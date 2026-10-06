@@ -25,6 +25,7 @@ import Invoices from "./screens/Invoices";
 import Approvals from "./screens/Approvals";
 import Alerts from "./screens/Alerts";
 import Offers from "./screens/Offers";
+import { Labels } from "./screens/Labels";
 import { branches, demoUsers, useDemo } from "./store";
 import type { Branch, Role } from "./types";
 import {
@@ -310,6 +311,7 @@ const screenRegistry: Record<string, ReactNode> = {
   approvals: <Approvals />,
   alerts: <Alerts />,
   offers: <Offers />,
+  labels: <Labels />,
   settings: <PricingSettings />,
 };
 function Placeholder({ page }: { page: (typeof pages)[number] }) {

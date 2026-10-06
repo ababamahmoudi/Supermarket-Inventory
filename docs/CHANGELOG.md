@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 6: bilingual labels
+
+- Added saved user-created templates, A4 geometry validation, copies, starting-slot offsets and multipage layout without preselected templates.
+- Added compact bilingual logo/name/price/offer/code/unit/tax labels using only the selected branch's approved prices.
+- Added used-slot previews and print layout that preserves separate A4 sheets, with unit and desktop/phone browser checks.
+
 ## 2026-10-06 — Phase 0.2, part 5: approvals, alerts and offers
 
 - Added scoped product/price approval previews, all-branch override clearing, margin review acknowledgement, and deliberate branch-price conflict decisions.

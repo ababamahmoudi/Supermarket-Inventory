@@ -70,3 +70,15 @@ Branch: `feat/prototype-05-approvals`
 4. Open Alerts. Tea shows Branch 1 `6.49` and Branch 2 `6.99`. Click Mark as intentional; enable Show resolved and intentional alerts to see the saved decision. Reset to try Apply this price to all and confirm; all three branches use the selected price.
 5. Approve Lavash again for Branch 1. Switch to Floor Worker with `2222`, then open Offers. Its suggested Confirm offer: 2 for $5 appears. Try the mix-and-match toggle and confirm the offer.
 6. Click Mix-and-match pools: Juice, Chips and Lavash share the same pool. Switch to فارسی to inspect the same task and pool in RTL.
+
+## 6. Bilingual A4 labels
+
+Branch: `feat/prototype-06-labels`
+
+1. Sign in as Floor Worker with `2222`, or Supervisor with `1111`, choose Branch 1, and open Labels.
+2. Keep the default Juice, Sumac and Chips selected with Copies per product `1`. No template is preselected.
+3. Create Template 1: width `60`, height `40`, margins `10` and gaps `4` millimetres. Click Save template.
+4. Keep Starting slot `5`: the first four slots are gray and marked Used. New bilingual labels start in slot 5.
+5. Check the logo, English/Persian names, approved price, offer, Product Code and unit size. Chips has a Taxable tag. Barcodes and promotion expiry dates are excluded.
+6. Click Print labels, inspect A4 preview, then Cancel to avoid using paper. Increase Copies per product to see multiple sheets. Used slots remain blank on the printed sheet.
+7. Switch to فارسی; labels stay bilingual. Refresh preserves Template 1; Reset demo removes it. Selecting All branches asks you to choose one branch before printing its approved prices.
