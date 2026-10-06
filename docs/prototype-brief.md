@@ -1,4 +1,6 @@
-# Prototype brief (Phase 0)
+# Prototype brief (Phase 0, step 0.2)
+
+Step 0.1 supplies the project skeleton, a placeholder page, and health checks. This brief is the subsequent clickable demo; its business screens are not a Step 0.1 deliverable.
 
 **Purpose:** a clickable demo to show the Super Arzon owner and win initial approval. It runs entirely in the browser with **no backend, no database, no real AI**. It must look and feel like the real product, because the screens and design will carry over.
 
@@ -18,12 +20,12 @@ A "Sign in as" screen with three demo users from the data file: **Demo Superviso
 1. **Cashier lookup.** Search "sumac", "سماق", a Product Code, or a barcode. Big price, Taxable tag, offer pill, "New price pending" tag on Lavash Bread.
 2. **Receive an invoice (simulated AI).** Floor Worker uploads any PDF/photo (the file is only displayed), a 2–3 second "Reading invoice…" state, then the **review screen** prefilled from `demo_invoice` in the data file: lines matched to products, calculated selling prices computed live by the engine, status badges, a date-tracking control only for Grocery lines, Save as draft and Post invoice. Editing a unit cost recalculates the price immediately.
 3. **Same-supplier lower price.** The Sour Cherry Juice line (1.95 → 1.80) asks the three expiry questions; answers create an alert on the Supervisor dashboard.
-4. **Short item.** Mark 4 potato chips as Short: the invoice total shows the deduction and the net payable (`payable_after_open_shorts`); resolving restores it.
+4. **Short item.** Mark 4 of 12 potato chips as Short: stock receives the 8 delivered units; the invoice shows the 7.23 deduction and net payable (`payable_after_open_shorts`). Receive two later deliveries of 2 units; restore 3.62 then 3.61 and add only the 4 newly received units.
 5. **Approvals.** As Supervisor: new product (Dried Barberries) and the Lavash price change (1.99 → 2.99) appear in Approvals; approve one for **All branches**, one for **This branch only**; the cashier lookup reflects it.
 6. **Cross-branch price conflict.** Black Tea: Branch 1 $6.49 vs Branch 2 $6.99 appears on the dashboard with **Mark as intentional** and **Apply to all**.
 7. **Offers.** After approval, the AI suggestion "Confirm offer: 2 for $5" appears for the Floor Worker with the mix-and-match toggle; show a pool page where juice and chips share "2 for $5".
 8. **Labels.** Pick products, create "Template 1" (width/height/margins/gaps), choose the starting slot on an A4 preview where the first four slots are already used, show a bilingual label preview (logo, name EN + FA, price, offer, product code, unit size, Taxable). Printing can open the browser print dialog.
-9. **Returns.** Select Fresh Valley Foods → its open return appears immediately → record pickup (type representative name) → choose resolution; show a replacement-received example that does not affect Payables.
+9. **Returns.** Select Fresh Valley Foods → its open return appears immediately → record actual pickup quantities, representative name, and fictional signed slip reference → choose resolution; show a replacement-received example that does not affect Payables. Demonstrate cancellation after a partial replacement: no original stock is restored while the supplier holds it; Supervisor reviews existing settlement. Show the staff return checklist/policy. Worker financial claims require Supervisor verification/posting.
 10. **Expiry list.** Lavash (5 days) and Sour Cherry Juice (25 days) as expiring soon; **Cleared** removes one.
 11. **Notes.** To order, Store use, For Supervisor, with the Supervisor's unread badge.
 12. **Payables.** Supervisor-only: a supplier balance with the invoice, shorts deduction, a payment with cheque number, and a month-end summary view. Show that the Floor Worker menu has no Payables.

@@ -42,7 +42,7 @@ Read this file first, then everything in `docs/` in this order:
 
 ## Quality bar (definition of done)
 - Feature matches the docs; edge cases from the docs are covered by automated tests.
-- The pricing engine passes **every** case in `seed/pricing-test-cases.json`.
+- The pricing engine passes **every** case in `seed/pricing-test-cases.json`; the case count grows as boundary coverage is added.
 - Works on a large desktop screen and a phone browser; keyboard-friendly on tables and forms.
 - Follows `docs/design-language.md`. No new colors, fonts, or component styles outside it.
 - English and Persian both render correctly (RTL layout checked).
