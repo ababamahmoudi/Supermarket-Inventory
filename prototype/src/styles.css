@@ -300,6 +300,29 @@ textarea {
   min-block-size: 96px;
   resize: vertical;
 }
+fieldset {
+  min-inline-size: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.invoice-line {
+  padding-block: 20px;
+  border-block-start: 1px solid var(--border);
+}
+.invoice-line > h3,
+.invoice-line > .actions {
+  margin-block-end: 12px;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 44px;
+}
+.date-review {
+  padding-block: 12px;
+}
 input[aria-invalid="true"],
 select[aria-invalid="true"],
 textarea[aria-invalid="true"] {

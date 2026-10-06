@@ -47,3 +47,15 @@ Branch: `feat/prototype-03-catalog`
 3. Switch to Supervisor with `1111`. Search `0004`: Branch 1 shows Tea `6.49`; Branch 2 shows `6.99`.
 4. Open Products. Try the category, taxable, offer, and pending filters, sort a column, then click View beside a product to inspect its details.
 5. Switch to Floor Worker with `2222`. Products still works, while supplier costs and Supervisor-only pages stay hidden.
+
+## 4. Invoice receiving
+
+Branch: `feat/prototype-04-invoices`
+
+1. Sign in as Floor Worker with `2222`; Invoices opens. Upload any fictional PDF or photo. Wait about 2.5 seconds for Reading invoice to finish. The file is retained only in your browser; all extracted lines are simulated.
+2. In Review invoice lines, edit Sumac's unit cost from `1.30` to `1.60`: its proposed selling price changes from `1.99` to `2.99`. Put the cost back.
+3. On Sour Cherry Juice, answer the lower-price stock/date questions. Choose Unknown and enter a fictional explanation if you do not have old-stock dates.
+4. On Potato Chips, check Mark as short: 4 units of 12 are short, deduction `7.23`, payable `169.79`.
+5. Confirm each Grocery date-tracking decision and each invoice line. Click Save as draft, refresh, and check that your choices are retained. Click Post invoice once.
+6. Receive 2 chips with reference `FICTITIOUS-CHIPS-1`, then 2 with `FICTITIOUS-CHIPS-2`. The restored amounts are `3.62` and `3.61`; chips stock moves from 8 to 10 to 12 and payable returns to `177.02`.
+7. Try Enter manually without a file on a new draft: posting requires the original invoice. Switch to فارسی to inspect the same review in RTL.
