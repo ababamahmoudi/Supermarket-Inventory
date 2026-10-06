@@ -1,0 +1,129 @@
+name: supermarket-inventory
+
+services:
+  db:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ${DB_NAME:-supermarket}
+      POSTGRES_USER: ${DB_USER:-supermarket}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run make setup to create .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  s3:
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+    command: mini -dir=/data -s3.port=9000 -s3.port.iceberg=0 -s3.port.lance=0 -master.telemetry=false -webdav=false -admin.ui=false -s3.allowDeleteBucketNotEmpty=false -s3.autoCreateBucket=false
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Set S3_ACCESS_KEY_ID in .env}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Set S3_SECRET_ACCESS_KEY in .env}
+      S3_BUCKET: ${S3_BUCKET_NAME:-supermarket-local}
+    ports:
+      - "127.0.0.1:${S3_PORT:-9000}:9000"
+    volumes:
+      - s3_data:/data
+      - ./infra/local-s3/check.sh:/usr/local/bin/local-s3-check:ro
+    healthcheck:
+      test: [CMD, sh, /usr/local/bin/local-s3-check, health]
+      interval: 3s
+      timeout: 15s
+      retries: 20
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      secrets:
+        - additional_ca
+    env_file: .env
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app/backend
+      - ./seed:/app/seed:ro
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      secrets:
+        - additional_ca
+    env_file: .env
+    command: celery -A config worker --loglevel=INFO --concurrency=2
+    volumes:
+      - ./backend:/app/backend
+      - ./seed:/app/seed:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'celery -A config inspect ping --destination "celery@$${HOSTNAME}" --timeout 5']
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      secrets:
+        - additional_ca
+    env_file: .env
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+    volumes:
+      - ./frontend:/app/frontend
+      - ./seed:/app/seed:ro
+      - ./assets:/app/assets:ro
+      - web_node_modules:/app/frontend/node_modules
+    ports:
+      - "127.0.0.1:${WEB_PORT:-5173}:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5173').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  redis_data:
+  s3_data:
+  web_node_modules:
+
+secrets:
+  additional_ca:
+    file: ${BUILD_CA_FILE:-/dev/null}
