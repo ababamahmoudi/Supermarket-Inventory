@@ -26,3 +26,14 @@ Branch: `feat/prototype-01-shell`
 6. Click Reset demo, then confirm Reset demo. Language and role stay selected.
 
 At this stage the business screens are placeholders; the later review branches replace them in the requested order.
+
+## 2. Pricing engine and Settings
+
+Branch: `feat/prototype-02-pricing`
+
+1. Sign in as Supervisor with `1111` and open Settings.
+2. Grocery cost `1.00` gives `1.49`; change its divisor from `0.65` to `0.50` and watch the price become `1.99`.
+3. Enter divisor `0`: the screen explains how to fix it and keeps the previous valid rule. Reload and confirm valid edits persisted.
+4. Reset demo, enter Grocery cost `1.12`, and see the below-margin review at `24.83%` with price `1.49`.
+5. Choose Rice and enter cost `3.1921`: displayed raw is `3.99`, but the final selling price is `4.99` because Rice uses the unrounded value.
+6. Switch to فارسی and verify that the same calculations work in the mirrored layout.

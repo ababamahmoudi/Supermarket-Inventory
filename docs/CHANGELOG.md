@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 2: pricing and Settings
+
+- Ported the configuration-driven pricing reference to TypeScript with decimal.js; all shared fixtures and configurable boundary/property checks are covered.
+- Added editable pricing divisors and a live Settings sandbox with validation, intermediate values, margin flags, persistence, and Persian translations.
+- Added desktop/phone browser checks for editing, invalid inputs, Rice precision, and Reset demo.
+
 ## 2026-10-06 — Phase 0.2, part 1: browser demo shell
 
 - Added the standalone `prototype/` React/TypeScript/Vite app and shared design tokens, local fonts, logo, bilingual components, and responsive RTL shell.
