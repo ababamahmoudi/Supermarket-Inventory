@@ -4,7 +4,7 @@ This is the Phase 0.2 browser demo. All people, suppliers, files, and activity a
 
 ## Run
 
-Use Node.js 22.22.2 and npm. The prototype does not require Docker or Python.
+Use Node.js 22.23.3 (pinned in `frontend/.nvmrc`) and npm. The prototype does not require Docker or Python.
 
 ```bash
 cd prototype
@@ -23,7 +23,9 @@ Expect `Local: http://localhost:5174/`. Open that address in a browser. Port 517
 7. Click **Reset demo**, then confirm **Reset demo**, to restore the original fictional data. Refreshing preserves changes; resetting preserves your role and language.
 8. Click **Lock** or **Sign out** to return to the PIN screen.
 
-The first pull request supplies the shell and reusable design components. Later small pull requests add pricing/settings, lookup/products, invoices, approvals/alerts/offers, labels, and operations/dashboard. An empty page at the shell stage is expected.
+The full part 7 branch, `feat/prototype-07-operations`, includes all 13 moments: lookup, invoice review, lower-price questions, partial shorts, approvals, branch-price conflicts, offers, labels, returns, expiry, notes, payables, and the Supervisor dashboard. Settings proves the pricing rules are configurable. Earlier review branches contain the requested stages in order.
+
+[REVIEW_GUIDE.md](REVIEW_GUIDE.md) gives detailed click-by-click instructions and expected results for each of the seven pull requests. They form a chain starting from the unmerged foundation branch. Review and merge the foundation first, then parts 1 through 7. Codex and GitHub run the technical checks; Ali does not need to install tools or run tests to review the proposed work.
 
 If `npm` is missing, install the supported Node version before running these commands. If the port is already in use, stop the process using it or run `npm run dev -- --port 5175` and open the address printed by Vite. If browser storage is unavailable, the demo still works until the page closes and shows a clear warning.
 

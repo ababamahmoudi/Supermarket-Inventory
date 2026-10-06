@@ -30,7 +30,23 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Prepare the environment
-        run: make setup
+        run: |
+          if make setup > /tmp/foundation-setup.log 2>&1; then
+            cat /tmp/foundation-setup.log
+          else
+            setup_status=$?
+            cat /tmp/foundation-setup.log
+            python3 - <<'PY'
+          import re
+          from pathlib import Path
+          message = "\n".join(Path("/tmp/foundation-setup.log").read_text(errors="replace").splitlines()[-20:])
+          message = re.sub(r"https?://\S+", "[URL omitted]", message)
+          message = re.sub(r"(?i)(password|token|secret|authorization)(\s*[=:]\s*)\S+", r"\1\2[redacted]", message)
+          message = message[-4000:].replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=Foundation setup failure::{message}")
+          PY
+            exit "$setup_status"
+          fi
       - name: Run lint checks
         run: make lint
       - name: Run unit and integration tests
