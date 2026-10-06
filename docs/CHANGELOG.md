@@ -1,5 +1,53 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 7: operations and dashboard
+
+- Completed returns with signed pickup/replacement evidence, partial settlement, reviewed cancellations, safe-original dispositions and Supervisor-only financial claims.
+- Added expiry clearing/history, three Notes tabs with stock-use accounting and unread reviews, supplier Payables with partial external payments, cheque references, allocations, CSV and printable month-end summaries.
+- Added the 15 configured dashboard priorities, scoped bilingual activity, company-timezone business dates and responsive stat cards.
+- Added meaningful operations unit and desktop/phone browser checks, including invalid-action rollback, supplier-held stock, replacement-versus-money separation and historical month boundaries.
+- Embedded the logo in the browser bundle and added all-screen offline checks in both languages, avoiding image revalidation requests when pages remount offline.
+- Added redacted CI setup failure annotations while preserving the original failing command's exit status.
+- Updated all prototype review/run documentation and the root README to distinguish the complete browser demo from the production backend roadmap.
+
+## 2026-10-06 — Phase 0.2, part 6: bilingual labels
+
+- Added saved user-created templates, A4 geometry validation, copies, starting-slot offsets and multipage layout without preselected templates.
+- Added compact bilingual logo/name/price/offer/code/unit/tax labels using only the selected branch's approved prices.
+- Added used-slot previews and print layout that preserves separate A4 sheets, with unit and desktop/phone browser checks.
+
+## 2026-10-06 — Phase 0.2, part 5: approvals, alerts and offers
+
+- Added scoped product/price approval previews, all-branch override clearing, margin review acknowledgement, and deliberate branch-price conflict decisions.
+- Added approval-linked offer tasks, confirmation, scoped price-compatible offers, and mix-and-match pools with bilingual controls/history.
+- Added cross-module invoice-to-approval-to-offer tests and desktop/phone workflows preserving approved cashier prices until confirmation.
+- Made store transactions validate synchronously and publish atomically; exact Product Code matches take priority over barcode substrings.
+
+## 2026-10-06 — Phase 0.2, part 4: invoice receiving
+
+- Added simulated upload reading, retained fictional originals, editable review/drafts, live pricing, date decisions, lower-price questions, and scoped approvals/alerts.
+- Added posting and later short deliveries with immutable stock receipts and conserved tax/cent deductions; duplicate posting and receipt retries cannot double count.
+- Added invoice unit tests and desktop/phone end-to-end checks for the 169.79 payable and 3.62/3.61 partial restorations.
+
+## 2026-10-06 — Phase 0.2, part 3: lookup and Products
+
+- Added English/Persian, Product Code, and barcode search with approved branch prices, pending tags, tax profiles, and scoped offers.
+- Added filterable, sortable, paginated Products and role-aware details; catalog supplier costs stay Supervisor-only.
+- Added scoped catalog unit checks and desktop/phone browser workflows, including direct-route role guards.
+
+## 2026-10-06 — Phase 0.2, part 2: pricing and Settings
+
+- Ported the configuration-driven pricing reference to TypeScript with decimal.js; all shared fixtures and configurable boundary/property checks are covered.
+- Added editable pricing divisors and a live Settings sandbox with validation, intermediate values, margin flags, persistence, and Persian translations.
+- Added desktop/phone browser checks for editing, invalid inputs, Rice precision, and Reset demo.
+
+## 2026-10-06 — Phase 0.2, part 1: browser demo shell
+
+- Added the standalone `prototype/` React/TypeScript/Vite app and shared design tokens, local fonts, logo, bilingual components, and responsive RTL shell.
+- Added fictional role/PIN sign-in, role-specific navigation, branch selection, browser persistence, and Reset demo. This demo does not contact the backend.
+- Added prototype lint, unit, build, and desktop/phone browser checks to pull-request CI and pre-commit.
+- Run and review instructions are in `prototype/README.md` and `prototype/REVIEW_GUIDE.md`.
+
 ## 2026-10-06 — Document decisions and Phase 0.1 foundation
 
 - Confirmed Toronto, Ontario, Canada, CAD, `America/Toronto`, and 13% HST; seeded explicit non-taxable/HST profiles and editable branding.
