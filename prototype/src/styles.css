@@ -713,6 +713,53 @@ tbody tr:focus-within {
   background: var(--card);
   color: var(--text);
   overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-auto-rows: min-content;
+  align-content: start;
+  gap: 1px;
+  padding: 1.5mm;
+  font-size: 13px;
+  line-height: 1.15;
+}
+.shelf-label > * {
+  grid-column: 1 / -1;
+}
+.shelf-label img {
+  grid-column: 2;
+  grid-row: 1;
+  inline-size: 14mm;
+  block-size: 5mm;
+  object-fit: contain;
+  background: var(--card);
+}
+.shelf-label > strong:first-of-type {
+  grid-column: 1;
+  grid-row: 1;
+}
+.shelf-label .price {
+  font-size: 24px;
+  line-height: 1.1;
+}
+.shelf-label small {
+  color: var(--text);
+  line-height: 1.15;
+}
+.shelf-label .badge {
+  justify-self: start;
+  padding: 1px 4px;
+  line-height: 1.15;
+}
+.shelf-label .badge svg {
+  inline-size: 13px;
+  block-size: 13px;
+}
+.label-unused {
+  display: grid;
+  place-items: center;
+  background: var(--neutral-bg);
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
 }
 
 @media (max-width: 1100px) {
@@ -823,14 +870,25 @@ tbody tr:focus-within {
     display: none !important;
   }
   .print-sheet {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-start: 0;
+    position: relative !important;
+    inset: auto;
     inline-size: 210mm;
     block-size: 297mm;
-    margin: 0;
+    margin: 0 !important;
     border: 0;
     print-color-adjust: exact;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .print-sheet:last-child {
+    break-after: auto;
+  }
+  .labels-controls,
+  .label-unused {
+    display: none !important;
+  }
+  .label-preview {
+    overflow: visible;
   }
   .main-content,
   .workspace,
