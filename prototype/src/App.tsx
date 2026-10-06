@@ -21,6 +21,7 @@ import {
 import logo from "../../assets/arzon-logo.png";
 import PricingSettings from "./screens/Settings";
 import { Lookup, Products } from "./screens/Catalog";
+import Invoices from "./screens/Invoices";
 import { branches, demoUsers, useDemo } from "./store";
 import type { Branch, Role } from "./types";
 import {
@@ -302,6 +303,7 @@ function SignIn({
 const screenRegistry: Record<string, ReactNode> = {
   lookup: <Lookup />,
   products: <Products />,
+  invoices: <Invoices />,
   settings: <PricingSettings />,
 };
 function Placeholder({ page }: { page: (typeof pages)[number] }) {

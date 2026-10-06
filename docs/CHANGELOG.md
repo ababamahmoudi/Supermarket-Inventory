@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 4: invoice receiving
+
+- Added simulated upload reading, retained fictional originals, editable review/drafts, live pricing, date decisions, lower-price questions, and scoped approvals/alerts.
+- Added posting and later short deliveries with immutable stock receipts and conserved tax/cent deductions; duplicate posting and receipt retries cannot double count.
+- Added invoice unit tests and desktop/phone end-to-end checks for the 169.79 payable and 3.62/3.61 partial restorations.
+
 ## 2026-10-06 — Phase 0.2, part 3: lookup and Products
 
 - Added English/Persian, Product Code, and barcode search with approved branch prices, pending tags, tax profiles, and scoped offers.
