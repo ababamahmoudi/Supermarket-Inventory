@@ -98,10 +98,19 @@ test("branch switcher shows approved overrides and a new product requires Superv
   await page.getByLabel("Branch", { exact: true }).selectOption("Branch 2");
   await expect(page.locator(".price")).toHaveText("$6.99");
   await page.getByLabel("Branch", { exact: true }).selectOption("Branch 1");
-  await page
-    .getByLabel("Search products", { exact: true })
-    .fill("Dried Barberries");
-  await expect(page.locator(".price")).toHaveText("$5.49");
+  for (const query of ["Dried Barberries", "0015", "۰۰۱۵"]) {
+    await page.getByLabel("Search products", { exact: true }).fill(query);
+    await expect(page.locator(".price")).toHaveText("$5.49");
+    await expect(
+      page.getByRole("heading", {
+        name: "Dried Barberries 100 g",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.locator('[aria-label="Product results"]').getByRole("button"),
+    ).toHaveCount(1);
+  }
   await expect(
     page.getByText("Pending: confirm with a Supervisor before selling", {
       exact: true,

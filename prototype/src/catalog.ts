@@ -142,3 +142,17 @@ export function matchesProduct(product: Product, query: string): boolean {
   );
   return words.every((word) => searchable.includes(word));
 }
+
+/** A scanned identifier must not select another product's barcode substring. */
+export function searchProducts(products: Product[], query: string): Product[] {
+  const identifier = normalizeSearch(query);
+  if (identifier) {
+    const exact = products.filter(
+      (product) =>
+        normalizeSearch(product.code) === identifier ||
+        (product.barcode && normalizeSearch(product.barcode) === identifier),
+    );
+    if (exact.length) return exact;
+  }
+  return products.filter((product) => matchesProduct(product, query));
+}

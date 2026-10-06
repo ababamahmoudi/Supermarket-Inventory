@@ -455,6 +455,8 @@ tbody tr:focus-within {
 }
 .confirm-dialog {
   inline-size: min(480px, calc(100vw - 32px));
+  max-block-size: calc(100vh - 32px);
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--card);

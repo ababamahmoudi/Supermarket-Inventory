@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -273,15 +274,17 @@ const DemoContext = createContext<DemoContextValue | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(readState);
+  const stateRef = useRef(state);
   const [session, setSession] = useState(readSession);
   const [storageError, setStorageError] = useState(false);
   const [resetGeneration, setResetGeneration] = useState(0);
   const update = useCallback((mutator: (draft: DemoState) => void) => {
-    setState((previous) => {
-      const draft = structuredClone(previous);
-      mutator(draft);
-      return draft;
-    });
+    // Validate synchronously so the screen can catch a failed business action.
+    // Publish only successful drafts; the ref also preserves same-event updates.
+    const draft = structuredClone(stateRef.current);
+    mutator(draft);
+    stateRef.current = draft;
+    setState(draft);
   }, []);
   useEffect(() => {
     try {
@@ -355,7 +358,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }));
       },
       reset: () => {
-        setState(initialState());
+        const seed = initialState();
+        stateRef.current = seed;
+        setState(seed);
         setResetGeneration((previous) => previous + 1);
       },
       navigate: (page) => {
