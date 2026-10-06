@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 1: browser demo shell
+
+- Added the standalone `prototype/` React/TypeScript/Vite app and shared design tokens, local fonts, logo, bilingual components, and responsive RTL shell.
+- Added fictional role/PIN sign-in, role-specific navigation, branch selection, browser persistence, and Reset demo. This demo does not contact the backend.
+- Added prototype lint, unit, build, and desktop/phone browser checks to pull-request CI and pre-commit.
+- Run and review instructions are in `prototype/README.md` and `prototype/REVIEW_GUIDE.md`.
+
 ## 2026-10-06 — Document decisions and Phase 0.1 foundation
 
 - Confirmed Toronto, Ontario, Canada, CAD, `America/Toronto`, and 13% HST; seeded explicit non-taxable/HST profiles and editable branding.
