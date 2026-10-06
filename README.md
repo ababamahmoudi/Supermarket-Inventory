@@ -4,15 +4,10 @@ An English/Persian supermarket operations app. Super Arzon is the first company;
 its name, branding, CAD currency, Toronto timezone, and 13% HST are editable seed
 configuration, not hardcoded application behavior. Exempt products remain exempt.
 
-**Status: Phase 0.1 foundation and Phase 0.2 browser prototype.** Local services, the bilingual placeholder shell,
+**Status: Phase 0.1 foundation.** Local services, the bilingual placeholder shell,
 API health checks, bootstrap configuration, tests, and pull-request CI are present.
-The separate `prototype/` app demonstrates all 13 requested moments with fictional
-browser data. Production receiving, approvals, stock, returns, payables and employee
-authentication remain future backend work. Do not enter real business data.
-
-For the browser demo, start with [prototype/README.md](prototype/README.md) and the
-[click-by-click review guide](prototype/REVIEW_GUIDE.md). It needs Node.js 22 and npm
-only; the Docker instructions below run the separate foundation services.
+Receiving, approvals, stock, returns, payables, employee sign-in, and the clickable
+prototype are not implemented. Do not enter real business data into this scaffold.
 
 ## Quick-start for Ali
 
@@ -223,7 +218,7 @@ needed for this phase. Django public health endpoints reveal no business records
 
 - `backend/`: Django, bootstrap models/migrations, Celery, health, tests, and seed loader.
 - `frontend/`: bilingual placeholder, component/browser tests, and build tools.
-- `prototype/`: complete Phase 0.2 browser demo; `infra/`: reserved for reviewed deployments.
+- `prototype/`: Phase 0.2 placeholder; `infra/`: reserved for reviewed deployments.
 - `seed/`: company settings, invented demo data, pricing fixtures and reference.
 - `docs/`: requirements, workflows, [return policy](docs/return-policy.md),
   [decisions](docs/decisions.md), and [changelog](docs/CHANGELOG.md).

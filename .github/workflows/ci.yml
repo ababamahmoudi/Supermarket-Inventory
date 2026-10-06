@@ -30,23 +30,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Prepare the environment
-        run: |
-          if make setup > /tmp/foundation-setup.log 2>&1; then
-            cat /tmp/foundation-setup.log
-          else
-            setup_status=$?
-            cat /tmp/foundation-setup.log
-            python3 - <<'PY'
-          import re
-          from pathlib import Path
-          message = "\n".join(Path("/tmp/foundation-setup.log").read_text(errors="replace").splitlines()[-20:])
-          message = re.sub(r"https?://\S+", "[URL omitted]", message)
-          message = re.sub(r"(?i)(password|token|secret|authorization)(\s*[=:]\s*)\S+", r"\1\2[redacted]", message)
-          message = message[-4000:].replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-          print(f"::error title=Foundation setup failure::{message}")
-          PY
-            exit "$setup_status"
-          fi
+        run: make setup
       - name: Run lint checks
         run: make lint
       - name: Run unit and integration tests
@@ -64,7 +48,6 @@ jobs:
       - name: Check hooks
         run: |
           make hooks
-          npm --prefix prototype ci
           .venv/bin/pre-commit run --all-files
       - name: Run browser smoke tests
         run: |
@@ -88,33 +71,3 @@ jobs:
         run: |
           make logs
           make down
-
-  prototype:
-    name: Prototype lint, tests, build, and browser checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: prototype
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: npm
-          cache-dependency-path: prototype/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
-      - name: Upload prototype browser results
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: prototype-browser-results
-          path: |
-            prototype/playwright-report
-            prototype/test-results
-          if-no-files-found: ignore

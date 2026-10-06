@@ -8,7 +8,7 @@ Goal: one repository, one command to run everything locally, automated tests on 
 | Backend API | **Python 3.12, Django + Django REST Framework**, OpenAPI schema generated automatically | Mature, strong admin tooling, excellent for data-heavy business apps, AI tools write it reliably |
 | Database | **PostgreSQL 16** | Transactions, constraints, JSON where needed |
 | Background jobs | **Celery** workers (Redis broker locally; managed Redis or SQS in AWS) | AI invoice reading, PDF generation, exports |
-| File storage | **S3-compatible** (SeaweedFS locally, S3 in AWS (decision 011)), private bucket, signed URLs | Invoice originals, return photos |
+| File storage | **S3-compatible** (MinIO locally, S3 in AWS), private bucket, signed URLs | Invoice originals, return photos |
 | Frontend | **React + TypeScript + Vite + Tailwind CSS + shadcn/ui**, TanStack Query, i18next | Matches the reference design; strong i18n/RTL support |
 | Label/PDF output | Server-side HTML→PDF with embedded Vazirmatn/Inter (WeasyPrint or headless Chromium) | Correct Persian shaping and exact mm sizing |
 | Tests | pytest, Vitest + Testing Library, Playwright (end-to-end) | |
@@ -31,38 +31,17 @@ The web app can be installed as a PWA later; native wrappers (Capacitor) remain 
 ```
 
 ## Local development (target experience)
-Phase 0.1 provides the Django scaffold, a public health endpoint and dependency
-readiness endpoint, a bilingual placeholder web shell, local service containers,
-test/lint runners, and pull-request CI. A small bootstrap model stores the seeded
-company, branches, and configuration, and a local Django admin supervisor can
-inspect it. This is not Phase 1 authentication, permissions, or business tenancy:
-no inventory, pricing approval, receiving, returns, or payables API exists yet.
-The full company/branch isolation and role tests are required before introducing
-those endpoints in Phase 1. The prototype remains a separate Phase 0.2 deliverable.
-
 Prerequisites on Ali's computer: Git, Docker Desktop, a code editor (VS Code). The AI writes exact install steps for his operating system.
 
-`docker-compose.yml` services: `db` (Postgres), `redis`, `s3` (SeaweedFS S3), `api`, `worker`, `web` (Vite dev server), optional `mailpit`.
+`docker-compose.yml` services: `db` (Postgres), `redis`, `minio` (S3), `api`, `worker`, `web` (Vite dev server), optional `mailpit`.
 
 Make targets (the AI must implement and document them in README):
-- `make setup`: create `.env` from `.env.example` only when absent, build images, back up and verify restoration before pending migrations, run migrations, **load `seed/arzon-config.json`**, create a local demo supervisor only when absent. Repeating setup preserves existing configuration files, user passwords, and data. Database configuration is refreshed from the reviewed seed; omitted existing companies/branches are not deleted.
+- `make setup`: copy `.env.example` to `.env`, build images, run migrations, **load `seed/arzon-config.json`**, create a demo supervisor.
 - `make up` / `make down`: start/stop everything. App at `http://localhost:5173`, API docs at `http://localhost:8000/api/docs`.
 - `make test`: backend + frontend unit tests, including the pricing test file.
 - `make e2e`: Playwright browser tests.
 - `make seed-demo`: load demo products/suppliers for manual testing.
 - `make lint`, `make reset-db` (asks for confirmation).
-
-Phase 0.1 also provides `make build`, `make e2e`, `make hooks`, `make audit`,
-`make logs`, and `make status`. `make seed-demo` and `make reset-db` are deferred
-until their business data and safe reset workflow are implemented. `make down`
-preserves named data volumes; it does not run `down --volumes`. Docker binds local
-ports to the loopback interface, so this scaffold is not exposed to the LAN.
-The placeholder is served on port 5173, `/healthz` and `/api/v1/health/` expose API
-liveness, and `/readyz` checks PostgreSQL and Redis and returns 503 on failure.
-Local plain HTTP is permitted only for loopback development; deployed environments
-require HTTPS. The seed confirms Toronto/Ontario, CAD, America/Toronto, and 13% HST
-for the first company; exempt products remain exempt. These are editable company
-settings, not application constants.
 
 ## Environments
 | Environment | Purpose | Data | Deploys |
@@ -79,12 +58,6 @@ settings, not application constants.
 - Deploy to AWS using **GitHub OIDC** (no stored AWS keys). Enable Dependabot.
 - Protect `main`: pull request required, checks required, no force pushes.
 
-For Phase 0.1, CI runs on pull requests and manual dispatch with read-only repository
-permissions. It performs local setup, lint, backend/frontend tests, the web build,
-service and browser smoke checks, pre-commit checks, and dependency audits. There
-are no deployments. Branch protection must be configured in GitHub settings;
-adding a workflow does not itself protect `main` or establish a green CI run.
-
 ## AWS plan (decide with Ali, with cost estimates first)
 Staged path so costs stay low while there is no paying usage:
 1. **Local only** until the prototype is approved and Phase 1 is underway.
@@ -94,8 +67,10 @@ Staged path so costs stay low while there is no paying usage:
 Required before any paid resource: AWS **budget alert**, MFA on the AWS account, a non-root admin identity, a short monthly cost estimate shown to Ali.
 
 ## Security and privacy
-- HTTPS only; secure, HTTP-only cookies; CSRF protection; rate limiting and lockout on sign-in and PIN attempts.
-- PIN login only from registered devices; device tokens revocable by the Supervisor; instant user deactivation.
+- HTTPS only; secure, HTTP-only cookies; CSRF protection; rate limiting and account lockout on failed sign-ins.
+- Accounts are created only by the Supervisor (no self-registration); temporary passwords force a change at first sign-in; passwords hashed with a modern algorithm (Argon2 or Django's default), checked against common/breached lists; no PINs.
+- Each company is served on its own subdomain; usernames are unique per company. Registered-device tokens (for the recent-users list) are revocable by the Supervisor; instant user deactivation.
+- Later, not now: invite-only Google sign-in (OpenID Connect, matched to emails the Supervisor added) and authenticator-app second step for Supervisors.
 - Server-side permission checks on every endpoint; company/branch scoping enforced centrally; automated tests for cross-company and cross-branch leakage.
 - Uploads: validate type and size, store privately, serve by short-lived signed URL, never trust file names. Add malware scanning before production.
 - Secrets only in secret stores. No secrets in logs. Audit log for sensitive actions.

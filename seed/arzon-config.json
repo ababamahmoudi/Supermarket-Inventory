@@ -1,5 +1,5 @@
 {
-  "_comment": "Super Arzon starting configuration. All business rules are company-configurable data. Toronto/CAD/HST settings confirmed by Ali on 2026-10-06; operational defaults delegated to the lead developer. Remaining PLACEHOLDER labels can be edited in Settings.",
+  "_comment": "Super Arzon starting configuration. Everything here is DATA that the app loads into the database on first run. Nothing here may be hardcoded in application code. Items marked PLACEHOLDER must be confirmed with the owner.",
   "company": {
     "name": "Super Arzon",
     "logo_file": "assets/arzon-logo.png",
@@ -7,39 +7,21 @@
       "en",
       "fa"
     ],
-    "currency": "CAD",
-    "timezone": "America/Toronto",
-    "seed_key": "super-arzon",
-    "name_en": "Super Arzon",
-    "name_fa": "سوپر ارزان",
-    "jurisdiction": {
-      "country": "CA",
-      "province": "ON",
-      "city": "Toronto"
-    },
-    "branding": {
-      "primary_color": "#284898",
-      "primary_hover_color": "#1F3A80"
-    }
+    "currency": "CAD_OR_USD_PLACEHOLDER",
+    "timezone": "PLACEHOLDER"
   },
   "branches": [
     {
       "code": "B1",
-      "name": "Branch 1 (PLACEHOLDER - rename in Settings)",
-      "name_en": "Branch 1 (PLACEHOLDER - rename in Settings)",
-      "name_fa": "شعبه 1"
+      "name": "Branch 1 (PLACEHOLDER - rename in Settings)"
     },
     {
       "code": "B2",
-      "name": "Branch 2 (PLACEHOLDER - rename in Settings)",
-      "name_en": "Branch 2 (PLACEHOLDER - rename in Settings)",
-      "name_fa": "شعبه 2"
+      "name": "Branch 2 (PLACEHOLDER - rename in Settings)"
     },
     {
       "code": "B3",
-      "name": "Branch 3 (PLACEHOLDER - rename in Settings)",
-      "name_en": "Branch 3 (PLACEHOLDER - rename in Settings)",
-      "name_fa": "شعبه 3"
+      "name": "Branch 3 (PLACEHOLDER - rename in Settings)"
     }
   ],
   "roles": [
@@ -65,69 +47,43 @@
       "label": "Grocery",
       "cost_divisor": "0.65",
       "rounding": "bands",
+      "apply_2_49_3_49_correction": true,
       "taxable": false,
-      "date_tracking_prompt": true,
-      "apply_special_correction": true,
-      "minimum_margin": "0.25",
-      "default_tax_profile": "non_taxable"
+      "date_tracking_prompt": true
     },
     {
       "key": "grocery_taxable",
       "label": "Grocery (Taxable)",
       "cost_divisor": "0.65",
       "rounding": "bands",
+      "apply_2_49_3_49_correction": true,
       "taxable": true,
-      "date_tracking_prompt": true,
-      "apply_special_correction": true,
-      "minimum_margin": "0.25",
-      "default_tax_profile": "hst_13"
+      "date_tracking_prompt": true
     },
     {
       "key": "rice",
       "label": "Rice",
       "cost_divisor": "0.80",
       "rounding": "always_up_to_next_99",
+      "apply_2_49_3_49_correction": false,
       "taxable": false,
-      "date_tracking_prompt": false,
-      "apply_special_correction": false,
-      "minimum_margin": "0.20",
-      "default_tax_profile": "non_taxable",
-      "rounding_ending": "0.99"
+      "date_tracking_prompt": false
     },
     {
       "key": "kitchenware",
       "label": "Kitchenware",
       "cost_divisor": "0.60",
       "rounding": "bands",
+      "apply_2_49_3_49_correction": false,
       "taxable": true,
-      "date_tracking_prompt": false,
-      "apply_special_correction": false,
-      "minimum_margin": "0.25",
-      "default_tax_profile": "hst_13"
+      "date_tracking_prompt": false
     }
   ],
   "rounding_bands": {
-    "_comment": "Apply ordered numeric fraction ranges after half-up cent rounding. Decimal strings keep thresholds and endings exact; lower bounds inclusive, upper bounds exclusive.",
-    "bands": [
-      {
-        "lower_inclusive": "0.00",
-        "upper_exclusive": "0.23",
-        "dollar_offset": -1,
-        "ending": "0.99"
-      },
-      {
-        "lower_inclusive": "0.23",
-        "upper_exclusive": "0.73",
-        "dollar_offset": 0,
-        "ending": "0.49"
-      },
-      {
-        "lower_inclusive": "0.73",
-        "upper_exclusive": "1.00",
-        "dollar_offset": 0,
-        "ending": "0.99"
-      }
-    ],
+    "_comment": "Applied to the cents part of the raw price (raw price is rounded half-up to the cent first).",
+    "below_23": "previous_dollar_99",
+    "from_23_to_below_73": "dollar_49",
+    "from_73_up": "dollar_99",
     "minimum_result_when_previous_dollar_does_not_exist": "0.49"
   },
   "special_corrections": [
@@ -141,28 +97,10 @@
     }
   ],
   "tax": {
-    "_comment": "Cost used for pricing is always BEFORE tax. Selling price is displayed before tax; taxable products carry a Taxable label so the cashier adds tax. Ali confirmed HST 13% for taxable products in Ontario; each approved product profile determines its actual tax treatment and posted invoices retain rate snapshots.",
-    "rate": "0.13",
+    "_comment": "Cost used for pricing is always BEFORE tax. Selling price is displayed before tax; taxable products carry a Taxable label so the cashier adds tax.",
+    "rate": "PLACEHOLDER_SET_PER_COMPANY",
     "label_text_en": "Taxable",
-    "label_text_fa": "مشمول مالیات",
-    "jurisdiction": "Toronto, Ontario, Canada",
-    "confirmed_on": "2026-10-06",
-    "profiles": [
-      {
-        "key": "non_taxable",
-        "label_en": "Non-taxable",
-        "label_fa": "غیرمشمول مالیات",
-        "rate": "0.00",
-        "taxable": false
-      },
-      {
-        "key": "hst_13",
-        "label_en": "HST 13%",
-        "label_fa": "مالیات HST 13%",
-        "rate": "0.13",
-        "taxable": true
-      }
-    ]
+    "label_text_fa": "مشمول مالیات"
   },
   "approvals": {
     "always_require_supervisor": [
@@ -174,19 +112,12 @@
       "calculated_price_change"
     ],
     "no_approval": [
-      "unchanged_selling_price_with_no_margin_breach"
+      "supplier_cost_change_that_does_not_change_selling_price"
     ],
     "minimum_margin": {
-      "source": "pricing_categories[].minimum_margin",
-      "meaning": "(selling price - cost) / selling price; per-category threshold; null disables the check. A breach requires deduplicated Supervisor review even when price is unchanged; receiving is not blocked and the approved cashier price stays unchanged until an approved override. Keep price with a reason or propose manual override.",
-      "review_context": [
-        "company",
-        "branch",
-        "product",
-        "approved_price",
-        "unit_cost",
-        "pricing_configuration_version"
-      ]
+      "value": "0.25",
+      "placeholder": true,
+      "meaning": "(selling price - cost) / selling price; owner to confirm; rule inactive if null"
     }
   },
   "promotions": {
@@ -216,16 +147,7 @@
       "floor_worker",
       "supervisor"
     ],
-    "ai_suggested_offers_need_floor_worker_confirmation": true,
-    "one_effective_offer_per_product_branch": true,
-    "branch_offer_precedes_company_offer": true,
-    "pool_scope": [
-      "company",
-      "branch",
-      "currency",
-      "offer_definition"
-    ],
-    "stop_when_price_has_no_mapping": true
+    "ai_suggested_offers_need_floor_worker_confirmation": true
   },
   "expiry": {
     "expiring_soon_days": 30,
@@ -240,8 +162,7 @@
     "min_digits": 4,
     "grows_to_5_digits_when_needed": true,
     "zero_padded": true,
-    "archive_and_reactivate": true,
-    "start": "0001"
+    "archive_and_reactivate": true
   },
   "invoices": {
     "mandatory_header": [
@@ -265,9 +186,7 @@
       "scheme": "sequential_per_supplier_per_company",
       "mark_as_system_assigned": true
     },
-    "drafts_allowed_without_image": true,
-    "partial_shorts_allowed": true,
-    "short_resolution_requires_actual_received_quantity": true
+    "drafts_allowed_without_image": true
   },
   "labels": {
     "show": [
@@ -292,16 +211,32 @@
     "templates_comment": "NO default template. Users create presets (Template 1, Template 2...) with their own dimensions. There is no label queue."
   },
   "session": {
-    "pin_login_only_on_registered_store_devices": true,
+    "sign_in": "username_and_password",
+    "self_registration": false,
+    "accounts_created_by": [
+      "supervisor",
+      "platform_owner_for_first_supervisor"
+    ],
+    "temporary_password_forces_change": true,
+    "password_min_length": 8,
+    "block_common_passwords": true,
+    "lockout_after_failed_attempts": 5,
+    "lockout_minutes": 15,
+    "registered_device_shows_recent_users": true,
     "idle_lock_minutes": 5,
-    "idle_lock_placeholder": false,
-    "password_required_for": [
+    "idle_lock_placeholder": true,
+    "reprompt_password_after_minutes": 15,
+    "reprompt_password_for": [
       "approvals",
       "payables",
       "settings",
       "user_management"
     ],
-    "password_reprompt_minutes": 15
+    "pins": false,
+    "later_options": [
+      "invite_only_google_sign_in",
+      "supervisor_second_step"
+    ]
   },
   "dashboard_order": [
     "approvals_waiting",
@@ -330,33 +265,8 @@
     "category_grocery_taxable": "Grocery (Taxable)",
     "product_code": "Product Code",
     "selling_price": "Selling Price",
-    "date_tracking": "Date tracking"
-  },
-  "supplier_cost_comparison": {
-    "scope": [
-      "company",
-      "branch",
-      "supplier_product"
-    ],
-    "source": "last_posted_non_voided_receipt",
-    "unknown_answers_allowed_with_note": true
-  },
-  "returns": {
-    "signed_pickup_slip_required": true,
-    "pickup_evidence": "scan_photo_or_retained_paper_reference",
-    "item_photo_required": false,
-    "supplier_credit_document_required": true,
-    "one_credit_invoice_per_return": true,
-    "stock_restoration": "actual_original_units_physically_present_and_confirmed_safe_sellable_only",
-    "cancellation_auto_restores_stock": false,
-    "settled_cancellation_requires_supervisor_review": true,
-    "financial_posting_roles": [
-      "supervisor"
-    ],
-    "policy_document": "docs/return-policy.md"
-  },
-  "stock_counts": {
-    "supervisor_approval_required": false,
-    "large_variance_alert_threshold": null
+    "date_tracking": "Date tracking",
+    "nav_suppliers": "Suppliers",
+    "last_delivery": "Last delivery"
   }
 }

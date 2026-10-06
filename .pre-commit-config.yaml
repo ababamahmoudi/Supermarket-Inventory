@@ -15,9 +15,3 @@ repos:
         language: system
         pass_filenames: false
         files: '^(backend/|frontend/|seed/.*\.py$|scripts/|docker-compose\.yml$|Makefile$)'
-      - id: prototype-lint
-        name: Prototype TypeScript and formatting checks
-        entry: npm --prefix prototype run lint
-        language: system
-        pass_filenames: false
-        files: '^prototype/'
