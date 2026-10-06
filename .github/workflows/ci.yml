@@ -48,6 +48,7 @@ jobs:
       - name: Check hooks
         run: |
           make hooks
+          npm --prefix prototype ci
           .venv/bin/pre-commit run --all-files
       - name: Run browser smoke tests
         run: |
@@ -71,3 +72,33 @@ jobs:
         run: |
           make logs
           make down
+
+  prototype:
+    name: Prototype lint, tests, build, and browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: prototype
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: prototype/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - name: Upload prototype browser results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-browser-results
+          path: |
+            prototype/playwright-report
+            prototype/test-results
+          if-no-files-found: ignore
