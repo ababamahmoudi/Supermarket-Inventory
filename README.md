@@ -165,6 +165,7 @@ use `docker compose down --volumes` to troubleshoot: it deletes local data.
 | Service unhealthy or API connection fails | Run `make status` and `make logs`. Share the error text without passwords. Retry `make down`, `make setup`, `make up`. |
 | Database authentication fails after editing `.env` | Existing PostgreSQL volumes retain original credentials. Restore previous local DB credentials; do not delete data to bypass the issue. |
 | Frontend dependency missing after pulling changes | Run `make setup`; it refreshes the dependency volume using the committed lockfile. |
+| Host `npm ci` reports `EACCES` for `frontend/node_modules` | Run `make down`. If that host folder is empty, run `rmdir frontend/node_modules`, then `make setup` and retry. Setup creates it with your user permissions before Docker starts. If it is not empty, keep its contents and share the error text so ownership can be checked. |
 
 ## Developer commands
 

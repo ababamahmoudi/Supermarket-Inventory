@@ -14,6 +14,8 @@
 - Added Docker Compose, development commands, exact/hash-verified dependency
   locks, lint/format checks, pre-commit hooks, PR-only CI, and Windows/macOS guides.
 - Added verified backup restoration before pending migrations and volume-safe stop.
+- Prepare frontend mount directories before Docker so host browser tools retain
+  write access on fresh Linux/WSL checkouts.
 - Replaced unavailable, unmaintained MinIO community images with digest-pinned
   SeaweedFS 4.48 for private local S3; production remains AWS S3.
 - Expanded configuration-driven reference pricing fixtures from 21 to 24 cases.

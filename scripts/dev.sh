@@ -24,6 +24,9 @@ require_docker() {
 }
 
 local_config() {
+  # Create the host mountpoint as the developer before Docker can create it as
+  # root. Host-side Playwright/npm must also be able to write here on Linux/WSL.
+  mkdir -p frontend/node_modules
   if [[ ! -f .env ]]; then
     cp .env.example .env
     echo "Created .env with fake local development values."
