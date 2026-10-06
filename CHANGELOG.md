@@ -26,4 +26,5 @@ Validation on the Linux cloud host: 58 backend tests (including all 24 pricing
 cases), 5 component tests, and 3 Playwright browser tests passed. All five required
 Make targets, web build, lint, pre-commit, runtime audits, authenticated S3 smoke,
 Redis outage/readiness handling, populated backup restore, and record-preserving
-stop/restart passed. GitHub-hosted CI and Ali's own computer remain unverified.
+stop/restart passed. See the pull request's Checks tab for GitHub-hosted CI results;
+Ali's own computer remains unverified.

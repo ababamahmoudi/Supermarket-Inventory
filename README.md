@@ -89,7 +89,13 @@ VS Code is recommended for editing but not required to view the placeholder.
    cd Supermarket-Inventory
    ```
 
-If already cloned, use that checkout and run `git switch feat/phase-0-1-foundation`.
+If already cloned, open that checkout's terminal and run:
+
+```bash
+git fetch origin
+git switch feat/phase-0-1-foundation
+```
+
 A private repository may require your existing GitHub sign-in; never put a token
 into these commands. After the PR merges, future clones can use `main`.
 
