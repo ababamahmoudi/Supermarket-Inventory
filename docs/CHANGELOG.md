@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 3: lookup and Products
+
+- Added English/Persian, Product Code, and barcode search with approved branch prices, pending tags, tax profiles, and scoped offers.
+- Added filterable, sortable, paginated Products and role-aware details; catalog supplier costs stay Supervisor-only.
+- Added scoped catalog unit checks and desktop/phone browser workflows, including direct-route role guards.
+
 ## 2026-10-06 — Phase 0.2, part 2: pricing and Settings
 
 - Ported the configuration-driven pricing reference to TypeScript with decimal.js; all shared fixtures and configurable boundary/property checks are covered.

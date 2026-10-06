@@ -37,3 +37,13 @@ Branch: `feat/prototype-02-pricing`
 4. Reset demo, enter Grocery cost `1.12`, and see the below-margin review at `24.83%` with price `1.49`.
 5. Choose Rice and enter cost `3.1921`: displayed raw is `3.99`, but the final selling price is `4.99` because Rice uses the unrounded value.
 6. Switch to فارسی and verify that the same calculations work in the mirrored layout.
+
+## 3. Cashier lookup and Products
+
+Branch: `feat/prototype-03-catalog`
+
+1. Sign in as Cashier with `3333`. In Search products, try `sumac`, `سماق`, or code `0001`. Copy a fictional barcode from `seed/demo-data.json` to try a scanner-style search.
+2. Search `0006`: Lavash shows the approved `1.99` and a New price pending tag. Search `0009` to see the Taxable tag.
+3. Switch to Supervisor with `1111`. Search `0004`: Branch 1 shows Tea `6.49`; Branch 2 shows `6.99`.
+4. Open Products. Try the category, taxable, offer, and pending filters, sort a column, then click View beside a product to inspect its details.
+5. Switch to Floor Worker with `2222`. Products still works, while supplier costs and Supervisor-only pages stay hidden.
