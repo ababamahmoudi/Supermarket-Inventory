@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png";
 import PricingSettings from "./screens/Settings";
+import { Lookup, Products } from "./screens/Catalog";
 import { branches, demoUsers, useDemo } from "./store";
 import type { Branch, Role } from "./types";
 import {
@@ -299,6 +300,8 @@ function SignIn({
 
 /** Business screens are added in the next small pull requests. */
 const screenRegistry: Record<string, ReactNode> = {
+  lookup: <Lookup />,
+  products: <Products />,
   settings: <PricingSettings />,
 };
 function Placeholder({ page }: { page: (typeof pages)[number] }) {
