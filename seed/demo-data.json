@@ -1,5 +1,5 @@
 {
-  "_comment": "Demo-only fictional data for the clickable prototype. Suppliers, products, barcodes and people are invented. All selling prices were computed with the verified pricing engine. Tax rate here is a DEMO PLACEHOLDER.",
+  "_comment": "Demo-only fictional data for Phase 0.2. Suppliers, products, barcodes and people are invented. Prices use the verified pricing engine. CAD and 13% HST match the confirmed Toronto configuration; product tax profiles still require Supervisor review before real use.",
   "demo_tax_rate": "0.13",
   "today_relative_dates": true,
   "branches": [
@@ -48,7 +48,8 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Rice",
       "barcode": "DEMO-6000000000",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0002",
@@ -64,7 +65,8 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Beans & legumes",
       "barcode": "DEMO-6000007919",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0003",
@@ -80,7 +82,8 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Juices",
       "barcode": "DEMO-6000015838",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0004",
@@ -96,7 +99,8 @@
       "main_supplier": "Sunrise Beverages",
       "ai_category": "Tea & coffee",
       "barcode": "DEMO-6000023757",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0005",
@@ -112,7 +116,8 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Spices",
       "barcode": "DEMO-6000031676",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0006",
@@ -128,7 +133,8 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Bread & bakery",
       "barcode": "DEMO-6000039595",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0007",
@@ -144,7 +150,8 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Beans & legumes",
       "barcode": "DEMO-6000047514",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0008",
@@ -160,7 +167,8 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Oils",
       "barcode": "DEMO-6000055433",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "non_taxable"
     },
     {
       "code": "0009",
@@ -176,7 +184,8 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Snacks",
       "barcode": "DEMO-6000063352",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     },
     {
       "code": "0010",
@@ -192,7 +201,8 @@
       "main_supplier": "Sunrise Beverages",
       "ai_category": "Soft drinks",
       "barcode": "DEMO-6000071271",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     },
     {
       "code": "0011",
@@ -208,7 +218,8 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Tableware",
       "barcode": "DEMO-6000079190",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     },
     {
       "code": "0012",
@@ -224,7 +235,8 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Cookware",
       "barcode": "DEMO-6000087109",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     },
     {
       "code": "0013",
@@ -240,7 +252,8 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Small appliances",
       "barcode": "DEMO-6000095028",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     },
     {
       "code": "0014",
@@ -256,7 +269,8 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Cleaning",
       "barcode": "DEMO-6000102947",
-      "status": "active"
+      "status": "active",
+      "tax_profile": "hst_13"
     }
   ],
   "demo_invoice": {
@@ -275,7 +289,9 @@
         "taxable": false,
         "calculated_selling_price": "1.49",
         "current_selling_price": "1.49",
-        "demo_note": "No price change: nothing to approve."
+        "demo_note": "No price change: nothing to approve.",
+        "qty_received_at_posting": 24,
+        "tax_profile": "non_taxable"
       },
       {
         "product_code": "0005",
@@ -286,7 +302,9 @@
         "taxable": false,
         "calculated_selling_price": "1.99",
         "current_selling_price": "1.99",
-        "demo_note": "Cost went up from 1.20 but selling price stays the same: no approval needed."
+        "demo_note": "Cost went up from 1.20 but selling price stays the same: no approval needed.",
+        "qty_received_at_posting": 12,
+        "tax_profile": "non_taxable"
       },
       {
         "product_code": "0006",
@@ -297,7 +315,9 @@
         "taxable": false,
         "calculated_selling_price": "2.99",
         "current_selling_price": "1.99",
-        "demo_note": "Calculated price changes: goes to Pending approval."
+        "demo_note": "Calculated price changes: goes to Pending approval.",
+        "qty_received_at_posting": 20,
+        "tax_profile": "non_taxable"
       },
       {
         "product_code": "0003",
@@ -308,7 +328,9 @@
         "taxable": false,
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
-        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted."
+        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted.",
+        "qty_received_at_posting": 36,
+        "tax_profile": "non_taxable"
       },
       {
         "product_code": "NEW",
@@ -319,7 +341,9 @@
         "taxable": false,
         "calculated_selling_price": "5.49",
         "current_selling_price": null,
-        "demo_note": "New product: Pending approval; AI suggests the category 'Dried fruits & spices'."
+        "demo_note": "New product: Pending approval; AI suggests the category 'Dried fruits & spices'.",
+        "qty_received_at_posting": 6,
+        "tax_profile": "non_taxable"
       },
       {
         "product_code": "0009",
@@ -330,7 +354,9 @@
         "taxable": true,
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
-        "demo_note": "Only 8 of 12 delivered: 4 marked Short, deducted from the invoice total."
+        "demo_note": "Only 8 of 12 delivered: 4 marked Short, deducted from the invoice total.",
+        "qty_received_at_posting": 8,
+        "tax_profile": "hst_13"
       }
     ],
     "subtotal": "174.52",
@@ -342,7 +368,21 @@
         "qty_short": 4,
         "deduction_before_tax": "6.40",
         "deduction_tax": "0.83",
-        "total_deduction": "7.23"
+        "total_deduction": "7.23",
+        "later_deliveries": [
+          {
+            "qty_received": 2,
+            "restored_before_tax": "3.20",
+            "restored_tax": "0.42",
+            "restored_total": "3.62"
+          },
+          {
+            "qty_received": 2,
+            "restored_before_tax": "3.20",
+            "restored_tax": "0.41",
+            "restored_total": "3.61"
+          }
+        ]
       }
     ],
     "payable_after_open_shorts": "169.79"
@@ -366,6 +406,12 @@
     "supervisor_actions": [
       "Mark as taken care of",
       "Keep as pending"
+    ],
+    "branch": "Branch 1",
+    "other_allowed_answers": [
+      "No previous stock",
+      "Dates not tracked",
+      "Unknown (add a note)"
     ]
   },
   "cross_branch_price_conflict": {
@@ -401,7 +447,9 @@
           "location": "Walk-in cooler"
         }
       ],
-      "status": "open"
+      "status": "open",
+      "branch": "Branch 1",
+      "original_units_recovered": 0
     },
     {
       "supplier": "Golden Grain Distributors",
@@ -412,8 +460,18 @@
           "reason": "Torn bag"
         }
       ],
-      "status": "picked_up",
-      "resolution": "replacement_product_received (partial)"
+      "status": "partially_resolved",
+      "resolution": "replacement_product_received (partial)",
+      "branch": "Branch 1",
+      "original_units_recovered": 0,
+      "supplier_rep_name": "Demo Supplier Representative",
+      "signed_pickup_slip_reference": "DEMO-PICKUP-002 (fictional paper reference)",
+      "replacement_received": {
+        "product_code": "0001",
+        "qty": 1,
+        "covers_original_qty": 1
+      },
+      "cancellation_demo_note": "Cancellation does not restore the two originals held by the supplier or duplicate the one replacement already received; request Supervisor review."
     }
   ],
   "notes": [
@@ -441,5 +499,7 @@
       "0009"
     ],
     "a4_note": "Show a sheet preview with the first 4 slots already used and printing starting at slot 5."
-  }
+  },
+  "demo_currency": "CAD",
+  "demo_timezone": "America/Toronto"
 }

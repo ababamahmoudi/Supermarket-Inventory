@@ -1,27 +1,15 @@
-# Open questions (build with the default; make each one configurable)
+# Open questions
 
-When Ali answers one, update the requirement it affects, record the date here, and remove the question.
+On **2026-10-06** Ali confirmed Toronto, Ontario, Canada; CAD; 13% HST and accepted safe physical return cancellation. He authorized the lead developer to choose/document the remaining defaults. The resolved rules now live in `requirements.md`, `workflows.md`, `pricing-engine.md`, `decisions.md`, `return-policy.md`, and `seed/arzon-config.json`; they are no longer unanswered questions.
 
-| # | Question | Default to build with |
+The following inputs do not block Phase 0.1. Ask only when the relevant slice needs them, at most one or two questions at a time. Keep configurable defaults while waiting; request explicit approval before paid resources or production deployment.
+
+| # | Input still needed | Default / when needed |
 |---|---|---|
-| 1 | Rice with an exact whole-dollar raw price (e.g., 4.00): go up to 4.99 or down to 3.99? | Up: 4.99 ("always round upward") |
-| 2 | While a new price is pending, what does the cashier charge? | Last approved price; new products show the proposed price tagged Pending |
-| 3 | Minimum margin per category (for the "below minimum margin" approval) | `0.25` placeholder; rule inactive if empty |
-| 4 | Tax: rate, jurisdiction, currency, timezone | Placeholders in config; rate is a company setting; prices displayed before tax |
-| 5 | Is tax on a short deduction included in the deduction? | Yes, proportional tax is deducted with the line |
-| 6 | Price → offer mapping | 1.99 → 3 for $5; 2.99 → 2 for $5; 3.99 → 2 for $7 (editable) |
-| 7 | Branch names and whether all three go live together | Placeholders "Branch 1/2/3"; rename in Settings |
-| 8 | Persian digits or Western digits in the Persian UI | Western digits for prices, codes, dates; translations for text |
-| 9 | Can cashiers add to-order notes? | No (lookup only) |
-| 10 | Do Floor Workers see unit cost and margin? | Cost on invoices they handle only; margins hidden |
-| 11 | Units per case: who enters it for a new supplier product? | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards |
-| 12 | Expiring-soon entries with no sales data | Manual **Cleared** action |
-| 13 | Raw price below $0.23 (no "previous .99" exists) | Result 0.49 |
-| 14 | Do stock-count adjustments need Supervisor approval above a threshold? | No approval; logged; threshold setting off |
-| 15 | Which AI provider reads invoices? | Decide at Phase 5 with cost per invoice; provider-agnostic interface |
-| 16 | When exactly is an offer suggestion created? | When the price becomes effective at 1.99/2.99/3.99 with no offer |
-| 17 | Automatic supplier invoice number scheme | Sequential per supplier, flagged system-assigned |
-| 18 | Idle-lock time and password re-prompt window | 5 minutes and 15 minutes (settings) |
-| 19 | Product code start | `0001`, zero-padded, five digits after 9999 |
-| 20 | Persian terminology for the English terms list | AI drafts; Ali reviews before go-live |
-| 21 | Official logo files and brand colors | Use the supplied PNG and sampled colors; replace when received |
+| 1 | Real branch names/addresses and whether all three launch together | Branch 1/2/3; stable B1/B2/B3 codes. Confirm before real data import/go-live. |
+| 2 | Which AI provider reads invoices? | Provider-agnostic interface; compare cost per invoice and ask Ali before Phase 1 slice 5. No real AI in Step 0.1 or the browser demo. |
+| 3 | Final Persian terminology/translation review | Draft bilingual text; Western digits for prices/product codes/dates. Ali reviews translations before go-live. |
+| 4 | Official logo/brand assets | Supplied PNG and design-language sampled values in editable branding configuration; replace when provided. |
+| 5 | Actual supplier return agreements and opening balances | Use the documented staff checklist; Supervisor collects written supplier terms/evidence and verifies balances before real operations. No invented supplier terms or financial amounts. |
+
+Recorded defaults adopted on 2026-10-06 include Rice rounding upward (including whole dollars), last approved price while pending, category minimum margins, proportional shortage tax, configured price→offer mappings, cashier lookup-only, worker own-invoice costs with no margins/catalog costs, worker-confirmed units per case, manually cleared dates, 0.49 minimum band result, logged stock adjustments with threshold off, sequential supplier invoice numbering within company, idle lock 5 minutes/password window 15 minutes, and product codes starting at 0001. See `decisions.md` for the reasons and the rules that resolved conflicting documents.

@@ -1,0 +1,376 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar: #0f172a;
+  --sidebar-active: #1e293b;
+  --page: #f9fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --brand: #284898;
+  --brand-hover: #1f3a80;
+  --pending: #b45309;
+  --pending-bg: #fef3c7;
+  --approved: #15803d;
+  --approved-bg: #dcfce7;
+  --danger: #b91c1c;
+  --danger-bg: #fee2e2;
+  --info: #1d4ed8;
+  --info-bg: #dbeafe;
+  --neutral: #475569;
+  --neutral-bg: #f1f5f9;
+  font-family: Inter, Vazirmatn, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--page);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@theme inline {
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+}
+
+[dir="rtl"] {
+  font-family: Vazirmatn, Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-inline-size: 320px;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.sidebar :focus-visible {
+  outline-color: var(--card);
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  z-index: 50;
+  transform: translateY(-150%);
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--brand);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.app-shell {
+  display: flex;
+  min-block-size: 100dvh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  inline-size: 248px;
+  flex-shrink: 0;
+  padding: 24px 16px;
+  background: var(--sidebar);
+  color: var(--card);
+}
+
+.sidebar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.logo-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 160px;
+  block-size: 80px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.logo-tile img {
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  object-fit: contain;
+}
+
+.company-name {
+  margin-block: 16px 24px;
+  font-size: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-block-size: 44px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--sidebar-active);
+  color: var(--card);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block-start: 24px;
+  margin-block-start: auto;
+  font-size: 13px;
+}
+
+.workspace {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-block-end: 1px solid var(--border);
+  background: var(--card);
+  min-block-size: 80px;
+}
+
+.topbar-start,
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar-company {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.local-date {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.language-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--page);
+  border: 1px solid var(--border);
+}
+
+.language-switch button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.language-switch button[aria-pressed="true"] {
+  background: var(--brand);
+  color: var(--card);
+}
+
+main {
+  padding: 24px;
+  max-inline-size: 1328px;
+  margin-inline: auto;
+}
+
+.page-heading {
+  margin-block-end: 24px;
+}
+
+h1 {
+  margin-block: 12px 8px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+h2 {
+  margin-block: 16px 8px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+p {
+  margin-block: 0 16px;
+}
+
+.page-heading p,
+.card p {
+  color: var(--text-muted);
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--neutral-bg);
+  color: var(--neutral);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 8px;
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+.notice {
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.connection-status {
+  margin-block: 20px 16px;
+}
+
+.connection-status p {
+  margin-block: 12px 0;
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-connected {
+  color: var(--approved);
+  background: var(--approved-bg);
+}
+
+.status-checking {
+  color: var(--pending);
+  background: var(--pending-bg);
+}
+
+.status-unavailable {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.scope-note {
+  margin-block-start: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .local-date {
+    display: none;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    display: none;
+  }
+
+  .sidebar-open {
+    display: flex;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 30;
+    inline-size: min(280px, 100vw);
+    border-inline-end: 1px solid var(--border);
+  }
+
+  .mobile-only {
+    display: inline-flex;
+    padding-inline: 12px;
+  }
+
+  .topbar {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .topbar-start,
+  .topbar-end {
+    gap: 8px;
+  }
+
+  .topbar-company {
+    display: none;
+  }
+
+  .language-switch button {
+    padding-inline: 12px;
+  }
+
+  main {
+    padding: 24px 16px;
+  }
+}
