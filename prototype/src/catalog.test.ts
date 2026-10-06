@@ -5,6 +5,7 @@ import {
   isOfferScheduledNow,
   matchesProduct,
   pendingPrice,
+  searchProducts,
 } from "./catalog";
 import { initialState } from "./store";
 import type { DemoState, Offer } from "./types";
@@ -41,6 +42,21 @@ describe("bilingual product search", () => {
     expect(matchesProduct(product, "لوبيا")).toBe(true);
     expect(matchesProduct(product, "  RED   beans  ")).toBe(true);
     expect(product.code).toBe("0007");
+  });
+  it("selects an exact code over a different product's barcode substring", () => {
+    const barberries = state.products.find(
+      (product) => product.code === "0015",
+    )!;
+    const juice = state.products.find((product) => product.code === "0003")!;
+    expect(matchesProduct(juice, barberries.code)).toBe(true);
+    for (const query of [barberries.code, "۰۰۱۵", barberries.barcode]) {
+      expect(
+        searchProducts(state.products, query).map((product) => product.code),
+      ).toEqual([barberries.code]);
+    }
+    expect(
+      searchProducts(state.products, "juice").map((product) => product.code),
+    ).toEqual([juice.code]);
   });
 });
 

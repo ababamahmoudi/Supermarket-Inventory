@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 5: approvals, alerts and offers
+
+- Added scoped product/price approval previews, all-branch override clearing, margin review acknowledgement, and deliberate branch-price conflict decisions.
+- Added approval-linked offer tasks, confirmation, scoped price-compatible offers, and mix-and-match pools with bilingual controls/history.
+- Added cross-module invoice-to-approval-to-offer tests and desktop/phone workflows preserving approved cashier prices until confirmation.
+- Made store transactions validate synchronously and publish atomically; exact Product Code matches take priority over barcode substrings.
+
 ## 2026-10-06 — Phase 0.2, part 4: invoice receiving
 
 - Added simulated upload reading, retained fictional originals, editable review/drafts, live pricing, date decisions, lower-price questions, and scoped approvals/alerts.

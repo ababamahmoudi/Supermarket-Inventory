@@ -4,8 +4,8 @@ import {
   effectiveOffer,
   effectivePrice,
   lookupBranch,
-  matchesProduct,
   pendingPrice,
+  searchProducts,
 } from "../catalog";
 import { branches, useDemo } from "../store";
 import type { Product } from "../types";
@@ -314,10 +314,8 @@ export function Lookup() {
       product.company_id === state.config.company.seed_key &&
       product.status !== "archived",
   );
-  const results = products.filter(
-    (product) =>
-      matchesProduct(product, search) &&
-      (!category || product.ai_category === category),
+  const results = searchProducts(products, search).filter(
+    (product) => !category || product.ai_category === category,
   );
   const selected =
     results.find((product) => product.code === selectedCode) ?? results[0];
@@ -454,10 +452,9 @@ export function Products() {
   const products = state.products.filter(
     (product) => product.company_id === state.config.company.seed_key,
   );
-  const results = products
+  const results = searchProducts(products, search)
     .filter(
       (product) =>
-        matchesProduct(product, search) &&
         (!pricingCategory || product.pricing_category === pricingCategory) &&
         (!aiCategory || product.ai_category === aiCategory) &&
         (!status || product.status === status) &&

@@ -22,6 +22,9 @@ import logo from "../../assets/arzon-logo.png";
 import PricingSettings from "./screens/Settings";
 import { Lookup, Products } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
+import Approvals from "./screens/Approvals";
+import Alerts from "./screens/Alerts";
+import Offers from "./screens/Offers";
 import { branches, demoUsers, useDemo } from "./store";
 import type { Branch, Role } from "./types";
 import {
@@ -304,6 +307,9 @@ const screenRegistry: Record<string, ReactNode> = {
   lookup: <Lookup />,
   products: <Products />,
   invoices: <Invoices />,
+  approvals: <Approvals />,
+  alerts: <Alerts />,
+  offers: <Offers />,
   settings: <PricingSettings />,
 };
 function Placeholder({ page }: { page: (typeof pages)[number] }) {

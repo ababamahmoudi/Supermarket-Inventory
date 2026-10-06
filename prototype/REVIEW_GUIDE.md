@@ -59,3 +59,14 @@ Branch: `feat/prototype-04-invoices`
 5. Confirm each Grocery date-tracking decision and each invoice line. Click Save as draft, refresh, and check that your choices are retained. Click Post invoice once.
 6. Receive 2 chips with reference `FICTITIOUS-CHIPS-1`, then 2 with `FICTITIOUS-CHIPS-2`. The restored amounts are `3.62` and `3.61`; chips stock moves from 8 to 10 to 12 and payable returns to `177.02`.
 7. Try Enter manually without a file on a new draft: posting requires the original invoice. Switch to فارسی to inspect the same review in RTL.
+
+## 5. Approvals, alerts and offers
+
+Branch: `feat/prototype-05-approvals`
+
+1. Reset demo. Sign in as Supervisor with `1111` and open Approvals.
+2. For Dried Barberries, click Approve product, select All branches, inspect the price preview, then confirm Approve product. For Lavash, click Approve price, select This branch only, then confirm.
+3. Open Cashier lookup and search `0006`: Branch 1 shows `2.99`; Branch 2 keeps `1.99`. Search `0015`: Barberries is approved in every branch.
+4. Open Alerts. Tea shows Branch 1 `6.49` and Branch 2 `6.99`. Click Mark as intentional; enable Show resolved and intentional alerts to see the saved decision. Reset to try Apply this price to all and confirm; all three branches use the selected price.
+5. Approve Lavash again for Branch 1. Switch to Floor Worker with `2222`, then open Offers. Its suggested Confirm offer: 2 for $5 appears. Try the mix-and-match toggle and confirm the offer.
+6. Click Mix-and-match pools: Juice, Chips and Lavash share the same pool. Switch to فارسی to inspect the same task and pool in RTL.
