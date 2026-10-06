@@ -18,7 +18,7 @@ import {
   Truck,
   X,
 } from "lucide-react";
-import logo from "../../assets/arzon-logo.png";
+import logo from "../../assets/arzon-logo.png?inline";
 import PricingSettings from "./screens/Settings";
 import { Lookup, Products } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
@@ -26,6 +26,11 @@ import Approvals from "./screens/Approvals";
 import Alerts from "./screens/Alerts";
 import Offers from "./screens/Offers";
 import { Labels } from "./screens/Labels";
+import Returns from "./screens/Returns";
+import Expiry from "./screens/Expiry";
+import Notes from "./screens/Notes";
+import Payables from "./screens/Payables";
+import Dashboard from "./screens/Dashboard";
 import { branches, demoUsers, useDemo } from "./store";
 import type { Branch, Role } from "./types";
 import {
@@ -312,6 +317,11 @@ const screenRegistry: Record<string, ReactNode> = {
   alerts: <Alerts />,
   offers: <Offers />,
   labels: <Labels />,
+  returns: <Returns />,
+  expiry: <Expiry />,
+  notes: <Notes />,
+  payables: <Payables />,
+  dashboard: <Dashboard />,
   settings: <PricingSettings />,
 };
 function Placeholder({ page }: { page: (typeof pages)[number] }) {

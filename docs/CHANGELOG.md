@@ -1,5 +1,15 @@
 # Project changelog
 
+## 2026-10-06 — Phase 0.2, part 7: operations and dashboard
+
+- Completed returns with signed pickup/replacement evidence, partial settlement, reviewed cancellations, safe-original dispositions and Supervisor-only financial claims.
+- Added expiry clearing/history, three Notes tabs with stock-use accounting and unread reviews, supplier Payables with partial external payments, cheque references, allocations, CSV and printable month-end summaries.
+- Added the 15 configured dashboard priorities, scoped bilingual activity, company-timezone business dates and responsive stat cards.
+- Added meaningful operations unit and desktop/phone browser checks, including invalid-action rollback, supplier-held stock, replacement-versus-money separation and historical month boundaries.
+- Embedded the logo in the browser bundle and added all-screen offline checks in both languages, avoiding image revalidation requests when pages remount offline.
+- Added redacted CI setup failure annotations while preserving the original failing command's exit status.
+- Updated all prototype review/run documentation and the root README to distinguish the complete browser demo from the production backend roadmap.
+
 ## 2026-10-06 — Phase 0.2, part 6: bilingual labels
 
 - Added saved user-created templates, A4 geometry validation, copies, starting-slot offsets and multipage layout without preselected templates.

@@ -437,6 +437,65 @@ tbody tr:focus-within {
   padding: 12px;
   border-radius: 8px;
 }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 16px;
+}
+.stat-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 12px;
+  padding: 20px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+button.stat-card:hover {
+  border-color: var(--brand);
+}
+.stat-label {
+  grid-column: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.stat-number {
+  grid-column: 1;
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.icon-tile {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 8px;
+}
+.stat-card > .muted {
+  grid-column: 1;
+  font-size: 13px;
+}
+.stat-card > .directional {
+  grid-column: 2;
+  justify-self: end;
+}
+[dir="rtl"] .directional {
+  transform: scaleX(-1);
+}
+.payables-report {
+  margin-block-start: 16px;
+}
+.payables-report > .card + .card,
+.payables-report > .table-wrap + .card {
+  margin-block-start: 16px;
+}
 .detail-list {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) 2fr;
@@ -640,6 +699,9 @@ tbody tr:focus-within {
 .main-content > .card + .helper {
   margin-block-start: 16px;
 }
+.main-content > .grid-2 + .card {
+  margin-block-start: 16px;
+}
 .mobile-menu,
 .sidebar-backdrop {
   display: none;
@@ -776,6 +838,9 @@ tbody tr:focus-within {
   .stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 760px) {
   .main-content {
@@ -820,6 +885,9 @@ tbody tr:focus-within {
   .grid-3,
   .stat-grid,
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
     grid-template-columns: 1fr;
   }
   .page-header {
@@ -896,6 +964,34 @@ tbody tr:focus-within {
     padding: 0;
     margin: 0;
     display: block;
+  }
+  body:has(.payables-report) .main-content > * {
+    display: none !important;
+  }
+  body:has(.payables-report) .main-content > .payables-report {
+    display: block !important;
+  }
+  .payables-report,
+  .payables-report * {
+    visibility: visible;
+  }
+  body:has(.payables-report) .main-content {
+    padding: 10mm;
+  }
+  .payables-report .no-print {
+    display: none !important;
+  }
+  .payables-report .table-wrap {
+    overflow: visible;
+  }
+  .payables-report .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .payables-report th {
+    position: static;
+  }
+  .payables-report tr {
+    break-inside: avoid;
   }
 }
 .row-between,

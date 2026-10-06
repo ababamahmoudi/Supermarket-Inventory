@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logo from "../../../assets/arzon-logo.png";
+import logo from "../../../assets/arzon-logo.png?inline";
 import demoSeed from "../../../seed/demo-data.json";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import { labelLayout, labelPages } from "../labels";
