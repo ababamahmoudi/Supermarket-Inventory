@@ -1,0 +1,377 @@
+{
+  "_comment": "Super Arzon starting configuration. Everything here is DATA that the app loads into the database on first run. Nothing here may be hardcoded in application code. Items marked PLACEHOLDER must be confirmed with the owner.",
+  "company": {
+    "name": "Super Arzon",
+    "logo_file": "assets/arzon-logo.png",
+    "ui_languages": [
+      "en",
+      "fa"
+    ],
+    "currency": "CAD_OR_USD_PLACEHOLDER",
+    "timezone": "PLACEHOLDER"
+  },
+  "branches": [
+    {
+      "code": "B1",
+      "name": "Branch 1 (PLACEHOLDER - rename in Settings)"
+    },
+    {
+      "code": "B2",
+      "name": "Branch 2 (PLACEHOLDER - rename in Settings)"
+    },
+    {
+      "code": "B3",
+      "name": "Branch 3 (PLACEHOLDER - rename in Settings)"
+    }
+  ],
+  "roles": [
+    {
+      "key": "cashier",
+      "label": "Cashier",
+      "summary": "Product and price lookup only"
+    },
+    {
+      "key": "floor_worker",
+      "label": "Floor Worker",
+      "summary": "Receiving, returns, products, labels, suppliers, offers, notes"
+    },
+    {
+      "key": "supervisor",
+      "label": "Supervisor",
+      "summary": "Approvals, payables, users, settings, all branches"
+    }
+  ],
+  "pricing_categories": [
+    {
+      "key": "grocery",
+      "label": "Grocery",
+      "cost_divisor": "0.65",
+      "rounding": "bands",
+      "apply_2_49_3_49_correction": true,
+      "taxable": false,
+      "date_tracking_prompt": true
+    },
+    {
+      "key": "grocery_taxable",
+      "label": "Grocery (Taxable)",
+      "cost_divisor": "0.65",
+      "rounding": "bands",
+      "apply_2_49_3_49_correction": true,
+      "taxable": true,
+      "date_tracking_prompt": true
+    },
+    {
+      "key": "rice",
+      "label": "Rice",
+      "cost_divisor": "0.80",
+      "rounding": "always_up_to_next_99",
+      "apply_2_49_3_49_correction": false,
+      "taxable": false,
+      "date_tracking_prompt": false
+    },
+    {
+      "key": "kitchenware",
+      "label": "Kitchenware",
+      "cost_divisor": "0.60",
+      "rounding": "bands",
+      "apply_2_49_3_49_correction": false,
+      "taxable": true,
+      "date_tracking_prompt": false
+    }
+  ],
+  "rounding_bands": {
+    "_comment": "Applied to the cents part of the raw price (raw price is rounded half-up to the cent first).",
+    "below_23": "previous_dollar_99",
+    "from_23_to_below_73": "dollar_49",
+    "from_73_up": "dollar_99",
+    "minimum_result_when_previous_dollar_does_not_exist": "0.49"
+  },
+  "special_corrections": [
+    {
+      "from": "2.49",
+      "to": "2.99"
+    },
+    {
+      "from": "3.49",
+      "to": "3.99"
+    }
+  ],
+  "tax": {
+    "_comment": "Cost used for pricing is always BEFORE tax. Selling price is displayed before tax; taxable products carry a Taxable label so the cashier adds tax.",
+    "rate": "PLACEHOLDER_SET_PER_COMPANY",
+    "label_text_en": "Taxable",
+    "label_text_fa": "مشمول مالیات"
+  },
+  "approvals": {
+    "always_require_supervisor": [
+      "new_product",
+      "sales_tax_profile_change",
+      "barcode_conflict",
+      "manual_selling_price_override",
+      "price_below_minimum_margin",
+      "calculated_price_change"
+    ],
+    "no_approval": [
+      "supplier_cost_change_that_does_not_change_selling_price"
+    ],
+    "minimum_margin": {
+      "value": "0.25",
+      "placeholder": true,
+      "meaning": "(selling price - cost) / selling price; owner to confirm; rule inactive if null"
+    }
+  },
+  "promotions": {
+    "price_to_offer": [
+      {
+        "price": "1.99",
+        "offer": "3 for $5",
+        "mix_and_match_pool": "3_for_5",
+        "assumption": true
+      },
+      {
+        "price": "2.99",
+        "offer": "2 for $5",
+        "mix_and_match_pool": "2_for_5",
+        "assumption": true
+      },
+      {
+        "price": "3.99",
+        "offer": "2 for $7",
+        "mix_and_match_pool": "2_for_7",
+        "assumption": true
+      }
+    ],
+    "one_active_offer_per_product_scope": true,
+    "start_end_dates_required": false,
+    "who_can_create": [
+      "floor_worker",
+      "supervisor"
+    ],
+    "ai_suggested_offers_need_floor_worker_confirmation": true
+  },
+  "expiry": {
+    "expiring_soon_days": 30,
+    "one_date_per_invoice_line": true,
+    "quantity_per_date": false,
+    "lot_number": "optional",
+    "ui_term": "Date tracking (Expiry or Best before)"
+  },
+  "product_codes": {
+    "permanent": true,
+    "reuse": false,
+    "min_digits": 4,
+    "grows_to_5_digits_when_needed": true,
+    "zero_padded": true,
+    "archive_and_reactivate": true
+  },
+  "invoices": {
+    "mandatory_header": [
+      "supplier",
+      "invoice_date",
+      "received_at",
+      "receiving_employee",
+      "branch",
+      "subtotal",
+      "tax",
+      "final_total",
+      "original_file_before_posting"
+    ],
+    "optional_header": [
+      "supplier_invoice_number",
+      "due_date",
+      "payment_terms"
+    ],
+    "auto_invoice_number": {
+      "enabled": true,
+      "scheme": "sequential_per_supplier_per_company",
+      "mark_as_system_assigned": true
+    },
+    "drafts_allowed_without_image": true
+  },
+  "labels": {
+    "show": [
+      "product_name",
+      "description",
+      "price",
+      "offers",
+      "product_code",
+      "logo",
+      "unit_size",
+      "tax_indicator"
+    ],
+    "hide": [
+      "barcode",
+      "promotion_expiry_date"
+    ],
+    "languages": [
+      "en",
+      "fa"
+    ],
+    "templates": [],
+    "templates_comment": "NO default template. Users create presets (Template 1, Template 2...) with their own dimensions. There is no label queue.",
+    "waitlist": {
+      "enabled": true,
+      "shared_per_branch": true,
+      "auto_add_on_price_approval": false,
+      "price_changed_recently_days": 3,
+      "confirm_after_print": true
+    },
+    "template_fields": [
+      "name",
+      "width_mm",
+      "height_mm",
+      "margin_top_mm",
+      "margin_bottom_mm",
+      "margin_left_mm",
+      "margin_right_mm",
+      "gap_x_mm",
+      "gap_y_mm",
+      "offset_x_mm",
+      "offset_y_mm",
+      "slot_order"
+    ],
+    "offer_label_format": {
+      "en": "{qty} for {price}",
+      "fa": "{qty} عدد {price}",
+      "fa_needs_review": true
+    }
+  },
+  "session": {
+    "sign_in": "username_and_password",
+    "self_registration": false,
+    "accounts_created_by": [
+      "supervisor",
+      "platform_owner_for_first_supervisor"
+    ],
+    "temporary_password_forces_change": true,
+    "password_min_length": 8,
+    "block_common_passwords": true,
+    "lockout_after_failed_attempts": 5,
+    "lockout_minutes": 15,
+    "registered_device_shows_recent_users": true,
+    "idle_lock_minutes": 5,
+    "idle_lock_placeholder": true,
+    "reprompt_password_after_minutes": 15,
+    "reprompt_password_for": [
+      "approvals",
+      "payables",
+      "settings",
+      "user_management"
+    ],
+    "pins": false,
+    "later_options": [
+      "invite_only_google_sign_in",
+      "supervisor_second_step"
+    ]
+  },
+  "dashboard_order": [
+    "approvals_waiting",
+    "same_supplier_lower_price_alerts",
+    "cross_branch_price_conflicts",
+    "tax_discrepancies",
+    "barcode_conflicts",
+    "ai_invoices_waiting_review",
+    "ai_processing_failures",
+    "open_shorts",
+    "open_supplier_returns",
+    "returns_waiting_for_credit",
+    "upcoming_expiries",
+    "overdue_invoices",
+    "supplier_balances",
+    "recent_posted_invoices",
+    "employee_activity"
+  ],
+  "terminology": {
+    "nav_invoices": "Invoices",
+    "nav_invoices_subtitle": "Deliveries and supplier invoices",
+    "nav_returns": "Returns",
+    "nav_returns_subtitle": "Supplier returns and credits",
+    "role_floor_worker": "Floor Worker",
+    "category_kitchenware": "Kitchenware",
+    "category_grocery_taxable": "Grocery (Taxable)",
+    "product_code": "Product Code",
+    "selling_price": "Selling Price",
+    "date_tracking": "Date tracking",
+    "nav_suppliers": "Suppliers",
+    "last_delivery": "Last delivery",
+    "label_waitlist": "Label waitlist",
+    "notebooks": "Notebooks",
+    "history": "History"
+  },
+  "notebooks": {
+    "built_in": [
+      {
+        "kind": "to_order",
+        "name_en": "To order",
+        "name_fa": "برای سفارش",
+        "read_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "add_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "has_status": true
+      },
+      {
+        "kind": "store_use",
+        "name_en": "Store use",
+        "name_fa": "مصرف فروشگاه",
+        "read_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "add_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "creates_stock_movement": true
+      },
+      {
+        "kind": "for_supervisor",
+        "name_en": "For Supervisor",
+        "name_fa": "برای سرپرست",
+        "read_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "add_roles": [
+          "floor_worker",
+          "supervisor"
+        ],
+        "has_status": true,
+        "notify_supervisor": true
+      }
+    ],
+    "custom_created_by": [
+      "supervisor"
+    ]
+  },
+  "history": {
+    "undo_window_seconds": 10,
+    "revert_role": "supervisor",
+    "corrections_not_undo_for": [
+      "posted_invoice",
+      "stock_movement",
+      "payables_entry",
+      "label_print"
+    ]
+  },
+  "receiving": {
+    "ai_reading_enabled": true,
+    "highlight_below_confidence": 0.8,
+    "tax_mismatch_tolerance": "0.05"
+  },
+  "modules": {
+    "invoices": true,
+    "returns": true,
+    "labels": true,
+    "date_tracking": true,
+    "notes": true,
+    "payables": true,
+    "suppliers": true,
+    "register": false,
+    "online_orders": false
+  }
+}
