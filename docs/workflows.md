@@ -106,13 +106,15 @@ stateDiagram-v2
 - Because there are no sales yet, the entry stays `active` until someone presses **Cleared** (removed, sold out, or checked).
 - The list can be filtered by branch, AI category, and time window.
 
-## 10. Label printing
-1. Choose products (search or filter by AI category); optionally set copies.
-2. Choose a saved **template**; or create one (name, width, height, margins, gaps).
-3. The app calculates how many labels fit on an A4 sheet: `columns = floor((210 − left − right + gap_x) / (width + gap_x))`, `rows` likewise with 297; slots are numbered left-to-right, top-to-bottom (a setting allows right-to-left for Persian layouts).
-4. Choose the **starting slot** (for a partially used sheet).
-5. Preview the PDF; print. Content per label comes from `arzon-config.json` → `labels.show`.
-No label queue and no automatic label creation after approvals.
+## 10. Labels: waitlist and printing
+1. **Find products** in the label product list: search, or filter by Arrived today, Price changed recently, On offer, pricing category, AI category, supplier.
+2. **Add to waitlist** (per product, with copies; or "Add all filtered"). The waitlist is shared per branch and survives sign-out and refresh. Optional setting: auto-add when a price is approved (off by default).
+3. **Open the waitlist:** adjust copies, remove items, choose a saved **template** or create one (name, width, height, margins, gaps, calibration offsets).
+4. The app calculates how many labels fit on an A4 sheet: `columns = floor((210 − left − right + gap_x) / (width + gap_x))`, `rows` likewise with 297; slots are numbered left-to-right, top-to-bottom (right-to-left setting for Persian layouts).
+5. Choose the **starting slot** on the A4 preview (used slots shown grayed).
+6. **Preview**, then **Print** (browser print dialog at exact size; "Save as PDF" works the same). Multiple pages are created when needed.
+7. After printing, the app asks "Did the labels print correctly?" **Yes** removes the printed items from the waitlist and records the print in History; **No** keeps them.
+8. **Test alignment page:** prints slot outlines only, so the user can hold it against a label sheet and adjust the template's calibration offsets.
 
 ## 11. Payables (Supervisor)
 - Balance per **branch and supplier** = opening balance + invoices (net of open shorts) − credits − payments ± adjustments.
@@ -140,3 +142,17 @@ stateDiagram-v2
 - **Idle lock:** after N minutes the screen locks; the same user unlocks with their password, or someone else signs in (which signs the first user out). No actions are possible while locked.
 - **Sensitive actions** (approve, payables, settings, users) ask for the password again if it was last entered more than 15 minutes ago **(setting)**.
 - Every sign-in, failed attempt, lock, reset, and deactivation is written to the audit log.
+
+## 14. Notebooks
+- Built-in notebooks (To order, Store use, For Supervisor) behave as in `requirements.md` §15.
+- **Create notebook (Supervisor):** name EN/FA, branch scope, read roles, add roles, optional fields, status on/off, notify Supervisor on/off → notebook appears in the Notes tabs for the allowed roles.
+- **Add entry:** the fields the notebook enables; author, branch, and time are automatic.
+- **Edit entry:** author within the undo window, Supervisor anytime (recorded in History).
+- **Archive notebook:** hidden from tabs, entries stay searchable; can be restored.
+
+## 15. History, undo, and revert
+- Every action writes a History entry with before/after values and a `reversible` flag.
+- **Undo window:** for reversible simple actions, the toast shows **Undo** for 10 seconds (setting). Undo restores the previous state and records "Undone".
+- **Revert from History (Supervisor):** available on reversible entries; shows the before/after and asks for confirmation; creates a new entry "Reverted [action]". If the record changed again since then, show the conflict and do not overwrite silently.
+- **Not reversible by undo/revert:** posted invoices, stock movements, payables entries, prints. These use corrections (`workflows.md` §1, §11) so the original stays visible.
+- Examples: offer stopped by mistake → Undo, or Supervisor reverts → the offer is active again. Wrong product name → revert to the previous name. Price approved by mistake → revert restores the previous approved price (and creates a new price proposal history entry).

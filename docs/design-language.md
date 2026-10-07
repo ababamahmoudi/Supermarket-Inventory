@@ -15,6 +15,12 @@ Version 1 of this document (navy sidebar, bordered cards) is replaced in full.
 6. **Demo-only controls** (role switcher, reset) live in one small **Demo** menu in the top bar, never as labeled form fields.
 7. **No invented wording.** Use the terms in `requirements.md` §18 and the copy rules below.
 8. **Max four KPI cards per page.** Everything else is a list or table you can act on, not a wall of counters.
+9. **Row actions and inputs must be visible on every row color.** Buttons and fields inside striped tables use a style that contrasts with both the stripe and the plain row (e.g., an outline or a fill one step darker than the stripe). Same padding on every row.
+10. **Tabs:** one segmented control style everywhere, fit-content width, one active style, and 24px space before the content below.
+11. **Spacing scale:** 8px label→control, 20px between fields, 24px before action buttons, 24px between cards. Nothing touches the element above it.
+12. **One date format:** YYYY-MM-DD in tables, forms, and date pickers. One price format: `$2.99` (symbol first) in every language.
+13. **The top bar is sticky** and dialogs open **centered** with a dimmed backdrop.
+14. **Persian and English mixed text follows the rules in "Mixed-direction text" below.**
 
 ## Tokens
 Light values are sampled from the references; dark values likewise. Brand tokens are per company (Settings) so other supermarkets can rebrand.
@@ -33,6 +39,7 @@ Light values are sampled from the references; dark values likewise. Brand tokens
 | `--accent` | `#2B59C3` | `#5B86E5` | Primary buttons, focus ring, links, active indicators |
 | `--accent-hover` | `#234AA8` | `#7398EA` | Hover |
 | `--accent-soft` | `#E6EDFA` | `rgba(91,134,229,.18)` | Offer pills, selected rows |
+| `--accent-fill` | `#2B59C3` | `#3D68D4` | Primary button fill (white text meets contrast in both themes) |
 | `--kpi-accent` | `linear-gradient(135deg,#234AA8,#3D68D4)` | same | KPI card variant A |
 | `--kpi-charcoal` | `linear-gradient(135deg,#0F0F0F,#4A4A4A)` | `linear-gradient(135deg,#4A4A4A,#5E5E5E)` | KPI card variant B |
 | `--tile-lavender` | `#ECEEFB` | `rgba(149,164,252,.14)` | Summary tile A |
@@ -75,16 +82,16 @@ Pill: fully rounded, 12px/500 text, padding 4px 10px, optional 6px leading dot. 
 
 ## App shell
 **Sidebar (240px, white, collapsible to 72px icons-only):**
-- Top: Super Arzon logo (horizontal, 32px tall, directly on white, no box) and the company name.
+- Top: Super Arzon logo (horizontal, 32px tall) and the company name. Light theme: directly on white. **Dark theme: on a small white rounded tile** so the red and blue stay legible.
 - Sections with muted 13px labels, items shown by role:
   - **Daily:** Lookup · Invoices · Returns · Labels · Date tracking · Notes
   - **Catalog:** Products · Offers · Suppliers · Stock
   - **Supervisor:** Dashboard · Approvals · Alerts · Payables
-  - **Admin:** Users and devices · Settings
+  - **Admin:** Users and devices · Settings · History
 - Item: 40px, icon + label, active = `--nav-active` fill + 3px accent bar at the inline-start edge. Counts as small pills at the inline-end.
 - Bottom: user chip (initials avatar, name, role) opening a menu with **Lock** and **Sign out**.
 
-**Top bar (64px, `--sidebar` background, 1px `--divider` bottom):** sidebar toggle · breadcrumbs ("Branch 1 / Invoices / FV-20417") · spacer · search pill (280px, `/` shortcut; products by name, code, barcode) · branch pill (Supervisor: switcher incl. "All branches"; others: static) · language segmented **EN | فا** · theme toggle (sun/moon) · notifications bell with count · **Demo** menu (prototype only).
+**Top bar (64px, sticky, `--sidebar` background, 1px `--divider` bottom):** sidebar toggle · breadcrumbs ("Branch 1 / Invoices / FV-20417") · spacer · search pill (280px, `/` shortcut; products by name, code, barcode) · branch pill (Supervisor: switcher incl. "All branches"; others: static) · language segmented **EN | فا** · theme toggle (sun/moon) · notifications bell with count · **Demo** menu (prototype only).
 
 **Right panel (280px, only on dashboards and only at ≥1440px width; otherwise it moves below the main content):** "Notes for Supervisor" (like the references' Notifications list) and "Activity" (timeline: initials avatar, action, relative time).
 
@@ -139,3 +146,19 @@ Pill: fully rounded, 12px/500 text, padding 4px 10px, optional 6px leading dot. 
 - WCAG AA contrast (the pill colors above are chosen for it), visible focus rings, targets at least 40px, keyboard-operable tables and menus.
 - RTL: `dir` on the root, CSS logical properties, sidebar and right panel mirror, directional icons mirror. Prices, codes, and dates use Western digits.
 - Light theme is the default. Dark theme uses the dark token column; the toggle is in the top bar. Theme and text size are remembered per user/device.
+
+## Mixed-direction text (Persian with English, numbers, prices)
+- Wrap every left-to-right fragment inside Persian text in an isolated span (`<bdi>` or `unicode-bidi: isolate`): unit sizes ("1 L", "400 g"), prices, Product Codes, barcodes, English names, supplier names. "1 L" must never render as "L 1".
+- Use **one formatter** for prices (`$2.99`), unit sizes, dates (YYYY-MM-DD), and offers. English offer label: "2 for $5". Persian offer label: "۲ عدد $5" style from the translation file (Ali reviews the wording); the price part stays isolated.
+- Price changes: show "Old $1.99" and "New $2.99" as two labeled values, or use an arrow that follows the reading direction (→ in English, ← in Persian).
+- **Tables in Persian:** header and cells use the same logical alignment (`text-align: start`; numbers `end`), so every header sits exactly above its values.
+- **Names:** the current language's name is primary (bold), the other language's name secondary (muted, below it), in lists, cards, tables, and labels alike.
+- Every user-facing string comes from the translation files, including branch names, demo user names, and status words; no English left in the Persian UI except proper names (suppliers, brands).
+- Buttons are actions, never past-tense states: "Mark as cleared", not "Cleared" (Persian: an action verb, not "پاک شد").
+
+## Small components (added)
+- **User chip** (sidebar bottom): one line, name truncated with an ellipsis, role below in muted text, radius 12, same width as nav items.
+- **Collapsed sidebar:** same toggle icon in both states, tooltips on hover, a small dot on icons that have counts, round avatar.
+- **Top bar icons:** text size as "Aa" with a tooltip; notification count as a small pill at the bell's top corner (no extra chevron); the language toggle's inactive option at full text contrast.
+- **Undo toast:** charcoal pill with the action text and an **Undo** link, 10 seconds.
+- **Pills hug their text**; never stretch a pill to full width.

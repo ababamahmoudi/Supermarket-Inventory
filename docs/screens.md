@@ -11,15 +11,16 @@ Layout follows `design-language.md`. Menus show only what the signed-in role may
 | Returns ("Supplier returns and credits") | | Yes | Yes |
 | Products | | Yes | Yes |
 | Offers | | Yes | Yes |
-| Labels | | Yes | Yes |
+| Labels (product list, waitlist, templates) | | Yes | Yes |
 | Expiry (Date tracking) | | Yes | Yes |
-| Notes (To order · Store use · For Supervisor) | | Yes | Yes |
+| Notes (built-in and custom notebooks) | If a notebook allows | Yes | Yes |
 | Stock | | Yes | Yes |
 | Suppliers | | Yes (no balances) | Yes |
 | Approvals | | | Yes |
 | Payables | | | Yes |
 | Users and devices | | | Yes |
 | Settings | | | Yes |
+| History | | Own actions | Yes |
 
 Sidebar groups (Daily · Catalog · Supervisor · Admin), the top bar, and the right panel are defined in `design-language.md` (App shell). Lock and Sign out are in the user menu at the bottom of the sidebar.
 
@@ -61,7 +62,10 @@ Same-supplier lower price: item, supplier, old/new cost, worker's answers (same 
 List of active offers with product, price, offer, mix-and-match pool, start/end (optional), created by; **Stop**. "To confirm" tab with AI suggestions: **Confirm** (toggle: join mix-and-match) / **Dismiss**. Pool view: all products in "2 for $5", etc.
 
 ### Labels
-Steps: select products → pick template (or **New template**: name, width, height, margins, gaps) → starting slot on the A4 grid → preview → print. No queue. Template manager lists saved presets.
+Three tabs: **Products · Waitlist (count) · Templates**.
+- **Products:** search pill, filter chips (Arrived today, Price changed recently, On offer, pricing category, AI category, supplier), a scrollable table (name EN + FA, Product Code, price, offer pill, copies stepper, **Add to waitlist**), "Add all filtered". Products already on the waitlist show "On waitlist (2)".
+- **Waitlist:** table of waiting items (copies editable, remove), template picker, A4 preview with clickable starting slot (used slots grayed), live bilingual label preview, **Print** (primary). After printing: "Did the labels print correctly?" Yes / No.
+- **Templates:** saved presets; **New template** form (name; width, height, four margins, two gaps, two calibration offsets as narrow mm inputs); **Print test alignment page**.
 
 ### Returns
 Supplier selector (search) → immediately lists that supplier's **open returns** → select lines → **Record pickup** (supplier representative name required; optional photo; note) → resolution panel (types in `requirements.md` §12; for replacements: product, qty, date, fully/partially). History tab with filters.
@@ -70,7 +74,7 @@ Supplier selector (search) → immediately lists that supplier's **open returns*
 Table: product, branch, date, type, days left, supplier/invoice. Filters: expiring soon (default 30 days), expired, AI category. Row action **Cleared**.
 
 ### Notes
-Three tabs: **To order · Store use · For Supervisor**. Fast add form (type, text, optional product and quantity). Supervisor sees unread count in the sidebar.
+Tabs for each notebook the user can read: built-in (**To order · Store use · For Supervisor**) then custom notebooks, each with an unread count pill. Fast add form showing only the fields the notebook enables. Search across readable notebooks. Supervisor: **New notebook** button and a notebook settings dialog (name EN/FA, branch, read/add roles, fields, status, notify).
 
 ### Stock
 Per-branch stock on hand (estimate until register integration), movement history per product, **Stock count** flow with variance, store-use entry.
@@ -84,8 +88,16 @@ Defined in `requirements.md` §21.
 ### Payables (Supervisor)
 Supplier list with balance per branch; detail with ledger (invoices, credits, payments with cheque number and date, adjustments, opening balance, disputes with notes); **month-end summary** (print/CSV).
 
-### Users and devices, Settings (Supervisor)
-Users: list (name, username, role, branch, status, last sign-in); **New employee** (name, username, role, branch(es); the app generates a temporary password shown once); **Reset password**; **Unlock**; **Deactivate** immediately. Devices: register the store computer. Settings: company/branch names, logo and brand color, pricing categories (divisor, rounding), special corrections, offer definitions, minimum margin, expiring-soon days, idle lock, terminology, tax profiles/rate, languages.
+### Users and devices (Supervisor)
+Users: list (name, username, role, branch, status, last sign-in); **New employee** (name, username, role, branch(es); the app generates a temporary password shown once); **Reset password**; **Unlock**; **Deactivate** immediately. Devices: register the store computer.
+
+### Settings (Supervisor)
+Two-column layout: a settings menu on the side (groups from `requirements.md` §22: Company, Branches, People, Catalog, Pricing and approvals, Offers, Taxes, Receiving, Returns, Date tracking, Labels, Notebooks, Notifications, Modules, Data) and the selected group's cards on the other side. Each group: short description, settings in cards, **Save changes** in a sticky bar when something changed, and a "Changed by … on …" line linking to History.
+- **Branches:** table (name, address, phone, status) + **Add branch**, edit dialog, deactivate.
+- **Pricing categories:** table + **Add category**; edit dialog with cost divisor, rounding rule (bands with editable thresholds and endings, or "always up to next .99"), special corrections list, taxable, date-tracking prompt, minimum margin; a live **price tester** beside it (cost in → each calculation step → final price, values right next to their labels).
+
+### History
+Table: time, person, branch, action, item, before → after, with filters (person, branch, type, date range). Row action **Revert** (Supervisor, reversible entries only) with a confirmation dialog showing what will change.
 
 ## Responsive behavior
 Desktop/large store monitor is the primary target; tablet and phone browsers must work (sidebar collapses; tables scroll inside their container; forms become one column; camera upload works for invoice photos).

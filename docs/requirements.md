@@ -2,6 +2,8 @@
 
 Sources: Super Arzon's workflow notes, the owner's brainstorm, and every decision made in planning. Where something was assumed rather than stated, it is marked **(assumed)** and listed in `open-questions.md`.
 
+**Vision: AI and automation are the point of this product.** A supplier invoice (PDF or photo) is uploaded, AI reads it into structured lines, the app matches products, calculates prices, and flags what needs attention; people review and approve instead of typing. Every feature should move routine work from people to the system, while keeping a human check wherever money, prices, or stock are at stake.
+
 ## 1. Purpose and phases
 Give a supermarket an **inventory and receiving system** where none exists, with price calculation, approvals, offers, labels, expiry tracking, supplier returns, supplier balances, and internal notes.
 
@@ -21,6 +23,7 @@ Until Phase 2, "stock on hand" is an estimate (received − returned − damaged
 - **Prices:** each product has a company default price. A branch may have its own price (override). Different branch prices are allowed. When two branches differ, the Supervisor is alerted (see `workflows.md`, "Cross-branch price conflict").
 - Floor Workers and Cashiers see only their assigned branch. The Supervisor can see and switch between all branches.
 - Branch and company names, logo, and terminology are settings.
+- The Supervisor can **add branches**, edit branch details (name, address, phone, opening hours, tax region) and deactivate a branch in Settings → Branches. A deactivated branch keeps its history.
 
 ## 3. Roles and permissions
 Three roles. **Each employee has exactly one role**, and the app they see (menus, screens, data) is decided by that role. Everyone signs in with their own username and password; see §16. A shared in-store computer is expected.
@@ -38,17 +41,21 @@ Three roles. **Each employee has exactly one role**, and the app they see (menus
 | Close a short as "not delivered" | No | No | Yes |
 | Create returns, record pickup, record resolution, cancel a return | No | Yes | Yes |
 | Create/stop offers and mix-and-match; confirm AI-suggested offers | No | Yes | Yes |
-| Create label templates and print labels | No | Yes | Yes |
+| Create label templates, use the label waitlist, print labels | No | Yes | Yes |
 | Record store-use, to-order items, notes for the Supervisor | No | Yes | Yes |
+| Create, edit, and archive custom notebooks | No | No | Yes |
+| Read and add to a custom notebook | If the notebook allows | If the notebook allows | Yes |
+| See History; undo own action within the undo window | No | Own actions | All actions |
+| Revert a change from History | No | No | Yes |
 | Record stock counts and adjustments | No | Yes (logged) | Yes |
 | Payables, supplier balances, payments, credits, opening balances | No | **No** | Yes |
 | Suppliers overview: contact, last delivery, open returns, open shorts | No | Yes | Yes |
 | Suppliers overview: balance, overdue amount, next due date, payments | No | **No** | Yes |
 | Create employee accounts, reset passwords, deactivate users | No | No | Yes |
-| Manage devices, settings, pricing rules | No | No | Yes |
+| Manage branches, devices, and all Settings (§22) | No | No | Yes |
 | Supervisor dashboard, all branches | No | No | Yes |
 
-Floor Workers never see supplier balances or payables. Cashier = lookup only **(assumed: cashiers cannot add notes)**.
+Floor Workers never see supplier balances or payables. Cashier = lookup only, unless the Supervisor gives cashiers access to a custom notebook.
 
 ## 4. Products and product codes
 - Every product has: **Product Code**, name (English), name (Persian), description (English/Persian, optional), unit size (e.g., "400 g"), pricing category, tax profile, AI category (see §14), barcode(s) (optional, multiple allowed), status.
@@ -110,11 +117,13 @@ When the same item arrives from a **different supplier** at a different price, r
 - Not needed: promotion margin display, label queue.
 
 ## 9. Labels
-- Fields on the default Super Arzon label: product name, description, price, offers, **product code**, **Super Arzon logo**, **unit size**, **tax indicator**. **Not** shown: barcode, promotion expiry date.
+- **Product list for labels:** every product, scrollable and searchable (name in either language, Product Code, barcode), with filters: **Arrived today** (on an invoice posted today in this branch), **Price changed recently** (approved in the last N days, setting, default 3), **On offer**, **Pricing category**, **AI category**, **Supplier**. Each row: name (EN + FA), Product Code, price, offer, and **Add to waitlist** with a copy count. "Add all filtered" adds every product in the current filter.
+- **Label waitlist** (this reverses the earlier "no label queue" decision): a shared list per branch, so one worker can add items and another can print them. Change copies, remove items, clear the list. Printed items leave the list automatically. Adding is manual; a setting can add products automatically when a new price is approved (**off by default**).
+- **Printing must really work:** the app produces an exact-size A4 layout (in millimeters) that prints from the browser or saves as PDF, with Persian text rendered correctly.
+- Fields on the default Super Arzon label: product name, description, price, offers, **product code**, **Super Arzon logo**, **unit size**, **tax indicator**. **Not** shown: barcode, promotion expiry date. Label fields are a setting.
 - Languages: **English and Persian** together.
-- Print on **A4** with multiple labels per sheet, and **start at a selected slot** on a partially used sheet.
-- **No default template.** Users create and save their own presets (Template 1, Template 2…), each with its own dimensions (width, height, margins, gaps).
-- **No label queue.** Printing is: choose products → choose a template → choose the starting slot → preview → print.
+- Multiple labels per A4 sheet, and **start at a selected slot** on a partially used sheet.
+- **No default template.** Users create and save their own presets (Template 1, Template 2…), each with width, height, margins, gaps, and **calibration offsets** (shift left/right/up/down in mm) because every printer shifts slightly. Each template can print a **test alignment page**.
 - Output must render Persian text correctly (see `architecture-devops.md`).
 
 ## 10. Date tracking (expiry and best-before)
@@ -166,12 +175,13 @@ Show: balance, open invoices, overdue invoices, month-end summary that is printa
 ## 14. AI categories
 AI assigns each product a flexible **AI category** from its name (beans, juices, meat, spices…), used to **filter product lookup**. It is editable by Floor Workers and Supervisors and separate from the four pricing categories.
 
-## 15. Notes and logs (replaces paper notebooks)
-Three simple sections, each entry stamped with author, branch, and time:
+## 15. Notes and notebooks (replaces paper notebooks)
+Every entry is stamped with author, branch, and time. Three **built-in notebooks** keep their special behavior:
 - **To order**: "we're out of this" reminders. Status open / ordered.
 - **Store use**: items taken from the floor for the store's own use. Creates a stock movement.
-- **Notes for the Supervisor**: reminders and hand-over notes (status open / seen / done).
-The Supervisor is notified of new items.
+- **For Supervisor**: reminders and hand-over notes (status open / seen / done). The Supervisor is notified.
+
+**Custom notebooks:** the Supervisor creates notebooks such as "Cleaning log", "Deli temperatures", or "Lost and found". Settings per notebook: name (English and Persian), branch (one branch or all), which roles can read and which can add, optional fields (product, quantity, date, a number with unit such as a temperature), whether entries have a status (open/done), and whether the Supervisor is notified. Notebooks can be archived (entries stay searchable). Search across all notebooks the user can read.
 
 ## 16. Accounts, sign-in, and the shared store computer
 - **The store registers its employees.** Nobody can create their own account. The platform owner (Ali) creates the first Supervisor account for each company; the Supervisor creates every other account: name, **username** (unique within the company), role, branch(es), and a **temporary password**.
@@ -189,7 +199,7 @@ The Supervisor is notified of new items.
 Order of importance: approvals waiting (new products, price changes, barcode conflicts, supplier proposals) → same-supplier lower-price alerts → cross-branch price conflicts → tax discrepancies → AI invoices waiting for review and AI failures → open shorts → open supplier returns and returns waiting for credit → upcoming expiries → overdue invoices and supplier balances → recent posted invoices → employee activity. (No "labels waiting to print"; there is no label queue.)
 
 ## 18. Terminology (use exactly)
-Invoices (subtitle: "Deliveries and supplier invoices") · Suppliers · Last delivery · Floor Worker · Kitchenware · Grocery (Taxable) · Returns (subtitle: "Supplier returns and credits") · Product Code · Selling Price · Date tracking (Expiry or Best before). Persian equivalents are stored as translations and reviewed by Ali.
+Invoices (subtitle: "Deliveries and supplier invoices") · Suppliers · Last delivery · Floor Worker · Kitchenware · Grocery (Taxable) · Returns (subtitle: "Supplier returns and credits") · Product Code · Selling Price · Date tracking (Expiry or Best before) · Label waitlist · Notebooks · History. Persian equivalents are stored as translations and reviewed by Ali.
 
 ## 19. Platform
 Web app first (responsive; works on desktop, tablet, phone browsers; installable later). Native phone and desktop apps are later options. Hosting on AWS later; development happens locally in containers.
@@ -207,3 +217,33 @@ Filters: branch, overdue (Supervisor), has open returns, has open shorts, waitin
 
 "Last delivery" always means the last **delivery/invoice received**. The app does not record purchase orders.
 Floor Workers see the same section without any money columns or the Payments tab (enforced on the server).
+
+## 22. Settings and store customization
+Each supermarket must be able to shape the app to its own way of working without code changes. Settings are grouped like a standard back-office system; each setting is company-wide unless marked per branch.
+
+| Group | Settings |
+|---|---|
+| Company | name, logo, brand color, currency, time zone, languages, date format, text size default |
+| Branches | add, edit, deactivate; name, address, phone, opening hours, tax region |
+| People | employees, roles and permissions, password rules, lockout, idle lock, registered store computers |
+| Catalog | pricing categories (add, edit, archive; cost divisor, rounding rule, special corrections, taxable, date-tracking prompt), AI categories (rename, merge), units, Product Code format |
+| Pricing and approvals | which changes need approval, minimum margin per category, default approval scope (all branches / this branch), cross-branch conflict alerts on/off |
+| Offers | price-to-offer mappings, mix-and-match pools, AI offer suggestions on/off |
+| Taxes | tax profiles, rates, extra fees such as container deposits |
+| Receiving | required invoice fields, automatic invoice numbering, tax-mismatch tolerance, AI reading on/off and the confidence level below which fields are highlighted, same-supplier lower-price questions on/off |
+| Returns | enabled resolution types, photo required or optional, representative name required |
+| Date tracking | expiring-soon days, which categories prompt |
+| Labels | label fields, languages, waitlist auto-add on price approval (off by default), "price changed recently" days, templates |
+| Notebooks | create and manage custom notebooks |
+| Notifications | which events notify whom (in-app now; email later) |
+| Modules | turn sections on or off per company (e.g., Returns, Payables, Labels; later Register, Online orders) |
+| Data | import and export (CSV), History |
+
+Every settings change is recorded in History and can be reverted by the Supervisor.
+
+## 23. History and undo
+- **History page:** every action (who, what, when, branch, before → after), filterable by person, branch, type, and date. Floor Workers see their own actions; the Supervisor sees all.
+- **Undo:** after simple actions (stop an offer, clear a date entry, remove from the waitlist, mark a note done, edit a draft), an **Undo** button appears for 10 seconds (setting).
+- **Revert:** the Supervisor can revert reversible changes from History (prices, offers, product details, settings, notebook entries). Reverting is itself a new recorded action; nothing is erased.
+- **Corrections instead of undo** for posted invoices, stock movements, and payables: the app adds a correcting entry and keeps the original visible, so stock and balances stay traceable.
+- Printed labels cannot be "unprinted"; History simply records the print.

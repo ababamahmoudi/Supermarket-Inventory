@@ -58,11 +58,11 @@ erDiagram
 | Entity | Key fields and rules |
 |---|---|
 | `company` | name, logo, default language, currency, timezone, settings |
-| `branch` | company, name, code, address, active |
+| `branch` | company, name (en/fa), code, address, phone, opening_hours, tax_region, active |
 | `user` | company, name, **username** (unique per company), email (optional; needed only for a future Google sign-in), **one** role (`cashier`/`floor_worker`/`supervisor`), branches, `password_hash`, `must_change_password`, `password_changed_at`, `failed_attempts`, `locked_until`, active, created_by, last_login. No PIN fields. |
 | `device` | branch, name, registered_by, token hash, active (the store computer; enables the "recent users on this computer" list) |
 | `setting` | company or branch scope, key, value (JSON) |
-| `audit_log` | actor, action, entity type/id, before/after (JSON), device, timestamp |
+| `audit_log` | the History: actor, action, entity type/id, branch, before/after (JSON), device, timestamp, `reversible`, `reverted_by_entry`, `reverts_entry`, `undone` |
 
 ### Catalog and pricing
 | Entity | Key fields and rules |
@@ -79,7 +79,8 @@ erDiagram
 | `approval` | generic Supervisor decision: type, target entity, status, decided_by, note |
 | `offer_definition` | label ("2 for $5"), quantity, total price, pool key, price it belongs to (1.99/2.99/3.99), editable in settings |
 | `promotion` | product, branch (null = same scope as the price), offer_definition, mix_and_match (bool), start (nullable), end (nullable), active, created_by |
-| `label_template` | company, name ("Template 1"), width_mm, height_mm, margin_top/left, gap_x/y, created_by. **No seeded rows.** |
+| `label_template` | company, name ("Template 1"), width_mm, height_mm, margin_top/bottom/left/right, gap_x/y, offset_x_mm, offset_y_mm (calibration), slot_order (`ltr`/`rtl`), created_by. **No seeded rows.** |
+| `label_waitlist_item` | branch, product, copies, added_by, added_at, status (`waiting`/`printed`/`removed`), printed_at, printed_by. Shared per branch. |
 
 ### Receiving
 | Entity | Key fields and rules |
@@ -105,7 +106,8 @@ erDiagram
 | `stock_movement` | branch, product, qty (signed), type (below), reference (invoice line / return line / note / count), occurred_at, user |
 | `stock_count` | branch, product, counted_qty, expected_qty, variance, counted_by (creates an `adjustment` movement) |
 | `supplier_ledger_entry` | branch, supplier, type (`invoice`/`credit`/`payment`/`adjustment`/`opening_balance`), amount (signed), date, reference (invoice/return), cheque_number?, payment_date?, note, `disputed` flag. Payments may be partial. |
-| `note` | branch, type (`to_order`/`store_use`/`supervisor_note`), text, product (optional), qty (optional), status, author, seen_by/at |
+| `notebook` | company, branch (null = all branches), name_en/fa, kind (`to_order`/`store_use`/`for_supervisor`/`custom`), read_roles, add_roles, enabled_fields (product, quantity, date, measurement + unit), has_status, notify_supervisor, archived |
+| `note` | notebook, branch, text, product (optional), qty (optional), date (optional), measurement + unit (optional), status, author, seen_by/at |
 
 ### Stock movement types (the ledger)
 `received` (+), `short_resolved_received` (+), `return_pending` (−, damaged set aside), `return_cancelled` (+), `replacement_received` (+), `store_use` (−), `adjustment` (±, from stock counts), `sale` (− , Phase 2 only, posted by the register integration). **Stock on hand = sum of movements per branch and product.** Never overwrite a quantity; always add a movement.

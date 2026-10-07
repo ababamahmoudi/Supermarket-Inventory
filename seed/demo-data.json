@@ -151,7 +151,10 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Rice",
       "barcode": "DEMO-6000000000",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -5
+      }
     },
     {
       "code": "0002",
@@ -167,7 +170,10 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Beans & legumes",
       "barcode": "DEMO-6000007919",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": 0
+      }
     },
     {
       "code": "0003",
@@ -183,7 +189,11 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Juices",
       "barcode": "DEMO-6000015838",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": 0,
+        "Branch 2": -3
+      }
     },
     {
       "code": "0004",
@@ -199,7 +209,12 @@
       "main_supplier": "Sunrise Beverages",
       "ai_category": "Tea & coffee",
       "barcode": "DEMO-6000023757",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -2,
+        "Branch 2": -2
+      },
+      "price_approved_relative_days": -1
     },
     {
       "code": "0005",
@@ -215,7 +230,10 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Spices",
       "barcode": "DEMO-6000031676",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": 0
+      }
     },
     {
       "code": "0006",
@@ -231,7 +249,10 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Bread & bakery",
       "barcode": "DEMO-6000039595",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": 0
+      }
     },
     {
       "code": "0007",
@@ -247,7 +268,11 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Beans & legumes",
       "barcode": "DEMO-6000047514",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -5
+      },
+      "price_approved_relative_days": -2
     },
     {
       "code": "0008",
@@ -263,7 +288,10 @@
       "main_supplier": "Golden Grain Distributors",
       "ai_category": "Oils",
       "barcode": "DEMO-6000055433",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -12
+      }
     },
     {
       "code": "0009",
@@ -279,7 +307,10 @@
       "main_supplier": "Fresh Valley Foods",
       "ai_category": "Snacks",
       "barcode": "DEMO-6000063352",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": 0
+      }
     },
     {
       "code": "0010",
@@ -295,7 +326,11 @@
       "main_supplier": "Sunrise Beverages",
       "ai_category": "Soft drinks",
       "barcode": "DEMO-6000071271",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -2
+      },
+      "price_approved_relative_days": -1
     },
     {
       "code": "0011",
@@ -311,7 +346,10 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Tableware",
       "barcode": "DEMO-6000079190",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -21
+      }
     },
     {
       "code": "0012",
@@ -327,7 +365,10 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Cookware",
       "barcode": "DEMO-6000087109",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -21
+      }
     },
     {
       "code": "0013",
@@ -343,7 +384,10 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Small appliances",
       "barcode": "DEMO-6000095028",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -40
+      }
     },
     {
       "code": "0014",
@@ -359,7 +403,10 @@
       "main_supplier": "HomeWare Imports",
       "ai_category": "Cleaning",
       "barcode": "DEMO-6000102947",
-      "status": "active"
+      "status": "active",
+      "last_received_relative_days": {
+        "Branch 1": -21
+      }
     }
   ],
   "demo_invoice": {
@@ -378,7 +425,8 @@
         "taxable": false,
         "calculated_selling_price": "1.49",
         "current_selling_price": "1.49",
-        "demo_note": "No price change: nothing to approve."
+        "demo_note": "No price change: nothing to approve.",
+        "confidence": 0.97
       },
       {
         "product_code": "0005",
@@ -389,7 +437,8 @@
         "taxable": false,
         "calculated_selling_price": "1.99",
         "current_selling_price": "1.99",
-        "demo_note": "Cost went up from 1.20 but selling price stays the same: no approval needed."
+        "demo_note": "Cost went up from 1.20 but selling price stays the same: no approval needed.",
+        "confidence": 0.93
       },
       {
         "product_code": "0006",
@@ -400,7 +449,8 @@
         "taxable": false,
         "calculated_selling_price": "2.99",
         "current_selling_price": "1.99",
-        "demo_note": "Calculated price changes: goes to Pending approval."
+        "demo_note": "Calculated price changes: goes to Pending approval.",
+        "confidence": 0.88
       },
       {
         "product_code": "0003",
@@ -411,7 +461,11 @@
         "taxable": false,
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
-        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted."
+        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted.",
+        "confidence": 0.71,
+        "low_confidence_fields": [
+          "unit_cost_before_tax"
+        ]
       },
       {
         "product_code": "NEW",
@@ -422,7 +476,12 @@
         "taxable": false,
         "calculated_selling_price": "5.49",
         "current_selling_price": null,
-        "demo_note": "New product: Pending approval; AI suggests the category 'Dried fruits & spices'."
+        "demo_note": "New product: Pending approval; AI suggests the category 'Dried fruits & spices'.",
+        "confidence": 0.62,
+        "low_confidence_fields": [
+          "description",
+          "qty_invoiced"
+        ]
       },
       {
         "product_code": "0009",
@@ -433,7 +492,8 @@
         "taxable": true,
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
-        "demo_note": "Only 8 of 12 delivered: 4 marked Short, deducted from the invoice total."
+        "demo_note": "Only 8 of 12 delivered: 4 marked Short, deducted from the invoice total.",
+        "confidence": 0.95
       }
     ],
     "subtotal": "174.52",
@@ -448,7 +508,8 @@
         "total_deduction": "7.23"
       }
     ],
-    "payable_after_open_shorts": "169.79"
+    "payable_after_open_shorts": "169.79",
+    "_confidence_note": "Fields on lines below 0.80 confidence are highlighted for checking in the review screen."
   },
   "same_supplier_lower_price_alert": {
     "product_code": "0003",
@@ -570,5 +631,41 @@
         "next_due_relative_days": -2
       }
     }
-  }
+  },
+  "custom_notebooks": [
+    {
+      "name_en": "Deli temperatures",
+      "name_fa": "دمای یخچال دلی",
+      "branch": "Branch 1",
+      "read_roles": [
+        "floor_worker",
+        "supervisor"
+      ],
+      "add_roles": [
+        "floor_worker",
+        "supervisor"
+      ],
+      "fields": [
+        "measurement"
+      ],
+      "measurement_unit": "°C",
+      "has_status": false,
+      "notify_supervisor": false,
+      "entries": [
+        {
+          "text": "Morning check",
+          "measurement": "3.5",
+          "by": "Demo Floor Worker",
+          "relative_hours": -3
+        },
+        {
+          "text": "Afternoon check",
+          "measurement": "4.0",
+          "by": "Demo Floor Worker",
+          "relative_hours": -1
+        }
+      ]
+    }
+  ],
+  "_demo_notes": "Arrived today = last_received_relative_days 0 for the branch. Price changed recently = price_approved_relative_days within labels.waitlist.price_changed_recently_days."
 }
