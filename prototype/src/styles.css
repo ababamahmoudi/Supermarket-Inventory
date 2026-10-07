@@ -1657,6 +1657,14 @@ th.numeric {
   object-fit: contain;
   margin-block-end: 16px;
 }
+.logo-filter {
+  position: absolute;
+  pointer-events: none;
+}
+html[data-theme="dark"] .brand-logo,
+html[data-theme="dark"] .signin-logo {
+  filter: url("#logo-white-matte");
+}
 .signin-card .page-header {
   margin-block-end: 24px;
 }

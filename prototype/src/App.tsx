@@ -191,6 +191,21 @@ function LanguageToggle() {
     </div>
   );
 }
+function BrandLogoFilter() {
+  return (
+    <svg width="0" height="0" className="logo-filter" aria-hidden="true">
+      <defs>
+        <filter id="logo-white-matte" colorInterpolationFilters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 0 3"
+          />
+          <feComposite operator="in" in2="SourceAlpha" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
 function Initials({ name }: { name: string }) {
   return (
     <span className="user-avatar" aria-hidden="true">
@@ -395,6 +410,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
   const { state, t } = useDemo();
   return (
     <div className="signin-page">
+      <BrandLogoFilter />
       <div className="signin-language">
         <LanguageToggle />
       </div>
@@ -724,6 +740,7 @@ export default function App() {
       className={`app-shell ${collapsed ? "is-collapsed" : ""}`}
       dir={lang === "fa" ? "rtl" : "ltr"}
     >
+      <BrandLogoFilter />
       <a
         className="skip-link"
         href="#main-content"
