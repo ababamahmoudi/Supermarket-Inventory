@@ -369,6 +369,25 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       ? "comfortable"
       : "default";
   }, [preferences.theme, preferences.comfortableText]);
+  useEffect(() => {
+    const style = document.documentElement.style;
+    const defaults = configSeed.company.branding;
+    const branding = state.config.company.branding ?? defaults;
+    const tokens: [string, keyof typeof defaults][] = [
+      ["--company-primary", "primary_color"],
+      ["--company-primary-hover", "primary_hover_color"],
+      ["--company-primary-soft", "primary_soft_color"],
+      ["--company-dark-primary", "dark_primary_color"],
+      ["--company-dark-primary-hover", "dark_primary_hover_color"],
+      ["--company-dark-primary-soft", "dark_primary_soft_color"],
+      ["--company-kpi-accent-end", "kpi_accent_end_color"],
+    ];
+    for (const [token, key] of tokens)
+      style.setProperty(token, branding[key] ?? defaults[key]);
+    return () => {
+      for (const [token] of tokens) style.removeProperty(token);
+    };
+  }, [state.config.company.branding]);
   const lockSession = useCallback(() => {
     const current = sessionRef.current;
     if (!current.username || current.locked) return;

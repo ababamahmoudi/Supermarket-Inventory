@@ -33,6 +33,22 @@ function Probe() {
   );
 }
 describe("fictional data and storage", () => {
+  it("uses the company's configured light and dark brand colors", () => {
+    const state = initialState();
+    state.config.company.branding.primary_color = "#0F766E";
+    state.config.company.branding.dark_primary_color = "#5EEAD4";
+    state.config.company.branding.kpi_accent_end_color = "#0D9488";
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    render(
+      <DemoProvider>
+        <Probe />
+      </DemoProvider>,
+    );
+    const style = document.documentElement.style;
+    expect(style.getPropertyValue("--company-primary")).toBe("#0F766E");
+    expect(style.getPropertyValue("--company-dark-primary")).toBe("#5EEAD4");
+    expect(style.getPropertyValue("--company-kpi-accent-end")).toBe("#0D9488");
+  });
   it("seeds approvals, scoped returns and the existing replacement once", () => {
     const state = initialState();
     expect(state.approvals).toHaveLength(2);

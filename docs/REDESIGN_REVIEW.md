@@ -78,7 +78,7 @@ Ali's decision covers PR1 appearance/usability. PR2 begins after that approval; 
 | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | TypeScript and Vite production build | Passed                                                                                           |
 | ESLint and formatting                | Passed                                                                                           |
-| Unit tests                           | 185 passed, 0 failed, 0 skipped                                                                  |
+| Unit tests                           | 186 passed, 0 failed, 0 skipped                                                                  |
 | Pricing unit tests, included above   | 66 passed; includes all 21 current seed cases and 3 retained boundary cases                      |
 | Desktop/phone browser tests          | 62 passed, 2 skipped, 0 failed; skips are desktop-only search/layout checks in the phone project |
 | Screenshot capture                   | 17 screenshots, no browser page errors or horizontal page overflow                               |
