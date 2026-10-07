@@ -1,0 +1,55 @@
+# Decisions
+
+The repository is the source of truth. Entries below were recorded on **2026-10-06**. Ali confirmed the location/tax details, accepted safe return cancellation, and authorized the lead developer to choose and document resolutions for the remaining contradictions. Defaults remain editable company configuration; they are not hardcoded business rules.
+
+## 001 — Business location, time, and tax
+
+**Context:** Currency, jurisdiction, and timezone were placeholders. **Decision:** Super Arzon uses Toronto, Ontario, Canada; CAD; `America/Toronto`; 13% HST for products assigned the approved `hst_13` profile. Seed a separate 0% `non_taxable` profile. Store UTC timestamps and snapshots of posted invoice tax profiles/rates. **Why:** Reflects Ali's answer, handles daylight saving, and prevents future configuration edits from rewriting financial history. Category defaults propose a profile; Supervisor review establishes each product's tax treatment before real use.
+
+## 002 — Return evidence and physically accurate cancellation
+
+**Context:** Cancellation restored original stock even when the supplier still held it or replacements had arrived. **Decision:** Cancellation creates no automatic stock movement. Record actual original units physically present/recovered and safe/sellable; restore only those, once, within the removed quantity. Keep replacements and compensation separate. Require signed pickup slips, paper-original references/scans, supplier credit documents, supplier-specific terms, and a staff policy (`return-policy.md`). **Why:** Prevents imaginary/double-counted stock and preserves evidence in supplier disputes. Item photos remain optional; physical condition confirmation is mandatory.
+
+## 003 — Operational claims versus financial postings
+
+**Context:** Workers could record resolutions while Payables was Supervisor-only. **Decision:** Workers record pickups, replacements, and claims/evidence; only Supervisors verify/post financial credits, cash settlements, adjustments, and reversals. Workers can cancel an unsettled return with a reason/disposition; any settlement requires Supervisor cancellation review. Covered original quantities are tracked and capped separately from replacement product quantities. **Why:** Protects financial permissions and prevents duplicate settlement. Retain original records and append corrections.
+
+## 004 — Partial shorts and conserved amounts
+
+**Context:** A partially short line could be entirely excluded from stock, and later partial deliveries were undefined. **Decision:** Add only the units delivered at posting. Withhold only missing quantity's original cost/tax; later actual deliveries restore cumulative proportional allocations, using half-up cents and a final remainder. Cap quantities, make receipts idempotent, and preserve posted rates. Closing undelivered units retains the existing deduction, without a second credit. **Why:** Stock reflects reality and repeated deliveries do not lose/create pennies.
+
+## 005 — Invoice corrections, allocations, and financial history
+
+**Context:** Voids and payments lacked stock reversal/allocation rules. **Decision:** Supervisor previews downstream stock/returns/shorts and financial allocations; resolve consumed-stock disposition before a void. Append linked compensating entries and preserve originals. Allocate payments/credits to same-company/branch/supplier/currency invoices with an editable oldest-due preview; excess remains unapplied supplier credit. Cap allocations and reconcile outstanding invoices to the ledger. **Why:** Makes overdue balances useful and corrections reviewable without deleting evidence. Verified backups remain required before database migrations.
+
+## 006 — Floor Worker visibility
+
+**Context:** Documents disagreed about margins and catalog supplier costs. **Decision:** Costs only on invoices created by/assigned to that worker within their branch; margins, catalog costs, balances, allocations, and financial postings are Supervisor-only. Enforce field restrictions on the server. **Why:** Keeps receiving practical while following the documented financial privacy default.
+
+## 007 — Receipt comparisons and missing date information
+
+**Context:** A company-wide last cost could compare the wrong branch; required expiry answers were impossible for untracked dates/no old stock. **Decision:** Compare the last posted, non-voided supplier-product receipt in the same branch. Permit explicit No previous stock, Dates not tracked, or Unknown with a note; known dates/counts are captured, unknown information is never invented. Alert the Supervisor without blocking posting once an answer is recorded. **Why:** Compares relevant receipts and keeps receiving usable for every category.
+
+## 008 — All-branch price approval and offers
+
+**Context:** Which price overrides disappear, and which offers take precedence, was ambiguous. **Decision:** All branches previews affected branches/prices/offers and archives every active override for that product in the company; stale previews require refresh. This branch only preserves others. One effective offer per branch: eligible branch offer precedes eligible company offer, with matching effective approved price. Stop incompatible offers even on an unmapped price; suggest mapped replacements for confirmation. Mix-and-match pools are company/branch/currency/offer-specific. **Why:** Makes approval consequences explicit and prevents conflicting offers or cross-store mixing.
+
+## 009 — Configuration-driven pricing and category margin flags
+
+**Context:** Threshold numbers were encoded in key names; 25% global margin conflicted with Rice's divisor; exact `.73` testing wrongly assumed whole-cent costs; unchanged-price wording could suppress required margin review. **Decision:** Store numeric ordered band bounds/endings/offsets, generic correction mappings/enabled flags, and Rice's ending in configuration. Category minimum margins: Grocery/Grocery (Taxable) 25%, Rice 20%, Kitchenware 25%; null disables the check. Add exact `.73` and Rice exact/just-above `.99` four-decimal fixtures. A below-margin result creates a deduplicated Supervisor review even if price is unchanged; receiving and the approved cashier price continue. Supervisor acknowledges keeping the price with a reason or proposes a manual override. Reviews identify company/branch/product/approved price/received cost/configuration version; identical contexts reuse the review, changed contexts re-evaluate it. **Why:** Supports configurable pricing, tests valid boundaries, and avoids missing low-margin costs that happen to round to the existing price without blocking receiving or silently repricing goods.
+
+## 010 — Phase 0.1 scope and stack
+
+**Context:** The prototype and full business foundation could be mistaken for the setup slice. **Decision:** Keep the documented Django/DRF/PostgreSQL/Celery/Redis with S3-compatible storage and React/TypeScript/Vite stack. Step 0.1 supplies containers, commands, health checks, a bilingual placeholder shell, bootstrap company/branch/configuration/development supervisor, lint/test/hooks and pull-request CI. Dedicated business models and full tenant/role security are Phase 1; the browser demo is Step 0.2. Use stable company `seed_key` and branch `code`; the seed command preserves edited configuration by default; `make setup` explicitly refreshes reviewed seed settings while preserving existing users/passwords and omitted branches. No paid cloud resource/deployment. **Why:** Provides a testable local foundation without implying operational workflows or production readiness.
+
+## 011 — Maintained local S3 storage and verified migrations
+
+**Context:** The [official MinIO README](https://github.com/minio/minio#readme) now states that community distribution is source-only and unmaintained; both historical Docker Hub and Quay images failed to pull. **Decision:** Use the maintained [SeaweedFS 4.48 release](https://github.com/seaweedfs/seaweedfs/releases/tag/4.48), official multi-architecture image pinned by digest, only as the local S3-compatible service. Keep private signed access and a persistent volume, disable extra interfaces/telemetry, and test upload/download, anonymous rejection, and deletion. Production remains AWS S3. No paid resource is created. **Why:** Provides reproducible authenticated local storage without depending on archived binary distribution.
+
+**Context:** Setup can apply migrations to an existing local database. **Decision:** Before pending migrations, dump the database and verify a full restore in a uniquely named temporary database; preserve the ignored backup and stop on any failure. Skip the migration backup when no migrations are pending. Build dependencies with frozen lockfiles/checksums and the platform-supplied public TLS trust bundle, never disabled verification. **Why:** Meets the repository backup rule and preserves trust through the cloud proxy.
+
+## 012 — Design language v2 and the PR1 approval boundary (2026-10-07)
+
+**Context:** Ali replaced the design language, updated accounts to username/password, and requested two separately reviewed redesign PRs. **Decision:** PR1 changes the shared shell/components plus sign-in, Supervisor dashboard, Cashier lookup, and invoice review. Suppliers and the remaining screen redesigns wait for explicit approval. Authentication has separate demo storage so existing invoice, stock, approval, and ledger records survive the sign-in change. Business reset preserves changed passwords and user preferences. **Why:** Makes the requested four screens reviewable without discarding the working prototype or starting PR2 prematurely.
+
+**Context:** The latest uploaded seed files omit metadata previously required by the working prototype. **Decision:** Keep the uploaded files unchanged; `prototype/src/config.ts` fills omitted settings from the retained configuration and operational snapshots inside `prototype/src/compat/`. Explicit current data wins. The Golden Grain example's picked-up/partial-replacement description maps to the existing `partially_resolved` state while preserving Product Code 0001, two originals, and the one previously received replacement. Retain the three earlier pricing boundary fixtures alongside all 21 current cases. **Why:** Preserves verified money and physical-quantity behavior during a presentation change; records the compatibility choice rather than silently inventing new rules.

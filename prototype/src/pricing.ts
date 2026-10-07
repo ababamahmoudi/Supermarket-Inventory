@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import seedConfig from "../../seed/arzon-config.json";
+import { configSeed as seedConfig } from "./config";
 
 // A local constructor keeps other modules from changing the engine's precision.
 const Money = Decimal.clone({ precision: 80, rounding: Decimal.ROUND_HALF_UP });

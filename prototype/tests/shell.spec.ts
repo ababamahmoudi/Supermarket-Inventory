@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-test("demo PIN, correct role menu, RTL and offline operation", async ({
+import { signIn, resetDemo } from "./helpers";
+
+test("username sign-in, correct role menu, RTL and offline operation", async ({
   page,
   context,
 }, testInfo) => {
@@ -8,14 +10,11 @@ test("demo PIN, correct role menu, RTL and offline operation", async ({
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Floor Worker", exact: true }).click();
-  await page.getByLabel("Demo PIN").fill("2222");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await signIn(page, "Floor Worker");
   if (testInfo.project.name === "phone") {
-    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.locator("#menu-toggle").click();
     await expect(
-      page.getByRole("link", { name: "Cashier lookup", exact: true }),
+      page.getByRole("link", { name: "Lookup", exact: true }),
     ).toBeFocused();
   }
   await expect(
@@ -35,10 +34,6 @@ test("demo PIN, correct role menu, RTL and offline operation", async ({
     "scrollWidth",
     await page.evaluate(() => document.body.clientWidth),
   );
-  await page.getByRole("button", { name: "Reset demo", exact: true }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Reset demo", exact: true })
-    .click();
+  await resetDemo(page);
   expect(errors).toEqual([]);
 });

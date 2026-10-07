@@ -1,16 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { signIn, setBranch } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 
 test("creates a template, starts after four used slots, and prints bilingual labels", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Floor Worker", exact: true }).click();
-  await page.getByLabel("Demo PIN", { exact: true }).fill("2222");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    "floor_worker",
-  );
+  await signIn(page, "Floor Worker");
   await page.goto("/#labels");
   await expect(
     page.getByRole("heading", { name: "Labels", exact: true }),
@@ -60,13 +55,7 @@ test("creates a template, starts after four used slots, and prints bilingual lab
 test("validates A4 dimensions and Persian labels without external requests", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Supervisor", exact: true }).click();
-  await page.getByLabel("Demo PIN", { exact: true }).fill("1111");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    "supervisor",
-  );
+  await signIn(page, "Supervisor");
   await page.goto("/#labels");
   await expect(
     page.getByRole("heading", { name: "Labels", exact: true }),
@@ -94,18 +83,12 @@ test("validates A4 dimensions and Persian labels without external requests", asy
 test("requires one branch and prints its approved price instead of a pending proposal", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Supervisor", exact: true }).click();
-  await page.getByLabel("Demo PIN", { exact: true }).fill("1111");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    "supervisor",
-  );
+  await signIn(page, "Supervisor");
   await page.goto("/#labels");
   await expect(
     page.getByRole("heading", { name: "Labels", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Branch", { exact: true }).selectOption("all");
+  await setBranch(page, "all");
   await expect(
     page.getByText(
       "Choose one branch above before selecting or printing labels. Labels use that branch’s approved prices and offers.",
@@ -124,7 +107,7 @@ test("requires one branch and prints its approved price instead of a pending pro
     ),
   ).toBeVisible();
   await page.getByRole("button", { name: "English", exact: true }).click();
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 2");
+  await setBranch(page, "Branch 2");
   for (const checkbox of await page
     .locator('.labels-controls input[type="checkbox"]')
     .all()) {
@@ -156,7 +139,7 @@ test("requires one branch and prints its approved price instead of a pending pro
   await expect(teaLabel.locator(".price")).toHaveText("$6.99");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
   await expect(lavashLabel).toContainText("3 for $5");
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 1");
+  await setBranch(page, "Branch 1");
   await expect(teaLabel.locator(".price")).toHaveText("$6.49");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
   await expect(lavashLabel.filter({ hasText: "$2.99" })).toHaveCount(0);

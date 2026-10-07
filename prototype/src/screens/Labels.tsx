@@ -1,6 +1,6 @@
 import { useState } from "react";
 import logo from "../../../assets/arzon-logo.png?inline";
-import demoSeed from "../../../seed/demo-data.json";
+import { demoSeed } from "../config";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import { labelLayout, labelPages } from "../labels";
 import { useDemo } from "../store";

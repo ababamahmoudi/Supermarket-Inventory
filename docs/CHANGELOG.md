@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-07 — Phase 0.2 redesign PR1: shell and four screens
+
+- Applied design language v2 to shared shell/controls, sign-in, Supervisor dashboard, Cashier lookup, and invoice review, with light/dark themes, comfortable text, responsive layouts, and Persian RTL.
+- Replaced role/PIN sign-in with fictional username/password accounts, recent-user chips, password-based locks, and a forced first-sign-in password change; role switching and business reset live in the Demo menu.
+- Retained operational workflows and compatible CAD/HST/Toronto, physical-quantity, returns, and ledger metadata while leaving the owner's seed files unchanged and giving current values precedence.
+- Added account/control/layout and working-action checks; updated Ubuntu instructions, click flows, and the screenshot matrix in `docs/REDESIGN_REVIEW.md`. Actual results belong to the PR validation report.
+- Deferred Suppliers overview/detail and remaining page redesigns to PR2 after Ali approves PR1.
+
 ## 2026-10-06 — Phase 0.2, part 7: operations and dashboard
 
 - Completed returns with signed pickup/replacement evidence, partial settlement, reviewed cancellations, safe-original dispositions and Supervisor-only financial claims.

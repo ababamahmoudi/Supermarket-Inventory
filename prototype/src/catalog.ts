@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import demoSeed from "../../seed/demo-data.json";
+import { demoSeed } from "./config";
 import type { Branch, DemoState, Offer, Product } from "./types";
 
 /** The all-branches lookup previews the first configured demo branch. */

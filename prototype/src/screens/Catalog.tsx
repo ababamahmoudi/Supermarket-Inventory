@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import Decimal from "decimal.js";
+import { Search, ScanLine } from "lucide-react";
 import {
   effectiveOffer,
   effectivePrice,
@@ -17,6 +18,7 @@ import {
   EmptyState,
   Field,
   PageHeader,
+  Select,
 } from "../ui";
 
 const PAGE_SIZE = 8;
@@ -304,11 +306,123 @@ function ProductDetail({
   );
 }
 
-export function Lookup() {
+function LookupProductDetail({ product }: { product: Product }) {
   const { state, branch, t, money, lang } = useDemo();
-  const [search, setSearch] = useState("");
+  const approved = effectivePrice(state, product, branch);
+  const pending = pendingPrice(state, product, branch);
+  const offer = effectiveOffer(state, product, branch);
+  const profile = state.config.tax.profiles.find(
+    (item) => item.key === product.tax_profile,
+  );
+  return (
+    <Card className="lookup-detail">
+      <div className="lookup-detail-header">
+        <div>
+          <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
+            {lang === "fa" ? product.name_fa : product.name_en}
+          </h2>
+          <p
+            className="muted"
+            lang={lang === "fa" ? "en" : "fa"}
+            dir={lang === "fa" ? "ltr" : "rtl"}
+          >
+            {lang === "fa" ? product.name_en : product.name_fa}
+          </p>
+        </div>
+        <p className="lookup-product-meta muted">
+          <span>
+            {t(state.config.terminology.product_code, "کد محصول")}{" "}
+            <span dir="ltr">{product.code}</span>
+          </span>
+          <span dir="ltr">{product.unit_size}</span>
+        </p>
+      </div>
+      <div className="lookup-price-block">
+        <div className="lookup-approved-price">
+          <p className="muted">
+            {t(state.config.terminology.selling_price, "قیمت فروش")}
+          </p>
+          {approved ? (
+            <strong className="price" dir="ltr">
+              {money(approved)}
+            </strong>
+          ) : (
+            <p className="muted lookup-missing-price">
+              {t("No approved price yet", "هنوز قیمت تأییدشده‌ای وجود ندارد")}
+            </p>
+          )}
+          <p className="helper">{t("Before tax", "پیش از مالیات")}</p>
+        </div>
+        {pending && (
+          <div className="lookup-pending-price">
+            <Badge tone="pending">
+              {approved
+                ? t("New price pending", "قیمت جدید در انتظار تأیید")
+                : t("Pending", "در انتظار تأیید")}
+            </Badge>
+            <span dir="ltr">{money(pending)}</span>
+          </div>
+        )}
+      </div>
+      {(profile?.taxable || offer) && (
+        <div className="lookup-price-tags actions">
+          {profile?.taxable && (
+            <Badge tone="info">
+              {t(
+                state.config.tax.label_text_en,
+                state.config.tax.label_text_fa,
+              )}
+            </Badge>
+          )}
+          {offer && (
+            <Badge tone="info" className="offer-pill">
+              {offer.label}
+            </Badge>
+          )}
+        </div>
+      )}
+      {pending && (
+        <p className="helper" role="status">
+          {approved
+            ? t(
+                "Keep charging the approved price shown above.",
+                "تا زمان تأیید، قیمت تأییدشدهٔ بالا را دریافت کنید.",
+              )
+            : t(
+                "Pending: confirm with a Supervisor before selling",
+                "در انتظار تأیید: پیش از فروش با سرپرست تأیید کنید",
+              )}
+        </p>
+      )}
+      {!approved && !pending && (
+        <p className="helper">
+          {t(
+            "Confirm with a Supervisor before selling.",
+            "پیش از فروش با سرپرست تأیید کنید.",
+          )}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function searchFromLookupHash() {
+  const [route, query = ""] = window.location.hash.slice(1).split("?");
+  return route === "lookup"
+    ? (new URLSearchParams(query).get("search") ?? "")
+    : "";
+}
+
+export function Lookup() {
+  const { state, branch, t, money } = useDemo();
+  const [search, setSearch] = useState(searchFromLookupHash);
   const [category, setCategory] = useState("");
   const [selectedCode, setSelectedCode] = useState("");
+  const [activeCode, setActiveCode] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchId = useId();
+  const resultsId = useId();
+  const searchHintId = useId();
   const products = state.products.filter(
     (product) =>
       product.company_id === state.config.company.seed_key &&
@@ -319,11 +433,57 @@ export function Lookup() {
   );
   const selected =
     results.find((product) => product.code === selectedCode) ?? results[0];
+  const active =
+    results.find((product) => product.code === activeCode) ?? selected;
   const categories = [
     ...new Set(products.map((product) => product.ai_category)),
   ].sort();
+
+  useEffect(() => {
+    const syncSearch = () => {
+      if (window.location.hash.slice(1).split("?")[0] !== "lookup") return;
+      setSearch(searchFromLookupHash());
+      setCategory("");
+      setSelectedCode("");
+      setActiveCode("");
+      searchRef.current?.focus();
+    };
+    window.addEventListener("hashchange", syncSearch);
+    return () => window.removeEventListener("hashchange", syncSearch);
+  }, []);
+
+  const selectProduct = (product: Product) => {
+    setSelectedCode(product.code);
+    setActiveCode(product.code);
+    searchRef.current?.focus();
+    searchRef.current?.select();
+  };
+  const moveActive = (direction: number) => {
+    const index = results.findIndex((product) => product.code === active?.code);
+    const next = results[(index + direction + results.length) % results.length];
+    if (next) setActiveCode(next.code);
+    return next;
+  };
+  const handleSearchKey = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.nativeEvent.isComposing || !results.length) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      moveActive(event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Enter" && active) {
+      event.preventDefault();
+      selectProduct(active);
+    }
+  };
+  const clearSearch = () => {
+    setSearch("");
+    setCategory("");
+    setSelectedCode("");
+    setActiveCode("");
+    searchRef.current?.focus();
+  };
+
   return (
-    <div className="stack">
+    <div className="stack lookup-page">
       <PageHeader
         title={t("Cashier lookup", "جست‌وجوی صندوق‌دار")}
         description={t(
@@ -331,44 +491,76 @@ export function Lookup() {
           "قیمت تأییدشدهٔ فعلی را پیدا کنید. انگلیسی یا فارسی جست‌وجو کنید یا بارکد را اسکن کنید.",
         )}
       />
-      <Card>
-        <div className="stack">
-          <Field label={t("Search products", "جست‌وجوی محصولات")}>
-            <input
-              className="lookup-search"
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
+      <div className="lookup-hero">
+        <label className="sr-only" htmlFor={searchId}>
+          {t("Search products", "جست‌وجوی محصولات")}
+        </label>
+        <div className="lookup-search-pill">
+          <Search size={24} strokeWidth={1.5} aria-hidden="true" />
+          <input
+            id={searchId}
+            ref={searchRef}
+            className="lookup-search"
+            type="search"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls={resultsId}
+            aria-expanded={Boolean(results.length)}
+            aria-activedescendant={
+              active ? `${resultsId}-${active.code}` : undefined
+            }
+            aria-describedby={searchHintId}
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setSelectedCode("");
+              setActiveCode("");
+            }}
+            onKeyDown={handleSearchKey}
+            placeholder={t(
+              "Name, Product Code or barcode",
+              "نام، کد محصول یا بارکد",
+            )}
+            autoComplete="off"
+            spellCheck={false}
+            autoFocus
+          />
+          <ScanLine size={20} strokeWidth={1.5} aria-hidden="true" />
+        </div>
+        <div className="lookup-filterbar">
+          <Field
+            label={t("AI category", "دستهٔ هوش مصنوعی")}
+            className="lookup-category"
+          >
+            <Select
+              value={category}
+              onChange={(value) => {
+                setCategory(value);
                 setSelectedCode("");
+                setActiveCode("");
               }}
-              placeholder={t(
-                "Name, Product Code or barcode",
-                "نام، کد محصول یا بارکد",
-              )}
-              autoComplete="off"
+              options={[
+                {
+                  value: "",
+                  label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
+                },
+                ...categories.map((value) => ({ value, label: value })),
+              ]}
             />
           </Field>
-          <Field label={t("AI category", "دستهٔ هوش مصنوعی")}>
-            <select
-              value={category}
-              onChange={(event) => {
-                setCategory(event.target.value);
-                setSelectedCode("");
-              }}
-            >
-              <option value="">
-                {t("All AI categories", "همهٔ دسته‌های هوش مصنوعی")}
-              </option>
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <p id={searchHintId} className="helper">
+            {t(
+              "Use ↑ ↓ and Enter to select a product.",
+              "برای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.",
+            )}
+          </p>
+          {(search || category) && (
+            <Button variant="ghost" onClick={clearSearch}>
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          )}
         </div>
-      </Card>
+      </div>
       {branch === "all" && (
         <p className="muted">
           {t(
@@ -380,13 +572,7 @@ export function Lookup() {
       {!selected ? (
         <EmptyState
           action={
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSearch("");
-                setCategory("");
-              }}
-            >
+            <Button variant="secondary" onClick={clearSearch}>
               {t("Clear search", "پاک کردن جست‌وجو")}
             </Button>
           }
@@ -397,37 +583,98 @@ export function Lookup() {
           )}
         </EmptyState>
       ) : (
-        <div className="grid-2">
-          <Card title={t("Search results", "نتایج جست‌وجو")}>
+        <>
+          <LookupProductDetail product={selected} />
+          <Card
+            title={t("Search results", "نتایج جست‌وجو")}
+            className="lookup-results-card"
+          >
             <div
-              className="stack"
+              id={resultsId}
+              className="lookup-results-list"
+              role="listbox"
               aria-label={t("Product results", "نتایج محصولات")}
             >
               {results.map((product) => {
                 const price = effectivePrice(state, product, branch);
+                const pending = pendingPrice(state, product, branch);
+                const offer = effectiveOffer(state, product, branch);
+                const taxable = state.config.tax.profiles.find(
+                  (item) => item.key === product.tax_profile,
+                )?.taxable;
                 return (
-                  <Button
+                  <button
                     key={product.code}
-                    variant={
-                      product.code === selected.code ? "secondary" : "ghost"
-                    }
-                    onClick={() => setSelectedCode(product.code)}
-                    aria-pressed={product.code === selected.code}
+                    id={`${resultsId}-${product.code}`}
+                    type="button"
+                    role="option"
+                    className={`lookup-result-row${product.code === selected.code ? " is-selected" : ""}${product.code === active?.code ? " is-active" : ""}`}
+                    aria-selected={product.code === selected.code}
+                    onClick={() => selectProduct(product)}
+                    onFocus={() => setActiveCode(product.code)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "ArrowDown" && event.key !== "ArrowUp")
+                        return;
+                      event.preventDefault();
+                      const next = moveActive(
+                        event.key === "ArrowDown" ? 1 : -1,
+                      );
+                      if (next)
+                        document
+                          .getElementById(`${resultsId}-${next.code}`)
+                          ?.focus();
+                    }}
                   >
-                    <span>
-                      {lang === "fa" ? product.name_fa : product.name_en}
+                    <span className="lookup-result-name">
+                      <span lang="en" dir="ltr">
+                        {product.name_en}
+                      </span>
+                      <span className="muted" lang="fa" dir="rtl">
+                        {product.name_fa}
+                      </span>
+                      <span className="lookup-result-meta muted">
+                        {t(state.config.terminology.product_code, "کد محصول")}{" "}
+                        <span dir="ltr">{product.code}</span>
+                      </span>
                     </span>
-                    {" · "}
-                    <span dir="ltr">
-                      {price ? money(price) : t("Pending", "در انتظار تأیید")}
+                    <span className="lookup-result-price">
+                      {price ? (
+                        <span dir="ltr">{money(price)}</span>
+                      ) : (
+                        <span className="muted">
+                          {t(
+                            "No approved price yet",
+                            "هنوز قیمت تأییدشده‌ای وجود ندارد",
+                          )}
+                        </span>
+                      )}
+                      <span className="lookup-result-pills actions">
+                        {pending && (
+                          <Badge tone="pending">
+                            {t("Pending", "در انتظار تأیید")}
+                          </Badge>
+                        )}
+                        {taxable && (
+                          <Badge tone="info">
+                            {t(
+                              state.config.tax.label_text_en,
+                              state.config.tax.label_text_fa,
+                            )}
+                          </Badge>
+                        )}
+                        {offer && (
+                          <Badge tone="info" className="offer-pill">
+                            {offer.label}
+                          </Badge>
+                        )}
+                      </span>
                     </span>
-                  </Button>
+                  </button>
                 );
               })}
             </div>
           </Card>
-          <ProductDetail product={selected} />
-        </div>
+        </>
       )}
     </div>
   );

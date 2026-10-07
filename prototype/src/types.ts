@@ -1,5 +1,4 @@
-import configSeed from "../../seed/arzon-config.json";
-import demoSeed from "../../seed/demo-data.json";
+import { configSeed, demoSeed } from "./config";
 
 export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";

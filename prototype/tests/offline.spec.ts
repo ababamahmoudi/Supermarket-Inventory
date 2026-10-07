@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
 const screens = [
   ["lookup", "Cashier lookup", "جست‌وجوی صندوق‌دار"],
@@ -25,13 +26,7 @@ test("all screens and both languages work offline with no console errors", async
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Supervisor", exact: true }).click();
-  await page.getByLabel("Demo PIN", { exact: true }).fill("1111");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    "supervisor",
-  );
+  await signIn(page, "Supervisor");
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
   for (const language of ["en", "fa"]) {

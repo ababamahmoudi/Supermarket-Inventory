@@ -12,9 +12,13 @@ void i18next.use(initReactI18next).init({
 });
 
 /** Keep each piece of copy bilingual while routing all display text through i18next. */
-export function translate(en: string, fa: string): string {
+export function translate(
+  en: string,
+  fa: string,
+  language = i18next.language,
+): string {
   i18next.addResource("en", "translation", en, en);
   i18next.addResource("fa", "translation", en, fa);
-  return String(i18next.t(en));
+  return String(i18next.t(en, { lng: language }));
 }
 export default i18next;

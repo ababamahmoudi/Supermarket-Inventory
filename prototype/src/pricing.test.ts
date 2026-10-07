@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
-import seedConfig from "../../seed/arzon-config.json";
+import { configSeed as seedConfig } from "./config";
 import fixtures from "../../seed/pricing-test-cases.json";
+import retainedBoundaries from "./compat/pricing-boundaries.json";
 import {
   calculatePrice,
   PricingValidationError,
@@ -15,6 +16,18 @@ function configuration(): PricingConfig {
 
 describe("the shared pricing fixtures", () => {
   it.each(fixtures.cases)("$name", (fixture) => {
+    const result = calculatePrice(fixture.cost_before_tax, fixture.category);
+    expect(result.selling_price).toBe(fixture.expected_selling_price);
+    expect(result.rounded_raw).toBe(fixture.raw_price);
+    expect(result.after_band_rounding).toBe(fixture.after_band_rounding);
+    expect(result.special_correction_applied).toBe(
+      fixture.special_2_49_3_49_correction_applied,
+    );
+  });
+});
+
+describe("the previously verified pricing boundaries", () => {
+  it.each(retainedBoundaries)("$name", (fixture) => {
     const result = calculatePrice(fixture.cost_before_tax, fixture.category);
     expect(result.selling_price).toBe(fixture.expected_selling_price);
     expect(result.rounded_raw).toBe(fixture.raw_price);

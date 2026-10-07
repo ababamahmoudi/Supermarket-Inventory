@@ -1,22 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import { signIn, visitPage, resetDemo } from "./helpers";
 
 async function openSettings(page: Page) {
-  await page.goto("/");
-  await page.getByRole("radio", { name: "Supervisor", exact: true }).click();
-  await page
-    .getByLabel("Demo PIN", { exact: true })
-    .fill(demoSeed.demo_users.find((user) => user.role === "supervisor")!.pin);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Reset demo", exact: true }),
-  ).toBeVisible();
-  const mobileMenu = page.getByRole("button", {
-    name: "Open menu",
-    exact: true,
-  });
-  if (await mobileMenu.isVisible()) await mobileMenu.click();
-  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  await signIn(page, "Supervisor");
+  await visitPage(page, "Settings");
   await expect(
     page.getByRole("heading", { name: "Pricing categories", exact: true }),
   ).toBeVisible();
@@ -101,11 +88,7 @@ test("Reset demo restores pricing rules, including an invalid field draft", asyn
     .getByLabel("Cost divisor for Grocery", { exact: true })
     .fill("0.50");
   await page.getByLabel("Cost divisor for Grocery", { exact: true }).fill("-1");
-  await page.getByRole("button", { name: "Reset demo", exact: true }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Reset demo", exact: true })
-    .click();
+  await resetDemo(page);
   await expect(
     page.getByLabel("Cost divisor for Grocery", { exact: true }),
   ).toHaveValue("0.65");

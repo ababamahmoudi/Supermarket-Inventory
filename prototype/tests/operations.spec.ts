@@ -1,29 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import configSeed from "../../seed/arzon-config.json" with { type: "json" };
+import { signIn, visitPage } from "./helpers";
 
-async function signIn(page: Page, role: "Floor Worker" | "Supervisor") {
-  const value = role === "Supervisor" ? "supervisor" : "floor_worker";
-  if (await page.getByLabel("Role switcher", { exact: true }).count()) {
-    await page.getByLabel("Role switcher", { exact: true }).selectOption(value);
-  } else {
-    await page.goto("/");
-    await page.getByRole("radio", { name: role, exact: true }).click();
-  }
-  await page
-    .getByLabel("Demo PIN", { exact: true })
-    .fill(role === "Supervisor" ? "1111" : "2222");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    value,
-  );
-}
 async function visit(page: Page, label: string) {
-  const menu = page.getByRole("button", { name: "Open menu", exact: true });
-  if (await menu.isVisible()) await menu.click();
-  await page
-    .getByRole("navigation", { name: "Pages", exact: true })
-    .getByRole("link", { name: label })
-    .click();
+  await visitPage(page, label);
 }
 async function stored(page: Page) {
   return page.evaluate(() =>
@@ -314,7 +293,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   ).toHaveCount(0);
 });
 
-test("dashboard follows configuration, navigates cards, and operations render in Persian without page overflow", async ({
+test("dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -352,17 +331,27 @@ test("dashboard follows configuration, navigates cards, and operations render in
   await expect(page.getByText("Approve price", { exact: true })).toBeVisible();
   await expect(page.getByText("Create offer", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Stop offer", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".stats-grid > .stat-card")).toHaveCount(
-    configSeed.dashboard_order.length,
-  );
-  await expect(page.locator(".stat-label").first()).toHaveText(
+  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
+  await expect(page.locator(".kpi-label")).toHaveText([
     "Approvals waiting",
-  );
-  await expect(page.locator(".stat-label").last()).toHaveText(
-    "Employee activity",
-  );
+    "Open alerts",
+    "Open shorts",
+    "Expiring soon",
+  ]);
+  for (const heading of [
+    "Approvals queue",
+    "Alerts",
+    "Recent invoices",
+    "Returns",
+    "Supplier balances",
+    "Notes for Supervisor",
+    "Activity",
+  ])
+    await expect(
+      page.getByRole("heading", { name: heading, exact: true }),
+    ).toBeVisible();
   await page
-    .getByRole("button", { name: "Upcoming expiries: 2", exact: true })
+    .getByRole("button", { name: "Expiring soon: 2", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Date tracking", exact: true, level: 1 }),

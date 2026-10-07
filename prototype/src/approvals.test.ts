@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import configSeed from "../../seed/arzon-config.json";
-import demoSeed from "../../seed/demo-data.json";
+import { configSeed, demoSeed } from "./config";
 import {
   activateOffer,
   applyApprovedPrice,

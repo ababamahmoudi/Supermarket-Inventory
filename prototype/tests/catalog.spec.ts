@@ -1,25 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn, setBranch } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
-
-async function signIn(
-  page: Page,
-  role: "Cashier" | "Floor Worker" | "Supervisor",
-  pin: string,
-) {
-  await page.goto("/");
-  await page.getByRole("radio", { name: role, exact: true }).click();
-  await page.getByLabel("Demo PIN", { exact: true }).fill(pin);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  const roleValue =
-    role === "Supervisor"
-      ? "supervisor"
-      : role === "Floor Worker"
-        ? "floor_worker"
-        : "cashier";
-  await expect(page.getByLabel("Role switcher", { exact: true })).toHaveValue(
-    roleValue,
-  );
-}
 
 // Hash navigation works with the desktop sidebar and the collapsed phone menu.
 async function visit(page: Page, route: string, heading: string) {
@@ -32,7 +13,7 @@ async function visit(page: Page, route: string, heading: string) {
 test("cashier finds English, Persian, code and barcode results with approved price, tax and pending tags", async ({
   page,
 }) => {
-  await signIn(page, "Cashier", "3333");
+  await signIn(page, "Cashier");
   const search = page.getByLabel("Search products", { exact: true });
   const sumac = demoSeed.products.find((product) =>
     product.name_en.includes("Sumac"),
@@ -46,7 +27,9 @@ test("cashier finds English, Persian, code and barcode results with approved pri
   }
   await search.fill("0009");
   await expect(page.locator(".price")).toHaveText("$2.99");
-  await expect(page.getByText("Taxable", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".lookup-detail").getByText("Taxable", { exact: true }),
+  ).toBeVisible();
   await search.fill("0006");
   await expect(page.locator(".price")).toHaveText("$1.99");
   await expect(
@@ -68,7 +51,7 @@ test("cashier finds English, Persian, code and barcode results with approved pri
 test("cashier direct navigation stays in lookup and exposes no operational or financial controls", async ({
   page,
 }) => {
-  await signIn(page, "Cashier", "3333");
+  await signIn(page, "Cashier");
   await visit(page, "payables", "Cashier lookup");
   await expect(
     page.getByRole("heading", { name: "Cashier lookup", exact: true }),
@@ -90,17 +73,23 @@ test("cashier direct navigation stays in lookup and exposes no operational or fi
 test("branch switcher shows approved overrides and a new product requires Supervisor confirmation", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor", "1111");
+  await signIn(page, "Supervisor");
   await visit(page, "lookup", "Cashier lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0004");
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 1");
+  await setBranch(page, "Branch 1");
   await expect(page.locator(".price")).toHaveText("$6.49");
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 2");
+  await setBranch(page, "Branch 2");
   await expect(page.locator(".price")).toHaveText("$6.99");
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 1");
+  await setBranch(page, "Branch 1");
   for (const query of ["Dried Barberries", "0015", "۰۰۱۵"]) {
     await page.getByLabel("Search products", { exact: true }).fill(query);
-    await expect(page.locator(".price")).toHaveText("$5.49");
+    await expect(page.locator(".price")).toHaveCount(0);
+    await expect(
+      page
+        .locator(".lookup-detail")
+        .getByText("No approved price yet", { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".lookup-pending-price")).toContainText("$5.49");
     await expect(
       page.getByRole("heading", {
         name: "Dried Barberries 100 g",
@@ -108,7 +97,7 @@ test("branch switcher shows approved overrides and a new product requires Superv
       }),
     ).toBeVisible();
     await expect(
-      page.locator('[aria-label="Product results"]').getByRole("button"),
+      page.locator('[aria-label="Product results"]').getByRole("option"),
     ).toHaveCount(1);
   }
   await expect(
@@ -121,7 +110,7 @@ test("branch switcher shows approved overrides and a new product requires Superv
 test("Floor Worker filters Products and opens details without seeing catalog supplier cost", async ({
   page,
 }) => {
-  await signIn(page, "Floor Worker", "2222");
+  await signIn(page, "Floor Worker");
   await visit(page, "products", "Products");
   await page.getByLabel("Has pending price", { exact: true }).check();
   await expect(

@@ -1,21 +1,28 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   Archive,
   Bell,
+  ChevronRight,
   ClipboardList,
   CreditCard,
+  Eye,
+  EyeOff,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
-  Menu,
+  Menu as MenuIcon,
   MessageSquare,
+  Moon,
   Package,
+  PanelLeftClose,
   RotateCcw,
   Search,
   Settings,
+  Sun,
   Tag,
   Tags,
   Truck,
+  Type,
   X,
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png?inline";
@@ -32,23 +39,26 @@ import Notes from "./screens/Notes";
 import Payables from "./screens/Payables";
 import Dashboard from "./screens/Dashboard";
 import { branches, demoUsers, useDemo } from "./store";
+import type { AuthError } from "./auth";
 import type { Branch, Role } from "./types";
 import {
-  Badge,
   Button,
   Card,
   ConfirmDialog,
-  EmptyState,
   Field,
-  PageHeader,
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
 } from "./ui";
 
 export const pages = [
   {
     key: "lookup",
-    en: "Cashier lookup",
-    fa: "جست‌وجوی صندوق‌دار",
+    en: "Lookup",
+    fa: "جست‌وجو",
     icon: Search,
+    group: "Daily",
     roles: ["cashier", "floor_worker", "supervisor"],
   },
   {
@@ -56,34 +66,7 @@ export const pages = [
     en: "Invoices",
     fa: "فاکتورها",
     icon: Truck,
-    roles: ["floor_worker", "supervisor"],
-  },
-  {
-    key: "approvals",
-    en: "Approvals",
-    fa: "تأییدها",
-    icon: ClipboardList,
-    roles: ["supervisor"],
-  },
-  {
-    key: "alerts",
-    en: "Alerts",
-    fa: "هشدارها",
-    icon: Bell,
-    roles: ["supervisor"],
-  },
-  {
-    key: "offers",
-    en: "Offers",
-    fa: "پیشنهادهای فروش",
-    icon: Tags,
-    roles: ["floor_worker", "supervisor"],
-  },
-  {
-    key: "labels",
-    en: "Labels",
-    fa: "برچسب‌ها",
-    icon: Tag,
+    group: "Daily",
     roles: ["floor_worker", "supervisor"],
   },
   {
@@ -91,6 +74,15 @@ export const pages = [
     en: "Returns",
     fa: "مرجوعی‌ها",
     icon: RotateCcw,
+    group: "Daily",
+    roles: ["floor_worker", "supervisor"],
+  },
+  {
+    key: "labels",
+    en: "Labels",
+    fa: "برچسب‌ها",
+    icon: Tag,
+    group: "Daily",
     roles: ["floor_worker", "supervisor"],
   },
   {
@@ -98,6 +90,7 @@ export const pages = [
     en: "Date tracking",
     fa: "پیگیری تاریخ",
     icon: Archive,
+    group: "Daily",
     roles: ["floor_worker", "supervisor"],
   },
   {
@@ -105,34 +98,63 @@ export const pages = [
     en: "Notes",
     fa: "یادداشت‌ها",
     icon: MessageSquare,
+    group: "Daily",
     roles: ["floor_worker", "supervisor"],
-  },
-  {
-    key: "payables",
-    en: "Payables",
-    fa: "حساب‌های پرداختنی",
-    icon: CreditCard,
-    roles: ["supervisor"],
-  },
-  {
-    key: "dashboard",
-    en: "Dashboard",
-    fa: "داشبورد",
-    icon: LayoutDashboard,
-    roles: ["supervisor"],
   },
   {
     key: "products",
     en: "Products",
     fa: "محصولات",
     icon: Package,
+    group: "Catalog",
     roles: ["floor_worker", "supervisor"],
+  },
+  {
+    key: "offers",
+    en: "Offers",
+    fa: "پیشنهادهای فروش",
+    icon: Tags,
+    group: "Catalog",
+    roles: ["floor_worker", "supervisor"],
+  },
+  {
+    key: "dashboard",
+    en: "Dashboard",
+    fa: "داشبورد",
+    icon: LayoutDashboard,
+    group: "Supervisor",
+    roles: ["supervisor"],
+  },
+  {
+    key: "approvals",
+    en: "Approvals",
+    fa: "تأییدها",
+    icon: ClipboardList,
+    group: "Supervisor",
+    roles: ["supervisor"],
+  },
+  {
+    key: "alerts",
+    en: "Alerts",
+    fa: "هشدارها",
+    icon: Bell,
+    group: "Supervisor",
+    roles: ["supervisor"],
+  },
+  {
+    key: "payables",
+    en: "Payables",
+    fa: "حساب‌های پرداختنی",
+    icon: CreditCard,
+    group: "Supervisor",
+    roles: ["supervisor"],
   },
   {
     key: "settings",
     en: "Settings",
     fa: "تنظیمات",
     icon: Settings,
+    group: "Admin",
     roles: ["supervisor"],
   },
 ];
@@ -151,164 +173,378 @@ function LanguageToggle() {
     <div className="pills language-toggle" aria-label={t("Language", "زبان")}>
       <button
         type="button"
+        aria-label="English"
         aria-pressed={lang === "en"}
         onClick={() => setLang("en")}
       >
-        English
+        EN
       </button>
       <button
         type="button"
         lang="fa"
+        aria-label="فارسی"
         aria-pressed={lang === "fa"}
         onClick={() => setLang("fa")}
       >
-        فارسی
+        فا
       </button>
     </div>
   );
 }
-function SignIn({
-  selectedRole,
-  setSelectedRole,
+function Initials({ name }: { name: string }) {
+  return (
+    <span className="user-avatar" aria-hidden="true">
+      {name
+        .split(" ")
+        .filter((part) => part !== "Demo")
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join("")}
+    </span>
+  );
+}
+function PasswordField({
+  label,
+  value,
+  onChange,
+  error,
+  autoComplete = "current-password",
+  autoFocus = false,
 }: {
-  selectedRole: Role;
-  setSelectedRole: (role: Role) => void;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  autoComplete?: string;
+  autoFocus?: boolean;
 }) {
-  const { signIn, t, state } = useDemo();
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
-  const user = demoUsers.find((candidate) => candidate.role === selectedRole)!;
-  function submit() {
-    if (!signIn(selectedRole, pin)) {
-      setError(
-        t(
-          "Use the demo PIN shown below for the selected role.",
-          "برای نقش انتخاب‌شده از رمز نمایشی زیر استفاده کنید.",
-        ),
+  const { t } = useDemo();
+  const id = useId();
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className="password-field">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          required
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
+        />
+        <button
+          type="button"
+          className="password-toggle"
+          aria-label={
+            visible
+              ? t("Hide password", "پنهان کردن گذرواژه")
+              : t("Show password", "نمایش گذرواژه")
+          }
+          aria-pressed={visible}
+          onClick={() => setVisible((previous) => !previous)}
+        >
+          {visible ? (
+            <EyeOff size={20} aria-hidden="true" />
+          ) : (
+            <Eye size={20} aria-hidden="true" />
+          )}
+        </button>
+      </div>
+      {error && (
+        <p id={`${id}-error`} className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+function authErrorCopy(
+  error: AuthError | null,
+  t: (en: string, fa: string) => string,
+  minLength = 8,
+): string {
+  switch (error) {
+    case "invalid":
+      return t(
+        "The username or password is incorrect. Try again.",
+        "نام کاربری یا گذرواژه درست نیست. دوباره تلاش کنید.",
       );
-      return;
-    }
-    window.location.hash =
-      selectedRole === "supervisor"
-        ? "dashboard"
-        : selectedRole === "floor_worker"
-          ? "invoices"
-          : "lookup";
+    case "locked":
+      return t(
+        "Too many attempts. Try again in 15 minutes or ask your Supervisor.",
+        "تلاش‌های ناموفق بیش از حد است. 15 دقیقه دیگر دوباره تلاش کنید یا از سرپرست کمک بخواهید.",
+      );
+    case "too_short":
+      return t(
+        `Use at least ${minLength} characters.`,
+        `حداقل ${minLength} نویسه وارد کنید.`,
+      );
+    case "common":
+      return t(
+        "This password is too common. Choose a different password.",
+        "این گذرواژه بسیار رایج است. گذرواژهٔ دیگری انتخاب کنید.",
+      );
+    case "same_password":
+      return t(
+        "Choose a password different from your temporary password.",
+        "گذرواژه‌ای متفاوت با گذرواژهٔ موقت انتخاب کنید.",
+      );
+    default:
+      return "";
   }
+}
+function SignIn() {
+  const { signIn, t, state, recentUsers } = useDemo();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <AuthLayout>
+      <h1>{t("Sign in", "ورود")}</h1>
+      {state.config.session.registered_device_shows_recent_users &&
+        recentUsers.length > 0 && (
+          <div className="recent-users">
+            <p className="helper">
+              {t("Recent users on this computer", "کاربران اخیر این رایانه")}
+            </p>
+            <div className="recent-user-list">
+              {recentUsers.map((user) => (
+                <button
+                  type="button"
+                  className="recent-user"
+                  key={user.username}
+                  onClick={() => {
+                    setUsername(user.username);
+                    setPassword("");
+                    setError("");
+                  }}
+                >
+                  <Initials name={user.name} />
+                  <span>{user.name.replace(/^Demo /, "")}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const result = signIn(username, password);
+          if (result) {
+            setError(authErrorCopy(result, t));
+            return;
+          }
+          const user = demoUsers.find(
+            (candidate) => candidate.username === username.trim().toLowerCase(),
+          )!;
+          window.location.hash =
+            user.role === "supervisor"
+              ? "dashboard"
+              : user.role === "floor_worker"
+                ? "invoices"
+                : "lookup";
+        }}
+      >
+        <Field label={t("Username", "نام کاربری")}>
+          <input
+            value={username}
+            onChange={(event) => {
+              setUsername(event.target.value);
+              setError("");
+            }}
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            autoFocus
+          />
+        </Field>
+        <PasswordField
+          label={t("Password", "گذرواژه")}
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            setError("");
+          }}
+          error={error}
+        />
+        <Button type="submit" className="signin-submit">
+          {t("Sign in", "ورود")}
+        </Button>
+      </form>
+      <p className="helper signin-help">
+        {t(
+          "Forgot your password? Ask your Supervisor to reset it.",
+          "گذرواژه را فراموش کرده‌اید؟ از سرپرست بخواهید آن را بازنشانی کند.",
+        )}
+      </p>
+      <p className="helper demo-account-hint">
+        {t(
+          "Demo accounts: supervisor, floorworker, cashier / password demo1234. New employee: newemployee / temporary password temp1234.",
+          "حساب‌های دمو: supervisor، floorworker، cashier / گذرواژه demo1234. کارمند جدید: newemployee / گذرواژهٔ موقت temp1234.",
+        )}
+      </p>
+    </AuthLayout>
+  );
+}
+function AuthLayout({ children }: { children: ReactNode }) {
+  const { state, t } = useDemo();
   return (
     <div className="signin-page">
       <div className="signin-language">
         <LanguageToggle />
       </div>
       <Card className="signin-card">
-        <div className="logo-tile">
-          <img
-            src={logo}
-            alt={t(state.config.company.name_en, state.config.company.name_fa)}
-          />
-        </div>
-        <PageHeader
-          title={t("Sign in as", "ورود با نقش")}
-          description={t(
-            "Choose a fictional demo user. No real account is needed.",
-            "یک کاربر نمایشی را انتخاب کنید. نیازی به حساب واقعی نیست.",
-          )}
+        <img
+          className="signin-logo"
+          src={logo}
+          alt={t(state.config.company.name_en, state.config.company.name_fa)}
         />
-        <div
-          className="role-options"
-          role="radiogroup"
-          aria-label={t("Demo role", "نقش نمایشی")}
-        >
-          {(["supervisor", "floor_worker", "cashier"] as Role[]).map((role) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked={selectedRole === role}
-              key={role}
-              className={
-                selectedRole === role ? "role-option selected" : "role-option"
-              }
-              onClick={() => {
-                setSelectedRole(role);
-                setPin("");
-                setError("");
-              }}
-            >
-              <RoleName role={role} />
-            </button>
-          ))}
-        </div>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit();
-          }}
-        >
-          <Field
-            label={t("Demo PIN", "رمز نمایشی")}
-            error={error}
-            hint={t(
-              `For this demo, use ${user.pin}.`,
-              `برای این دمو از ${user.pin} استفاده کنید.`,
-            )}
-          >
-            <input
-              autoComplete="off"
-              inputMode="numeric"
-              type="password"
-              value={pin}
-              maxLength={4}
-              onChange={(event) => {
-                setPin(event.target.value.replace(/\D/g, ""));
-                setError("");
-              }}
-            />
-          </Field>
-          <div className="pin-pad" aria-label={t("PIN pad", "صفحهٔ رمز")}>
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
-              <Button
-                key={digit}
-                variant="secondary"
-                onClick={() =>
-                  setPin((previous) => (previous + digit).slice(0, 4))
-                }
-              >
-                {digit}
-              </Button>
-            ))}
-            <Button variant="secondary" onClick={() => setPin("")}>
-              {t("Clear", "پاک کردن")}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setPin((previous) => (previous + "0").slice(0, 4))}
-            >
-              0
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setPin((previous) => previous.slice(0, -1))}
-              aria-label={t("Remove last digit", "حذف آخرین رقم")}
-            >
-              ⌫
-            </Button>
-          </div>
-          <Button type="submit" className="signin-submit">
-            {t("Sign in", "ورود")}
-          </Button>
-        </form>
-        <p className="helper">
-          {t(
-            "Browser demo · Fictional data · No real authentication",
-            "دموی مرورگر · داده‌های خیالی · بدون احراز هویت واقعی",
-          )}
-        </p>
+        {children}
       </Card>
     </div>
   );
 }
-
-/** Business screens are added in the next small pull requests. */
+function ChoosePassword() {
+  const { choosePassword, signOut, state, t } = useDemo();
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <AuthLayout>
+      <h1>{t("Choose a new password", "انتخاب گذرواژهٔ جدید")}</h1>
+      <p className="helper">
+        {t(
+          `Use at least ${state.config.session.password_min_length} characters. Avoid common passwords.`,
+          `حداقل ${state.config.session.password_min_length} نویسه وارد کنید. از گذرواژه‌های رایج استفاده نکنید.`,
+        )}
+      </p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (password !== confirmation) {
+            setError(
+              t(
+                "The passwords do not match. Enter the same password in both fields.",
+                "گذرواژه‌ها یکسان نیستند. در هر دو فیلد گذرواژهٔ یکسان وارد کنید.",
+              ),
+            );
+            return;
+          }
+          const result = choosePassword(password);
+          setError(
+            authErrorCopy(result, t, state.config.session.password_min_length),
+          );
+        }}
+      >
+        <PasswordField
+          label={t("New password", "گذرواژهٔ جدید")}
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          autoFocus
+          error={error}
+        />
+        <PasswordField
+          label={t("Confirm password", "تأیید گذرواژه")}
+          value={confirmation}
+          onChange={setConfirmation}
+          autoComplete="new-password"
+        />
+        <Button type="submit" className="signin-submit">
+          {t("Save password", "ذخیرهٔ گذرواژه")}
+        </Button>
+      </form>
+      <Button variant="ghost" onClick={signOut}>
+        {t("Sign out", "خروج")}
+      </Button>
+    </AuthLayout>
+  );
+}
+function LockScreen() {
+  const { user, unlock, signOut, t } = useDemo();
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <AuthLayout>
+      <Initials name={user!.name} />
+      <h1>{t("Screen locked", "صفحه قفل شده است")}</h1>
+      <p>{user!.name}</p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setError(authErrorCopy(unlock(password), t));
+        }}
+      >
+        <PasswordField
+          label={t("Password", "گذرواژه")}
+          value={password}
+          onChange={setPassword}
+          error={error}
+          autoFocus
+        />
+        <Button type="submit" className="signin-submit">
+          {t("Unlock", "باز کردن قفل")}
+        </Button>
+      </form>
+      <Button variant="ghost" onClick={signOut}>
+        {t("Sign in as someone else", "ورود به‌عنوان کاربر دیگر")}
+      </Button>
+    </AuthLayout>
+  );
+}
+function Reauthenticate() {
+  const { reauthenticate, navigate, t } = useDemo();
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className="confirm-dialog"
+      aria-labelledby="reauth-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        navigate("dashboard");
+      }}
+    >
+      <h2 id="reauth-title">{t("Confirm your password", "تأیید گذرواژه")}</h2>
+      <p className="muted">
+        {t(
+          "Enter your password to continue.",
+          "برای ادامه گذرواژهٔ خود را وارد کنید.",
+        )}
+      </p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setError(authErrorCopy(reauthenticate(password), t));
+        }}
+      >
+        <PasswordField
+          label={t("Password", "گذرواژه")}
+          value={password}
+          onChange={setPassword}
+          error={error}
+          autoFocus
+        />
+        <div className="actions">
+          <Button variant="secondary" onClick={() => navigate("dashboard")}>
+            {t("Cancel", "انصراف")}
+          </Button>
+          <Button type="submit">{t("Continue", "ادامه")}</Button>
+        </div>
+      </form>
+    </dialog>
+  );
+}
 const screenRegistry: Record<string, ReactNode> = {
   lookup: <Lookup />,
   products: <Products />,
@@ -324,68 +560,75 @@ const screenRegistry: Record<string, ReactNode> = {
   dashboard: <Dashboard />,
   settings: <PricingSettings />,
 };
-function Placeholder({ page }: { page: (typeof pages)[number] }) {
-  const { t } = useDemo();
-  return (
-    <>
-      <PageHeader
-        title={t(page.en, page.fa)}
-        description={t(
-          "Phase 0 browser prototype",
-          "نمونهٔ اولیهٔ مرورگر در فاز 0",
-        )}
-      />
-      <Card>
-        <EmptyState>
-          {t(
-            "The demo shell is ready. This workflow is added in the next prototype steps.",
-            "پوستهٔ دمو آماده است. این بخش در مراحل بعدی نمونهٔ اولیه اضافه می‌شود.",
-          )}
-        </EmptyState>
-      </Card>
-      {page.key === "invoices" && (
-        <p className="helper">
-          {t(
-            "Demo: AI invoice reading is simulated",
-            "دمو: خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
-          )}
-        </p>
-      )}
-    </>
-  );
-}
 export default function App() {
   const {
     state,
     role,
+    user,
+    locked,
+    authenticatedAt,
+    mustChangePassword,
     branch,
     lang,
+    theme,
+    setTheme,
+    comfortableText,
+    setComfortableText,
     setBranch,
     signOut,
     lock,
+    switchDemoUser,
     reset,
     resetGeneration,
+    needsReauthentication,
     t,
   } = useDemo();
-  const [selectedRole, setSelectedRole] = useState<Role>("cashier");
   const [hash, setHash] = useState(() => window.location.hash.slice(1));
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia?.("(max-width: 760px)").matches ?? false,
+  );
   const [resetOpen, setResetOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [, setReauthenticationClock] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia?.("(max-width: 760px)");
+    if (!media) return;
+    const resize = () => setIsMobile(media.matches);
+    media.addEventListener("change", resize);
+    return () => media.removeEventListener("change", resize);
+  }, []);
   useEffect(() => {
     const onHash = () => {
       setHash(window.location.hash.slice(1));
       setMenuOpen(false);
     };
+    const onShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        event.key === "/" &&
+        !target?.matches("input, textarea, [contenteditable=true]") &&
+        searchRef.current
+      ) {
+        event.preventDefault();
+        searchRef.current.focus();
+      }
+    };
     window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    window.addEventListener("keydown", onShortcut);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("keydown", onShortcut);
+    };
   }, []);
   useEffect(() => {
     if (!menuOpen) return;
-    const sidebar = document.getElementById("app-sidebar");
     const focusable = Array.from(
-      sidebar?.querySelectorAll<HTMLElement>(
-        "a[href],button:not([disabled])",
-      ) ?? [],
+      document
+        .getElementById("app-sidebar")
+        ?.querySelectorAll<HTMLElement>("a[href],button:not([disabled])") ?? [],
     );
     focusable[0]?.focus();
     const handle = (event: KeyboardEvent) => {
@@ -408,10 +651,29 @@ export default function App() {
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
   }, [menuOpen]);
-  if (!role)
-    return (
-      <SignIn selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
+  useEffect(() => {
+    if (role !== "supervisor" || locked || mustChangePassword) return;
+    const wait =
+      authenticatedAt +
+      state.config.session.reprompt_password_after_minutes * 60_000 -
+      Date.now() +
+      1;
+    if (wait <= 0) return;
+    const timer = window.setTimeout(
+      () => setReauthenticationClock((current) => current + 1),
+      wait,
     );
+    return () => window.clearTimeout(timer);
+  }, [
+    role,
+    locked,
+    mustChangePassword,
+    authenticatedAt,
+    state.config.session.reprompt_password_after_minutes,
+  ]);
+  if (!role || !user) return <SignIn />;
+  if (mustChangePassword) return <ChoosePassword />;
+  if (locked) return <LockScreen />;
   const allowed = pages.filter((page) => page.roles.includes(role));
   const defaultKey =
     role === "supervisor"
@@ -420,39 +682,58 @@ export default function App() {
         ? "invoices"
         : "lookup";
   const page =
-    allowed.find((candidate) => candidate.key === hash) ??
+    allowed.find((candidate) => candidate.key === hash.split("?")[0]) ??
     allowed.find((candidate) => candidate.key === defaultKey)!;
-  const user = demoUsers.find((candidate) => candidate.role === role)!;
+  const inBranch = (record: { company_id: string; branch: Branch }) =>
+    record.company_id === state.config.company.seed_key &&
+    (branch === "all" || record.branch === branch || record.branch === "all");
   const unread = state.notes.filter(
     (note) =>
-      note.company_id === state.config.company.seed_key &&
+      inBranch(note) &&
       note.type === "note_to_supervisor" &&
-      note.status === "open" &&
-      (branch === "all" || note.branch === branch),
+      note.status === "open",
   ).length;
-  const configuredBranches = state.config.branches;
+  const approvalCount = state.approvals.filter(
+    (record) => inBranch(record) && record.status === "pending",
+  ).length;
+  const alertCount = state.alerts.filter(
+    (record) => inBranch(record) && record.status === "pending",
+  ).length;
+  const notifications =
+    role === "supervisor" ? unread + approvalCount + alertCount : 0;
+  const groupNames: Record<string, [string, string]> = {
+    Daily: ["Daily", "روزانه"],
+    Catalog: ["Catalog", "کاتالوگ"],
+    Supervisor: ["Supervisor", "سرپرست"],
+    Admin: ["Admin", "مدیریت"],
+  };
   const branchLabel = (name: Branch) => {
     const index = branches.indexOf(name as Exclude<Branch, "all">);
     return name === "all"
       ? t("All branches", "همهٔ شعبه‌ها")
       : t(
-          configuredBranches[index]?.name_en.replace(
+          state.config.branches[index]?.name_en.replace(
             / \(PLACEHOLDER.*\)/,
             "",
           ) ?? name,
-          configuredBranches[index]?.name_fa ?? name,
+          state.config.branches[index]?.name_fa ?? name,
         );
   };
-  const brandStyle = {
-    "--brand": state.config.company.branding.primary_color,
-    "--brand-hover": state.config.company.branding.primary_hover_color,
-  } as CSSProperties;
   return (
     <div
-      className="app-shell"
-      style={brandStyle}
+      className={`app-shell ${collapsed ? "is-collapsed" : ""}`}
       dir={lang === "fa" ? "rtl" : "ltr"}
     >
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+      >
+        {t("Skip to content", "رفتن به محتوا")}
+      </a>
       {menuOpen && (
         <button
           className="sidebar-backdrop"
@@ -466,152 +747,238 @@ export default function App() {
         aria-label={t("Main menu", "منوی اصلی")}
       >
         <div className="sidebar-brand">
-          <div className="logo-tile">
-            <img
-              src={logo}
-              alt={t(
-                state.config.company.name_en,
-                state.config.company.name_fa,
-              )}
-            />
-          </div>
-          <p className="store-name">
+          <img
+            className="brand-logo"
+            src={logo}
+            alt={t(state.config.company.name_en, state.config.company.name_fa)}
+          />
+          <span className="store-name">
             {t(state.config.company.name_en, state.config.company.name_fa)}
-          </p>
-          <span className="sidebar-helper">
-            {t("Operations demo", "دموی مدیریت فروشگاه")}
           </span>
         </div>
         <nav aria-label={t("Pages", "صفحه‌ها")}>
-          {allowed.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.key}
-                href={`#${item.key}`}
-                aria-current={page.key === item.key ? "page" : undefined}
-                onClick={() => setMenuOpen(false)}
-              >
-                <Icon size={19} aria-hidden="true" />
-                <span>{t(item.en, item.fa)}</span>
-                {item.key === "notes" &&
-                  role === "supervisor" &&
-                  unread > 0 && (
-                    <span
-                      className="nav-count"
-                      aria-label={t(
-                        `${unread} unread notes`,
-                        `${unread} یادداشت خوانده‌نشده`,
-                      )}
+          {Object.entries(groupNames).map(([group, names]) => {
+            const items = allowed.filter((item) => item.group === group);
+            return items.length > 0 ? (
+              <div className="nav-section" key={group}>
+                <p className="nav-section-label">{t(...names)}</p>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const count =
+                    item.key === "notes" && role === "supervisor"
+                      ? unread
+                      : item.key === "approvals"
+                        ? approvalCount
+                        : item.key === "alerts"
+                          ? alertCount
+                          : 0;
+                  return (
+                    <a
+                      key={item.key}
+                      href={`#${item.key}`}
+                      aria-label={t(item.en, item.fa)}
+                      title={collapsed ? t(item.en, item.fa) : undefined}
+                      aria-current={page.key === item.key ? "page" : undefined}
+                      onClick={() => setMenuOpen(false)}
                     >
-                      {unread}
-                    </span>
-                  )}
-              </a>
-            );
+                      <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                      <span className="nav-item-label">
+                        {t(item.en, item.fa)}
+                      </span>
+                      {count > 0 && <span className="nav-count">{count}</span>}
+                    </a>
+                  );
+                })}
+              </div>
+            ) : null;
           })}
         </nav>
         <div className="sidebar-user">
-          <span className="user-avatar" aria-hidden="true">
-            {role === "supervisor" ? "S" : role === "floor_worker" ? "F" : "C"}
-          </span>
-          <div>
-            <strong>
-              {t(
-                user.name,
-                role === "supervisor"
-                  ? "سرپرست نمایشی"
-                  : role === "floor_worker"
-                    ? "کارمند نمایشی"
-                    : "صندوق‌دار نمایشی",
-              )}
-            </strong>
-            <small>
-              <RoleName role={role} />
-            </small>
-          </div>
-        </div>
-        <div className="sidebar-session">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSelectedRole(role);
-              lock();
-            }}
+          <Menu
+            className="user-menu"
+            aria-label={t("User menu", "منوی کاربر")}
+            label={
+              <span className="user-chip">
+                <Initials name={user.name} />
+                <span className="user-chip-copy">
+                  <strong>{user.name}</strong>
+                  <small>
+                    <RoleName role={role} />
+                  </small>
+                </span>
+              </span>
+            }
           >
-            <LockKeyhole size={17} aria-hidden="true" />
-            {t("Lock", "قفل")}
-          </Button>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut size={17} aria-hidden="true" />
-            {t("Sign out", "خروج")}
-          </Button>
+            <MenuItem onClick={lock}>
+              <LockKeyhole size={20} strokeWidth={1.5} aria-hidden="true" />
+              {t("Lock", "قفل")}
+            </MenuItem>
+            <MenuItem onClick={signOut}>
+              <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
+              {t("Sign out", "خروج")}
+            </MenuItem>
+          </Menu>
         </div>
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <Button
+          <IconButton
             id="menu-toggle"
-            className="mobile-menu"
-            variant="secondary"
+            className="sidebar-toggle"
             aria-controls="app-sidebar"
-            aria-expanded={menuOpen}
-            aria-label={t(
-              menuOpen ? "Close menu" : "Open menu",
-              menuOpen ? "بستن منو" : "باز کردن منو",
-            )}
-            onClick={() => setMenuOpen((previous) => !previous)}
+            aria-expanded={isMobile ? menuOpen : !collapsed}
+            aria-label={
+              isMobile
+                ? t(
+                    menuOpen ? "Close menu" : "Open menu",
+                    menuOpen ? "بستن منو" : "باز کردن منو",
+                  )
+                : t(
+                    collapsed ? "Expand sidebar" : "Collapse sidebar",
+                    collapsed ? "باز کردن نوار کناری" : "جمع کردن نوار کناری",
+                  )
+            }
+            onClick={() => {
+              if (isMobile) setMenuOpen((previous) => !previous);
+              else setCollapsed((previous) => !previous);
+            }}
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </Button>
+            {menuOpen ? (
+              <X size={20} strokeWidth={1.5} />
+            ) : collapsed ? (
+              <MenuIcon size={20} strokeWidth={1.5} />
+            ) : (
+              <PanelLeftClose size={20} strokeWidth={1.5} />
+            )}
+          </IconButton>
+          <nav
+            className="breadcrumbs"
+            aria-label={t("Breadcrumbs", "مسیر صفحه")}
+          >
+            <span>{branchLabel(branch)}</span>
+            <ChevronRight size={14} aria-hidden="true" />
+            <span aria-current="page">{t(page.en, page.fa)}</span>
+            {page.key === "invoices" && state.invoice.status !== "empty" && (
+              <>
+                <ChevronRight size={14} aria-hidden="true" />
+                <span dir="ltr">{state.invoice.supplier_invoice_number}</span>
+              </>
+            )}
+          </nav>
+          <form
+            className="topbar-search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              window.location.hash = `lookup?search=${encodeURIComponent(search.trim())}`;
+            }}
+          >
+            <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              aria-label={t("Search all products", "جست‌وجوی همهٔ محصولات")}
+              placeholder={t("Search products", "جست‌وجوی محصولات")}
+            />
+            <kbd aria-hidden="true">/</kbd>
+          </form>
           {role === "supervisor" ? (
-            <Field label={t("Branch", "شعبه")}>
-              <select
-                value={branch}
-                onChange={(event) => setBranch(event.target.value as Branch)}
-              >
-                {[...branches, "all" as const].map((item) => (
-                  <option key={item} value={item}>
-                    {branchLabel(item)}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <Select
+              className="branch-pill"
+              aria-label={t("Branch", "شعبه")}
+              value={branch}
+              onChange={(value) => setBranch(value as Branch)}
+              options={[...branches, "all" as const].map((value) => ({
+                value,
+                label: branchLabel(value),
+              }))}
+            />
           ) : (
-            <Badge tone="neutral">{branchLabel(branch)}</Badge>
+            <span className="branch-pill static">{branchLabel(branch)}</span>
           )}
-          <Field label={t("Role switcher", "تغییر نقش")}>
-            <select
-              value={role}
-              onChange={(event) => {
-                setSelectedRole(event.target.value as Role);
-                signOut();
-              }}
-            >
-              {(["supervisor", "floor_worker", "cashier"] as Role[]).map(
-                (item) => (
-                  <option key={item} value={item}>
-                    {t(...roleNames[item])}
-                  </option>
-                ),
-              )}
-            </select>
-          </Field>
-          <div className="topbar-end">
-            <LanguageToggle />
-            <time className="topbar-date" dateTime={new Date().toISOString()}>
-              {new Intl.DateTimeFormat("en-CA", {
-                timeZone: state.config.company.timezone,
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              }).format(new Date())}
-            </time>
-            <Button variant="secondary" onClick={() => setResetOpen(true)}>
-              <RotateCcw size={16} aria-hidden="true" />
+          <LanguageToggle />
+          <IconButton
+            aria-label={
+              theme === "light"
+                ? t("Switch to dark theme", "تغییر به تم تیره")
+                : t("Switch to light theme", "تغییر به تم روشن")
+            }
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          >
+            {theme === "light" ? (
+              <Moon size={20} strokeWidth={1.5} />
+            ) : (
+              <Sun size={20} strokeWidth={1.5} />
+            )}
+          </IconButton>
+          <IconButton
+            className="text-size-toggle"
+            aria-label={t("Comfortable text size", "اندازهٔ متن راحت")}
+            aria-pressed={comfortableText}
+            onClick={() => setComfortableText(!comfortableText)}
+          >
+            <Type size={20} strokeWidth={1.5} />
+          </IconButton>
+          <Menu
+            className="notifications-menu"
+            aria-label={t(
+              `Notifications, ${notifications} unread`,
+              `اعلان‌ها، ${notifications} خوانده‌نشده`,
+            )}
+            label={
+              <span className="notification-button">
+                <Bell size={20} strokeWidth={1.5} aria-hidden="true" />
+                {notifications > 0 && (
+                  <span className="notification-count">{notifications}</span>
+                )}
+              </span>
+            }
+          >
+            {role === "supervisor" ? (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    window.location.hash = "approvals";
+                  }}
+                >
+                  {t("Approvals", "تأییدها")} · {approvalCount}
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    window.location.hash = "alerts";
+                  }}
+                >
+                  {t("Alerts", "هشدارها")} · {alertCount}
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    window.location.hash = "notes";
+                  }}
+                >
+                  {t("Notes for Supervisor", "یادداشت‌های سرپرست")} · {unread}
+                </MenuItem>
+              </>
+            ) : (
+              <p className="helper">
+                {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
+              </p>
+            )}
+          </Menu>
+          <Menu className="demo-menu" label={t("Demo", "دمو")}>
+            {demoUsers.map((candidate) => (
+              <MenuItem
+                key={candidate.username}
+                onClick={() => switchDemoUser(candidate.username)}
+              >
+                {t("Switch to", "تغییر به")} {candidate.name}
+              </MenuItem>
+            ))}
+            <MenuItem onClick={() => setResetOpen(true)}>
+              <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
               {t("Reset demo", "بازنشانی دمو")}
-            </Button>
-          </div>
+            </MenuItem>
+          </Menu>
         </header>
         <main
           id="main-content"
@@ -619,7 +986,11 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {screenRegistry[page.key] ?? <Placeholder page={page} />}
+          {needsReauthentication(page.key) ? (
+            <Reauthenticate />
+          ) : (
+            screenRegistry[page.key]
+          )}
         </main>
       </div>
       <ConfirmDialog
@@ -627,8 +998,8 @@ export default function App() {
         onOpenChange={setResetOpen}
         title={t("Reset demo", "بازنشانی دمو")}
         description={t(
-          "Restore the fictional seed data and clear changes made in this browser. Your selected role and language stay the same.",
-          "داده‌های خیالی اولیه بازیابی می‌شوند و تغییرات این مرورگر پاک می‌شوند. نقش و زبان شما حفظ می‌شود.",
+          "Restore the fictional seed data and clear business changes made in this browser. Your account, preferences, and language stay the same.",
+          "داده‌های خیالی اولیه بازیابی و تغییرات این مرورگر پاک می‌شوند. حساب، تنظیمات شخصی و زبان شما حفظ می‌شوند.",
         )}
         confirmLabel={t("Reset demo", "بازنشانی دمو")}
         onConfirm={reset}

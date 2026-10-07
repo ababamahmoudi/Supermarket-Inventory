@@ -1,8 +1,27 @@
+import { useEffect, useState } from "react";
 import Decimal from "decimal.js";
-import { ArrowRight, Bell, ClipboardCheck, Clock3 } from "lucide-react";
+import {
+  ArrowRight,
+  Bell,
+  CalendarClock,
+  ClipboardCheck,
+  PackageMinus,
+} from "lucide-react";
 import { demoUsers, useDemo } from "../store";
 import { companyDate } from "../invoice";
-import { Badge, Button, Card, EmptyState, PageHeader } from "../ui";
+import { approvalSnapshot, demoBranches, resolveApproval } from "../approvals";
+import { effectiveOffer, effectivePrice } from "../catalog";
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  DataTable,
+  EmptyState,
+  Field,
+  PageHeader,
+  Select,
+} from "../ui";
 import {
   ledgerSummary,
   companyTimestamp,
@@ -10,14 +29,49 @@ import {
   type OperationalReturn,
   type OperationsContext,
 } from "../operations";
+import type {
+  Alert,
+  Approval,
+  Branch,
+  DemoInvoice,
+  NoteRecord,
+} from "../types";
 
 export function Dashboard() {
-  const { state, role, branch, t, lang, money, navigate } = useDemo();
+  const {
+    state,
+    update,
+    role,
+    branch,
+    t,
+    lang,
+    money,
+    navigate,
+    user,
+    needsReauthentication,
+  } = useDemo();
+  const [scope, setScope] = useState<"all" | "branch">("all");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const [preview, setPreview] = useState<{
+    approval: Approval;
+    decision: "approve" | "reject";
+    snapshot: string;
+    target: Branch;
+    company: string;
+    branch: Branch;
+  } | null>(null);
   const context: OperationsContext = {
     company_id: state.config.company.seed_key,
     branch,
     role: role ?? "cashier",
-    actor: demoUsers.find((user) => user.role === role)?.name ?? "Demo user",
+    actor:
+      user?.name ?? demoUsers.find((item) => item.role === role)?.name ?? "",
   };
   if (role !== "supervisor")
     return (
@@ -28,65 +82,65 @@ export function Dashboard() {
         )}
       </EmptyState>
     );
+
   const today = companyDate(state.config);
   const approvals = scopedRecords(state.approvals, context).filter(
     (item) => item.status === "pending",
   );
+  const alertPriority: Record<Alert["type"], number> = {
+    lower_price: 0,
+    price_conflict: 1,
+    tax_discrepancy: 2,
+    other_supplier: 3,
+    barcode_conflict: 4,
+  };
   const alerts = state.alerts
     .filter(
       (item) =>
         item.company_id === context.company_id &&
-        (branch === "all" || item.branch === branch || item.branch === "all"),
+        (branch === "all" || item.branch === branch || item.branch === "all") &&
+        item.status === "pending",
     )
-    .filter((item) => item.status === "pending");
+    .sort(
+      (left, right) => alertPriority[left.type] - alertPriority[right.type],
+    );
   const returns = scopedRecords(state.returns, context) as OperationalReturn[];
+  const openReturns = returns.filter(
+    (item) => item.status !== "resolved" && item.status !== "cancelled",
+  );
+  const returnCredits = openReturns.filter(
+    (item) =>
+      item.status === "claim_pending" ||
+      item.claims?.some((claim) => claim.status === "submitted"),
+  );
+  const otherReturns = openReturns.filter(
+    (item) => !returnCredits.some((credit) => credit.id === item.id),
+  );
   const invoices = scopedRecords(state.invoices ?? [], context);
   const currentInvoiceVisible =
     state.invoice.company_id === context.company_id &&
     (branch === "all" || state.invoice.branch === branch);
-  const posted = invoices.filter((item) => item.status === "posted");
-  if (
-    currentInvoiceVisible &&
-    state.invoice.status === "posted" &&
-    !posted.some((item) => item.id === state.invoice.id)
-  )
-    posted.push(state.invoice);
-  const expiry = scopedRecords(state.expiry, context).filter(
-    (item) =>
-      item.status === "active" &&
-      item.date >= today &&
-      Math.ceil((Date.parse(item.date) - Date.parse(today)) / 86_400_000) <=
-        state.config.expiry.expiring_soon_days,
-  );
-  const activity = state.activity
-    .filter(
-      (item) =>
-        item.company_id === context.company_id &&
-        (branch === "all" || item.branch === branch || item.branch === "all"),
-    )
-    .sort((a, b) => b.at.localeCompare(a.at));
-  const suppliers = [
-    ...new Set(
-      state.ledger
-        .filter((item) => item.company_id === context.company_id)
-        .map((item) => item.supplier),
-    ),
-  ];
-  const ledgers = suppliers.map((supplier) => ({
-    supplier,
-    summary: ledgerSummary(state, context, supplier),
-  }));
-  const balance = ledgers
-    .reduce((sum, item) => sum.plus(item.summary.balance), new Decimal(0))
-    .toFixed(2);
-  const overdue = ledgers
-    .flatMap((item) => item.summary.invoices)
-    .filter(
-      (invoice) =>
-        new Decimal(invoice.amount).gt(0) &&
-        invoice.due_date &&
-        invoice.due_date < today,
+  if (currentInvoiceVisible && state.invoice.status !== "empty") {
+    const currentIndex = invoices.findIndex(
+      (item) => item.id === state.invoice.id,
     );
+    if (currentIndex === -1) invoices.push(state.invoice);
+    else invoices[currentIndex] = state.invoice;
+  }
+  const posted = invoices.filter((item) => item.status === "posted");
+  const recentInvoices = invoices
+    .filter((item) => item.status !== "empty")
+    .sort((left, right) =>
+      (
+        right.posted_at ??
+        right.received_at ??
+        right.invoice_date ??
+        ""
+      ).localeCompare(
+        left.posted_at ?? left.received_at ?? left.invoice_date ?? "",
+      ),
+    )
+    .slice(0, 5);
   const shorts = posted.flatMap((invoice) =>
     invoice.lines.filter(
       (line) =>
@@ -96,131 +150,114 @@ export function Dashboard() {
         0,
     ),
   );
-  const lowerPrice = alerts.filter((item) => item.type === "lower_price");
-  const returnCredits = returns.filter(
+  const expiry = scopedRecords(state.expiry, context).filter(
     (item) =>
-      item.status === "claim_pending" ||
-      item.claims?.some((claim) => claim.status === "submitted"),
+      item.status === "active" &&
+      item.date >= today &&
+      Math.ceil((Date.parse(item.date) - Date.parse(today)) / 86_400_000) <=
+        state.config.expiry.expiring_soon_days,
   );
-  const metrics: Record<
-    string,
-    {
-      label: string;
-      number: string | number;
-      page: string;
-      tone: string;
-      detail?: string;
-    }
-  > = {
-    approvals_waiting: {
-      label: t("Approvals waiting", "تأییدهای در انتظار"),
-      number: approvals.length,
-      page: "approvals",
-      tone: "pending",
-    },
-    same_supplier_lower_price_alerts: {
-      label: t(
-        "Same-supplier lower-price alerts",
-        "هشدار کاهش قیمت همان تأمین‌کننده",
-      ),
-      number: lowerPrice.length,
-      page: "alerts",
-      tone: "pending",
-    },
-    cross_branch_price_conflicts: {
-      label: t("Cross-branch price conflicts", "اختلاف قیمت میان شعب"),
-      number: alerts.filter((item) => item.type === "price_conflict").length,
-      page: "alerts",
-      tone: "danger",
-    },
-    tax_discrepancies: {
-      label: t("Tax discrepancies", "مغایرت مالیات"),
-      number: alerts.filter((item) => item.type === "tax_discrepancy").length,
-      page: "alerts",
-      tone: "danger",
-    },
-    barcode_conflicts: {
-      label: t("Barcode conflicts", "تعارض بارکد"),
-      number:
-        alerts.filter((item) => item.type === "barcode_conflict").length +
-        approvals.filter((item) => item.type === "barcode_conflict").length,
-      page: "approvals",
-      tone: "danger",
-    },
-    ai_invoices_waiting_review: {
-      label: t("Invoices waiting for review", "فاکتورهای منتظر بررسی"),
-      number:
-        currentInvoiceVisible && state.invoice.status === "review" ? 1 : 0,
-      page: "invoices",
-      tone: "pending",
-    },
-    ai_processing_failures: {
-      label: t("Invoice reading failures", "خطاهای خواندن فاکتور"),
-      number: 0,
-      page: "invoices",
-      tone: "danger",
-      detail: t(
-        "AI reading is simulated",
-        "خواندن هوش مصنوعی شبیه‌سازی شده است",
-      ),
-    },
-    open_shorts: {
-      label: t("Open shorts", "کسری‌های باز"),
-      number: shorts.length,
-      page: "invoices",
-      tone: "danger",
-    },
-    open_supplier_returns: {
-      label: t("Open supplier returns", "مرجوعی‌های باز تأمین‌کنندگان"),
-      number: returns.filter(
-        (item) => item.status !== "resolved" && item.status !== "cancelled",
-      ).length,
-      page: "returns",
-      tone: "pending",
-    },
-    returns_waiting_for_credit: {
-      label: t("Returns waiting for credit", "مرجوعی‌های منتظر بستانکاری"),
-      number: returnCredits.length,
-      page: "returns",
-      tone: "pending",
-    },
-    upcoming_expiries: {
-      label: t("Upcoming expiries", "انقضاهای نزدیک"),
-      number: expiry.length,
-      page: "expiry",
-      tone: "pending",
-    },
-    overdue_invoices: {
-      label: t("Overdue invoices", "فاکتورهای سررسید گذشته"),
-      number: overdue.length,
-      page: "payables",
-      tone: "danger",
-    },
-    supplier_balances: {
-      label: t("Supplier balances", "مانده تأمین‌کنندگان"),
-      number: money(balance),
-      page: "payables",
-      tone: "info",
-    },
-    recent_posted_invoices: {
-      label: t("Recent posted invoices", "فاکتورهای اخیراً ثبت‌شده"),
-      number: posted.length,
-      page: "invoices",
-      tone: "approved",
-    },
-    employee_activity: {
-      label: t("Employee activity", "فعالیت کارکنان"),
-      number: activity.length,
-      page: "dashboard",
-      tone: "info",
-      detail: t("Recent activity below", "فعالیت اخیر در پایین"),
-    },
-  };
+  const notes = scopedRecords(state.notes, context)
+    .filter(
+      (item) =>
+        item.type === "note_to_supervisor" && item.status !== "resolved",
+    )
+    .sort(
+      (left, right) =>
+        Number(right.status === "open") - Number(left.status === "open") ||
+        right.created_at.localeCompare(left.created_at),
+    );
+  const activity = state.activity
+    .filter(
+      (item) =>
+        item.company_id === context.company_id &&
+        (branch === "all" || item.branch === branch || item.branch === "all"),
+    )
+    .sort((left, right) => right.at.localeCompare(left.at));
+  const suppliers = [
+    ...new Set(
+      scopedRecords(state.ledger, context).map((item) => item.supplier),
+    ),
+  ];
+  const balances = suppliers
+    .map((supplier) => {
+      const summary = ledgerSummary(state, context, supplier);
+      const outstanding = summary.invoices.filter((item) =>
+        new Decimal(item.amount).gt(0),
+      );
+      const overdue = outstanding
+        .filter((item) => item.due_date && item.due_date < today)
+        .reduce((sum, item) => sum.plus(item.amount), new Decimal(0))
+        .toFixed(2);
+      return { supplier, summary, outstanding, overdue };
+    })
+    .filter((item) => item.summary.rows.length > 0)
+    .sort((left, right) =>
+      new Decimal(right.summary.balance).cmp(left.summary.balance),
+    )
+    .slice(0, 5);
   const productName = (code: string) => {
     const product = state.products.find(
       (item) => item.company_id === context.company_id && item.code === code,
     );
-    return lang === "fa" ? product?.name_fa : product?.name_en;
+    return (lang === "fa" ? product?.name_fa : product?.name_en) ?? code;
+  };
+  const branchName = (value: Branch) =>
+    value === "all"
+      ? t("All branches", "همه شعبه‌ها")
+      : t(value, `شعبه ${demoBranches.indexOf(value) + 1}`);
+  const approvalType = (item: Approval) =>
+    item.manual_override
+      ? t("Manual price override", "تغییر دستی قیمت")
+      : {
+          new_product: t("New product", "محصول جدید"),
+          price_change: t("Price change", "تغییر قیمت"),
+          margin_review: t("Below minimum margin", "کمتر از حداقل حاشیه سود"),
+          barcode_conflict: t("Barcode conflict", "تعارض بارکد"),
+          tax_profile: t("Tax profile change", "تغییر وضعیت مالیات"),
+        }[item.type];
+  const alertType = (type: Alert["type"]) =>
+    ({
+      lower_price: t("Same-supplier lower price", "کاهش قیمت همان تأمین‌کننده"),
+      price_conflict: t("Cross-branch price conflict", "اختلاف قیمت میان شعب"),
+      tax_discrepancy: t("Tax discrepancy", "مغایرت مالیات"),
+      other_supplier: t("Different supplier price", "قیمت تأمین‌کننده دیگر"),
+      barcode_conflict: t("Barcode conflict", "تعارض بارکد"),
+    })[type];
+  const invoiceStatus = (status: DemoInvoice["status"]) =>
+    ({
+      empty: t("Draft", "پیش‌نویس"),
+      draft: t("Draft", "پیش‌نویس"),
+      reading: t("Processing", "در حال پردازش"),
+      review: t("Needs review", "نیاز به بررسی"),
+      posted: t("Posted", "ثبت‌شده"),
+    })[status];
+  const noteText = (item: NoteRecord) =>
+    item.text ===
+    "Customer asked about the tea glass set price; please confirm."
+      ? t(
+          "Customer asked about the tea glass set price; please confirm.",
+          "مشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.",
+        )
+      : item.text;
+  const initials = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toLocaleUpperCase();
+  const relativeTime = (at: string) => {
+    const elapsed = now - Date.parse(at);
+    if (!Number.isFinite(elapsed)) return companyTimestamp(state.config, at);
+    const minutes = Math.max(0, Math.floor(elapsed / 60_000));
+    if (minutes < 1) return t("Just now", "همین حالا");
+    if (minutes < 60) return t(`${minutes} min ago`, `${minutes} دقیقه پیش`);
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t(`${hours} h ago`, `${hours} ساعت پیش`);
+    const days = Math.floor(hours / 24);
+    return t(`${days} d ago`, `${days} روز پیش`);
   };
   const actionLabel = (action: string) =>
     ({
@@ -290,13 +327,144 @@ export function Dashboard() {
         "تعدیل دفتر ثبت شد",
       ),
     })[action] ?? t("Recorded activity", "فعالیت ثبت‌شده");
+  const openPreview = (approval: Approval, decision: "approve" | "reject") => {
+    setMessage("");
+    setError("");
+    if (needsReauthentication("approvals")) {
+      navigate("approvals");
+      return;
+    }
+    setScope("all");
+    setPreview({
+      approval,
+      decision,
+      snapshot: approvalSnapshot(state, approval.product_code),
+      target:
+        branch !== "all"
+          ? branch
+          : approval.branch !== "all"
+            ? approval.branch
+            : demoBranches[0],
+      company: context.company_id,
+      branch,
+    });
+  };
+  const confirm = () => {
+    if (!preview) return;
+    if (needsReauthentication("approvals")) {
+      setPreview(null);
+      navigate("approvals");
+      return;
+    }
+    if (
+      preview.company !== context.company_id ||
+      preview.branch !== branch ||
+      preview.snapshot !==
+        approvalSnapshot(state, preview.approval.product_code)
+    ) {
+      setError(
+        t(
+          "Prices or branch changed. Open the approval again to review the latest prices before confirming.",
+          "قیمت یا شعبه تغییر کرد. برای بررسی تازه‌ترین قیمت‌ها، تأیید را دوباره باز کنید.",
+        ),
+      );
+      setPreview(null);
+      return;
+    }
+    try {
+      update((draft) =>
+        resolveApproval(
+          draft,
+          preview.approval.id,
+          preview.decision,
+          scope,
+          preview.target,
+          undefined,
+          preview.snapshot,
+        ),
+      );
+      setMessage(
+        preview.decision === "reject"
+          ? t(
+              "Rejected proposal. The approved price was kept.",
+              "پیشنهاد رد شد. قیمت تأییدشده حفظ شد.",
+            )
+          : preview.approval.type === "new_product"
+            ? t("Approved product.", "محصول تأیید شد.")
+            : t(
+                "Approved price. Cashier lookup now shows the approved price.",
+                "قیمت تأیید شد. جستجوی صندوق‌دار اکنون قیمت تأییدشده را نشان می‌دهد.",
+              ),
+      );
+    } catch {
+      setError(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
+    setPreview(null);
+  };
+  const priceChanges = approvals.filter(
+    (item) => item.type === "price_change",
+  ).length;
+  const newProducts = approvals.filter(
+    (item) => item.type === "new_product",
+  ).length;
+  const lowerPrices = alerts.filter(
+    (item) => item.type === "lower_price",
+  ).length;
+  const conflicts = alerts.filter(
+    (item) => item.type === "price_conflict",
+  ).length;
+  const kpis = [
+    {
+      label: t("Approvals waiting", "تأییدهای در انتظار"),
+      value: approvals.length,
+      detail: t(
+        `${priceChanges} ${priceChanges === 1 ? "price change" : "price changes"} · ${newProducts} ${newProducts === 1 ? "new product" : "new products"}`,
+        `${priceChanges} تغییر قیمت · ${newProducts} محصول جدید`,
+      ),
+      page: "approvals",
+      icon: ClipboardCheck,
+    },
+    {
+      label: t("Open alerts", "هشدارهای باز"),
+      value: alerts.length,
+      detail: t(
+        `${lowerPrices} ${lowerPrices === 1 ? "lower price" : "lower prices"} · ${conflicts} ${conflicts === 1 ? "conflict" : "conflicts"}`,
+        `${lowerPrices} کاهش قیمت · ${conflicts} اختلاف`,
+      ),
+      page: "alerts",
+      icon: Bell,
+    },
+    {
+      label: t("Open shorts", "کسری‌های باز"),
+      value: shorts.length,
+      detail: t("Items waiting for delivery", "کالاهای در انتظار تحویل"),
+      page: "invoices",
+      icon: PackageMinus,
+    },
+    {
+      label: t("Expiring soon", "انقضای نزدیک"),
+      value: expiry.length,
+      detail: t(
+        `Within ${state.config.expiry.expiring_soon_days} days`,
+        `در ${state.config.expiry.expiring_soon_days} روز آینده`,
+      ),
+      page: "expiry",
+      icon: CalendarClock,
+    },
+  ];
+
   return (
     <>
       <PageHeader
         title={t("Supervisor dashboard", "داشبورد سرپرست")}
         description={t(
-          "Your branch priorities, approvals, and recent activity — in the configured order.",
-          "اولویت‌های شعبه، تأییدها و فعالیت اخیر — با ترتیب تنظیم‌شده.",
+          "Your branch priorities, approvals, and recent activity.",
+          "اولویت‌های شعبه، تأییدها و فعالیت اخیر.",
         )}
         actions={
           <Button onClick={() => navigate("approvals")}>
@@ -304,175 +472,627 @@ export function Dashboard() {
           </Button>
         }
       />
-      <div className="stats-grid">
-        {state.config.dashboard_order.map((key) => {
-          const metric = metrics[key];
-          return metric ? (
-            <button
-              type="button"
-              key={key}
-              className="stat-card"
-              onClick={() =>
-                key === "employee_activity"
-                  ? document
-                      .getElementById("recent-activity")
-                      ?.scrollIntoView({ behavior: "instant" })
-                  : navigate(metric.page)
-              }
-              aria-label={`${metric.label}: ${metric.number}`}
+      {error && (
+        <div className="banner danger" role="alert">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="banner approved" role="status">
+          {message}
+        </div>
+      )}
+      <div className="dashboard-layout">
+        <div className="dashboard-main">
+          <div className="dashboard-kpis">
+            {kpis.map((item, index) => (
+              <button
+                type="button"
+                key={item.page}
+                className={`kpi-card ${index % 2 === 0 ? "kpi-accent" : "kpi-charcoal"}`}
+                onClick={() => navigate(item.page)}
+                aria-label={`${item.label}: ${item.value}`}
+              >
+                <span className="kpi-label">{item.label}</span>
+                <span className="kpi-icon">
+                  <item.icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                </span>
+                <strong className="kpi-value" dir="ltr">
+                  {item.value}
+                </strong>
+                <span className="kpi-detail" title={item.detail}>
+                  {item.detail}
+                </span>
+                <ArrowRight
+                  size={16}
+                  strokeWidth={1.5}
+                  className="directional kpi-arrow"
+                  aria-hidden="true"
+                />
+              </button>
+            ))}
+          </div>
+          <div className="dashboard-row">
+            <Card
+              title={t("Approvals queue", "صف تأییدها")}
+              className="dashboard-approvals"
             >
-              <span className={`icon-tile ${metric.tone}`}>
-                <ClipboardCheck size={20} aria-hidden="true" />
-              </span>
-              <span className="stat-label">{metric.label}</span>
-              <strong className="stat-number" dir="ltr">
-                {metric.number}
-              </strong>
-              {metric.detail && <span className="muted">{metric.detail}</span>}
-              <ArrowRight
-                size={16}
-                className="directional"
-                aria-hidden="true"
-              />
-            </button>
-          ) : null;
-        })}
-      </div>
-      <div className="form-grid">
-        <Card title={t("Approvals queue", "صف تأییدها")}>
-          {approvals.length === 0 ? (
-            <EmptyState>
-              {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
-            </EmptyState>
-          ) : (
-            approvals.slice(0, 6).map((item) => (
-              <div className="row-between history-row" key={item.id}>
-                <div>
-                  <strong>{productName(item.product_code)}</strong>
-                  <p className="muted">
-                    {item.branch} ·{" "}
-                    {item.type === "new_product"
-                      ? t("New product", "محصول جدید")
-                      : item.type === "margin_review"
-                        ? t("Below margin", "حاشیه سود پایین")
-                        : t("Price change", "تغییر قیمت")}
-                  </p>
-                </div>
-                <div>
-                  <Badge tone="pending">{t("Pending", "در انتظار")}</Badge>
-                  <Button variant="ghost" onClick={() => navigate("approvals")}>
-                    {t("Review", "بررسی")}
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </Card>
-        <Card title={t("Alerts", "هشدارها")}>
-          {alerts.length === 0 ? (
-            <EmptyState>
-              {t("No pending alerts.", "هشداری در انتظار نیست.")}
-            </EmptyState>
-          ) : (
-            alerts.slice(0, 6).map((item) => (
-              <div className="row-between history-row" key={item.id}>
-                <div>
-                  <strong>{productName(item.product_code)}</strong>
-                  <p className="muted">
-                    {item.type === "price_conflict"
-                      ? t("Cross-branch price conflict", "اختلاف قیمت میان شعب")
-                      : item.type === "lower_price"
-                        ? t(
-                            "Same-supplier lower price",
-                            "کاهش قیمت همان تأمین‌کننده",
-                          )
-                        : item.type === "other_supplier"
-                          ? t(
-                              "Different supplier price",
-                              "قیمت تأمین‌کننده دیگر",
-                            )
-                          : item.type === "tax_discrepancy"
-                            ? t("Tax discrepancy", "مغایرت مالیات")
-                            : t("Barcode conflict", "تعارض بارکد")}
-                  </p>
-                </div>
-                <Button variant="ghost" onClick={() => navigate("alerts")}>
-                  <Bell size={16} aria-hidden="true" />
-                  {t("Review", "بررسی")}
-                </Button>
-              </div>
-            ))
-          )}
-        </Card>
-      </div>
-      <Card title={t("Recent posted invoices", "فاکتورهای اخیراً ثبت‌شده")}>
-        {posted.length === 0 ? (
-          <EmptyState
-            action={
-              <Button variant="secondary" onClick={() => navigate("invoices")}>
-                {t("Receive an invoice", "دریافت فاکتور")}
-              </Button>
-            }
-          >
-            {t(
-              "No posted invoices. Receive the fictional demo delivery to connect this dashboard.",
-              "فاکتور ثبت‌شده‌ای نیست. تحویل ساختگی نمونه را دریافت کنید تا داشبورد کامل شود.",
-            )}
-          </EmptyState>
-        ) : (
-          posted
-            .slice(-5)
-            .reverse()
-            .map((invoice) => (
-              <div className="row-between history-row" key={invoice.id}>
-                <div>
-                  <strong>{invoice.supplier_invoice_number}</strong>
-                  <p className="muted">
-                    {invoice.supplier} · {invoice.branch} ·{" "}
-                    {invoice.invoice_date}
-                  </p>
-                </div>
-                <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
-                <Button variant="ghost" onClick={() => navigate("invoices")}>
-                  {t("View", "مشاهده")}
-                </Button>
-              </div>
-            ))
-        )}
-      </Card>
-      <section id="recent-activity">
-        <Card title={t("Recent activity", "فعالیت اخیر")}>
-          {activity.length === 0 ? (
-            <EmptyState>
-              {t(
-                "No new activity yet. Actions throughout the demo appear here.",
-                "هنوز فعالیت جدیدی نیست. کارهای نمایش اینجا ظاهر می‌شوند.",
-              )}
-            </EmptyState>
-          ) : (
-            activity.slice(0, 12).map((item) => (
-              <div className="history-row" key={item.id}>
-                <div className="row-between">
-                  <strong>
-                    <Clock3 size={16} aria-hidden="true" />{" "}
-                    {actionLabel(item.action)}
-                  </strong>
-                  {item.product_code && (
-                    <span>{productName(item.product_code)}</span>
+              {approvals.length === 0 ? (
+                <EmptyState>
+                  {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
+                </EmptyState>
+              ) : (
+                <div className="dashboard-queue">
+                  {approvals.slice(0, 6).map((item) => {
+                    const product = state.products.find(
+                      (value) =>
+                        value.company_id === context.company_id &&
+                        value.code === item.product_code,
+                    );
+                    if (!product) return null;
+                    const approved = effectivePrice(
+                      state,
+                      product,
+                      item.branch,
+                    );
+                    const inline =
+                      !item.manual_override &&
+                      (item.type === "new_product" ||
+                        item.type === "price_change");
+                    return (
+                      <div className="dashboard-queue-row" key={item.id}>
+                        <div className="dashboard-queue-product">
+                          <strong>{productName(item.product_code)}</strong>
+                          <span className="muted">
+                            {branchName(item.branch)} ·{" "}
+                            <bdi>{item.product_code}</bdi>
+                          </span>
+                        </div>
+                        <Badge
+                          tone={
+                            item.type === "margin_review" ||
+                            item.type === "barcode_conflict"
+                              ? "danger"
+                              : "info"
+                          }
+                        >
+                          {approvalType(item)}
+                        </Badge>
+                        <span className="dashboard-price-change">
+                          <bdi>
+                            {approved ? (
+                              money(approved)
+                            ) : (
+                              <span className="muted">
+                                {t(
+                                  "No approved price yet",
+                                  "هنوز قیمت تأییدشده ندارد",
+                                )}
+                              </span>
+                            )}{" "}
+                            → {money(item.proposed_price)}
+                          </bdi>
+                        </span>
+                        <div className="dashboard-inline-actions">
+                          {inline ? (
+                            <>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => openPreview(item, "approve")}
+                              >
+                                {t("Approve", "تأیید")}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openPreview(item, "reject")}
+                              >
+                                {t("Reject", "رد کردن")}
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate("approvals")}
+                            >
+                              {t("Review", "بررسی")}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {approvals.length > 6 && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate("approvals")}
+                    >
+                      {t("View all approvals", "مشاهده همه تأییدها")}
+                    </Button>
                   )}
                 </div>
-                <p className="muted">
-                  {item.by} · {item.branch} ·{" "}
-                  <span dir="ltr">
-                    {companyTimestamp(state.config, item.at)}
-                  </span>
-                </p>
+              )}
+            </Card>
+            <Card title={t("Alerts", "هشدارها")} className="dashboard-alerts">
+              {alerts.length === 0 ? (
+                <EmptyState>
+                  {t("No pending alerts.", "هشداری در انتظار نیست.")}
+                </EmptyState>
+              ) : (
+                <div className="dashboard-alert-list">
+                  {alerts.slice(0, 5).map((item) => (
+                    <div className="dashboard-alert-item" key={item.id}>
+                      <Badge
+                        tone={
+                          item.type === "lower_price" ||
+                          item.type === "other_supplier"
+                            ? "pending"
+                            : "danger"
+                        }
+                      >
+                        {alertType(item.type)}
+                      </Badge>
+                      <strong>
+                        {productName(item.product_code) ||
+                          t("Invoice", "فاکتور")}
+                      </strong>
+                      <span className="muted">
+                        {item.supplier ? `${item.supplier} · ` : ""}
+                        {branchName(item.branch)}
+                      </span>
+                      {item.previous_cost && item.new_cost && (
+                        <span className="dashboard-price-change">
+                          <bdi>
+                            {money(item.previous_cost)} → {money(item.new_cost)}
+                          </bdi>
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("alerts")}
+                      >
+                        {t("Review", "بررسی")}
+                        <ArrowRight
+                          size={16}
+                          strokeWidth={1.5}
+                          className="directional"
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </div>
+                  ))}
+                  {alerts.length > 5 && (
+                    <Button variant="ghost" onClick={() => navigate("alerts")}>
+                      {t("View all alerts", "مشاهده همه هشدارها")}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </Card>
+          </div>
+          <div className="dashboard-row">
+            <Card
+              title={t("Recent invoices", "فاکتورهای اخیر")}
+              className="dashboard-invoices"
+            >
+              {recentInvoices.length === 0 ? (
+                <EmptyState
+                  action={
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate("invoices")}
+                    >
+                      {t("Receive an invoice", "دریافت فاکتور")}
+                    </Button>
+                  }
+                >
+                  {t(
+                    "No invoices. Receive an invoice to get started.",
+                    "فاکتوری نیست. برای شروع یک فاکتور دریافت کنید.",
+                  )}
+                </EmptyState>
+              ) : (
+                <DataTable>
+                  <thead>
+                    <tr>
+                      <th>{t("Invoice", "فاکتور")}</th>
+                      <th>{t("Supplier", "تأمین‌کننده")}</th>
+                      <th>{t("Branch", "شعبه")}</th>
+                      <th>{t("Date", "تاریخ")}</th>
+                      <th>{t("Status", "وضعیت")}</th>
+                      <th>{t("Action", "عملیات")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentInvoices.map((invoice) => (
+                      <tr key={invoice.id}>
+                        <td>
+                          <bdi>{invoice.supplier_invoice_number || "—"}</bdi>
+                        </td>
+                        <td>{invoice.supplier}</td>
+                        <td>{branchName(invoice.branch)}</td>
+                        <td>
+                          <bdi>{invoice.invoice_date || "—"}</bdi>
+                        </td>
+                        <td>
+                          <Badge
+                            tone={
+                              invoice.status === "posted"
+                                ? "approved"
+                                : invoice.status === "draft"
+                                  ? "neutral"
+                                  : "progress"
+                            }
+                          >
+                            {invoiceStatus(invoice.status)}
+                          </Badge>
+                        </td>
+                        <td>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate("invoices")}
+                          >
+                            {t("View", "مشاهده")}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
+              )}
+            </Card>
+            <Card
+              title={t("Returns", "مرجوعی‌ها")}
+              className="dashboard-returns"
+            >
+              {openReturns.length === 0 ? (
+                <EmptyState>
+                  {t("No open returns.", "مرجوعی بازی نیست.")}
+                </EmptyState>
+              ) : (
+                <div className="dashboard-return-list">
+                  {[
+                    {
+                      title: t("Open returns", "مرجوعی‌های باز"),
+                      items: otherReturns,
+                      credit: false,
+                    },
+                    {
+                      title: t("Waiting for credit", "در انتظار بستانکاری"),
+                      items: returnCredits,
+                      credit: true,
+                    },
+                  ].map(
+                    (group) =>
+                      group.items.length > 0 && (
+                        <div key={group.title}>
+                          <h3>
+                            {group.title}{" "}
+                            <span className="muted">
+                              ({group.items.length})
+                            </span>
+                          </h3>
+                          {group.items.slice(0, 3).map((item) => (
+                            <div
+                              className="dashboard-return-item"
+                              key={item.id}
+                            >
+                              <strong>{item.supplier}</strong>
+                              <span className="muted">
+                                {branchName(item.branch)} ·{" "}
+                                {item.lines
+                                  .map((line) => productName(line.product_code))
+                                  .join(", ")}
+                              </span>
+                              <div className="row-between">
+                                <Badge
+                                  tone={
+                                    group.credit
+                                      ? "pending"
+                                      : item.status === "partially_resolved"
+                                        ? "progress"
+                                        : "info"
+                                  }
+                                >
+                                  {group.credit
+                                    ? t(
+                                        "Waiting for credit",
+                                        "در انتظار بستانکاری",
+                                      )
+                                    : item.status === "partially_resolved"
+                                      ? t("Partially resolved", "بخشی حل‌شده")
+                                      : t("Open", "باز")}
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => navigate("returns")}
+                                >
+                                  {t("View", "مشاهده")}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ),
+                  )}
+                  <Button variant="ghost" onClick={() => navigate("returns")}>
+                    {t("View all returns", "مشاهده همه مرجوعی‌ها")}
+                  </Button>
+                </div>
+              )}
+            </Card>
+          </div>
+          <Card
+            title={t("Supplier balances", "مانده تأمین‌کنندگان")}
+            className="dashboard-balances"
+          >
+            {balances.length === 0 ? (
+              <EmptyState>
+                {t(
+                  "No supplier balances. Post an invoice to start the ledger.",
+                  "مانده تأمین‌کننده‌ای نیست. برای شروع دفتر، یک فاکتور ثبت کنید.",
+                )}
+              </EmptyState>
+            ) : (
+              <DataTable>
+                <thead>
+                  <tr>
+                    <th>{t("Supplier", "تأمین‌کننده")}</th>
+                    <th className="numeric">{t("Balance", "مانده")}</th>
+                    <th className="numeric">
+                      {t("Open invoices", "فاکتورهای باز")}
+                    </th>
+                    <th className="numeric">{t("Overdue", "سررسید گذشته")}</th>
+                    <th>{t("Action", "عملیات")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {balances.map((item) => (
+                    <tr key={item.supplier}>
+                      <td>{item.supplier}</td>
+                      <td className="numeric">
+                        <bdi>{money(item.summary.balance)}</bdi>
+                      </td>
+                      <td className="numeric">
+                        <bdi>{item.outstanding.length}</bdi>
+                      </td>
+                      <td className="numeric">
+                        <bdi>{money(item.overdue)}</bdi>
+                      </td>
+                      <td>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate("payables")}
+                        >
+                          {t("View", "مشاهده")}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </Card>
+        </div>
+        <aside
+          className="dashboard-aside"
+          aria-label={t("Notes and activity", "یادداشت‌ها و فعالیت")}
+        >
+          <Card title={t("Notes for Supervisor", "یادداشت‌های سرپرست")}>
+            {notes.length === 0 ? (
+              <EmptyState>
+                {t(
+                  "No open notes for the Supervisor.",
+                  "یادداشت بازی برای سرپرست نیست.",
+                )}
+              </EmptyState>
+            ) : (
+              <div className="dashboard-note-list">
+                {notes.slice(0, 5).map((item) => (
+                  <div className="dashboard-note-item" key={item.id}>
+                    <div className="row">
+                      <span className="initials-avatar" aria-hidden="true">
+                        {initials(item.by)}
+                      </span>
+                      <span className="muted">{item.by}</span>
+                    </div>
+                    <p>{noteText(item)}</p>
+                    <span className="muted">
+                      {branchName(item.branch)} ·{" "}
+                      <time
+                        dateTime={item.created_at}
+                        title={companyTimestamp(state.config, item.created_at)}
+                      >
+                        {relativeTime(item.created_at)}
+                      </time>
+                    </span>
+                    <div className="row-between">
+                      <Badge tone="info">
+                        {item.status === "open"
+                          ? t("Open", "باز")
+                          : t("Seen", "دیده‌شده")}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("notes")}
+                      >
+                        {t("View", "مشاهده")}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
+            )}
+          </Card>
+          <Card title={t("Activity", "فعالیت")} id="recent-activity">
+            {activity.length === 0 ? (
+              <EmptyState>
+                {t(
+                  "No recent activity. Your actions appear here.",
+                  "فعالیت اخیری نیست. کارهای شما اینجا ظاهر می‌شوند.",
+                )}
+              </EmptyState>
+            ) : (
+              <ol className="dashboard-activity-list">
+                {activity.slice(0, 8).map((item) => (
+                  <li className="dashboard-activity-item" key={item.id}>
+                    <span className="initials-avatar" aria-hidden="true">
+                      {initials(item.by)}
+                    </span>
+                    <div>
+                      <strong>{actionLabel(item.action)}</strong>
+                      {item.product_code && (
+                        <span>{productName(item.product_code)}</span>
+                      )}
+                      <span className="muted">
+                        {item.by} · {branchName(item.branch)}
+                      </span>
+                      <time
+                        className="muted"
+                        dateTime={item.at}
+                        title={companyTimestamp(state.config, item.at)}
+                      >
+                        {relativeTime(item.at)}
+                      </time>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Card>
+        </aside>
+      </div>
+      {preview && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setPreview(null);
+          }}
+          title={
+            preview.decision === "approve"
+              ? t("Review approval", "بررسی تأیید")
+              : t("Reject proposal", "رد پیشنهاد")
+          }
+          description={
+            preview.decision === "approve"
+              ? t(
+                  "Review every affected branch before confirming.",
+                  "پیش از تأیید، همه شعبه‌های تحت تأثیر را بررسی کنید.",
+                )
+              : t(
+                  "The current approved price stays unchanged. This proposal will be marked Rejected.",
+                  "قیمت تأییدشده فعلی حفظ می‌شود. این پیشنهاد به وضعیت ردشده تغییر می‌کند.",
+                )
+          }
+          confirmLabel={
+            preview.decision === "reject"
+              ? t("Reject proposal", "رد پیشنهاد")
+              : preview.approval.type === "new_product"
+                ? t("Approve product", "تأیید محصول")
+                : t("Approve price", "تأیید قیمت")
+          }
+          onConfirm={confirm}
+        >
+          <p>
+            <strong>{productName(preview.approval.product_code)}</strong>
+          </p>
+          {preview.decision === "approve" && (
+            <>
+              <Field label={t("Apply price to", "اعمال قیمت به")}>
+                <Select
+                  value={scope}
+                  onChange={(value) => setScope(value as "all" | "branch")}
+                  options={[
+                    {
+                      value: "all",
+                      label: t(
+                        "All branches (default)",
+                        "همه شعبه‌ها (پیش‌فرض)",
+                      ),
+                    },
+                    {
+                      value: "branch",
+                      label: `${t("This branch only", "فقط این شعبه")} — ${branchName(preview.target)}`,
+                    },
+                  ]}
+                />
+              </Field>
+              <p className="muted">
+                {scope === "all"
+                  ? t(
+                      "All branch overrides will be removed, including intentional prices. Incompatible offers will stop; new offers wait for confirmation.",
+                      "همه قیمت‌های ویژه شعبه‌ها، از جمله قیمت‌های عمدی، حذف می‌شوند. پیشنهادهای ناسازگار متوقف می‌شوند و پیشنهادهای جدید منتظر تأیید می‌مانند.",
+                    )
+                  : t(
+                      "Only this branch changes. Other branches keep their prices and offers.",
+                      "فقط این شعبه تغییر می‌کند. شعبه‌های دیگر قیمت‌ها و پیشنهادهای خود را حفظ می‌کنند.",
+                    )}
+              </p>
+              <DataTable>
+                <thead>
+                  <tr>
+                    <th>{t("Branch", "شعبه")}</th>
+                    <th>{t("Current → approved", "فعلی ← تأییدشده")}</th>
+                    <th>{t("Affected offer", "پیشنهاد مرتبط")}</th>
+                    <th>{t("Override removed", "حذف قیمت ویژه")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(scope === "all" ? demoBranches : [preview.target]).map(
+                    (value) => {
+                      const product = state.products.find(
+                        (item) =>
+                          item.company_id === context.company_id &&
+                          item.code === preview.approval.product_code,
+                      );
+                      if (!product) return null;
+                      const price = effectivePrice(state, product, value);
+                      const offer = effectiveOffer(state, product, value);
+                      return (
+                        <tr key={value}>
+                          <td>{branchName(value)}</td>
+                          <td>
+                            <bdi>
+                              {price ? money(price) : "—"} →{" "}
+                              {money(preview.approval.proposed_price)}
+                            </bdi>
+                          </td>
+                          <td>
+                            {offer
+                              ? t(
+                                  offer.label,
+                                  offer.label.replace("for", "برای"),
+                                )
+                              : t("None", "ندارد")}
+                            {offer &&
+                              !new Decimal(offer.price).eq(
+                                preview.approval.proposed_price,
+                              ) && <> · {t("Will stop", "متوقف می‌شود")}</>}
+                          </td>
+                          <td>
+                            {scope === "all" && product.branch_prices?.[value]
+                              ? t("Yes", "بله")
+                              : t("No", "خیر")}
+                          </td>
+                        </tr>
+                      );
+                    },
+                  )}
+                </tbody>
+              </DataTable>
+            </>
           )}
-        </Card>
-      </section>
+        </ConfirmDialog>
+      )}
     </>
   );
 }
+
 export default Dashboard;

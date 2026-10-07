@@ -9,15 +9,29 @@ import {
   type ReactNode,
 } from "react";
 import Decimal from "decimal.js";
-import configSeed from "../../seed/arzon-config.json";
-import demoSeed from "../../seed/demo-data.json";
+import { configSeed, demoSeed } from "./config";
+import {
+  AUTH_STORAGE_KEY,
+  SESSION_KEY,
+  authenticate,
+  auditAuth,
+  demoUsers,
+  preferencesFor,
+  readAuth,
+  readAuthSession,
+  replacePassword,
+  type AuthError,
+  type AuthSession,
+  type AuthState,
+  type DemoUser,
+  type Theme,
+} from "./auth";
+export { demoUsers } from "./auth";
 import i18n, { translate } from "./i18n";
 import type { Branch, DemoState, Language, Role } from "./types";
 
 export const STORAGE_KEY = "supermarket-prototype-v1";
-const SESSION_KEY = "supermarket-prototype-session-v1";
 export const branches = demoSeed.branches as Exclude<Branch, "all">[];
-export const demoUsers = demoSeed.demo_users;
 
 export function relativeDate(days: number): string {
   const now = new Date();
@@ -223,35 +237,21 @@ function readState(): DemoState {
         Array.isArray(candidate.ledger) &&
         candidate.invoice &&
         Array.isArray(candidate.returns)
-      )
+      ) {
+        // Keep business edits from v1 while replacing the old PIN session policy.
+        candidate.config.session = {
+          ...configSeed.session,
+          ...candidate.config.session,
+          sign_in: configSeed.session.sign_in,
+          pins: configSeed.session.pins,
+        };
         return candidate;
+      }
     }
   } catch {
     /* Invalid or unavailable browser storage falls back to the fictional seed. */
   }
   return initialState();
-}
-function readSession(): { role: Role | null; branch: Branch; lang: Language } {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? "null") as {
-      role?: Role;
-      branch?: Branch;
-      lang?: Language;
-    } | null;
-    const role = demoUsers.some((user) => user.role === saved?.role)
-      ? saved!.role!
-      : null;
-    const lang = saved?.lang === "fa" ? "fa" : "en";
-    const branch =
-      role === "supervisor" &&
-      (saved?.branch === "all" ||
-        branches.includes(saved?.branch as Exclude<Branch, "all">))
-        ? saved!.branch!
-        : "Branch 1";
-    return { role, branch, lang };
-  } catch {
-    return { role: null, branch: "Branch 1", lang: "en" };
-  }
 }
 interface DemoContextValue {
   state: DemoState;
@@ -263,7 +263,21 @@ interface DemoContextValue {
   money: (value: string) => string;
   setBranch: (branch: Branch) => void;
   setLang: (lang: Language) => void;
-  signIn: (role: Role, pin: string) => boolean;
+  user: DemoUser | null;
+  locked: boolean;
+  authenticatedAt: number;
+  mustChangePassword: boolean;
+  recentUsers: DemoUser[];
+  theme: Theme;
+  comfortableText: boolean;
+  setTheme: (theme: Theme) => void;
+  setComfortableText: (comfortable: boolean) => void;
+  signIn: (username: string, password: string) => AuthError | null;
+  unlock: (password: string) => AuthError | null;
+  choosePassword: (password: string) => AuthError | null;
+  switchDemoUser: (username: string) => void;
+  needsReauthentication: (page: string) => boolean;
+  reauthenticate: (password: string) => AuthError | null;
   lock: () => void;
   signOut: () => void;
   reset: () => void;
@@ -275,14 +289,58 @@ const DemoContext = createContext<DemoContextValue | null>(null);
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(readState);
   const stateRef = useRef(state);
-  const [session, setSession] = useState(readSession);
+  const [session, setSession] = useState(readAuthSession);
+  const sessionRef = useRef(session);
+  const [auth, setAuth] = useState(readAuth);
+  const authRef = useRef(auth);
+  const commitSession = useCallback((next: AuthSession) => {
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+  const commitAuth = useCallback((next: AuthState) => {
+    authRef.current = next;
+    setAuth(next);
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* Browser-only demo remains usable in memory. */
+    }
+  }, []);
+  const user =
+    demoUsers.find((candidate) => candidate.username === session.username) ??
+    null;
+  const role = user?.role ?? null;
+  const mustChangePassword = Boolean(
+    user && auth.accounts[user.username]?.mustChangePassword,
+  );
+  const preferences = useMemo(
+    () => preferencesFor(auth, session.username),
+    [auth, session.username],
+  );
   const [storageError, setStorageError] = useState(false);
   const [resetGeneration, setResetGeneration] = useState(0);
   const update = useCallback((mutator: (draft: DemoState) => void) => {
     // Validate synchronously so the screen can catch a failed business action.
     // Publish only successful drafts; the ref also preserves same-event updates.
+    if (
+      sessionRef.current.locked ||
+      (sessionRef.current.username &&
+        authRef.current.accounts[sessionRef.current.username]
+          ?.mustChangePassword)
+    )
+      throw new Error("Sign in and choose your password before continuing.");
     const draft = structuredClone(stateRef.current);
     mutator(draft);
+    const actor = demoUsers.find(
+      (candidate) => candidate.username === sessionRef.current.username,
+    );
+    if (actor) {
+      const previousIds = new Set(
+        stateRef.current.activity.map((entry) => entry.id),
+      );
+      for (const entry of draft.activity)
+        if (!previousIds.has(entry.id)) entry.by = actor.name;
+    }
     stateRef.current = draft;
     setState(draft);
   }, []);
@@ -305,13 +363,86 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = session.lang === "fa" ? "rtl" : "ltr";
     document.title = `${session.lang === "fa" ? state.config.company.name_fa : state.config.company.name_en} · ${translate("Demo", "دمو")}`;
   }, [session, state.config.company]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = preferences.theme;
+    document.documentElement.dataset.textSize = preferences.comfortableText
+      ? "comfortable"
+      : "default";
+  }, [preferences.theme, preferences.comfortableText]);
+  const lockSession = useCallback(() => {
+    const current = sessionRef.current;
+    if (!current.username || current.locked) return;
+    const next = structuredClone(authRef.current);
+    auditAuth(next, "Locked screen", current.username);
+    commitAuth(next);
+    commitSession({ ...current, locked: true });
+  }, [commitAuth, commitSession]);
+  useEffect(() => {
+    if (!user || session.locked || mustChangePassword) return;
+    const delay = state.config.session.idle_lock_minutes * 60_000;
+    if (delay <= 0) return;
+    let timer = window.setTimeout(lockSession, delay);
+    const activity = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(lockSession, delay);
+    };
+    for (const event of ["pointerdown", "keydown", "pointermove", "touchstart"])
+      window.addEventListener(event, activity);
+    return () => {
+      window.clearTimeout(timer);
+      for (const event of [
+        "pointerdown",
+        "keydown",
+        "pointermove",
+        "touchstart",
+      ])
+        window.removeEventListener(event, activity);
+    };
+  }, [
+    user,
+    session.locked,
+    mustChangePassword,
+    state.config.session.idle_lock_minutes,
+    lockSession,
+  ]);
   const value = useMemo<DemoContextValue>(
     () => ({
       state,
       update,
       ...session,
+      role,
+      user,
+      mustChangePassword,
+      recentUsers: auth.recentUsers
+        .map((username) =>
+          demoUsers.find((candidate) => candidate.username === username)!,
+        )
+        .filter(Boolean),
+      ...preferences,
+      setTheme: (theme) => {
+        const next = structuredClone(authRef.current);
+        const preference = {
+          ...preferencesFor(next, sessionRef.current.username),
+          theme,
+        };
+        next.devicePreferences = preference;
+        if (sessionRef.current.username)
+          next.preferences[sessionRef.current.username] = preference;
+        commitAuth(next);
+      },
+      setComfortableText: (comfortableText) => {
+        const next = structuredClone(authRef.current);
+        const preference = {
+          ...preferencesFor(next, sessionRef.current.username),
+          comfortableText,
+        };
+        next.devicePreferences = preference;
+        if (sessionRef.current.username)
+          next.preferences[sessionRef.current.username] = preference;
+        commitAuth(next);
+      },
       resetGeneration,
-      t: translate,
+      t: (en, fa) => translate(en, fa, session.lang),
       money: (amount) => {
         try {
           const fixed = new Decimal(amount || "0").toFixed(
@@ -324,38 +455,126 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           return "—";
         }
       },
-      setBranch: (branch) =>
-        setSession((current) =>
-          current.role === "supervisor" &&
+      setBranch: (branch) => {
+        if (
+          role === "supervisor" &&
           (branch === "all" ||
             branches.includes(branch as Exclude<Branch, "all">))
-            ? { ...current, branch }
-            : current,
-        ),
+        )
+          commitSession({ ...sessionRef.current, branch });
+      },
       setLang: (lang) => {
         void i18n.changeLanguage(lang);
-        setSession((current) => ({ ...current, lang }));
+        commitSession({ ...sessionRef.current, lang });
       },
-      signIn: (role, pin) => {
-        const user = demoUsers.find(
-          (candidate) => candidate.role === role && candidate.pin === pin,
+      signIn: (username, password) => {
+        const result = authenticate(
+          authRef.current,
+          username,
+          password,
+          stateRef.current.config.session,
         );
-        if (!user) return false;
-        setSession((current) => ({
-          ...current,
-          role,
-          branch: user.branch === "all" ? "Branch 1" : (user.branch as Branch),
-        }));
-        return true;
+        commitAuth(result.state);
+        if (!result.user) return result.error ?? "invalid";
+        commitSession({
+          ...sessionRef.current,
+          username: result.user.username,
+          branch:
+            result.user.branch === "all" ? "Branch 1" : result.user.branch,
+          locked: false,
+          authenticatedAt: Date.now(),
+        });
+        return null;
       },
-      lock: () => setSession((current) => ({ ...current, role: null })),
+      unlock: (password) => {
+        const result = authenticate(
+          authRef.current,
+          sessionRef.current.username ?? "",
+          password,
+          stateRef.current.config.session,
+        );
+        commitAuth(result.state);
+        if (!result.user) return result.error ?? "invalid";
+        commitSession({
+          ...sessionRef.current,
+          locked: false,
+          authenticatedAt: Date.now(),
+        });
+        return null;
+      },
+      choosePassword: (password) => {
+        if (!sessionRef.current.username) return "invalid";
+        const result = replacePassword(
+          authRef.current,
+          sessionRef.current.username,
+          password,
+          stateRef.current.config.session,
+        );
+        if (result.error) return result.error;
+        commitAuth(result.state);
+        commitSession({ ...sessionRef.current, authenticatedAt: Date.now() });
+        return null;
+      },
+      switchDemoUser: (username) => {
+        const demoUser = demoUsers.find(
+          (candidate) => candidate.username === username,
+        );
+        if (!demoUser) return;
+        const next = structuredClone(authRef.current);
+        auditAuth(next, "Switched demo user", username);
+        next.recentUsers = [
+          username,
+          ...next.recentUsers.filter((recent) => recent !== username),
+        ].slice(0, 4);
+        commitAuth(next);
+        commitSession({
+          ...sessionRef.current,
+          username,
+          branch: demoUser.branch === "all" ? "Branch 1" : demoUser.branch,
+          locked: false,
+          authenticatedAt: Date.now(),
+        });
+        window.location.hash =
+          demoUser.role === "supervisor"
+            ? "dashboard"
+            : demoUser.role === "cashier"
+              ? "lookup"
+              : "invoices";
+      },
+      needsReauthentication: (page) =>
+        state.config.session.reprompt_password_for.includes(page) &&
+        Date.now() - session.authenticatedAt >
+          state.config.session.reprompt_password_after_minutes * 60_000,
+      reauthenticate: (password) => {
+        const result = authenticate(
+          authRef.current,
+          sessionRef.current.username ?? "",
+          password,
+          stateRef.current.config.session,
+        );
+        commitAuth(result.state);
+        if (!result.user) {
+          if (result.error === "locked")
+            commitSession({ ...sessionRef.current, locked: true });
+          return result.error ?? "invalid";
+        }
+        commitSession({ ...sessionRef.current, authenticatedAt: Date.now() });
+        return null;
+      },
+      lock: lockSession,
       signOut: () => {
+        const current = sessionRef.current;
+        const next = structuredClone(authRef.current);
+        if (current.username) auditAuth(next, "Signed out", current.username);
+        commitAuth(next);
         window.location.hash = "";
-        setSession((current) => ({
+        commitSession({
           ...current,
-          role: null,
+          username: null,
           branch: "Branch 1",
-        }));
+          locked: false,
+          authenticatedAt: 0,
+        });
       },
       reset: () => {
         const seed = initialState();
@@ -367,7 +586,20 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         window.location.hash = page;
       },
     }),
-    [session, state, update, resetGeneration],
+    [
+      session,
+      state,
+      update,
+      resetGeneration,
+      role,
+      user,
+      auth,
+      preferences,
+      mustChangePassword,
+      commitAuth,
+      commitSession,
+      lockSession,
+    ],
   );
   return (
     <DemoContext.Provider value={value}>
@@ -376,6 +608,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           {translate(
             "Browser storage is full or disabled. Your changes last until this page closes. Reset the demo or allow browser storage.",
             "حافظهٔ مرورگر پر یا غیرفعال است. تغییرات تا بسته شدن صفحه باقی می‌مانند. دمو را بازنشانی کنید یا حافظهٔ مرورگر را فعال کنید.",
+            session.lang,
           )}
         </div>
       )}

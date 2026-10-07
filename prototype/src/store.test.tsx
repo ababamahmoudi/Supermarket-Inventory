@@ -15,7 +15,7 @@ function Probe() {
       <output data-testid="role">{demo.role}</output>
       <output data-testid="name">{demo.state.products[0].name_en}</output>
       <output data-testid="money">{demo.money("169.79")}</output>
-      <button onClick={() => demo.signIn("floor_worker", "2222")}>
+      <button onClick={() => demo.signIn("floorworker", "demo1234")}>
         Worker
       </button>
       <button onClick={() => demo.setBranch("Branch 2")}>Branch 2</button>
@@ -204,5 +204,104 @@ describe("atomic synchronous demo actions", () => {
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).stock["Branch 1:0001"],
     ).toBe(2);
+  });
+});
+
+function AuthProbe() {
+  const demo = useDemo();
+  const [error, setError] = useState("");
+  return (
+    <>
+      <output data-testid="username">{demo.user?.username}</output>
+      <output data-testid="must-change">
+        {String(demo.mustChangePassword)}
+      </output>
+      <output data-testid="locked">{String(demo.locked)}</output>
+      <output data-testid="actor">{demo.state.activity.at(-1)?.by}</output>
+      <output data-testid="auth-error">{error}</output>
+      <output data-testid="stored-product">
+        {demo.state.products[0].name_en}
+      </output>
+      <button onClick={() => demo.signIn("newemployee", "temp1234")}>
+        New employee
+      </button>
+      <button
+        onClick={() => setError(demo.choosePassword("summer orchard") ?? "")}
+      >
+        Choose password
+      </button>
+      <button onClick={() => setError(demo.choosePassword("short") ?? "")}>
+        Short password
+      </button>
+      <button
+        onClick={() => {
+          try {
+            demo.update((draft) => {
+              draft.activity.push({
+                id: `probe-${draft.activity.length}`,
+                company_id: draft.config.company.seed_key,
+                branch: "Branch 1",
+                action: "Added note",
+                by: "Demo Floor Worker",
+                at: new Date().toISOString(),
+              });
+            });
+            setError("");
+          } catch (caught) {
+            setError((caught as Error).message);
+          }
+        }}
+      >
+        Record action
+      </button>
+      <button onClick={demo.lock}>Lock session</button>
+    </>
+  );
+}
+describe("password gates and employee identity", () => {
+  it("blocks business mutations until the new employee chooses a password, then records that employee as the actor", () => {
+    render(
+      <DemoProvider>
+        <AuthProbe />
+      </DemoProvider>,
+    );
+    fireEvent.click(screen.getByText("New employee"));
+    expect(screen.getByTestId("username")).toHaveTextContent("newemployee");
+    fireEvent.click(screen.getByText("Record action"));
+    expect(screen.getByTestId("auth-error")).toHaveTextContent(
+      "choose your password",
+    );
+    expect(screen.getByTestId("actor")).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByText("Choose password"));
+    expect(screen.getByTestId("must-change")).toHaveTextContent("false");
+    fireEvent.click(screen.getByText("Record action"));
+    expect(screen.getByTestId("actor")).toHaveTextContent("Demo New Employee");
+    fireEvent.click(screen.getByText("Lock session"));
+    fireEvent.click(screen.getByText("Record action"));
+    expect(screen.getByTestId("auth-error")).toHaveTextContent("Sign in");
+    expect(
+      JSON.parse(localStorage.getItem(STORAGE_KEY)!).activity,
+    ).toHaveLength(1);
+  });
+  it("keeps old business edits and applies the new password policy when restoring PIN-era state", () => {
+    const old = JSON.parse(JSON.stringify(initialState()));
+    old.products[0].name_en = "Existing browser edit";
+    old.config.session = { idle_lock_minutes: 5, pins: true };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(old));
+    render(
+      <DemoProvider>
+        <AuthProbe />
+      </DemoProvider>,
+    );
+    expect(screen.getByTestId("stored-product")).toHaveTextContent(
+      "Existing browser edit",
+    );
+    fireEvent.click(screen.getByText("New employee"));
+    fireEvent.click(screen.getByText("Short password"));
+    expect(screen.getByTestId("auth-error")).toHaveTextContent("too_short");
+    expect(screen.getByTestId("must-change")).toHaveTextContent("true");
+    expect(
+      JSON.parse(localStorage.getItem(STORAGE_KEY)!).config.session.pins,
+    ).toBe(false);
   });
 });

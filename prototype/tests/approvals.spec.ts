@@ -1,24 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-
-async function signIn(
-  page: Page,
-  role: "cashier" | "floor_worker" | "supervisor",
-) {
-  const labels = {
-    cashier: "Cashier",
-    floor_worker: "Floor Worker",
-    supervisor: "Supervisor",
-  };
-  const pins = { cashier: "3333", floor_worker: "2222", supervisor: "1111" };
-  if (await page.getByLabel("Role switcher", { exact: true }).count()) {
-    await page.getByLabel("Role switcher", { exact: true }).selectOption(role);
-  } else {
-    await page.goto("/");
-    await page.getByRole("radio", { name: labels[role], exact: true }).click();
-  }
-  await page.getByLabel("Demo PIN", { exact: true }).fill(pins[role]);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-}
+import { signIn, setBranch, resetDemo } from "./helpers";
 
 async function lookup(page: Page, code: string, price: string) {
   await page.goto("/#lookup");
@@ -68,9 +49,9 @@ test("live role switches keep cashier approved price until branch approval; new 
     page.getByText("New price pending", { exact: true }),
   ).toHaveCount(0);
   await signIn(page, "supervisor");
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 2");
+  await setBranch(page, "Branch 2");
   await lookup(page, "0006", "$1.99");
-  await page.getByLabel("Branch", { exact: true }).selectOption("all");
+  await setBranch(page, "all");
   await page.goto("/#approvals");
   const barberries = page.locator("section.card").filter({
     has: page.getByRole("heading", {
@@ -88,7 +69,7 @@ test("live role switches keep cashier approved price until branch approval; new 
   await dialog
     .getByRole("button", { name: "Approve product", exact: true })
     .click();
-  await page.getByLabel("Branch", { exact: true }).selectOption("Branch 2");
+  await setBranch(page, "Branch 2");
   await lookup(page, "0015", "$5.49");
   await expect(
     page.getByText("Pending: confirm with a Supervisor before selling", {
@@ -115,11 +96,7 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     .getByLabel("Show resolved and intentional alerts", { exact: true })
     .check();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Reset demo", exact: true }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Reset demo", exact: true })
-    .click();
+  await resetDemo(page);
   const row = page
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: "Branch 2", exact: true }) });
@@ -134,7 +111,7 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
   for (const branch of ["Branch 1", "Branch 2", "Branch 3"]) {
-    await page.getByLabel("Branch", { exact: true }).selectOption(branch);
+    await setBranch(page, branch);
     await lookup(page, "0004", "$6.99");
   }
 });

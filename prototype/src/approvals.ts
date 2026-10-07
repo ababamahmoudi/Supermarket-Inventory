@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import demoSeed from "../../seed/demo-data.json";
+import { demoSeed } from "./config";
 import { effectiveOffer, effectivePrice } from "./catalog";
 export { isOfferScheduledNow } from "./catalog";
 import type {

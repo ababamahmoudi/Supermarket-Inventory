@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import demo from "../../seed/demo-data.json";
+import { demoSeed as demo } from "./config";
 import { calculatePrice } from "./pricing";
 import { effectivePrice } from "./catalog";
 import type {
