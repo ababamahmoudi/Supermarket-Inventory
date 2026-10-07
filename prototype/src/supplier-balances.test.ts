@@ -385,12 +385,13 @@ describe("configured minimum margins and safe saved-demo upgrades", () => {
     expect(restored.config.pricing_categories[0].minimum_margin).toBeNull();
   });
 
-  it("preserves audited settings and values created with the corrected defaults", () => {
+  it("corrects the old margin even after other audited settings changed", () => {
     const state = initialState();
     delete state.pricing_minimum_margin_schema;
     state.config.pricing_categories.find(
       (category) => category.key === "rice",
     )!.minimum_margin = "0.20";
+    state.config.pricing_categories[0].cost_divisor = "0.70";
     state.activity.push({
       id: "settings-edit",
       company_id: supervisor.company_id,
@@ -404,7 +405,9 @@ describe("configured minimum margins and safe saved-demo upgrades", () => {
       restored.config.pricing_categories.find(
         (category) => category.key === "rice",
       )!.minimum_margin,
-    ).toBe("0.20");
+    ).toBe("0.25");
+    expect(restored.config.pricing_categories[0].cost_divisor).toBe("0.70");
+    expect(restored.activity).toEqual(state.activity);
     expect(restored.pricing_minimum_margin_schema).toBe(2);
   });
 

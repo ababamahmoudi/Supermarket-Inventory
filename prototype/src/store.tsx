@@ -254,26 +254,21 @@ function readState(): DemoState {
           configSeed.company.currency;
         if (candidate.pricing_minimum_margin_schema !== 2) {
           // Earlier screens could edit divisors, but not minimum margins. Only
-          // replace an unchanged retained default without a settings audit;
+          // replace an unchanged retained default;
           // preserve explicit custom values and all other saved business data.
-          const hasSettingsAudit = candidate.activity?.some((entry) =>
-            /setting|configuration/i.test(entry.action),
-          );
-          if (!hasSettingsAudit) {
-            for (const category of candidate.config.pricing_categories) {
-              const previous = retainedConfig.pricing_categories.find(
-                (item) => item.key === category.key,
-              );
-              const current = configSeed.pricing_categories.find(
-                (item) => item.key === category.key,
-              );
-              if (
-                previous &&
-                current &&
-                category.minimum_margin === previous.minimum_margin
-              )
-                category.minimum_margin = current.minimum_margin;
-            }
+          for (const category of candidate.config.pricing_categories) {
+            const previous = retainedConfig.pricing_categories.find(
+              (item) => item.key === category.key,
+            );
+            const current = configSeed.pricing_categories.find(
+              (item) => item.key === category.key,
+            );
+            if (
+              previous &&
+              current &&
+              category.minimum_margin === previous.minimum_margin
+            )
+              category.minimum_margin = current.minimum_margin;
           }
           candidate.pricing_minimum_margin_schema = 2;
         }
