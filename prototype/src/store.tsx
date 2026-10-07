@@ -8,8 +8,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import Decimal from "decimal.js";
 import { configSeed, demoSeed } from "./config";
+import retainedConfig from "./compat/configuration.json";
+import { formatMoney } from "./formatters";
 import {
   AUTH_STORAGE_KEY,
   SESSION_KEY,
@@ -93,6 +94,9 @@ export function initialState(): DemoState {
   });
   return structuredClone({
     version: 1,
+    supplier_balance_snapshot_date: relativeDate(0),
+    supplier_balance_snapshot_currency: configSeed.company.currency,
+    pricing_minimum_margin_schema: 2,
     config: configSeed,
     products,
     approvals: [
@@ -245,6 +249,34 @@ function readState(): DemoState {
           sign_in: configSeed.session.sign_in,
           pins: configSeed.session.pins,
         };
+        candidate.supplier_balance_snapshot_date ??= relativeDate(0);
+        candidate.supplier_balance_snapshot_currency ??=
+          configSeed.company.currency;
+        if (candidate.pricing_minimum_margin_schema !== 2) {
+          // Earlier screens could edit divisors, but not minimum margins. Only
+          // replace an unchanged retained default without a settings audit;
+          // preserve explicit custom values and all other saved business data.
+          const hasSettingsAudit = candidate.activity?.some((entry) =>
+            /setting|configuration/i.test(entry.action),
+          );
+          if (!hasSettingsAudit) {
+            for (const category of candidate.config.pricing_categories) {
+              const previous = retainedConfig.pricing_categories.find(
+                (item) => item.key === category.key,
+              );
+              const current = configSeed.pricing_categories.find(
+                (item) => item.key === category.key,
+              );
+              if (
+                previous &&
+                current &&
+                category.minimum_margin === previous.minimum_margin
+              )
+                category.minimum_margin = current.minimum_margin;
+            }
+          }
+          candidate.pricing_minimum_margin_schema = 2;
+        }
         return candidate;
       }
     }
@@ -464,12 +496,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       t: (en, fa) => translate(en, fa, session.lang),
       money: (amount) => {
         try {
-          const fixed = new Decimal(amount || "0").toFixed(
-            2,
-            Decimal.ROUND_HALF_UP,
-          );
-          const [whole, fraction] = fixed.split(".");
-          return `${state.config.company.currency === "CAD" ? "$" : state.config.company.currency + " "}${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${fraction}`;
+          return formatMoney(amount || "0", {
+            currency: state.config.company.currency,
+          });
         } catch {
           return "—";
         }

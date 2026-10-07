@@ -47,7 +47,10 @@ export const configSeed = {
       ...previous,
       ...category,
       apply_special_correction: category.apply_2_49_3_49_correction,
-      minimum_margin: previous.minimum_margin as string | null,
+      minimum_margin:
+        "minimum_margin" in category
+          ? (category.minimum_margin as string | null)
+          : (sourceConfig.approvals.minimum_margin.value as string | null),
     };
   }),
   rounding_bands: {

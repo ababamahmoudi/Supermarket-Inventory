@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   activateOffer,
   businessDate,
-  demoBranches,
   effectivePool,
   offerMapping,
   offerReadiness,
@@ -15,6 +14,14 @@ import {
   lookupBranch,
 } from "../catalog";
 import { useDemo } from "../store";
+import {
+  branchLabel,
+  DateText,
+  LtrText,
+  Money,
+  OfferLabel,
+  ProductName,
+} from "../presentation";
 import type { Branch, Offer } from "../types";
 import {
   Badge,
@@ -25,10 +32,14 @@ import {
   EmptyState,
   Field,
   PageHeader,
+  Checkbox,
+  DateField,
+  Select,
+  Tabs,
 } from "../ui";
 
 export function Offers() {
-  const { state, update, role, branch, lang, t, money } = useDemo();
+  const { state, update, role, branch, lang, t } = useDemo();
   const [tab, setTab] = useState<"offers" | "pools">("offers");
   const [showStopped, setShowStopped] = useState(false);
   const [code, setCode] = useState("");
@@ -65,11 +76,14 @@ export function Offers() {
         )}
       </EmptyState>
     );
-  const offerLabel = (label: string) => t(label, label.replace("for", "برای"));
-  const branchName = (value: Branch) =>
-    value === "all"
-      ? t("All branches", "همه شعبه‌ها")
-      : t(value, `شعبه ${demoBranches.indexOf(value) + 1}`);
+  const offerLabel = (label: string) => (
+    <OfferLabel
+      label={label}
+      language={lang}
+      currency={state.config.company.currency}
+    />
+  );
+  const branchName = (value: Branch) => branchLabel(value, lang);
   const readyMessage = (reason: ReturnType<typeof offerReadiness>) =>
     ({
       ready: t(
@@ -160,26 +174,24 @@ export function Offers() {
   return (
     <>
       <PageHeader
-        title={t("Offers", "پیشنهادها")}
+        title={t("Offers", "پیشنهادهای فروش")}
         description={t(
           "Confirm suggestions or create offers. The approved price chooses the offer definition.",
           "پیشنهادها را تأیید یا ایجاد کنید. قیمت تأییدشده نوع پیشنهاد را تعیین می‌کند.",
         )}
       />
-      <div className="tabs">
-        <Button
-          variant={tab === "offers" ? "primary" : "secondary"}
-          onClick={() => setTab("offers")}
-        >
-          {t("Offers", "پیشنهادها")}
-        </Button>
-        <Button
-          variant={tab === "pools" ? "primary" : "secondary"}
-          onClick={() => setTab("pools")}
-        >
-          {t("Mix-and-match pools", "گروه‌های ترکیبی")}
-        </Button>
-      </div>
+      <Tabs
+        value={tab}
+        onChange={(value) => setTab(value as "offers" | "pools")}
+        aria-label={t("Offers", "پیشنهادهای فروش")}
+        options={[
+          { value: "offers", label: t("Offers", "پیشنهادهای فروش") },
+          {
+            value: "pools",
+            label: t("Mix-and-match pools", "گروه‌های ترکیبی"),
+          },
+        ]}
+      />
       {message && (
         <div className="banner" role="status">
           {message}
@@ -227,11 +239,11 @@ export function Offers() {
                   <section className="offer-task" key={offer.id}>
                     <div className="row">
                       <h3>
-                        {product
-                          ? lang === "fa"
-                            ? product.name_fa
-                            : product.name_en
-                          : offer.product_code}
+                        {product ? (
+                          <ProductName product={product} language={lang} />
+                        ) : (
+                          <LtrText>{offer.product_code}</LtrText>
+                        )}
                       </h3>
                       <Badge tone="pending">{t("Pending", "در انتظار")}</Badge>
                       <span>{branchName(offer.branch)}</span>
@@ -242,18 +254,17 @@ export function Offers() {
                         {offerLabel(offer.label)}
                       </strong>{" "}
                       · {t("Approved price", "قیمت تأییدشده")}:{" "}
-                      {money(offer.price)}
-                    </p>
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={options.mix}
-                        onChange={(event) =>
-                          change({ mix: event.target.checked })
-                        }
+                      <Money
+                        value={offer.price}
+                        currency={state.config.company.currency}
                       />
+                    </p>
+                    <Checkbox
+                      checked={options.mix}
+                      onChange={(value) => change({ mix: value })}
+                    >
                       {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
-                    </label>
+                    </Checkbox>
                     <div className="grid-2">
                       <Field
                         label={t(
@@ -261,12 +272,9 @@ export function Offers() {
                           "تاریخ شروع (اختیاری)",
                         )}
                       >
-                        <input
-                          type="date"
+                        <DateField
                           value={options.start}
-                          onChange={(event) =>
-                            change({ start: event.target.value })
-                          }
+                          onChange={(value) => change({ start: value })}
                         />
                       </Field>
                       <Field
@@ -275,18 +283,16 @@ export function Offers() {
                           "تاریخ پایان (اختیاری)",
                         )}
                       >
-                        <input
-                          type="date"
+                        <DateField
                           value={options.end}
-                          onChange={(event) =>
-                            change({ end: event.target.value })
-                          }
+                          onChange={(value) => change({ end: value })}
                         />
                       </Field>
                     </div>
                     <p className="muted">{readyMessage(readiness)}</p>
-                    <div className="row">
+                    <div className="actions">
                       <Button
+                        variant="secondary"
                         disabled={readiness !== "ready"}
                         onClick={() => activate(task)}
                       >
@@ -306,14 +312,9 @@ export function Offers() {
             )}
           </Card>
           <Card title={t("Current offers", "پیشنهادهای فعلی")}>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={showStopped}
-                onChange={(event) => setShowStopped(event.target.checked)}
-              />
+            <Checkbox checked={showStopped} onChange={setShowStopped}>
               {t("Show stopped offers", "نمایش پیشنهادهای متوقف‌شده")}
-            </label>
+            </Checkbox>
             {rows.length === 0 ? (
               <EmptyState>
                 {t(
@@ -352,13 +353,18 @@ export function Offers() {
                     return (
                       <tr key={offer.id}>
                         <td>
-                          {product
-                            ? lang === "fa"
-                              ? product.name_fa
-                              : product.name_en
-                            : offer.product_code}
+                          {product ? (
+                            <ProductName product={product} language={lang} />
+                          ) : (
+                            <LtrText>{offer.product_code}</LtrText>
+                          )}
                           <br />
-                          <span className="muted">{money(offer.price)}</span>
+                          <span className="muted">
+                            <Money
+                              value={offer.price}
+                              currency={state.config.company.currency}
+                            />
+                          </span>
                         </td>
                         <td>
                           {offerLabel(offer.label)}
@@ -398,12 +404,13 @@ export function Offers() {
                           {offer.start_date && (
                             <p className="muted">
                               {t("Starts", "شروع")}:{" "}
-                              <bdi>{offer.start_date}</bdi>
+                              <DateText value={offer.start_date} />
                             </p>
                           )}
                           {offer.end_date && (
                             <p className="muted">
-                              {t("Ends", "پایان")}: <bdi>{offer.end_date}</bdi>
+                              {t("Ends", "پایان")}:{" "}
+                              <DateText value={offer.end_date} />
                             </p>
                           )}
                         </td>
@@ -424,78 +431,71 @@ export function Offers() {
               </DataTable>
             )}
           </Card>
-          <Card title={t("Create offer", "ایجاد پیشنهاد")}>
+          <Card
+            title={t("Create offer", "ایجاد پیشنهاد")}
+            className="form-card"
+          >
             <div className="grid-2">
               <Field label={t("Product", "کالا")}>
-                <select
+                <Select
                   value={code}
-                  onChange={(event) => {
-                    setCode(event.target.value);
+                  onChange={(value) => {
+                    setCode(value);
                     const product = products.find(
-                      (item) => item.code === event.target.value,
+                      (item) => item.code === value,
                     );
                     setScope(
                       product?.branch_prices?.[viewBranch] ? "branch" : "all",
                     );
                   }}
-                >
-                  <option value="">
-                    {t("Choose a product", "یک کالا انتخاب کنید")}
-                  </option>
-                  {products.map((product) => (
-                    <option key={product.code} value={product.code}>
-                      {lang === "fa" ? product.name_fa : product.name_en} ·{" "}
-                      {product.code}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    {
+                      value: "",
+                      label: t("Choose a product", "یک کالا انتخاب کنید"),
+                    },
+                    ...products.map((product) => ({
+                      value: product.code,
+                      label: `${lang === "fa" ? product.name_fa : product.name_en} · \u2066${product.code}\u2069`,
+                    })),
+                  ]}
+                />
               </Field>
               <Field label={t("Offer scope", "دامنه پیشنهاد")}>
-                <select
+                <Select
                   value={scope}
-                  onChange={(event) =>
-                    setScope(event.target.value as "all" | "branch")
-                  }
-                >
-                  <option value="branch">
-                    {t("This branch only", "فقط این شعبه")} —{" "}
-                    {branchName(viewBranch)}
-                  </option>
-                  <option value="all">
-                    {t("Company default price", "قیمت پیش‌فرض شرکت")}
-                  </option>
-                </select>
+                  onChange={(value) => setScope(value as "all" | "branch")}
+                  options={[
+                    {
+                      value: "branch",
+                      label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
+                    },
+                    {
+                      value: "all",
+                      label: t("Company default price", "قیمت پیش‌فرض شرکت"),
+                    },
+                  ]}
+                />
               </Field>
               <Field label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}>
-                <input
-                  type="date"
-                  value={start}
-                  onChange={(event) => setStart(event.target.value)}
-                />
+                <DateField value={start} onChange={setStart} />
               </Field>
               <Field label={t("End date (optional)", "تاریخ پایان (اختیاری)")}>
-                <input
-                  type="date"
-                  value={end}
-                  onChange={(event) => setEnd(event.target.value)}
-                />
+                <DateField value={end} onChange={setEnd} />
               </Field>
             </div>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={mix}
-                onChange={(event) => setMix(event.target.checked)}
-              />
+            <Checkbox checked={mix} onChange={setMix}>
               {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
-            </label>
+            </Checkbox>
             <p>
               {candidate ? (
                 <>
                   {t("Offer", "پیشنهاد")}:{" "}
                   <strong>{offerLabel(candidate.label)}</strong> ·{" "}
                   {t("Approved price", "قیمت تأییدشده")}:{" "}
-                  {money(candidate.price)}
+                  <Money
+                    value={candidate.price}
+                    currency={state.config.company.currency}
+                  />
                 </>
               ) : selected ? (
                 t(
@@ -514,16 +514,18 @@ export function Offers() {
                 {readyMessage(offerReadiness(state, candidate))}
               </p>
             )}
-            <Button
-              disabled={
-                !candidate || offerReadiness(state, candidate) !== "ready"
-              }
-              onClick={() => {
-                if (candidate) activate(candidate);
-              }}
-            >
-              {t("Create offer", "ایجاد پیشنهاد")}
-            </Button>
+            <div className="actions">
+              <Button
+                disabled={
+                  !candidate || offerReadiness(state, candidate) !== "ready"
+                }
+                onClick={() => {
+                  if (candidate) activate(candidate);
+                }}
+              >
+                {t("Create offer", "ایجاد پیشنهاد")}
+              </Button>
+            </div>
           </Card>
         </>
       ) : (
@@ -548,10 +550,8 @@ export function Offers() {
               state.config.company.currency,
             );
             return (
-              <Card
-                key={mapping.mix_and_match_pool}
-                title={offerLabel(mapping.offer)}
-              >
+              <Card key={mapping.mix_and_match_pool}>
+                <h2>{offerLabel(mapping.offer)}</h2>
                 {members.length === 0 ? (
                   <EmptyState>
                     {t(
@@ -565,7 +565,9 @@ export function Offers() {
                       <tr>
                         <th>{t("Product", "کالا")}</th>
                         <th>{t("Product Code", "کد کالا")}</th>
-                        <th>{t("Approved price", "قیمت تأییدشده")}</th>
+                        <th className="number-cell">
+                          {t("Approved price", "قیمت تأییدشده")}
+                        </th>
                         <th>{t("Supplier", "تأمین‌کننده")}</th>
                       </tr>
                     </thead>
@@ -573,15 +575,24 @@ export function Offers() {
                       {members.map((product) => (
                         <tr key={product.code}>
                           <td>
-                            {lang === "fa" ? product.name_fa : product.name_en}
+                            <ProductName product={product} language={lang} />
                           </td>
                           <td>
-                            <bdi>{product.code}</bdi>
+                            <LtrText>{product.code}</LtrText>
+                          </td>
+                          <td className="number-cell">
+                            <Money
+                              value={effectivePrice(
+                                state,
+                                product,
+                                viewBranch,
+                              )!}
+                              currency={state.config.company.currency}
+                            />
                           </td>
                           <td>
-                            {money(effectivePrice(state, product, viewBranch)!)}
+                            <LtrText>{product.main_supplier}</LtrText>
                           </td>
-                          <td>{product.main_supplier}</td>
                         </tr>
                       ))}
                     </tbody>

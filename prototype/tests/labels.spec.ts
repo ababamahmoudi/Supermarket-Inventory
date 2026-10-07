@@ -16,7 +16,7 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
-  await expect(page.getByLabel("Saved template")).toHaveValue(/.+/);
+  await expect(page.getByLabel("Saved template")).toHaveText("Template 1");
   await expect(page.getByLabel("Starting slot")).toHaveValue("5");
   await expect(
     page
@@ -47,9 +47,8 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await expect(page.locator("body")).toHaveAttribute("data-printed", "yes");
   await page.reload();
-  await expect(page.getByLabel("Saved template").locator("option")).toHaveCount(
-    2,
-  );
+  await page.getByLabel("Saved template").click();
+  await expect(page.getByRole("option")).toHaveCount(2);
 });
 
 test("validates A4 dimensions and Persian labels without external requests", async ({
@@ -94,9 +93,9 @@ test("requires one branch and prints its approved price instead of a pending pro
       "Choose one branch above before selecting or printing labels. Labels use that branch’s approved prices and offers.",
     ),
   ).toBeVisible();
-  await expect(
-    page.locator('.labels-controls input[type="checkbox"]'),
-  ).toHaveCount(0);
+  await expect(page.locator('.labels-controls [role="checkbox"]')).toHaveCount(
+    0,
+  );
   await expect(
     page.getByRole("button", { name: "Print labels", exact: true }),
   ).toBeDisabled();
@@ -109,7 +108,7 @@ test("requires one branch and prints its approved price instead of a pending pro
   await page.getByRole("button", { name: "English", exact: true }).click();
   await setBranch(page, "Branch 2");
   for (const checkbox of await page
-    .locator('.labels-controls input[type="checkbox"]')
+    .locator('.labels-controls [role="checkbox"]')
     .all()) {
     if (await checkbox.isChecked()) await checkbox.uncheck();
   }
@@ -117,13 +116,13 @@ test("requires one branch and prints its approved price instead of a pending pro
   const lavash = demoSeed.products.find((product) => product.code === "0006")!;
   await page
     .getByRole("checkbox", {
-      name: `${tea.name_en} · ${tea.name_fa}`,
+      name: `${tea.name_en} ${tea.name_fa}`,
       exact: true,
     })
     .check();
   await page
     .getByRole("checkbox", {
-      name: `${lavash.name_en} · ${lavash.name_fa}`,
+      name: `${lavash.name_en} ${lavash.name_fa}`,
       exact: true,
     })
     .check();

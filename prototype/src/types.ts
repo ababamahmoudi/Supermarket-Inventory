@@ -9,8 +9,13 @@ export interface ScopedRecord {
   branch: Branch;
   branch_id?: string;
 }
-export type Product = Omit<(typeof demoSeed.products)[number], "status"> & {
+export type Product = Omit<
+  (typeof demoSeed.products)[number],
+  "status" | "last_received_relative_days" | "price_approved_relative_days"
+> & {
   company_id: string;
+  last_received_relative_days?: Partial<Record<string, number>>;
+  price_approved_relative_days?: number;
   status: "active" | "pending_approval" | "archived";
   branch_prices?: Record<string, string>;
   pending_price?: string | null;
@@ -61,8 +66,13 @@ export interface Alert extends ScopedRecord {
   note?: string;
   branch_prices?: Record<string, string>;
 }
-export type InvoiceLine = (typeof demoSeed.demo_invoice.lines)[number] & {
+export type InvoiceLine = Omit<
+  (typeof demoSeed.demo_invoice.lines)[number],
+  "confidence" | "low_confidence_fields"
+> & {
   company_id: string;
+  confidence?: number;
+  low_confidence_fields?: string[];
   pricing_category?: string;
   date_tracking?: boolean;
   date_type?: "expiry" | "best_before";
@@ -213,6 +223,10 @@ export interface Activity extends ScopedRecord {
 }
 export interface DemoState {
   version: 1;
+  /** The supplied balance figures are a dated demo snapshot, not ledger entries. */
+  supplier_balance_snapshot_date?: string;
+  supplier_balance_snapshot_currency?: string;
+  pricing_minimum_margin_schema?: 2;
   config: CompanyConfig;
   products: Product[];
   approvals: Approval[];

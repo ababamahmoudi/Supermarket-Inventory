@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, setBranch, resetDemo } from "./helpers";
+import { chooseOption, signIn, setBranch, resetDemo } from "./helpers";
 
 async function lookup(page: Page, code: string, price: string) {
   await page.goto("/#lookup");
@@ -19,12 +19,14 @@ async function approveLavash(page: Page, scope: "branch" | "all") {
     .getByRole("button", { name: "Approve price", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await dialog
-    .getByLabel("Apply price to", { exact: true })
-    .selectOption(scope);
-  await expect(
-    dialog.getByText("Current → approved", { exact: true }),
-  ).toBeVisible();
+  await chooseOption(
+    page,
+    dialog.getByLabel("Apply price to", { exact: true }),
+    scope,
+    scope === "all" ? "All branches" : "This branch only",
+  );
+  await expect(dialog).toContainText("$1.99");
+  await expect(dialog).toContainText("$2.99");
   await dialog
     .getByRole("button", { name: "Approve price", exact: true })
     .click();
@@ -63,9 +65,9 @@ test("live role switches keep cashier approved price until branch approval; new 
     .getByRole("button", { name: "Approve product", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await expect(
-    dialog.getByLabel("Apply price to", { exact: true }),
-  ).toHaveValue("all");
+  await expect(dialog.getByLabel("Apply price to", { exact: true })).toHaveText(
+    "All branches",
+  );
   await dialog
     .getByRole("button", { name: "Approve product", exact: true })
     .click();
@@ -93,7 +95,10 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
   await page
-    .getByLabel("Show resolved and intentional alerts", { exact: true })
+    .getByRole("checkbox", {
+      name: "Show resolved and intentional alerts",
+      exact: true,
+    })
     .check();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
   await resetDemo(page);
@@ -125,16 +130,14 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   await approveLavash(page, "branch");
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
-  const task = page.locator(".offer-task").filter({
-    has: page.getByRole("heading", {
-      name: "Lavash Bread 500 g",
-      exact: true,
-    }),
-  });
+  const task = page
+    .locator(".offer-task")
+    .filter({ hasText: "Lavash Bread 500 g" });
   await expect(
     task.getByRole("button", { name: "Confirm offer: 2 for $5", exact: true }),
   ).toBeVisible();
-  const toggle = task.getByLabel("Join the mix-and-match pool", {
+  const toggle = task.getByRole("checkbox", {
+    name: "Join the mix-and-match pool",
     exact: true,
   });
   await expect(toggle).toBeChecked();
@@ -145,7 +148,7 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
     .getByRole("button", { name: "Confirm offer: 2 for $5", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Mix-and-match pools", exact: true })
+    .getByRole("tab", { name: "Mix-and-match pools", exact: true })
     .click();
   const pool = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "2 for $5", exact: true }),
@@ -156,7 +159,9 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
     "Lavash Bread 500 g",
   ])
     await expect(
-      pool.getByRole("cell", { name: product, exact: true }),
+      pool
+        .getByRole("cell")
+        .filter({ has: page.getByText(product, { exact: true }) }),
     ).toBeVisible();
   await page.getByRole("button", { name: "فارسی", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

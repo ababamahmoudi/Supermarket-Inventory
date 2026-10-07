@@ -17,7 +17,18 @@ import {
   NumberField,
   Select,
   SummaryTile,
+  Tabs,
 } from "../ui";
+import {
+  branchLabel,
+  DateText,
+  demoUserLabel,
+  LtrText,
+  Money,
+  ProductName,
+  UnitSize,
+} from "../presentation";
+import "./invoice-settings-labels.css";
 import { calculatePrice } from "../pricing";
 import {
   addManualLine,
@@ -37,6 +48,13 @@ import {
 import type { Branch, InvoiceLine } from "../types";
 
 type Translate = (en: string, fa: string) => string;
+type InvoiceTab =
+  | "drafts"
+  | "processing"
+  | "needs_review"
+  | "ready_to_post"
+  | "posted"
+  | "cancelled";
 const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
   permission: [
     "Sign in as a Floor Worker or Supervisor to receive invoices.",
@@ -111,7 +129,6 @@ export default function Invoices() {
   const { state, update, role, branch, lang, t, money, user } = useDemo();
   const invoice = state.invoice;
   const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
-  const [tab, setTab] = useState<"current" | "posted">("current");
   const [message, setMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [manualCode, setManualCode] = useState("0002");
@@ -120,6 +137,37 @@ export default function Invoices() {
   >({});
   const [deliveryRefs, setDeliveryRefs] = useState<Record<string, string>>({});
   const blockers = role ? invoiceBlockers(state, role, branch) : [];
+  const currentTab: InvoiceTab =
+    invoice.status === "reading"
+      ? "processing"
+      : invoice.status === "posted"
+        ? "posted"
+        : invoice.status === "review"
+          ? blockers.length
+            ? "needs_review"
+            : "ready_to_post"
+          : "drafts";
+  const [selectedView, setSelectedView] = useState<{
+    invoiceId: string;
+    stage: InvoiceTab;
+    tab: InvoiceTab;
+    postedDetail: boolean;
+  } | null>(null);
+  const validSelection =
+    selectedView?.invoiceId === invoice.id && selectedView.stage === currentTab;
+  const tab = validSelection ? selectedView.tab : currentTab;
+  const showPostedDetail = validSelection
+    ? selectedView.postedDetail
+    : currentTab === "posted";
+
+  function chooseTab(nextTab: InvoiceTab, postedDetail = false) {
+    setSelectedView({
+      invoiceId: invoice.id,
+      stage: currentTab,
+      tab: nextTab,
+      postedDetail,
+    });
+  }
   const totals = shortTotals(invoice);
   const lowerLines = lowerPriceLines(state);
   const locked = invoice.status === "posted";
@@ -165,7 +213,7 @@ export default function Invoices() {
       );
       draft.invoice.receiving_employee = user?.name;
     });
-    setTab("current");
+    chooseTab("drafts");
     setDetailsOpen(manual);
     setMessage("");
     setUploadError("");
@@ -217,7 +265,7 @@ export default function Invoices() {
       });
       setUploadError("");
       setMessage("");
-      setTab("current");
+      chooseTab("processing");
       setDetailsOpen(false);
     } catch {
       setUploadError(
@@ -309,7 +357,7 @@ export default function Invoices() {
       receiveShort(draft, code, quantity, receipt, role!, branch);
     });
     setMessage(
-      `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} ${money(restored)}`,
+      `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} \u2066${money(restored)}\u2069`,
     );
     setDeliveryRefs((current) => ({ ...current, [code]: "" }));
   }
@@ -338,34 +386,27 @@ export default function Invoices() {
           </Button>
         }
       />
-      <div
-        className="tabs"
-        role="tablist"
+      <Tabs
         aria-label={t("Invoice views", "نمای فاکتورها")}
-      >
-        <button
-          role="tab"
-          aria-selected={tab === "current"}
-          className={tab === "current" ? "active" : ""}
-          onClick={() => setTab("current")}
-        >
-          {t("Drafts / Needs review", "پیش‌نویس‌ها / نیازمند بررسی")}
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === "posted"}
-          className={tab === "posted" ? "active" : ""}
-          onClick={() => setTab("posted")}
-        >
-          {t("Posted", "ثبت‌شده")} ({branchInvoices.length})
-        </button>
-      </div>
+        value={tab}
+        onChange={(value) => {
+          chooseTab(value as InvoiceTab);
+        }}
+        options={[
+          { value: "drafts", label: t("Drafts", "پیش‌نویس‌ها") },
+          { value: "processing", label: t("Processing", "در حال پردازش") },
+          { value: "needs_review", label: t("Needs review", "نیازمند بررسی") },
+          { value: "ready_to_post", label: t("Ready to post", "آماده ثبت") },
+          { value: "posted", label: t("Posted", "ثبت‌شده") },
+          { value: "cancelled", label: t("Cancelled", "لغوشده") },
+        ]}
+      />
       {message && (
         <div role="status" className="banner info">
           {message}
         </div>
       )}
-      {tab === "posted" ? (
+      {tab === "posted" && !showPostedDetail ? (
         <Card title={t("Posted invoices", "فاکتورهای ثبت‌شده")}>
           {!branchInvoices.length ? (
             <EmptyState>
@@ -389,12 +430,16 @@ export default function Invoices() {
               <tbody>
                 {branchInvoices.map((item) => (
                   <tr key={item.id}>
-                    <td dir="ltr">{item.supplier_invoice_number}</td>
-                    <td>{item.supplier}</td>
                     <td>
-                      {t(item.branch, item.branch.replace("Branch", "شعبه"))}
+                      <LtrText>{item.supplier_invoice_number}</LtrText>
                     </td>
-                    <td dir="ltr">{item.invoice_date}</td>
+                    <td>
+                      <LtrText>{item.supplier}</LtrText>
+                    </td>
+                    <td>{branchLabel(item.branch, lang)}</td>
+                    <td>
+                      <DateText value={item.invoice_date} />
+                    </td>
                     <td>
                       <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
                     </td>
@@ -406,7 +451,7 @@ export default function Invoices() {
                           update((draft) => {
                             draft.invoice = structuredClone(item);
                           });
-                          setTab("current");
+                          chooseTab("posted", true);
                           setDetailsOpen(false);
                         }}
                       >
@@ -419,8 +464,36 @@ export default function Invoices() {
             </DataTable>
           )}
         </Card>
+      ) : tab !== currentTab ? (
+        <Card className="invoice-view-empty">
+          <EmptyState>
+            {tab === "cancelled"
+              ? t("No cancelled invoices.", "فاکتور لغوشده‌ای نیست.")
+              : tab === "processing"
+                ? t(
+                    "No invoices are processing.",
+                    "فاکتوری در حال پردازش نیست.",
+                  )
+                : tab === "ready_to_post"
+                  ? t(
+                      "No invoices are ready to post.",
+                      "فاکتوری آماده ثبت نیست.",
+                    )
+                  : tab === "needs_review"
+                    ? t(
+                        "No invoices need review.",
+                        "فاکتوری نیازمند بررسی نیست.",
+                      )
+                    : t(
+                        "No drafts. Start a new invoice.",
+                        "پیش‌نویسی نیست. فاکتور جدید شروع کنید.",
+                      )}
+          </EmptyState>
+        </Card>
       ) : (
-        <div className="invoice-workspace">
+        <div
+          className={`invoice-workspace${!active || tab === "drafts" ? " invoice-start-stack" : ""}`}
+        >
           <aside
             className="invoice-document-pane"
             aria-label={t("Original invoice", "اصل فاکتور")}
@@ -510,42 +583,106 @@ export default function Invoices() {
                 </p>
               </Card>
             ) : !active ? (
-              <EmptyState>
-                {t(
-                  "No drafts. Upload a file or start a manual invoice.",
-                  "پیش‌نویسی نیست. فایل بارگذاری کنید یا فاکتور دستی شروع کنید.",
-                )}
-              </EmptyState>
+              <Card title={t("Drafts", "پیش‌نویس‌ها")}>
+                <EmptyState>
+                  {t(
+                    "No drafts. Upload a file or start a manual invoice.",
+                    "پیش‌نویسی نیست. فایل بارگذاری کنید یا فاکتور دستی شروع کنید.",
+                  )}
+                </EmptyState>
+              </Card>
             ) : (
               <>
+                {tab === "drafts" && (
+                  <Card
+                    title={t("Drafts", "پیش‌نویس‌ها")}
+                    className="invoice-draft-list"
+                  >
+                    <DataTable>
+                      <thead>
+                        <tr>
+                          <th>{t("Invoice", "فاکتور")}</th>
+                          <th>{t("Supplier", "تأمین‌کننده")}</th>
+                          <th>{t("Branch", "شعبه")}</th>
+                          <th>{t("Date", "تاریخ")}</th>
+                          <th>{t("Status", "وضعیت")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <LtrText>
+                              {invoice.supplier_invoice_number || "—"}
+                            </LtrText>
+                          </td>
+                          <td>
+                            <LtrText>{invoice.supplier || "—"}</LtrText>
+                          </td>
+                          <td>{branchLabel(invoice.branch, lang)}</td>
+                          <td>
+                            <DateText value={invoice.invoice_date} />
+                          </td>
+                          <td>
+                            <Badge tone="neutral">
+                              {t("Draft", "پیش‌نویس")}
+                            </Badge>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </DataTable>
+                  </Card>
+                )}
                 <div
                   className="invoice-summary-grid"
                   aria-label={t("Delivery summary", "خلاصه تحویل")}
                 >
                   <SummaryTile
                     label={t("Subtotal", "جمع پیش از مالیات")}
-                    value={money(invoice.subtotal)}
+                    value={
+                      <Money
+                        value={invoice.subtotal}
+                        currency={state.config.company.currency}
+                      />
+                    }
                     tone="lavender"
                   />
                   <SummaryTile
                     label={t("Tax", "مالیات")}
-                    value={money(invoice.tax)}
+                    value={
+                      <Money
+                        value={invoice.tax}
+                        currency={state.config.company.currency}
+                      />
+                    }
                     tone="sky"
                   />
                   <SummaryTile
                     label={t("Shorts deduction", "کسر کسری باز")}
-                    value={`−${money(totals.total)}`}
+                    value={
+                      <LtrText>
+                        −
+                        <Money
+                          value={totals.total}
+                          currency={state.config.company.currency}
+                        />
+                      </LtrText>
+                    }
                     tone="lavender"
                   />
                   <SummaryTile
                     label={t("Payable", "قابل پرداخت")}
-                    value={money(
-                      /^[0-9]+(?:\.[0-9]{1,2})?$/.test(invoice.final_total)
-                        ? new Decimal(invoice.final_total)
-                            .minus(totals.total)
-                            .toFixed(2)
-                        : "0",
-                    )}
+                    value={
+                      <Money
+                        currency={state.config.company.currency}
+                        value={
+                          /^[0-9]+(?:\.[0-9]{1,2})?$/.test(invoice.final_total)
+                            ? new Decimal(invoice.final_total)
+                                .minus(totals.total)
+                                .toFixed(2)
+                            : "0"
+                        }
+                      />
+                    }
                     tone="sky"
                   />
                 </div>
@@ -567,16 +704,10 @@ export default function Invoices() {
                     </button>
                   </h2>
                   <p className="muted invoice-details-meta">
-                    {invoice.supplier} ·{" "}
-                    <span dir="ltr">
-                      {invoice.supplier_invoice_number || "—"}
-                    </span>{" "}
-                    ·{" "}
-                    {t(
-                      invoice.branch,
-                      invoice.branch.replace("Branch", "شعبه"),
-                    )}{" "}
-                    · <span dir="ltr">{invoice.invoice_date}</span>
+                    <LtrText>{invoice.supplier}</LtrText> ·{" "}
+                    <LtrText>{invoice.supplier_invoice_number || "—"}</LtrText>{" "}
+                    · {branchLabel(invoice.branch, lang)} ·{" "}
+                    <DateText value={invoice.invoice_date} />
                   </p>
                   <p>
                     <Badge tone={locked ? "approved" : "progress"}>
@@ -613,7 +744,7 @@ export default function Invoices() {
                           disabled={locked}
                           options={demo.suppliers.map((supplier) => ({
                             value: supplier,
-                            label: supplier,
+                            label: `\u2066${supplier}\u2069`,
                           }))}
                         />
                       </Field>
@@ -710,12 +841,7 @@ export default function Invoices() {
                             .filter((user) => user.role !== "cashier")
                             .map((user) => ({
                               value: user.name,
-                              label: t(
-                                user.name,
-                                user.role === "supervisor"
-                                  ? "سرپرست دمو"
-                                  : "کارمند فروشگاه دمو",
-                              ),
+                              label: demoUserLabel(user.name, lang),
                             }))}
                         />
                       </Field>
@@ -732,7 +858,7 @@ export default function Invoices() {
 
                           options={branches.map((item) => ({
                             value: item,
-                            label: t(item, item.replace("Branch", "شعبه")),
+                            label: branchLabel(item, lang),
                           }))}
                         />
                       </Field>
@@ -897,16 +1023,32 @@ export default function Invoices() {
                               {" "}
                               <div className="invoice-line-heading">
                                 <h3>
-                                  {index + 1}. {name}
+                                  <LtrText>{index + 1}.</LtrText>{" "}
+                                  <ProductName
+                                    product={{
+                                      name_en:
+                                        product?.name_en ??
+                                        line.new_name_en ??
+                                        line.description,
+                                      name_fa:
+                                        product?.name_fa ??
+                                        line.new_name_fa ??
+                                        "",
+                                    }}
+                                    language={lang}
+                                  />
                                 </h3>
                                 <p className="muted invoice-line-description">
-                                  {line.description}
+                                  <bdi dir="auto">{line.description}</bdi>
                                 </p>
                                 <p className="muted">
-                                  <span dir="ltr">{line.product_code}</span>
-                                  {product?.unit_size
-                                    ? ` · ${product.unit_size}`
-                                    : ""}
+                                  <LtrText>{line.product_code}</LtrText>
+                                  {product?.unit_size && (
+                                    <>
+                                      {" "}
+                                      · <UnitSize value={product.unit_size} />
+                                    </>
+                                  )}
                                 </p>
                                 <div className="inline-actions">
                                   {line.product_code === "NEW" ||
@@ -1027,8 +1169,11 @@ export default function Invoices() {
                                 />
                               </Field>
                             </td>
-                            <td className="numeric" dir="ltr">
-                              {money(line.line_total)}
+                            <td className="numeric">
+                              <Money
+                                value={line.line_total}
+                                currency={state.config.company.currency}
+                              />
                             </td>
                             <td className="numeric">
                               {" "}
@@ -1043,7 +1188,14 @@ export default function Invoices() {
                                   className="price-display numeric"
                                   dir="ltr"
                                 >
-                                  {price ? money(price) : "—"}
+                                  {price ? (
+                                    <Money
+                                      value={price}
+                                      currency={state.config.company.currency}
+                                    />
+                                  ) : (
+                                    "—"
+                                  )}
                                 </strong>
                                 <span className="muted">
                                   {t("Before tax", "پیش از مالیات")}
@@ -1062,7 +1214,10 @@ export default function Invoices() {
                                       "Approved price to charge:",
                                       "قیمت تأییدشده برای فروش:",
                                     )}{" "}
-                                    <span dir="ltr">{money(oldPrice)}</span>
+                                    <Money
+                                      value={oldPrice}
+                                      currency={state.config.company.currency}
+                                    />
                                   </p>
                                 ) : (
                                   <p className="muted">
@@ -1129,7 +1284,7 @@ export default function Invoices() {
                                           )
                                           .map((item) => ({
                                             value: item.code,
-                                            label: `${item.code} · ${lang === "fa" ? item.name_fa : item.name_en}`,
+                                            label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
                                           })),
                                       ]}
                                     />
@@ -1225,9 +1380,21 @@ export default function Invoices() {
                                     {t("Missing units:", "واحدهای کمبود:")}{" "}
                                     {short.quantity} ·{" "}
                                     {t("Deduction:", "کسر مبلغ:")}{" "}
-                                    <span dir="ltr">{money(short.total)}</span>{" "}
-                                    ({money(short.beforeTax)} +{" "}
-                                    {money(short.tax)} {t("tax", "مالیات")})
+                                    <Money
+                                      value={short.total}
+                                      currency={state.config.company.currency}
+                                    />{" "}
+                                    (
+                                    <Money
+                                      value={short.beforeTax}
+                                      currency={state.config.company.currency}
+                                    />{" "}
+                                    +{" "}
+                                    <Money
+                                      value={short.tax}
+                                      currency={state.config.company.currency}
+                                    />{" "}
+                                    {t("tax", "مالیات")})
                                   </p>
                                 )}
                                 {category.date_tracking_prompt && (
@@ -1377,7 +1544,7 @@ export default function Invoices() {
                             )
                             .map((item) => ({
                               value: item.code,
-                              label: `${item.code} · ${lang === "fa" ? item.name_fa : item.name_en}`,
+                              label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
                             }))}
                         />
                       </Field>
@@ -1407,15 +1574,23 @@ export default function Invoices() {
                       )!;
                       return (
                         <p key={line.product_code}>
-                          {lang === "fa" ? product.name_fa : product.name_en} ·{" "}
-                          {invoice.supplier} ·{" "}
-                          <span dir="ltr">
-                            {money(
+                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                            {lang === "fa" ? product.name_fa : product.name_en}
+                          </bdi>{" "}
+                          · <LtrText>{invoice.supplier}</LtrText> ·{" "}
+                          {t("Old", "قبلی")}{" "}
+                          <Money
+                            value={
                               previousReceiptCost(state, product.code)?.cost ??
-                                product.last_cost_before_tax,
-                            )}{" "}
-                            → {money(line.unit_cost_before_tax)}
-                          </span>
+                              product.last_cost_before_tax
+                            }
+                            currency={state.config.company.currency}
+                          />{" "}
+                          · {t("New", "جدید")}{" "}
+                          <Money
+                            value={line.unit_cost_before_tax}
+                            currency={state.config.company.currency}
+                          />
                         </p>
                       );
                     })}
@@ -1620,7 +1795,7 @@ export default function Invoices() {
                       return (
                         <Card
                           key={line.product_code}
-                          title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? product.name_fa : product.name_en}`}
+                          title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? product.name_fa : `\u2066${product.name_en}\u2069`}`}
                         >
                           <p>
                             <Badge tone={remaining ? "danger" : "approved"}>
@@ -1709,9 +1884,12 @@ export default function Invoices() {
                             )
                             .map((entry) => (
                               <p key={entry.id}>
-                                <span dir="ltr">{entry.reference}</span> ·{" "}
+                                <LtrText>{entry.reference}</LtrText> ·{" "}
                                 {t("Restored:", "بازگردانده شد:")}{" "}
-                                <span dir="ltr">{money(entry.amount)}</span>
+                                <Money
+                                  value={entry.amount}
+                                  currency={state.config.company.currency}
+                                />
                               </p>
                             ))}
                         </Card>

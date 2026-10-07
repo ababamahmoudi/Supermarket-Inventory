@@ -6,7 +6,7 @@ const screens = [
   ["invoices", "Invoices", "فاکتورها"],
   ["approvals", "Approvals", "تأییدها"],
   ["alerts", "Alerts", "هشدارها"],
-  ["offers", "Offers", "پیشنهادها"],
+  ["offers", "Offers", "پیشنهادهای فروش"],
   ["labels", "Labels", "برچسب‌ها"],
   ["returns", "Returns", "مرجوعی‌ها"],
   ["expiry", "Date tracking", "پیگیری تاریخ"],

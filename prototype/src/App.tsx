@@ -7,10 +7,10 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  History,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
-  Menu as MenuIcon,
   MessageSquare,
   Moon,
   Package,
@@ -19,13 +19,14 @@ import {
   Search,
   Settings,
   Sun,
+  Store,
   Tag,
   Tags,
   Truck,
-  Type,
-  X,
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png?inline";
+import { branchLabel, demoUserLabel, LtrText } from "./presentation";
+import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
 import { Lookup, Products } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
@@ -52,7 +53,15 @@ import {
   Select,
 } from "./ui";
 
-export const pages = [
+export const pages: {
+  key: string;
+  en: string;
+  fa: string;
+  icon: typeof Search;
+  group: string;
+  roles: Role[];
+  disabled?: boolean;
+}[] = [
   {
     key: "lookup",
     en: "Lookup",
@@ -118,6 +127,15 @@ export const pages = [
     roles: ["floor_worker", "supervisor"],
   },
   {
+    key: "suppliers",
+    en: "Suppliers",
+    fa: "تأمین‌کنندگان",
+    icon: Store,
+    group: "Catalog",
+    roles: ["floor_worker", "supervisor"],
+    disabled: true,
+  },
+  {
     key: "dashboard",
     en: "Dashboard",
     fa: "داشبورد",
@@ -157,6 +175,15 @@ export const pages = [
     group: "Admin",
     roles: ["supervisor"],
   },
+  {
+    key: "history",
+    en: "History",
+    fa: "تاریخچه",
+    icon: History,
+    group: "Admin",
+    roles: ["supervisor"],
+    disabled: true,
+  },
 ];
 const roleNames: Record<Role, [string, string]> = {
   supervisor: ["Supervisor", "سرپرست"],
@@ -191,27 +218,12 @@ function LanguageToggle() {
     </div>
   );
 }
-function BrandLogoFilter() {
-  return (
-    <svg width="0" height="0" className="logo-filter" aria-hidden="true">
-      <defs>
-        <filter id="logo-white-matte" colorInterpolationFilters="sRGB">
-          <feColorMatrix
-            type="matrix"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 0 3"
-          />
-          <feComposite operator="in" in2="SourceAlpha" />
-        </filter>
-      </defs>
-    </svg>
-  );
-}
 function Initials({ name }: { name: string }) {
   return (
     <span className="user-avatar" aria-hidden="true">
       {name
         .split(" ")
-        .filter((part) => part !== "Demo")
+        .filter((part) => !["Demo", "دمو"].includes(part))
         .map((part) => part[0])
         .slice(0, 2)
         .join("")}
@@ -313,7 +325,7 @@ function authErrorCopy(
   }
 }
 function SignIn() {
-  const { signIn, t, state, recentUsers } = useDemo();
+  const { signIn, t, state, recentUsers, lang } = useDemo();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -338,8 +350,16 @@ function SignIn() {
                     setError("");
                   }}
                 >
-                  <Initials name={user.name} />
-                  <span>{user.name.replace(/^Demo /, "")}</span>
+                  <Initials
+                    name={demoUserLabel(user.name, lang)
+                      .replace(/^Demo /, "")
+                      .replace(/ نمایشی$/, "")}
+                  />
+                  <span>
+                    {demoUserLabel(user.name, lang)
+                      .replace(/^Demo /, "")
+                      .replace(/ نمایشی$/, "")}
+                  </span>
                 </button>
               ))}
             </div>
@@ -372,6 +392,7 @@ function SignIn() {
               setError("");
             }}
             autoComplete="username"
+            dir="ltr"
             autoCapitalize="none"
             spellCheck={false}
             required
@@ -398,10 +419,14 @@ function SignIn() {
         )}
       </p>
       <p className="helper demo-account-hint">
-        {t(
-          "Demo accounts: supervisor, floorworker, cashier / password demo1234. New employee: newemployee / temporary password temp1234.",
-          "حساب‌های دمو: supervisor، floorworker، cashier / گذرواژه demo1234. کارمند جدید: newemployee / گذرواژهٔ موقت temp1234.",
-        )}
+        {t("Demo accounts:", "حساب‌های دمو:")}{" "}
+        <LtrText>supervisor, floorworker, cashier</LtrText>
+        {" / "}
+        {t("password", "گذرواژه")} <LtrText>demo1234</LtrText>
+        {". "}
+        {t("New employee:", "کارمند جدید:")} <LtrText>newemployee</LtrText>
+        {" / "}
+        {t("temporary password", "گذرواژهٔ موقت")} <LtrText>temp1234</LtrText>.
       </p>
     </AuthLayout>
   );
@@ -410,16 +435,22 @@ function AuthLayout({ children }: { children: ReactNode }) {
   const { state, t } = useDemo();
   return (
     <div className="signin-page">
-      <BrandLogoFilter />
       <div className="signin-language">
         <LanguageToggle />
       </div>
       <Card className="signin-card">
-        <img
-          className="signin-logo"
-          src={logo}
-          alt={t(state.config.company.name_en, state.config.company.name_fa)}
-        />
+        <span className="signin-logo-tile">
+          <span className="brand-logo-window signin-logo-window">
+            <img
+              className="signin-logo"
+              src={logo}
+              alt={t(
+                state.config.company.name_en,
+                state.config.company.name_fa,
+              )}
+            />
+          </span>
+        </span>
         {children}
       </Card>
     </div>
@@ -482,14 +513,14 @@ function ChoosePassword() {
   );
 }
 function LockScreen() {
-  const { user, unlock, signOut, t } = useDemo();
+  const { user, unlock, signOut, t, lang } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   return (
     <AuthLayout>
-      <Initials name={user!.name} />
+      <Initials name={demoUserLabel(user!.name, lang)} />
       <h1>{t("Screen locked", "صفحه قفل شده است")}</h1>
-      <p>{user!.name}</p>
+      <p>{demoUserLabel(user!.name, lang)}</p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -698,8 +729,10 @@ export default function App() {
         ? "invoices"
         : "lookup";
   const page =
-    allowed.find((candidate) => candidate.key === hash.split("?")[0]) ??
-    allowed.find((candidate) => candidate.key === defaultKey)!;
+    allowed.find(
+      (candidate) =>
+        !candidate.disabled && candidate.key === hash.split("?")[0],
+    ) ?? allowed.find((candidate) => candidate.key === defaultKey)!;
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
     (branch === "all" || record.branch === branch || record.branch === "all");
@@ -723,24 +756,12 @@ export default function App() {
     Supervisor: ["Supervisor", "سرپرست"],
     Admin: ["Admin", "مدیریت"],
   };
-  const branchLabel = (name: Branch) => {
-    const index = branches.indexOf(name as Exclude<Branch, "all">);
-    return name === "all"
-      ? t("All branches", "همهٔ شعبه‌ها")
-      : t(
-          state.config.branches[index]?.name_en.replace(
-            / \(PLACEHOLDER.*\)/,
-            "",
-          ) ?? name,
-          state.config.branches[index]?.name_fa ?? name,
-        );
-  };
+
   return (
     <div
       className={`app-shell ${collapsed ? "is-collapsed" : ""}`}
       dir={lang === "fa" ? "rtl" : "ltr"}
     >
-      <BrandLogoFilter />
       <a
         className="skip-link"
         href="#main-content"
@@ -764,11 +785,18 @@ export default function App() {
         aria-label={t("Main menu", "منوی اصلی")}
       >
         <div className="sidebar-brand">
-          <img
-            className="brand-logo"
-            src={logo}
-            alt={t(state.config.company.name_en, state.config.company.name_fa)}
-          />
+          <span className="brand-logo-tile">
+            <span className="brand-logo-window">
+              <img
+                className="brand-logo"
+                src={logo}
+                alt={t(
+                  state.config.company.name_en,
+                  state.config.company.name_fa,
+                )}
+              />
+            </span>
+          </span>
           <span className="store-name">
             {t(state.config.company.name_en, state.config.company.name_fa)}
           </span>
@@ -792,9 +820,16 @@ export default function App() {
                   return (
                     <a
                       key={item.key}
-                      href={`#${item.key}`}
+                      href={item.disabled ? undefined : `#${item.key}`}
+                      role={item.disabled ? "link" : undefined}
+                      aria-disabled={item.disabled || undefined}
+                      tabIndex={item.disabled ? -1 : undefined}
                       aria-label={t(item.en, item.fa)}
-                      title={collapsed ? t(item.en, item.fa) : undefined}
+                      title={
+                        collapsed || item.disabled
+                          ? t(item.en, item.fa)
+                          : undefined
+                      }
                       aria-current={page.key === item.key ? "page" : undefined}
                       onClick={() => setMenuOpen(false)}
                     >
@@ -802,7 +837,12 @@ export default function App() {
                       <span className="nav-item-label">
                         {t(item.en, item.fa)}
                       </span>
-                      {count > 0 && <span className="nav-count">{count}</span>}
+                      {count > 0 && (
+                        <>
+                          <span className="nav-count">{count}</span>
+                          <span className="nav-count-dot" aria-hidden="true" />
+                        </>
+                      )}
                     </a>
                   );
                 })}
@@ -813,12 +853,13 @@ export default function App() {
         <div className="sidebar-user">
           <Menu
             className="user-menu"
+            showChevron={false}
             aria-label={t("User menu", "منوی کاربر")}
             label={
               <span className="user-chip">
-                <Initials name={user.name} />
+                <Initials name={demoUserLabel(user.name, lang)} />
                 <span className="user-chip-copy">
-                  <strong>{user.name}</strong>
+                  <strong>{demoUserLabel(user.name, lang)}</strong>
                   <small>
                     <RoleName role={role} />
                   </small>
@@ -860,25 +901,19 @@ export default function App() {
               else setCollapsed((previous) => !previous);
             }}
           >
-            {menuOpen ? (
-              <X size={20} strokeWidth={1.5} />
-            ) : collapsed ? (
-              <MenuIcon size={20} strokeWidth={1.5} />
-            ) : (
-              <PanelLeftClose size={20} strokeWidth={1.5} />
-            )}
+            <PanelLeftClose size={20} strokeWidth={1.5} />
           </IconButton>
           <nav
             className="breadcrumbs"
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
-            <span>{branchLabel(branch)}</span>
+            <span>{branchLabel(branch, lang)}</span>
             <ChevronRight size={14} aria-hidden="true" />
             <span aria-current="page">{t(page.en, page.fa)}</span>
             {page.key === "invoices" && state.invoice.status !== "empty" && (
               <>
                 <ChevronRight size={14} aria-hidden="true" />
-                <span dir="ltr">{state.invoice.supplier_invoice_number}</span>
+                <LtrText>{state.invoice.supplier_invoice_number}</LtrText>
               </>
             )}
           </nav>
@@ -908,11 +943,13 @@ export default function App() {
               onChange={(value) => setBranch(value as Branch)}
               options={[...branches, "all" as const].map((value) => ({
                 value,
-                label: branchLabel(value),
+                label: branchLabel(value, lang),
               }))}
             />
           ) : (
-            <span className="branch-pill static">{branchLabel(branch)}</span>
+            <span className="branch-pill static">
+              {branchLabel(branch, lang)}
+            </span>
           )}
           <LanguageToggle />
           <IconButton
@@ -931,14 +968,18 @@ export default function App() {
           </IconButton>
           <IconButton
             className="text-size-toggle"
+            title={t("Comfortable text size", "اندازهٔ متن راحت")}
             aria-label={t("Comfortable text size", "اندازهٔ متن راحت")}
             aria-pressed={comfortableText}
             onClick={() => setComfortableText(!comfortableText)}
           >
-            <Type size={20} strokeWidth={1.5} />
+            <span className="text-size-glyph" aria-hidden="true">
+              Aa
+            </span>
           </IconButton>
           <Menu
             className="notifications-menu"
+            showChevron={false}
             aria-label={t(
               `Notifications, ${notifications} unread`,
               `اعلان‌ها، ${notifications} خوانده‌نشده`,
@@ -988,7 +1029,8 @@ export default function App() {
                 key={candidate.username}
                 onClick={() => switchDemoUser(candidate.username)}
               >
-                {t("Switch to", "تغییر به")} {candidate.name}
+                {t("Switch to", "تغییر به")}{" "}
+                {demoUserLabel(candidate.name, lang)}
               </MenuItem>
             ))}
             <MenuItem onClick={() => setResetOpen(true)}>

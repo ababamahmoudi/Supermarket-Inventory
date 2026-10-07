@@ -1,0 +1,344 @@
+.brand-logo-tile,
+.signin-logo-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-inline-size: 100%;
+}
+
+.brand-logo-window {
+  position: relative;
+  display: block;
+  inline-size: 50px;
+  block-size: 40px;
+  overflow: hidden;
+  flex-shrink: 0;
+  direction: ltr;
+}
+
+.sidebar .brand-logo-window .brand-logo {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -45%);
+  block-size: 72px;
+  inline-size: 72px;
+  max-inline-size: none;
+}
+
+.signin-logo-window {
+  inline-size: 96px;
+  block-size: 76px;
+}
+
+.signin-card .signin-logo-window .signin-logo {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -45%);
+  block-size: 140px;
+  inline-size: 140px;
+  max-inline-size: none;
+}
+
+html[data-theme="dark"] .brand-logo-tile,
+html[data-theme="dark"] .signin-logo-tile {
+  padding: 8px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.sidebar .brand-logo-tile .brand-logo,
+.signin-card .signin-logo-tile .signin-logo {
+  filter: none;
+  margin: 0;
+}
+
+.is-collapsed .sidebar .brand-logo-tile {
+  inline-size: 44px;
+  padding: 4px;
+}
+
+.is-collapsed .sidebar .brand-logo-window {
+  inline-size: 36px;
+  block-size: 28px;
+}
+
+.is-collapsed .sidebar .brand-logo-window .brand-logo {
+  block-size: 52px;
+  inline-size: 52px;
+}
+
+.sidebar .user-menu {
+  border-radius: 12px;
+  padding: 0;
+  min-inline-size: 0;
+  justify-content: flex-start;
+}
+
+.sidebar .user-chip {
+  min-inline-size: 0;
+  border-radius: 12px;
+  gap: 8px;
+}
+
+.sidebar .user-chip-copy {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.sidebar .user-chip-copy strong,
+.sidebar .user-chip-copy small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sidebar .user-avatar {
+  border-radius: 50%;
+}
+
+.sidebar nav .nav-count {
+  margin-inline-start: auto;
+  padding: 2px 6px;
+  min-inline-size: 21px;
+  inline-size: max-content;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-count-dot {
+  display: none;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+}
+
+.is-collapsed .sidebar .nav-count-dot {
+  display: block;
+}
+
+.sidebar nav a[aria-disabled="true"] {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.sidebar nav a[aria-disabled="true"]:hover {
+  background: transparent;
+}
+
+.text-size-glyph {
+  font-family: Inter, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+  direction: ltr;
+}
+
+.topbar .notifications-menu {
+  inline-size: 40px;
+  min-inline-size: 40px;
+  min-block-size: 40px;
+  padding: 10px;
+  border-radius: 50%;
+  overflow: visible;
+}
+
+.notification-button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.topbar .notification-count {
+  inset-block-start: -8px;
+  inset-inline-end: -9px;
+  min-inline-size: 17px;
+  padding: 1px 4px;
+  text-align: center;
+}
+
+.topbar .language-toggle button {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.topbar .language-toggle button[lang="fa"] {
+  font-family: Vazirmatn, Inter, sans-serif;
+}
+
+.topbar-search kbd {
+  display: grid;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  background: var(--surface);
+  border-radius: 4px;
+  font-family: Inter, sans-serif;
+  line-height: 1;
+}
+
+.lookup-page .lookup-search-pill {
+  block-size: 56px;
+  padding-inline-end: 8px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.lookup-page .lookup-search-pill:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lookup-page .lookup-search-pill > svg {
+  flex-shrink: 0;
+}
+
+.lookup-page .lookup-search-pill input.lookup-search {
+  flex: 1;
+  min-inline-size: 0;
+  inline-size: 0;
+  background: transparent;
+  border-radius: 0;
+  outline: none;
+}
+
+.lookup-scan-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 40px;
+  block-size: 40px;
+  min-block-size: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--search-fill);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.lookup-scan-button:hover {
+  background: var(--nav-active);
+}
+
+.lookup-page .lookup-result-row {
+  grid-template-columns: minmax(0, 1fr) 176px;
+  direction: ltr;
+  padding: 12px 16px;
+  gap: 16px;
+  align-items: center;
+  min-block-size: 76px;
+}
+
+.lookup-page .lookup-result-name {
+  min-inline-size: 0;
+  text-align: start;
+  gap: 6px;
+}
+
+.lookup-result-name > strong,
+.lookup-secondary-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lookup-result-secondary {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-inline-size: 0;
+  font-size: 0.8125rem;
+}
+
+.lookup-secondary-name {
+  min-inline-size: 0;
+}
+
+.lookup-result-meta {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.lookup-page .lookup-result-price {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-inline-size: 0;
+  text-align: right;
+  align-self: center;
+  font-size: 1rem;
+}
+
+.lookup-result-price > .muted {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.lookup-page .lookup-result-pills {
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.lookup-result-pills .badge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.lookup-detail-header .lookup-product-meta {
+  margin-block-start: 12px;
+}
+
+.catalog-filter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.catalog-filter-toolbar > .field {
+  inline-size: 220px;
+  max-inline-size: 100%;
+}
+
+.catalog-filter-toolbar > .field:first-child {
+  inline-size: 280px;
+}
+
+.catalog-product-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.catalog-product-secondary {
+  margin-block-start: 4px;
+}
+
+@media (max-width: 760px) {
+  .lookup-page .lookup-result-row {
+    grid-template-columns: minmax(0, 1fr) 104px;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .lookup-result-secondary {
+    display: grid;
+    gap: 2px;
+  }
+
+  .lookup-result-meta {
+    display: none;
+  }
+
+  .lookup-page .lookup-result-price {
+    font-size: 0.9375rem;
+  }
+
+  .lookup-result-pills .badge {
+    padding-inline: 7px;
+  }
+}

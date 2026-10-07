@@ -2,6 +2,13 @@ import { useState } from "react";
 import { demoUsers, useDemo } from "../store";
 import { companyDate } from "../invoice";
 import {
+  branchLabel,
+  categoryLabel,
+  DateText,
+  LtrText,
+  ProductName,
+} from "../presentation";
+import {
   Badge,
   Button,
   Card,
@@ -9,6 +16,7 @@ import {
   EmptyState,
   Field,
   PageHeader,
+  Select,
 } from "../ui";
 import {
   clearExpiry,
@@ -94,7 +102,7 @@ export function Expiry() {
         </div>
       )}
       <Card>
-        <div className="form-grid">
+        <div className="table-toolbar">
           <Field label={t("Search products", "جستجوی محصولات")}>
             <input
               value={search}
@@ -103,51 +111,66 @@ export function Expiry() {
             />
           </Field>
           <Field label={t("Time window", "بازه زمانی")}>
-            <select
+            <Select
               value={window}
-              onChange={(event) => setWindow(event.target.value)}
-            >
-              <option value="soon">
-                {t("Expiring soon", "به‌زودی منقضی")} (
-                {state.config.expiry.expiring_soon_days} {t("days", "روز")})
-              </option>
-              <option value="expired">{t("Expired", "منقضی‌شده")}</option>
-              <option value="active">
-                {t("All active dates", "همه تاریخ‌های فعال")}
-              </option>
-              <option value="cleared">
-                {t("Cleared history", "سوابق پاک‌شده")}
-              </option>
-            </select>
+              onChange={setWindow}
+              options={[
+                {
+                  value: "soon",
+                  label: `${t("Expiring soon", "به‌زودی منقضی")} (${state.config.expiry.expiring_soon_days} ${t("days", "روز")})`,
+                },
+                { value: "expired", label: t("Expired", "منقضی‌شده") },
+                {
+                  value: "active",
+                  label: t("All active dates", "همه تاریخ‌های فعال"),
+                },
+                {
+                  value: "cleared",
+                  label: t("Cleared history", "سوابق پاک‌شده"),
+                },
+              ]}
+            />
           </Field>
           <Field label={t("AI category", "دسته‌بندی هوش مصنوعی")}>
-            <select
+            <Select
               value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option value="all">{t("All categories", "همه دسته‌ها")}</option>
-              {[
-                ...new Set(
-                  state.products
-                    .filter((item) => item.company_id === context.company_id)
-                    .map((product) => product.ai_category),
-                ),
-              ].map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </select>
+              onChange={setCategory}
+              options={[
+                { value: "all", label: t("All categories", "همه دسته‌ها") },
+                ...[
+                  ...new Set(
+                    state.products
+                      .filter((item) => item.company_id === context.company_id)
+                      .map((product) => product.ai_category),
+                  ),
+                ].map((value) => ({
+                  value,
+                  label: categoryLabel(value, lang),
+                })),
+              ]}
+            />
           </Field>
           <Field label={t("Sort by", "مرتب‌سازی بر اساس")}>
-            <select
+            <Select
               value={sort}
-              onChange={(event) =>
-                setSort(event.target.value as "date" | "name")
-              }
-            >
-              <option value="date">{t("Date", "تاریخ")}</option>
-              <option value="name">{t("Product", "محصول")}</option>
-            </select>
+              onChange={(value) => setSort(value as "date" | "name")}
+              options={[
+                { value: "date", label: t("Date", "تاریخ") },
+                { value: "name", label: t("Product", "محصول") },
+              ]}
+            />
           </Field>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSearch("");
+              setCategory("all");
+              setWindow("soon");
+              setSort("date");
+            }}
+          >
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
         </div>
       </Card>
       {message && (
@@ -176,7 +199,9 @@ export function Expiry() {
                 <th>{t("Branch", "شعبه")}</th>
                 <th>{t("Date", "تاریخ")}</th>
                 <th>{t("Type", "نوع")}</th>
-                <th>{t("Days left", "روز باقی‌مانده")}</th>
+                <th className="number-cell">
+                  {t("Days left", "روز باقی‌مانده")}
+                </th>
                 <th>{t("Supplier / invoice", "تأمین‌کننده / فاکتور")}</th>
                 <th>{t("Status", "وضعیت")}</th>
                 <th>{t("Action", "عملیات")}</th>
@@ -198,26 +223,35 @@ export function Expiry() {
                 return (
                   <tr key={entry.id}>
                     <td>
-                      <strong>
-                        {lang === "fa" ? product?.name_fa : product?.name_en}
-                      </strong>
-                      <div dir="ltr" className="muted">
-                        {entry.product_code}
+                      {product && (
+                        <ProductName product={product} language={lang} />
+                      )}
+                      <div className="muted">
+                        <LtrText>{entry.product_code}</LtrText>
                       </div>
                     </td>
-                    <td>{entry.branch}</td>
-                    <td dir="ltr">{entry.date}</td>
+                    <td>{branchLabel(entry.branch, lang)}</td>
+                    <td>
+                      <DateText value={entry.date} />
+                    </td>
                     <td>
                       {richer.date_type === "best_before"
                         ? t("Best before", "بهترین زمان مصرف")
                         : t("Expiry", "انقضا")}
                     </td>
-                    <td dir="ltr">{days}</td>
+                    <td className="number-cell">
+                      <LtrText>{days}</LtrText>
+                    </td>
                     <td>
-                      {richer.supplier ?? product?.main_supplier}
+                      <LtrText>
+                        {richer.supplier ?? product?.main_supplier}
+                      </LtrText>
                       <div className="muted">
-                        {richer.invoice_id ??
-                          t("Demo stock on hand", "موجودی نمونه")}
+                        {richer.invoice_id ? (
+                          <LtrText>{richer.invoice_id}</LtrText>
+                        ) : (
+                          t("Demo stock on hand", "موجودی نمونه")
+                        )}
                       </div>
                     </td>
                     <td>
@@ -269,7 +303,7 @@ export function Expiry() {
                             }
                           }}
                         >
-                          {t("Cleared", "پاک شد")}
+                          {t("Mark as cleared", "علامت‌گذاری به‌عنوان پاک‌شده")}
                         </Button>
                       )}
                     </td>

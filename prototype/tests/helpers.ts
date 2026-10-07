@@ -47,12 +47,9 @@ export async function chooseOption(
   value: string,
   label = value,
 ) {
-  if ((await control.evaluate((element) => element.tagName)) === "SELECT") {
-    await control.selectOption(value);
-  } else {
-    await control.click();
-    await page.getByRole("option", { name: label, exact: true }).click();
-  }
+  await expect(control).toHaveAttribute("role", "combobox");
+  await control.click();
+  await page.getByRole("option", { name: label, exact: true }).click();
 }
 
 export async function setBranch(page: Page, branch: string) {

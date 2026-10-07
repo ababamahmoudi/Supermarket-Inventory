@@ -383,7 +383,12 @@ type ControlAttributes = Pick<
   | "dir"
   | "title"
 >;
-export type SelectOption = { value: string; label: string; disabled?: boolean };
+export type SelectOption = {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  count?: number;
+};
 
 function usePopover(minWidth = 224) {
   const [open, setOpen] = useState(false);
@@ -601,7 +606,9 @@ export function Select({
         onKeyDown={keydown}
       >
         <span className={selected ? undefined : "muted"}>
-          {selected?.label ?? t("Choose an option", "یک گزینه انتخاب کنید")}
+          <bdi dir="auto">
+            {selected?.label ?? t("Choose an option", "یک گزینه انتخاب کنید")}
+          </bdi>
         </span>
         <ChevronDown size={18} strokeWidth={1.5} aria-hidden="true" />
       </button>
@@ -668,7 +675,9 @@ export function Select({
                   }}
                   onClick={() => choose(option)}
                 >
-                  <span>{option.label}</span>
+                  <span>
+                    <bdi dir="auto">{option.label}</bdi>
+                  </span>
                   {option.value === value && (
                     <Check size={16} strokeWidth={1.5} aria-hidden="true" />
                   )}
@@ -818,6 +827,7 @@ export function NumberField({
     <input
       {...props}
       type="text"
+      dir={props.dir ?? "ltr"}
       inputMode={step === 1 || step === "1" ? "numeric" : "decimal"}
       value={value}
       className={cn("ui-input ui-number", className)}
@@ -900,12 +910,7 @@ export function DateField({
         : date;
   };
   const locale = lang === "fa" ? "fa-IR-u-ca-gregory-nu-latn" : "en-US";
-  const dateLabel = (date: Date) =>
-    date.toLocaleDateString(locale, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+  const dateLabel = dateValue;
   const focusDate = (date: Date) => {
     const next = clamp(date);
     const nextValue = dateValue(next);
@@ -952,9 +957,9 @@ export function DateField({
           } else if (event.key === "Escape") closePopup(true);
         }}
       >
-        <span dir="ltr" className={value ? "tabular" : "muted"}>
+        <bdi dir="ltr" className={value ? "tabular" : "muted"}>
           {value || t("Choose date", "تاریخ را انتخاب کنید")}
-        </span>
+        </bdi>
         <CalendarDays size={18} strokeWidth={1.5} aria-hidden="true" />
       </button>
       {popupOpen &&
@@ -1293,12 +1298,14 @@ const MenuContext = createContext<(() => void) | null>(null);
 export function Menu({
   label,
   icon,
+  showChevron = true,
   children,
   className,
   ...props
 }: {
   label: ReactNode;
   icon?: ReactNode;
+  showChevron?: boolean;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -1344,7 +1351,7 @@ export function Menu({
       >
         {icon ?? null}
         {label}
-        {!icon && (
+        {showChevron && !icon && (
           <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
         )}
       </button>
@@ -1490,13 +1497,18 @@ function Segments({
     <div
       {...props}
       role={tabs ? "tablist" : "group"}
-      className={cn("ui-segments", className)}
+      className={cn("ui-segments", { "ui-tabs": tabs }, className)}
     >
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           role={tabs ? "tab" : undefined}
+          aria-label={
+            option.count && option.count > 0
+              ? `${option.label} ${option.count}`
+              : undefined
+          }
           aria-selected={tabs ? value === option.value : undefined}
           aria-pressed={tabs ? undefined : value === option.value}
           disabled={option.disabled}
@@ -1536,7 +1548,10 @@ function Segments({
             }
           }}
         >
-          {option.label}
+          <span>{option.label}</span>
+          {option.count !== undefined && option.count > 0 && (
+            <span className="tab-count">{option.count}</span>
+          )}
         </button>
       ))}
     </div>
