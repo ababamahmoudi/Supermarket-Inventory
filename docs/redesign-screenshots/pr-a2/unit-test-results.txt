@@ -1,0 +1,15 @@
+> supermarket-browser-prototype@0.2.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /workspace/Supermarket-Inventory/prototype
+
+
+ Test Files  15 passed (15)
+      Tests  250 passed (250)
+   Start at  23:32:24
+   Duration  23.55s (environment 49%, tests 32%, setup 9%, transform 5%, import 5%)
+
+Environment  jsdom was created 15 times · 20.57s total, 49% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
