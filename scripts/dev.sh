@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 report_failure() {
   failure_status="$?"
   failure_line="$1"
-  echo "Development command '${target:-setup}' failed at scripts/dev.sh:${failure_line} (exit ${failure_status}). See the error above." >&2
+  echo "Development command '${target:-setup}' failed during ${setup_stage:-the requested command} at scripts/dev.sh:${failure_line} (exit ${failure_status}). See the error above." >&2
   if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
-    echo "::error file=scripts/dev.sh,line=${failure_line}::Development command '${target:-setup}' failed (exit ${failure_status}); see its preceding error."
+    echo "::error file=scripts/dev.sh,line=${failure_line}::Development command '${target:-setup}' failed during ${setup_stage:-the requested command} (exit ${failure_status}); see its preceding error."
   fi
   exit "$failure_status"
 }
@@ -102,18 +102,26 @@ case "$target" in
     local_config
     case "$target" in
       setup)
+        setup_stage="validating Compose configuration"
         compose config --quiet
+        setup_stage="building development images"
         echo "Setup: building the development images."
         compose build
+        setup_stage="preparing compatible local seed files"
         prepare_runtime_seed
+        setup_stage="starting the database, cache, and local file storage"
         echo "Setup: starting the database, cache, and local file storage."
         compose up -d --wait --wait-timeout 120 db redis s3
+        setup_stage="verifying the database backup"
         echo "Setup: verifying a backup before migrations."
         bash scripts/backup-before-migrate.sh
+        setup_stage="applying migrations"
         echo "Setup: applying migrations."
         compose run --rm api python manage.py migrate --noinput
+        setup_stage="loading local company configuration"
         echo "Setup: loading compatible local company configuration."
         compose run --rm api python manage.py seed_arzon --refresh-config
+        setup_stage="installing frozen frontend dependencies"
         # Refresh the dependency volume against the committed lockfile on every setup.
         compose run --rm --no-deps web npm ci
         echo "Setup complete. Run make up. Repeating setup preserves .env, users, and data."
