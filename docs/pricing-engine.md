@@ -105,6 +105,8 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 - A manual override of the price → proposal flagged "manual override" (always approval).
   See `workflows.md` for the state machine and display rules.
 
+**Supervisor direct product entry (B, item 45)** uses this exact engine for the entered last unit cost/category, but the Supervisor's save is the creation/price decision: the product is Active immediately without a separate pending approval. A different selling price records a manual override; a below-minimum-margin saved price requires explicit confirmation. This is a role-specific creation exception, not a change to the decimal algorithm or worker invoice proposal rules.
+
 ## Price scope
 
 - Company default price per product, optional per-branch override.

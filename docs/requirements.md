@@ -41,6 +41,9 @@ Three roles. **Each employee has exactly one role**, and the app they see (menus
 | Create invoices, upload PDFs/photos, save drafts, post invoices                                                    |           No           |           Yes           |     Yes     |
 | Quick-add a supplier (proposal)                                                                                    |           No           |           Yes           |     Yes     |
 | Confirm a new supplier                                                                                             |           No           |           No            |     Yes     |
+| Add a Confirmed supplier from Suppliers; edit or deactivate a supplier                                             |           No           |           No            |     Yes     |
+| Add an Active product from Products; enter opening stock counts                                                    |           No           |           No            |     Yes     |
+| Enter supplier opening balances per branch with an as-of date                                                      |           No           |           No            |     Yes     |
 | Mark an invoice line Short / mark it Resolved                                                                      |           No           |           Yes           |     Yes     |
 | Close a short as "not delivered"                                                                                   |           No           |           No            |     Yes     |
 | Create returns, record pickup, record resolution, cancel a return                                                  |           No           |           Yes           |     Yes     |
@@ -61,18 +64,23 @@ Three roles. **Each employee has exactly one role**, and the app they see (menus
 
 Floor Workers never see supplier balances or payables. Cashier = lookup only, unless the Supervisor gives cashiers access to a custom notebook.
 
+**Manual entry (B, items 44–47):** **Add supplier** on the Suppliers overview and **Add product** on Products are Supervisor-only. Floor Workers and Cashiers never see these catalog actions or opening-balance controls, including when opening a form through a direct route. Floor Workers retain the invoice-only **+ Add supplier** and **+ Add new product** proposal flows: they create a Proposed supplier or Pending approval product, not a confirmed/active catalog record. A Supervisor uses the same forms from an invoice, with the direct-entry permissions below. Permission checks apply to the transaction and its fields, not only button visibility; the Phase 0 implementation enforces these checks in the scoped browser store, and the future API must enforce them on the server.
+
 ## 4. Products and product codes
 
 - Every product has: **Product Code**, name (English), name (Persian), description (English/Persian, optional), unit size (e.g., "400 g"), pricing category, tax profile, AI category (see §14), barcode(s) (optional, multiple allowed), status.
 - **Product codes are permanent.** Never reused. Archived products can be reactivated. Codes are strings, zero-padded to at least four digits (`0001`…`9999`), then continue as five digits (`10000`…). **(assumed: start at 0001)**
 - Statuses: `pending_approval` (new product), `active`, `archived`.
+- **Supervisor Add product (B):** the shared product editor also has a new mode for names EN/FA, unit size, category, pricing category, barcode, supplier, date tracking, last unit cost before tax, selling price, and optional starting stock count per allowed branch. The engine calculates selling price from the entered four-decimal unit cost and pricing category. A changed selling price records the Supervisor's manual-override decision; a price below the configured minimum margin requires explicit confirmation before saving. Unlike a receiving proposal, the Supervisor-added product is **Active immediately**, with no separate pending approval. Record its creation and price provenance in History; never claim a manual cost came from an invoice.
+- **Next Product Code:** allocate the next company-wide code without reusing any previously assigned code, including archived or reverted records. Keep the existing zero padding and five-digit continuation. Block conflicting barcodes exactly as in the editor and warn when a name is close to an existing product, with a link to that product. A name warning does not replace the barcode block.
+- Each optional starting stock count creates its own company/product/branch-scoped stock movement displayed as **Opening count**, stamped with the Supervisor and time. Never overwrite stock on hand or invent a supplier receipt. These movements stay in history and use corrections rather than simple Undo/Revert.
 - **Barcode conflict:** if a barcode being added already belongs to a different product, block it and create a Supervisor approval ("Barcode conflict") showing both products.
 - In the A2 prototype, approving a blocked barcode conflict keeps the existing mappings; rejecting rejects the attempted change. Either choice preserves prices, overrides and offers. A future barcode reassignment needs a separate explicit decision.
 - **Supplier products:** the same product may arrive from different suppliers with different supplier SKUs, names, pack sizes, and costs. A `supplier_product` record links supplier SKU/name to a product. An item from a different supplier at a different price is registered under that supplier (own SKU/name) and still raises an alert to the Supervisor (see §8).
 - **Pack size:** invoices often list cases. Each supplier product stores `units_per_case`. Pricing always uses **unit cost before tax** = line total before tax ÷ (quantity × units per case).
 - **Shared product editor (A2):** only the Supervisor may edit catalog names (English/Persian), description, unit size, AI category, pricing category, barcode, supplier association, date tracking, and approved selling price. The same editor opens from Lookup, every Products row, and the product page. Product Code is read-only. Receiving proposals and worker invoice matching remain available under their existing permissions.
 - **Manual price change:** ask for **All branches** (default) or **This branch only**, preview the affected prices/overrides, and record the Supervisor's save as the manual-override approval decision. The approved change runs the normal offer and cross-branch-conflict checks. Preserve the invoice calculation and its invoice number; do not overwrite the recorded cost basis. The product card and page show both **Calculated from invoice FV-20417: $2.99 · Changed by [name] on [date]: $3.29** when those are the real recorded values. Names, invoice numbers, dates and prices are isolated in Persian.
-- Product-detail and price edits append reversible History entries with actor, branch/scope, time and before/after values. A2 stores these entries; the History/Revert interface is deferred to pull request B. Revert must later detect intervening changes rather than silently overwriting them.
+- Product-detail and price edits append reversible History entries with actor, branch/scope, time and before/after values. B builds the History/Revert interface on A2's stored entries. Revert must detect intervening changes rather than silently overwriting them.
 
 ## 5. Pricing categories and selling price
 
@@ -95,13 +103,15 @@ Every calculated selling-price change needs Supervisor approval.
 
 | Event                                     | Approval                                |
 | ----------------------------------------- | --------------------------------------- |
-| New product                               | Always                                  |
+| New product proposed during receiving     | Always                                  |
 | Sales-tax profile change                  | Always                                  |
 | Barcode conflict                          | Always                                  |
 | Manual selling-price override             | Always                                  |
 | Calculated price below the minimum margin | Always                                  |
 | Ordinary calculated price change          | Yes (Supervisor review)                 |
 | Supplier cost change only                 | No, unless it changes the selling price |
+
+**Supervisor manual-entry exception (B):** saving Add product is the Supervisor's creation/price decision, so it activates the product without a separate approval step. Manual overrides are recorded, and a below-minimum-margin price requires an explicit confirmation. Worker invoice-created products remain pending and use the normal approval flow.
 
 **Pending prices:** a proposed price is visible in the Products section, clearly labeled **Pending**, so workers and cashiers know it still has to be confirmed. The cashier keeps charging the **last approved price** and never sells at a pending lower price. **(assumed)** For a brand-new product with no approved price, the lookup shows the proposed price labeled "Pending: confirm with a Supervisor before selling". **(assumed)**
 
@@ -139,6 +149,7 @@ When the same item arrives from a **different supplier** at a different price, r
 - **Label waitlist** (this reverses the earlier "no label queue" decision): a shared list per branch, so one worker can add items and another can print them. Change copies, remove items, clear the list. Printed items leave the list automatically. Adding is manual; a setting can add products automatically when a new price is approved (**off by default**).
 - **Printing must really work:** the app produces an exact-size A4 layout (in millimeters) that prints from the browser or saves as PDF, with Persian text rendered correctly.
 - Fields on the default Super Arzon label: product name, description, price, offers, **product code**, **Super Arzon logo**, **unit size**, **tax indicator**. **Not** shown: barcode, promotion expiry date. Label fields are a setting.
+- Omit the logo on labels narrower than **50mm**. When the logo is shown on a label at least 50mm wide, make it at least **8mm tall** and preserve exact-size containment; never shrink it to illegible decoration.
 - Languages: **English and Persian** together.
 - Multiple labels per A4 sheet, and **start at a selected slot** on a partially used sheet.
 - **No default template.** Users create and save their own presets (Template 1, Template 2…), each with width, height, margins, gaps, and **calibration offsets** (shift left/right/up/down in mm) because every printer shifts slightly. Each template can print a **test alignment page**.
@@ -166,8 +177,10 @@ Header fields:
 Rules:
 
 - **Drafts:** an invoice that is neither cancelled nor submitted stays as a **Draft** (like an email draft). Workers are often busy and cannot attach the image right away. A draft can be saved at any time and cannot be posted without the original file.
+- **New invoice (B):** **Upload** and **Manual entry** are clear adjacent choices. In manual entry the Supervisor chooses branch, supplier (including **+ Add supplier**), supplier invoice number, invoice date and payment terms; adds any product (including **+ Add new product**) with quantity and unit cost; then reviews the same calculated prices/date decisions/shorts as an uploaded invoice. Manual entry does not bypass the original-photo/PDF requirement, supplier confirmation, matching or line-review rules. A draft can be saved without the original; posting cannot.
 - **Branch** is set on the invoice (from the document or chosen at upload).
 - **New suppliers:** a Floor Worker can quick-add a supplier proposal while entering an invoice. The invoice cannot be **posted** until the Supervisor confirms the supplier.
+- The invoice **+ Add supplier** uses the Suppliers form. Supervisor additions are Confirmed immediately; Floor Worker additions are Proposed and have no opening-balance field. Deactivated suppliers are excluded from new-invoice choices while existing invoice links remain intact. **+ Add new product** likewise uses the shared editor's new mode: Supervisor additions are Active; Floor Worker proposals remain Pending approval and have no opening-stock controls.
 - **Shorts:** when the supplier forgot an item that is on the invoice, the worker marks that line **Short**; its amount (plus its proportional tax) is **deducted from the payable total**. If the supplier brings it later, the worker marks the line **Resolved** and the amount returns. If it never comes, the Supervisor sees the invoice and the deducted amount and closes it as **Not delivered**.
 - **Tax discrepancy:** if subtotal + tax ≠ final total, or tax does not match taxable lines at the configured rate (within a tolerance), raise a Supervisor alert (does not block posting).
 - Posting an invoice: adds stock movements, creates price proposals and alerts, creates the invoice entry in that branch's supplier balance. Posted invoices are locked; only the Supervisor can correct them, with an audit entry.
@@ -178,6 +191,8 @@ Rules:
 **Returns overview (A2):** the Returns landing page lists all returns visible to the user across suppliers and allowed branches. Columns: **Return # · Supplier · Branch · Created · Items · Status · Next action**. Default status filter is **Pending**, meaning every status except resolved/cancelled. One compact toolbar has a search pill, supplier (default **All suppliers**), status, branch, **Clear filters**, and the result count. Search covers return number, supplier and product names. Selecting a row opens that return's own page; filtering never exposes another company or a worker's unassigned branch.
 
 **Return page:** header **Return #1 · created [date] by [name]**, status pill, status-driven primary action at the top right, and a **Return policy** link opening a centered dialog. Lines are in their own card; **Evidence and history** is a separate card below. Creation date and employee are required for new returns and supplied explicitly for fictional starting returns; preserve signed pickup evidence and financial permissions.
+
+While a return is **Open**, show **Record pickup** as the primary action and **Cancel return** as the other action. **Record resolution** appears only after pickup, when the state permits it. The return title uses the standard page-title size.
 
 Flow:
 
@@ -263,6 +278,10 @@ Filters: branch, overdue (Supervisor), has open returns, has open shorts, waitin
 
 **Supplier page tabs:** Overview (contact details, sales representative, default payment terms, key figures) · Invoices · Products supplied (their SKU, pack size, last cost, cost history) · Returns and credits · Shorts · Price alerts · Payments (**Supervisor only**) · Notes.
 
+**Add supplier (B, item 44):** the Supervisor-only primary action on the overview opens a form no wider than **720px**: name, phone, email, sales representative and their phone, payment terms, optional address and notes, and optional opening balance for each allowed branch with an **as of** date. Warn before saving if the name is close to an existing supplier, with a link to that supplier; the warning helps prevent duplicates and does not silently merge records. A Supervisor save creates a **Confirmed** supplier immediately. Each entered branch balance becomes a separate **Opening balance** supplier-ledger entry with its as-of date, Supervisor and company/branch scope, and appears in Payables. It is not a purchase invoice and does not enter purchase charts.
+
+The same form opens from the invoice Supplier field's **+ Add supplier**. A Floor Worker can use that invoice-only flow, without opening-balance fields, and creates **Proposed**; posting stays blocked until the Supervisor confirms it. The supplier page has Supervisor-only **Edit** and **Deactivate**, never Delete. Deactivation removes the supplier from new-invoice choices but preserves contact/creation history, all prior invoices, returns, supplier products and ledger entries. Record additions, confirmations, edits and deactivation in History; existing financial history is corrected with entries rather than erased.
+
 "Last delivery" always means the last **delivery/invoice received**. The app does not record purchase orders.
 Floor Workers see the same section without any money columns or the Payments tab (enforced on the server).
 
@@ -286,14 +305,14 @@ Each supermarket must be able to shape the app to its own way of working without
 | Modules                      | turn sections on or off per company (e.g., Returns, Payables, Labels; later Register, Online orders)                                                                                                              |
 | Data                         | import and export (CSV), History                                                                                                                                                                                  |
 
-**Exact group order:** Company → Branches → People → Catalog → Pricing and approvals → Offers → Taxes → Receiving → Returns/date tracking/labels → Notes → Notifications → Modules → Data. These are the B groups; A2 changes the plan, not the grouped Settings implementation.
+**Exact group order:** Company → Branches → People → Catalog → Pricing and approvals → Offers → Taxes → Receiving → Returns/date tracking/labels → Notes → Notifications → Modules → Data. These are the B groups; Ali approved implementation after A2 on 2026-10-08.
 
 **Working in the B demo:** Company, Branches, Pricing categories under Catalog (including rounding rules and the price tester), Offers, Notebooks under Notes, Labels under Returns/date tracking/labels, Modules. All other groups/areas show their structure only; they must not imply that nonworking actions save changes. Every actual settings change is recorded in History and can be reverted by the Supervisor.
 
 ## 23. History and undo
 
 - **History page:** every action (who, what, when, branch, before → after), filterable by person, branch, type, and date. Floor Workers see their own actions; the Supervisor sees all.
-- **Undo (B):** after reversible simple actions (stop an offer, clear a date entry, remove from the waitlist, mark a note done, edit a draft), a toast appears at **bottom-left** in English, **bottom-right** in Persian, with the action text and an **Undo** link. Each toast lasts **5 seconds of unpaused display time** and pauses its own timer while hovered. Several stack newest on top; independently timed oldest items normally disappear from the bottom first. Show at most **3** toasts plus **+N more** for additional active items. Remaining items retain their own timers; a new action must not restart another toast's timer. This supersedes the earlier 10-second/bottom-center rule. A2 stores reversible audit entries but does not implement the B toast/History interface.
+- **Undo (B):** after reversible simple actions (stop an offer, clear a date entry, remove from the waitlist, mark a note done, edit a draft), a toast appears at **bottom-left** in English, **bottom-right** in Persian, with the action text and an **Undo** link. Each toast lasts **5 seconds of unpaused display time** and pauses its own timer while hovered. Several stack newest on top; independently timed oldest items normally disappear from the bottom first. Show at most **3** toasts plus **+N more** for additional active items. Remaining items retain their own timers; a new action must not restart another toast's timer. This supersedes the earlier 10-second/bottom-center rule. B builds the interface on A2's reversible audit records.
 - **Revert:** the Supervisor can revert reversible changes from History (prices, offers, product details, settings, notebook entries). Reverting is itself a new recorded action; nothing is erased.
 - **Corrections instead of undo** for posted invoices, stock movements, and payables: the app adds a correcting entry and keeps the original visible, so stock and balances stay traceable.
 - Printed labels cannot be "unprinted"; History simply records the print.

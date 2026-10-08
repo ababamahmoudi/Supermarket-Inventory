@@ -1,6 +1,19 @@
-# Pull request B plan — updated after A2 review (2026-10-07)
+# Pull request B scope — authorized after A2 approval (2026-10-08)
 
-**Status:** plan only. Build GLOBAL, SCREENS and PROOF of Ali's A2 request in A2; do not start B while A2 is being reviewed. Suppliers overview/detail is now part of A2, not deferred B. The changed B requirements below are items 40–43 of the uploaded A2 request; they supersede older wording only where stated. The remaining previously planned B workflows stay deferred.
+**Status:** Ali approved A2 on 2026-10-08 and authorized **Parts 1, 2 and 3 together in one pull request B**, without a separate review round between them. First apply the ten A2 leftover fixes, then build Prompt 3C items 26–29 with items 40–43 below and the new Supervisor manual entry in items 44–47. Changes stay in `prototype/` and `docs/`. Part 4, the foundation/prototype CI repair, is a separate small pull request restricted to `.github/workflows/`, `Makefile` and `scripts/`. This scope replaces the earlier A2 approval pause; it does not claim the implementation has passed validation yet.
+
+## Part 1. A2 leftovers first
+
+1. Make every toolbar control 44px tall, fit complete select labels, add search icons/placeholders, and remove the Products toolbar/table spacer.
+2. Keep pills and branch names on one line.
+3. Widen invoice product columns to preserve names/unit sizes; Approved price notes stay one muted line.
+4. Purchases, last 8 weeks uses hover amounts and date-axis labels, with no week-total list beneath it; dashboard cards in each row have equal height.
+5. Open returns show Record pickup and Cancel return only; resolution follows pickup and the title uses the standard page size.
+6. Labels narrower than 50mm omit the logo; other labels show it at least 8mm tall.
+7. Review approval dialogs fit their final column, up to 720px or with wrapped headers.
+8. Products sortable headers share muted 13px styling/small arrows; Back to Products uses the same arrow as Back to Returns.
+9. Counted nouns use i18n plural forms everywhere.
+10. Operational page text drops demo disclaimers. Retain AI invoice reading is simulated on Invoices and Demo with fictional data in Demo only.
 
 ## 40. Labels: Products search and live A4 template preview
 
@@ -34,7 +47,7 @@ Use these groups in precisely this order:
 12. Modules
 13. Data
 
-When authorized, the B demo will implement **Company**, **Branches**, **Pricing categories** under Catalog (including rounding rules, special corrections, margin and live price tester), **Offers**, **Notebooks** under Notes, **Labels** under Returns/date tracking/labels, and **Modules**. Other groups/areas display their planned structure only, with no false claim that unfinished settings save changes. Catalog categories and new branches come from editable configuration; adding them must work without new code. Actual edits persist, are scoped, and record reversible History.
+The authorized B demo implements **Company**, **Branches**, **Pricing categories** under Catalog (including rounding rules, special corrections, margin and live price tester), **Offers**, **Notebooks** under Notes, **Labels** under Returns/date tracking/labels, and **Modules**. Other groups/areas display their planned structure only, with no false claim that unfinished settings save changes. Catalog categories and new branches come from editable configuration; adding them must work without new code. Actual edits persist, are scoped, and record reversible History.
 
 requirements §22 and screens Settings have been updated to this order and subset. B does not add a backend, real account administration or real AI credentials.
 
@@ -47,8 +60,17 @@ requirements §22 and screens Settings have been updated to this order and subse
 - Posted invoices, stock movements, financial entries and prints use recorded corrections rather than simple Undo; preserves quantity and money history.
 - A2's product-edit provenance/reversible entries are the data groundwork only. Active History/Revert/Undo interface ships in B. The old **10 seconds / bottom center** default is superseded in requirements §23, workflows §15 and design-language Toast/Undo toast.
 
-## Deferred scope and review proof
+## Part 3. Manual entry — items 44–47
 
-The earlier B plan for simulated AI progress steps and highlighted low-confidence fields remains deferred; no real AI call is introduced. Standalone Stock and Users and devices are deliberately outside A2; branch stock remains visible on product pages and existing sign-in/lock/password behavior works. Future minimal user-management/Stock scope needs a separate authorized slice.
+- **44 — Suppliers:** Supervisor-only Add supplier on Suppliers and shared invoice quick-add form; details/contact/payment terms, optional address/notes, optional per-branch/as-of opening balances. Supervisor additions are Confirmed; worker invoice-only additions are Proposed, never see balances, and block posting until confirmation. Warn/link similar names. Edit/Deactivate preserves history and excludes deactivated suppliers from new invoices.
+- **45 — Products:** Supervisor-only Add product on Products and shared invoice new mode; bilingual names, unit size, category/pricing category, barcode, supplier, date tracking, four-decimal last unit cost, calculated selling price and optional branch starting counts. Manual changes record an override; below-margin prices require confirmation. Assign the next nonreused Product Code, block barcode conflicts and warn/link similar names. Supervisor additions are Active and recorded in History; starting counts append Opening count movements. Worker invoice additions remain pending without opening counts.
+- **46 — Manual invoices:** Upload and Manual entry are adjacent choices. Supervisor selects branch/supplier/number/date/terms, adds any product with quantity/cost, and can create both supplier and product from the same draft. Original photo/PDF remains mandatory before posting; drafts can save without it. Existing posting, review, pricing, date and stock/payables logic is retained.
+- **47 — Tests:** prove Supervisor supplier Confirmed, worker supplier Proposed and posting blocker until confirmation, Supervisor product Active with next code and opening stock movement, blocked barcodes, and absent standalone Add supplier/Add product/opening balances for Floor Worker/Cashier. Include transaction-level permission/company/branch checks, not only UI visibility.
 
-After B is authorized, validate role and branch isolation, exact millimeter printing, persistent notebooks/settings, independent Undo timers and correction rules, plus pricing regressions and English/Persian/light/dark/phone screenshots. None of these plan changes implies that B has been built or approved.
+The required specification-first changes live in requirements §3/4/6/11/21, screens Suppliers/Products/Invoices and workflows §1/2/2A. They are written before implementation.
+
+## Deferred scope and required review proof
+
+**Item 30 (AI reading look and feel) is deferred to Prompt 3D with real AI reading**, so it is built once. B retains existing simulated reading without introducing a provider, server or credentials. Standalone Stock and Users and devices remain outside this slice; product pages retain branch stock and sign-in/lock/password behavior remains working.
+
+Validate role and branch isolation, exact millimeter printing, persistent notebooks/settings/manual drafts, independent Undo timers and correction rules, plus every pricing regression. Send English light, English dark, Persian and phone screenshots of saved template/live preview, waitlist, custom notebook, each working Settings group, History, stacked Undo, Add supplier, Add product, and a manual invoice using both new records. The final B review report records executed results, branch name, exact Ubuntu commands, click-by-click test paths and any unfinished work.
