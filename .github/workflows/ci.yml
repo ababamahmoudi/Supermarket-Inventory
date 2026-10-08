@@ -71,3 +71,45 @@ jobs:
         run: |
           make logs
           make down
+
+  prototype:
+    name: Prototype lint, pricing and unit tests, build, and browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: prototype
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Read the prototype Node.js requirement
+        id: prototype-node
+        run: |
+          node -e 'const fs = require("node:fs"); const range = JSON.parse(fs.readFileSync("package.json", "utf8")).engines.node; fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${range}\n`);'
+      - name: Set up the prototype Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.prototype-node.outputs.version }}
+          cache: npm
+          cache-dependency-path: prototype/package-lock.json
+      - name: Install frozen prototype dependencies
+        run: npm ci
+      - name: Check prototype lint and formatting
+        run: npm run lint
+      - name: Run prototype unit tests and every seed pricing case
+        run: npm test
+      - name: Build the prototype
+        run: npm run build
+      - name: Install Chromium and browser dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Test desktop and phone browser workflows
+        run: npm run e2e -- --workers=2
+      - name: Upload prototype browser failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-browser-test-results
+          path: |
+            prototype/playwright-report
+            prototype/test-results
+          if-no-files-found: ignore

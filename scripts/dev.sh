@@ -2,6 +2,17 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+report_failure() {
+  failure_status="$?"
+  failure_line="$1"
+  echo "Development command '${target:-setup}' failed at scripts/dev.sh:${failure_line} (exit ${failure_status}). See the error above." >&2
+  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
+    echo "::error file=scripts/dev.sh,line=${failure_line}::Development command '${target:-setup}' failed (exit ${failure_status}); see its preceding error."
+  fi
+  exit "$failure_status"
+}
+trap 'report_failure "$LINENO"' ERR
+
 # The managed cloud proxy supplies this public trust root. Normal desktops keep
 # their standard trust stores; an explicit BUILD_CA_FILE takes priority.
 if [[ -f /usr/local/share/ca-certificates/environment-proxy-ca.crt ]]; then
@@ -37,6 +48,20 @@ compose() {
   docker compose "$@"
 }
 
+prepare_runtime_seed() {
+  # The uploaded seed is left untouched. A read-only generated mount restores
+  # omitted confirmed metadata for the existing company, as the prototype does.
+  local seed_override
+  if command -v python3 >/dev/null; then
+    seed_override="$(python3 scripts/prepare-local-seed.py)"
+  else
+    # Linux/WSL can use the built API image without a host Python installation.
+    seed_override="$(compose run --rm --no-deps --user "$(id -u):$(id -g)" \
+      --volume "$PWD:$PWD" api python "$PWD/scripts/prepare-local-seed.py")"
+  fi
+  export COMPOSE_FILE="${COMPOSE_FILE:-$PWD/docker-compose.yml}${COMPOSE_PATH_SEPARATOR:-:}${seed_override}"
+}
+
 start_services() {
   compose up -d --wait --wait-timeout 180
   compose exec -T api python manage.py check
@@ -60,6 +85,7 @@ case "$target" in
   e2e)
     require_docker
     local_config
+    prepare_runtime_seed
     start_services
     if ! command -v npm >/dev/null; then
       echo "Install the Node.js version in frontend/.nvmrc, then retry make e2e." >&2
@@ -77,32 +103,43 @@ case "$target" in
     case "$target" in
       setup)
         compose config --quiet
+        echo "Setup: building the development images."
         compose build
+        prepare_runtime_seed
+        echo "Setup: starting the database, cache, and local file storage."
         compose up -d --wait --wait-timeout 120 db redis s3
+        echo "Setup: verifying a backup before migrations."
         bash scripts/backup-before-migrate.sh
+        echo "Setup: applying migrations."
         compose run --rm api python manage.py migrate --noinput
+        echo "Setup: loading compatible local company configuration."
         compose run --rm api python manage.py seed_arzon --refresh-config
         # Refresh the dependency volume against the committed lockfile on every setup.
         compose run --rm --no-deps web npm ci
         echo "Setup complete. Run make up. Repeating setup preserves .env, users, and data."
         ;;
-      up) start_services ;;
+      up) prepare_runtime_seed; start_services ;;
       down) compose down; echo "Stopped. Local data volumes were preserved." ;;
       test)
+        compose run --rm --no-deps --volume "$PWD/scripts:/app/scripts:ro" api python /app/scripts/test_prepare_local_seed.py
+        prepare_runtime_seed
         compose up -d --wait --wait-timeout 120 db redis
         compose run --rm --no-deps api pytest
         compose run --rm --no-deps web npm run test
         ;;
       lint)
+        prepare_runtime_seed
         compose config --quiet
         bash -n scripts/dev.sh
         bash -n scripts/backup-before-migrate.sh
+        compose run --rm --no-deps --volume "$PWD/scripts:/app/scripts:ro" api ruff check --config /app/backend/pyproject.toml /app/scripts
+        compose run --rm --no-deps --volume "$PWD/scripts:/app/scripts:ro" api ruff format --check --config /app/backend/pyproject.toml /app/scripts
         compose run --rm --no-deps api ruff check . /app/seed
         compose run --rm --no-deps api ruff format --check . /app/seed
         compose run --rm --no-deps api python manage.py check
         compose run --rm --no-deps web npm run lint
         ;;
-      build) compose run --rm --no-deps web npm run build ;;
+      build) prepare_runtime_seed; compose run --rm --no-deps web npm run build ;;
       logs) compose logs --tail=100 ;;
       status) compose ps ;;
       audit)
