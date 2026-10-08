@@ -108,6 +108,8 @@ async function capture(page, screen, variant) {
   }
   if (!(await page.locator("dialog[open]").count()))
     await appearance(page, variant);
+  // Let a fresh RTL layout paint while the test clock remains controlled.
+  await page.clock.runFor(32);
   await page.evaluate(async () => {
     await document.fonts.ready;
     document.activeElement?.blur();

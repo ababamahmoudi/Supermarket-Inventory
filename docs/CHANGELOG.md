@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-08 — Pull request B: labels, notebooks, Settings, History and manual entry
+
+- Recorded Ali's A2 approval and authorization to build A2 leftovers, Prompt 3C items 26–29 with revised 40–43, and manual-entry items 44–47 together in B. Deferred item 30's AI presentation to Prompt 3D with real AI; the CI fix remains a separate tightly scoped pull request.
+- Updated requirements/roles, Suppliers/Products/Invoices screens and workflows before manual-entry code: Supervisor Confirmed suppliers and Active products, worker invoice-only proposals, confirmation posting gate, shared forms, similar-name links, barcode blocks and preserved deactivation history.
+- Defined branch/as-of Opening balance ledger entries, branch Opening count stock movements, nonreused Product Codes, unchanged Decimal pricing/manual override/minimum-margin confirmation and original-required manual posting with attachment-free drafts.
+- Aligned the B plan, brief, data model, acceptance checklist and design rules for 44px complete-text toolbars, one-line short values, invoice columns, chart hover/date labels, return actions, legible label logos, shared table/back styling, i18n plurals and Demo-only disclaimers.
+- Preserved the exact 13 Settings groups and working subset, notebook permissions, exact millimeter label printing and independent five-second corner Undo rules. Implemented the approved B workflows, safe History/Revert and independent corner Undo. The [B review guide](PR_B_REVIEW.md) records executed checks, exact Ubuntu commands and screenshots.
+
 ## 2026-10-08 — Phase 0.2 pull request A2: implementation and review proof
 
 - Implemented shared centered dialogs, table alignment, compact filters, fitting custom selects, Persian isolation, source copy and formatting corrections across existing screens.
