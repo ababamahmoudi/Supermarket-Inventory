@@ -23,6 +23,15 @@ if [[ -f /usr/local/share/ca-certificates/environment-proxy-ca.crt ]]; then
   export npm_config_cache="${npm_config_cache:-$PWD/.local/npm-cache}"
 fi
 
+# Current Compose/Bake limits secret source reads to build contexts. The normal
+# no-extra-CA placeholder must therefore live inside this checkout, not /dev/null.
+# A configured real CA keeps its original path and trust behavior.
+if [[ -z "${BUILD_CA_FILE:-}" || "$BUILD_CA_FILE" == /dev/null ]]; then
+  mkdir -p .local
+  : > .local/additional-ca.pem
+  export BUILD_CA_FILE="$PWD/.local/additional-ca.pem"
+fi
+
 require_docker() {
   if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1; then
     echo "Install Docker Desktop with Compose; see README.md." >&2
