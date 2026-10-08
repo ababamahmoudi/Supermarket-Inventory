@@ -2079,5 +2079,14 @@
     ],
     "skippedBecauseNoChangedApplicableFiles": ["check-yaml", "foundation-lint"]
   },
-  "githubCI": "To be checked after publishing the draft PR; local prototype checks are not a GitHub CI pass."
+  "githubCI": {
+    "result": "failed before lint, tests and build",
+    "headSha": "fc6eb4037489c7054bb26cb60dba738c36103fbe",
+    "runUrl": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/37728803518",
+    "failedStep": "Prepare the environment",
+    "command": "make setup",
+    "exitCode": 2,
+    "detailedLogDownload": "Forbidden; underlying setup error unconfirmed",
+    "scopeNote": "Root setup/CI changes are outside the authorized prototype/docs scope. PR stays draft. Local prototype verification is separate."
+  }
 }

@@ -2,7 +2,7 @@
 
 A2 implements the GLOBAL, SCREENS and PROOF items in Ali’s uploaded review. B is **plan only** in [REVIEW_B_PLAN.md](REVIEW_B_PLAN.md). All changed files belong to `prototype/` or `docs/`; the owner’s seed files, pricing algorithm, main branch and backend remain untouched.
 
-The review branch is `fix/prototype-10-review-a2`, based on A’s `fix/prototype-09-design-language-polish`. Use this branch to test the complete combined prototype. Earlier review pull requests remain separate and unmerged.
+[Draft pull request A2 #11](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/11). The review branch is `fix/prototype-10-review-a2`, based on A’s `fix/prototype-09-design-language-polish`. Use this branch to test the complete combined prototype. Earlier review pull requests remain separate and unmerged.
 
 ## What changed
 
@@ -83,7 +83,7 @@ The three intentional phone skips are desktop top-bar search keyboard behavior, 
 
 Alignment proof includes Products, **Alerts**, Return overview/detail, Date tracking, Offers, Payables, Labels and the populated six-line invoice review, plus Suppliers overview and the populated Invoices/Products/Returns/Payments tabs. Four reports each measured 446 pairs across 18 views; the separate centered-editor test checked focus trapping, Escape/backdrop closing and restored trigger focus on desktop and phone.
 
-Local prototype validation is separate from GitHub CI. The earlier A draft's repository-wide CI failed during **Prepare the environment**, before prototype checks ran; its root cause remains unconfirmed. A2 stays draft, and its own GitHub result will be recorded after publication. Root tooling/CI files are outside the authorized A2 scope.
+Local prototype validation is separate from GitHub CI. [A2's repository-wide CI run](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/37728803518) failed at **Prepare the environment** (`make setup`, exit code 2), before lint/tests/build ran, as the earlier A run did. Downloading the detailed log returned **Forbidden**, so the underlying setup error remains unconfirmed. The public annotations report only the exit code; Node action deprecation notices are warnings, not an identified cause. A2 remains draft. Fixing the root setup/CI pipeline is outside the explicit `prototype/` and `docs/` scope. The passed local prototype checks above remain valid; do not merge until repository CI passes.
 
 Screenshots use real UI actions and the existing fictional invoice picture, with no edited images or injected business state. There are **156 screenshots: 39 states in four variants**. The phone viewport is **390 × 844 px**. Dialog pictures use the visible viewport so their centering can be inspected. Wide table contents scroll inside their table container.
 
