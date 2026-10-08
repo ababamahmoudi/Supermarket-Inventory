@@ -4,10 +4,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DemoProvider, STORAGE_KEY } from "../store";
 import i18n from "../i18n";
 import { Labels } from "./Labels";
+import { SESSION_KEY } from "../auth";
 
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  sessionStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      username: "floorworker",
+      branch: "Branch 1",
+      lang: "en",
+      locked: false,
+      authenticatedAt: Date.now(),
+    }),
+  );
   void i18n.changeLanguage("en");
 });
 afterEach(() => vi.unstubAllGlobals());

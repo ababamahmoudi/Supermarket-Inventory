@@ -1,0 +1,73 @@
+.history-toolbar {
+  margin-block-end: 24px;
+}
+.history-toolbar .ui-date {
+  inline-size: 180px;
+  max-inline-size: 100%;
+  flex: 0 0 auto;
+}
+.history-card {
+  min-inline-size: 0;
+}
+.history-table table {
+  min-inline-size: 1150px;
+}
+.history-table td small {
+  display: block;
+  margin-block-start: 4px;
+}
+.history-branch {
+  white-space: nowrap;
+}
+.history-value-summary {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.history-value-summary > span:first-child {
+  color: var(--text-muted);
+}
+.history-revert-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: 720px;
+}
+.history-revert-context {
+  display: grid;
+  gap: 8px;
+  margin-block-end: 20px;
+}
+.history-revert-context > span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.history-revert-fields {
+  display: grid;
+  gap: 20px;
+}
+.history-revert-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.history-revert-values > div {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.history-revert-dialog > .actions {
+  margin-block-start: 24px;
+}
+@media (max-width: 760px) {
+  .history-toolbar {
+    margin-block-end: 16px;
+  }
+  .history-revert-values {
+    gap: 8px;
+    padding: 12px;
+  }
+}

@@ -16,6 +16,7 @@ const screens = [
   ["products", "Products", "محصولات"],
   ["suppliers", "Suppliers", "تأمین‌کنندگان"],
   ["settings", "Settings", "تنظیمات"],
+  ["history", "History", "سابقه"],
 ];
 
 test("all screens and both languages work offline with no console errors", async ({

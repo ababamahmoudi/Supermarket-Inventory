@@ -1,5 +1,12 @@
+import {
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
+import { translateCount } from "../i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import Decimal from "decimal.js";
+import { formatMoney } from "../formatters";
+import { historyActionLabel } from "../history-copy";
 import {
   ArrowRight,
   Bell,
@@ -9,10 +16,10 @@ import {
 } from "lucide-react";
 import { demoUsers, useDemo } from "../store";
 import { companyDate } from "../invoice";
-import { approvalSnapshot, demoBranches, resolveApproval } from "../approvals";
+import { approvalSnapshot, resolveApproval } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { SupplierApproval } from "./SupplierApproval";
 import {
-  branchLabel,
   demoUserLabel,
   DateText,
   LtrText,
@@ -80,6 +87,9 @@ function DashboardListRow({
 }
 
 export function Dashboard() {
+  const [hoveredPurchaseWeek, setHoveredPurchaseWeek] = useState<number | null>(
+    null,
+  );
   const {
     state,
     update,
@@ -124,6 +134,7 @@ export function Dashboard() {
       </EmptyState>
     );
 
+  const branches = configuredBranches(state.config, true);
   const today = companyDate(state.config);
   const approvals = scopedRecords(state.approvals, context).filter(
     (item) => item.status === "pending",
@@ -241,11 +252,13 @@ export function Dashboard() {
       <LtrText>{code}</LtrText>
     );
   };
-  const branchName = (value: Branch) => branchLabel(value, lang);
+  const branchName = (value: Branch) =>
+    configuredBranchLabel(state.config, value, lang);
   const approvalType = (item: Approval) =>
     item.manual_override
       ? t("Manual price override", "تغییر دستی قیمت")
       : {
+          new_supplier: t("New supplier", "تأمین‌کننده جدید"),
           new_product: t("New product", "محصول جدید"),
           price_change: t("Price change", "تغییر قیمت"),
           margin_review: t("Below minimum margin", "کمتر از حداقل حاشیه سود"),
@@ -362,7 +375,7 @@ export function Dashboard() {
         "Recorded ledger adjustment",
         "تعدیل دفتر ثبت شد",
       ),
-    })[action] ?? t("Recorded activity", "فعالیت ثبت‌شده");
+    })[action] ?? historyActionLabel(action, lang);
   const openPreview = (approval: Approval, decision: "approve" | "reject") => {
     setMessage("");
     setError("");
@@ -380,7 +393,7 @@ export function Dashboard() {
           ? branch
           : approval.branch !== "all"
             ? approval.branch
-            : demoBranches[0],
+            : branches[0],
       company: context.company_id,
       branch,
     });
@@ -458,20 +471,14 @@ export function Dashboard() {
     {
       label: t("Approvals waiting", "تأییدهای در انتظار"),
       value: approvals.length,
-      detail: t(
-        `${priceChanges} ${priceChanges === 1 ? "price change" : "price changes"} · ${newProducts} ${newProducts === 1 ? "new product" : "new products"}`,
-        `${priceChanges} تغییر قیمت · ${newProducts} محصول جدید`,
-      ),
+      detail: `${translateCount("{{count}} price change", "{{count}} price changes", "{{count}} تغییر قیمت", "{{count}} تغییر قیمت", priceChanges, lang)} · ${translateCount("{{count}} new product", "{{count}} new products", "{{count}} محصول جدید", "{{count}} محصول جدید", newProducts, lang)}`,
       page: "approvals",
       icon: ClipboardCheck,
     },
     {
       label: t("Open alerts", "هشدارهای باز"),
       value: alerts.length,
-      detail: t(
-        `${lowerPrices} ${lowerPrices === 1 ? "lower price" : "lower prices"} · ${conflicts} ${conflicts === 1 ? "conflict" : "conflicts"}`,
-        `${lowerPrices} کاهش قیمت · ${conflicts} اختلاف`,
-      ),
+      detail: `${translateCount("{{count}} lower price", "{{count}} lower prices", "{{count}} کاهش قیمت", "{{count}} کاهش قیمت", lowerPrices, lang)} · ${translateCount("{{count}} conflict", "{{count}} conflicts", "{{count}} اختلاف", "{{count}} اختلاف", conflicts, lang)}`,
       page: "alerts",
       icon: Bell,
     },
@@ -485,9 +492,13 @@ export function Dashboard() {
     {
       label: t("Expiring soon", "انقضای نزدیک"),
       value: expiry.length,
-      detail: t(
-        `Within ${state.config.expiry.expiring_soon_days} days`,
-        `در ${state.config.expiry.expiring_soon_days} روز آینده`,
+      detail: translateCount(
+        "Within {{count}} day",
+        "Within {{count}} days",
+        "در {{count}} روز آینده",
+        "در {{count}} روز آینده",
+        state.config.expiry.expiring_soon_days,
+        lang,
       ),
       page: "expiry",
       icon: CalendarClock,
@@ -560,6 +571,14 @@ export function Dashboard() {
               ) : (
                 <div className="dashboard-queue">
                   {approvals.slice(0, 6).map((item) => {
+                    if (item.type === "new_supplier")
+                      return (
+                        <SupplierApproval
+                          key={item.id}
+                          approval={item}
+                          compact
+                        />
+                      );
                     const product = state.products.find(
                       (value) =>
                         value.company_id === context.company_id &&
@@ -1085,25 +1104,45 @@ export function Dashboard() {
                               }
                               r="3"
                               className="purchase-point"
+                              tabIndex={0}
+                              aria-label={`${week.start} – ${week.end}: ${formatMoney(week.amount, { currency: state.config.company.currency })}`}
+                              onMouseEnter={() => setHoveredPurchaseWeek(index)}
+                              onMouseLeave={() => setHoveredPurchaseWeek(null)}
+                              onFocus={() => setHoveredPurchaseWeek(index)}
+                              onBlur={() => setHoveredPurchaseWeek(null)}
                             />
                           ))}
                         </svg>
+                        {hoveredPurchaseWeek !== null && (
+                          <div
+                            className="purchase-chart-tooltip"
+                            role="tooltip"
+                          >
+                            <DateText
+                              value={purchases.weeks[hoveredPurchaseWeek].start}
+                            />{" "}
+                            –{" "}
+                            <DateText
+                              value={purchases.weeks[hoveredPurchaseWeek].end}
+                            />
+                            <strong>
+                              <Money
+                                value={
+                                  purchases.weeks[hoveredPurchaseWeek].amount
+                                }
+                              />
+                            </strong>
+                          </div>
+                        )}
                       </div>
                       <div className="purchase-week-labels">
-                        <DateText value={purchases.weeks[0].start} />
-                        <DateText value={purchases.weeks[7].end} />
-                      </div>
-                      <ul className="purchase-week-totals">
-                        {purchases.weeks.map((week) => (
-                          <li key={week.start}>
-                            <span>
-                              <DateText value={week.start} /> –{" "}
-                              <DateText value={week.end} />
-                            </span>
-                            <Money value={week.amount} />
-                          </li>
+                        {[0, 2, 4, 7].map((index) => (
+                          <DateText
+                            key={index}
+                            value={purchases.weeks[index].start}
+                          />
                         ))}
-                      </ul>
+                      </div>
                     </>
                   );
                 })()
@@ -1387,7 +1426,7 @@ export function Dashboard() {
                       "فقط این شعبه تغییر می‌کند. شعبه‌های دیگر قیمت‌ها و پیشنهادهای خود را حفظ می‌کنند.",
                     )}
               </p>
-              <DataTable>
+              <DataTable className="approval-scope-preview">
                 <thead>
                   <tr>
                     <th>{t("Branch", "شعبه")}</th>
@@ -1397,7 +1436,7 @@ export function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(scope === "all" ? demoBranches : [preview.target]).map(
+                  {(scope === "all" ? branches : [preview.target]).map(
                     (value) => {
                       const product = state.products.find(
                         (item) =>

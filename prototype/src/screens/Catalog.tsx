@@ -1,6 +1,7 @@
+import { translateCount } from "../i18n";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import Decimal from "decimal.js";
-import { Search, ScanLine } from "lucide-react";
+import { Search, ScanLine, ArrowLeft } from "lucide-react";
 import "../catalog-a2.css";
 import {
   effectiveOffer,
@@ -9,7 +10,26 @@ import {
   pendingPrice,
   searchProducts,
 } from "../catalog";
-import { branches, useDemo } from "../store";
+import { useDemo } from "../store";
+import {
+  configuredBranches,
+  branchLabel as configuredBranchLabel,
+  activePricingCategories,
+} from "../settings";
+import {
+  supplierChoices,
+  supplierRecords,
+  supplierMatches,
+} from "../supplier-editor";
+import {
+  addProduct,
+  nextProductCode,
+  similarProductNames,
+  NewProductError,
+  type NewProductEdits,
+} from "../manual-product";
+import { calculatePrice } from "../pricing";
+import "./manual-entry.css";
 import type { Branch, Product } from "../types";
 import {
   productEditSnapshot,
@@ -34,7 +54,6 @@ import {
 
 import {
   activityLabel,
-  branchLabel,
   categoryLabel,
   demoUserLabel,
   DateText,
@@ -71,10 +90,29 @@ function ProductProvenance({ product }: { product: Product }) {
 }
 
 function editorError(
-  code: ProductEditErrorCode,
+  code: ProductEditErrorCode | NewProductError["code"],
   t: (en: string, fa: string) => string,
 ): string {
-  const messages: Record<ProductEditErrorCode, [string, string]> = {
+  const messages: Record<
+    ProductEditErrorCode | NewProductError["code"],
+    [string, string]
+  > = {
+    cost: [
+      "Enter a unit cost with at most four decimals.",
+      "هزینهٔ واحد را با حداکثر چهار رقم اعشار وارد کنید.",
+    ],
+    margin: [
+      "Confirm the price below the minimum margin before saving.",
+      "پیش از ذخیره، قیمت زیر حداقل حاشیه را تأیید کنید.",
+    ],
+    similar: [
+      "Review the similar product before saving.",
+      "پیش از ذخیره، محصول مشابه را بررسی کنید.",
+    ],
+    stock: [
+      "Enter a whole starting stock count for each allowed branch.",
+      "تعداد صحیح موجودی اولیه را برای هر شعبهٔ مجاز وارد کنید.",
+    ],
     permission: [
       "Only a Supervisor can edit products.",
       "فقط سرپرست می‌تواند محصول را ویرایش کند.",
@@ -113,14 +151,50 @@ function editorError(
   return t(...messages[code]);
 }
 
-function ProductEditor({
-  product,
+export function ProductEditor({
+  product: existingProduct,
   onClose,
+  invoiceQuickAdd = false,
+  onCreated,
 }: {
-  product: Product;
+  product?: Product;
   onClose: () => void;
+  invoiceQuickAdd?: boolean;
+  onCreated?: (product: Product) => void;
 }) {
-  const { state, branch, role, user, lang, t, update } = useDemo();
+  const { state, branch, role, user, lang, t, update, navigate } = useDemo();
+  const branches = configuredBranches(state.config);
+  const isNew = !existingProduct;
+  const product: Product = existingProduct ?? {
+    company_id: state.config.company.seed_key,
+    code: nextProductCode(state),
+    name_en: "",
+    name_fa: "",
+    unit_size: "",
+    pricing_category: activePricingCategories(state.config)[0]?.key ?? "",
+    ai_category:
+      state.products.find(
+        (item) => item.company_id === state.config.company.seed_key,
+      )?.ai_category ?? "",
+    barcode: "",
+    main_supplier: invoiceQuickAdd
+      ? state.invoice.supplier
+      : (supplierChoices(state)[0]?.name ?? ""),
+    last_cost_before_tax: "",
+    selling_price: "",
+    offer: null,
+    taxable: false,
+    status: "active",
+    tax_profile: "",
+    date_tracking: false,
+  };
+  const [cost, setCost] = useState("");
+  const [manualPrice, setManualPrice] = useState(false);
+  const [startingCounts, setStartingCounts] = useState<Record<string, string>>(
+    {},
+  );
+  const [similarConfirmed, setSimilarConfirmed] = useState(false);
+  const [marginConfirmed, setMarginConfirmed] = useState(false);
   const category = state.config.pricing_categories.find(
     (item) => item.key === product.pricing_category,
   );
@@ -144,9 +218,11 @@ function ProductEditor({
     lookupBranch(branch),
   );
   const [expected, setExpected] = useState(() =>
-    productEditSnapshot(state, product.code),
+    isNew ? "" : productEditSnapshot(state, product.code),
   );
-  const [error, setError] = useState<ProductEditErrorCode | null>(null);
+  const [error, setError] = useState<
+    ProductEditErrorCode | NewProductError["code"] | null
+  >(null);
   const patch = <K extends keyof ProductEdits>(
     key: K,
     value: ProductEdits[K],
@@ -159,21 +235,61 @@ function ProductEditor({
         .map((item) => item.ai_category),
     ),
   ].sort();
-  const suppliers = [
-    ...new Set(
-      state.products
-        .filter((item) => item.company_id === product.company_id)
-        .map((item) => item.main_supplier),
-    ),
-  ].sort();
+  const suppliers = supplierChoices(state).map((item) => item.name);
+  if (
+    !suppliers.includes(values.main_supplier) &&
+    supplierRecords(state).some((item) =>
+      supplierMatches(item, values.main_supplier),
+    )
+  )
+    suppliers.push(values.main_supplier);
+  let calculatedPrice = "";
+  try {
+    calculatedPrice = calculatePrice(
+      cost,
+      values.pricing_category,
+      state.config,
+    ).selling_price;
+  } catch {
+    /* Invalid draft cost is explained on Save. */
+  }
+  const effectiveSellingPrice =
+    isNew && !manualPrice ? calculatedPrice : sellingPrice;
+  const minimum = state.config.pricing_categories.find(
+    (item) => item.key === values.pricing_category,
+  )?.minimum_margin;
+  const belowMinimum =
+    isNew &&
+    /^\d+(\.\d{1,4})?$/.test(cost) &&
+    /^\d+(\.\d{1,2})?$/.test(effectiveSellingPrice) &&
+    minimum !== null &&
+    minimum !== undefined &&
+    new Decimal(effectiveSellingPrice)
+      .minus(cost)
+      .lt(new Decimal(effectiveSellingPrice).times(minimum));
+  const similar = isNew ? similarProductNames(state, values.name_en) : [];
+  if (
+    isNew &&
+    role !== "supervisor" &&
+    !(role === "floor_worker" && invoiceQuickAdd)
+  )
+    return null;
   return (
     <Dialog
       open
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title={t("Edit product", "ویرایش محصول")}
-      className="product-editor-dialog"
+      title={
+        isNew
+          ? t("Add product", "افزودن محصول")
+          : t("Edit product", "ویرایش محصول")
+      }
+      className={
+        isNew
+          ? "product-editor-dialog manual-entry-dialog"
+          : "product-editor-dialog"
+      }
     >
       <form
         className="stack product-editor-form"
@@ -189,6 +305,37 @@ function ProductEditor({
             allowed_branches: branches,
           };
           try {
+            if (isNew) {
+              let created: Product | undefined;
+              update((draft) => {
+                created = structuredClone(
+                  addProduct(
+                    draft,
+                    context,
+                    {
+                      ...values,
+                      last_cost_before_tax: cost,
+                      selling_price: effectiveSellingPrice || undefined,
+                      minimum_margin_confirmed: marginConfirmed,
+                      similar_name_confirmed: similarConfirmed,
+                      opening_counts:
+                        role === "supervisor"
+                          ? Object.entries(startingCounts)
+                              .filter(([, quantity]) => quantity.trim())
+                              .map(([value, quantity]) => ({
+                                branch: value,
+                                quantity: Number(quantity),
+                              }))
+                          : [],
+                    } as NewProductEdits,
+                    invoiceQuickAdd,
+                  ),
+                );
+              });
+              onCreated?.(created!);
+              onClose();
+              return;
+            }
             update((draft) =>
               saveProductEdits(
                 draft,
@@ -204,8 +351,11 @@ function ProductEditor({
             onClose();
           } catch (cause) {
             const code =
-              cause instanceof ProductEditError ? cause.code : "stale";
-            if (code === "barcode_conflict") {
+              cause instanceof ProductEditError ||
+              cause instanceof NewProductError
+                ? cause.code
+                : "stale";
+            if (code === "barcode_conflict" && !isNew) {
               // The rejected catalog draft stays untouched. Its separate
               // approval is now part of the current editing snapshot, so the
               // user can correct this field without reopening the dialog.
@@ -237,7 +387,10 @@ function ProductEditor({
               autoFocus
               dir="ltr"
               value={values.name_en}
-              onChange={(event) => patch("name_en", event.target.value)}
+              onChange={(event) => {
+                patch("name_en", event.target.value);
+                setSimilarConfirmed(false);
+              }}
             />
           </Field>
           <Field
@@ -290,7 +443,7 @@ function ProductEditor({
             <Select
               value={values.pricing_category}
               onChange={(value) => patch("pricing_category", value)}
-              options={state.config.pricing_categories.map((item) => ({
+              options={activePricingCategories(state.config).map((item) => ({
                 value: item.key,
                 label: categoryLabel(item.label, lang),
               }))}
@@ -315,6 +468,26 @@ function ProductEditor({
               onChange={(event) => patch("barcode", event.target.value)}
             />
           </Field>
+          {isNew && (
+            <Field
+              label={t(
+                "Last unit cost before tax",
+                "آخرین هزینهٔ واحد پیش از مالیات",
+              )}
+              error={error === "cost" ? editorError(error, t) : undefined}
+            >
+              <input
+                dir="ltr"
+                inputMode="decimal"
+                className="control-narrow"
+                value={cost}
+                onChange={(event) => {
+                  setCost(event.target.value);
+                  setMarginConfirmed(false);
+                }}
+              />
+            </Field>
+          )}
           <Field
             label={t("Selling price", "قیمت فروش")}
             error={error === "price" ? editorError(error, t) : undefined}
@@ -323,8 +496,13 @@ function ProductEditor({
             <input
               dir="ltr"
               inputMode="decimal"
-              value={sellingPrice}
-              onChange={(event) => setSellingPrice(event.target.value)}
+              value={effectiveSellingPrice}
+              readOnly={isNew && role !== "supervisor"}
+              onChange={(event) => {
+                setSellingPrice(event.target.value);
+                setManualPrice(true);
+                setMarginConfirmed(false);
+              }}
             />
           </Field>
           <Field label={t("Date tracking", "پیگیری تاریخ")}>
@@ -338,7 +516,81 @@ function ProductEditor({
             />
           </Field>
         </div>
-        {priceChanged && (
+        {isNew && role === "supervisor" && (
+          <fieldset className="manual-opening-fields">
+            <legend>
+              {t(
+                "Starting stock count (optional)",
+                "تعداد موجودی اولیه (اختیاری)",
+              )}
+            </legend>
+            {branches.map((value) => (
+              <Field
+                key={value}
+                label={configuredBranchLabel(state.config, value, lang)}
+              >
+                <input
+                  dir="ltr"
+                  inputMode="numeric"
+                  className="control-narrow"
+                  value={startingCounts[value] ?? ""}
+                  onChange={(event) =>
+                    setStartingCounts((current) => ({
+                      ...current,
+                      [value]: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            ))}
+          </fieldset>
+        )}
+        {isNew && belowMinimum && role === "supervisor" && (
+          <div className="banner info">
+            <p>
+              {t(
+                "This price is below the minimum margin.",
+                "این قیمت کمتر از حداقل حاشیه است.",
+              )}
+            </p>
+            <Checkbox checked={marginConfirmed} onChange={setMarginConfirmed}>
+              {t(
+                "Confirm price below minimum margin",
+                "تأیید قیمت زیر حداقل حاشیه",
+              )}
+            </Checkbox>
+          </div>
+        )}
+        {!!similar.length && (
+          <div className="banner info manual-similar-warning" role="status">
+            <p>
+              {t(
+                "A similar product already exists.",
+                "یک محصول مشابه وجود دارد.",
+              )}
+            </p>
+            {similar.map((item) => (
+              <Button
+                key={item.code}
+                variant="ghost"
+                onClick={() => {
+                  onClose();
+                  navigate(`product?code=${item.code}`);
+                }}
+              >
+                {lang === "fa" ? (
+                  item.name_fa
+                ) : (
+                  <LtrText>{item.name_en}</LtrText>
+                )}
+              </Button>
+            ))}
+            <Checkbox checked={similarConfirmed} onChange={setSimilarConfirmed}>
+              {t("Continue with this product name", "ادامه با این نام محصول")}
+            </Checkbox>
+          </div>
+        )}
+        {!isNew && priceChanged && (
           <div className="stack product-editor-price-scope">
             <Field label={t("Approval scope", "محدودهٔ تأیید")}>
               <Select
@@ -360,7 +612,7 @@ function ProductEditor({
                   onChange={(value) => setTargetBranch(value as Branch)}
                   options={branches.map((value) => ({
                     value,
-                    label: branchLabel(value, lang),
+                    label: configuredBranchLabel(state.config, value, lang),
                   }))}
                 />
               </Field>
@@ -383,7 +635,7 @@ function ProductEditor({
                 {(values.scope === "all" ? branches : [targetBranch]).map(
                   (item) => (
                     <tr key={item}>
-                      <td>{branchLabel(item, lang)}</td>
+                      <td>{configuredBranchLabel(state.config, item, lang)}</td>
                       <td>
                         {effectivePrice(state, product, item) ? (
                           <Money
@@ -418,7 +670,11 @@ function ProductEditor({
           <Button variant="secondary" onClick={onClose}>
             {t("Cancel", "انصراف")}
           </Button>
-          <Button type="submit">{t("Save product", "ذخیرهٔ محصول")}</Button>
+          <Button type="submit">
+            {isNew
+              ? t("Add product", "افزودن محصول")
+              : t("Save product", "ذخیرهٔ محصول")}
+          </Button>
         </div>
       </form>
     </Dialog>
@@ -545,6 +801,7 @@ function ProductDetail({
     (item) => item.key === product.tax_profile,
   );
   const canSeeOperations = operational && role !== "cashier";
+  const branches = configuredBranches(state.config, true);
   const visibleBranches =
     role === "supervisor" ? branches : [lookupBranch(branch)];
   return (
@@ -690,7 +947,9 @@ function ProductDetail({
                       const price = effectivePrice(state, product, item);
                       return (
                         <tr key={item}>
-                          <td>{branchLabel(item, lang)}</td>
+                          <td>
+                            {configuredBranchLabel(state.config, item, lang)}
+                          </td>
                           <td className="numeric">
                             {price ? <Money value={price} /> : "—"}
                           </td>
@@ -727,7 +986,9 @@ function ProductDetail({
               <dl className="form-grid">
                 {visibleBranches.map((item) => (
                   <div key={item}>
-                    <dt className="muted">{branchLabel(item, lang)}</dt>
+                    <dt className="muted">
+                      {configuredBranchLabel(state.config, item, lang)}
+                    </dt>
                     <dd>
                       <LtrText>
                         {state.stock[`${item}:${product.code}`] ?? 0}
@@ -1039,7 +1300,14 @@ export function Lookup() {
             ]}
           />
           <span className="filter-count muted">
-            {t(`${results.length} products`, `${results.length} محصول`)}
+            {translateCount(
+              "{{count}} product",
+              "{{count}} products",
+              "{{count}} محصول",
+              "{{count}} محصول",
+              results.length,
+              lang,
+            )}
           </span>
           <p id={searchHintId} className="helper lookup-keyboard-hint">
             {t(
@@ -1057,8 +1325,8 @@ export function Lookup() {
       {branch === "all" && (
         <p className="muted">
           {t(
-            `Showing the price to charge in ${branchLabel(lookupBranch(branch), "en")}. Choose a branch above to compare.`,
-            `قیمت فروش ${branchLabel(lookupBranch(branch), "fa")} نمایش داده می‌شود. برای مقایسه، شعبه را در بالا انتخاب کنید.`,
+            `Showing the price to charge in ${configuredBranchLabel(state.config, lookupBranch(branch), "en")}. Choose a branch above to compare.`,
+            `قیمت فروش ${configuredBranchLabel(state.config, lookupBranch(branch), "fa")} نمایش داده می‌شود. برای مقایسه، شعبه را در بالا انتخاب کنید.`,
           )}
         </p>
       )}
@@ -1188,6 +1456,7 @@ type SortColumn = "name" | "code" | "price";
 
 export function Products() {
   const { state, role, branch, t, lang, navigate } = useDemo();
+  const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pricingCategory, setPricingCategory] = useState("");
   const [aiCategory, setAiCategory] = useState("");
@@ -1262,12 +1531,25 @@ export function Products() {
           "Approved prices, pending changes and branch details in one catalog.",
           "قیمت‌های تأییدشده، تغییرات در انتظار تأیید و جزئیات شعبه در یک فهرست.",
         )}
+        actions={
+          role === "supervisor" ? (
+            <Button onClick={() => setAddOpen(true)}>
+              {t("Add product", "افزودن محصول")}
+            </Button>
+          ) : undefined
+        }
       />
+      {addOpen && (
+        <ProductEditor
+          onClose={() => setAddOpen(false)}
+          onCreated={(product) => navigate(`product?code=${product.code}`)}
+        />
+      )}
       {branch === "all" && (
         <p className="muted">
           {t(
-            `Prices and offers below preview ${branchLabel(lookupBranch(branch), "en")}. Open product details to compare branch prices, or choose one branch above.`,
-            `قیمت‌ها و پیشنهادهای زیر مربوط به ${branchLabel(lookupBranch(branch), "fa")} هستند. برای مقایسهٔ قیمت شعبه‌ها، جزئیات محصول را باز کنید یا یک شعبه را در بالا انتخاب کنید.`,
+            `Prices and offers below preview ${configuredBranchLabel(state.config, lookupBranch(branch), "en")}. Open product details to compare branch prices, or choose one branch above.`,
+            `قیمت‌ها و پیشنهادهای زیر مربوط به ${configuredBranchLabel(state.config, lookupBranch(branch), "fa")} هستند. برای مقایسهٔ قیمت شعبه‌ها، جزئیات محصول را باز کنید یا یک شعبه را در بالا انتخاب کنید.`,
           )}
         </p>
       )}
@@ -1385,7 +1667,14 @@ export function Products() {
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
         <span className="filter-count muted">
-          {t(`${results.length} products`, `${results.length} محصول`)}
+          {translateCount(
+            "{{count}} product",
+            "{{count}} products",
+            "{{count}} محصول",
+            "{{count}} محصول",
+            results.length,
+            lang,
+          )}
         </span>
       </div>
       {!results.length ? (
@@ -1559,8 +1848,17 @@ export function Products() {
               </Button>
               <span>
                 {t(
-                  `Page ${currentPage + 1} of ${pageCount} · ${results.length} products`,
-                  `صفحهٔ ${currentPage + 1} از ${pageCount} · ${results.length} محصول`,
+                  `Page ${currentPage + 1} of ${pageCount}`,
+                  `صفحهٔ ${currentPage + 1} از ${pageCount}`,
+                )}{" "}
+                ·{" "}
+                {translateCount(
+                  "{{count}} product",
+                  "{{count}} products",
+                  "{{count}} محصول",
+                  "{{count}} محصول",
+                  results.length,
+                  lang,
                 )}
               </span>
               <Button
@@ -1592,7 +1890,10 @@ export function ProductPage() {
       <EmptyState
         action={
           <Button variant="secondary" asChild>
-            <a href="#products">{t("Back to Products", "بازگشت به محصولات")}</a>
+            <a href="#products">
+              <ArrowLeft size={16} aria-hidden="true" />
+              {t("Back to Products", "بازگشت به محصولات")}
+            </a>
           </Button>
         }
       >
@@ -1602,7 +1903,10 @@ export function ProductPage() {
   return (
     <div className="stack product-page">
       <Button className="product-back" variant="ghost" asChild>
-        <a href="#products">{t("Back to Products", "بازگشت به محصولات")}</a>
+        <a href="#products">
+          <ArrowLeft size={16} aria-hidden="true" />
+          {t("Back to Products", "بازگشت به محصولات")}
+        </a>
       </Button>
       <header className="page-header">
         <div>

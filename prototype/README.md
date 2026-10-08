@@ -2,24 +2,24 @@
 
 This Phase 0.2 demo runs entirely in the browser. People, suppliers, files, and activity are fictional; invoice reading is simulated. There is no backend, database, production authentication, or AI connection. Uploaded files and saved changes stay in this browser.
 
-The current review branch, `fix/prototype-10-review-a2`, is **pull request A2**. It builds on the earlier unmerged A branch and implements the owner’s GLOBAL, SCREENS and PROOF review: shared presentation fixes, product editing, recorded invoice/stock history, Returns overview and detail, Suppliers, purchase charts and filters. The [A2 review guide](../docs/DESIGN_A2_REVIEW.md) contains exact click paths, test results, and screenshots. [B remains a plan](../docs/REVIEW_B_PLAN.md); it has not been implemented. History remains inactive; Suppliers is now available.
+The current review branch, `feat/prototype-11-b-workflows`, is **pull request B**. It includes approved A2 plus label waitlists/live A4 printing, custom notebooks, grouped Settings, History/Revert and corner Undo, Supervisor supplier/product creation, and manual invoices. The [B review guide](../docs/PR_B_REVIEW.md) contains exact Ubuntu commands, click-by-click checks, screenshots and the remaining scope. [REVIEW_B_PLAN.md](../docs/REVIEW_B_PLAN.md) records the authorized scope; real AI/item 30 remains deferred to Prompt 3D.
 
 ## Run on Ubuntu
 
 First get the review branch. If you already tested the project, open Ubuntu **Files**, find your `Supermarket-Inventory` folder, right-click inside it, and choose **Open in Terminal**. Stop the previous demo with Ctrl+C in its terminal, then run:
 
 ```bash
-git fetch origin
-git switch fix/prototype-10-review-a2
-git pull --ff-only origin fix/prototype-10-review-a2
+git fetch origin feat/prototype-11-b-workflows:refs/remotes/origin/feat/prototype-11-b-workflows
+git switch feat/prototype-11-b-workflows
+git pull --ff-only origin feat/prototype-11-b-workflows
 ```
 
-Expect Git to say it switched to `fix/prototype-10-review-a2`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
+Expect Git to say it switched to `feat/prototype-11-b-workflows`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
 
 For a fresh copy instead, open a terminal in the folder where you keep projects and run:
 
 ```bash
-git clone --branch fix/prototype-10-review-a2 https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch feat/prototype-11-b-workflows https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory
 ```
 
@@ -43,10 +43,10 @@ From the repository root:
 cd prototype
 npm ci
 npm run build
-npm run dev
+npm run preview
 ```
 
-Expect Node `v22.22.2`, a successful TypeScript/Vite build, and Vite serving on port **5174**. On your own Ubuntu machine, open the local address printed by Vite. Keep the terminal open; Ctrl+C stops it. If 5174 is occupied, stop the existing demo server first. Cloud checks use internal requests; cloud onboarding does not publish a browser preview.
+Expect Node `v22.22.2`, a successful TypeScript/Vite build, and the preview serving on port **5174**. On your own Ubuntu machine, open the local address printed by Vite. Keep the terminal open; Ctrl+C stops it. If 5174 is occupied, stop the existing demo server first. Cloud checks use internal requests; cloud onboarding does not publish a browser preview.
 
 ## Sign in and review
 
@@ -64,7 +64,7 @@ Expect Node `v22.22.2`, a successful TypeScript/Vite build, and Vite serving on 
 5. Open the user menu at the bottom of the sidebar for **Lock** or **Sign out**. Recent-user chips fill the username without retaining a typed password. On a phone, open the sidebar first.
 6. Choose **Demo → Reset demo → Reset demo** in the confirmation dialog to restore fictional business data. Refresh preserves changes. Reset preserves the account, language, preferences, and changed passwords; use a fresh browser profile to repeat the first-sign-in example.
 
-[DESIGN_A2_REVIEW.md](../docs/DESIGN_A2_REVIEW.md) is the current A2 review guide, with click-by-click checks and screenshots for every existing screen. [REVIEW_GUIDE.md](REVIEW_GUIDE.md) and [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) record the earlier four-screen PR1 review.
+[PR_B_REVIEW.md](../docs/PR_B_REVIEW.md) is the current review guide, including B and the retained A2 workflows. [DESIGN_A2_REVIEW.md](../docs/DESIGN_A2_REVIEW.md) records the earlier A2 review. [REVIEW_GUIDE.md](REVIEW_GUIDE.md) and [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) record the earlier four-screen PR1 review.
 
 ## Meaningful checks
 
@@ -78,7 +78,7 @@ npx playwright install --with-deps chromium
 npm run e2e
 ```
 
-Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving, returns, and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including A2's all-screen controls, role guards and layouts, Persian RTL, theme/text persistence, invoice blockers, approved-price lookup, supplier balances, and operational regressions. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/alignment-a2.spec.ts` targets A2 table/dialog proof; the full command also checks the earlier sign-in/layout work and retained workflows.
+Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving, returns, and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including the retained A2 controls/operational flows and B's live label designer/waitlist/printing, custom notebook roles, saved Settings, History/Revert/independent Undo timers, new supplier/product guards, manual invoice posting blockers, Persian RTL and theme/text persistence. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/alignment-a2.spec.ts` targets A2 table/dialog proof; the full command also checks the earlier sign-in/layout work and retained workflows.
 
 These are commands and expected results; the PR validation report records actual run results. A check with no executed tests is not a pass.
 
@@ -86,7 +86,7 @@ These are commands and expected results; the PR validation report records actual
 
 The owner's current `seed/arzon-config.json` and `seed/demo-data.json` remain unchanged. [src/config.ts](src/config.ts) adapts their updated schema using [configuration.json](src/compat/configuration.json) and [operational-data.json](src/compat/operational-data.json). Current seed values take precedence; fields absent from the updated files retain earlier confirmed metadata: CAD, `America/Toronto`, 13% HST and tax profiles, actual received quantities, return evidence/settlements, and ledger rules. This preserves receiving and returns without dropping history. Compatibility data belongs to the prototype and remains configurable. A2 adds explicit fictional historical invoices and opening stock counts in [a2-demo-data.json](src/fixtures/a2-demo-data.json), loaded by [demo-fixtures.ts](src/demo-fixtures.ts). Matching posted invoice/payment ledger entries support the supplier balances, open invoices, overdue amounts and purchase charts. Stock estimates come from recorded counts and receipts minus returns/store use. These are fictional estimates, not sales tracking.
 
-The historical Fresh Valley invoice **FV-20390** contributes $169.79. The current upload example **FV-20417** is a separate delivery: posting it after marking the four chips short adds another $169.79; Fresh Valley becomes $339.58. The historical records never replace the uploaded invoice’s amount. A2 preserves existing saved custom changes. Before extending old browser data, it writes and verifies an exact backup under `supermarket-prototype-before-a2-fixtures`; a failed backup leaves the original data unchanged. **Reset demo** restores the coherent fictional starting records, so use it only when you want to discard your demo business edits.
+The historical Fresh Valley invoice **FV-20390** contributes $169.79. The current upload example **FV-20417** is a separate delivery: posting it after marking the four chips short adds another $169.79; Fresh Valley becomes $339.58. The historical records never replace the uploaded invoice’s amount. A2 preserves existing saved custom changes. Before extending old browser data, it writes and verifies an exact backup under `supermarket-prototype-before-a2-fixtures`; a failed backup leaves the original data unchanged. B also writes and verifies an additive exact backup under `supermarket-prototype-before-b` before extending existing saved state. **Reset demo** restores the coherent fictional starting records, so use it only when you want to discard your demo business edits.
 
 ## Static build
 

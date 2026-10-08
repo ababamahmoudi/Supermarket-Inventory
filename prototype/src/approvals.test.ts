@@ -189,6 +189,61 @@ describe("invoice, approval, offer and catalog integration", () => {
 });
 
 describe("approval scopes and prices", () => {
+  it("uses configured branch IDs for approvals and conflicts, including archived historical branches", () => {
+    const state = fixture();
+    state.config.branches = state.config.branches.map((branch, index) => ({
+      ...branch,
+      id: `shop-${index + 1}`,
+      name_en: `Configured shop ${index + 1}`,
+      active: index !== 2,
+    }));
+    applyApprovedPrice(state, "0006", "2.99", "branch", "shop-2");
+    expect(effectivePrice(state, "0006", "shop-2")).toBe("2.99");
+    expect(
+      state.alerts.find((item) => item.type === "price_conflict")
+        ?.branch_prices,
+    ).toEqual({ "shop-1": "1.99", "shop-2": "2.99", "shop-3": "1.99" });
+    expect(
+      state.offers.find(
+        (item) => item.product_code === "0006" && item.branch === "shop-2",
+      )?.status,
+    ).toBe("suggested");
+    expect(() =>
+      applyApprovedPrice(state, "0006", "3.99", "branch", "Branch 1"),
+    ).toThrow("Choose one branch");
+    expect(() =>
+      applyApprovedPrice(state, "0006", "3.99", "branch", "shop-3"),
+    ).toThrow("Choose one branch");
+  });
+
+  it("honors disabled suggestions while preserving current and manually confirmed offers", () => {
+    const state = fixture();
+    const existing = offer(state);
+    state.offers.push(existing);
+    state.config.promotions.ai_suggestions_enabled = false;
+    applyApprovedPrice(state, "0006", "2.99", "branch", "Branch 1");
+    expect(state.offers).toEqual([existing]);
+    activateOffer(
+      state,
+      offer(state, {
+        id: "manual-lavash",
+        product_code: "0006",
+        scope: "branch",
+        branch: "Branch 1",
+      }),
+      "supervisor",
+    );
+    expect(effectiveOffer(state, "0006", "Branch 1")?.id).toBe("manual-lavash");
+    state.config.promotions.ai_suggestions_enabled = true;
+    applyApprovedPrice(state, "0002", "1.99", "all", "all");
+    expect(
+      state.offers.some(
+        (item) => item.product_code === "0002" && item.status === "suggested",
+      ),
+    ).toBe(true);
+    expect(existing.status).toBe("active");
+  });
+
   it("keeps successive Lavash and Barberries approvals isolated by product code", () => {
     const state = initialState();
     const lavash = state.approvals.find(

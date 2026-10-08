@@ -1,3 +1,8 @@
+import {
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
+import { translateCount } from "../i18n";
 import { useState } from "react";
 import {
   activateOffer,
@@ -13,9 +18,8 @@ import {
   isOfferScheduledNow,
   lookupBranch,
 } from "../catalog";
-import { branches, useDemo } from "../store";
+import { useDemo } from "../store";
 import {
-  branchLabel,
   categoryLabel,
   DateText,
   formatOffer,
@@ -44,6 +48,7 @@ import {
 
 export function Offers() {
   const { state, update, role, branch, setBranch, lang, t } = useDemo();
+  const branches = configuredBranches(state.config);
   const [tab, setTab] = useState<"offers" | "pools">("offers");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -127,7 +132,8 @@ export function Offers() {
       currency={state.config.company.currency}
     />
   );
-  const branchName = (value: Branch) => branchLabel(value, lang);
+  const branchName = (value: Branch) =>
+    configuredBranchLabel(state.config, value, lang);
   const readyMessage = (reason: ReturnType<typeof offerReadiness>) =>
     ({
       ready: t(
@@ -255,9 +261,13 @@ export function Offers() {
                 placeholder={t("Search offers", "جستجوی پیشنهادها")}
               />
             }
-            count={t(
-              `${filteredOffers.length} ${filteredOffers.length === 1 ? "offer" : "offers"}`,
-              `${filteredOffers.length} پیشنهاد`,
+            count={translateCount(
+              "{{count}} offer",
+              "{{count}} offers",
+              "{{count}} پیشنهاد",
+              "{{count}} پیشنهاد",
+              filteredOffers.length,
+              lang,
             )}
           >
             <Select
@@ -335,16 +345,21 @@ export function Offers() {
           <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
             <p className="muted">
               {t(
-                "Demo suggestions use configured price mappings. No real AI is running. Nothing starts until a worker confirms it.",
-                "پیشنهادهای نمایشی از نگاشت قیمت تنظیم‌شده استفاده می‌کنند. هوش مصنوعی واقعی اجرا نمی‌شود. تا تأیید کارکنان هیچ پیشنهادی شروع نمی‌شود.",
+                "Confirm an offer before it starts.",
+                "پیش از شروع، پیشنهاد را تأیید کنید.",
               )}
             </p>
             {suggestions.length === 0 ? (
               <EmptyState>
-                {t(
-                  "No suggestions waiting. Approve a mapped price to create one.",
-                  "پیشنهادی منتظر نیست. یک قیمت دارای نگاشت را تأیید کنید تا پیشنهاد ایجاد شود.",
-                )}
+                {state.config.promotions.ai_suggestions_enabled === false
+                  ? t(
+                      "Offer suggestions are turned off in Settings.",
+                      "پیشنهادهای خودکار فروش در تنظیمات غیرفعال هستند.",
+                    )
+                  : t(
+                      "No suggestions waiting. Approve a mapped price to create one.",
+                      "پیشنهادی منتظر نیست. یک قیمت دارای نگاشت را تأیید کنید تا پیشنهاد ایجاد شود.",
+                    )}
               </EmptyState>
             ) : (
               suggestions.map((offer) => {
@@ -379,7 +394,9 @@ export function Offers() {
                         )}
                       </h3>
                       <Badge tone="pending">{t("Pending", "در انتظار")}</Badge>
-                      <span>{branchName(offer.branch)}</span>
+                      <span className="branch-label">
+                        {branchName(offer.branch)}
+                      </span>
                     </div>
                     <p>
                       <strong>
@@ -515,7 +532,9 @@ export function Offers() {
                             </>
                           )}
                         </td>
-                        <td>{branchName(offer.branch)}</td>
+                        <td className="branch-label">
+                          {branchName(offer.branch)}
+                        </td>
                         <td>
                           <Badge
                             tone={
@@ -672,7 +691,7 @@ export function Offers() {
           <Card title={t("Mix-and-match pools", "گروه‌های ترکیبی")}>
             <p>
               {t("Showing effective offers for", "نمایش پیشنهادهای مؤثر برای")}:{" "}
-              <strong>{branchName(viewBranch)}</strong>
+              <strong className="branch-label">{branchName(viewBranch)}</strong>
             </p>
             <p className="muted">
               {t(

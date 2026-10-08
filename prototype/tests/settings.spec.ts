@@ -4,6 +4,10 @@ import { chooseOption, signIn, visitPage, resetDemo } from "./helpers";
 async function openSettings(page: Page) {
   await signIn(page, "Supervisor");
   await visitPage(page, "Settings");
+  await page
+    .getByRole("navigation", { name: "Settings groups" })
+    .getByRole("button", { name: "Catalog", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Pricing categories", exact: true }),
   ).toBeVisible();
@@ -20,6 +24,7 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
   const divisor = page.getByLabel("Cost divisor for Grocery", { exact: true });
   await divisor.fill("0.50");
   await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
 
   await page.reload();
   sandbox = page.locator(".card").filter({

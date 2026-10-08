@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { configSeed } from "./config";
 import {
   AUTH_STORAGE_KEY,
+  SESSION_KEY,
+  readAuthSession,
   authenticate,
   demoUsers,
   initialAuth,
@@ -11,7 +13,10 @@ import {
   replacePassword,
 } from "./auth";
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
 const settings = configSeed.session;
 describe("fictional username and password accounts", () => {
   it("has four distinct accounts, including two distinct Floor Workers", () => {
@@ -97,15 +102,64 @@ describe("fictional username and password accounts", () => {
     expect(preferencesFor(readAuth(), "cashier")).toEqual({
       theme: "light",
       comfortableText: false,
+      comfortableTextExplicit: false,
     });
     expect(preferencesFor(readAuth(), "floorworker")).toEqual({
       theme: "dark",
       comfortableText: true,
+      comfortableTextExplicit: true,
     });
     localStorage.setItem(AUTH_STORAGE_KEY, "{broken");
     expect(preferencesFor(readAuth(), null)).toEqual({
       theme: "light",
       comfortableText: false,
+      comfortableTextExplicit: false,
+    });
+  });
+});
+
+describe("configured branches and text preference persistence", () => {
+  it("restores a Supervisor's newly configured branch but rejects unrelated branches", () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        username: "supervisor",
+        branch: "Branch 4",
+        lang: "fa",
+        locked: false,
+        authenticatedAt: 42,
+      }),
+    );
+    expect(readAuthSession(["Branch 1", "Branch 4"])).toMatchObject({
+      branch: "Branch 4",
+      lang: "fa",
+    });
+    expect(readAuthSession(["Branch 1"])).toMatchObject({ branch: "Branch 1" });
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        username: "floorworker",
+        branch: "Branch 4",
+        lang: "en",
+      }),
+    );
+    expect(readAuthSession(["Branch 1", "Branch 4"])).toMatchObject({
+      branch: "Branch 1",
+    });
+  });
+  it("keeps explicit normal text separate from a company large-text default", () => {
+    const state = initialAuth();
+    state.preferences.supervisor = {
+      theme: "dark",
+      comfortableText: false,
+      comfortableTextExplicit: true,
+    };
+    expect(preferencesFor(state, "supervisor")).toMatchObject({
+      comfortableText: false,
+      comfortableTextExplicit: true,
+    });
+    expect(preferencesFor(state, "floorworker")).toMatchObject({
+      comfortableTextExplicit: false,
     });
   });
 });

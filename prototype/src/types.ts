@@ -1,9 +1,35 @@
 import { configSeed, demoSeed } from "./config";
+import type { NotebookDefinition, NotebookEntry } from "./notebooks";
+import type { ReversalPatch } from "./history";
 
 export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
-export type Branch = "Branch 1" | "Branch 2" | "Branch 3" | "all";
-export type CompanyConfig = typeof configSeed;
+export type Branch = string;
+export type CompanyConfig = Omit<
+  typeof configSeed,
+  "company" | "branches" | "pricing_categories" | "promotions"
+> & {
+  company: typeof configSeed.company & {
+    logo_data?: string;
+    date_format?: "yyyy-mm-dd" | "dd/mm/yyyy" | "mm/dd/yyyy";
+    text_size?: "normal" | "large";
+  };
+  branches: ((typeof configSeed.branches)[number] & {
+    id?: string;
+    active?: boolean;
+    address?: string;
+    phone?: string;
+    opening_hours?: string;
+    tax_region?: string;
+  })[];
+  pricing_categories: ((typeof configSeed.pricing_categories)[number] & {
+    label_fa?: string;
+    archived?: boolean;
+  })[];
+  promotions: typeof configSeed.promotions & {
+    ai_suggestions_enabled?: boolean;
+  };
+};
 export interface PriceProvenance {
   invoice_number: string;
   calculated_price: string;
@@ -31,9 +57,11 @@ export type Product = Omit<
   description_en?: string;
   description_fa?: string;
   date_tracking?: boolean;
-  price_provenance?: Partial<Record<Branch, PriceProvenance>>;
+  price_provenance?: Record<Branch, PriceProvenance>;
 };
 export interface Approval extends ScopedRecord {
+  supplier_id?: string;
+  supplier_name?: string;
   barcode?: string;
   conflicting_product_code?: string;
   id: string;
@@ -42,7 +70,8 @@ export interface Approval extends ScopedRecord {
     | "price_change"
     | "margin_review"
     | "barcode_conflict"
-    | "tax_profile";
+    | "tax_profile"
+    | "new_supplier";
   product_code: string;
   status: "pending" | "approved" | "rejected";
   proposed_price: string;
@@ -119,6 +148,8 @@ export type DemoInvoice = Omit<
     due_date?: string;
     posted_at?: string;
     supplier_confirmed?: boolean;
+    entry_mode?: "upload" | "manual";
+    payment_terms?: string;
     number_is_system_assigned?: boolean;
     short_receipt_keys?: string[];
     lower_price_answers?: {
@@ -154,6 +185,16 @@ export interface LabelTemplate {
   margin_right: number;
   gap_x: number;
   gap_y: number;
+  offset_x?: number;
+  offset_y?: number;
+  archived?: boolean;
+}
+export interface LabelWaitlistItem extends ScopedRecord {
+  id: string;
+  product_code: string;
+  copies: number;
+  added_by: string;
+  added_at: string;
 }
 export interface ReturnLine {
   product_code: string;
@@ -235,6 +276,8 @@ export interface LedgerEntry extends ScopedRecord {
   note?: string;
 }
 export interface Activity extends ScopedRecord {
+  actor_username?: string;
+  device?: string;
   id: string;
   action: string;
   by: string;
@@ -244,6 +287,28 @@ export interface Activity extends ScopedRecord {
   before?: unknown;
   after?: unknown;
   scope?: "all" | "branch";
+  entity_type?: string;
+  entity_id?: string;
+  reversal?: ReversalPatch[];
+  reversed_activity_id?: string;
+  reversal_kind?: "undo" | "revert";
+}
+export interface SupplierRecord {
+  id: string;
+  company_id: string;
+  name: string;
+  phone: string;
+  email: string;
+  sales_rep_name: string;
+  sales_rep_phone: string;
+  payment_terms: string;
+  address?: string;
+  notes?: string;
+  status: "confirmed" | "proposed";
+  active: boolean;
+  previous_names?: string[];
+  created_at: string;
+  created_by: string;
 }
 export interface DemoState {
   version: 1;
@@ -252,6 +317,7 @@ export interface DemoState {
   supplier_balance_snapshot_currency?: string;
   pricing_minimum_margin_schema?: 2;
   demo_fixture_schema?: 2;
+  prototype_b_schema?: 1;
   demo_fixture_anchor_date?: string;
   stock_movements?: {
     id: string;
@@ -265,6 +331,8 @@ export interface DemoState {
     at: string;
   }[];
   config: CompanyConfig;
+  suppliers?: SupplierRecord[];
+  product_code_high_water?: number;
   products: Product[];
   approvals: Approval[];
   alerts: Alert[];
@@ -272,6 +340,24 @@ export interface DemoState {
   invoices?: DemoInvoice[];
   offers: Offer[];
   templates: LabelTemplate[];
+  label_waitlist?: LabelWaitlistItem[];
+  label_settings?: {
+    recent_price_days: number;
+    auto_add_approved: boolean;
+    fields?: {
+      name: boolean;
+      description: boolean;
+      price: boolean;
+      offer: boolean;
+      code: boolean;
+      logo: boolean;
+      unit: boolean;
+      tax: boolean;
+    };
+    languages?: Language[];
+  };
+  notebooks?: NotebookDefinition[];
+  notebook_entries?: NotebookEntry[];
   returns: ReturnRecord[];
   expiry: ExpiryRecord[];
   notes: NoteRecord[];

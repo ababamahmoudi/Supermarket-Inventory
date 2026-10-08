@@ -40,7 +40,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
   await page
-    .getByLabel("Fictional signed paper pickup slip reference", { exact: true })
+    .getByLabel("Signed paper pickup slip reference", { exact: true })
     .fill("DEMO-SIGNED-001");
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
@@ -70,7 +70,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
   await page
-    .getByLabel("Fictional replacement receipt reference", { exact: true })
+    .getByLabel("Replacement receipt reference", { exact: true })
     .fill("DEMO-REPLACE-001");
   await page
     .getByRole("button", { name: "Receive replacement", exact: true })
@@ -219,7 +219,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
     .getByRole("button", { name: "Record external payment", exact: true })
     .click();
   await page
-    .getByLabel("Fictional payment receipt reference", { exact: true })
+    .getByLabel("Payment receipt reference", { exact: true })
     .fill("DEMO-PAY-001");
   await page
     .getByRole("button", {
@@ -249,7 +249,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export CSV", exact: true }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toContain("demo-payables");
+  expect(download.suggestedFilename()).toContain("payables-");
   await page.evaluate(() => {
     window.print = () => {
       document.body.dataset.printed = "yes";
@@ -423,7 +423,7 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
     .getByLabel("Signed amount (credits are negative)", { exact: true })
     .fill("not-an-amount");
   await page
-    .getByLabel("Fictional evidence reference", { exact: true })
+    .getByLabel("Evidence reference", { exact: true })
     .fill("DEMO-INVALID-AMOUNT");
   await page
     .getByLabel("Reason / dispute note (required)", { exact: true })

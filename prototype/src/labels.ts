@@ -7,7 +7,7 @@ export interface LabelLayout {
 }
 export class LabelLayoutError extends Error {
   constructor(
-    readonly code: "dimensions" | "fit" | "slot",
+    readonly code: "dimensions" | "fit" | "slot" | "calibration",
     readonly field?: keyof LabelTemplate,
     readonly capacity?: number,
   ) {
@@ -44,7 +44,46 @@ export function labelLayout(template: LabelTemplate): LabelLayout {
       (template.height + template.gap_y),
   );
   if (columns < 1 || rows < 1) throw new LabelLayoutError("fit", undefined, 0);
+  const offsetX = template.offset_x ?? 0;
+  const offsetY = template.offset_y ?? 0;
+  if (
+    !Number.isFinite(offsetX) ||
+    template.margin_left + offsetX < 0 ||
+    template.margin_left +
+      offsetX +
+      columns * template.width +
+      (columns - 1) * template.gap_x >
+      210
+  )
+    throw new LabelLayoutError("calibration", "offset_x");
+  if (
+    !Number.isFinite(offsetY) ||
+    template.margin_top + offsetY < 0 ||
+    template.margin_top +
+      offsetY +
+      rows * template.height +
+      (rows - 1) * template.gap_y >
+      297
+  )
+    throw new LabelLayoutError("calibration", "offset_y");
   return { columns, rows, capacity: columns * rows };
+}
+
+/** Both the scaled preview and exact-size print use this physical position. */
+export function labelSlotGeometry(template: LabelTemplate, index: number) {
+  const { columns } = labelLayout(template);
+  return {
+    left:
+      template.margin_left +
+      (template.offset_x ?? 0) +
+      (index % columns) * (template.width + template.gap_x),
+    top:
+      template.margin_top +
+      (template.offset_y ?? 0) +
+      Math.floor(index / columns) * (template.height + template.gap_y),
+    width: template.width,
+    height: template.height,
+  };
 }
 
 export function labelPages<T>(

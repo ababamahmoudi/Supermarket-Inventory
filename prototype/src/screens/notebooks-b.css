@@ -1,0 +1,125 @@
+.notebook-editor-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: 720px;
+}
+.notebook-editor-dialog form {
+  display: grid;
+  gap: 20px;
+}
+.notebook-definition-fields {
+  max-inline-size: 100%;
+  margin: 0;
+}
+.notebook-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.notebook-permission-grid fieldset,
+.notebook-field-options {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.notebook-permission-grid fieldset {
+  flex-direction: column;
+}
+.notebook-editor-dialog legend {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0;
+  margin-block-end: 12px;
+}
+.notebook-behavior-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.notebook-definition-list {
+  display: grid;
+  gap: 12px;
+  margin-block-start: 24px;
+}
+.notebook-definition-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.notebook-definition-row p {
+  margin-block: 8px;
+}
+.notebook-definition-row > .actions {
+  margin: 0;
+  flex-wrap: wrap;
+}
+.notebook-entry-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block: 16px;
+}
+.notebook-entry-details > span {
+  background: var(--surface-soft);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.notebook-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--search-fill);
+  border-radius: 22px;
+  padding-inline-start: 14px;
+  block-size: 44px;
+  inline-size: min(320px, 100%);
+  min-inline-size: 180px;
+}
+.notebook-search-pill input {
+  background: transparent;
+  min-inline-size: 0;
+  inline-size: 100%;
+  block-size: 44px;
+  border-radius: 22px;
+}
+.notebook-search-pill svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.notebook-entry-form {
+  max-inline-size: 720px;
+}
+@media (max-width: 760px) {
+  .notebook-definition-row,
+  .notebook-permission-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .notebook-definition-row > .actions {
+    justify-content: flex-start;
+  }
+  .notebook-entry-card > .row-between {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+.notebooks-page {
+  display: grid;
+  gap: 24px;
+}
+.notebooks-page > .page-header,
+.notebooks-page > .ui-tabs,
+.notebooks-page > .filter-toolbar,
+.notebooks-page > .card,
+.notebook-manage-actions {
+  margin-block: 0;
+}
+.notebook-settings > .card > .row-between h2 {
+  margin: 0;
+}
