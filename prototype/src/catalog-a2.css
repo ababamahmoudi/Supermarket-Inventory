@@ -1,0 +1,119 @@
+/* Shared catalog rows mirror their logical start/end columns in Persian. */
+.lookup-page .lookup-result-row {
+  direction: inherit;
+  grid-template-columns: minmax(0, 1fr) 204px;
+  position: relative;
+  text-align: start;
+}
+.lookup-page .lookup-result-row.is-selected,
+.lookup-page .lookup-result-row.is-active {
+  background: var(--nav-active);
+}
+.lookup-page .lookup-result-row.is-selected::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 12px;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.lookup-page .lookup-result-price {
+  text-align: end;
+  justify-items: end;
+}
+.lookup-page .lookup-result-pills {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  inline-size: 204px;
+  max-inline-size: 100%;
+}
+.lookup-page .lookup-filterbar {
+  align-items: center;
+}
+.lookup-page .lookup-filterbar .lookup-category {
+  max-inline-size: min(340px, 100%);
+  inline-size: max-content;
+}
+.lookup-keyboard-hint {
+  inline-size: 100%;
+  order: 3;
+  margin-block-start: 0;
+}
+.product-page {
+  max-inline-size: 960px;
+}
+.product-page-detail {
+  max-inline-size: 960px;
+}
+.product-other-name {
+  text-align: start;
+}
+.product-back {
+  justify-self: start;
+  inline-size: fit-content;
+}
+.catalog-filter-toolbar input[type="search"] {
+  inline-size: 250px;
+  max-inline-size: 100%;
+}
+.catalog-filter-toolbar > .ui-select {
+  max-inline-size: 280px;
+}
+.catalog-filter-toolbar .ui-checkbox {
+  flex-shrink: 0;
+}
+@media (max-width: 760px) {
+  .lookup-page .lookup-result-row {
+    grid-template-columns: minmax(0, 1fr) 138px;
+    gap: 10px;
+  }
+  .lookup-page .lookup-result-pills {
+    inline-size: 138px;
+  }
+  .lookup-page .lookup-result-pills .badge {
+    font-size: 0.6875rem;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+}
+.product-editor-dialog {
+  max-inline-size: 520px;
+}
+.product-editor-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.product-editor-fields input,
+.product-editor-fields textarea,
+.product-editor-fields .ui-select {
+  max-inline-size: 100%;
+  inline-size: 100%;
+}
+.product-editor-fields .short-field input {
+  inline-size: 144px;
+}
+.product-editor-price-scope {
+  margin-block-start: 4px;
+}
+.catalog-row-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.catalog-products-table th .button {
+  padding-inline: 0;
+  min-inline-size: 0;
+  text-align: inherit;
+}
+.product-price-provenance {
+  line-height: 1.65;
+}
+@media (max-width: 480px) {
+  .product-editor-fields {
+    grid-template-columns: 1fr;
+  }
+}
+.catalog-filter-toolbar input[type="search"] {
+  border-radius: 999px;
+}

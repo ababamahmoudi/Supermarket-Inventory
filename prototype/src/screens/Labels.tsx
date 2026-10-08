@@ -2,7 +2,13 @@ import { useState } from "react";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { demoSeed } from "../config";
 import { effectiveOffer, effectivePrice } from "../catalog";
-import { labelLayout, labelPages } from "../labels";
+import {
+  labelContentGeometry,
+  LabelLayoutError,
+  labelLayout,
+  labelPages,
+} from "../labels";
+import { createId } from "../ids";
 import { useDemo } from "../store";
 import type { LabelTemplate, Product } from "../types";
 import {
@@ -25,6 +31,7 @@ import {
   UnitSize,
 } from "../presentation";
 import "./invoice-settings-labels.css";
+import "./labels-a2.css";
 
 const geometry = {
   width: 60,
@@ -73,11 +80,14 @@ export function Labels() {
   }
   const saveTemplate = () => {
     try {
-      if (!draft.name.trim()) throw new Error("name");
+      if (!draft.name.trim()) {
+        setError(t("Enter a template name.", "نام قالب را وارد کنید."));
+        return;
+      }
       const item: LabelTemplate = {
         ...draft,
         name: draft.name.trim(),
-        id: crypto.randomUUID(),
+        id: createId("label-template"),
         company_id: state.config.company.seed_key,
       };
       labelLayout(item);
@@ -86,13 +96,45 @@ export function Labels() {
       });
       setTemplateId(item.id);
       setError("");
-    } catch {
-      setError(
-        t(
-          "Enter a name and positive dimensions that fit on an A4 sheet.",
-          "نام و ابعاد مثبت متناسب با برگه A4 وارد کنید.",
-        ),
-      );
+    } catch (cause) {
+      if (cause instanceof LabelLayoutError && cause.code === "dimensions") {
+        const names: Record<string, string> = {
+          width: t("Width", "عرض"),
+          height: t("Height", "ارتفاع"),
+          margin_top: t("Top margin", "حاشیه بالا"),
+          margin_bottom: t("Bottom margin", "حاشیه پایین"),
+          margin_left: t("Left margin", "حاشیه چپ"),
+          margin_right: t("Right margin", "حاشیه راست"),
+          gap_x: t("Horizontal gap", "فاصله افقی"),
+          gap_y: t("Vertical gap", "فاصله عمودی"),
+        };
+        const field = names[cause.field ?? ""];
+        setError(
+          cause.field === "width" || cause.field === "height"
+            ? t(
+                `${field} must be greater than zero.`,
+                `${field} باید بیشتر از صفر باشد.`,
+              )
+            : t(
+                `${field} must be zero or greater.`,
+                `${field} باید صفر یا بیشتر باشد.`,
+              ),
+        );
+      } else if (cause instanceof LabelLayoutError && cause.code === "fit") {
+        setError(
+          t(
+            "Only 0 labels fit on A4. Reduce the dimensions or margins to fit on an A4 sheet.",
+            "هیچ برچسبی روی A4 جا نمی‌شود. ابعاد یا حاشیه‌ها را کاهش دهید.",
+          ),
+        );
+      } else {
+        setError(
+          t(
+            "Could not save the template. Try saving again.",
+            "قالب ذخیره نشد. دوباره ذخیره کنید.",
+          ),
+        );
+      }
     }
   };
   return (
@@ -114,13 +156,21 @@ export function Labels() {
       )}
       <div className="labels-controls">
         <Card title={t("Choose products", "انتخاب کالاها")}>
-          <DataTable className="labels-product-table">
+          <DataTable
+            className="labels-product-table"
+            columns={[
+              { width: "48%" },
+              { width: "18%" },
+              { width: "17%" },
+              { width: "17%", align: "end" },
+            ]}
+          >
             <thead>
               <tr>
                 <th>{t("Product", "کالا")}</th>
                 <th>{t("Product Code", "کد کالا")}</th>
                 <th>{t("Unit size", "اندازه واحد")}</th>
-                <th className="numeric">{t("Selling Price", "قیمت فروش")}</th>
+                <th className="numeric">{t("Selling price", "قیمت فروش")}</th>
               </tr>
             </thead>
             <tbody>
@@ -265,8 +315,8 @@ export function Labels() {
               error={
                 startSlot > capacity
                   ? t(
-                      "Choose a slot on this sheet.",
-                      "خانه‌ای از این برگه انتخاب کنید.",
+                      `Only ${capacity} labels fit on A4. Choose a starting slot from 1 to ${capacity}.`,
+                      `فقط ${capacity} برچسب روی A4 جا می‌شود. خانه شروع را از 1 تا ${capacity} انتخاب کنید.`,
                     )
                   : undefined
               }
@@ -283,12 +333,6 @@ export function Labels() {
               />
             </Field>
           )}
-          <p>
-            {t(
-              "Use slot 5 when the first four slots are already used.",
-              "اگر چهار خانه اول استفاده شده، از خانه 5 شروع کنید.",
-            )}
-          </p>
           <div className="labels-print-actions">
             <Button
               disabled={pages.length === 0}
@@ -317,72 +361,90 @@ export function Labels() {
                 direction: "ltr",
               }}
             >
-              {Array.from({ length: capacity }, (_, index) => {
-                const product = page[index];
-                const { columns } = labelLayout(template);
-                const style = {
-                  position: "absolute" as const,
-                  insetInlineStart: `${template.margin_left + (index % columns) * (template.width + template.gap_x)}mm`,
-                  top: `${template.margin_top + Math.floor(index / columns) * (template.height + template.gap_y)}mm`,
-                  width: `${template.width}mm`,
-                  height: `${template.height}mm`,
-                };
-                if (!product)
+              {Array.from(
+                { length: Math.min(capacity, page.length) },
+                (_, index) => {
+                  const product = page[index];
+                  const { columns } = labelLayout(template);
+                  const style = {
+                    position: "absolute" as const,
+                    insetInlineStart: `${template.margin_left + (index % columns) * (template.width + template.gap_x)}mm`,
+                    top: `${template.margin_top + Math.floor(index / columns) * (template.height + template.gap_y)}mm`,
+                    width: `${template.width}mm`,
+                    height: `${template.height}mm`,
+                  };
+                  if (!product)
+                    return (
+                      <div key={index} className="label-unused" style={style}>
+                        {pageIndex === 0 && index < startSlot - 1
+                          ? t("Used", "استفاده‌شده")
+                          : ""}
+                      </div>
+                    );
+                  const price = effectivePrice(state, product, branch);
+                  const offer = effectiveOffer(state, product, branch);
+                  const taxProfile = state.config.tax.profiles.find(
+                    (profile) => profile.key === product.tax_profile,
+                  );
+                  const content = labelContentGeometry(
+                    template.width,
+                    template.height,
+                  );
                   return (
-                    <div key={index} className="label-unused" style={style}>
-                      {pageIndex === 0 && index < startSlot - 1
-                        ? t("Used", "استفاده‌شده")
-                        : ""}
+                    <div key={index} className="shelf-label" style={style}>
+                      <div
+                        className="shelf-label-content"
+                        dir={lang === "fa" ? "rtl" : "ltr"}
+                        style={{
+                          left: content.left,
+                          top: content.top,
+                          transform: `scale(${content.scale})`,
+                        }}
+                      >
+                        <span className="price" dir="ltr">
+                          {price ? (
+                            <Money
+                              value={price}
+                              currency={state.config.company.currency}
+                            />
+                          ) : (
+                            t("Pending", "در انتظار")
+                          )}
+                        </span>
+                        <div className="shelf-label-offer">
+                          {offer && (
+                            <OfferLabel
+                              className="label-offer-badge"
+                              label={offer.label}
+                              language={lang}
+                              currency={state.config.company.currency}
+                            />
+                          )}
+                        </div>
+                        <ProductName product={product} language={lang} />
+                        <small className="shelf-label-code">
+                          {t("Product Code", "کد کالا")}:{" "}
+                          <LtrText>{product.code}</LtrText> ·{" "}
+                          <UnitSize value={product.unit_size} />
+                        </small>
+                        <div className="shelf-label-footer">
+                          {taxProfile?.taxable && (
+                            <Badge tone="info">
+                              {t(
+                                state.config.tax.label_text_en,
+                                state.config.tax.label_text_fa,
+                              )}
+                            </Badge>
+                          )}
+                          {template.width >= 40 && template.height >= 28 && (
+                            <img src={logo} alt={state.config.company.name} />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
-                const price = effectivePrice(state, product, branch);
-                const offer = effectiveOffer(state, product, branch);
-                const taxProfile = state.config.tax.profiles.find(
-                  (profile) => profile.key === product.tax_profile,
-                );
-                return (
-                  <div key={index} className="shelf-label" style={style}>
-                    <img src={logo} alt={state.config.company.name} />
-                    <ProductName product={product} language={lang} />
-                    {(product.description_en || product.description_fa) && (
-                      <small>
-                        <LtrText>{product.description_en}</LtrText> ·{" "}
-                        <bdi dir="rtl">{product.description_fa}</bdi>
-                      </small>
-                    )}
-                    <span className="price" dir="ltr">
-                      {price ? (
-                        <Money
-                          value={price}
-                          currency={state.config.company.currency}
-                        />
-                      ) : (
-                        t("Pending", "در انتظار")
-                      )}
-                    </span>
-                    {offer && (
-                      <OfferLabel
-                        label={offer.label}
-                        language={lang}
-                        currency={state.config.company.currency}
-                      />
-                    )}
-                    <small>
-                      {t("Product Code", "کد کالا")}:{" "}
-                      <LtrText>{product.code}</LtrText> ·{" "}
-                      <UnitSize value={product.unit_size} />
-                    </small>
-                    {taxProfile?.taxable && (
-                      <Badge tone="info">
-                        {t(
-                          state.config.tax.label_text_en,
-                          state.config.tax.label_text_fa,
-                        )}
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
+                },
+              )}
             </div>
           ))}
         </section>

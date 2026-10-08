@@ -14,6 +14,7 @@ const screens = [
   ["payables", "Payables", "پرداختنی‌ها"],
   ["dashboard", "Supervisor dashboard", "داشبورد سرپرست"],
   ["products", "Products", "محصولات"],
+  ["suppliers", "Suppliers", "تأمین‌کنندگان"],
   ["settings", "Settings", "تنظیمات"],
 ];
 

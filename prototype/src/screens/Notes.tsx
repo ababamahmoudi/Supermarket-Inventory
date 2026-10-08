@@ -7,6 +7,7 @@ import {
   Checkbox,
   EmptyState,
   Field,
+  FilterToolbar,
   NumberField,
   PageHeader,
   Select,
@@ -219,31 +220,29 @@ export function Notes() {
           {message}
         </div>
       )}
-      <Card>
-        <div className="table-toolbar">
-          <Field label={t("Search notes", "جستجوی یادداشت‌ها")}>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </Field>
-          <Checkbox checked={showDone} onChange={setShowDone}>
-            {t(
-              "Include done and ordered notes",
-              "نمایش موارد انجام‌شده و سفارش‌داده‌شده",
-            )}
-          </Checkbox>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSearch("");
-              setShowDone(false);
-            }}
-          >
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
-        </div>
-      </Card>
+      <FilterToolbar count={`${notes.length} ${t("notes", "یادداشت")}`}>
+        <Field label={t("Search notes", "جستجوی یادداشت‌ها")}>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </Field>
+        <Checkbox checked={showDone} onChange={setShowDone}>
+          {t(
+            "Include done and ordered notes",
+            "نمایش موارد انجام‌شده و سفارش‌داده‌شده",
+          )}
+        </Checkbox>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setSearch("");
+            setShowDone(false);
+          }}
+        >
+          {t("Clear filters", "پاک کردن فیلترها")}
+        </Button>
+      </FilterToolbar>
       {notes.length === 0 && (
         <EmptyState>
           {t(

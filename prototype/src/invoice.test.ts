@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
 import { pendingPrice } from "./catalog";
@@ -18,10 +18,18 @@ import type { DemoState } from "./types";
 
 function movements(state: DemoState): InvoiceStockMovement[] {
   return (
-    (state as DemoState & { stock_movements?: InvoiceStockMovement[] })
-      .stock_movements ?? []
+    (
+      state as DemoState & { stock_movements?: InvoiceStockMovement[] }
+    ).stock_movements?.filter((entry) =>
+      entry.id.startsWith(`${state.invoice.id}:`),
+    ) ?? []
   );
 }
+
+function invoiceLedger(state: DemoState) {
+  return state.ledger.filter((entry) => entry.invoice_id === state.invoice.id);
+}
+const seedStock = initialState().stock;
 
 function reviewed(): DemoState {
   const state = initialState();
@@ -52,7 +60,7 @@ describe("invoice review and posting", () => {
       expect.arrayContaining(["file", "review", "date"]),
     );
     expect(() => postInvoice(state, "floor_worker", "Branch 1")).toThrow();
-    expect(state.ledger).toHaveLength(0);
+    expect(invoiceLedger(state)).toHaveLength(0);
   });
 
   it("posts delivered stock and financial entries once, without inventing approvals for unchanged-price lines", () => {
@@ -62,11 +70,13 @@ describe("invoice review and posting", () => {
     )!.qty_received_at_posting = 8;
     expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toEqual([]);
     expect(postInvoice(state, "floor_worker", "Branch 1")).toBe(true);
-    expect(state.stock["Branch 1:0009"]).toBe(8);
-    expect(state.stock["Branch 2:0009"]).toBe(0);
+    expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 8);
+    expect(state.stock["Branch 2:0009"]).toBe(seedStock["Branch 2:0009"]);
     expect(state.invoice.payable_after_open_shorts).toBe("169.79");
     expect(
-      Decimal.sum(...state.ledger.map((entry) => entry.amount)).toFixed(2),
+      Decimal.sum(...invoiceLedger(state).map((entry) => entry.amount)).toFixed(
+        2,
+      ),
     ).toBe("169.79");
     expect(
       state.approvals.filter(
@@ -91,6 +101,74 @@ describe("invoice review and posting", () => {
     const saved = structuredClone(state);
     expect(postInvoice(state, "floor_worker", "Branch 1")).toBe(false);
     expect(state).toEqual(saved);
+  });
+
+  it("requires an explicit date answer on every line and a date for Yes", () => {
+    const state = reviewed();
+    const rice = state.invoice.lines[0];
+    rice.pricing_category = "rice";
+    rice.date_confirmed = false;
+    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
+      "date",
+    );
+    rice.date_tracking = true;
+    rice.date_confirmed = true;
+    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
+      "date",
+    );
+    rice.date_value = "2026-12-01";
+    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
+      "date",
+    );
+    rice.date_tracking = false;
+    rice.date_value = undefined;
+    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
+      "date",
+    );
+  });
+
+  it("creates proposals only on posting and refreshes cost, margin, invoice and poster together", () => {
+    const state = reviewed();
+    const lavash = state.invoice.lines.find(
+      (line) => line.product_code === "0006",
+    )!;
+    lavash.unit_cost_before_tax = "1.60";
+    const before = structuredClone(state.approvals);
+    expect(
+      before.every((item) => !item.invoice_ids?.includes(state.invoice.id)),
+    ).toBe(true);
+    expect(state.approvals).toEqual(before);
+    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    const approval = state.approvals.find(
+      (item) =>
+        item.product_code === "0006" &&
+        item.invoice_ids?.includes(state.invoice.id),
+    )!;
+    expect(approval).toMatchObject({
+      unit_cost: "1.60",
+      invoice_number: "FV-20417",
+      triggered_by: "Ali",
+      proposed_price: "2.99",
+    });
+    expect(new Decimal(approval.margin!).times(100).toFixed(2)).toBe("46.49");
+    expect(approval.posted_at).toBeTruthy();
+    expect(
+      state.products.find((product) => product.code === "0006")!
+        .price_provenance?.["Branch 1"],
+    ).toMatchObject({ invoice_number: "FV-20417", calculated_price: "2.99" });
+  });
+
+  it("creates distinct invoice IDs on an HTTP address without crypto.randomUUID", () => {
+    vi.stubGlobal("crypto", undefined);
+    try {
+      const state = initialState();
+      const first = createInvoice(state, "Branch 1");
+      const second = createInvoice(state, "Branch 1");
+      expect(first.id).toMatch(/^invoice-/);
+      expect(second.id).not.toBe(first.id);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("keeps an unchanged-price minimum-margin review instead of silently changing the register price", () => {
@@ -222,7 +300,7 @@ describe("invoice review and posting", () => {
     const state = reviewed();
     expect(invoiceBlockers(state, role, branch)).toContain(reason);
     expect(() => postInvoice(state, role, branch)).toThrow(reason);
-    expect(state.ledger).toHaveLength(0);
+    expect(invoiceLedger(state)).toHaveLength(0);
   });
 
   it("cannot post a foreign-company invoice or product line", () => {
@@ -231,7 +309,7 @@ describe("invoice review and posting", () => {
     expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow(
       "company",
     );
-    expect(state.ledger).toHaveLength(0);
+    expect(invoiceLedger(state)).toHaveLength(0);
   });
 
   it("validates every calculation before any stock, product, or ledger posting", () => {
@@ -339,7 +417,7 @@ describe("short delivery cumulative allocations", () => {
         "Branch 1",
       ),
     ).toBe("3.62");
-    expect(state.stock["Branch 1:0009"]).toBe(10);
+    expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 10);
     expect(state.invoice.payable_after_open_shorts).toBe("173.41");
     expect(
       receiveShort(
@@ -351,7 +429,7 @@ describe("short delivery cumulative allocations", () => {
         "Branch 1",
       ),
     ).toBe("3.61");
-    expect(state.stock["Branch 1:0009"]).toBe(12);
+    expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 12);
     expect(movements(state).slice(0, 6)).toEqual(originalMovements);
     expect(
       movements(state)
@@ -373,7 +451,9 @@ describe("short delivery cumulative allocations", () => {
       ).toFixed(2),
     ).toBe("7.23");
     expect(
-      Decimal.sum(...state.ledger.map((entry) => entry.amount)).toFixed(2),
+      Decimal.sum(...invoiceLedger(state).map((entry) => entry.amount)).toFixed(
+        2,
+      ),
     ).toBe("177.02");
   });
 
@@ -401,7 +481,7 @@ describe("short delivery cumulative allocations", () => {
     expect(() =>
       receiveShort(state, "0009", 5, "TOO-MANY", "floor_worker", "Branch 1"),
     ).toThrow("remaining");
-    expect(state.stock["Branch 1:0009"]).toBe(8);
+    expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 8);
     receiveShort(state, "0009", 2, "SAME-RECEIPT", "floor_worker", "Branch 1");
     const saved = structuredClone(state);
     expect(
@@ -454,7 +534,7 @@ describe("short delivery cumulative allocations", () => {
       ),
     ).toBe("0.00");
     expect(state).toEqual(saved);
-    expect(state.stock["Branch 1:0009"]).toBe(10);
+    expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 10);
     expect(state.invoice.payable_after_open_shorts).toBe("173.41");
   });
 });

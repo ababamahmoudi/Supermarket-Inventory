@@ -15,6 +15,7 @@ import {
   DataTable,
   EmptyState,
   Field,
+  FilterToolbar,
   PageHeader,
   Select,
 } from "../ui";
@@ -89,8 +90,8 @@ export function Expiry() {
       <PageHeader
         title={t("Date tracking", "پیگیری تاریخ")}
         description={t(
-          "Check expiry and best-before dates. Cleared entries stay in history until Reset demo.",
-          "تاریخ انقضا و بهترین زمان مصرف را بررسی کنید. موارد پاک‌شده تا بازنشانی نمایش در سابقه می‌مانند.",
+          "Check expiry and best-before dates.",
+          "تاریخ انقضا و بهترین زمان مصرف را بررسی کنید.",
         )}
       />
       {branch === "all" && (
@@ -101,78 +102,76 @@ export function Expiry() {
           )}
         </div>
       )}
-      <Card>
-        <div className="table-toolbar">
-          <Field label={t("Search products", "جستجوی محصولات")}>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("Name or Product Code", "نام یا کد محصول")}
-            />
-          </Field>
-          <Field label={t("Time window", "بازه زمانی")}>
-            <Select
-              value={window}
-              onChange={setWindow}
-              options={[
-                {
-                  value: "soon",
-                  label: `${t("Expiring soon", "به‌زودی منقضی")} (${state.config.expiry.expiring_soon_days} ${t("days", "روز")})`,
-                },
-                { value: "expired", label: t("Expired", "منقضی‌شده") },
-                {
-                  value: "active",
-                  label: t("All active dates", "همه تاریخ‌های فعال"),
-                },
-                {
-                  value: "cleared",
-                  label: t("Cleared history", "سوابق پاک‌شده"),
-                },
-              ]}
-            />
-          </Field>
-          <Field label={t("AI category", "دسته‌بندی هوش مصنوعی")}>
-            <Select
-              value={category}
-              onChange={setCategory}
-              options={[
-                { value: "all", label: t("All categories", "همه دسته‌ها") },
-                ...[
-                  ...new Set(
-                    state.products
-                      .filter((item) => item.company_id === context.company_id)
-                      .map((product) => product.ai_category),
-                  ),
-                ].map((value) => ({
-                  value,
-                  label: categoryLabel(value, lang),
-                })),
-              ]}
-            />
-          </Field>
-          <Field label={t("Sort by", "مرتب‌سازی بر اساس")}>
-            <Select
-              value={sort}
-              onChange={(value) => setSort(value as "date" | "name")}
-              options={[
-                { value: "date", label: t("Date", "تاریخ") },
-                { value: "name", label: t("Product", "محصول") },
-              ]}
-            />
-          </Field>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSearch("");
-              setCategory("all");
-              setWindow("soon");
-              setSort("date");
-            }}
-          >
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
-        </div>
-      </Card>
+      <FilterToolbar count={`${entries.length} ${t("entries", "مورد")}`}>
+        <Field label={t("Search products", "جستجوی محصولات")}>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t("Name or Product Code", "نام یا کد محصول")}
+          />
+        </Field>
+        <Field label={t("Time window", "بازه زمانی")}>
+          <Select
+            value={window}
+            onChange={setWindow}
+            options={[
+              {
+                value: "soon",
+                label: `${t("Expiring soon", "به‌زودی منقضی")} (${state.config.expiry.expiring_soon_days} ${t("days", "روز")})`,
+              },
+              { value: "expired", label: t("Expired", "منقضی‌شده") },
+              {
+                value: "active",
+                label: t("All active dates", "همه تاریخ‌های فعال"),
+              },
+              {
+                value: "cleared",
+                label: t("Cleared history", "سوابق پاک‌شده"),
+              },
+            ]}
+          />
+        </Field>
+        <Field label={t("AI category", "دسته‌بندی هوش مصنوعی")}>
+          <Select
+            value={category}
+            onChange={setCategory}
+            options={[
+              { value: "all", label: t("All categories", "همه دسته‌ها") },
+              ...[
+                ...new Set(
+                  state.products
+                    .filter((item) => item.company_id === context.company_id)
+                    .map((product) => product.ai_category),
+                ),
+              ].map((value) => ({
+                value,
+                label: categoryLabel(value, lang),
+              })),
+            ]}
+          />
+        </Field>
+        <Field label={t("Sort by", "مرتب‌سازی بر اساس")}>
+          <Select
+            value={sort}
+            onChange={(value) => setSort(value as "date" | "name")}
+            options={[
+              { value: "date", label: t("Date", "تاریخ") },
+              { value: "name", label: t("Product", "محصول") },
+            ]}
+          />
+        </Field>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setSearch("");
+            setCategory("all");
+            setWindow("soon");
+            setSort("date");
+          }}
+        >
+          {t("Clear filters", "پاک کردن فیلترها")}
+        </Button>
+      </FilterToolbar>
       {message && (
         <div className="banner approved" role="status">
           {message}
@@ -186,13 +185,24 @@ export function Expiry() {
       {entries.length === 0 ? (
         <EmptyState>
           {t(
-            "No dates match these filters. Choose all active dates or Reset demo to restore the examples.",
-            "هیچ تاریخی با این فیلترها مطابق نیست. همه تاریخ‌های فعال را انتخاب یا برای بازیابی نمونه‌ها نمایش را بازنشانی کنید.",
+            "No dates match these filters.",
+            "هیچ تاریخی با این فیلترها مطابق نیست.",
           )}
         </EmptyState>
       ) : (
         <Card>
-          <DataTable>
+          <DataTable
+            columns={[
+              { width: "22%" },
+              { width: 110 },
+              { width: 112 },
+              { width: 110 },
+              { width: 96, align: "end" },
+              { width: "20%" },
+              { width: 130 },
+              { width: 180, actions: true, align: "end" },
+            ]}
+          >
             <thead>
               <tr>
                 <th>{t("Product", "محصول")}</th>
@@ -247,10 +257,17 @@ export function Expiry() {
                         {richer.supplier ?? product?.main_supplier}
                       </LtrText>
                       <div className="muted">
-                        {richer.invoice_id ? (
-                          <LtrText>{richer.invoice_id}</LtrText>
-                        ) : (
-                          t("Demo stock on hand", "موجودی نمونه")
+                        <LtrText>
+                          {entry.invoice_number ??
+                            state.invoices?.find(
+                              (invoice) => invoice.id === entry.invoice_id,
+                            )?.supplier_invoice_number ??
+                            "—"}
+                        </LtrText>
+                        {entry.received_date && (
+                          <div>
+                            <DateText value={entry.received_date} />
+                          </div>
                         )}
                       </div>
                     </td>
@@ -286,12 +303,7 @@ export function Expiry() {
                               update((draft) =>
                                 clearExpiry(draft, context, entry.id),
                               );
-                              setMessage(
-                                t(
-                                  "Cleared. Reset demo restores the example.",
-                                  "پاک شد. بازنشانی نمایش نمونه را بازیابی می‌کند.",
-                                ),
-                              );
+                              setMessage(t("Cleared.", "پاک شد."));
                               setError("");
                             } catch (caught) {
                               setError(

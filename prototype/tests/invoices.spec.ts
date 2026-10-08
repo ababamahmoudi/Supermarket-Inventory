@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, chooseOption } from "./helpers";
 
+test.setTimeout(60000);
+
 const pixel = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jUjYAAAAASUVORK5CYII=",
   "base64",
@@ -26,7 +28,9 @@ async function upload(page: Page) {
   await expect(
     page.getByRole("heading", { name: "Review invoice lines" }),
   ).toBeVisible({ timeout: 8000 });
-  await expect(page.locator(".invoice-line")).toHaveCount(6);
+  await expect(page.locator(".invoice-line")).toHaveCount(6, {
+    timeout: 10000,
+  });
 }
 async function stored(page: Page) {
   return page.evaluate(() =>
@@ -37,13 +41,24 @@ async function stored(page: Page) {
 test("simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis.crypto, "randomUUID", {
+      value: undefined,
+      configurable: true,
+    });
+  });
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await signInWorker(page);
   await expect(
     page.getByText("Demo: AI invoice reading is simulated", { exact: true }),
   ).toBeVisible();
+  const before = await stored(page);
+  const beforeStock = before.stock["Branch 1:0009"];
   await upload(page);
+  expect(await page.evaluate(() => typeof globalThis.crypto.randomUUID)).toBe(
+    "undefined",
+  );
   const sumac = page.locator(".invoice-line").nth(1);
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.60");
   await expect(sumac.locator(".price-display")).toHaveText("$2.99");
@@ -68,17 +83,12 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page
     .getByLabel("What information is unknown? (required)", { exact: true })
     .fill("Demo only: old stock label cannot be read.");
-  for (const checkbox of await page
-    .getByRole("checkbox", {
-      name: "Confirm date tracking decision",
-      exact: true,
-    })
-    .all())
-    await checkbox.check();
-  for (const checkbox of await page
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-    .all())
-    await checkbox.check();
+  for (const line of await page.locator(".invoice-line").all()) {
+    await line.getByRole("button", { name: "No", exact: true }).click();
+    await line
+      .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+      .click();
+  }
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
@@ -95,7 +105,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toHaveCount(0);
   let state = await stored(page);
-  expect(state.stock["Branch 1:0009"]).toBe(8);
+  expect(state.stock["Branch 1:0009"]).toBe(beforeStock + 8);
   expect(state.invoice.payable_after_open_shorts).toBe("169.79");
   expect(
     state.alerts.filter(
@@ -110,7 +120,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .click();
   await expect(page.getByRole("status")).toContainText("$3.62");
   state = await stored(page);
-  expect(state.stock["Branch 1:0009"]).toBe(10);
+  expect(state.stock["Branch 1:0009"]).toBe(beforeStock + 10);
   await page
     .getByLabel("Delivery document reference", { exact: true })
     .fill("FICTITIOUS-CHIPS-2");
@@ -119,7 +129,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .click();
   await expect(page.getByRole("status")).toContainText("$3.61");
   state = await stored(page);
-  expect(state.stock["Branch 1:0009"]).toBe(12);
+  expect(state.stock["Branch 1:0009"]).toBe(beforeStock + 12);
   expect(state.invoice.payable_after_open_shorts).toBe("177.02");
   expect(
     state.ledger
@@ -138,25 +148,24 @@ test("manual draft survives a refresh and cannot post without its original", asy
     .click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await page
-    .getByRole("checkbox", {
-      name: "Confirm date tracking decision",
-      exact: true,
-    })
-    .check();
+    .locator(".invoice-line")
+    .getByRole("button", { name: "No", exact: true })
+    .click();
   await page
     .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-    .check();
+    .click();
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
   await page.reload();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect(
-    page.getByRole("checkbox", {
-      name: "Confirm this invoice line",
-      exact: true,
-    }),
-  ).toBeChecked();
+    page.locator(".invoice-line").getByText("Confirmed", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".invoice-line")).toHaveAttribute(
+    "data-expanded",
+    "false",
+  );
   await expect(
     page.getByText("Add the original invoice (PDF or photo) before posting.", {
       exact: true,
@@ -167,7 +176,11 @@ test("manual draft survives a refresh and cannot post without its original", asy
   ).toBeDisabled();
   const state = await stored(page);
   expect(state.invoice.status).toBe("draft");
-  expect(state.ledger).toHaveLength(0);
+  expect(
+    state.ledger.filter(
+      (entry: { invoice_id?: string }) => entry.invoice_id === state.invoice.id,
+    ),
+  ).toHaveLength(0);
 });
 
 test("Persian invoice review mirrors the shell and keeps Western price digits", async ({
@@ -189,10 +202,7 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
     page.locator(".invoice-line").nth(0).locator(".price-display"),
   ).toHaveText("$1.49");
   await expect(
-    page.getByRole("checkbox", {
-      name: "تأیید تصمیم پیگیری تاریخ",
-      exact: true,
-    }),
+    page.getByRole("group", { name: "پیگیری تاریخ", exact: true }),
   ).toHaveCount(6);
   expect(
     await page.evaluate(

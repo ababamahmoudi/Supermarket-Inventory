@@ -4,6 +4,14 @@ export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
 export type Branch = "Branch 1" | "Branch 2" | "Branch 3" | "all";
 export type CompanyConfig = typeof configSeed;
+export interface PriceProvenance {
+  invoice_number: string;
+  calculated_price: string;
+  invoice_date?: string;
+  changed_price?: string;
+  changed_by?: string;
+  changed_at?: string;
+}
 export interface ScopedRecord {
   company_id: string;
   branch: Branch;
@@ -22,8 +30,12 @@ export type Product = Omit<
   pending_branch?: Branch;
   description_en?: string;
   description_fa?: string;
+  date_tracking?: boolean;
+  price_provenance?: Partial<Record<Branch, PriceProvenance>>;
 };
 export interface Approval extends ScopedRecord {
+  barcode?: string;
+  conflicting_product_code?: string;
   id: string;
   type:
     | "new_product"
@@ -45,6 +57,9 @@ export interface Approval extends ScopedRecord {
   config_version?: string;
   manual_override?: boolean;
   acknowledgment_reason?: string;
+  invoice_number?: string;
+  triggered_by?: string;
+  posted_at?: string;
 }
 export interface Alert extends ScopedRecord {
   id: string;
@@ -177,6 +192,8 @@ export interface ReturnRecord extends ScopedRecord {
   credit_document?: string;
   linked_invoice?: string;
   note?: string;
+  created_at?: string;
+  created_by?: string;
 }
 export interface ExpiryRecord extends ScopedRecord {
   id: string;
@@ -184,6 +201,9 @@ export interface ExpiryRecord extends ScopedRecord {
   expires_in_days: number;
   date: string;
   status: "active" | "cleared";
+  invoice_id?: string;
+  invoice_number?: string;
+  received_date?: string;
 }
 export interface NoteRecord extends ScopedRecord {
   id: string;
@@ -220,6 +240,10 @@ export interface Activity extends ScopedRecord {
   by: string;
   at: string;
   product_code?: string;
+  reversible?: boolean;
+  before?: unknown;
+  after?: unknown;
+  scope?: "all" | "branch";
 }
 export interface DemoState {
   version: 1;
@@ -227,6 +251,19 @@ export interface DemoState {
   supplier_balance_snapshot_date?: string;
   supplier_balance_snapshot_currency?: string;
   pricing_minimum_margin_schema?: 2;
+  demo_fixture_schema?: 2;
+  demo_fixture_anchor_date?: string;
+  stock_movements?: {
+    id: string;
+    company_id: string;
+    branch: Branch;
+    product_code: string;
+    qty: number;
+    type: string;
+    reference: string;
+    by: string;
+    at: string;
+  }[];
   config: CompanyConfig;
   products: Product[];
   approvals: Approval[];

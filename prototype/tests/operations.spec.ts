@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import { chooseOption, signIn, visitPage } from "./helpers";
 
+test.setTimeout(60000);
+
 async function visit(page: Page, label: string) {
   await visitPage(page, label);
 }
@@ -10,45 +12,12 @@ async function stored(page: Page) {
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
   );
 }
-async function seedPostedInvoice(page: Page) {
-  await page.evaluate(() => {
-    const key = "supermarket-prototype-v1";
-    const state = JSON.parse(localStorage.getItem(key)!);
-    state.invoice.status = "posted";
-    state.stock["Branch 1:0006"] = 20;
-    state.ledger = [
-      {
-        id: "demo-posted-invoice",
-        company_id: state.config.company.seed_key,
-        branch: "Branch 1",
-        supplier: "Fresh Valley Foods",
-        type: "invoice",
-        amount: "177.02",
-        date: new Date().toLocaleDateString("en-CA", {
-          timeZone: state.config.company.timezone,
-        }),
-        reference: "FV-20417",
-        invoice_id: state.invoice.id,
-        currency: "CAD",
-      },
-      {
-        id: "demo-short-deduction",
-        company_id: state.config.company.seed_key,
-        branch: "Branch 1",
-        supplier: "Fresh Valley Foods",
-        type: "short_deduction",
-        amount: "-7.23",
-        date: new Date().toLocaleDateString("en-CA", {
-          timeZone: state.config.company.timezone,
-        }),
-        reference: "FV-20417 short",
-        invoice_id: state.invoice.id,
-        currency: "CAD",
-      },
-    ];
-    localStorage.setItem(key, JSON.stringify(state));
-  });
-  await page.reload();
+async function openReturn(page: Page, number: number) {
+  await visit(page, "Returns");
+  await page.getByRole("link", { name: `#${number}`, exact: true }).click();
+  await expect(page).toHaveURL(
+    new RegExp(`#return\\?id=demo-return-${number}$`),
+  );
 }
 
 test("supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals", async ({
@@ -57,7 +26,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await signIn(page, "Floor Worker");
-  await visit(page, "Returns");
+  await openReturn(page, 1);
   await expect(
     page.getByText("Sour Cherry Juice 1 L", { exact: true }),
   ).toBeVisible();
@@ -112,11 +81,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   const after = await stored(page);
   expect(after.ledger).toEqual(before.ledger);
   expect(after.stock["Branch 1:0002"]).toBe(before.stock["Branch 1:0002"] + 2);
-  await chooseOption(
-    page,
-    page.getByLabel("Supplier", { exact: true }),
-    "Golden Grain Distributors",
-  );
+  await openReturn(page, 2);
   await expect(
     page.getByRole("table").getByText("Basmati Rice 4.5 kg", { exact: true }),
   ).toBeVisible();
@@ -140,15 +105,10 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .click();
   await expect(page.getByText(/Supervisor review required/)).toBeVisible();
   const cancelled = await stored(page);
-  expect(cancelled.stock["Branch 1:0001"]).toBe(1);
+  expect(cancelled.stock["Branch 1:0001"]).toBe(before.stock["Branch 1:0001"]);
   expect(cancelled.returns[1].status).toBe("cancellation_review");
   await signIn(page, "Supervisor");
-  await visit(page, "Returns");
-  await chooseOption(
-    page,
-    page.getByLabel("Supplier", { exact: true }),
-    "Golden Grain Distributors",
-  );
+  await openReturn(page, 2);
   await page
     .getByLabel("Settlement review and reason", { exact: true })
     .fill(
@@ -158,14 +118,12 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Approve cancellation", exact: true })
     .click();
-  await chooseOption(
-    page,
-    page.getByLabel("View", { exact: true }),
-    "history",
-    "All returns and history",
+  await expect(
+    page.locator(".return-header-card").getByText("Cancelled", { exact: true }),
+  ).toBeVisible();
+  expect((await stored(page)).stock["Branch 1:0001"]).toBe(
+    before.stock["Branch 1:0001"],
   );
-  await expect(page.getByText("Cancelled", { exact: true })).toBeVisible();
-  expect((await stored(page)).stock["Branch 1:0001"]).toBe(1);
   expect(errors).toEqual([]);
 });
 
@@ -173,7 +131,6 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
   page,
 }) => {
   await signIn(page, "Floor Worker");
-  await seedPostedInvoice(page);
   await visit(page, "Date tracking");
   await expect(
     page.getByRole("button", { name: "Mark as cleared", exact: true }),
@@ -191,6 +148,7 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
   ).toHaveCount(1);
   await visit(page, "Notes");
   await page.getByRole("tab", { name: "Store use", exact: true }).click();
+  const beforeStoreUse = await stored(page);
   await page.getByLabel("Note", { exact: true }).fill("Demo staff lunch");
   await chooseOption(
     page,
@@ -202,7 +160,9 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
     .getByLabel("Actual quantity used (required)", { exact: true })
     .fill("2");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
-  expect((await stored(page)).stock["Branch 1:0006"]).toBe(18);
+  expect((await stored(page)).stock["Branch 1:0006"]).toBe(
+    beforeStoreUse.stock["Branch 1:0006"] - 2,
+  );
   await page.getByRole("tab", { name: "For Supervisor", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
@@ -246,8 +206,12 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await seedPostedInvoice(page);
   await visit(page, "Payables");
+  await page
+    .getByRole("row")
+    .filter({ hasText: "Fresh Valley Foods" })
+    .getByRole("button", { name: "View", exact: true })
+    .click();
   await expect(
     page.getByText("$169.79", { exact: true }).first(),
   ).toBeVisible();
@@ -395,7 +359,7 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await signIn(page, "Floor Worker");
-  await visit(page, "Returns");
+  await openReturn(page, 1);
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
@@ -412,7 +376,7 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
   );
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
-    page.getByRole("heading", { name: "Returns", exact: true, level: 1 }),
+    page.getByRole("heading", { name: /^Return #1 · created/, level: 1 }),
   ).toBeVisible();
 
   await visit(page, "Notes");

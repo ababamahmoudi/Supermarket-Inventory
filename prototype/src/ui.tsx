@@ -5,6 +5,8 @@ import {
   useState,
   createContext,
   useContext,
+  Children,
+  Fragment,
   cloneElement,
   isValidElement,
   type ButtonHTMLAttributes,
@@ -277,7 +279,7 @@ export function PageHeader({
   description,
   actions,
 }: {
-  title: string;
+  title: ReactNode;
   description?: string;
   actions?: ReactNode;
 }) {
@@ -294,11 +296,129 @@ export function PageHeader({
 export function DataTable({
   children,
   className,
+  columns,
   ...props
-}: HTMLAttributes<HTMLDivElement>) {
+}: HTMLAttributes<HTMLDivElement> & {
+  columns?: {
+    key?: string;
+    width?: string | number;
+    align?: "start" | "end";
+    actions?: boolean;
+  }[];
+}) {
+  const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
+    Children.toArray(nodes).flatMap((node, index) =>
+      isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment
+        ? cells(node.props.children, `${prefix}${index}:`)
+        : [
+            isValidElement(node)
+              ? cloneElement(node, { key: `${prefix}${index}` })
+              : node,
+          ],
+    );
+  const headerSection = Children.toArray(children).find(
+    (node) => isValidElement(node) && node.type === "thead",
+  );
+  const headerRow = isValidElement<{ children?: ReactNode }>(headerSection)
+    ? Children.toArray(headerSection.props.children).find(
+        (node) => isValidElement(node) && node.type === "tr",
+      )
+    : undefined;
+  const resolvedColumns =
+    columns ??
+    (isValidElement<{ children?: ReactNode }>(headerRow)
+      ? cells(headerRow.props.children).map((cell) => {
+          const numeric =
+            isValidElement<{ className?: string }>(cell) &&
+            /numeric|number-cell/.test(cell.props.className ?? "");
+          const label = isValidElement<{ children?: ReactNode }>(cell)
+            ? cell.props.children
+            : undefined;
+          const actions =
+            typeof label === "string" &&
+            ["Action", "Actions", "عملیات", "اقدام"].includes(label);
+          return {
+            width: actions ? 120 : numeric ? 140 : undefined,
+            align: numeric || actions ? ("end" as const) : ("start" as const),
+            actions,
+            key: undefined as string | undefined,
+          };
+        })
+      : []);
+  const decorate = (nodes: ReactNode): ReactNode =>
+    Children.map(nodes, (node) => {
+      if (
+        !isValidElement<{
+          children?: ReactNode;
+          className?: string;
+          style?: CSSProperties;
+          colSpan?: number;
+        }>(node)
+      )
+        return node;
+      if (node.type === "tr")
+        return cloneElement(node, {
+          children: Children.map(cells(node.props.children), (cell, index) => {
+            if (
+              !isValidElement<{
+                className?: string;
+                style?: CSSProperties;
+                colSpan?: number;
+              }>(cell) ||
+              (cell.props.colSpan ?? 1) > 1
+            )
+              return cell;
+            const column = resolvedColumns[index];
+            if (!column) return cell;
+            return cloneElement(cell, {
+              className: cn(
+                cell.props.className,
+                column.align === "end" && "numeric",
+                column.actions && "table-actions",
+              ),
+              style: {
+                ...cell.props.style,
+                textAlign: column.actions ? "end" : (column.align ?? "start"),
+              },
+            });
+          }),
+        });
+      return cloneElement(node, { children: decorate(node.props.children) });
+    });
   return (
-    <div className={cn("table-wrap", className)} tabIndex={0} {...props}>
-      <table>{children}</table>
+    <div
+      className={cn("table-wrap", "ui-data-table", className)}
+      tabIndex={0}
+      {...props}
+    >
+      <table className="has-defined-columns">
+        <colgroup>
+          {resolvedColumns.map((column, index) => (
+            <col
+              key={column.key ?? index}
+              style={{
+                width: column.width ?? (column.actions ? "120px" : undefined),
+              }}
+            />
+          ))}
+        </colgroup>
+        {decorate(children)}
+      </table>
+    </div>
+  );
+}
+export function FilterToolbar({
+  children,
+  search,
+  count,
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { search?: ReactNode; count?: ReactNode }) {
+  return (
+    <div className={cn("filter-toolbar", className)} {...props}>
+      {search}
+      {children}
+      {count !== undefined && <span className="filter-count">{count}</span>}
     </div>
   );
 }
@@ -319,6 +439,76 @@ export function EmptyState({
     </div>
   );
 }
+export function Dialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  className,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const trigger = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      trigger.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      dialog.showModal();
+      dialog
+        .querySelector<HTMLElement>(
+          "[autofocus], input:not([disabled]), button:not([disabled]), [tabindex='0']",
+        )
+        ?.focus();
+    } else if (!open && dialog.open) {
+      dialog.close();
+      trigger.current?.focus();
+    }
+    return () => {
+      if (dialog.open) dialog.close();
+      trigger.current?.focus();
+    };
+  }, [open]);
+  return (
+    <dialog
+      ref={ref}
+      className={cn("confirm-dialog ui-dialog", className)}
+      aria-labelledby={titleId}
+      onCancel={(event) => {
+        event.preventDefault();
+        onOpenChange(false);
+      }}
+      onClick={(event) => {
+        if (event.target !== event.currentTarget) return;
+        const box = event.currentTarget.getBoundingClientRect();
+        if (
+          event.clientX < box.left ||
+          event.clientX > box.right ||
+          event.clientY < box.top ||
+          event.clientY > box.bottom
+        )
+          onOpenChange(false);
+      }}
+    >
+      <h2 id={titleId}>{title}</h2>
+      {description && (
+        <div className="dialog-description muted">{description}</div>
+      )}
+      {children}
+    </dialog>
+  );
+}
 export function ConfirmDialog({
   open,
   onOpenChange,
@@ -336,23 +526,14 @@ export function ConfirmDialog({
   onConfirm: () => void;
   children?: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
   const { t } = useDemo();
-  useEffect(() => {
-    if (open && !ref.current?.open) ref.current?.showModal();
-    if (!open && ref.current?.open) ref.current?.close();
-  }, [open]);
   return (
-    <dialog
-      ref={ref}
-      className="confirm-dialog ui-dialog"
-      aria-labelledby={titleId}
-      onCancel={() => onOpenChange(false)}
-      onClose={() => onOpenChange(false)}
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
     >
-      <h2 id={titleId}>{title}</h2>
-      <p className="muted">{description}</p>
       {children}
       <div className="actions">
         <Button variant="secondary" onClick={() => onOpenChange(false)}>
@@ -367,7 +548,7 @@ export function ConfirmDialog({
           {confirmLabel}
         </Button>
       </div>
-    </dialog>
+    </Dialog>
   );
 }
 
@@ -605,6 +786,14 @@ export function Select({
         onClick={() => (popupOpen ? closePopup() : open())}
         onKeyDown={keydown}
       >
+        {options.map((option) => (
+          <span
+            key={option.value}
+            className="select-sizing"
+            aria-hidden="true"
+            data-sizing-label={option.label}
+          />
+        ))}
         <span className={selected ? undefined : "muted"}>
           <bdi dir="auto">
             {selected?.label ?? t("Choose an option", "یک گزینه انتخاب کنید")}

@@ -8,7 +8,14 @@ import {
   resolveApproval,
 } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
-import { branchLabel, demoUserLabel, Money, OfferLabel } from "../presentation";
+import {
+  branchLabel,
+  demoUserLabel,
+  LtrText,
+  Money,
+  OfferLabel,
+  ProductName,
+} from "../presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
 import type { Approval, Branch } from "../types";
@@ -110,15 +117,20 @@ export function Approvals() {
       ),
     );
     setMessage(
-      preview.decision === "approve"
+      preview.approval.type === "barcode_conflict"
         ? t(
-            "Approved price. Cashier lookup now shows the approved price.",
-            "قیمت تأیید شد. جستجوی صندوق‌دار اکنون قیمت تأییدشده را نشان می‌دهد.",
+            preview.decision === "approve" ? "Approved" : "Rejected",
+            preview.decision === "approve" ? "تأیید شد" : "رد شد",
           )
-        : t(
-            "Rejected. The approved price was kept.",
-            "رد شد. قیمت تأییدشده حفظ شد.",
-          ),
+        : preview.decision === "approve"
+          ? t(
+              "Approved price. Cashier lookup now shows the approved price.",
+              "قیمت تأیید شد. جستجوی صندوق‌دار اکنون قیمت تأییدشده را نشان می‌دهد.",
+            )
+          : t(
+              "Rejected. The approved price was kept.",
+              "رد شد. قیمت تأییدشده حفظ شد.",
+            ),
     );
     setPreview(null);
   };
@@ -213,23 +225,25 @@ export function Approvals() {
         const unitCost = item.unit_cost ?? product.last_cost_before_tax;
         const margin =
           item.margin ??
-          (new Decimal(item.proposed_price).gt(0)
+          (item.proposed_price && new Decimal(item.proposed_price).gt(0)
             ? new Decimal(item.proposed_price)
                 .minus(unitCost)
                 .div(item.proposed_price)
                 .toFixed(4)
             : null);
-        const triggeredBy = item.manual_override
-          ? [...state.activity]
-              .reverse()
-              .find(
-                (entry) =>
-                  entry.company_id === company &&
-                  entry.product_code === item.product_code &&
-                  entry.branch === item.branch &&
-                  entry.action === "Propose manual override",
-              )?.by
-          : relatedInvoice?.receiving_employee;
+        const triggeredBy =
+          item.triggered_by ??
+          (item.manual_override
+            ? [...state.activity]
+                .reverse()
+                .find(
+                  (entry) =>
+                    entry.company_id === company &&
+                    entry.product_code === item.product_code &&
+                    entry.branch === item.branch &&
+                    entry.action === "Propose manual override",
+                )?.by
+            : relatedInvoice?.receiving_employee);
 
         return (
           <Card
@@ -242,6 +256,27 @@ export function Approvals() {
                 {lang === "fa" ? product.name_en : product.name_fa}
               </bdi>
             </p>
+            {item.type === "barcode_conflict" && (
+              <div className="barcode-conflict-details">
+                <LtrText>{item.barcode}</LtrText>
+                <p>
+                  {t("Product", "محصول")}:{" "}
+                  <ProductName product={product} language={lang} />
+                </p>
+                {state.products
+                  .filter(
+                    (value) =>
+                      value.company_id === company &&
+                      value.code === item.conflicting_product_code,
+                  )
+                  .map((value) => (
+                    <p key={value.code}>
+                      {t("Existing barcode mapping", "محصول متصل به بارکد")}:{" "}
+                      <ProductName product={value} language={lang} />
+                    </p>
+                  ))}
+              </div>
+            )}
             <div className="row">
               <Badge
                 tone={
@@ -264,42 +299,44 @@ export function Approvals() {
                 <bdi>{item.product_code}</bdi>
               </span>
             </div>
-            <div className="approval-values">
-              <div className="approval-value">
-                <span className="muted">{t("Old price", "قیمت قبلی")}</span>
-                {approved !== null && approved !== undefined ? (
+            {item.type !== "barcode_conflict" && (
+              <div className="approval-values">
+                <div className="approval-value">
+                  <span className="muted">{t("Old price", "قیمت قبلی")}</span>
+                  {approved !== null && approved !== undefined ? (
+                    <strong className="price">
+                      <Money value={approved} />
+                    </strong>
+                  ) : (
+                    <span className="muted approval-missing-price">
+                      {t("No approved price yet", "هنوز قیمت تأییدشده ندارد")}
+                    </span>
+                  )}
+                </div>
+                <div className="approval-value">
+                  <span className="muted">{t("New price", "قیمت جدید")}</span>
                   <strong className="price">
-                    <Money value={approved} />
+                    <Money value={item.proposed_price} />
                   </strong>
-                ) : (
-                  <span className="muted approval-missing-price">
-                    {t("No approved price yet", "هنوز قیمت تأییدشده ندارد")}
-                  </span>
-                )}
+                </div>
+                <div className="approval-value">
+                  <span className="muted">{t("Unit cost", "هزینه واحد")}</span>
+                  <strong>
+                    <Money value={unitCost} />
+                  </strong>
+                </div>
+                <div className="approval-value">
+                  <span className="muted">{t("Margin", "حاشیه سود")}</span>
+                  <strong>
+                    <bdi dir="ltr">
+                      {margin !== null
+                        ? `${new Decimal(margin).times(100).toFixed(2)}%`
+                        : "—"}
+                    </bdi>
+                  </strong>
+                </div>
               </div>
-              <div className="approval-value">
-                <span className="muted">{t("New price", "قیمت جدید")}</span>
-                <strong className="price">
-                  <Money value={item.proposed_price} />
-                </strong>
-              </div>
-              <div className="approval-value">
-                <span className="muted">{t("Unit cost", "هزینه واحد")}</span>
-                <strong>
-                  <Money value={unitCost} decimals={4} />
-                </strong>
-              </div>
-              <div className="approval-value">
-                <span className="muted">{t("Margin", "حاشیه سود")}</span>
-                <strong>
-                  <bdi dir="ltr">
-                    {margin !== null
-                      ? `${new Decimal(margin).times(100).toFixed(2)}%`
-                      : "—"}
-                  </bdi>
-                </strong>
-              </div>
-            </div>
+            )}
             <div className="approval-meta">
               <span>
                 {t("Branch", "شعبه")}: {branchName(item.branch)}
@@ -324,10 +361,13 @@ export function Approvals() {
                 {t("Reason", "دلیل")}: {item.reason}
               </p>
             )}
-            {relatedInvoice && (
+            {(item.invoice_number || relatedInvoice) && (
               <p className="muted">
                 {t("Invoice", "فاکتور")}:{" "}
-                <bdi dir="ltr">{relatedInvoice.supplier_invoice_number}</bdi>
+                <bdi dir="ltr">
+                  {item.invoice_number ??
+                    relatedInvoice?.supplier_invoice_number}
+                </bdi>
               </p>
             )}
             {item.status === "pending" && item.type === "margin_review" && (
@@ -380,9 +420,11 @@ export function Approvals() {
                     openPreview(item, "approve");
                   }}
                 >
-                  {item.type === "new_product"
-                    ? t("Approve product", "تأیید کالا")
-                    : t("Approve price", "تأیید قیمت")}
+                  {item.type === "barcode_conflict"
+                    ? t("Approve", "تأیید")
+                    : item.type === "new_product"
+                      ? t("Approve product", "تأیید کالا")
+                      : t("Approve price", "تأیید قیمت")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -407,9 +449,11 @@ export function Approvals() {
             if (!open) setPreview(null);
           }}
           title={
-            preview.decision === "approve"
-              ? t("Review approval", "بررسی تأیید")
-              : t("Reject proposal", "رد پیشنهاد")
+            preview.approval.type === "barcode_conflict"
+              ? t("Existing barcode mapping", "محصول متصل به بارکد")
+              : preview.decision === "approve"
+                ? t("Review approval", "بررسی تأیید")
+                : t("Reject proposal", "رد پیشنهاد")
           }
           description={
             preview.decision === "approve"
@@ -425,13 +469,16 @@ export function Approvals() {
           confirmLabel={
             preview.decision === "reject"
               ? t("Reject proposal", "رد پیشنهاد")
-              : preview.approval.type === "new_product"
-                ? t("Approve product", "تأیید کالا")
-                : t("Approve price", "تأیید قیمت")
+              : preview.approval.type === "barcode_conflict"
+                ? t("Approve", "تأیید")
+                : preview.approval.type === "new_product"
+                  ? t("Approve product", "تأیید کالا")
+                  : t("Approve price", "تأیید قیمت")
           }
           onConfirm={confirm}
         >
-          {preview.decision === "approve" ? (
+          {preview.decision === "approve" &&
+          preview.approval.type !== "barcode_conflict" ? (
             <>
               <Field label={t("Apply price to", "اعمال قیمت به")}>
                 <Select

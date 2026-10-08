@@ -44,9 +44,9 @@ function guard(state: DemoState, context: OperationsContext) {
 }
 
 /**
- * The owner's seed supplies aggregate figures, not historical invoices. Keep
- * those figures separate from the real ledger and anchor relative dates once
- * when a demo is created or an older saved demo is opened.
+ * A2 figures are derived only from posted invoice and allocated ledger rows.
+ * The older snapshot adapter remains solely for a saved demo whose backup
+ * could not be verified; it is never added to an A2 fixture ledger.
  */
 export function supplierBalanceSummary(
   state: DemoState,
@@ -60,6 +60,7 @@ export function supplierBalanceSummary(
     state.supplier_balance_snapshot_date ?? companyDate(state.config);
   const asOf = throughDate ?? companyDate(state.config);
   const snapshotApplies =
+    state.demo_fixture_schema !== 2 &&
     context.company_id === configSeed.company.seed_key &&
     (state.supplier_balance_snapshot_currency ??
       configSeed.company.currency) === state.config.company.currency &&
@@ -126,7 +127,8 @@ export function supplierBalanceSummary(
     ...summary,
     balance: new Decimal(summary.balance).plus(snapshotBalance).toFixed(2),
     overdue: actualOverdue.plus(snapshotOverdue).toFixed(2),
-    next_due_date: dueDates.sort()[0],
+    next_due_date:
+      dueDates.filter((date) => date >= asOf).sort()[0] ?? dueDates.sort()[0],
     snapshot_balance: snapshotBalance.toFixed(2),
     snapshot_overdue: snapshotOverdue.toFixed(2),
     snapshot_date: hasSnapshot ? snapshotDate : undefined,

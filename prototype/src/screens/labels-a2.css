@@ -1,0 +1,98 @@
+/* The physical millimeter box remains unchanged. One complete hierarchy is
+   scaled inside it, so neither text nor status chips can print past an edge. */
+.labels-product-table table {
+  min-inline-size: 600px;
+}
+.shelf-label {
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: #fff;
+  color: #1c1c1c;
+  display: block;
+}
+.shelf-label-content {
+  position: absolute;
+  width: 220px;
+  height: 136px;
+  transform-origin: top left;
+  display: grid;
+  grid-template-rows: 36px 22px 38px 14px 18px;
+  gap: 2px;
+  overflow: hidden;
+  text-align: start;
+}
+.shelf-label-content > * {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  grid-column: auto;
+}
+.shelf-label .shelf-label-content .price {
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 700;
+  text-align: start;
+  white-space: nowrap;
+}
+.shelf-label-offer {
+  display: flex;
+  align-items: center;
+}
+.label-offer-badge {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+  background: #e6edfa;
+  color: #2b59c3;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.shelf-label .shelf-label-content .product-name {
+  display: grid;
+  grid-template-rows: 19px 17px;
+  gap: 1px;
+}
+.shelf-label .shelf-label-content .product-name strong {
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 600;
+}
+.shelf-label .shelf-label-content .product-name small {
+  font-size: 12px;
+  line-height: 17px;
+  color: #666;
+  font-weight: 400;
+}
+.shelf-label .product-name strong,
+.shelf-label .product-name small,
+.shelf-label .shelf-label-code {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.shelf-label .shelf-label-code {
+  font-size: 10px;
+  line-height: 14px;
+}
+.shelf-label-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.shelf-label .shelf-label-footer img {
+  width: 48px;
+  height: 18px;
+  object-fit: contain;
+  margin-inline-start: auto;
+}
+.shelf-label .shelf-label-footer .badge {
+  font-size: 10px;
+  line-height: 12px;
+  max-height: 16px;
+  padding: 2px 6px;
+  background: #e1edfb;
+  color: #0058b8;
+}

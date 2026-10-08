@@ -266,6 +266,19 @@ export function resolveApproval(
     throw new Error(
       "Keep the approved price with a reason or propose an override",
     );
+  if (approval.type === "barcode_conflict") {
+    approval.status = decision === "approve" ? "approved" : "rejected";
+    if (reason?.trim()) approval.acknowledgment_reason = reason.trim();
+    recordDemoActivity(
+      state,
+      decision === "approve"
+        ? "Keep barcode mappings"
+        : "Reject barcode change",
+      product.code,
+      approval.branch,
+    );
+    return;
+  }
   if (decision === "approve")
     applyApprovedPrice(
       state,

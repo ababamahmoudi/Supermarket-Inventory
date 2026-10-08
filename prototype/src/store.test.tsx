@@ -56,9 +56,9 @@ describe("fictional data and storage", () => {
       state.products.find((product) => product.code === "0006")?.pending_price,
     ).toBe("2.99");
     expect(state.templates).toEqual([]);
-    expect(state.ledger).toEqual([]);
-    expect(state.stock["Branch 1:0001"]).toBe(1);
-    expect(state.stock["Branch 2:0001"]).toBe(0);
+    expect(state.ledger).toHaveLength(24);
+    expect(state.stock["Branch 1:0001"]).toBe(61);
+    expect(state.stock["Branch 2:0001"]).toBe(18);
     expect(
       state.returns.every(
         (record) => record.company_id === state.config.company.seed_key,
@@ -191,12 +191,16 @@ describe("atomic synchronous demo actions", () => {
     expect(screen.getByTestId("transaction-name")).toHaveTextContent(
       original.products[0].name_en,
     );
-    expect(screen.getByTestId("transaction-stock")).toHaveTextContent("1");
+    expect(screen.getByTestId("transaction-stock")).toHaveTextContent(
+      String(original.stock["Branch 1:0001"]),
+    );
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(saved.products[0].name_en).toBe(original.products[0].name_en);
-    expect(saved.stock["Branch 1:0001"]).toBe(1);
+    expect(saved.stock["Branch 1:0001"]).toBe(original.stock["Branch 1:0001"]);
     fireEvent.click(screen.getByText("Receive two deliveries"));
-    expect(screen.getByTestId("transaction-stock")).toHaveTextContent("6");
+    expect(screen.getByTestId("transaction-stock")).toHaveTextContent(
+      String(initialState().stock["Branch 1:0001"] + 5),
+    );
   });
   it("conserves both successful deliveries submitted in the same event", () => {
     showTransactions();
@@ -204,10 +208,12 @@ describe("atomic synchronous demo actions", () => {
     expect(screen.getByTestId("transaction-name")).toHaveTextContent(
       "First successful update",
     );
-    expect(screen.getByTestId("transaction-stock")).toHaveTextContent("6");
+    expect(screen.getByTestId("transaction-stock")).toHaveTextContent(
+      String(initialState().stock["Branch 1:0001"] + 5),
+    );
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).stock["Branch 1:0001"],
-    ).toBe(6);
+    ).toBe(initialState().stock["Branch 1:0001"] + 5);
   });
   it("starts the next same-event mutation from the reset seed rather than stale state", () => {
     showTransactions();
@@ -216,10 +222,12 @@ describe("atomic synchronous demo actions", () => {
     expect(screen.getByTestId("transaction-name")).toHaveTextContent(
       initialState().products[0].name_en + " after reset",
     );
-    expect(screen.getByTestId("transaction-stock")).toHaveTextContent("2");
+    expect(screen.getByTestId("transaction-stock")).toHaveTextContent(
+      String(initialState().stock["Branch 1:0001"] + 1),
+    );
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).stock["Branch 1:0001"],
-    ).toBe(2);
+    ).toBe(initialState().stock["Branch 1:0001"] + 1);
   });
 });
 
@@ -281,13 +289,15 @@ describe("password gates and employee identity", () => {
         <AuthProbe />
       </DemoProvider>,
     );
+    const originalActor = screen.getByTestId("actor").textContent;
+    const originalActivityCount = initialState().activity.length;
     fireEvent.click(screen.getByText("New employee"));
     expect(screen.getByTestId("username")).toHaveTextContent("newemployee");
     fireEvent.click(screen.getByText("Record action"));
     expect(screen.getByTestId("auth-error")).toHaveTextContent(
       "choose your password",
     );
-    expect(screen.getByTestId("actor")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("actor")).toHaveTextContent(originalActor ?? "");
     fireEvent.click(screen.getByText("Choose password"));
     expect(screen.getByTestId("must-change")).toHaveTextContent("false");
     fireEvent.click(screen.getByText("Record action"));
@@ -297,7 +307,7 @@ describe("password gates and employee identity", () => {
     expect(screen.getByTestId("auth-error")).toHaveTextContent("Sign in");
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).activity,
-    ).toHaveLength(1);
+    ).toHaveLength(originalActivityCount + 1);
   });
   it("keeps old business edits and applies the new password policy when restoring PIN-era state", () => {
     const old = JSON.parse(JSON.stringify(initialState()));

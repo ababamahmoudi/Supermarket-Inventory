@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
-import { demoUsers, useDemo } from "../store";
+import { branches, useDemo } from "../store";
 import { companyDate } from "../invoice";
 import {
   branchLabel,
@@ -19,9 +19,11 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   DataTable,
   EmptyState,
   Field,
+  FilterToolbar,
   PageHeader,
   Select,
   DateField,
@@ -39,14 +41,16 @@ import {
   type Allocation,
   type OperationsContext,
 } from "../operations";
+import type { Branch } from "../types";
+import "./filters-a2.css";
 
 export function Payables() {
-  const { state, update, role, branch, lang, t } = useDemo();
+  const { state, update, role, branch, setBranch, user, lang, t } = useDemo();
   const context: OperationsContext = {
     company_id: state.config.company.seed_key,
     branch,
     role: role ?? "cashier",
-    actor: demoUsers.find((user) => user.role === role)?.name ?? "Demo user",
+    actor: user?.name ?? "Demo user",
   };
   const suppliers = [
     ...new Set([
@@ -59,6 +63,9 @@ export function Payables() {
     ]),
   ];
   const [supplier, setSupplier] = useState("");
+  const [search, setSearch] = useState("");
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [withBalance, setWithBalance] = useState(false);
   const [mode, setMode] = useState<"ledger" | "month">("ledger");
   const [month, setMonth] = useState(() =>
     companyDate(state.config).slice(0, 7),
@@ -92,7 +99,33 @@ export function Payables() {
     );
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
   const endOfMonth = validMonth ? monthEndDate(month) : undefined;
-  const overview = supplierBalanceOverview(state, context);
+  const overview = supplierBalanceOverview(state, context).filter(
+    (item) =>
+      item.supplier
+        .toLocaleLowerCase()
+        .includes(search.trim().toLocaleLowerCase()) &&
+      (!overdueOnly || new Decimal(item.overdue).gt(0)) &&
+      (!withBalance || !new Decimal(item.balance).eq(0)),
+  );
+  const selectedVisible = overview.some((item) => item.supplier === supplier);
+  const resetEntryForms = () => {
+    setPaymentOpen(false);
+    setEntryOpen(false);
+    setAllocations(null);
+    setDisputeId(null);
+    setError("");
+    setMessage("");
+  };
+  const changeBranch = (value: string) => {
+    setBranch(value as Branch);
+    resetEntryForms();
+  };
+  const clearFilters = () => {
+    setSearch("");
+    setOverdueOnly(false);
+    setWithBalance(false);
+    changeBranch("all");
+  };
   const summary = supplierBalanceSummary(
     state,
     context,
@@ -149,8 +182,9 @@ export function Payables() {
         )}
         actions={
           <Button
+            disabled={overview.length === 0}
             onClick={() => {
-              if (!supplier)
+              if (!selectedVisible)
                 setSupplier(overview[0]?.supplier ?? suppliers[0] ?? "");
               setPaymentOpen(!paymentOpen);
               setEntryOpen(false);
@@ -161,11 +195,59 @@ export function Payables() {
           </Button>
         }
       />
+      <FilterToolbar
+        className="payables-filters no-print"
+        aria-label={t("Payables filters", "فیلترهای پرداختنی‌ها")}
+        search={
+          <input
+            className="ui-input"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            aria-label={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
+            placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
+          />
+        }
+        count={t(
+          `${overview.length} ${overview.length === 1 ? "supplier" : "suppliers"}`,
+          `${overview.length} تأمین‌کننده`,
+        )}
+      >
+        <Select
+          aria-label={t("Payables branch", "شعبه پرداختنی‌ها")}
+          value={branch}
+          onChange={changeBranch}
+          options={[
+            { value: "all", label: t("All branches", "همه شعبه‌ها") },
+            ...branches.map((value) => ({
+              value,
+              label: branchLabel(value, lang),
+            })),
+          ]}
+        />
+        <Checkbox checked={overdueOnly} onChange={setOverdueOnly}>
+          {t("Overdue only", "فقط سررسید گذشته")}
+        </Checkbox>
+        <Checkbox checked={withBalance} onChange={setWithBalance}>
+          {t("With balance", "دارای مانده")}
+        </Checkbox>
+        <Button variant="ghost" onClick={clearFilters}>
+          {t("Clear filters", "پاک کردن فیلترها")}
+        </Button>
+      </FilterToolbar>
       <Card
         title={t("Suppliers", "تأمین‌کنندگان")}
         className="payables-overview"
       >
-        <DataTable>
+        <DataTable
+          columns={[
+            { width: "32%" },
+            { width: "16%" },
+            { width: "14%", align: "end" },
+            { width: "14%", align: "end" },
+            { width: 156 },
+            { width: 96, actions: true },
+          ]}
+        >
           <thead>
             <tr>
               <th>{t("Supplier", "تأمین‌کننده")}</th>
@@ -209,12 +291,24 @@ export function Payables() {
                 </td>
               </tr>
             ))}
+            {overview.length === 0 && (
+              <tr>
+                <td colSpan={6}>
+                  <EmptyState>
+                    {t(
+                      "No suppliers match these filters. Clear filters to see all suppliers.",
+                      "هیچ تأمین‌کننده‌ای با این فیلترها مطابقت ندارد. برای نمایش همه، فیلترها را پاک کنید.",
+                    )}
+                  </EmptyState>
+                </td>
+              </tr>
+            )}
           </tbody>
         </DataTable>
       </Card>
-      {supplier && (
+      {supplier && selectedVisible && (
         <>
-          <Card className="payables-toolbar no-print">
+          <Card className="payables-toolbar no-print form-card">
             <div className="form-grid">
               <Field label={t("Supplier", "تأمین‌کننده")}>
                 <Select
@@ -224,9 +318,9 @@ export function Payables() {
                     setAllocations(null);
                     setDisputeId(null);
                   }}
-                  options={suppliers.map((name) => ({
-                    value: name,
-                    label: name,
+                  options={overview.map((item) => ({
+                    value: item.supplier,
+                    label: item.supplier,
                   }))}
                 />
               </Field>
@@ -309,6 +403,7 @@ export function Payables() {
           {paymentOpen && (
             <Card
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}
+              className="form-card"
             >
               <p className="muted">
                 {t(
@@ -460,7 +555,10 @@ export function Payables() {
             </Card>
           )}
           {entryOpen && (
-            <Card title={t("Record ledger entry", "ثبت ردیف دفتر")}>
+            <Card
+              title={t("Record ledger entry", "ثبت ردیف دفتر")}
+              className="form-card"
+            >
               <div className="form-grid">
                 <Field label={t("Entry type", "نوع ردیف")}>
                   <Select
@@ -552,6 +650,7 @@ export function Payables() {
           {disputeId && (
             <Card
               title={t("Record supplier dispute", "ثبت اختلاف تأمین‌کننده")}
+              className="form-card"
             >
               <Field
                 label={t("Dispute note (required)", "یادداشت اختلاف (ضروری)")}
@@ -670,7 +769,18 @@ export function Payables() {
                     : t("Supplier ledger", "دفتر تأمین‌کننده")
                 }
               >
-                <DataTable>
+                <DataTable
+                  columns={[
+                    { width: 132 },
+                    { width: 112 },
+                    { width: 144 },
+                    { width: "28%" },
+                    { width: 116, align: "end" },
+                    { width: 152 },
+                    { width: 168 },
+                    { width: 152, actions: true },
+                  ]}
+                >
                   <thead>
                     <tr>
                       <th>{t("Date", "تاریخ")}</th>
@@ -760,7 +870,15 @@ export function Payables() {
             )}
             {summary.invoices.length > 0 && (
               <Card title={t("Invoice outstanding amounts", "مانده فاکتورها")}>
-                <DataTable>
+                <DataTable
+                  columns={[
+                    { width: "30%" },
+                    { width: "18%" },
+                    { width: 144 },
+                    { width: 144, align: "end" },
+                    { width: "20%" },
+                  ]}
+                >
                   <thead>
                     <tr>
                       <th>{t("Invoice", "فاکتور")}</th>

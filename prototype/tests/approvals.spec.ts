@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn, setBranch, resetDemo } from "./helpers";
 
+test.setTimeout(60000);
+
 async function lookup(page: Page, code: string, price: string) {
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill(code);

@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { demoSeed as demo } from "./config";
 import { calculatePrice } from "./pricing";
 import { effectivePrice } from "./catalog";
+import { createId } from "./ids";
 import type {
   Branch,
   CompanyConfig,
@@ -69,7 +70,7 @@ export function createInvoice(
   const seed = structuredClone(demo.demo_invoice);
   return {
     ...seed,
-    id: `invoice-${crypto.randomUUID()}`,
+    id: createId("invoice"),
     company_id: company,
     branch,
     status: "draft",
@@ -395,10 +396,7 @@ export function invoiceBlockers(
     } catch {
       blockers.push("cost");
     }
-    if (
-      category?.date_tracking_prompt &&
-      (!line.date_confirmed || (line.date_tracking && !line.date_value))
-    )
+    if (!line.date_confirmed || (line.date_tracking && !line.date_value))
       blockers.push("date");
   }
   if (lowerPriceLines(state).length) {
@@ -424,6 +422,7 @@ export function postInvoice(
   state: DemoState,
   role: Role,
   branch: Branch,
+  actor?: string,
 ): boolean {
   const invoice = state.invoice;
   if (invoice.status === "posted") return false;
@@ -507,6 +506,14 @@ export function postInvoice(
     };
     line.calculated_selling_price = price;
     line.current_selling_price = prior;
+    product.price_provenance ??= {};
+    const previousProvenance = product.price_provenance[invoice.branch];
+    product.price_provenance[invoice.branch] = {
+      ...(previousProvenance ?? {}),
+      invoice_number: invoice.supplier_invoice_number,
+      calculated_price: price,
+      invoice_date: invoice.invoice_date ?? companyDate(state.config),
+    };
     if (prior !== price || margin.below_minimum) {
       const context = `${invoice.company_id}:${invoice.branch}:${product.code}:${prior ?? "new"}:${line.unit_cost_before_tax}:${JSON.stringify(
         {
@@ -530,10 +537,11 @@ export function postInvoice(
           ...new Set([...(existing.invoice_ids ?? []), invoice.id]),
         ];
         existing.unit_cost = line.unit_cost_before_tax;
-        if (margin.below_minimum) {
-          existing.margin = margin.margin;
-          existing.threshold = category.minimum_margin;
-        }
+        existing.margin = margin.margin;
+        existing.threshold = category.minimum_margin;
+        existing.invoice_number = invoice.supplier_invoice_number;
+        existing.triggered_by = actor ?? invoice.receiving_employee;
+        existing.posted_at = now;
       } else if (
         !state.approvals.some((item) => item.config_version === context)
       ) {
@@ -558,6 +566,9 @@ export function postInvoice(
           config_version: context,
           invoice_ids: [invoice.id],
           created_at: now,
+          invoice_number: invoice.supplier_invoice_number,
+          triggered_by: actor ?? invoice.receiving_employee,
+          posted_at: now,
         });
       }
       if (prior !== price) {
