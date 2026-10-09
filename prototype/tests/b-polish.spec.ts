@@ -150,7 +150,9 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
       rows
         .map((row) =>
           [...row.querySelectorAll("td")].find((cell) =>
-            /Branch \d+/.test(cell.textContent ?? ""),
+            /North York|Richmond Hill|Newmarket|Warehouse/.test(
+              cell.textContent ?? "",
+            ),
           ),
         )
         .filter(Boolean)

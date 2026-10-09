@@ -26,7 +26,16 @@ import {
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png?inline";
 import { demoUserLabel, LtrText } from "./presentation";
-import { branchLabel, configuredBranches, moduleEnabled } from "./settings";
+import {
+  branchLabel,
+  configuredBranches,
+  moduleEnabled,
+  branchAllowsRole,
+} from "./settings";
+import {
+  effectiveInvoiceLocation,
+  effectiveApprovalLocation,
+} from "./received";
 import {
   canAccessNotebooks,
   readableNotebookEntries,
@@ -48,6 +57,7 @@ import Notes from "./screens/Notes";
 import Payables from "./screens/Payables";
 import Dashboard from "./screens/Dashboard";
 import Suppliers from "./screens/Suppliers";
+import Received from "./screens/Received";
 import "./a2-shared.css";
 import { demoUsers, useDemo } from "./store";
 import type { AuthError } from "./auth";
@@ -85,6 +95,14 @@ export const pages: {
     key: "invoices",
     en: "Invoices",
     fa: "فاکتورها",
+    icon: Truck,
+    group: "Daily",
+    roles: ["floor_worker", "supervisor"],
+  },
+  {
+    key: "received",
+    en: "Received",
+    fa: "دریافت‌شده",
     icon: Truck,
     group: "Daily",
     roles: ["floor_worker", "supervisor"],
@@ -317,6 +335,11 @@ function authErrorCopy(
       return t(
         "Too many attempts. Try again in 15 minutes or ask your Supervisor.",
         "تلاش‌های ناموفق بیش از حد است. 15 دقیقه دیگر دوباره تلاش کنید یا از سرپرست کمک بخواهید.",
+      );
+    case "location":
+      return t(
+        "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
+        "این مکان برای نقش شما در دسترس نیست. از سرپرست بخواهید محل تعیین‌شدهٔ شما را بررسی کند.",
       );
     case "too_short":
       return t(
@@ -601,6 +624,7 @@ const screenRegistry: Record<string, ReactNode> = {
   products: <Products />,
   product: <ProductPage />,
   invoices: <Invoices />,
+  received: <Received />,
   approvals: <Approvals />,
   alerts: <Alerts />,
   offers: <Offers />,
@@ -639,6 +663,10 @@ export default function App() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1));
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [compactGroups, setCompactGroups] = useState(
+    () => window.matchMedia?.("(max-height: 920px)").matches ?? false,
+  );
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia?.("(max-width: 760px)").matches ?? false,
   );
@@ -646,6 +674,13 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [, setReauthenticationClock] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia?.("(max-height: 920px)");
+    if (!media) return;
+    const resize = () => setCompactGroups(media.matches);
+    media.addEventListener("change", resize);
+    return () => media.removeEventListener("change", resize);
+  }, []);
   useEffect(() => {
     const media = window.matchMedia?.("(max-width: 760px)");
     if (!media) return;
@@ -657,6 +692,7 @@ export default function App() {
     const onHash = () => {
       setHash(window.location.hash.slice(1));
       setMenuOpen(false);
+      setExpandedGroup(null);
     };
     const onShortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -727,6 +763,18 @@ export default function App() {
   if (!role || !user) return <SignIn />;
   if (mustChangePassword) return <ChoosePassword />;
   if (locked) return <LockScreen />;
+  if (!branchAllowsRole(state.config, branch, role))
+    return (
+      <Card>
+        <p>
+          {t(
+            "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
+            "این مکان برای نقش شما در دسترس نیست. از سرپرست بخواهید محل تعیین‌شدهٔ شما را بررسی کند.",
+          )}
+        </p>
+        <Button onClick={signOut}>{t("Sign out", "خروج از حساب")}</Button>
+      </Card>
+    );
   const context = {
     company_id: state.config.company.seed_key,
     branch,
@@ -800,9 +848,12 @@ export default function App() {
         note.type === "note_to_supervisor" &&
         note.status === "open",
     ).length + customUnread;
-  const approvalCount = state.approvals.filter(
-    (record) => inBranch(record) && record.status === "pending",
-  ).length;
+  const approvalCount = state.approvals
+    .map((record) => ({
+      ...record,
+      branch: effectiveApprovalLocation(state, record),
+    }))
+    .filter((record) => inBranch(record) && record.status === "pending").length;
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
@@ -839,7 +890,7 @@ export default function App() {
       )}
       <aside
         id="app-sidebar"
-        className={`sidebar ${menuOpen ? "is-open" : ""}`}
+        className={`sidebar ${menuOpen ? "is-open" : ""} ${compactGroups ? "has-compact-groups" : ""}`}
         aria-label={t("Main menu", "منوی اصلی")}
       >
         <div className="sidebar-brand">
@@ -862,48 +913,75 @@ export default function App() {
         <nav aria-label={t("Pages", "صفحه‌ها")}>
           {Object.entries(groupNames).map(([group, names]) => {
             const items = allowed.filter((item) => item.group === group);
+            const open =
+              !compactGroups || (expandedGroup ?? page.group) === group;
             return items.length > 0 ? (
               <div className="nav-section" key={group}>
-                <p className="nav-section-label">{t(...names)}</p>
-                {items.map((item) => {
-                  const Icon = item.icon;
-                  const count =
-                    item.key === "notes" && role === "supervisor"
-                      ? unread
-                      : item.key === "approvals"
-                        ? approvalCount
-                        : item.key === "alerts"
-                          ? alertCount
-                          : 0;
-                  return (
-                    <a
-                      key={item.key}
-                      href={item.disabled ? undefined : `#${item.key}`}
-                      role={item.disabled ? "link" : undefined}
-                      aria-disabled={item.disabled || undefined}
-                      tabIndex={item.disabled ? -1 : undefined}
-                      aria-label={t(item.en, item.fa)}
-                      title={
-                        collapsed || item.disabled
-                          ? t(item.en, item.fa)
-                          : undefined
-                      }
-                      aria-current={page.key === item.key ? "page" : undefined}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                      <span className="nav-item-label">
-                        {t(item.en, item.fa)}
-                      </span>
-                      {count > 0 && (
-                        <>
-                          <span className="nav-count">{count}</span>
-                          <span className="nav-count-dot" aria-hidden="true" />
-                        </>
-                      )}
-                    </a>
-                  );
-                })}
+                {compactGroups ? (
+                  <Button
+                    variant="ghost"
+                    className="nav-group-toggle"
+                    aria-expanded={open}
+                    aria-controls={`nav-group-${group}`}
+                    title={collapsed ? t(...names) : undefined}
+                    onClick={() => setExpandedGroup(open ? "" : group)}
+                  >
+                    <span className="nav-section-label">{t(...names)}</span>
+                    <ChevronRight
+                      size={16}
+                      className={open ? "nav-group-expanded" : "directional"}
+                      aria-hidden="true"
+                    />
+                  </Button>
+                ) : (
+                  <p className="nav-section-label">{t(...names)}</p>
+                )}
+                <div id={`nav-group-${group}`} hidden={!open}>
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const count =
+                      item.key === "notes" && role === "supervisor"
+                        ? unread
+                        : item.key === "approvals"
+                          ? approvalCount
+                          : item.key === "alerts"
+                            ? alertCount
+                            : 0;
+                    return (
+                      <a
+                        key={item.key}
+                        href={item.disabled ? undefined : `#${item.key}`}
+                        role={item.disabled ? "link" : undefined}
+                        aria-disabled={item.disabled || undefined}
+                        tabIndex={item.disabled ? -1 : undefined}
+                        aria-label={t(item.en, item.fa)}
+                        title={
+                          collapsed || item.disabled
+                            ? t(item.en, item.fa)
+                            : undefined
+                        }
+                        aria-current={
+                          page.key === item.key ? "page" : undefined
+                        }
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                        <span className="nav-item-label">
+                          {t(item.en, item.fa)}
+                        </span>
+                        {count > 0 && (
+                          <>
+                            <span className="nav-count">{count}</span>
+                            <span
+                              className="nav-count-dot"
+                              aria-hidden="true"
+                            />
+                          </>
+                        )}
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             ) : null;
           })}
@@ -965,7 +1043,22 @@ export default function App() {
             className="breadcrumbs"
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
-            <span>{branchLabel(state.config, branch, lang)}</span>
+            <span>
+              {branchLabel(
+                state.config,
+                page.key === "invoices" &&
+                  state.invoice.status !== "empty" &&
+                  (role === "supervisor" ||
+                    (state.invoice.status !== "posted"
+                      ? (state.invoice.handling_branch ??
+                          state.invoice.branch) === user.branch
+                      : effectiveInvoiceLocation(state, state.invoice) ===
+                        user.branch))
+                  ? effectiveInvoiceLocation(state, state.invoice)
+                  : branch,
+                lang,
+              )}
+            </span>
             <ChevronRight size={14} aria-hidden="true" />
             {currentProduct || currentReturn || supplierDetail ? (
               <>
@@ -993,7 +1086,10 @@ export default function App() {
               state.invoice.company_id === state.config.company.seed_key &&
               (role === "supervisor" ||
                 (role === "floor_worker" &&
-                  state.invoice.branch === user.branch)) && (
+                  (state.invoice.status === "posted"
+                    ? effectiveInvoiceLocation(state, state.invoice)
+                    : (state.invoice.handling_branch ??
+                      state.invoice.branch)) === user.branch)) && (
                 <>
                   <ChevronRight size={14} aria-hidden="true" />
                   <LtrText>{state.invoice.supplier_invoice_number}</LtrText>

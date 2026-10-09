@@ -262,8 +262,12 @@ test("offer preferences and module visibility save, while existing records stay 
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
     page
-      .getByRole("navigation", { name: "Pages", exact: true })
-      .getByRole("link", { name: "Returns", exact: true }),
+      .getByRole("navigation", {
+        name: "Pages",
+        exact: true,
+        includeHidden: true,
+      })
+      .getByRole("link", { name: "Returns", exact: true, includeHidden: true }),
   ).toHaveCount(0);
   expect(
     await page.evaluate(
@@ -274,11 +278,17 @@ test("offer preferences and module visibility save, while existing records stay 
   ).toBe(returns);
   await page.getByRole("switch", { name: "Returns", exact: true }).click();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
-  if (await page.evaluate(() => window.innerWidth <= 760))
-    await page.locator("#menu-toggle").click();
   await expect(
     page
-      .getByRole("navigation", { name: "Pages", exact: true })
-      .getByRole("link", { name: "Returns", exact: true }),
+      .getByRole("navigation", {
+        name: "Pages",
+        exact: true,
+        includeHidden: true,
+      })
+      .getByRole("link", { name: "Returns", exact: true, includeHidden: true }),
   ).toHaveCount(1);
+  await visitPage(page, "Returns");
+  await expect(
+    page.getByRole("heading", { name: "Returns", exact: true, level: 1 }),
+  ).toBeVisible();
 });

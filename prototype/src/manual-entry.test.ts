@@ -16,6 +16,7 @@ import {
   type NewProductEdits,
 } from "./manual-product";
 import { calculatePrice } from "./pricing";
+import { configuredBranches } from "./settings";
 import {
   addManualLine,
   createInvoice,
@@ -44,7 +45,7 @@ beforeEach(() => {
   };
   productContext = {
     ...supervisor,
-    allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
+    allowed_branches: configuredBranches(state.config),
   };
 });
 const supplierEdits = (patch: Partial<SupplierEdits> = {}): SupplierEdits => ({
@@ -303,19 +304,12 @@ describe("Supervisor manual product entry", () => {
       true,
     ]);
   });
-  it("calculates the price, activates the next product code immediately, and logs each opening count", () => {
+  it("calculates the price and activates the next product code without an inventory count", () => {
     const code = nextProductCode(state);
+    const stock = structuredClone(state.stock);
+    const movements = structuredClone(state.stock_movements);
     const result = calculatePrice("1.4000", "grocery", state.config);
-    const product = addProduct(
-      state,
-      productContext,
-      productEdits({
-        opening_counts: [
-          { branch: "Branch 1", quantity: 12 },
-          { branch: "Branch 2", quantity: 0 },
-        ],
-      }),
-    );
+    const product = addProduct(state, productContext, productEdits());
     expect(product).toMatchObject({
       code,
       status: "active",
@@ -328,19 +322,8 @@ describe("Supervisor manual product entry", () => {
           approval.type === "new_product" && approval.product_code === code,
       ),
     ).toBe(false);
-    expect(state.stock[`Branch 1:${code}`]).toBe(12);
-    expect(
-      state.stock_movements?.filter(
-        (movement) => movement.product_code === code,
-      ),
-    ).toHaveLength(2);
-    expect(
-      state.stock_movements?.find((movement) => movement.product_code === code),
-    ).toMatchObject({
-      type: "opening_count",
-      reference: "Opening count",
-      by: supervisor.actor,
-    });
+    expect(state.stock).toEqual(stock);
+    expect(state.stock_movements).toEqual(movements);
     expect(state.activity.at(-1)).toMatchObject({
       action: "Add product",
       product_code: code,
@@ -432,17 +415,17 @@ describe("Supervisor manual product entry", () => {
       ),
     ).toMatchObject({ type: "new_product", status: "pending" });
   });
-  it("rejects worker opening counts and overrides, foreign company and invalid stock branches", () => {
+  it("rejects removed opening-count input, worker overrides, foreign company and invalid locations", () => {
     const before = structuredClone(state);
     const worker = { ...productContext, role: "floor_worker" as const };
-    expect(() =>
-      addProduct(
-        state,
-        worker,
-        productEdits({ opening_counts: [{ branch: "Branch 1", quantity: 0 }] }),
-        true,
-      ),
-    ).toThrow("permission");
+    const obsolete = {
+      ...productEdits(),
+      opening_counts: [{ branch: "Branch 1", quantity: 0 }],
+    };
+    for (const actor of [productContext, worker])
+      expect(() => addProduct(state, actor, obsolete, true)).toThrow(
+        "inventory_disabled",
+      );
     expect(() =>
       addProduct(state, worker, productEdits({ selling_price: "4.99" }), true),
     ).toThrow("permission");
@@ -456,10 +439,10 @@ describe("Supervisor manual product entry", () => {
     expect(() =>
       addProduct(
         state,
-        productContext,
-        productEdits({ opening_counts: [{ branch: "all", quantity: 12 }] }),
+        { ...productContext, branch: "foreign-location" },
+        productEdits(),
       ),
-    ).toThrow("stock");
+    ).toThrow("branch");
     expect(state).toEqual(before);
   });
   it("excludes another company's similar names, codes and barcodes", () => {

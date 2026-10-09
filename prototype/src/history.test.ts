@@ -16,6 +16,7 @@ import { saveLabelTemplate } from "./label-workflow";
 import { stopOffer } from "./approvals";
 import { saveSupplier } from "./supplier-editor";
 import { supplierBalanceSummary } from "./supplier-balances";
+import { configuredBranches } from "./settings";
 
 const supervisor: HistoryContext = {
   company_id: "super-arzon",
@@ -28,6 +29,7 @@ const supervisor: HistoryContext = {
 const context = (state: DemoState): HistoryContext => ({
   ...supervisor,
   company_id: state.config.company.seed_key,
+  allowed_branches: configuredBranches(state.config, true),
 });
 function act(
   state: DemoState,

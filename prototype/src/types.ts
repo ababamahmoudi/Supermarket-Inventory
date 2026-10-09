@@ -1,6 +1,7 @@
 import { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
 import type { ReversalPatch } from "./history";
+import type { InvoiceLocationCorrection } from "./received";
 
 export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
@@ -14,13 +15,14 @@ export type CompanyConfig = Omit<
     date_format?: "yyyy-mm-dd" | "dd/mm/yyyy" | "mm/dd/yyyy";
     text_size?: "normal" | "large";
   };
-  branches: ((typeof configSeed.branches)[number] & {
+  branches: (Omit<(typeof configSeed.branches)[number], "id" | "type"> & {
     id?: string;
     active?: boolean;
     address?: string;
     phone?: string;
     opening_hours?: string;
     tax_region?: string;
+    type?: "store" | "warehouse";
   })[];
   pricing_categories: ((typeof configSeed.pricing_categories)[number] & {
     label_fa?: string;
@@ -58,6 +60,15 @@ export type Product = Omit<
   description_fa?: string;
   date_tracking?: boolean;
   price_provenance?: Record<Branch, PriceProvenance>;
+  manual_prices?: Record<
+    Branch,
+    {
+      price: string;
+      rule_price: string;
+      set_by: string;
+      set_at: string;
+    }
+  >;
 };
 export interface Approval extends ScopedRecord {
   supplier_id?: string;
@@ -85,6 +96,8 @@ export interface Approval extends ScopedRecord {
   invoice_ids?: string[];
   config_version?: string;
   manual_override?: boolean;
+  clear_manual_price?: boolean;
+  source_invoice_id?: string;
   acknowledgment_reason?: string;
   invoice_number?: string;
   triggered_by?: string;
@@ -130,6 +143,9 @@ export type InvoiceLine = Omit<
   line_tax?: string;
   new_name_en?: string;
   new_name_fa?: string;
+  units_per_case?: number;
+  manual_price_decision?: "keep" | "rule";
+  short_dated?: boolean;
 };
 export type DemoInvoice = Omit<
   typeof demoSeed.demo_invoice,
@@ -152,6 +168,8 @@ export type DemoInvoice = Omit<
     payment_terms?: string;
     number_is_system_assigned?: boolean;
     short_receipt_keys?: string[];
+    handling_branch?: Branch;
+    ship_to?: string;
     lower_price_answers?: {
       same_expiry: string;
       old_expiry?: string;
@@ -188,6 +206,8 @@ export interface LabelTemplate {
   offset_x?: number;
   offset_y?: number;
   archived?: boolean;
+  style?: "regular" | "promo";
+  built_in?: "regular" | "promo";
 }
 export interface LabelWaitlistItem extends ScopedRecord {
   id: string;
@@ -318,6 +338,8 @@ export interface DemoState {
   pricing_minimum_margin_schema?: 2;
   demo_fixture_schema?: 2;
   prototype_b_schema?: 1;
+  prototype_c1_schema?: 1;
+  invoice_location_corrections?: InvoiceLocationCorrection[];
   demo_fixture_anchor_date?: string;
   stock_movements?: {
     id: string;
@@ -329,6 +351,8 @@ export interface DemoState {
     reference: string;
     by: string;
     at: string;
+    invoice_id?: string;
+    line_index?: number;
   }[];
   config: CompanyConfig;
   suppliers?: SupplierRecord[];

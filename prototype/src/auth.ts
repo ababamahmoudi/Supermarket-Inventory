@@ -49,7 +49,7 @@ export interface AuthSettings {
   lockout_minutes: number;
 }
 export type AuthError =
-  "invalid" | "locked" | "too_short" | "common" | "same_password";
+  "invalid" | "locked" | "too_short" | "common" | "same_password" | "location";
 const commonPasswords = new Set([
   "12345678",
   "123456789",

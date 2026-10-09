@@ -186,16 +186,19 @@ test("fictional invoice answers are available only inside Demo and retain Persia
     .getByRole("menuitem", { name: "Use fictional demo answer", exact: true })
     .click();
   await expect(
-    page.getByLabel("Is the expiry date the same as the stock on hand?", {
-      exact: true,
-    }),
+    page.getByLabel(
+      "Is the expiry date the same as the goods already in the store?",
+      {
+        exact: true,
+      },
+    ),
   ).toHaveText("No, different dates");
   await expect(
     page.getByText("Use fictional demo answer", { exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "فارسی", exact: true }).click();
   await expect(
-    page.getByLabel("آیا تاریخ انقضا با موجودی قبلی یکسان است؟", {
+    page.getByLabel("آیا تاریخ انقضا با کالاهای موجود در فروشگاه یکسان است؟", {
       exact: true,
     }),
   ).toHaveText("خیر، تاریخ‌های متفاوت");

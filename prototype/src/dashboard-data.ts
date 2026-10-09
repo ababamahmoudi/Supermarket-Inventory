@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
-import { demoSeed } from "./config";
+import { receivedLog, effectiveInvoiceLocation } from "./received";
+import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate, dateAfter } from "./invoice";
 import {
   OperationError,
@@ -28,31 +29,46 @@ export function dashboardPurchases(
   }));
   const posted = (state.invoices ?? []).filter(
     (invoice) =>
-      invoice.company_id === context.company_id &&
-      (context.branch === "all" || invoice.branch === context.branch) &&
-      invoice.status === "posted",
+      invoice.company_id === context.company_id && invoice.status === "posted",
   );
   if (
     state.invoice.status === "posted" &&
     state.invoice.company_id === context.company_id &&
-    (context.branch === "all" || state.invoice.branch === context.branch) &&
     !posted.some((invoice) => invoice.id === state.invoice.id)
   )
     posted.push(state.invoice);
+  const locationCorrections = new Set(
+    (state.invoice_location_corrections ?? []).flatMap((correction) => [
+      correction.ledger_out_id,
+      correction.ledger_in_id,
+    ]),
+  );
+  const identities = supplierRecords(state).filter(
+    (supplier) => supplier.company_id === context.company_id,
+  );
+  const sameSupplier = (left: string, right: string) =>
+    left === right ||
+    identities.some(
+      (identity) =>
+        supplierMatches(identity, left) && supplierMatches(identity, right),
+    );
+  const inLocation = (invoice: typeof state.invoice) =>
+    context.branch === "all" ||
+    effectiveInvoiceLocation(state, invoice) === context.branch;
   for (const row of state.ledger as OperationalLedger[]) {
     if (
       row.company_id !== context.company_id ||
-      (context.branch !== "all" && row.branch !== context.branch) ||
       row.currency !== state.config.company.currency ||
       row.date > today ||
-      ["payment", "opening_balance"].includes(row.type)
+      ["payment", "opening_balance"].includes(row.type) ||
+      locationCorrections.has(row.id)
     )
       continue;
     const invoice = posted.find(
       (item) =>
         item.id === row.invoice_id &&
-        item.branch === row.branch &&
-        item.supplier === row.supplier,
+        inLocation(item) &&
+        sameSupplier(item.supplier, row.supplier),
     );
     let amount: Decimal;
     if (invoice) amount = new Decimal(row.amount);
@@ -62,18 +78,21 @@ export function dashboardPurchases(
           posted.some(
             (item) =>
               item.id === allocation.invoice_id &&
-              item.branch === row.branch &&
-              item.supplier === row.supplier,
+              inLocation(item) &&
+              sameSupplier(item.supplier, row.supplier),
           )
             ? sum.minus(allocation.amount)
             : sum,
         new Decimal(0),
       );
     } else continue;
+    const supplierName =
+      identities.find((identity) => supplierMatches(identity, row.supplier))
+        ?.name ?? row.supplier;
     if (row.date.startsWith(today.slice(0, 7)))
       suppliers.set(
-        row.supplier,
-        (suppliers.get(row.supplier) ?? new Decimal(0)).plus(amount),
+        supplierName,
+        (suppliers.get(supplierName) ?? new Decimal(0)).plus(amount),
       );
     const week = weeks.find(
       (item) => row.date >= item.start && row.date <= item.end,
@@ -88,37 +107,16 @@ export function dashboardPurchases(
   };
 }
 
-export function dashboardLowStock(
+export function dashboardArrivals(
   state: DemoState,
   context: OperationsContext,
+  today = companyDate(state.config),
 ) {
   scoped(state, context);
-  const branches =
-    context.branch === "all" ? demoSeed.branches : [context.branch];
-  const reminders = state.notes.filter(
-    (note) =>
-      note.company_id === context.company_id &&
-      note.type === "to_order" &&
-      note.status === "open",
-  );
-  return branches.flatMap((branch) =>
-    state.products
-      .filter(
-        (product) =>
-          product.company_id === context.company_id &&
-          product.status === "active",
-      )
-      .flatMap((product) => {
-        const estimate = state.stock[`${branch}:${product.code}`];
-        const reminder = reminders.find(
-          (note) =>
-            note.branch === branch && note.product_code === product.code,
-        );
-        return estimate !== undefined && (estimate <= 0 || reminder)
-          ? [{ product, branch, estimate, reminder }]
-          : [];
-      }),
-  );
+  return receivedLog(state, context, {
+    from: companyWeekStart(today),
+    to: today,
+  });
 }
 
 export function companyWeekStart(today: string) {

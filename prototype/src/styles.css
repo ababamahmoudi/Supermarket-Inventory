@@ -1421,13 +1421,34 @@ th.numeric {
   padding: 0;
 }
 .nav-section {
-  margin-block-end: 16px;
+  margin-block-end: 8px;
 }
 .nav-section-label {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text-muted);
   margin: 0 12px 4px;
+}
+.sidebar.has-compact-groups nav {
+  flex: initial;
+  overflow: visible;
+}
+.has-compact-groups .nav-section {
+  margin-block-end: 0;
+}
+.sidebar .nav-group-toggle {
+  inline-size: 100%;
+  min-block-size: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+}
+.nav-group-toggle .nav-section-label {
+  margin: 0;
+}
+.nav-group-expanded {
+  transform: rotate(90deg);
 }
 .sidebar nav a {
   min-block-size: 40px;

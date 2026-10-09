@@ -16,12 +16,7 @@ import {
   Select,
   Tabs,
 } from "../ui";
-import {
-  branchLabel,
-  demoUserLabel,
-  LtrText,
-  ProductName,
-} from "../presentation";
+import { demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
   addNote,
   operationError,
@@ -36,6 +31,7 @@ import {
   canEditNotebookEntry,
   editNotebookEntry,
   notebookError,
+  notebookEntryLocations,
   readableNotebookEntries,
   updateNotebookEntryStatus,
   visibleNotebooks,
@@ -43,8 +39,9 @@ import {
   type NotebookContext,
   type NotebookEntry,
 } from "../notebooks";
-import { configuredBranches } from "../settings";
+import { branchLabel, configuredBranches } from "../settings";
 import { translateCount } from "../i18n";
+import { notesText } from "../c-notes-i18n";
 import { NotebookEditor } from "./NotebookSettings";
 import type { NoteRecord } from "../types";
 import "./notebooks-b.css";
@@ -75,6 +72,7 @@ export function Notes() {
   const [qty, setQty] = useState("");
   const [date, setDate] = useState("");
   const [measurement, setMeasurement] = useState("");
+  const [entryLocation, setEntryLocation] = useState("");
   const [search, setSearch] = useState("");
   const [showDone, setShowDone] = useState(false);
   const [error, setError] = useState("");
@@ -132,9 +130,16 @@ export function Notes() {
     : (tabs[0]?.key ?? "");
   const notebook = definitions.find((item) => item.id === activeTab);
   const isBuiltin = !notebook && role !== "cashier";
+  const locations = notebook
+    ? notebookEntryLocations(state, notebook, context)
+    : [];
+  const targetLocation = branch === "all" ? entryLocation : branch;
+  const canChooseLocation = Boolean(
+    notebook && role === "supervisor" && branch === "all" && locations.length,
+  );
   const canAdd = isBuiltin
     ? branch !== "all"
-    : Boolean(notebook && canAddNotebookEntry(notebook, context));
+    : Boolean(notebook && locations.includes(targetLocation));
   const canSaveEdit = Boolean(
     editing && canEditNotebookEntry(state, context, editing.entry.id),
   );
@@ -235,6 +240,7 @@ export function Notes() {
         onChange={(value) => {
           setTab(value);
           clearEntryForm();
+          setEntryLocation("");
           setError("");
           setMessage(null);
         }}
@@ -271,7 +277,7 @@ export function Notes() {
           </a>
         </div>
       )}
-      {(editing || isBuiltin || canAdd) && (
+      {(editing || isBuiltin || canAdd || canChooseLocation) && (
         <Card
           title={
             editing
@@ -306,6 +312,7 @@ export function Notes() {
                     );
                   else if (notebook)
                     addNotebookEntry(draft, context, notebook.id, {
+                      branch: targetLocation || undefined,
                       text,
                       product_code: product || undefined,
                       qty: qty ? Number(qty) : undefined,
@@ -331,6 +338,21 @@ export function Notes() {
             }}
           >
             <div className="form-grid">
+              {!editing && canChooseLocation && (
+                <Field label={notesText(t, "location")}>
+                  <Select
+                    value={entryLocation}
+                    onChange={setEntryLocation}
+                    options={[
+                      { value: "", label: notesText(t, "chooseLocation") },
+                      ...locations.map((location) => ({
+                        value: location,
+                        label: branchLabel(state.config, location, lang),
+                      })),
+                    ]}
+                  />
+                </Field>
+              )}
               <Field label={t("Note", "یادداشت")}>
                 <textarea
                   value={text}
@@ -345,10 +367,7 @@ export function Notes() {
                 <Field
                   label={
                     activeTab === "store_use"
-                      ? t(
-                          "Product (required for stock)",
-                          "محصول (برای موجودی ضروری)",
-                        )
+                      ? notesText(t, "productRequired")
                       : t("Product (optional)", "محصول (اختیاری)")
                   }
                 >
@@ -411,12 +430,7 @@ export function Notes() {
               )}
             </div>
             {activeTab === "store_use" && (
-              <p className="banner info">
-                {t(
-                  "Saving store use deducts this actual quantity from estimated sellable stock once. It does not change Payables.",
-                  "ذخیره مصرف فروشگاه این تعداد واقعی را یک‌بار از موجودی قابل‌فروش تخمینی کم می‌کند. پرداختنی‌ها تغییر نمی‌کنند.",
-                )}
-              </p>
+              <p className="banner info">{notesText(t, "storeUse")}</p>
             )}
             <div className="actions">
               <Button type="submit" disabled={editing ? !canSaveEdit : !canAdd}>
@@ -438,22 +452,28 @@ export function Notes() {
                 )}
               </p>
             )}
-            {branch === "all" && (
-              <p className="muted">
-                {t(
-                  "Choose one branch before adding or updating a note.",
-                  "پیش از افزودن یا تغییر یادداشت، یک شعبه انتخاب کنید.",
-                )}
+            {!editing && branch === "all" && !canAdd && (
+              <p className="muted" role="status">
+                {notebook
+                  ? notesText(t, "chooseLocation")
+                  : t(
+                      "Choose one branch before adding or updating a note.",
+                      "پیش از افزودن یا تغییر یادداشت، یک شعبه انتخاب کنید.",
+                    )}
               </p>
             )}
           </form>
         </Card>
       )}
-      {notebook && !canAdd && branch !== "all" && (
-        <p className="muted">
-          {t(
-            "You can read this notebook. Adding notes is not enabled for your role.",
-            "می‌توانید این دفترچه را بخوانید. افزودن یادداشت برای نقش شما فعال نیست.",
+      {notebook && !canAdd && !canChooseLocation && !editing && (
+        <p className="muted" role="status">
+          {notesText(
+            t,
+            role !== "supervisor" &&
+              (!notebook.read_roles.includes(role ?? "cashier") ||
+                !notebook.add_roles.includes(role ?? "cashier"))
+              ? "readOnly"
+              : "noLocation",
           )}
         </p>
       )}
@@ -546,7 +566,8 @@ export function Notes() {
             </Badge>
           </div>
           <p className="muted">
-            {demoUserLabel(item.by, lang)} · {branchLabel(item.branch, lang)} ·{" "}
+            {demoUserLabel(item.by, lang)} ·{" "}
+            {branchLabel(state.config, item.branch, lang)} ·{" "}
             <LtrText>{companyTimestamp(state.config, item.created_at)}</LtrText>
             {query && (
               <>
@@ -631,8 +652,8 @@ export function Notes() {
               )}
             </div>
             <p className="muted">
-              {demoUserLabel(item.by, lang)} · {branchLabel(item.branch, lang)}{" "}
-              ·{" "}
+              {demoUserLabel(item.by, lang)} ·{" "}
+              {branchLabel(state.config, item.branch, lang)} ·{" "}
               <LtrText>
                 {companyTimestamp(state.config, item.created_at)}
               </LtrText>

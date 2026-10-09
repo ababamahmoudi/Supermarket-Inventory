@@ -2,20 +2,19 @@ import { useState } from "react";
 import {
   applyApprovedPrice,
   approvalSnapshot,
-  demoBranches,
   markPriceConflictIntentional,
   setAlertStatus,
 } from "../approvals";
 import { useDemo } from "../store";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import {
-  branchLabel,
   DateText,
   LtrText,
   Money,
   OfferLabel,
   ProductName,
 } from "../presentation";
+import { branchLabel, configuredBranches } from "../settings";
 import "./financial-polish.css";
 import {
   Badge,
@@ -55,7 +54,8 @@ export function Alerts() {
         )}
       </EmptyState>
     );
-  const branchName = (value: string) => branchLabel(value, lang);
+  const branchName = (value: string) => branchLabel(state.config, value, lang);
+  const demoBranches = configuredBranches(state.config);
   const resolve = (id: string, status: "pending" | "resolved") => {
     update((draft) => setAlertStatus(draft, id, status, notes[id]));
     setMessage(

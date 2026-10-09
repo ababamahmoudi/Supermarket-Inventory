@@ -202,7 +202,14 @@ describe("approval scopes and prices", () => {
     expect(
       state.alerts.find((item) => item.type === "price_conflict")
         ?.branch_prices,
-    ).toEqual({ "shop-1": "1.99", "shop-2": "2.99", "shop-3": "1.99" });
+    ).toEqual(
+      Object.fromEntries(
+        state.config.branches.map((_, index) => [
+          `shop-${index + 1}`,
+          index === 1 ? "2.99" : "1.99",
+        ]),
+      ),
+    );
     expect(
       state.offers.find(
         (item) => item.product_code === "0006" && item.branch === "shop-2",

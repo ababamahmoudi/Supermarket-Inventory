@@ -26,6 +26,7 @@ import {
   Checkbox,
   DateField,
   Dropzone,
+  Dialog,
   NumberField,
   Select,
   SegmentedControl,
@@ -58,6 +59,20 @@ import {
   shortTotals,
   type InvoiceBlocker,
 } from "../invoice";
+import { manualPrice } from "../manual-prices";
+import {
+  ManualPriceDetails,
+  ManualPricePill,
+} from "../manual-price-presentation";
+import {
+  effectiveInvoiceLocation,
+  invoiceLocationMovePreview,
+  movePostedInvoice,
+  setInvoiceLocation,
+  suggestedInvoiceLocation,
+  type InvoiceMovePreview,
+} from "../received";
+import "./received-c.css";
 import type {
   Branch,
   DemoInvoice,
@@ -128,6 +143,10 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
     "Choose Yes or No for date tracking on every line; add a date when tracking is on.",
     "برای پیگیری تاریخ هر ردیف بله یا خیر را انتخاب کنید؛ در صورت فعال بودن تاریخ را وارد کنید.",
   ],
+  manual_price: [
+    "Choose Keep manual price or Use rule price for each manual-priced product.",
+    "برای هر کالای دارای قیمت دستی، حفظ قیمت دستی یا استفاده از قیمت قاعده را انتخاب کنید.",
+  ],
   lower_price: [
     "Answer the lower-price questions; add a note if information is unknown.",
     "به پرسش‌های کاهش هزینه پاسخ دهید؛ اگر اطلاعات نامعلوم است یادداشت اضافه کنید.",
@@ -149,11 +168,15 @@ function readableInvoice(
   invoice: DemoInvoice,
   company: string,
   reader: InvoiceReader,
+  state: DemoState,
 ) {
   return (
     invoice.company_id === company &&
     (reader.role === "supervisor" ||
-      (reader.role === "floor_worker" && invoice.branch === reader.branch))
+      (reader.role === "floor_worker" &&
+        (invoice.status === "posted"
+          ? effectiveInvoiceLocation(state, invoice)
+          : (invoice.handling_branch ?? invoice.branch)) === reader.branch))
   );
 }
 /** Keep the previous workspace as a resumable record before opening another. */
@@ -175,9 +198,10 @@ function retainInvoiceWorkspace(draft: DemoState) {
 }
 
 export default function Invoices() {
-  const { state, update, role, branch, setBranch, lang, t, money, user } =
-    useDemo();
+  const { state, update, role, branch, lang, t, money, user } = useDemo();
   const branches = configuredBranches(state.config);
+  const invoiceLocation = effectiveInvoiceLocation(state, state.invoice);
+  const locationSuggestion = suggestedInvoiceLocation(state, state.invoice);
   const [supplierEditorOpen, setSupplierEditorOpen] = useState(false);
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const invoice = state.invoice;
@@ -190,6 +214,7 @@ export default function Invoices() {
     invoice,
     state.config.company.seed_key,
     reader,
+    state,
   );
   const updateInvoice = useCallback(
     (mutator: (draft: DemoState) => void) => {
@@ -199,6 +224,7 @@ export default function Invoices() {
             draft.invoice,
             draft.config.company.seed_key,
             readerRef.current,
+            draft,
           )
         )
           throw new Error("Choose an invoice in your allowed branch.");
@@ -207,6 +233,10 @@ export default function Invoices() {
     },
     [update],
   );
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveTarget, setMoveTarget] = useState("");
+  const [moveReason, setMoveReason] = useState("");
+  const [moveError, setMoveError] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
   const [message, setMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
@@ -252,6 +282,24 @@ export default function Invoices() {
   const lowerLines = lowerPriceLines(state);
   const locked = invoice.status === "posted";
   const active = invoice.status !== "empty";
+  let movePreview: InvoiceMovePreview | null = null;
+  if (moveOpen && role === "supervisor" && moveTarget) {
+    try {
+      movePreview = invoiceLocationMovePreview(
+        state,
+        {
+          company_id: state.config.company.seed_key,
+          role,
+          branch,
+          actor: user?.name ?? "",
+        },
+        invoice.id,
+        moveTarget,
+      );
+    } catch {
+      movePreview = null;
+    }
+  }
   const fileSize = invoice.file_data
     ? Math.floor(
         ((invoice.file_data.split(",")[1] ?? "").replace(/=+$/, "").length *
@@ -311,11 +359,13 @@ export default function Invoices() {
         (item) =>
           item.id === id &&
           item.company_id === state.config.company.seed_key &&
-          (branch === "all" || item.branch === branch) &&
+          (branch === "all" ||
+            effectiveInvoiceLocation(state, item) === branch) &&
           readableInvoice(
             item,
             state.config.company.seed_key,
             readerRef.current,
+            state,
           ),
       );
       if (!linked || linked.id === invoice.id) return;
@@ -325,6 +375,7 @@ export default function Invoices() {
             linked,
             draft.config.company.seed_key,
             readerRef.current,
+            draft,
           )
         )
           return;
@@ -336,13 +387,7 @@ export default function Invoices() {
     loadLinkedInvoice();
     window.addEventListener("hashchange", loadLinkedInvoice);
     return () => window.removeEventListener("hashchange", loadLinkedInvoice);
-  }, [
-    state.invoices,
-    state.config.company.seed_key,
-    branch,
-    invoice.id,
-    update,
-  ]);
+  }, [state, branch, invoice.id, update]);
 
   if (role === "cashier" || !role)
     return (
@@ -365,9 +410,11 @@ export default function Invoices() {
         return;
       const targetBranch =
         currentReader.role === "supervisor"
-          ? branch === "all"
-            ? configuredBranches(draft.config)[0]
-            : branch
+          ? currentReader.branch && currentReader.branch !== "all"
+            ? currentReader.branch
+            : branch === "all"
+              ? configuredBranches(draft.config)[0]
+              : branch
           : currentReader.branch;
       if (
         !targetBranch ||
@@ -419,7 +466,14 @@ export default function Invoices() {
         if (existing.status === "posted") return;
         const next =
           existing.status === "empty"
-            ? createInvoice(draft, branch === "all" ? branches[0] : branch)
+            ? createInvoice(
+                draft,
+                user?.branch && user.branch !== "all"
+                  ? user.branch
+                  : branch === "all"
+                    ? branches[0]
+                    : branch,
+              )
             : existing;
         if (existing.status === "empty") next.receiving_employee = user?.name;
         next.file_name = file.name;
@@ -477,8 +531,8 @@ export default function Invoices() {
     });
     setMessage(
       t(
-        "Posted. Delivered stock, approvals, alerts, and supplier ledger are updated.",
-        "ثبت شد. موجودی تحویل‌شده، تأییدها، هشدارها و دفتر تأمین‌کننده به‌روز شدند.",
+        "Posted. Received, approvals, alerts, and supplier ledger are updated.",
+        "ثبت شد. دریافت‌شده‌ها، تأییدها، هشدارها و دفتر تأمین‌کننده به‌روز شدند.",
       ),
     );
   }
@@ -518,8 +572,8 @@ export default function Invoices() {
     if (preview.ledger.every((entry) => oldLedgerIds.has(entry.id))) {
       setMessage(
         t(
-          "This delivery reference was already recorded. No stock or money was added.",
-          "این مرجع تحویل قبلاً ثبت شده است. موجودی یا مبلغی اضافه نشد.",
+          "This delivery reference was already recorded. No delivery or money was added.",
+          "این مرجع تحویل قبلاً ثبت شده است. تحویل یا مبلغی اضافه نشد.",
         ),
       );
       return;
@@ -538,7 +592,8 @@ export default function Invoices() {
       (item) =>
         item.company_id === state.config.company.seed_key &&
         item.status === "posted" &&
-        (branch === "all" || item.branch === branch),
+        readableInvoice(item, state.config.company.seed_key, reader, state) &&
+        (branch === "all" || effectiveInvoiceLocation(state, item) === branch),
     ) ?? [];
   const savedDrafts =
     state.invoices?.filter(
@@ -546,8 +601,8 @@ export default function Invoices() {
         item.id !== invoice.id &&
         item.status !== "empty" &&
         item.status !== "posted" &&
-        readableInvoice(item, state.config.company.seed_key, reader) &&
-        (branch === "all" || item.branch === branch),
+        readableInvoice(item, state.config.company.seed_key, reader, state) &&
+        (role === "floor_worker" || branch === "all" || item.branch === branch),
     ) ?? [];
   const resume = (saved: DemoInvoice) => {
     update((draft) => {
@@ -556,6 +611,7 @@ export default function Invoices() {
           saved,
           draft.config.company.seed_key,
           readerRef.current,
+          draft,
         )
       )
         return;
@@ -993,8 +1049,8 @@ export default function Invoices() {
                   </div>
                   <p className="muted invoice-summary-note">
                     {t(
-                      "This is the amount of this invoice, not a supplier balance. Only physically delivered units are added to stock.",
-                      "این مبلغ همین فاکتور است، نه مانده تأمین‌کننده. فقط واحدهای واقعاً تحویل‌شده به موجودی اضافه می‌شوند.",
+                      "This is the amount of this invoice, not a supplier balance. Received records only physically delivered units.",
+                      "این مبلغ همین فاکتور است، نه مانده تأمین‌کننده. دریافت‌شده‌ها فقط واحدهای واقعاً تحویل‌شده را ثبت می‌کند.",
                     )}
                   </p>
                 </section>
@@ -1019,9 +1075,63 @@ export default function Invoices() {
                     <LtrText>{invoice.supplier}</LtrText> ·{" "}
                     <LtrText>{invoice.supplier_invoice_number || "—"}</LtrText>{" "}
                     ·{" "}
-                    {configuredBranchLabel(state.config, invoice.branch, lang)}{" "}
+                    {configuredBranchLabel(state.config, invoiceLocation, lang)}{" "}
                     · <DateText value={invoice.invoice_date} />
                   </p>
+                  {locked && role === "supervisor" && (
+                    <div className="invoice-location-correction">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setMoveTarget(
+                            branches.find(
+                              (location) => location !== invoiceLocation,
+                            ) ?? "",
+                          );
+                          setMoveReason("");
+                          setMoveError("");
+                          setMoveOpen(true);
+                        }}
+                      >
+                        {t("Move invoice", "انتقال فاکتور")}
+                      </Button>
+                    </div>
+                  )}
+                  {!locked &&
+                    locationSuggestion &&
+                    locationSuggestion !== invoiceLocation && (
+                      <div className="banner info">
+                        <p>
+                          {t(
+                            "Suggested location from Ship to:",
+                            "مکان پیشنهادی از نشانی تحویل:",
+                          )}{" "}
+                          {configuredBranchLabel(
+                            state.config,
+                            locationSuggestion,
+                            lang,
+                          )}
+                        </p>
+                        <Button
+                          variant="secondary"
+                          onClick={() =>
+                            updateInvoice((draft) =>
+                              setInvoiceLocation(
+                                draft,
+                                role!,
+                                user?.branch ?? branch,
+                                locationSuggestion,
+                              ),
+                            )
+                          }
+                        >
+                          {t(
+                            "Use suggested location",
+                            "استفاده از مکان پیشنهادی",
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   <p>
                     <Badge tone={locked ? "approved" : "progress"}>
                       {locked
@@ -1194,15 +1304,18 @@ export default function Invoices() {
                             }))}
                         />
                       </Field>
-                      <Field label={t("Branch", "شعبه")}>
+                      <Field label={t("Location", "مکان")}>
                         <Select
-                          value={invoice.branch}
-                          disabled={locked || role !== "supervisor"}
+                          value={invoiceLocation}
+                          disabled={locked}
                           onChange={(value) => {
-                            setBranch(value as Branch);
                             updateInvoice((draft) => {
-                              draft.invoice.branch = value as Branch;
-                              draft.invoice.lower_price_answers = undefined;
+                              setInvoiceLocation(
+                                draft,
+                                role!,
+                                user?.branch ?? branch,
+                                value,
+                              );
                             });
                           }}
 
@@ -1214,6 +1327,19 @@ export default function Invoices() {
                               lang,
                             ),
                           }))}
+                        />
+                      </Field>
+                      <Field
+                        label={t("Ship to (optional)", "نشانی تحویل (اختیاری)")}
+                      >
+                        <input
+                          value={invoice.ship_to ?? ""}
+                          disabled={locked}
+                          onChange={(event) =>
+                            updateInvoice((draft) => {
+                              draft.invoice.ship_to = event.target.value;
+                            })
+                          }
                         />
                       </Field>
                       <Field label={t("Subtotal", "جمع پیش از مالیات")}>
@@ -1353,6 +1479,9 @@ export default function Invoices() {
                             "grocery"),
                       )!;
                       const short = lineShort(line);
+                      const manual = product
+                        ? manualPrice(state, product, invoice.branch)
+                        : null;
                       let price: string | null = null;
                       let costValid = true;
                       try {
@@ -1382,6 +1511,9 @@ export default function Invoices() {
                         (!line.review_confirmed ||
                           !line.date_confirmed ||
                           (line.date_tracking && !line.date_value) ||
+                          (manual &&
+                            !line.short_dated &&
+                            !line.manual_price_decision) ||
                           !costValid);
                       const expanded =
                         needsDecision || (openLines[lineKey] ?? false);
@@ -1609,7 +1741,7 @@ export default function Invoices() {
                                 >
                                   {price ? (
                                     <Money
-                                      value={price}
+                                      value={manual?.price ?? price}
                                       currency={state.config.company.currency}
                                     />
                                   ) : (
@@ -1617,21 +1749,37 @@ export default function Invoices() {
                                   )}
                                 </strong>
 
-                                {price && oldPrice !== price && (
+                                {product && manual && (
                                   <>
-                                    <Badge tone="pending">
-                                      {t("Pending", "در انتظار")}
-                                    </Badge>
-                                    {!locked && (
-                                      <small className="muted">
-                                        {t(
-                                          "Goes to approval when posted",
-                                          "هنگام ثبت برای تأیید ارسال می‌شود",
-                                        )}
-                                      </small>
-                                    )}
+                                    <ManualPricePill
+                                      product={product}
+                                      branch={invoice.branch}
+                                    />
+                                    <ManualPriceDetails
+                                      product={product}
+                                      branch={invoice.branch}
+                                      cost={line.unit_cost_before_tax}
+                                    />
                                   </>
                                 )}
+                                {price &&
+                                  (manual
+                                    ? line.manual_price_decision === "rule"
+                                    : oldPrice !== price) && (
+                                    <>
+                                      <Badge tone="pending">
+                                        {t("Pending", "در انتظار")}
+                                      </Badge>
+                                      {!locked && (
+                                        <small className="muted">
+                                          {t(
+                                            "Goes to approval when posted",
+                                            "هنگام ثبت برای تأیید ارسال می‌شود",
+                                          )}
+                                        </small>
+                                      )}
+                                    </>
+                                  )}
                                 {expanded &&
                                   (oldPrice ? (
                                     <p className="muted">
@@ -1944,8 +2092,52 @@ export default function Invoices() {
                                       )}
                                     </fieldset>
                                   }
+                                  {manual && !locked && !line.short_dated && (
+                                    <div className="invoice-manual-choice">
+                                      <Field
+                                        label={t("Manual price", "قیمت دستی")}
+                                      >
+                                        <SegmentedControl
+                                          aria-label={t(
+                                            "Manual price decision",
+                                            "تصمیم قیمت دستی",
+                                          )}
+                                          value={
+                                            line.manual_price_decision ?? ""
+                                          }
+                                          onChange={(value) =>
+                                            editLine(index, (item) => {
+                                              item.manual_price_decision =
+                                                value as "keep" | "rule";
+                                            })
+                                          }
+                                          options={[
+                                            {
+                                              value: "keep",
+                                              label: t(
+                                                "Keep manual price",
+                                                "حفظ قیمت دستی",
+                                              ),
+                                            },
+                                            {
+                                              value: "rule",
+                                              label: t(
+                                                "Use rule price",
+                                                "استفاده از قیمت قاعده",
+                                              ),
+                                            },
+                                          ]}
+                                        />
+                                      </Field>
+                                    </div>
+                                  )}
                                   <Checkbox
-                                    disabled={locked}
+                                    disabled={
+                                      locked ||
+                                      (!!manual &&
+                                        !line.short_dated &&
+                                        !line.manual_price_decision)
+                                    }
                                     checked={line.review_confirmed ?? false}
                                     onChange={(checked) => {
                                       updateInvoice((draft) => {
@@ -2076,8 +2268,8 @@ export default function Invoices() {
                     >
                       <Field
                         label={t(
-                          "Is the expiry date the same as the stock on hand?",
-                          "آیا تاریخ انقضا با موجودی قبلی یکسان است؟",
+                          "Is the expiry date the same as the goods already in the store?",
+                          "آیا تاریخ انقضا با کالاهای موجود در فروشگاه یکسان است؟",
                         )}
                       >
                         <Select
@@ -2112,7 +2304,7 @@ export default function Invoices() {
                             },
                             {
                               value: "no_previous_stock",
-                              label: t("No previous stock", "موجودی قبلی نیست"),
+                              label: t("No previous goods", "کالای قبلی نیست"),
                             },
                             {
                               value: "dates_not_tracked",
@@ -2157,7 +2349,10 @@ export default function Invoices() {
                       {invoice.lower_price_answers?.same_expiry === "no" && (
                         <>
                           <Field
-                            label={t("Old stock expiry", "انقضای موجودی قبلی")}
+                            label={t(
+                              "Previous goods expiry",
+                              "انقضای کالاهای قبلی",
+                            )}
                           >
                             <DateField
                               dir="ltr"
@@ -2204,9 +2399,9 @@ export default function Invoices() {
                           <textarea
                             value={
                               invoice.lower_price_answers.note ===
-                              "Demo only: old stock label cannot be read."
+                              "Previous goods label cannot be read."
                                 ? t(
-                                    "Old stock label cannot be read.",
+                                    "Previous goods label cannot be read.",
                                     "برچسب موجودی قبلی خوانا نیست.",
                                   )
                                 : (invoice.lower_price_answers.note ?? "")
@@ -2250,8 +2445,8 @@ export default function Invoices() {
                           </p>
                           <p>
                             {t(
-                              "Stock received from this invoice:",
-                              "موجودی دریافت‌شده از این فاکتور:",
+                              "Received from this invoice:",
+                              "دریافت‌شده از این فاکتور:",
                             )}{" "}
                             {line.qty_received_at_posting +
                               (line.qty_later_received ?? 0)}
@@ -2308,7 +2503,7 @@ export default function Invoices() {
                               <Button
                                 variant="secondary"
                                 onClick={() => receive(line.product_code)}
-                                disabled={branch !== invoice.branch}
+                                disabled={branch !== invoiceLocation}
                               >
                                 {t(
                                   "Receive short delivery",
@@ -2372,6 +2567,162 @@ export default function Invoices() {
           )}
         </div>
       )}
+      <Dialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        title={t("Move invoice", "انتقال فاکتور")}
+        description={t(
+          "Record a correction to the receiving location.",
+          "ثبت اصلاح مکان دریافت فاکتور.",
+        )}
+        className="invoice-move-form"
+      >
+        <Field label={t("Location", "مکان")}>
+          <Select
+            value={moveTarget}
+            onChange={(value) => {
+              setMoveTarget(value);
+              setMoveError("");
+            }}
+            options={branches
+              .filter((location) => location !== invoiceLocation)
+              .map((location) => ({
+                value: location,
+                label: configuredBranchLabel(state.config, location, lang),
+              }))}
+          />
+        </Field>
+        <Field label={t("Reason", "دلیل")}>
+          <textarea
+            value={moveReason}
+            onChange={(event) => setMoveReason(event.target.value)}
+          />
+        </Field>
+        {movePreview && (
+          <>
+            <dl className="invoice-move-summary">
+              <div>
+                <dt>{t("From", "از")}</dt>
+                <dd>
+                  {configuredBranchLabel(
+                    state.config,
+                    movePreview.from_branch,
+                    lang,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("To", "به")}</dt>
+                <dd>
+                  {configuredBranchLabel(
+                    state.config,
+                    movePreview.to_branch,
+                    lang,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("Outstanding", "مانده پرداخت")}</dt>
+                <dd>
+                  <Money
+                    value={movePreview.outstanding_amount}
+                    currency={movePreview.currency}
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>{t("Received", "دریافت‌شده‌ها")}</dt>
+                <dd>
+                  <LtrText>
+                    {movePreview.receipts.reduce(
+                      (sum, receipt) => sum + receipt.units,
+                      0,
+                    )}
+                  </LtrText>{" "}
+                  {t("units", "واحد")}
+                </dd>
+              </div>
+            </dl>
+            <p className="helper">
+              {t(
+                "Previous payments and credits stay at their recorded location. Only the outstanding amount moves.",
+                "پرداخت‌ها و اعتبارهای قبلی در مکان ثبت‌شده می‌مانند. فقط مانده پرداخت منتقل می‌شود.",
+              )}
+            </p>
+            {movePreview.allocations.length > 0 && (
+              <ul>
+                {movePreview.allocations.map((allocation) => (
+                  <li key={allocation.ledger_id}>
+                    <Money
+                      value={allocation.amount}
+                      currency={movePreview.currency}
+                    />{" "}
+                    ·{" "}
+                    {configuredBranchLabel(
+                      state.config,
+                      allocation.branch,
+                      lang,
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="helper">
+              {t("Pending approvals", "تأییدهای در انتظار")}:{" "}
+              <LtrText>{movePreview.approval_ids.length}</LtrText>
+            </p>
+          </>
+        )}
+        {moveError && (
+          <p role="alert" className="form-error">
+            {moveError}
+          </p>
+        )}
+        <div className="dialog-actions">
+          <Button variant="secondary" onClick={() => setMoveOpen(false)}>
+            {t("Cancel", "انصراف")}
+          </Button>
+          <Button
+            disabled={!movePreview || !moveReason.trim()}
+            onClick={() => {
+              if (!movePreview) return;
+              try {
+                updateInvoice((draft) =>
+                  movePostedInvoice(
+                    draft,
+                    {
+                      company_id: draft.config.company.seed_key,
+                      role: readerRef.current.role ?? "cashier",
+                      branch,
+                      actor: user?.name ?? "",
+                    },
+                    invoice.id,
+                    moveTarget,
+                    moveReason,
+                    movePreview.snapshot,
+                  ),
+                );
+                setMoveOpen(false);
+                setMessage(
+                  t(
+                    "Invoice moved. The correction is recorded in History.",
+                    "فاکتور منتقل شد. اصلاح در سابقه ثبت شد.",
+                  ),
+                );
+              } catch {
+                setMoveError(
+                  t(
+                    "The invoice or allocations changed. Review the move again.",
+                    "فاکتور یا تخصیص‌ها تغییر کردند. انتقال را دوباره بررسی کنید.",
+                  ),
+                );
+              }
+            }}
+          >
+            {t("Move invoice", "انتقال فاکتور")}
+          </Button>
+        </div>
+      </Dialog>
     </>
   );
 }

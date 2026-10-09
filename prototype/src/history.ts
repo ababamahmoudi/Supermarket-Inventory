@@ -17,7 +17,8 @@ export interface ReversalPatch {
   after?: unknown;
   before_exists: boolean;
   after_exists: boolean;
-  creation?: "archive" | "deactivate" | "stop" | "reject" | "remove";
+  creation?:
+    "archive" | "deactivate" | "stop" | "reject" | "resolve" | "remove";
   guards?: { path: HistoryPath; after?: unknown; exists: boolean }[];
 }
 export type HistoryErrorCode =
@@ -98,6 +99,7 @@ const creationMode = (root: string): ReversalPatch["creation"] => {
   if (root === "suppliers") return "deactivate";
   if (root === "offers") return "stop";
   if (root === "approvals") return "reject";
+  if (root === "alerts") return "resolve";
   if (["label_waitlist", "config"].includes(root)) return "remove";
   return undefined;
 };
@@ -321,6 +323,9 @@ function ownedBy(entry: Activity, context: HistoryContext): boolean {
 const workerSharedActions = new Set([
   "Create template",
   "Save template",
+  "Duplicate template",
+  "Archive template",
+  "Restore template",
   "Add supplier",
   "Add product",
   "Stop offer",
@@ -530,6 +535,7 @@ export function reverseActivity(
       }
       if (patch.creation === "deactivate") record.active = false;
       if (patch.creation === "stop") record.status = "stopped";
+      if (patch.creation === "resolve") record.status = "resolved";
       if (patch.creation === "reject") {
         record.status = "rejected";
         record.reason = "Reverted approved decision";

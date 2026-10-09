@@ -8,7 +8,8 @@ import {
 } from "./demo-fixtures";
 import { ledgerSummary, type OperationsContext } from "./operations";
 import {
-  dashboardLowStock,
+  dashboardArrivals,
+  companyWeekStart,
   dashboardPriceChanges,
   dashboardPurchases,
 } from "./dashboard-data";
@@ -79,7 +80,7 @@ describe("explicit fictional demo documents", () => {
     ).toBe("2368.29");
   });
 
-  it("supports every branch stock estimate with physical count, receipt, return and store-use movements", () => {
+  it("retains historical physical count, receipt, return and store-use movements without exposing inventory", () => {
     const state = initialState();
     for (const [key, quantity] of Object.entries(state.stock)) {
       const expected = state
@@ -254,24 +255,56 @@ describe("dashboard content from the same scoped business records", () => {
     ).toBe("10.00");
   });
 
-  it("finds low stock from nonpositive estimates or To order reminders without invented thresholds", () => {
+  it("shows this week's actual arrivals and ignores retained counters and To order reminders", () => {
     const state = initialState();
-    const rows = dashboardLowStock(state, context);
-    expect(rows.map((row) => row.product.code)).toEqual(["0008"]);
-    state.stock["Branch 1:0008"] = 4;
-    expect(dashboardLowStock(state, context)[0].estimate).toBe(4);
+    const today = companyDate(state.config);
+    const rows = dashboardArrivals(state, context, today);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.units).toBeGreaterThan(0);
+      expect(row.company_id).toBe(context.company_id);
+      expect(row.branch).toBe(context.branch);
+      expect(row.date >= companyWeekStart(today) && row.date <= today).toBe(
+        true,
+      );
+      expect(row.invoice_number).not.toBe("");
+      expect(row.received_by).not.toBe("");
+    }
+    state.stock["Branch 1:0008"] = 999999;
     state.notes.find((note) => note.id === "demo-note-1")!.status = "resolved";
-    expect(dashboardLowStock(state, context)).toEqual([]);
+    expect(dashboardArrivals(state, context, today)).toEqual(rows);
   });
 
-  it("uses canonical stock keys when the Supervisor selects all branches", () => {
+  it("uses scoped actual receipts across all locations without duplicate entries or another company's documents", () => {
     const state = initialState();
-    state.stock["Branch 2:0008"] = 0;
-    const rows = dashboardLowStock(state, { ...context, branch: "all" });
-    expect(rows.map((row) => `${row.branch}:${row.product.code}`)).toEqual([
-      "Branch 1:0008",
-      "Branch 2:0008",
-    ]);
+    const today = companyDate(state.config);
+    const invoice = state.invoices![0];
+    state.invoices!.push({
+      ...structuredClone(invoice),
+      id: "this-week-other-location",
+      branch: "Branch 2",
+      supplier_invoice_number: "THIS-WEEK-OTHER-LOCATION",
+      posted_at: `${today}T16:00:00Z`,
+      received_at: `${today}T16:00:00Z`,
+      invoice_date: today,
+    });
+    const branchRows = dashboardArrivals(state, context, today);
+    const rows = dashboardArrivals(state, { ...context, branch: "all" }, today);
+    expect(rows.filter((row) => row.branch === context.branch)).toEqual(
+      branchRows,
+    );
+    expect(rows.some((row) => row.branch !== context.branch)).toBe(true);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    state.invoices!.push({
+      ...structuredClone(invoice),
+      id: "private-company-invoice",
+      company_id: "private-company",
+      posted_at: `${today}T16:00:00Z`,
+      invoice_date: today,
+    });
+    expect(
+      dashboardArrivals(state, { ...context, branch: "all" }, today),
+    ).toEqual(rows);
   });
 
   it("shows actual price changes this company-timezone week, excluding metadata-only product edits", () => {
@@ -314,7 +347,7 @@ describe("dashboard content from the same scoped business records", () => {
       dashboardPurchases(state, { ...context, company_id: "foreign" }),
     ).toThrow("scope");
     expect(() =>
-      dashboardLowStock(state, { ...context, role: "floor_worker" }),
+      dashboardArrivals(state, { ...context, role: "floor_worker" }),
     ).toThrow("supervisor");
     expect(() =>
       dashboardPriceChanges(state, { ...context, role: "cashier" }),

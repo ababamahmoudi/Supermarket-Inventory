@@ -152,7 +152,7 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
   await page.getByLabel("Note", { exact: true }).fill("Demo staff lunch");
   await chooseOption(
     page,
-    page.getByLabel("Product (required for stock)", { exact: true }),
+    page.getByLabel("Product (required)", { exact: true }),
     "0006",
     "Lavash Bread 500 g",
   );
@@ -353,7 +353,7 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   ).toBe(true);
 });
 
-test("invalid pickup evidence, excessive store use, and invalid financial amounts show errors without changing records or crashing the app", async ({
+test("invalid pickup evidence, invalid store-use quantities, and invalid financial amounts show errors without changing records or crashing the app", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -383,28 +383,54 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
   await page.getByRole("tab", { name: "Store use", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
-    .fill("Fictional quantity exceeds available stock");
+    .fill("Fictional actual quantity validation");
   await chooseOption(
     page,
-    page.getByLabel("Product (required for stock)", { exact: true }),
+    page.getByLabel("Product (required)", { exact: true }),
     "0006",
     "Lavash Bread 500 g",
   );
   const beforeStoreUse = await stored(page);
   await page
     .getByLabel("Actual quantity used (required)", { exact: true })
-    .fill(String((beforeStoreUse.stock["Branch 1:0006"] ?? 0) + 1));
+    .fill("0");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
-    "The quantity exceeds estimated sellable stock",
+    "Enter a positive whole quantity",
   );
   expect(await stored(page)).toEqual(beforeStoreUse);
   await expect(
     page.getByRole("heading", { name: "Notes", exact: true, level: 1 }),
   ).toBeVisible();
   await expect(page.getByLabel("Note", { exact: true })).toHaveValue(
-    "Fictional quantity exceeds available stock",
+    "Fictional actual quantity validation",
   );
+
+  const actualQty = (beforeStoreUse.stock["Branch 1:0006"] ?? 0) + 120;
+  await page
+    .getByLabel("Actual quantity used (required)", { exact: true })
+    .fill(String(actualQty));
+  await page.getByRole("button", { name: "Save note", exact: true }).click();
+  const recordedUse = await stored(page);
+  expect(recordedUse.notes[0]).toMatchObject({
+    type: "store_use",
+    product_code: "0006",
+    qty: actualQty,
+    text: "Fictional actual quantity validation",
+    branch: "Branch 1",
+    company_id: "super-arzon",
+  });
+  expect(recordedUse.stock_movements).toHaveLength(
+    beforeStoreUse.stock_movements.length + 1,
+  );
+  expect(recordedUse.stock_movements.at(-1)).toMatchObject({
+    type: "store_use",
+    product_code: "0006",
+    qty: -actualQty,
+    branch: "Branch 1",
+    company_id: "super-arzon",
+  });
+  expect(recordedUse.ledger).toEqual(beforeStoreUse.ledger);
 
   await signIn(page, "Supervisor");
   await visit(page, "Payables");

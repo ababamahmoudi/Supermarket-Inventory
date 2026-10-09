@@ -1177,8 +1177,8 @@ export function Returns() {
                                 fully,
                               }),
                             t(
-                              "Received replacement. Stock increased; Payables did not change.",
-                              "جایگزین دریافت شد. موجودی افزایش یافت؛ پرداختنی‌ها تغییر نکرد.",
+                              "Replacement received. Payables did not change.",
+                              "جایگزین دریافت شد. پرداختنی‌ها تغییر نکرد.",
                             ),
                           );
                         else

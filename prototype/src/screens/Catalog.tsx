@@ -29,6 +29,13 @@ import {
   type NewProductEdits,
 } from "../manual-product";
 import { calculatePrice } from "../pricing";
+import { manualPrice, sellingMargin } from "../manual-prices";
+import {
+  ManualPriceDetails,
+  ManualPricePill,
+} from "../manual-price-presentation";
+import { productCostHistory, productStoreCost } from "../product-costs";
+import { lastReceivedByLocation } from "../received";
 import "./manual-entry.css";
 import type { Branch, Product } from "../types";
 import {
@@ -109,9 +116,9 @@ function editorError(
       "Review the similar product before saving.",
       "پیش از ذخیره، محصول مشابه را بررسی کنید.",
     ],
-    stock: [
-      "Enter a whole starting stock count for each allowed branch.",
-      "تعداد صحیح موجودی اولیه را برای هر شعبهٔ مجاز وارد کنید.",
+    inventory_disabled: [
+      "Opening counts are not available. Record a delivery through an invoice.",
+      "ثبت موجودی اولیه در دسترس نیست. تحویل را از طریق فاکتور ثبت کنید.",
     ],
     permission: [
       "Only a Supervisor can edit products.",
@@ -190,9 +197,6 @@ export function ProductEditor({
   };
   const [cost, setCost] = useState("");
   const [manualPrice, setManualPrice] = useState(false);
-  const [startingCounts, setStartingCounts] = useState<Record<string, string>>(
-    {},
-  );
   const [similarConfirmed, setSimilarConfirmed] = useState(false);
   const [marginConfirmed, setMarginConfirmed] = useState(false);
   const category = state.config.pricing_categories.find(
@@ -318,15 +322,6 @@ export function ProductEditor({
                       selling_price: effectiveSellingPrice || undefined,
                       minimum_margin_confirmed: marginConfirmed,
                       similar_name_confirmed: similarConfirmed,
-                      opening_counts:
-                        role === "supervisor"
-                          ? Object.entries(startingCounts)
-                              .filter(([, quantity]) => quantity.trim())
-                              .map(([value, quantity]) => ({
-                                branch: value,
-                                quantity: Number(quantity),
-                              }))
-                          : [],
                     } as NewProductEdits,
                     invoiceQuickAdd,
                   ),
@@ -516,35 +511,6 @@ export function ProductEditor({
             />
           </Field>
         </div>
-        {isNew && role === "supervisor" && (
-          <fieldset className="manual-opening-fields">
-            <legend>
-              {t(
-                "Starting stock count (optional)",
-                "تعداد موجودی اولیه (اختیاری)",
-              )}
-            </legend>
-            {branches.map((value) => (
-              <Field
-                key={value}
-                label={configuredBranchLabel(state.config, value, lang)}
-              >
-                <input
-                  dir="ltr"
-                  inputMode="numeric"
-                  className="control-narrow"
-                  value={startingCounts[value] ?? ""}
-                  onChange={(event) =>
-                    setStartingCounts((current) => ({
-                      ...current,
-                      [value]: event.target.value,
-                    }))
-                  }
-                />
-              </Field>
-            ))}
-          </fieldset>
-        )}
         {isNew && belowMinimum && role === "supervisor" && (
           <div className="banner info">
             <p>
@@ -728,6 +694,7 @@ function ProductPrice({ product }: { product: Product }) {
           <strong className="price" dir="ltr">
             {approved || pending ? <Money value={approved || pending!} /> : "—"}
           </strong>
+          <ManualPricePill product={product} />
           {profile?.taxable && (
             <Badge tone="info">
               {t(
@@ -743,6 +710,7 @@ function ProductPrice({ product }: { product: Product }) {
           )}
         </div>
       </div>
+      <ManualPriceDetails product={product} />
       {pending && (
         <div className="banner pending" role="status">
           <Badge tone="pending">
@@ -793,7 +761,7 @@ function ProductDetail({
   operational?: boolean;
   showName?: boolean;
 }) {
-  const { state, branch, role, lang, t } = useDemo();
+  const { state, branch, role, user, lang, t } = useDemo();
   const category = state.config.pricing_categories.find(
     (item) => item.key === product.pricing_category,
   );
@@ -803,7 +771,21 @@ function ProductDetail({
   const canSeeOperations = operational && role !== "cashier";
   const branches = configuredBranches(state.config, true);
   const visibleBranches =
-    role === "supervisor" ? branches : [lookupBranch(branch)];
+    role === "supervisor" && branch === "all"
+      ? branches
+      : [lookupBranch(branch)];
+  const context = {
+    company_id: state.config.company.seed_key,
+    branch,
+    role: role ?? "cashier",
+    actor: user?.name ?? "",
+  };
+  const costs =
+    role === "supervisor" ? productCostHistory(state, context, product) : [];
+  const storeCost = productStoreCost(state, context, product);
+  const received = canSeeOperations
+    ? lastReceivedByLocation(state, context, product.code)
+    : [];
   return (
     <Card
       title={
@@ -952,6 +934,7 @@ function ProductDetail({
                           </td>
                           <td className="numeric">
                             {price ? <Money value={price} /> : "—"}
+                            <ManualPricePill product={product} branch={item} />
                           </td>
                           <td>
                             {product.branch_prices?.[item]
@@ -964,39 +947,153 @@ function ProductDetail({
                   </tbody>
                 </DataTable>
                 <p>
-                  {t(
-                    "Last supplier unit cost before tax",
-                    "آخرین هزینهٔ واحد از تأمین‌کننده پیش از مالیات",
-                  )}
-                  :{" "}
+                  {t("Store cost", "هزینهٔ فروشگاه")}:{" "}
                   <strong>
-                    <Money value={product.last_cost_before_tax} />
+                    {storeCost ? <Money value={storeCost} /> : "—"}
                   </strong>
                 </p>
+                <div className="stack">
+                  <h3>{t("Cost history", "تاریخچهٔ هزینه")}</h3>
+                  {!costs.length ? (
+                    <p className="muted">
+                      {t(
+                        "No recorded cost history.",
+                        "تاریخچهٔ هزینه‌ای ثبت نشده است.",
+                      )}
+                    </p>
+                  ) : (
+                    <DataTable
+                      className="product-cost-history-table"
+                      columns={[
+                        { width: "200px" },
+                        { width: "150px" },
+                        { width: "128px" },
+                        { width: "150px" },
+                        { width: "130px", align: "end" },
+                        { width: "160px" },
+                      ]}
+                    >
+                      <thead>
+                        <tr>
+                          <th>{t("Supplier", "تأمین‌کننده")}</th>
+                          <th>{t("Location", "محل")}</th>
+                          <th>{t("Date", "تاریخ")}</th>
+                          <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
+                          <th>
+                            {t(
+                              "Unit cost before tax",
+                              "هزینهٔ واحد پیش از مالیات",
+                            )}
+                          </th>
+                          <th>{t("Price basis", "مبنای قیمت")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {costs.map((entry) => (
+                          <tr key={entry.id}>
+                            <td>
+                              <bdi dir="auto">{entry.supplier}</bdi>
+                            </td>
+                            <td>
+                              {configuredBranchLabel(
+                                state.config,
+                                entry.branch,
+                                lang,
+                              )}
+                            </td>
+                            <td>
+                              <DateText value={entry.date} />
+                            </td>
+                            <td>
+                              <a
+                                href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
+                              >
+                                <LtrText>{entry.invoice_number}</LtrText>
+                              </a>
+                            </td>
+                            <td>
+                              <Money value={entry.unit_cost_before_tax} />
+                            </td>
+                            <td>
+                              {entry.short_dated ? (
+                                <Badge tone="pending">
+                                  {t(
+                                    "Short-dated (expiry discount)",
+                                    "تاریخ نزدیک (تخفیف انقضا)",
+                                  )}
+                                </Badge>
+                              ) : (
+                                t("Regular", "عادی")
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </DataTable>
+                  )}
+                </div>
               </div>
             )}
             <div className="stack">
-              <h3>{t("Stock estimate", "برآورد موجودی")}</h3>
-              <p className="muted">
-                {t(
-                  "An estimate until a cash register is connected.",
-                  "تا زمان اتصال صندوق فروش، این مقدار برآورد است.",
-                )}
-              </p>
-              <dl className="form-grid">
-                {visibleBranches.map((item) => (
-                  <div key={item}>
-                    <dt className="muted">
-                      {configuredBranchLabel(state.config, item, lang)}
-                    </dt>
-                    <dd>
-                      <LtrText>
-                        {state.stock[`${item}:${product.code}`] ?? 0}
-                      </LtrText>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <h3>{t("Last received", "آخرین دریافت")}</h3>
+              <DataTable
+                className="product-last-received-table"
+                columns={[
+                  { width: "160px" },
+                  { width: "130px" },
+                  { width: "120px", align: "end" },
+                  { width: "150px" },
+                ]}
+              >
+                <thead>
+                  <tr>
+                    <th>{t("Location", "محل")}</th>
+                    <th>{t("Date", "تاریخ")}</th>
+                    <th>{t("Units", "واحد")}</th>
+                    <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleBranches.map((item) => {
+                    const latest = received.find(
+                      (entry) => entry.branch === item,
+                    );
+                    return (
+                      <tr key={item}>
+                        <td>
+                          {configuredBranchLabel(state.config, item, lang)}
+                        </td>
+                        <td>
+                          {latest ? (
+                            <DateText value={latest.date} />
+                          ) : (
+                            <span className="muted">
+                              {t(
+                                "No deliveries yet",
+                                "هنوز تحویلی ثبت نشده است",
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {latest ? <LtrText>{latest.units}</LtrText> : "—"}
+                        </td>
+                        <td>
+                          {latest ? (
+                            <a
+                              href={`#invoices?id=${encodeURIComponent(latest.invoice_id)}`}
+                            >
+                              <LtrText>{latest.invoice_number}</LtrText>
+                            </a>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
             </div>
             <div className="stack">
               <h3>{t("History", "تاریخچه")}</h3>
@@ -1092,6 +1189,7 @@ function LookupProductDetail({ product }: { product: Product }) {
             </p>
           )}
           <p className="helper">{t("Before tax", "پیش از مالیات")}</p>
+          <ManualPricePill product={product} />
         </div>
         {pending && (
           <div className="lookup-pending-price">
@@ -1104,6 +1202,7 @@ function LookupProductDetail({ product }: { product: Product }) {
           </div>
         )}
       </div>
+      <ManualPriceDetails product={product} />
       {(profile?.taxable || offer) && (
         <div className="lookup-price-tags actions">
           {profile?.taxable && (
@@ -1421,6 +1520,7 @@ export function Lookup() {
                         </span>
                       )}
                       <span className="lookup-result-pills actions">
+                        <ManualPricePill product={product} />
                         {pending && (
                           <Badge tone="pending">
                             {t("Pending", "در انتظار تأیید")}
@@ -1464,6 +1564,7 @@ export function Products() {
   const [supplier, setSupplier] = useState("");
   const [onlyPending, setOnlyPending] = useState(false);
   const [onlyOffers, setOnlyOffers] = useState(false);
+  const [onlyManual, setOnlyManual] = useState(false);
   const [sort, setSort] = useState<SortColumn>("name");
   const [ascending, setAscending] = useState(true);
   const [page, setPage] = useState(0);
@@ -1479,7 +1580,8 @@ export function Products() {
         (!status || product.status === status) &&
         (!supplier || product.main_supplier === supplier) &&
         (!onlyPending || pendingPrice(state, product, branch)) &&
-        (!onlyOffers || effectiveOffer(state, product, branch)),
+        (!onlyOffers || effectiveOffer(state, product, branch)) &&
+        (!onlyManual || manualPrice(state, product, branch)),
     )
     .sort((left, right) => {
       let comparison = 0;
@@ -1521,6 +1623,7 @@ export function Products() {
     setSupplier("");
     setOnlyPending(false);
     setOnlyOffers(false);
+    setOnlyManual(false);
     setPage(0);
   };
   return (
@@ -1663,6 +1766,16 @@ export function Products() {
         >
           {t("Has offer", "دارای پیشنهاد")}
         </Checkbox>
+        <Checkbox
+          checked={onlyManual}
+          onChange={(value) => {
+            setOnlyManual(value);
+            setPage(0);
+          }}
+          aria-label={t("Manual prices", "قیمت‌های دستی")}
+        >
+          {t("Manual prices", "قیمت‌های دستی")}
+        </Checkbox>
         <Button variant="ghost" onClick={clear}>
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
@@ -1694,10 +1807,16 @@ export function Products() {
         <Card>
           <div className="stack">
             <DataTable
-              className="catalog-products-table"
+              className={`catalog-products-table${role === "supervisor" ? " with-store-cost" : ""}`}
               columns={[
                 { width: "35%" },
                 { width: "104px", align: "end" },
+                ...(role === "supervisor"
+                  ? [
+                      { width: "120px", align: "end" as const },
+                      { width: "104px", align: "end" as const },
+                    ]
+                  : []),
                 { width: "120px", align: "end" },
                 { width: "28%" },
                 {
@@ -1738,6 +1857,12 @@ export function Products() {
                       {sort === "code" ? (ascending ? " ↑" : " ↓") : ""}
                     </Button>
                   </th>
+                  {role === "supervisor" && (
+                    <>
+                      <th>{t("Store cost", "هزینهٔ فروشگاه")}</th>
+                      <th>{t("Margin %", "حاشیه سود %")}</th>
+                    </>
+                  )}
                   <th
                     className="numeric"
                     aria-sort={
@@ -1762,6 +1887,17 @@ export function Products() {
                   const price = effectivePrice(state, product, branch);
                   const pending = pendingPrice(state, product, branch);
                   const offer = effectiveOffer(state, product, branch);
+                  const cost = productStoreCost(
+                    state,
+                    {
+                      company_id: state.config.company.seed_key,
+                      role: role ?? "cashier",
+                      branch,
+                      actor: "",
+                    },
+                    product,
+                  );
+                  const margin = cost ? sellingMargin(price, cost) : null;
                   return (
                     <tr key={product.code}>
                       <td>
@@ -1782,11 +1918,24 @@ export function Products() {
                       <td className="numeric">
                         <LtrText>{product.code}</LtrText>
                       </td>
+                      {role === "supervisor" && (
+                        <>
+                          <td>{cost ? <Money value={cost} /> : "—"}</td>
+                          <td>
+                            {margin !== null ? (
+                              <LtrText>{margin}%</LtrText>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        </>
+                      )}
                       <td className="numeric">
                         {price ? <Money value={price} /> : "—"}
                       </td>
                       <td>
                         <div className="actions">
+                          <ManualPricePill product={product} />
                           {pending && (
                             <Badge tone="pending">
                               {t("Pending", "در انتظار تأیید")}{" "}

@@ -109,7 +109,7 @@ test("supplier similarity warning links the existing record and requires explici
   ).toBeVisible();
 });
 
-test("Supervisor Add product calculates its price, blocks a barcode conflict and logs opening stock", async ({
+test("Supervisor Add product calculates its price and blocks a barcode conflict without inventory fields", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -138,7 +138,10 @@ test("Supervisor Add product calculates its price, blocks a barcode conflict and
     storage,
   );
   await dialog.getByLabel("Barcode", { exact: true }).fill(conflictingBarcode);
-  await dialog.getByLabel("Branch 1", { exact: true }).fill("12");
+  await expect(
+    dialog.getByText("Starting stock count (optional)", { exact: true }),
+  ).toHaveCount(0);
+  await expect(dialog.getByLabel("North York", { exact: true })).toHaveCount(0);
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
     .click();
@@ -162,17 +165,13 @@ test("Supervisor Add product calculates its price, blocks a barcode conflict and
   );
   expect(product.status).toBe("active");
   expect(product.code).toBe("0016");
-  expect(saved.stock[`Branch 1:${product.code}`]).toBe(12);
+  expect(saved.stock[`Branch 1:${product.code}`]).toBeUndefined();
   expect(
-    saved.stock_movements.find(
+    saved.stock_movements.filter(
       (movement: { product_code: string }) =>
         movement.product_code === product.code,
     ),
-  ).toMatchObject({
-    type: "opening_count",
-    reference: "Opening count",
-    qty: 12,
-  });
+  ).toHaveLength(0);
 });
 
 test("worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances", async ({

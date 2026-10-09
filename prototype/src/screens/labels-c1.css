@@ -1,0 +1,149 @@
+.label-template-kind {
+  font-size: 0.8125rem;
+  margin-block: 0 20px;
+}
+.label-template-picker > .ui-checked-control {
+  margin-block-end: 8px;
+}
+.label-grayscale-caption {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-block: 0 12px;
+}
+.label-grayscale-preview {
+  filter: grayscale(1);
+}
+.shelf-label > .shelf-label-logo img {
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  background: #fff;
+}
+.regular-label-special {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.shelf-label-offer {
+  gap: 8px;
+}
+.shelf-label .label-offer-badge {
+  background: #fff;
+  color: #000;
+  border-radius: 0;
+  padding-inline: 0;
+}
+.shelf-label .shelf-label-footer .badge {
+  background: #fff;
+  color: #000;
+}
+.promo-label-frame {
+  position: absolute;
+  pointer-events: none;
+}
+.promo-label-content {
+  position: absolute;
+  width: 650px;
+  height: 420px;
+  display: grid;
+  grid-template-rows: 48px 115px 40px 100px 25px 36px;
+  gap: 8px;
+  text-align: center;
+  transform-origin: top left;
+  overflow: hidden;
+  font-family: Inter, Vazirmatn, sans-serif;
+  color: #000;
+}
+.promo-label-content > * {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.promo-label-special {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 40px;
+  font-weight: 700;
+}
+.promo-label-content.has-offer .promo-label-special {
+  background: #000;
+  color: #fff;
+}
+.promo-label-content .promo-label-price {
+  font-size: 94px;
+  line-height: 115px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-align: center;
+  direction: ltr;
+}
+.promo-label-content .promo-label-price > span {
+  display: inline-block;
+}
+.promo-label-regular-price {
+  font-size: 26px;
+  line-height: 35px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.shelf-label .promo-label-content .product-name {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 8px;
+  height: 100%;
+}
+.shelf-label .promo-label-content .product-name strong {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 36px;
+  white-space: normal;
+}
+.shelf-label .promo-label-content .product-name small {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 30px;
+  color: #000;
+  white-space: normal;
+}
+.promo-label-code {
+  font-size: 16px;
+  line-height: 25px;
+  white-space: nowrap;
+}
+.promo-label-footer {
+  font-size: 16px;
+  line-height: 28px;
+  text-align: start;
+}
+.promo-shelf-label > .shelf-label-logo {
+  inset-inline-end: 10mm;
+  bottom: 10mm;
+}
+@media print {
+  .label-print-output .shelf-label {
+    filter: grayscale(1);
+  }
+  .label-print-output .regular-label-special,
+  .label-print-output .promo-label-content.has-offer .promo-label-special,
+  .label-print-output .promo-label-frame {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+.label-price-display {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}

@@ -62,9 +62,7 @@ test("cashier direct navigation stays in lookup and exposes no operational or fi
   await expect(
     page.getByRole("link", { name: "Products", exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByText("Last supplier unit cost before tax", { exact: false }),
-  ).toHaveCount(0);
+  await expect(page.getByText("Store cost", { exact: false })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Stock estimate", exact: true }),
   ).toHaveCount(0);
@@ -124,10 +122,11 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
     page.getByRole("heading", { name: lavash.name_en, exact: true }),
   ).toBeVisible();
   await expect(page.locator(".price")).toHaveText("$1.99");
-  await expect(
-    page.getByText("Last supplier unit cost before tax", { exact: false }),
-  ).toHaveCount(0);
+  await expect(page.getByText("Store cost", { exact: false })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Stock estimate", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Last received", exact: true }),
   ).toBeVisible();
 });

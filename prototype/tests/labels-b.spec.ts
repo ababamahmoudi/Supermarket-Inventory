@@ -22,6 +22,8 @@ test("live A4 designer redraws capacity and calibration, stores editable presets
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await expect(page.locator(".label-preview-caption")).toContainText(
     "18 labels per sheet",
   );
@@ -91,6 +93,8 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await saveTemplate(page);
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await page.getByLabel("Search products", { exact: true }).fill("0015");
@@ -154,6 +158,8 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await saveTemplate(page);
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await page.getByLabel("Search products", { exact: true }).fill("0003");
@@ -169,6 +175,8 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
   ).toBeVisible();
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
     "1",

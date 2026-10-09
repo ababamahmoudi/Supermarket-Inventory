@@ -1,4 +1,53 @@
-import type { LabelTemplate } from "./types";
+import type { DemoState, LabelTemplate } from "./types";
+
+export const regularLabelGeometry = {
+  width: 60,
+  height: 40,
+  margin_top: 10,
+  margin_bottom: 10,
+  margin_left: 10,
+  margin_right: 10,
+  gap_x: 4,
+  gap_y: 4,
+  offset_x: 0,
+  offset_y: 0,
+};
+export const promoLabelGeometry = {
+  width: 210,
+  height: 148.5,
+  margin_top: 0,
+  margin_bottom: 0,
+  margin_left: 0,
+  margin_right: 0,
+  gap_x: 0,
+  gap_y: 0,
+  offset_x: 0,
+  offset_y: 0,
+};
+
+/** Add missing company presets; edits and archived built-ins stay untouched. */
+export function ensureBuiltInLabelTemplates(state: DemoState) {
+  for (const kind of ["regular", "promo"] as const) {
+    const company_id = state.config.company.seed_key;
+    const id = `label-builtin-${kind}-${encodeURIComponent(company_id)}`;
+    if (
+      state.templates.some(
+        (template) =>
+          template.company_id === company_id &&
+          (template.built_in === kind || template.id === id),
+      )
+    )
+      continue;
+    state.templates.push({
+      id,
+      company_id,
+      name: kind === "regular" ? "Regular" : "Promo",
+      style: kind,
+      built_in: kind,
+      ...(kind === "regular" ? regularLabelGeometry : promoLabelGeometry),
+    });
+  }
+}
 
 export interface LabelLayout {
   columns: number;
@@ -118,5 +167,35 @@ export function labelContentGeometry(width: number, height: number) {
     scale,
     left: (widthPx - 220 * scale) / 2,
     top: (heightPx - 136 * scale) / 2,
+  };
+}
+
+/** A safe inset border and complete promo hierarchy, shared by preview/print. */
+export function promoContentGeometry(
+  width: number,
+  height: number,
+  includeLogo: boolean,
+) {
+  const pxPerMm = 96 / 25.4;
+  const inset = Math.min(5, width / 10, height / 10);
+  const border = Math.min(1.5, width / 20, height / 20);
+  const padding = Math.min(4, width / 20, height / 20);
+  const contentWidth = (width - 2 * (inset + border + padding)) * pxPerMm;
+  const contentHeight =
+    Math.max(
+      0.1,
+      height - 2 * (inset + border + padding) - (includeLogo ? 9 : 0),
+    ) * pxPerMm;
+  const scale = Math.min(contentWidth / 650, contentHeight / 420);
+  return {
+    inset,
+    border,
+    frameWidth: width - 2 * inset,
+    frameHeight: height - 2 * inset,
+    scale,
+    left:
+      (inset + border + padding) * pxPerMm + (contentWidth - 650 * scale) / 2,
+    top:
+      (inset + border + padding) * pxPerMm + (contentHeight - 420 * scale) / 2,
   };
 }

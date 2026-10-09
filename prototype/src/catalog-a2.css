@@ -117,3 +117,25 @@
 .catalog-filter-toolbar input[type="search"] {
   border-radius: 999px;
 }
+.catalog-products-table.with-store-cost table {
+  min-inline-size: 1120px;
+}
+.product-cost-history-table table {
+  min-inline-size: 918px;
+}
+.product-last-received-table table {
+  min-inline-size: 560px;
+}
+.manual-price-pill {
+  vertical-align: middle;
+}
+.manual-price-details {
+  display: grid;
+  gap: 4px;
+}
+.manual-price-details p {
+  margin: 0;
+}
+.manual-price-comparison {
+  white-space: nowrap;
+}

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
+import { invoiceLocationMovePreview, movePostedInvoice } from "./received";
 import {
   addNote,
   cancelReturn,
@@ -314,7 +315,72 @@ describe("financial return claims", () => {
   });
 });
 describe("notes and expiry are company and branch scoped", () => {
-  it("records store-use stock once with author/time and no ledger change", () => {
+  it("blocks plain built-in notes for another company or an unavailable location before changing any record", () => {
+    const state = initialState();
+    const before = structuredClone(state);
+    expect(() =>
+      addNote(
+        state,
+        { ...worker, company_id: "another-company" },
+        {
+          type: "to_order",
+          text: "No product needed to exercise company guard",
+        },
+      ),
+    ).toThrow("scope");
+    expect(state).toEqual(before);
+    expect(() =>
+      addNote(
+        state,
+        { ...worker, branch: "missing-location" },
+        {
+          type: "note_to_supervisor",
+          text: "Unassigned location cannot create a note",
+        },
+      ),
+    ).toThrow("scope");
+    expect(state).toEqual(before);
+    state.config.branches.find((branch) => branch.code === "W1")!.active =
+      false;
+    const deactivated = structuredClone(state);
+    expect(() =>
+      addNote(
+        state,
+        { ...supervisor, branch: "Warehouse" },
+        {
+          type: "to_order",
+          text: "Inactive Warehouse cannot create a note",
+        },
+      ),
+    ).toThrow("scope");
+    expect(state).toEqual(deactivated);
+  });
+  it("allows Warehouse built-in notes with the same scoped history and author evidence as store locations", () => {
+    const state = initialState();
+    const ledgerBefore = structuredClone(state.ledger);
+    addNote(
+      state,
+      { ...supervisor, branch: "Warehouse" },
+      {
+        type: "to_order",
+        text: "Fictional Warehouse order reminder",
+      },
+    );
+    expect(state.notes[0]).toMatchObject({
+      company_id: supervisor.company_id,
+      branch: "Warehouse",
+      type: "to_order",
+      text: "Fictional Warehouse order reminder",
+      by: supervisor.actor,
+    });
+    expect(state.activity[0]).toMatchObject({
+      company_id: supervisor.company_id,
+      branch: "Warehouse",
+      by: supervisor.actor,
+    });
+    expect(state.ledger).toEqual(ledgerBefore);
+  });
+  it("records store-use physical movement once with author/time and no ledger change", () => {
     const state = initialState();
     const ledgerBefore = structuredClone(state.ledger);
     state.stock["Branch 1:0006"] = 10;
@@ -333,6 +399,15 @@ describe("notes and expiry are company and branch scoped", () => {
     });
     expect(state.notes[0].created_at).toBeTruthy();
     expect(state.ledger).toEqual(ledgerBefore);
+    expect(state.stock_movements?.at(-1)).toMatchObject({
+      company_id: worker.company_id,
+      branch: worker.branch,
+      product_code: "0006",
+      type: "store_use",
+      qty: -2,
+      reference: "Used for fictional staff lunch",
+      by: worker.actor,
+    });
     expect(() =>
       addNote(state, worker, { type: "store_use", text: "Missing product" }),
     ).toThrow("store_use");
@@ -343,6 +418,45 @@ describe("notes and expiry are company and branch scoped", () => {
         { type: "to_order", text: "Forbidden" },
       ),
     ).toThrow("role");
+  });
+  it("records actual store use above an obsolete aggregate while rejecting invalid quantities without partial events", () => {
+    const state = initialState();
+    state.stock["Branch 1:0006"] = 0;
+    const ledgerBefore = structuredClone(state.ledger);
+    const movementCount = state.stock_movements!.length;
+    addNote(state, worker, {
+      type: "store_use",
+      text: "Actual recorded use without inventory",
+      product_code: "0006",
+      qty: 120,
+    });
+    expect(state.notes[0]).toMatchObject({
+      branch: worker.branch,
+      company_id: worker.company_id,
+      qty: 120,
+      product_code: "0006",
+    });
+    expect(state.stock_movements).toHaveLength(movementCount + 1);
+    expect(state.stock_movements?.at(-1)).toMatchObject({
+      branch: worker.branch,
+      company_id: worker.company_id,
+      qty: -120,
+      type: "store_use",
+      product_code: "0006",
+    });
+    expect(state.ledger).toEqual(ledgerBefore);
+    const after = structuredClone(state);
+    for (const qty of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        addNote(state, worker, {
+          type: "store_use",
+          text: "Invalid actual quantity",
+          product_code: "0006",
+          qty,
+        }),
+      ).toThrow("quantity");
+      expect(state).toEqual(after);
+    }
   });
   it("keeps unread Supervisor notes restricted and history remains after seen/done", () => {
     const state = initialState();
@@ -377,6 +491,53 @@ describe("notes and expiry are company and branch scoped", () => {
     expect(
       initialState().expiry.every((item) => item.status === "active"),
     ).toBe(true);
+  });
+  it("clears date tracking at the corrected receiving location while preserving its original invoice assignment", () => {
+    const state = initialState();
+    const entry = state.expiry[0];
+    const originalLocation = entry.branch;
+    const invoiceId = entry.invoice_id!;
+    const invoiceBefore = structuredClone(
+      state.invoices!.find((invoice) => invoice.id === invoiceId),
+    );
+    const preview = invoiceLocationMovePreview(
+      state,
+      supervisor,
+      invoiceId,
+      "Warehouse",
+    );
+    movePostedInvoice(
+      state,
+      supervisor,
+      invoiceId,
+      "Warehouse",
+      "Delivery belongs at Warehouse",
+      preview.snapshot,
+    );
+    const beforeClearing = structuredClone(state);
+    expect(() => clearExpiry(state, worker, entry.id)).toThrow("scope");
+    expect(state).toEqual(beforeClearing);
+    expect(() =>
+      clearExpiry(
+        state,
+        { ...worker, branch: "Warehouse", company_id: "another-company" },
+        entry.id,
+      ),
+    ).toThrow("scope");
+    expect(state).toEqual(beforeClearing);
+    clearExpiry(state, { ...worker, branch: "Warehouse" }, entry.id);
+    expect(entry.status).toBe("cleared");
+    expect(entry.branch).toBe(originalLocation);
+    expect(state.invoices!.find((invoice) => invoice.id === invoiceId)).toEqual(
+      invoiceBefore,
+    );
+    expect(state.activity[0]).toMatchObject({
+      action: "expiry_cleared",
+      branch: "Warehouse",
+      company_id: worker.company_id,
+      by: worker.actor,
+      product_code: entry.product_code,
+    });
   });
 });
 describe("supplier ledger and payment allocations", () => {

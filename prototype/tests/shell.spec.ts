@@ -13,6 +13,14 @@ test("username sign-in, correct role menu, RTL and offline operation", async ({
   await signIn(page, "Floor Worker");
   if (testInfo.project.name === "phone") {
     await page.locator("#menu-toggle").click();
+    const daily = page
+      .getByRole("navigation", { name: "Pages", exact: true })
+      .getByRole("button", { name: "Daily", exact: true });
+    if (await daily.count()) {
+      await expect(daily).toBeFocused();
+      await expect(daily).toHaveAttribute("aria-expanded", "true");
+      await page.keyboard.press("Tab");
+    }
     await expect(
       page.getByRole("link", { name: "Lookup", exact: true }),
     ).toBeFocused();

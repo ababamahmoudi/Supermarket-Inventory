@@ -19,6 +19,7 @@ import {
   lookupBranch,
 } from "../catalog";
 import { useDemo } from "../store";
+import { ManualPricePill } from "../manual-price-presentation";
 import {
   categoryLabel,
   DateText,
@@ -408,6 +409,13 @@ export function Offers() {
                         value={offer.price}
                         currency={state.config.company.currency}
                       />
+                      {product && (
+                        <ManualPricePill
+                          product={product}
+                          branch={offer.branch}
+                          companyDefault={offer.scope === "all"}
+                        />
+                      )}
                     </p>
                     <Checkbox
                       checked={options.mix}
@@ -519,6 +527,13 @@ export function Offers() {
                               value={offer.price}
                               currency={state.config.company.currency}
                             />
+                            {product && (
+                              <ManualPricePill
+                                product={product}
+                                branch={offer.branch}
+                                companyDefault={offer.scope === "all"}
+                              />
+                            )}
                           </span>
                         </td>
                         <td>
@@ -654,6 +669,9 @@ export function Offers() {
                     value={candidate.price}
                     currency={state.config.company.currency}
                   />
+                  {selected && (
+                    <ManualPricePill product={selected} branch={viewBranch} />
+                  )}
                 </>
               ) : selected ? (
                 t(
@@ -753,6 +771,10 @@ export function Offers() {
                                 viewBranch,
                               )!}
                               currency={state.config.company.currency}
+                            />
+                            <ManualPricePill
+                              product={product}
+                              branch={viewBranch}
                             />
                           </td>
                           <td>

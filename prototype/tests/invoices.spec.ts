@@ -74,9 +74,12 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   ).toBeDisabled();
   await chooseOption(
     page,
-    page.getByLabel("Is the expiry date the same as the stock on hand?", {
-      exact: true,
-    }),
+    page.getByLabel(
+      "Is the expiry date the same as the goods already in the store?",
+      {
+        exact: true,
+      },
+    ),
     "unknown",
     "Unknown — add a note",
   );
@@ -95,7 +98,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page.reload();
   await expect(
     page.getByLabel("What information is unknown? (required)", { exact: true }),
-  ).toHaveValue("Old stock label cannot be read.");
+  ).toHaveValue("Demo only: old stock label cannot be read.");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();

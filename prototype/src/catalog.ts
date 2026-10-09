@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
+import { effectiveApprovalLocation } from "./received";
 import type { Branch, DemoState, Offer, Product } from "./types";
 
 /** The all-branches lookup previews the first configured demo branch. */
@@ -95,17 +96,19 @@ export function pendingPrice(
 ): string | null {
   if (product.company_id !== state.config.company.seed_key) return null;
   const selectedBranch = lookupBranch(branch);
-  const proposal = state.approvals.find(
+  const proposals = state.approvals.filter(
     (approval) =>
       approval.company_id === product.company_id &&
       approval.product_code === product.code &&
       approval.status === "pending" &&
-      (approval.type === "new_product" || approval.type === "price_change") &&
-      (branch === "all" ||
-        approval.branch === selectedBranch ||
-        approval.branch === "all"),
+      (approval.type === "new_product" || approval.type === "price_change"),
   );
+  const proposal = proposals.find((approval) => {
+    const origin = effectiveApprovalLocation(state, approval);
+    return branch === "all" || origin === selectedBranch || origin === "all";
+  });
   if (proposal) return proposal.proposed_price;
+  if (proposals.length) return null;
   if (
     product.pending_price &&
     (branch === "all" ||

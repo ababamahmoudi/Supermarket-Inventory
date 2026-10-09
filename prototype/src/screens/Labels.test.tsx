@@ -36,19 +36,26 @@ describe("Label template validation and ordinary HTTP", () => {
     });
     const user = userEvent.setup();
     show();
+    await user.click(screen.getByRole("tab", { name: "Templates" }));
+    await user.click(screen.getByRole("button", { name: "New template" }));
     await user.click(screen.getByRole("button", { name: /^Save template$/ }));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(
       screen.getByRole("combobox", { name: "Saved template" }),
     ).toHaveTextContent("Template 1");
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-    expect(saved.templates).toHaveLength(1);
-    expect(saved.templates[0].id).toMatch(/^label-template-/);
-    expect(saved.templates[0].width).toBe(60);
+    expect(saved.templates).toHaveLength(3);
+    const created = saved.templates.find(
+      (item: { name: string }) => item.name === "Template 1",
+    );
+    expect(created.id).toMatch(/^label-template-/);
+    expect(created.width).toBe(60);
   });
   it("explains a missing name, the specific zero dimension, and A4 capacity", async () => {
     const user = userEvent.setup();
     show();
+    await user.click(screen.getByRole("tab", { name: "Templates" }));
+    await user.click(screen.getByRole("button", { name: "New template" }));
     await user.clear(screen.getByLabelText("Template name"));
     await user.click(screen.getByRole("button", { name: /^Save template$/ }));
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -73,6 +80,31 @@ describe("Label template validation and ordinary HTTP", () => {
     );
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).templates,
-    ).toHaveLength(0);
+    ).toHaveLength(2);
+  });
+  it("offers Regular and Promo immediately, archives without deleting and restores the same preset", async () => {
+    const user = userEvent.setup();
+    show();
+    await user.click(screen.getByRole("tab", { name: "Templates" }));
+    expect(
+      screen.getByRole("combobox", { name: "Saved template" }),
+    ).toHaveTextContent("Regular");
+    await user.click(screen.getByRole("combobox", { name: "Saved template" }));
+    await user.click(screen.getByRole("option", { name: "Promo" }));
+    expect(screen.getByLabelText("Width (mm)")).toHaveValue("210");
+    expect(screen.getByLabelText("Height (mm)")).toHaveValue("148.5");
+    expect(screen.getByText(/2 labels per sheet/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Archive template" }));
+    expect(
+      screen.getByRole("button", { name: "Save template" }),
+    ).toBeDisabled();
+    expect(
+      JSON.parse(localStorage.getItem(STORAGE_KEY)!).templates,
+    ).toHaveLength(2);
+    await user.click(screen.getByRole("button", { name: "Restore template" }));
+    expect(screen.getByRole("button", { name: "Save template" })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: /^Delete/ }),
+    ).not.toBeInTheDocument();
   });
 });

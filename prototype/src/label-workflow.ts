@@ -317,10 +317,10 @@ export function saveLabelTemplate(
   validateLabelTemplate(template, state.label_settings?.fields?.logo !== false);
   const existing = state.templates.find(
     (item) =>
-      item.id === template.id &&
-      item.company_id === template.company_id &&
-      !item.archived,
+      item.id === template.id && item.company_id === template.company_id,
   );
+  if (existing?.archived || template.archived)
+    throw new LabelWorkflowError("template");
   const before = existing ? structuredClone(existing) : null;
   if (existing)
     Object.assign(existing, structuredClone(template), {
@@ -339,6 +339,65 @@ export function saveLabelTemplate(
     true,
     before,
     template,
+  );
+}
+
+function managedTemplate(state: DemoState, id: string, actor: LabelActor) {
+  if (actor.role === "cashier") throw new LabelWorkflowError("permission");
+  const template = state.templates.find(
+    (item) =>
+      item.company_id === state.config.company.seed_key && item.id === id,
+  );
+  if (!template) throw new LabelWorkflowError("template");
+  return template;
+}
+
+export function duplicateLabelTemplate(
+  state: DemoState,
+  id: string,
+  actor: LabelActor,
+  name: string,
+): LabelTemplate {
+  const original = managedTemplate(state, id, actor);
+  if (original.archived || !name.trim())
+    throw new LabelWorkflowError("template");
+  const copy = structuredClone(original);
+  copy.id = createId("label-template");
+  copy.name = name.trim();
+  delete copy.built_in;
+  delete copy.archived;
+  validateLabelTemplate(copy, state.label_settings?.fields?.logo !== false);
+  state.templates.push(copy);
+  record(
+    state,
+    actor,
+    "all",
+    "Duplicate template",
+    true,
+    null,
+    structuredClone(copy),
+  );
+  return copy;
+}
+
+export function setLabelTemplateArchived(
+  state: DemoState,
+  id: string,
+  archived: boolean,
+  actor: LabelActor,
+) {
+  const template = managedTemplate(state, id, actor);
+  if (Boolean(template.archived) === archived) return;
+  const before = structuredClone(template);
+  template.archived = archived;
+  record(
+    state,
+    actor,
+    "all",
+    archived ? "Archive template" : "Restore template",
+    true,
+    before,
+    structuredClone(template),
   );
 }
 
