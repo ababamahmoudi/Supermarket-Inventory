@@ -20,6 +20,7 @@ stateDiagram-v2
 ```
 
 - **draft**: anything not yet submitted. Auto-saves. Allowed without the image/PDF. Listed in a "Drafts" tab like an email client.
+- **Manual entry (B, item 46):** New invoice offers Upload and Manual entry side by side. Supervisor chooses the branch, supplier (including + Add supplier), supplier invoice number, invoice date and payment terms, then adds any product (including + Add new product), quantity and unit cost. Return from either shared add form selects the new record without discarding the draft. Manual entry uses the same pricing, lower-cost questions, date decisions, matching, tax and posting logic as uploaded review. Save as draft works without an original; Post still requires the original photo/PDF and all normal rules. No AI extraction or invented source document is needed for manual entry.
 - **processing**: AI is reading the file in the background; the worker can leave and come back.
 - **needs_review**: AI lines wait for a person. The reviewer must confirm each line, including the explicit **Track date: Yes / No** decision for every line in A2.
 - **ready_to_post**: header complete, original file attached, every line confirmed.
@@ -28,9 +29,21 @@ stateDiagram-v2
 - A posted invoice can be corrected only by the Supervisor (void and re-enter, or adjustment), always with an audit entry.
 - Invoice number missing → assign next sequential number for that supplier and mark `number_is_system_assigned`.
 
-## 2. New supplier
+## 2. New supplier and manual supplier management
 
-Floor Worker quick-adds a supplier (`proposed`) → invoice entry continues → invoice cannot be posted → Supervisor confirms (`confirmed`) or merges it into an existing supplier → invoice becomes postable. Dashboard shows "Supplier waiting for confirmation".
+- **Supervisor Add supplier (B, item 44):** open from Suppliers or the invoice Supplier field's + Add supplier. The max-720px shared form captures name, phone, email, sales rep/phone, payment terms, optional address/notes, and optional balance per allowed branch with an as-of date. A similar-name warning links to existing suppliers before save; it never silently merges. Save creates `confirmed` immediately and records actor/time/company in History.
+- Each entered branch opening balance appends an `opening_balance` ledger entry labeled **Opening balance**, dated as of the entered date and attributed to the Supervisor. It appears in Payables; it is not an invoice, delivery or purchase-chart contribution. Existing ledger entries are never replaced.
+- **Floor Worker invoice quick-add:** the same form has no opening-balance controls and creates `proposed`. Invoice entry continues but posting is blocked with **Waiting for Supervisor to confirm supplier** until the Supervisor confirms (`confirmed`) or explicitly merges it into an existing supplier. Dashboard shows Supplier waiting for confirmation. The transaction rejects unauthorized opening balances, including values supplied outside the UI.
+- Only Supervisors can edit or deactivate suppliers. Deactivate excludes a supplier from new-invoice choices without deleting its invoices, returns, products, balances or history; existing records retain their links. Record every edit, confirmation and deactivation. Cashiers cannot add suppliers; Floor Workers have no standalone Suppliers Add supplier action.
+- The supplier-confirmation task appears in Approvals and the Supervisor dashboard without price fields. Confirm supplier marks it Approved and releases the supplier posting gate. Reject marks the task Rejected and the proposed supplier inactive, retains its draft/history, and keeps posting blocked; it does not silently confirm or merge the supplier. Recheck a supplier snapshot before either decision so a stale preview cannot decide edited details. Record the signed-in Supervisor and decision time.
+
+## 2A. Supervisor Add product and invoice product proposals
+
+- **Supervisor Add product (B, item 45):** open the shared product editor in new mode from Products or an invoice's + Add new product. Capture English/Persian names, unit size, category, pricing category, barcode, supplier, date tracking, last unit cost before tax, selling price and optional starting count per allowed branch.
+- Compute selling price through the unchanged Decimal pricing engine using the entered cost/category. If the Supervisor changes the calculated selling price, record a manual override; if the saved price falls below the configured minimum margin, require the Supervisor's explicit confirmation. Do not invent invoice-number provenance for a manual cost.
+- Allocate the next company-wide Product Code, beyond all previously assigned codes including archived records; a failed validation does not create a product or stock. Block conflicting barcodes with the existing conflict flow and warn/link when a name is close to an existing product. Never silently merge products or recycle a code.
+- Supervisor save creates an **Active** product immediately and records the creation/price decision in History; no separate pending-product approval is needed. Each entered branch starting count appends an **Opening count** stock movement with actor/time/company/product/branch. It does not overwrite the stock ledger or become a fabricated receipt. Posted opening stock and money use correction entries, never simple Undo/Revert.
+- **Floor Worker invoice-only + Add new product:** use the shared new form as a proposal, with no opening-stock controls. Save a **Pending approval** product, retain normal invoice/posting-derived approval behavior and the last-approved-price rules. Floor Workers and Cashiers do not get a standalone Products Add product action; Cashiers cannot create invoice proposals. All state changes enforce role and company/branch scope.
 
 ## 3. Price proposal and approval
 
@@ -47,7 +60,7 @@ stateDiagram-v2
 - While `pending`, the Products section shows the proposed price labeled **Pending** next to the approved price. The **cashier lookup keeps showing the last approved price as the price to charge**, with a small "New price pending" tag. A new product with no approved price shows its proposed price tagged "Pending: confirm with a Supervisor before selling". **(assumed)**
 - Approval with scope **all branches** (default) sets the company default and clears branch overrides that this proposal replaces; **this branch only** creates/updates that branch's override.
 - After a price becomes effective, run: offer suggestion check (§7) and cross-branch conflict check (§5).
-- **Supervisor catalog edit (A2):** open the shared editor from Lookup/Products; validate permitted fields and immutable Product Code; if selling price changes, choose **All branches** (default) or **This branch only**, preview affected values, and save with the Supervisor manual-override decision. Retain original invoice-calculated value/number and append actor/date/scope/before/after provenance. Product edits append reversible History entries now; History UI and conflict-aware Revert wait for B. Worker invoice proposals still use their existing review/approval flow.
+- **Supervisor catalog edit:** open the shared editor from Lookup/Products; validate permitted fields and immutable Product Code; if selling price changes, choose **All branches** (default) or **This branch only**, preview affected values, and save with the Supervisor manual-override decision. Retain original invoice-calculated value/number and append actor/date/scope/before/after provenance. B adds History UI and conflict-aware Revert to the reversible records. Worker invoice proposals still use their existing review/approval flow; direct Supervisor creation uses §2A's immediate Active decision.
 
 ## 4. Same-supplier lower price (and different-supplier price)
 
@@ -105,6 +118,7 @@ stateDiagram-v2
 ```
 
 - **A2 landing:** overview of all visible returns, default **Pending** (not resolved/cancelled), supplier default **All suppliers**, plus search/status/branch filters. A row opens its own return page, with creation employee/date, status and primary next action at the top. **Return policy** opens a centered dialog; lines and evidence/history use separate cards.
+- While **open**, the only header actions are **Record pickup** (primary) and **Cancel return**. **Record resolution** appears after pickup when the state allows it; the header uses the normal page-title size.
 - When a supplier arrives and is selected, show that supplier's **open returns** at once so the worker can pick them up.
 - Creating a return lines moves the damaged quantity out of sellable stock (`return_pending`). Cancelling puts it back (`return_cancelled`).
 - Pickup requires the **supplier representative's typed name**. The paper copy carries the signature. Photo optional. Pickup does not require an invoice.
@@ -173,7 +187,7 @@ stateDiagram-v2
 ## 15. History, undo, and revert
 
 - Every action writes a History entry with before/after values and a `reversible` flag.
-- **Undo window (B):** reversible simple actions show action text and an **Undo** link for **5 seconds** per toast; pause that toast's timer while hovered. Place bottom-left in English, bottom-right in Persian; stack newest first, at most three visible plus **+N more**, keeping independent timers. Undo restores the previous state and appends "Undone". A2 records reversible catalog edits but defers this interface to B; the prior 10-second rule is superseded.
+- **Undo window (B):** reversible simple actions show action text and an **Undo** link for **5 seconds** per toast; pause that toast's timer while hovered. Place bottom-left in English, bottom-right in Persian; stack newest first, at most three visible plus **+N more**, keeping independent timers. Undo restores the previous state and appends "Undone". B implements this interface on A2's reversible records; the prior 10-second rule is superseded.
 - **Revert from History (Supervisor):** available on reversible entries; shows the before/after and asks for confirmation; creates a new entry "Reverted [action]". If the record changed again since then, show the conflict and do not overwrite silently.
 - **Not reversible by undo/revert:** posted invoices, stock movements, payables entries, prints. These use corrections (`workflows.md` §1, §11) so the original stays visible.
 - Examples: offer stopped by mistake → Undo, or Supervisor reverts → the offer is active again. Wrong product name → revert to the previous name. Price approved by mistake → revert restores the previous approved price (and creates a new price proposal history entry).

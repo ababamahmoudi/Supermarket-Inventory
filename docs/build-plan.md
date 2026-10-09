@@ -4,12 +4,12 @@ Build in small slices. After each slice the app must run, tests must pass, and A
 
 ## Phase 0: Prototype and setup
 
-| Step                     | Deliverable                                                                                                                                          | Exit criteria                                                            |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 0.1 Repo and local setup | Monorepo skeleton, Docker Compose, Makefile, CI running on an empty project, README quick-start                                                      | `make setup && make up` works on Ali's computer; CI green                |
-| 0.2 Prototype            | Frontend-only demo per `prototype-brief.md`, including design fixes, labels waitlist and real printing, notebooks, Settings groups, History and undo | Ali can run the demo script end to end; pricing tests pass in TypeScript |
-| 0.3 Real AI reading      | One small server piece holding the AI key, provider chosen by Ali, spending cap, simulated fallback switch, rehearsal with 5–10 invoices             | A real invoice is read into reviewable lines; fallback works             |
-| 0.4 Demo hosting         | Prototype reachable by link (or run locally for a meeting)                                                                                           | Ali approves the demo                                                    |
+| Step                     | Deliverable                                                                                                                                                              | Exit criteria                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| 0.1 Repo and local setup | Monorepo skeleton, Docker Compose, Makefile, CI running on an empty project, README quick-start                                                                          | `make setup && make up` works on Ali's computer; CI green                |
+| 0.2 Prototype            | Frontend-only demo per `prototype-brief.md`, including design fixes, label waitlist/real printing, notebooks, grouped Settings, History/Undo and Supervisor manual entry | Ali can run the demo script end to end; pricing tests pass in TypeScript |
+| 0.3 Real AI reading      | One small server piece holding the AI key, provider chosen by Ali, spending cap, simulated fallback switch, rehearsal with 5–10 invoices                                 | A real invoice is read into reviewable lines; fallback works             |
+| 0.4 Demo hosting         | Prototype reachable by link (or run locally for a meeting)                                                                                                               | Ali approves the demo                                                    |
 
 ## Phase 1: Core app
 
@@ -44,7 +44,7 @@ Phase 2: register integration. Phase 3: website with food ordering. Plan separat
 **Approvals and prices**
 
 - [ ] A changed calculated price creates a Pending proposal; cashier lookup still shows the last approved price with a pending tag.
-- [ ] A new product appears as Pending approval; barcode conflict blocks and creates an approval.
+- [ ] A worker invoice-created product appears as Pending approval; Supervisor direct creation is Active immediately with recorded price decision/below-margin confirmation; barcode conflict blocks and creates an approval.
 - [ ] Approving with "This branch only" does not change other branches; "All branches" does.
 - [ ] Two branches with different prices raise a conflict alert; "Mark as intentional" silences it until a price changes.
 
@@ -55,6 +55,7 @@ Phase 2: register integration. Phase 3: website with food ordering. Plan separat
 - [ ] Missing supplier invoice number is auto-assigned per supplier and marked system-assigned.
 - [ ] Posting creates correct stock movements and supplier-ledger entry; a posted invoice is locked.
 - [ ] Subtotal + tax ≠ total raises a tax discrepancy alert without blocking.
+- [ ] New invoice has adjacent Upload/Manual entry choices; manual draft keeps edited header/lines when adding a supplier or product, saves without an original and remains blocked from posting until it has one.
 
 **Same-supplier lower price**
 
@@ -79,7 +80,7 @@ Phase 2: register integration. Phase 3: website with food ordering. Plan separat
 - [ ] A product at 1.99/2.99/3.99 with no offer creates a worker suggestion; a product never has two active offers.
 - [ ] Mix-and-match combines any products in the same pool across categories and suppliers.
 - [ ] A label shows name, description, price, offer, product code, logo, unit size, tax indicator, in English and Persian; no barcode; no promotion expiry.
-- [ ] Labels print at exact template size on A4, starting at the chosen slot; there is no label queue and no default template.
+- [ ] Labels print at exact template size on A4, starting at the chosen slot; the shared branch waitlist survives refresh and there is no default template. Omit logos below 50mm label width; otherwise render them at least 8mm tall.
 
 **Date tracking**
 
@@ -91,6 +92,14 @@ Phase 2: register integration. Phase 3: website with food ordering. Plan separat
 - [ ] Last delivery equals the latest posted invoice date for that supplier in the selected branch.
 - [ ] Open returns and open shorts counts match the Returns and Shorts screens.
 - [ ] Floor Workers see the overview without balance, overdue, next due date, Balance card, or Payments tab (UI and API).
+- [ ] Supervisor Add supplier creates Confirmed; branch/as-of Opening balance appears once in Payables. Worker invoice quick-add creates Proposed, has no balances and blocks posting until confirmation.
+- [ ] Similar-name warnings link existing suppliers; Deactivate removes new-invoice choices but retains all history.
+
+**Manual Products**
+
+- [ ] Supervisor Add product creates Active with the next never-reused Product Code, engine price/manual-override record and below-margin confirmation when needed.
+- [ ] Optional branch starting counts append Opening count movements; barcode conflicts block and similar-name warnings link existing products.
+- [ ] Worker/Cashier cannot invoke standalone Add supplier/Add product or opening financial/count transactions; workers retain invoice-only proposals.
 
 **Payables and permissions**
 

@@ -416,7 +416,14 @@ export function FilterToolbar({
 }: HTMLAttributes<HTMLDivElement> & { search?: ReactNode; count?: ReactNode }) {
   return (
     <div className={cn("filter-toolbar", className)} {...props}>
-      {search}
+      {isValidElement(search) && search.type === "input" ? (
+        <div className="filter-search-pill">
+          <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+          {search}
+        </div>
+      ) : (
+        search
+      )}
       {children}
       {count !== undefined && <span className="filter-count">{count}</span>}
     </div>
@@ -1434,8 +1441,12 @@ export function Dropzone({
           </span>
           <p>
             {t(
-              "Drop a PDF or photo here, or browse",
-              "یک PDF یا عکس را اینجا رها کنید، یا فایل را انتخاب کنید",
+              accept.includes("pdf")
+                ? "Drop a PDF or photo here, or browse"
+                : "Drop a photo here, or browse",
+              accept.includes("pdf")
+                ? "یک PDF یا عکس را اینجا رها کنید، یا فایل را انتخاب کنید"
+                : "یک عکس را اینجا رها کنید، یا فایل را انتخاب کنید",
             )}
           </p>
         </>

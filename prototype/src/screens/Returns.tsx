@@ -1,8 +1,13 @@
+import {
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
+import { translateCount } from "../i18n";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import "./returns-a2.css";
 import policySource from "../../../docs/return-policy.md?raw";
-import { branches, useDemo } from "../store";
+import { useDemo } from "../store";
 import { companyDate } from "../invoice";
 import {
   Badge,
@@ -20,13 +25,7 @@ import {
   PageHeader,
   Select,
 } from "../ui";
-import {
-  branchLabel,
-  DateText,
-  demoUserLabel,
-  LtrText,
-  ProductName,
-} from "../presentation";
+import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
   cancelReturn,
   operationError,
@@ -45,6 +44,7 @@ import {
 
 export function Returns() {
   const { state, update, role, user, branch, t, lang } = useDemo();
+  const branches = configuredBranches(state.config);
   const [hash, setHash] = useState(() => window.location.hash);
   const detailId = hash.startsWith("#return?")
     ? new URLSearchParams(hash.split("?")[1]).get("id")
@@ -271,7 +271,14 @@ export function Returns() {
               count={
                 <span aria-live="polite">
                   <LtrText>{overviewReturns.length}</LtrText>{" "}
-                  {t("results", "نتیجه")}
+                  {translateCount(
+                    "result",
+                    "results",
+                    "نتیجه",
+                    "نتیجه",
+                    overviewReturns.length,
+                    lang,
+                  )}
                 </span>
               }
             >
@@ -324,11 +331,15 @@ export function Returns() {
                     label:
                       role === "supervisor"
                         ? t("All branches", "همه شعب")
-                        : branchLabel(overviewContext.branch, lang),
+                        : configuredBranchLabel(
+                            state.config,
+                            overviewContext.branch,
+                            lang,
+                          ),
                   },
                   ...(role === "supervisor" ? branches : []).map((value) => ({
                     value,
-                    label: branchLabel(value, lang),
+                    label: configuredBranchLabel(state.config, value, lang),
                   })),
                 ]}
               />
@@ -414,7 +425,13 @@ export function Returns() {
                       <td>
                         <LtrText>{record.supplier}</LtrText>
                       </td>
-                      <td>{branchLabel(record.branch, lang)}</td>
+                      <td className="branch-label">
+                        {configuredBranchLabel(
+                          state.config,
+                          record.branch,
+                          lang,
+                        )}
+                      </td>
                       <td>
                         <DateText value={record.created_at} />
                       </td>
@@ -567,7 +584,9 @@ export function Returns() {
                   </h1>
                   <p className="muted">
                     <LtrText>{record.supplier}</LtrText> ·{" "}
-                    {branchLabel(record.branch, lang)}
+                    <span className="branch-label">
+                      {configuredBranchLabel(state.config, record.branch, lang)}
+                    </span>
                   </p>
                 </div>
                 <div className="return-header-actions">
@@ -750,14 +769,6 @@ export function Returns() {
                           {t("Record pickup", "ثبت جمع‌آوری")}
                         </Button>
                       )}
-                    {record.status === "open" && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => openPanel(record, "resolve")}
-                      >
-                        {t("Record resolution", "ثبت حل‌وفصل")}
-                      </Button>
-                    )}
                     <Button
                       variant="danger"
                       onClick={() => openPanel(record, "cancel")}
@@ -917,8 +928,8 @@ export function Returns() {
                             setRepresentative(event.target.value)
                           }
                           placeholder={t(
-                            "Type the fictional representative name",
-                            "نام ساختگی نماینده را وارد کنید",
+                            "Type the representative name",
+                            "نام نماینده را وارد کنید",
                           )}
                         />
                       </Field>
@@ -926,12 +937,12 @@ export function Returns() {
                         label={
                           panel === "pickup"
                             ? t(
-                                "Fictional signed paper pickup slip reference",
-                                "مرجع ساختگی رسید کاغذی امضاشده جمع‌آوری",
+                                "Signed paper pickup slip reference",
+                                "مرجع رسید کاغذی امضاشده جمع‌آوری",
                               )
                             : t(
-                                "Fictional replacement receipt reference",
-                                "مرجع ساختگی رسید جایگزین",
+                                "Replacement receipt reference",
+                                "مرجع رسید جایگزین",
                               )
                         }
                       >
@@ -966,10 +977,7 @@ export function Returns() {
                         <img
                           className="evidence-photo"
                           src={photo}
-                          alt={t(
-                            "Local demo evidence photo",
-                            "عکس مدرک محلی نمایش",
-                          )}
+                          alt={t("Evidence photo", "عکس مدرک")}
                         />
                       )}
                     </div>
@@ -1035,8 +1043,8 @@ export function Returns() {
                         {resolution !== "no_compensation" && (
                           <Field
                             label={t(
-                              "Fictional supplier credit or compensation document reference",
-                              "مرجع ساختگی سند بستانکاری یا جبران تأمین‌کننده",
+                              "Supplier credit or compensation document reference",
+                              "مرجع سند بستانکاری یا جبران تأمین‌کننده",
                             )}
                           >
                             <input
@@ -1113,7 +1121,13 @@ export function Returns() {
                   <p className="muted">
                     {t("Recorded by", "ثبت‌کننده")}:{" "}
                     {demoUserLabel(context.actor, lang)} ·{" "}
-                    {branchLabel(context.branch, lang)}
+                    <span className="branch-label">
+                      {configuredBranchLabel(
+                        state.config,
+                        context.branch,
+                        lang,
+                      )}
+                    </span>
                   </p>
                   <div className="actions">
                     <Button

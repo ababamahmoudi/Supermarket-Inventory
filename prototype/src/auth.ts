@@ -25,6 +25,7 @@ export interface Account {
 export interface Preferences {
   theme: Theme;
   comfortableText: boolean;
+  comfortableTextExplicit?: boolean;
 }
 export interface AuthState {
   version: 2;
@@ -127,10 +128,13 @@ export function readAuth(): AuthState {
   }
   return seed;
 }
-export function readAuthSession(): AuthSession {
+export function readAuthSession(
+  allowedBranches: readonly string[] = demoSeed.branches,
+): AuthSession {
+  const fallbackBranch = allowedBranches[0] ?? demoSeed.branches[0];
   const empty: AuthSession = {
     username: null,
-    branch: "Branch 1",
+    branch: fallbackBranch,
     lang: "en",
     locked: false,
     authenticatedAt: 0,
@@ -147,11 +151,11 @@ export function readAuthSession(): AuthSession {
       username: user?.username ?? null,
       branch:
         user?.role === "supervisor" &&
-        [...demoSeed.branches, "all"].includes(saved.branch)
+        [...allowedBranches, "all"].includes(saved.branch)
           ? saved.branch
           : user?.branch === "all"
-            ? "Branch 1"
-            : (user?.branch ?? "Branch 1"),
+            ? fallbackBranch
+            : (user?.branch ?? fallbackBranch),
       lang: saved.lang === "fa" ? "fa" : "en",
       locked: Boolean(saved.locked),
       authenticatedAt: Number.isFinite(saved.authenticatedAt)
@@ -246,5 +250,8 @@ export function preferencesFor(
   return {
     theme: preference?.theme === "dark" ? "dark" : "light",
     comfortableText: Boolean(preference?.comfortableText),
+    comfortableTextExplicit:
+      preference?.comfortableTextExplicit ??
+      Boolean(preference?.comfortableText),
   };
 }

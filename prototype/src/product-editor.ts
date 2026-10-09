@@ -1,7 +1,9 @@
 import Decimal from "decimal.js";
 import { effectivePrice, lookupBranch } from "./catalog";
-import { demoBranches, reconcileOffers, syncPriceConflicts } from "./approvals";
+import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import { createId } from "./ids";
+import { configuredBranches } from "./settings";
+import { supplierChoices, supplierMatches } from "./supplier-editor";
 import type { Branch, DemoState, Product, Role } from "./types";
 
 export interface ProductEditorContext {
@@ -58,7 +60,7 @@ function ownProduct(state: DemoState, company: string, code: string): Product {
 function checkContext(state: DemoState, context: ProductEditorContext) {
   if (context.role !== "supervisor") fail("permission");
   if (context.company_id !== state.config.company.seed_key) fail("company");
-  const configured = demoBranches;
+  const configured = configuredBranches(state.config);
   if (
     !context.allowed_branches.length ||
     context.allowed_branches.some((branch) => !configured.includes(branch))
@@ -125,7 +127,13 @@ export function saveProductEdits(
   for (const invoice of [...(state.invoices ?? []), state.invoice])
     if (invoice.company_id === context.company_id)
       suppliers.add(invoice.supplier);
-  if (!suppliers.has(edits.main_supplier)) fail("supplier");
+  if (
+    !suppliers.has(edits.main_supplier) &&
+    !supplierChoices(state).some((item) =>
+      supplierMatches(item, edits.main_supplier),
+    )
+  )
+    fail("supplier");
   if (
     edits.barcode.trim() &&
     state.products.some(
@@ -144,7 +152,7 @@ export function saveProductEdits(
     price = amount.toFixed(2);
     if (edits.scope === "all") {
       if (
-        demoBranches.some(
+        configuredBranches(state.config).some(
           (branch) => !context.allowed_branches.includes(branch),
         )
       )

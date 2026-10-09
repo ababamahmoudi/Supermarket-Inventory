@@ -1,52 +1,98 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+
+async function addProducts(page: Page, codes: string[], copies = 1) {
+  await page.getByRole("tab", { name: "Products", exact: true }).click();
+  for (const code of codes) {
+    await page.getByLabel("Search products", { exact: true }).fill(code);
+    await page
+      .getByLabel(`Copies for ${code}`, { exact: true })
+      .fill(String(copies));
+    await page
+      .getByRole("button", { name: "Add to waitlist", exact: true })
+      .click();
+  }
+  await page.getByRole("tab", { name: /^Waitlist/ }).click();
+}
 
 test("creates a template, starts after four used slots, and prints bilingual labels", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    window.print = () => {
+      document.body.dataset.printed = "yes";
+    };
+  });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
   await expect(
     page.getByRole("heading", { name: "Labels", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("No templates. Create your first template."),
-  ).toBeVisible();
+  await expect(page.getByLabel("Saved template", { exact: true })).toHaveText(
+    "Choose a template",
+  );
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).templates
+          .length,
+    ),
+  ).toBe(0);
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
   await expect(page.getByLabel("Saved template")).toHaveText("Template 1");
-  await expect(page.getByLabel("Starting slot")).toHaveValue("5");
-  await expect(
-    page
-      .locator(".print-sheet")
-      .first()
-      .locator(".label-unused")
-      .filter({ hasText: "Used" }),
-  ).toHaveCount(4);
-  const labels = page.locator(".shelf-label");
+  await addProducts(page, ["0003", "0005", "0009"]);
+  await expect(page.getByLabel("Starting slot", { exact: true })).toHaveValue(
+    "5",
+  );
+  await expect(page.locator(".label-preview-slot.is-used")).toHaveCount(4);
+  const labels = page.locator(".label-bilingual-preview .shelf-label");
   await expect(labels).toHaveCount(3);
+  expect(
+    await labels.evaluateAll((elements) =>
+      elements.map((element) => ({
+        left: (element as HTMLElement).style.left,
+        top: (element as HTMLElement).style.top,
+      })),
+    ),
+  ).toEqual([
+    { left: "74mm", top: "54mm" },
+    { left: "138mm", top: "54mm" },
+    { left: "10mm", top: "98mm" },
+  ]);
   await expect(labels.first()).toContainText("Sour Cherry Juice");
   await expect(labels.first().locator('[lang="fa"]')).toBeVisible();
   await expect(labels.first().locator("img")).toBeVisible();
-  for (const product of demoSeed.products) {
+  for (const product of demoSeed.products)
     await expect(labels.filter({ hasText: product.barcode })).toHaveCount(0);
-  }
-  await page.getByLabel("Copies per product", { exact: true }).fill("2.7");
-  await expect(
-    page.getByLabel("Copies per product", { exact: true }),
-  ).toHaveValue("2");
-  await expect(labels).toHaveCount(6);
+  await page.getByLabel("Copies for 0003", { exact: true }).fill("2.7");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Enter a whole copy count from 1 to 1000.",
+  );
+  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
+    "1",
+  );
+  await expect(labels).toHaveCount(3);
+  await page.getByLabel("Copies for 0003", { exact: true }).fill("2");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
+    "2",
+  );
+  await expect(labels).toHaveCount(4);
   await expect(labels.filter({ hasText: "Sour Cherry Juice" })).toHaveCount(2);
-  await page.evaluate(() => {
-    window.print = () => {
-      document.body.dataset.printed = "yes";
-    };
-  });
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await expect(page.locator("body")).toHaveAttribute("data-printed", "yes");
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".label-print-output .shelf-label")).toHaveCount(4);
+  await page.emulateMedia({ media: "screen" });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "No", exact: true })
+    .click();
   await page.reload();
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByLabel("Saved template").click();
   await expect(page.getByRole("option")).toHaveCount(2);
 });
@@ -56,9 +102,6 @@ test("validates A4 dimensions and Persian labels without external requests", asy
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
-  await expect(
-    page.getByRole("heading", { name: "Labels", exact: true }),
-  ).toBeVisible();
   await page.getByLabel("Width (mm)", { exact: true }).fill("220");
   await page
     .getByRole("button", { name: "Save template", exact: true })
@@ -68,6 +111,7 @@ test("validates A4 dimensions and Persian labels without external requests", asy
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
+  await addProducts(page, ["0003"]);
   await page.getByRole("button", { name: "فارسی", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
@@ -84,18 +128,20 @@ test("requires one branch and prints its approved price instead of a pending pro
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
-  await expect(
-    page.getByRole("heading", { name: "Labels", exact: true }),
-  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Save template", exact: true })
+    .click();
   await setBranch(page, "all");
   await expect(
     page.getByText(
       "Choose one branch above before selecting or printing labels. Labels use that branch’s approved prices and offers.",
     ),
   ).toBeVisible();
-  await expect(page.locator('.labels-controls [role="checkbox"]')).toHaveCount(
-    0,
-  );
+  await page.getByRole("tab", { name: "Products", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Add all filtered", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await expect(
     page.getByRole("button", { name: "Print labels", exact: true }),
   ).toBeDisabled();
@@ -107,38 +153,23 @@ test("requires one branch and prints its approved price instead of a pending pro
   ).toBeVisible();
   await page.getByRole("button", { name: "English", exact: true }).click();
   await setBranch(page, "Branch 2");
-  for (const checkbox of await page
-    .locator('.labels-controls [role="checkbox"]')
-    .all()) {
-    if (await checkbox.isChecked()) await checkbox.uncheck();
-  }
-  const tea = demoSeed.products.find((product) => product.code === "0004")!;
-  const lavash = demoSeed.products.find((product) => product.code === "0006")!;
-  await page
-    .getByRole("checkbox", {
-      name: `${tea.name_en} ${tea.name_fa}`,
-      exact: true,
-    })
-    .check();
-  await page
-    .getByRole("checkbox", {
-      name: `${lavash.name_en} ${lavash.name_fa}`,
-      exact: true,
-    })
-    .check();
-  await page
-    .getByRole("button", { name: "Save template", exact: true })
-    .click();
+  await addProducts(page, ["0004", "0006"]);
   const teaLabel = page
-    .locator(".shelf-label")
-    .filter({ hasText: tea.name_en });
+    .locator(".label-bilingual-preview .shelf-label")
+    .filter({ hasText: "Black Tea 450 g" });
   const lavashLabel = page
-    .locator(".shelf-label")
-    .filter({ hasText: lavash.name_en });
+    .locator(".label-bilingual-preview .shelf-label")
+    .filter({ hasText: "Lavash Bread 500 g" });
   await expect(teaLabel.locator(".price")).toHaveText("$6.99");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
   await expect(lavashLabel).toContainText("3 for $5");
   await setBranch(page, "Branch 1");
+  await expect(
+    page.getByText("No labels waiting. Add products from the Products tab.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await addProducts(page, ["0004", "0006"]);
   await expect(teaLabel.locator(".price")).toHaveText("$6.49");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
   await expect(lavashLabel.filter({ hasText: "$2.99" })).toHaveCount(0);

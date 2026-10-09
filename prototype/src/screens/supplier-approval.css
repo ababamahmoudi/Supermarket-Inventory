@@ -1,0 +1,32 @@
+.supplier-approval-card {
+  display: grid;
+  gap: 16px;
+}
+.supplier-approval-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+.supplier-approval-details dt {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.supplier-approval-details dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.dashboard-supplier-approval .supplier-approval-error {
+  grid-column: 1 / -1;
+}
+.dashboard-supplier-approval .dashboard-queue-product > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .supplier-approval-details {
+    grid-template-columns: 1fr;
+  }
+}

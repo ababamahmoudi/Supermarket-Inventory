@@ -37,8 +37,17 @@
   margin-block-end: 20px;
 }
 .invoice-lines-table table {
-  min-inline-size: 680px;
+  min-inline-size: 860px;
   table-layout: fixed;
+}
+.invoice-lines-table col:first-child {
+  width: 320px;
+}
+.invoice-line-toggle .product-name strong,
+.invoice-line-toggle .product-name small,
+.invoice-line-price > small,
+.invoice-line-price > p {
+  white-space: nowrap;
 }
 .invoice-lines-table th,
 .invoice-lines-table td {

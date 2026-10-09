@@ -85,6 +85,9 @@
 .dashboard-invoices .button {
   padding-inline: 8px;
 }
+.dashboard-invoices td:nth-child(3) {
+  white-space: nowrap;
+}
 .dashboard-list-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -173,6 +176,37 @@
 .purchase-line-chart {
   margin-block-start: 24px;
   direction: ltr;
+  position: relative;
+}
+.dashboard-row-halves > .dashboard-purchases {
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-purchases .purchase-bars {
+  flex: 1;
+  align-content: space-evenly;
+}
+.dashboard-purchases .chart-axis-label {
+  margin-block-start: auto;
+  padding-block-start: 24px;
+}
+.purchase-chart-tooltip {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.6875rem;
+  pointer-events: none;
+}
+.purchase-chart-tooltip strong {
+  display: block;
+  margin-block-start: 4px;
+}
+.purchase-point {
+  cursor: help;
 }
 .purchase-line-chart svg {
   inline-size: 100%;
@@ -205,7 +239,7 @@
   justify-content: space-between;
   direction: ltr;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
 }
 .purchase-week-totals {
   display: grid;

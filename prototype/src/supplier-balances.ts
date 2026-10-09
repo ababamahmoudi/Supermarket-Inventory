@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
-import { configSeed, demoSeed, supplierDetails } from "./config";
+import { configSeed, demoSeed } from "./config";
+import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate, dateAfter } from "./invoice";
 import {
   ledgerCsv,
@@ -55,6 +56,34 @@ export function supplierBalanceSummary(
   throughDate?: string,
 ): SupplierBalanceSummary {
   guard(state, context);
+  const identity = supplierRecords(state).find(
+    (record) =>
+      record.company_id === context.company_id &&
+      supplierMatches(record, supplier),
+  );
+  if (identity?.previous_names?.length) {
+    supplier = identity.name;
+    state = {
+      ...state,
+      ledger: state.ledger.map((row) =>
+        row.company_id === context.company_id &&
+        supplierMatches(identity, row.supplier)
+          ? { ...row, supplier }
+          : row,
+      ),
+      invoices: state.invoices?.map((invoice) =>
+        invoice.company_id === context.company_id &&
+        supplierMatches(identity, invoice.supplier)
+          ? { ...invoice, supplier }
+          : invoice,
+      ),
+      invoice:
+        state.invoice.company_id === context.company_id &&
+        supplierMatches(identity, state.invoice.supplier)
+          ? { ...state.invoice, supplier }
+          : state.invoice,
+    };
+  }
   const summary = ledgerSummary(state, context, supplier, throughDate);
   const snapshotDate =
     state.supplier_balance_snapshot_date ?? companyDate(state.config);
@@ -142,14 +171,20 @@ export function supplierBalanceOverview(
 ): SupplierBalanceRow[] {
   guard(state, context);
   const suppliers = new Set<string>();
-  if (context.company_id === configSeed.company.seed_key)
-    supplierDetails.forEach((supplier) => suppliers.add(supplier.name));
+  const registry = supplierRecords(state).filter(
+    (record) => record.company_id === context.company_id,
+  );
+  registry.forEach((supplier) => suppliers.add(supplier.name));
+  const addName = (name: string) =>
+    suppliers.add(
+      registry.find((record) => supplierMatches(record, name))?.name ?? name,
+    );
   state.products
     .filter((product) => product.company_id === context.company_id)
-    .forEach((product) => suppliers.add(product.main_supplier));
+    .forEach((product) => addName(product.main_supplier));
   state.ledger
     .filter((row) => row.company_id === context.company_id)
-    .forEach((row) => suppliers.add(row.supplier));
+    .forEach((row) => addName(row.supplier));
   return [...suppliers].map((supplier) => {
     const { balance, overdue, next_due_date } = supplierBalanceSummary(
       state,

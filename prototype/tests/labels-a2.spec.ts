@@ -14,6 +14,7 @@ for (const language of ["en", "fa"] as const) {
           configurable: true,
           value: undefined,
         });
+        window.print = () => {};
       });
       await signIn(page, "Floor Worker");
       await page.goto("/#labels");
@@ -29,18 +30,31 @@ for (const language of ["en", "fa"] as const) {
       await expect(
         page.getByLabel("Saved template", { exact: true }),
       ).toHaveText("Template 1");
-      if (language === "fa") await setLanguage(page, "fa");
-      const labels = page.locator(".shelf-label");
+      await page.getByRole("tab", { name: "Products", exact: true }).click();
+      for (const code of ["0003", "0005", "0009"]) {
+        await page.getByLabel("Search products", { exact: true }).fill(code);
+        await page
+          .getByRole("button", { name: "Add to waitlist", exact: true })
+          .click();
+      }
+      await page.getByRole("tab", { name: /^Waitlist/ }).click();
+      await page
+        .getByRole("button", { name: "Print labels", exact: true })
+        .click();
+      await page.emulateMedia({ media: "print" });
+      const labels = page.locator(".label-print-output .shelf-label");
       await expect(labels).toHaveCount(3);
       await expect(labels.first().locator(".price")).toHaveText("$2.99");
       await expect(labels.first().locator('[lang="fa"]')).toBeVisible();
-      await expect(page.getByRole("alert")).toHaveCount(0);
       const metrics = await labels.evaluateAll((boxes) =>
         boxes.map((box) => {
           const outer = box.getBoundingClientRect();
           const inner = box
             .querySelector(".shelf-label-content")!
             .getBoundingClientRect();
+          const image = box
+            .querySelector(".shelf-label-logo")
+            ?.getBoundingClientRect();
           return {
             width: outer.width,
             height: outer.height,
@@ -51,6 +65,7 @@ for (const language of ["en", "fa"] as const) {
               inner.bottom - outer.bottom,
               0,
             ),
+            logoHeight: image?.height,
             priceFont: Number.parseFloat(
               getComputedStyle(box.querySelector(".price")!).fontSize,
             ),
@@ -70,16 +85,25 @@ for (const language of ["en", "fa"] as const) {
         ).toBeLessThan(0.2);
         expect(metric.overflow).toBeLessThanOrEqual(0.2);
         expect(metric.priceFont).toBeGreaterThan(metric.nameFont);
+        if (dimensions[0] >= 50)
+          expect(metric.logoHeight).toBeGreaterThanOrEqual(
+            (8 * 96) / 25.4 - 0.1,
+          );
+        else expect(metric.logoHeight).toBeUndefined();
       }
+      await page.emulateMedia({ media: "screen" });
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "No", exact: true })
+        .click();
+      if (language === "fa") await setLanguage(page, "fa");
       await page.reload();
-      await expect(
-        page.getByLabel(
-          language === "en" ? "Saved template" : "قالب ذخیره‌شده",
-          { exact: true },
-        ),
-      ).toContainText(
-        language === "en" ? "Choose a template" : "یک قالب انتخاب کنید",
-      );
+      await page
+        .getByRole("tab", {
+          name: language === "en" ? "Templates" : "قالب‌ها",
+          exact: true,
+        })
+        .click();
       await page
         .getByLabel(language === "en" ? "Saved template" : "قالب ذخیره‌شده", {
           exact: true,
@@ -88,8 +112,12 @@ for (const language of ["en", "fa"] as const) {
       await page
         .getByRole("option", { name: "Template 1", exact: true })
         .click();
-      await expect(labels).toHaveCount(3);
-      await expect(page.locator(".label-unused")).toHaveCount(0);
+      await expect(
+        page.getByLabel(language === "en" ? "Width (mm)" : "عرض (میلی‌متر)", {
+          exact: true,
+        }),
+      ).toHaveValue(String(dimensions[0]));
+      await expect(page.getByRole("alert")).toHaveCount(0);
     });
   }
 }

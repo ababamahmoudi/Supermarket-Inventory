@@ -3,6 +3,9 @@ import { demoSeed as demo } from "./config";
 import { calculatePrice } from "./pricing";
 import { effectivePrice } from "./catalog";
 import { createId } from "./ids";
+import { configuredBranches } from "./settings";
+import { supplierRecords, supplierMatches } from "./supplier-editor";
+import { nextProductCode } from "./manual-product";
 import type {
   Branch,
   CompanyConfig,
@@ -74,6 +77,7 @@ export function createInvoice(
     company_id: company,
     branch,
     status: "draft",
+    entry_mode: manual ? "manual" : "upload",
     supplier_confirmed: true,
     invoice_date: today,
     received_at: new Date().toISOString(),
@@ -104,6 +108,10 @@ export function createInvoice(
         })),
     ...(manual
       ? {
+          supplier: "",
+          supplier_confirmed: false,
+          supplier_invoice_number: "",
+          payment_terms: "",
           subtotal: "0.00",
           tax: "0.00",
           final_total: "0.00",
@@ -342,11 +350,24 @@ export function invoiceBlockers(
   const invoice = state.invoice;
   const blockers: InvoiceBlocker[] = [];
   if (role === "cashier") blockers.push("permission");
-  if (branch !== invoice.branch || branch === "all") blockers.push("branch");
+  if (
+    !configuredBranches(state.config).includes(invoice.branch) ||
+    (branch !== invoice.branch && !(role === "supervisor" && branch === "all"))
+  )
+    blockers.push("branch");
   if (invoice.company_id !== state.config.company.seed_key)
     blockers.push("company");
   if (!invoice.supplier.trim()) blockers.push("supplier");
-  if (!invoice.supplier_confirmed || !demo.suppliers.includes(invoice.supplier))
+  const supplier = supplierRecords(state).find(
+    (record) =>
+      record.company_id === invoice.company_id &&
+      supplierMatches(record, invoice.supplier),
+  );
+  if (
+    !supplier ||
+    supplier.status !== "confirmed" ||
+    !invoice.supplier_confirmed
+  )
     blockers.push("supplier_pending");
   if (
     !invoice.invoice_date ||
@@ -458,16 +479,8 @@ export function postInvoice(
       if (product) line.product_code = product.code;
     }
     if (line.product_code === "NEW") {
-      const max = Math.max(
-        0,
-        ...state.products
-          .filter((item) => item.company_id === invoice.company_id)
-          .map((item) => Number(item.code)),
-      );
-      line.product_code = String(max + 1).padStart(
-        state.config.product_codes.min_digits,
-        "0",
-      );
+      line.product_code = nextProductCode(state);
+      state.product_code_high_water = Number(line.product_code);
       product = {
         company_id: invoice.company_id,
         code: line.product_code,
@@ -695,7 +708,12 @@ export function postInvoice(
     at: now,
   });
   state.invoices ??= [];
-  state.invoices.push(structuredClone(invoice));
+  const savedIndex = state.invoices.findIndex(
+    (saved) =>
+      saved.company_id === invoice.company_id && saved.id === invoice.id,
+  );
+  if (savedIndex >= 0) state.invoices[savedIndex] = structuredClone(invoice);
+  else state.invoices.push(structuredClone(invoice));
   return true;
 }
 

@@ -1,314 +1,1022 @@
-import { useState } from "react";
-import Decimal from "decimal.js";
+import { useEffect, useState } from "react";
+import { History, Plus } from "lucide-react";
 import { useDemo } from "../store";
 import {
   Badge,
+  Button,
   Card,
   DataTable,
+  Dialog,
+  Dropzone,
   Field,
   NumberField,
   PageHeader,
   Select,
+  Switch,
 } from "../ui";
-import "./invoice-settings-labels.css";
 import {
-  calculatePrice,
-  type PricingErrorCode,
-  type PricingResult,
-  PricingValidationError,
-  validatePricingConfig,
-} from "../pricing";
+  branchId,
+  branchLabel,
+  newBranch,
+  saveBranchSettings,
+  saveCompanySettings,
+  saveModuleSettings,
+  saveOfferSettings,
+  setBranchActive,
+  SettingsError,
+  type ConfigBranch,
+} from "../settings";
+import type { CompanyConfig } from "../types";
+import PricingSettings from "./PricingSettings";
+import { NotebookSettings } from "./NotebookSettings";
+import { LabelsSettings } from "./Labels";
+import "./settings-b.css";
 
+type Group =
+  | "company"
+  | "branches"
+  | "people"
+  | "catalog"
+  | "pricing"
+  | "offers"
+  | "taxes"
+  | "receiving"
+  | "returns"
+  | "notes"
+  | "notifications"
+  | "modules"
+  | "data";
 type Translate = (en: string, fa: string) => string;
-
-function errorText(code: PricingErrorCode, t: Translate): string {
-  const messages: Record<PricingErrorCode, [string, string]> = {
-    invalid_cost: [
-      "Enter a cost of zero or more, with no more than four decimal places.",
-      "هزینه صفر یا بیشتر، با حداکثر چهار رقم اعشار وارد کنید.",
+const groups: {
+  key: Group;
+  label: [string, string];
+  description: [string, string];
+  planned?: [string, string][];
+}[] = [
+  {
+    key: "company",
+    label: ["Company", "شرکت"],
+    description: [
+      "Company name, branding and display preferences.",
+      "نام شرکت، هویت بصری و تنظیمات نمایش.",
     ],
-    invalid_divisor: [
-      "Enter a divisor greater than zero. The previous valid value is still in use.",
-      "ضریب تقسیم بزرگ‌تر از صفر وارد کنید. مقدار معتبر قبلی همچنان استفاده می‌شود.",
+  },
+  {
+    key: "branches",
+    label: ["Branches", "شعب"],
+    description: [
+      "Add branches and keep their details up to date.",
+      "شعب را اضافه کنید و اطلاعات آن‌ها را به‌روز نگه دارید.",
     ],
-    unknown_category: [
-      "Choose a pricing category from the list.",
-      "یک دسته قیمت‌گذاری از فهرست انتخاب کنید.",
+  },
+  {
+    key: "people",
+    label: ["People", "کارکنان"],
+    description: [
+      "Employees, roles and registered store computers.",
+      "کارکنان، نقش‌ها و رایانه‌های ثبت‌شده فروشگاه.",
     ],
-    invalid_bands: [
-      "Rounding bands must cover zero to one without gaps or overlaps.",
-      "بازه‌های گرد کردن باید از صفر تا یک، بدون فاصله یا هم‌پوشانی باشند.",
+    planned: [
+      ["Employees and roles", "کارکنان و نقش‌ها"],
+      ["Permissions", "مجوزها"],
+      ["Password rules and lockout", "قواعد رمز عبور و قفل حساب"],
+      ["Idle lock", "قفل خودکار"],
+      ["Registered store computers", "رایانه‌های ثبت‌شده فروشگاه"],
     ],
-    invalid_ending: [
-      "Use a price ending from 0.00 to 0.99, with no more than two decimal places.",
-      "پایان قیمت را بین 0.00 و 0.99، با حداکثر دو رقم اعشار وارد کنید.",
+  },
+  {
+    key: "catalog",
+    label: ["Catalog", "کاتالوگ"],
+    description: [
+      "Pricing categories, rounding rules and the live price tester.",
+      "دسته‌های قیمت‌گذاری، قواعد گرد کردن و آزمایش زنده قیمت.",
     ],
-    invalid_correction: [
-      "Corrections must use unique source prices and nonnegative two-decimal amounts.",
-      "اصلاح قیمت باید مبدأ یکتا و مبلغ غیرمنفی با دو رقم اعشار داشته باشد.",
+  },
+  {
+    key: "pricing",
+    label: ["Pricing and approvals", "قیمت‌گذاری و تأییدها"],
+    description: [
+      "Approval rules and branch price conflicts.",
+      "قواعد تأیید و تعارض قیمت شعب.",
     ],
-    invalid_minimum: [
-      "Use a nonnegative minimum price with no more than two decimal places.",
-      "حداقل قیمت غیرمنفی با حداکثر دو رقم اعشار وارد کنید.",
+    planned: [
+      ["Changes that need approval", "تغییرات نیازمند تأیید"],
+      ["Default approval scope", "دامنه پیش‌فرض تأیید"],
+      ["Cross-branch conflict alerts", "هشدار تعارض قیمت میان شعب"],
     ],
-    invalid_margin: [
-      "Use a minimum margin from zero to one, or leave it inactive.",
-      "حداقل حاشیه سود بین صفر و یک باشد یا غیرفعال بماند.",
+  },
+  {
+    key: "offers",
+    label: ["Offers", "پیشنهادها"],
+    description: [
+      "Price-to-offer mappings and mix-and-match pools.",
+      "نگاشت قیمت به پیشنهاد و گروه‌های ترکیبی.",
     ],
-    invalid_rounding: [
-      "Choose a supported rounding method.",
-      "یک روش گرد کردن پشتیبانی‌شده انتخاب کنید.",
+  },
+  {
+    key: "taxes",
+    label: ["Taxes", "مالیات"],
+    description: [
+      "Tax profiles, rates and additional fees.",
+      "پروفایل‌های مالیات، نرخ‌ها و هزینه‌های اضافی.",
+    ],
+    planned: [
+      ["Tax profiles and rates", "پروفایل‌ها و نرخ‌های مالیات"],
+      [
+        "Container deposits and additional fees",
+        "ودیعه ظروف و هزینه‌های اضافی",
+      ],
+    ],
+  },
+  {
+    key: "receiving",
+    label: ["Receiving", "دریافت کالا"],
+    description: [
+      "Invoice fields, numbering and reading preferences.",
+      "فیلدهای فاکتور، شماره‌گذاری و تنظیمات خواندن.",
+    ],
+    planned: [
+      ["Required invoice fields", "فیلدهای الزامی فاکتور"],
+      ["Automatic invoice numbering", "شماره‌گذاری خودکار فاکتور"],
+      ["Tax-mismatch tolerance", "تلورانس اختلاف مالیات"],
+      ["AI reading and confidence", "خواندن هوش مصنوعی و اطمینان"],
+      [
+        "Same-supplier lower-price questions",
+        "پرسش‌های کاهش قیمت همان تأمین‌کننده",
+      ],
+    ],
+  },
+  {
+    key: "returns",
+    label: ["Returns/date tracking/labels", "مرجوعی/پیگیری تاریخ/برچسب"],
+    description: [
+      "Label waitlist preferences and editable A4 templates.",
+      "تنظیمات فهرست انتظار برچسب و قالب‌های قابل ویرایش A4.",
+    ],
+  },
+  {
+    key: "notes",
+    label: ["Notes", "یادداشت‌ها"],
+    description: [
+      "Custom notebooks, permissions and entry fields.",
+      "دفترهای سفارشی، مجوزها و فیلدهای ثبت یادداشت.",
+    ],
+  },
+  {
+    key: "notifications",
+    label: ["Notifications", "اعلان‌ها"],
+    description: [
+      "Which events notify each role.",
+      "اعلان رویدادها برای هر نقش.",
+    ],
+    planned: [
+      ["In-app notification rules", "قواعد اعلان داخل برنامه"],
+      ["Email notifications", "اعلان ایمیلی"],
+    ],
+  },
+  {
+    key: "modules",
+    label: ["Modules", "بخش‌ها"],
+    description: [
+      "Choose the sections available to your company.",
+      "بخش‌های در دسترس شرکت را انتخاب کنید.",
+    ],
+  },
+  {
+    key: "data",
+    label: ["Data", "داده‌ها"],
+    description: [
+      "Import, export and recorded History.",
+      "ورود، خروج و تاریخچه ثبت‌شده.",
+    ],
+    planned: [
+      ["CSV import", "ورود CSV"],
+      ["CSV export", "خروج CSV"],
+    ],
+  },
+];
+function requestedGroup(): Group | undefined {
+  const query = new URLSearchParams(window.location.hash.split("?")[1] ?? "");
+  const requested = query.get("group");
+  return groups.find((group) => group.key === requested)?.key;
+}
+function settingsError(error: unknown, t: Translate): string {
+  const messages: Record<string, [string, string]> = {
+    permission: [
+      "Only the Supervisor can change Settings.",
+      "فقط سرپرست می‌تواند تنظیمات را تغییر دهد.",
+    ],
+    company: [
+      "This change belongs to another company.",
+      "این تغییر متعلق به شرکت دیگری است.",
+    ],
+    name: [
+      "Enter both the English and Persian names.",
+      "نام انگلیسی و فارسی را وارد کنید.",
+    ],
+    duplicate: [
+      "A branch already has this name. Use a different name.",
+      "شعبه‌ای با این نام وجود دارد. نام دیگری وارد کنید.",
+    ],
+    branch: [
+      "Choose a branch from this company.",
+      "شعبه‌ای از این شرکت انتخاب کنید.",
+    ],
+    last_branch: [
+      "Keep at least one active branch.",
+      "حداقل یک شعبه فعال نگه دارید.",
+    ],
+    currency: [
+      "Enter a three-letter currency code, such as CAD.",
+      "کد سه‌حرفی ارز، مانند CAD، وارد کنید.",
+    ],
+    timezone: [
+      "Enter a valid time zone, such as America/Toronto.",
+      "منطقه زمانی معتبر، مانند America/Toronto، وارد کنید.",
+    ],
+    color: [
+      "Enter a six-digit brand color, such as #2B59C3.",
+      "رنگ شش‌رقمی برند، مانند ‎#2B59C3، وارد کنید.",
+    ],
+    mapping: [
+      "Use unique two-decimal prices, and give each mapping an offer and a pool.",
+      "از قیمت‌های یکتا با دو رقم اعشار استفاده کنید و برای هر نگاشت پیشنهاد و گروه وارد کنید.",
     ],
   };
-  return t(...messages[code]);
-}
-
-function categoryLabel(key: string, label: string, t: Translate): string {
-  const labels: Record<string, string> = {
-    grocery: "مواد غذایی",
-    grocery_taxable: "مواد غذایی (مشمول مالیات)",
-    rice: "برنج",
-    kitchenware: "لوازم آشپزخانه",
-  };
-  return t(label, labels[key] ?? label);
-}
-
-export default function Settings() {
-  const { state, update, t, money } = useDemo();
-  const [categoryKey, setCategoryKey] = useState(
-    state.config.pricing_categories[0]?.key ?? "",
+  return t(
+    ...(messages[error instanceof SettingsError ? error.code : "name"] ??
+      messages.name),
   );
-  const [cost, setCost] = useState("1.00");
-  const [invalidDivisors, setInvalidDivisors] = useState<
-    Record<string, string>
-  >({});
-  const [divisorErrors, setDivisorErrors] = useState<
-    Record<string, PricingErrorCode>
-  >({});
-  let result: PricingResult | null = null;
-  let costError: string | undefined;
-  try {
-    result = calculatePrice(cost, categoryKey, state.config);
-  } catch (error) {
-    costError = errorText(
-      error instanceof PricingValidationError ? error.code : "invalid_cost",
-      t,
-    );
-  }
-
-  function editDivisor(key: string, value: string) {
-    const candidate = structuredClone(state.config);
-    candidate.pricing_categories.find(
-      (entry) => entry.key === key,
-    )!.cost_divisor = value;
+}
+function SaveBar({
+  dirty,
+  save,
+  cancel,
+}: {
+  dirty: boolean;
+  save: () => void;
+  cancel: () => void;
+}) {
+  const { t } = useDemo();
+  return dirty ? (
+    <div className="settings-save-bar">
+      <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
+      <Button variant="secondary" onClick={cancel}>
+        {t("Cancel", "لغو")}
+      </Button>
+      <Button onClick={save}>{t("Save changes", "ذخیره تغییرات")}</Button>
+    </div>
+  ) : null;
+}
+function CompanySettings() {
+  const { state, update, t, role, user } = useDemo();
+  const persisted = JSON.stringify(state.config.company);
+  const [draft, setDraft] = useState<CompanyConfig["company"]>(() =>
+    structuredClone(state.config.company),
+  );
+  const [error, setError] = useState<string>();
+  function save() {
     try {
-      validatePricingConfig(candidate);
-      update((draft) => {
-        draft.config = candidate;
+      const check = structuredClone(state);
+      saveCompanySettings(check, draft, {
+        role: role ?? "cashier",
+        company_id: state.config.company.seed_key,
+        by: user?.name ?? "",
       });
-      setInvalidDivisors((previous) => {
-        const next = { ...previous };
-        delete next[key];
-        return next;
-      });
-      setDivisorErrors((previous) => {
-        const next = { ...previous };
-        delete next[key];
-        return next;
-      });
-    } catch (error) {
-      setInvalidDivisors((previous) => ({ ...previous, [key]: value }));
-      setDivisorErrors((previous) => ({
-        ...previous,
-        [key]:
-          error instanceof PricingValidationError
-            ? error.code
-            : "invalid_divisor",
-      }));
+      update((next) =>
+        saveCompanySettings(next, draft, {
+          role: role ?? "cashier",
+          company_id: state.config.company.seed_key,
+          by: user?.name ?? "",
+        }),
+      );
+      setError(undefined);
+    } catch (failure) {
+      setError(settingsError(failure, t));
     }
   }
-
+  function logo(file: File) {
+    if (
+      !/^image\/(png|jpeg|webp)$/.test(file.type) ||
+      file.size > 2 * 1024 * 1024
+    ) {
+      setError(
+        t(
+          "Use a PNG, JPEG or WebP logo smaller than 2 MB.",
+          "از نشان PNG، JPEG یا WebP کوچک‌تر از 2 مگابایت استفاده کنید.",
+        ),
+      );
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () =>
+      setDraft((current) => ({ ...current, logo_data: String(reader.result) }));
+    reader.readAsDataURL(file);
+  }
   return (
     <>
-      <PageHeader
-        title={t("Settings", "تنظیمات")}
-        description={t(
-          "Change pricing rules and see calculated prices update immediately.",
-          "قواعد قیمت‌گذاری را تغییر دهید و نتیجه محاسبه را بلافاصله ببینید.",
+      <Card
+        title={t("Company details", "اطلاعات شرکت")}
+        className="settings-form-card"
+      >
+        <div className="form-grid settings-company-fields">
+          <Field label={t("Name (English)", "نام (انگلیسی)")}>
+            <input
+              value={draft.name_en}
+              onChange={(event) =>
+                setDraft({ ...draft, name_en: event.target.value })
+              }
+            />
+          </Field>
+          <Field label={t("Name (Persian)", "نام (فارسی)")}>
+            <input
+              dir="rtl"
+              value={draft.name_fa}
+              onChange={(event) =>
+                setDraft({ ...draft, name_fa: event.target.value })
+              }
+            />
+          </Field>
+          <Field label={t("Currency", "ارز")}>
+            <input
+              dir="ltr"
+              maxLength={3}
+              value={draft.currency}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  currency: event.target.value.toUpperCase(),
+                })
+              }
+            />
+          </Field>
+          <Field label={t("Time zone", "منطقه زمانی")}>
+            <input
+              dir="ltr"
+              value={draft.timezone}
+              onChange={(event) =>
+                setDraft({ ...draft, timezone: event.target.value })
+              }
+            />
+          </Field>
+          <Field label={t("Brand color", "رنگ برند")}>
+            <input
+              dir="ltr"
+              value={draft.branding.primary_color}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  branding: {
+                    ...draft.branding,
+                    primary_color: event.target.value,
+                  },
+                })
+              }
+            />
+          </Field>
+          <Field label={t("Dark-theme brand color", "رنگ برند در حالت تیره")}>
+            <input
+              dir="ltr"
+              value={draft.branding.dark_primary_color}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  branding: {
+                    ...draft.branding,
+                    dark_primary_color: event.target.value,
+                  },
+                })
+              }
+            />
+          </Field>
+          <Field label={t("Date format", "قالب تاریخ")}>
+            <Select
+              value="yyyy-mm-dd"
+              onChange={() => setDraft({ ...draft, date_format: "yyyy-mm-dd" })}
+              options={[{ value: "yyyy-mm-dd", label: "YYYY-MM-DD" }]}
+            />
+          </Field>
+          <Field label={t("Default text size", "اندازه پیش‌فرض متن")}>
+            <Select
+              value={draft.text_size ?? "normal"}
+              onChange={(value) =>
+                setDraft({ ...draft, text_size: value as "normal" | "large" })
+              }
+              options={[
+                { value: "normal", label: t("Normal", "معمولی") },
+                { value: "large", label: t("Comfortable", "خوانا") },
+              ]}
+            />
+          </Field>
+        </div>
+        <div className="settings-switch-list">
+          <Switch
+            checked={draft.ui_languages.includes("en")}
+            onChange={(enabled) => {
+              const languages = enabled
+                ? [...new Set([...draft.ui_languages, "en"])]
+                : draft.ui_languages.filter((language) => language !== "en");
+              if (languages.length)
+                setDraft({ ...draft, ui_languages: languages });
+            }}
+          >
+            {t("English", "انگلیسی")}
+          </Switch>
+          <Switch
+            checked={draft.ui_languages.includes("fa")}
+            onChange={(enabled) => {
+              const languages = enabled
+                ? [...new Set([...draft.ui_languages, "fa"])]
+                : draft.ui_languages.filter((language) => language !== "fa");
+              if (languages.length)
+                setDraft({ ...draft, ui_languages: languages });
+            }}
+          >
+            {t("Persian", "فارسی")}
+          </Switch>
+        </div>
+      </Card>
+      <Card title={t("Logo", "نشان")} className="settings-form-card">
+        <Dropzone
+          accept="image/png,image/jpeg,image/webp"
+          fileName={
+            draft.logo_data ? t("Company logo", "نشان شرکت") : undefined
+          }
+          onChange={logo}
+          onRemove={() => setDraft({ ...draft, logo_data: undefined })}
+        />
+        {draft.logo_data && (
+          <img
+            className="settings-logo-preview"
+            src={draft.logo_data}
+            alt={t("Company logo", "نشان شرکت")}
+          />
         )}
-      />
-      <Card title={t("Pricing categories", "دسته‌های قیمت‌گذاری")}>
-        <p className="muted">
-          {t(
-            "Valid divisor changes save automatically in this demo. Approved selling prices still require Supervisor approval.",
-            "تغییر معتبر ضریب تقسیم در این دمو خودکار ذخیره می‌شود. تغییر قیمت فروش تأییدشده همچنان به تأیید سرپرست نیاز دارد.",
-          )}
+      </Card>
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
         </p>
-        <DataTable>
+      )}
+      <SaveBar
+        dirty={JSON.stringify(draft) !== persisted}
+        save={save}
+        cancel={() => {
+          setDraft(structuredClone(state.config.company));
+          setError(undefined);
+        }}
+      />
+    </>
+  );
+}
+function BranchSettings() {
+  const { state, update, t, role, user, lang } = useDemo();
+  const [editing, setEditing] = useState<ConfigBranch | null>(null);
+  const [error, setError] = useState<string>();
+  const actor = {
+    role: role ?? "cashier",
+    company_id: state.config.company.seed_key,
+    by: user?.name ?? "",
+  };
+  function save() {
+    if (!editing) return;
+    try {
+      saveBranchSettings(structuredClone(state), editing, actor);
+      update((next) => saveBranchSettings(next, editing, actor));
+      setEditing(null);
+      setError(undefined);
+    } catch (failure) {
+      setError(settingsError(failure, t));
+    }
+  }
+  function active(code: string, value: boolean) {
+    try {
+      setBranchActive(structuredClone(state), code, value, actor);
+      update((next) => setBranchActive(next, code, value, actor));
+      setError(undefined);
+    } catch (failure) {
+      setError(settingsError(failure, t));
+    }
+  }
+  return (
+    <>
+      <Card title={t("Branches", "شعب")}>
+        <div className="settings-section-actions">
+          <Button
+            onClick={() => {
+              setEditing(newBranch(state.config));
+              setError(undefined);
+            }}
+          >
+            <Plus size={18} />
+            {t("Add branch", "افزودن شعبه")}
+          </Button>
+        </div>
+        <DataTable
+          columns={[
+            { width: "23%" },
+            { width: "28%" },
+            { width: "15%" },
+            { width: "12%" },
+            { width: 176, actions: true },
+          ]}
+        >
           <thead>
             <tr>
-              <th scope="col">{t("Category", "دسته")}</th>
-              <th scope="col">{t("Cost divisor", "ضریب تقسیم هزینه")}</th>
-              <th scope="col">{t("Rounding", "گرد کردن")}</th>
-              <th scope="col">{t("Tax", "مالیات")}</th>
-              <th scope="col">
-                {t("Date tracking prompt", "پرسش پیگیری تاریخ")}
-              </th>
-              <th scope="col">{t("Minimum margin", "حداقل حاشیه سود")}</th>
+              <th>{t("Name", "نام")}</th>
+              <th>{t("Address", "نشانی")}</th>
+              <th>{t("Phone", "تلفن")}</th>
+              <th>{t("Status", "وضعیت")}</th>
+              <th>{t("Actions", "عملیات")}</th>
             </tr>
           </thead>
           <tbody>
-            {state.config.pricing_categories.map((category) => (
-              <tr key={category.key}>
+            {state.config.branches.map((branch, index) => (
+              <tr key={branch.code}>
                 <th scope="row">
-                  {categoryLabel(category.key, category.label, t)}
+                  {branchLabel(state.config, branchId(branch, index), lang)}
                 </th>
+                <td>{branch.address || "—"}</td>
                 <td>
-                  <label
-                    className="sr-only"
-                    htmlFor={`divisor-${category.key}`}
+                  <bdi dir="ltr">{branch.phone || "—"}</bdi>
+                </td>
+                <td>
+                  <Badge
+                    tone={branch.active === false ? "neutral" : "approved"}
                   >
-                    {t("Cost divisor for", "ضریب تقسیم برای")}{" "}
-                    {categoryLabel(category.key, category.label, t)}
-                  </label>
-                  <NumberField
-                    id={`divisor-${category.key}`}
-                    dir="ltr"
-                    className="numeric control-narrow"
-                    value={
-                      invalidDivisors[category.key] ?? category.cost_divisor
-                    }
-                    onChange={(value) => editDivisor(category.key, value)}
-                    aria-invalid={Boolean(divisorErrors[category.key])}
-                    aria-describedby={
-                      divisorErrors[category.key]
-                        ? `divisor-error-${category.key}`
-                        : undefined
-                    }
-                  />
-                  {divisorErrors[category.key] && (
-                    <p
-                      id={`divisor-error-${category.key}`}
-                      className="form-error"
-                      role="alert"
-                    >
-                      {errorText(divisorErrors[category.key], t)}
-                    </p>
-                  )}
-                </td>
-                <td>
-                  {category.rounding === "bands"
-                    ? t("Configured bands", "بازه‌های تنظیم‌شده")
-                    : t(
-                        "Round up to configured ending",
-                        "گرد کردن رو به بالا تا پایان تنظیم‌شده",
-                      )}
-                </td>
-                <td>
-                  {category.taxable ? (
-                    <Badge tone="info">{t("Taxable", "مشمول مالیات")}</Badge>
-                  ) : (
-                    t("Non-taxable", "غیرمشمول مالیات")
-                  )}
-                </td>
-                <td>
-                  {category.date_tracking_prompt
-                    ? t("Yes", "بله")
-                    : t("No", "خیر")}
-                </td>
-                <td>
-                  <bdi dir="ltr">
-                    {category.minimum_margin === null
+                    {branch.active === false
                       ? t("Inactive", "غیرفعال")
-                      : `${new Decimal(category.minimum_margin).times("100").toFixed(0)}%`}
-                  </bdi>
+                      : t("Active", "فعال")}
+                  </Badge>
+                </td>
+                <td>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setEditing({
+                        ...structuredClone(branch),
+                        id: branchId(branch, index),
+                        name_en: branch.name_en.replace(
+                          /\s*\(PLACEHOLDER.*$/i,
+                          "",
+                        ),
+                      });
+                      setError(undefined);
+                    }}
+                  >
+                    {t("Edit", "ویرایش")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => active(branch.code, branch.active === false)}
+                  >
+                    {branch.active === false
+                      ? t("Reactivate", "فعال‌سازی دوباره")
+                      : t("Deactivate", "غیرفعال کردن")}
+                  </Button>
                 </td>
               </tr>
             ))}
           </tbody>
         </DataTable>
       </Card>
-
+      {error && !editing && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      <Dialog
+        open={Boolean(editing)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditing(null);
+            setError(undefined);
+          }
+        }}
+        title={
+          state.config.branches.some((branch) => branch.code === editing?.code)
+            ? t("Edit branch", "ویرایش شعبه")
+            : t("Add branch", "افزودن شعبه")
+        }
+        className="settings-dialog"
+      >
+        {editing && (
+          <>
+            <div className="form-grid settings-dialog-fields">
+              <Field label={t("Name (English)", "نام (انگلیسی)")}>
+                <input
+                  value={editing.name_en}
+                  onChange={(event) =>
+                    setEditing({ ...editing, name_en: event.target.value })
+                  }
+                />
+              </Field>
+              <Field label={t("Name (Persian)", "نام (فارسی)")}>
+                <input
+                  dir="rtl"
+                  value={editing.name_fa}
+                  onChange={(event) =>
+                    setEditing({ ...editing, name_fa: event.target.value })
+                  }
+                />
+              </Field>
+              <Field label={t("Address", "نشانی")}>
+                <input
+                  value={editing.address ?? ""}
+                  onChange={(event) =>
+                    setEditing({ ...editing, address: event.target.value })
+                  }
+                />
+              </Field>
+              <Field label={t("Phone", "تلفن")}>
+                <input
+                  dir="ltr"
+                  value={editing.phone ?? ""}
+                  onChange={(event) =>
+                    setEditing({ ...editing, phone: event.target.value })
+                  }
+                />
+              </Field>
+              <Field label={t("Opening hours", "ساعت کاری")}>
+                <input
+                  value={editing.opening_hours ?? ""}
+                  onChange={(event) =>
+                    setEditing({
+                      ...editing,
+                      opening_hours: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+              <Field label={t("Tax region", "منطقه مالیاتی")}>
+                <input
+                  value={editing.tax_region ?? ""}
+                  onChange={(event) =>
+                    setEditing({ ...editing, tax_region: event.target.value })
+                  }
+                />
+              </Field>
+            </div>
+            {error && (
+              <p role="alert" className="form-error">
+                {error}
+              </p>
+            )}
+            <div className="settings-save-bar">
+              <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
+              <Button variant="secondary" onClick={() => setEditing(null)}>
+                {t("Cancel", "لغو")}
+              </Button>
+              <Button onClick={save}>
+                {t("Save changes", "ذخیره تغییرات")}
+              </Button>
+            </div>
+          </>
+        )}
+      </Dialog>
+    </>
+  );
+}
+function OfferSettings() {
+  const { state, update, t, role, user } = useDemo();
+  const persisted = JSON.stringify(state.config.promotions);
+  const [draft, setDraft] = useState(() =>
+    structuredClone(state.config.promotions),
+  );
+  const [error, setError] = useState<string>();
+  function save() {
+    try {
+      const actor = {
+        role: role ?? "cashier",
+        company_id: state.config.company.seed_key,
+        by: user?.name ?? "",
+      };
+      saveOfferSettings(structuredClone(state), draft, actor);
+      update((next) => saveOfferSettings(next, draft, actor));
+      setError(undefined);
+    } catch (failure) {
+      setError(settingsError(failure, t));
+    }
+  }
+  return (
+    <>
       <Card
-        title={t("Price tester", "آزمایش قیمت")}
-        className="settings-price-tester"
+        title={t("Price-to-offer mappings", "نگاشت قیمت به پیشنهاد")}
+        className="settings-form-card"
+      >
+        <div className="settings-offer-mappings">
+          {draft.price_to_offer.map((mapping, index) => (
+            <div className="settings-offer-mapping" key={index}>
+              <Field label={t("Selling price", "قیمت فروش")}>
+                <NumberField
+                  dir="ltr"
+                  value={mapping.price}
+                  onChange={(value) =>
+                    setDraft({
+                      ...draft,
+                      price_to_offer: draft.price_to_offer.map(
+                        (entry, position) =>
+                          position === index
+                            ? { ...entry, price: value }
+                            : entry,
+                      ),
+                    })
+                  }
+                />
+              </Field>
+              <Field label={t("Offer", "پیشنهاد")}>
+                <input
+                  dir="ltr"
+                  value={mapping.offer}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      price_to_offer: draft.price_to_offer.map(
+                        (entry, position) =>
+                          position === index
+                            ? { ...entry, offer: event.target.value }
+                            : entry,
+                      ),
+                    })
+                  }
+                />
+              </Field>
+              <Field label={t("Mix-and-match pool", "گروه ترکیبی")}>
+                <input
+                  dir="ltr"
+                  value={mapping.mix_and_match_pool}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      price_to_offer: draft.price_to_offer.map(
+                        (entry, position) =>
+                          position === index
+                            ? {
+                                ...entry,
+                                mix_and_match_pool: event.target.value,
+                              }
+                            : entry,
+                      ),
+                    })
+                  }
+                />
+              </Field>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    price_to_offer: draft.price_to_offer.filter(
+                      (_, position) => position !== index,
+                    ),
+                  })
+                }
+              >
+                {t("Remove", "برداشتن")}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <div className="settings-section-actions">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              setDraft({
+                ...draft,
+                price_to_offer: [
+                  ...draft.price_to_offer,
+                  {
+                    price: "",
+                    offer: "",
+                    mix_and_match_pool: "",
+                    assumption: false,
+                  },
+                ],
+              })
+            }
+          >
+            {t("Add mapping", "افزودن نگاشت")}
+          </Button>
+        </div>
+      </Card>
+      <Card
+        title={t("Offer suggestions", "پیشنهادهای تخفیف")}
+        className="settings-form-card"
+      >
+        <Switch
+          checked={draft.ai_suggestions_enabled !== false}
+          onChange={(enabled) =>
+            setDraft({ ...draft, ai_suggestions_enabled: enabled })
+          }
+        >
+          {t("AI offer suggestions", "پیشنهاد تخفیف هوش مصنوعی")}
+        </Switch>
+        <p className="muted">
+          {t(
+            "Suggested offers need confirmation before becoming active.",
+            "پیشنهادها پیش از فعال شدن به تأیید نیاز دارند.",
+          )}
+        </p>
+      </Card>
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      <SaveBar
+        dirty={JSON.stringify(draft) !== persisted}
+        save={save}
+        cancel={() => {
+          setDraft(structuredClone(state.config.promotions));
+          setError(undefined);
+        }}
+      />
+    </>
+  );
+}
+const moduleLabels: [keyof CompanyConfig["modules"], string, string][] = [
+  ["invoices", "Invoices", "فاکتورها"],
+  ["suppliers", "Suppliers", "تأمین‌کنندگان"],
+  ["returns", "Returns", "مرجوعی‌ها"],
+  ["labels", "Labels", "برچسب‌ها"],
+  ["date_tracking", "Date tracking", "پیگیری تاریخ"],
+  ["notes", "Notes", "یادداشت‌ها"],
+  ["payables", "Payables", "حساب‌های پرداختنی"],
+];
+function ModuleSettings() {
+  const { state, update, t, role, user } = useDemo();
+  const persisted = JSON.stringify(state.config.modules);
+  const [draft, setDraft] = useState(() =>
+    structuredClone(state.config.modules),
+  );
+  return (
+    <>
+      <Card title={t("Modules", "بخش‌ها")} className="settings-form-card">
+        <div className="settings-switch-list">
+          {moduleLabels.map(([key, en, fa]) => (
+            <Switch
+              key={key}
+              checked={draft[key]}
+              onChange={(value) => setDraft({ ...draft, [key]: value })}
+            >
+              {t(en, fa)}
+            </Switch>
+          ))}
+        </div>
+      </Card>
+      <Card
+        title={t("Planned sections", "بخش‌های برنامه‌ریزی‌شده")}
+        className="settings-form-card"
       >
         <p className="muted">
           {t(
-            "Use a cost before tax. This preview uses the current rules and does not change an approved price.",
-            "هزینه پیش از مالیات را وارد کنید. این پیش‌نمایش از قواعد فعلی استفاده می‌کند و قیمت تأییدشده را تغییر نمی‌دهد.",
+            "Register and Online orders are not available yet.",
+            "صندوق فروش و سفارش‌های آنلاین هنوز در دسترس نیستند.",
           )}
         </p>
-        <div className="form-grid settings-tester-fields">
-          <Field label={t("Pricing category", "دسته قیمت‌گذاری")}>
-            <Select
-              value={categoryKey}
-              onChange={setCategoryKey}
-              options={state.config.pricing_categories.map((category) => ({
-                value: category.key,
-                label: categoryLabel(category.key, category.label, t),
-              }))}
-            />
-          </Field>
-          <Field
-            label={t("Unit cost before tax", "هزینه هر واحد پیش از مالیات")}
-            error={costError}
-          >
-            <NumberField
-              dir="ltr"
-              value={cost}
-              onChange={setCost}
-              aria-invalid={Boolean(costError)}
-            />
-          </Field>
-        </div>
-        {result && (
-          <div aria-live="polite">
-            <div className="price-display">
-              <bdi dir="ltr" className="numeric">
-                {money(result.selling_price)}
-              </bdi>
-            </div>
-            <p className="muted">
-              {t(
-                "Calculated selling price before tax",
-                "قیمت فروش محاسبه‌شده پیش از مالیات",
-              )}
-            </p>
-            <dl className="detail-list settings-calculation-steps">
-              <dt>{t("Raw cost ÷ divisor", "هزینه ÷ ضریب تقسیم")}</dt>
-              <dd dir="ltr" className="numeric">
-                {new Decimal(result.raw_price).toFixed(6)}
-              </dd>
-              <dt>{t("Cent-rounded raw", "مقدار خام گرد‌شده به سنت")}</dt>
-              <dd dir="ltr" className="numeric">
-                {result.rounded_raw}
-              </dd>
-              <dt>{t("After band rounding", "پس از گرد کردن بازه‌ای")}</dt>
-              <dd dir="ltr" className="numeric">
-                {result.after_band_rounding ?? t("Not used", "استفاده نمی‌شود")}
-              </dd>
-              <dt>{t("Special correction applied", "اصلاح ویژه اعمال شد")}</dt>
-              <dd>
-                {result.special_correction_applied
-                  ? t("Yes", "بله")
-                  : t("No", "خیر")}
-              </dd>
-              <dt>{t("Calculated margin", "حاشیه سود محاسبه‌شده")}</dt>
-              <dd dir="ltr" className="numeric">
-                {result.margin === null
-                  ? t("Cannot calculate", "قابل محاسبه نیست")
-                  : `${new Decimal(result.margin).times("100").toFixed(2)}%`}
-              </dd>
-            </dl>
-            {result.below_minimum_margin && (
-              <Badge tone="pending">
-                {t("Below minimum margin", "کمتر از حداقل حاشیه سود")}
-              </Badge>
-            )}
-          </div>
-        )}
       </Card>
+      <SaveBar
+        dirty={JSON.stringify(draft) !== persisted}
+        save={() =>
+          update((next) =>
+            saveModuleSettings(next, draft, {
+              role: role ?? "cashier",
+              company_id: state.config.company.seed_key,
+              by: user?.name ?? "",
+            }),
+          )
+        }
+        cancel={() => setDraft(structuredClone(state.config.modules))}
+      />
+    </>
+  );
+}
+function PlannedSettings({ group }: { group: (typeof groups)[number] }) {
+  const { t } = useDemo();
+  return (
+    <Card title={t(...group.label)} className="settings-form-card">
+      <p className="muted">
+        {t(
+          "These settings are planned. Changes are not available yet.",
+          "این تنظیمات برنامه‌ریزی شده‌اند. تغییر آن‌ها هنوز در دسترس نیست.",
+        )}
+      </p>
+      <ul className="settings-planned-list">
+        {group.planned?.map(([en, fa]) => (
+          <li key={en}>{t(en, fa)}</li>
+        ))}
+      </ul>
+      {group.key === "data" && (
+        <a className="settings-history-link" href="#history">
+          <History size={18} />
+          {t("History", "تاریخچه")}
+        </a>
+      )}
+      {group.key === "pricing" && (
+        <p>
+          {t(
+            "Minimum margins can be edited in Catalog → Pricing categories.",
+            "حداقل حاشیه سود در کاتالوگ ← دسته‌های قیمت‌گذاری قابل ویرایش است.",
+          )}
+        </p>
+      )}
+    </Card>
+  );
+}
+export default function Settings() {
+  const { state, t, role } = useDemo();
+  const [selected, setSelected] = useState<Group>(() => {
+    const requested = requestedGroup();
+    if (requested) return requested;
+    const saved = sessionStorage.getItem(
+      "arzon-settings-group",
+    ) as Group | null;
+    return groups.some((group) => group.key === saved) ? saved! : "company";
+  });
+  useEffect(() => {
+    const changed = () => {
+      const requested = requestedGroup();
+      if (requested) {
+        setSelected(requested);
+        sessionStorage.setItem("arzon-settings-group", requested);
+      }
+    };
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
+  const group = groups.find((entry) => entry.key === selected)!;
+  if (role !== "supervisor") return null;
+  const changed = state.activity.find(
+    (activity) =>
+      activity.entity_type === "settings" &&
+      activity.entity_id === (selected === "returns" ? "labels" : selected),
+  );
+  return (
+    <>
+      <PageHeader title={t("Settings", "تنظیمات")} />
+      <div className="settings-layout">
+        <nav
+          className="settings-group-menu"
+          aria-label={t("Settings groups", "گروه‌های تنظیمات")}
+        >
+          {groups.map((item) => (
+            <button
+              type="button"
+              key={item.key}
+              className={selected === item.key ? "active" : ""}
+              aria-current={selected === item.key ? "page" : undefined}
+              onClick={() => {
+                setSelected(item.key);
+                sessionStorage.setItem("arzon-settings-group", item.key);
+                window.location.hash = `settings?group=${item.key}`;
+              }}
+            >
+              {t(...item.label)}
+            </button>
+          ))}
+        </nav>
+        <section
+          className="settings-group-content"
+          aria-label={t(...group.label)}
+        >
+          <div className="settings-group-intro">
+            <h2>{t(...group.label)}</h2>
+            <p className="muted">{t(...group.description)}</p>
+          </div>
+          {selected === "company" ? (
+            <CompanySettings key={JSON.stringify(state.config.company)} />
+          ) : selected === "branches" ? (
+            <BranchSettings />
+          ) : selected === "catalog" ? (
+            <PricingSettings
+              key={JSON.stringify([
+                state.config.pricing_categories,
+                state.config.rounding_bands,
+                state.config.special_corrections,
+              ])}
+            />
+          ) : selected === "offers" ? (
+            <OfferSettings key={JSON.stringify(state.config.promotions)} />
+          ) : selected === "notes" ? (
+            <NotebookSettings />
+          ) : selected === "returns" ? (
+            <LabelsSettings />
+          ) : selected === "modules" ? (
+            <ModuleSettings key={JSON.stringify(state.config.modules)} />
+          ) : (
+            <PlannedSettings group={group} />
+          )}{" "}
+          {changed && (
+            <p className="settings-changed-line">
+              {t("Changed by", "تغییر توسط")} {changed.by} {t("on", "در")}{" "}
+              <bdi dir="ltr">{changed.at.slice(0, 10)}</bdi> ·{" "}
+              <a href="#history">{t("History", "تاریخچه")}</a>
+            </p>
+          )}
+        </section>
+      </div>
     </>
   );
 }

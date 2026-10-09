@@ -1,14 +1,13 @@
+import {
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
+import { translateCount } from "../i18n";
 import { useState } from "react";
 import Decimal from "decimal.js";
-import { branches, useDemo } from "../store";
+import { useDemo } from "../store";
 import { companyDate } from "../invoice";
-import {
-  branchLabel,
-  DateText,
-  formatMoney,
-  LtrText,
-  Money,
-} from "../presentation";
+import { DateText, formatMoney, LtrText, Money } from "../presentation";
 import {
   supplierBalanceCsv,
   supplierBalanceOverview,
@@ -46,11 +45,12 @@ import "./filters-a2.css";
 
 export function Payables() {
   const { state, update, role, branch, setBranch, user, lang, t } = useDemo();
+  const branches = configuredBranches(state.config);
   const context: OperationsContext = {
     company_id: state.config.company.seed_key,
     branch,
     role: role ?? "cashier",
-    actor: user?.name ?? "Demo user",
+    actor: user?.name ?? t("Supervisor", "سرپرست"),
   };
   const suppliers = [
     ...new Set([
@@ -168,7 +168,7 @@ export function Payables() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `demo-payables-${branch.replaceAll(" ", "-")}-${month}.csv`;
+    anchor.download = `payables-${branch.replaceAll(" ", "-")}-${month}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -177,8 +177,8 @@ export function Payables() {
       <PageHeader
         title={t("Payables", "پرداختنی‌ها")}
         description={t(
-          "Fictional branch supplier balances for manual bookkeeping. Nothing is paid through this demo.",
-          "مانده ساختگی تأمین‌کنندگان شعبه برای حسابداری دستی. هیچ پرداختی از طریق این نمایش انجام نمی‌شود.",
+          "Supplier balances and payment records by branch.",
+          "مانده تأمین‌کنندگان و سوابق پرداخت هر شعبه.",
         )}
         actions={
           <Button
@@ -207,9 +207,13 @@ export function Payables() {
             placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
           />
         }
-        count={t(
-          `${overview.length} ${overview.length === 1 ? "supplier" : "suppliers"}`,
-          `${overview.length} تأمین‌کننده`,
+        count={translateCount(
+          "{{count}} supplier",
+          "{{count}} suppliers",
+          "{{count}} تأمین‌کننده",
+          "{{count}} تأمین‌کننده",
+          overview.length,
+          lang,
         )}
       >
         <Select
@@ -220,7 +224,7 @@ export function Payables() {
             { value: "all", label: t("All branches", "همه شعبه‌ها") },
             ...branches.map((value) => ({
               value,
-              label: branchLabel(value, lang),
+              label: configuredBranchLabel(state.config, value, lang),
             })),
           ]}
         />
@@ -264,7 +268,9 @@ export function Payables() {
                 <td>
                   <LtrText>{item.supplier}</LtrText>
                 </td>
-                <td>{branchLabel(branch, lang)}</td>
+                <td className="branch-label">
+                  {configuredBranchLabel(state.config, branch, lang)}
+                </td>
                 <td className="numeric">
                   <Money value={item.balance} />
                 </td>
@@ -407,8 +413,8 @@ export function Payables() {
             >
               <p className="muted">
                 {t(
-                  "Enter a fictional payment already made outside this app. Partial payments are allowed; overpayment stays unapplied.",
-                  "یک پرداخت ساختگی انجام‌شده خارج از برنامه وارد کنید. پرداخت جزئی مجاز است؛ اضافه‌پرداخت تخصیص‌نیافته می‌ماند.",
+                  "Enter a payment already made outside this app. Partial payments are allowed; overpayment stays unapplied.",
+                  "یک پرداخت انجام‌شده خارج از برنامه وارد کنید. پرداخت جزئی مجاز است؛ اضافه‌پرداخت تخصیص‌نیافته می‌ماند.",
                 )}
               </p>
               <div className="form-grid">
@@ -433,10 +439,7 @@ export function Payables() {
                   />
                 </Field>
                 <Field
-                  label={t(
-                    "Fictional payment receipt reference",
-                    "مرجع ساختگی رسید پرداخت",
-                  )}
+                  label={t("Payment receipt reference", "مرجع رسید پرداخت")}
                 >
                   <input
                     value={receipt}
@@ -596,9 +599,7 @@ export function Payables() {
                 <Field label={t("Date", "تاریخ")}>
                   <DateField value={date} onChange={setDate} />
                 </Field>
-                <Field
-                  label={t("Fictional evidence reference", "مرجع ساختگی مدرک")}
-                >
+                <Field label={t("Evidence reference", "مرجع مدرک")}>
                   <input
                     value={entryReference}
                     onChange={(event) => setEntryReference(event.target.value)}
@@ -712,8 +713,10 @@ export function Payables() {
                 <LtrText>{supplier}</LtrText>
               </h2>
               <p>
-                {branchLabel(branch, lang)} ·{" "}
-                <LtrText>{state.config.company.currency}</LtrText> ·{" "}
+                <span className="branch-label">
+                  {configuredBranchLabel(state.config, branch, lang)}
+                </span>{" "}
+                · <LtrText>{state.config.company.currency}</LtrText> ·{" "}
                 {t("As of", "تا تاریخ")}{" "}
                 <DateText
                   value={
@@ -728,7 +731,14 @@ export function Payables() {
                 value={<Money value={summary.balance} />}
               />
               <SummaryTile
-                label={t("Open invoices", "فاکتورهای باز")}
+                label={translateCount(
+                  "Open invoice",
+                  "Open invoices",
+                  "فاکتور باز",
+                  "فاکتورهای باز",
+                  openInvoices.length,
+                  lang,
+                )}
                 value={<LtrText>{openInvoices.length}</LtrText>}
                 tone="sky"
               />
@@ -744,7 +754,7 @@ export function Payables() {
             </div>
             {!new Decimal(summary.snapshot_balance).eq(0) && (
               <p className="muted payables-snapshot">
-                {t("Demo balance", "مانده نمایشی")}:{" "}
+                {t("Balance", "مانده")}:{" "}
                 <Money value={summary.snapshot_balance} />
                 {summary.snapshot_date && (
                   <>
@@ -757,8 +767,8 @@ export function Payables() {
             {summary.rows.length === 0 ? (
               <EmptyState>
                 {t(
-                  "No ledger entries yet. Post the demo invoice in Invoices to show the invoice and its short deduction here.",
-                  "هنوز ردیفی در دفتر وجود ندارد. فاکتور نمونه را در فاکتورها ثبت کنید تا فاکتور و کسر کسری آن اینجا نمایش داده شوند.",
+                  "No ledger entries yet. Post an invoice in Invoices to show the invoice and its short deduction here.",
+                  "هنوز ردیفی در دفتر وجود ندارد. یک فاکتور را در فاکتورها ثبت کنید تا فاکتور و کسر کسری آن اینجا نمایش داده شوند.",
                 )}
               </EmptyState>
             ) : (
@@ -799,7 +809,13 @@ export function Payables() {
                         <td>
                           <DateText value={row.date} />
                         </td>
-                        <td>{branchLabel(row.branch, lang)}</td>
+                        <td className="branch-label">
+                          {configuredBranchLabel(
+                            state.config,
+                            row.branch,
+                            lang,
+                          )}
+                        </td>
                         <td>
                           <Badge
                             tone={
@@ -894,7 +910,13 @@ export function Payables() {
                         <td>
                           <LtrText>{invoice.reference}</LtrText>
                         </td>
-                        <td>{branchLabel(invoice.branch, lang)}</td>
+                        <td className="branch-label">
+                          {configuredBranchLabel(
+                            state.config,
+                            invoice.branch,
+                            lang,
+                          )}
+                        </td>
                         <td>
                           <DateText value={invoice.due_date} />
                         </td>

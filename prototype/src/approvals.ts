@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
 import { effectiveOffer, effectivePrice } from "./catalog";
+import { configuredBranches } from "./settings";
 export { isOfferScheduledNow } from "./catalog";
 import type {
   Approval,
@@ -126,7 +127,7 @@ export function reconcileOffers(
   const scopes: { scope: PriceScope; branch: Branch; price: string | null }[] =
     [
       { scope: "all", branch: "all", price: product.selling_price || null },
-      ...demoBranches
+      ...configuredBranches(state.config, true)
         .filter((branch) => Boolean(product.branch_prices?.[branch]))
         .map((branch) => ({
           scope: "branch" as const,
@@ -135,6 +136,7 @@ export function reconcileOffers(
         })),
     ];
   for (const item of scopes) {
+    if (state.config.promotions.ai_suggestions_enabled === false) continue;
     const mapping = offerMapping(state, item.price);
     if (!mapping || !item.price) continue;
     const existsInScope = state.offers.some(
@@ -180,7 +182,7 @@ export function syncPriceConflicts(
   if (companyId !== state.config.company.seed_key) return;
   const product = currentProduct(state, productCode);
   const prices = Object.fromEntries(
-    demoBranches
+    configuredBranches(state.config, true)
       .map((branch) => [branch, effectivePrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );
@@ -226,7 +228,7 @@ export function applyApprovedPrice(
     product.selling_price = amount;
     product.branch_prices = {};
   } else {
-    if (branch === "all" || !demoBranches.includes(branch))
+    if (branch === "all" || !configuredBranches(state.config).includes(branch))
       throw new Error("Choose one branch");
     product.branch_prices = { ...product.branch_prices, [branch]: amount };
   }
@@ -256,6 +258,8 @@ export function resolveApproval(
   );
   if (!approval || approval.status !== "pending")
     throw new Error("Approval is no longer pending");
+  if (approval.type === "new_supplier")
+    throw new Error("Review this supplier with supplier confirmation");
   const product = currentProduct(state, approval.product_code);
   if (
     expectedSnapshot !== undefined &&
@@ -390,7 +394,7 @@ export function markPriceConflictIntentional(
   if (!alert) throw new Error("Conflict is no longer pending");
   const product = currentProduct(state, alert.product_code);
   const prices = Object.fromEntries(
-    demoBranches
+    configuredBranches(state.config, true)
       .map((branch) => [branch, effectivePrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );

@@ -51,7 +51,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await signInWorker(page);
   await expect(
-    page.getByText("Demo: AI invoice reading is simulated", { exact: true }),
+    page.getByText("AI invoice reading is simulated", { exact: true }),
   ).toBeVisible();
   const before = await stored(page);
   const beforeStock = before.stock["Branch 1:0009"];
@@ -95,7 +95,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page.reload();
   await expect(
     page.getByLabel("What information is unknown? (required)", { exact: true }),
-  ).toHaveValue("Demo only: old stock label cannot be read.");
+  ).toHaveValue("Old stock label cannot be read.");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();
@@ -142,10 +142,9 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
 test("manual draft survives a refresh and cannot post without its original", async ({
   page,
 }) => {
-  await signInWorker(page);
-  await page
-    .getByRole("button", { name: "Enter manually without a file", exact: true })
-    .click();
+  await signIn(page, "Supervisor");
+  await page.goto("/#invoices");
+  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await page
     .locator(".invoice-line")
@@ -194,7 +193,7 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
     page.getByRole("heading", { name: "بررسی ردیف‌های فاکتور", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("دمو: خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است", {
+    page.getByText("خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است", {
       exact: true,
     }),
   ).toBeVisible();

@@ -1,4 +1,4 @@
-import { configSeed, supplierDetails } from "./config";
+import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate } from "./invoice";
 import { OperationError, type OperationsContext } from "./operations";
 import { supplierBalanceSummary } from "./supplier-balances";
@@ -17,6 +17,11 @@ export interface SupplierMoney {
   next_due_date?: string;
 }
 export interface SupplierOverviewRow {
+  id?: string;
+  active?: boolean;
+  previous_names?: string[];
+  address?: string;
+  notes?: string;
   name: string;
   status: "confirmed" | "proposed";
   phone: string | null;
@@ -178,27 +183,39 @@ export function suppliersOverview(
   context: OperationsContext,
 ): SupplierOverviewRow[] {
   guard(state, context);
-  const metadata =
-    context.company_id === configSeed.company.seed_key ? supplierDetails : [];
+  const metadata = supplierRecords(state).filter(
+    (record) => record.company_id === context.company_id,
+  );
   const names = new Set(metadata.map((supplier) => supplier.name));
+  const addName = (name: string) =>
+    names.add(
+      metadata.find((record) => supplierMatches(record, name))?.name ?? name,
+    );
   state.products
     .filter((product) => product.company_id === context.company_id)
-    .forEach((product) => names.add(product.main_supplier));
+    .forEach((product) => addName(product.main_supplier));
   postedInvoices(state, context).forEach((invoice) =>
-    names.add(invoice.supplier),
+    addName(invoice.supplier),
   );
   state.returns
     .filter((record) => inScope(record, context))
-    .forEach((record) => names.add(record.supplier));
+    .forEach((record) => addName(record.supplier));
   const month = companyDate(state.config).slice(0, 7);
   return [...names].map((name) => {
     const details = metadata.find((supplier) => supplier.name === name);
-    const invoices = postedInvoices(state, context).filter(
-      (invoice) => invoice.supplier === name,
+    const matches = (supplier: string) =>
+      details ? supplierMatches(details, supplier) : supplier === name;
+    const invoices = postedInvoices(state, context).filter((invoice) =>
+      matches(invoice.supplier),
     );
     const dates = invoices.map(receivedDate).filter(Boolean).sort();
     return {
       name,
+      id: details?.id,
+      active: details?.active ?? true,
+      previous_names: details?.previous_names,
+      address: details?.address,
+      notes: details?.notes,
       status: details?.status === "proposed" ? "proposed" : "confirmed",
       phone: details?.phone ?? null,
       email: details?.email ?? null,
@@ -211,15 +228,23 @@ export function suppliersOverview(
       open_returns: state.returns.filter(
         (record) =>
           inScope(record, context) &&
-          record.supplier === name &&
+          matches(record.supplier) &&
           record.status !== "resolved" &&
           record.status !== "cancelled",
       ).length,
-      open_shorts: supplierShorts(state, context, name).length,
+      open_shorts: supplierShorts(
+        canonicalSupplierState(state, name),
+        context,
+        name,
+      ).length,
       ...(context.role === "supervisor"
         ? {
             financial: (() => {
-              const summary = supplierBalanceSummary(state, context, name);
+              const summary = supplierBalanceSummary(
+                canonicalSupplierState(state, name),
+                context,
+                name,
+              );
               return {
                 balance: summary.balance,
                 overdue: summary.overdue,
@@ -238,6 +263,12 @@ export function supplierPage(
   name: string,
 ): SupplierPageData {
   guard(state, context);
+  const matching = supplierRecords(state).find(
+    (record) =>
+      record.company_id === context.company_id && supplierMatches(record, name),
+  );
+  name = matching?.name ?? name;
+  state = canonicalSupplierState(state, name);
   const supplier = suppliersOverview(state, context).find(
     (item) => item.name === name,
   );
@@ -376,4 +407,39 @@ export function supplierPage(
         cheque_number,
       }));
   return result;
+}
+
+/** Renames preserve original stored invoice/ledger text; read models resolve stable identity. */
+function canonicalSupplierState(state: DemoState, name: string): DemoState {
+  const supplier = supplierRecords(state).find(
+    (record) =>
+      record.company_id === state.config.company.seed_key &&
+      record.name === name,
+  );
+  if (!supplier?.previous_names?.length) return state;
+  const canonical = <T extends { company_id: string; supplier: string }>(
+    record: T,
+  ): T =>
+    record.company_id === supplier.company_id &&
+    supplierMatches(supplier, record.supplier)
+      ? { ...record, supplier: name }
+      : record;
+  return {
+    ...state,
+    invoice: canonical(state.invoice),
+    invoices: state.invoices?.map(canonical),
+    returns: state.returns.map(canonical),
+    ledger: state.ledger.map(canonical),
+    products: state.products.map((product) =>
+      product.company_id === supplier.company_id &&
+      supplierMatches(supplier, product.main_supplier)
+        ? { ...product, main_supplier: name }
+        : product,
+    ),
+    alerts: state.alerts.map((alert) =>
+      alert.supplier
+        ? canonical({ ...alert, supplier: alert.supplier })
+        : alert,
+    ),
+  };
 }

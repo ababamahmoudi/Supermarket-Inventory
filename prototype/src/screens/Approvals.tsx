@@ -1,15 +1,17 @@
+import {
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
 import { useState } from "react";
 import Decimal from "decimal.js";
 import {
   approvalSnapshot,
-  demoBranches,
   keepApprovedPrice,
   proposeManualOverride,
   resolveApproval,
 } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import {
-  branchLabel,
   demoUserLabel,
   LtrText,
   Money,
@@ -18,6 +20,7 @@ import {
 } from "../presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
+import { SupplierApproval } from "./SupplierApproval";
 import type { Approval, Branch } from "../types";
 import {
   Badge,
@@ -49,6 +52,7 @@ export function Approvals() {
     target: Branch;
   } | null>(null);
   const company = state.config.company.seed_key;
+  const branches = configuredBranches(state.config, true);
   const items = state.approvals.filter(
     (item) =>
       item.company_id === company &&
@@ -73,8 +77,13 @@ export function Approvals() {
           margin_review: t("Below minimum margin", "کمتر از حداقل حاشیه سود"),
           barcode_conflict: t("Barcode conflict", "تداخل بارکد"),
           tax_profile: t("Tax profile change", "تغییر وضعیت مالیات"),
+          new_supplier: t(
+            "Supplier waiting for confirmation",
+            "تأمین‌کننده در انتظار تأیید",
+          ),
         }[item.type];
-  const branchName = (value: Branch) => branchLabel(value, lang);
+  const branchName = (value: Branch) =>
+    configuredBranchLabel(state.config, value, lang);
   const openPreview = (item: Approval, decision: "approve" | "reject") => {
     setMessage("");
     const target =
@@ -82,7 +91,7 @@ export function Approvals() {
         ? branch
         : item.branch !== "all"
           ? item.branch
-          : demoBranches[0];
+          : branches[0];
     setPreview({
       approval: item,
       decision,
@@ -208,6 +217,8 @@ export function Approvals() {
         </EmptyState>
       )}
       {items.map((item) => {
+        if (item.type === "new_supplier")
+          return <SupplierApproval key={item.id} approval={item} />;
         const product = state.products.find(
           (value) =>
             value.company_id === company && value.code === item.product_code,
@@ -507,7 +518,7 @@ export function Approvals() {
                       "فقط این شعبه تغییر می‌کند. شعبه‌های دیگر قیمت‌ها و پیشنهادهای خود را حفظ می‌کنند.",
                     )}
               </p>
-              <DataTable>
+              <DataTable className="approval-scope-preview">
                 <thead>
                   <tr>
                     <th>{t("Branch", "شعبه")}</th>
@@ -517,7 +528,7 @@ export function Approvals() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(scope === "all" ? demoBranches : [preview.target]).map(
+                  {(scope === "all" ? branches : [preview.target]).map(
                     (value) => {
                       const product = state.products.find(
                         (item) =>

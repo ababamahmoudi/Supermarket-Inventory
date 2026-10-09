@@ -12,6 +12,23 @@ import { configSeed, demoSeed } from "./config";
 import retainedConfig from "./compat/configuration.json";
 import { formatMoney } from "./formatters";
 import { hydrateDemoFixture, restoreDemoFixture } from "./demo-fixtures";
+import { hydrateBState, restoreBState } from "./b-state";
+import { configuredBranches } from "./settings";
+import { autoAddApprovedLabelChanges } from "./label-workflow";
+import {
+  attachReversals,
+  reverseActivity,
+  HistoryError,
+  type HistoryContext,
+} from "./history";
+import { createId } from "./ids";
+import {
+  addUndoToast,
+  pauseUndoToast,
+  expireUndoToasts,
+  remainingTime,
+  type UndoToast,
+} from "./undo-queue";
 import {
   AUTH_STORAGE_KEY,
   SESSION_KEY,
@@ -29,7 +46,7 @@ import {
   type Theme,
 } from "./auth";
 export { demoUsers } from "./auth";
-import i18n, { translate } from "./i18n";
+import i18n, { translate, translateCount } from "./i18n";
 import type { Branch, DemoState, Language, Role } from "./types";
 
 export const STORAGE_KEY = "supermarket-prototype-v1";
@@ -93,133 +110,135 @@ export function initialState(): DemoState {
     status: "pending_approval",
     tax_profile: newLine.tax_profile,
   });
-  return hydrateDemoFixture(
-    structuredClone({
-      version: 1,
-      supplier_balance_snapshot_date: relativeDate(0),
-      supplier_balance_snapshot_currency: configSeed.company.currency,
-      pricing_minimum_margin_schema: 2,
-      config: configSeed,
-      products,
-      approvals: [
-        {
-          id: "demo-lavash-price",
-          company_id,
-          branch: "Branch 1",
-          type: "price_change",
-          product_code: "0006",
-          status: "pending",
-          proposed_price: "2.99",
-          current_price: "1.99",
-        },
-        {
-          id: "demo-barberries-product",
-          company_id,
-          branch: "Branch 1",
-          type: "new_product",
-          product_code: "0015",
-          status: "pending",
-          proposed_price: newLine.calculated_selling_price,
-          current_price: null,
-        },
-      ],
-      alerts: [
-        {
-          id: "demo-tea-conflict",
-          company_id,
-          branch: "all",
-          type: "price_conflict",
-          product_code: demoSeed.cross_branch_price_conflict.product_code,
-          status: "pending",
-          branch_prices: {
-            "Branch 1": demoSeed.cross_branch_price_conflict.branch_1_price,
-            "Branch 2": demoSeed.cross_branch_price_conflict.branch_2_price,
+  return hydrateBState(
+    hydrateDemoFixture(
+      structuredClone({
+        version: 1,
+        supplier_balance_snapshot_date: relativeDate(0),
+        supplier_balance_snapshot_currency: configSeed.company.currency,
+        pricing_minimum_margin_schema: 2,
+        config: configSeed,
+        products,
+        approvals: [
+          {
+            id: "demo-lavash-price",
+            company_id,
+            branch: "Branch 1",
+            type: "price_change",
+            product_code: "0006",
+            status: "pending",
+            proposed_price: "2.99",
+            current_price: "1.99",
           },
-        },
-      ],
-      invoice: {
-        ...demoSeed.demo_invoice,
-        id: "demo-fv-20417",
-        company_id,
-        branch: "Branch 1",
-        status: "empty",
-        lines: demoSeed.demo_invoice.lines.map((line) => ({
-          ...line,
-          company_id,
-        })),
-        invoice_date: relativeDate(0),
-        received_at: new Date().toISOString(),
-        receiving_employee: demoSeed.demo_users.find(
-          (user) => user.role === "floor_worker",
-        )!.name,
-        due_date: relativeDate(14),
-        supplier_confirmed: true,
-      },
-      invoices: [],
-      offers: products
-        .filter((product) => product.offer)
-        .map((product) => {
-          const mapping = configSeed.promotions.price_to_offer.find(
-            (offer) => offer.price === product.selling_price,
-          )!;
-          return {
-            id: `demo-offer-${product.code}`,
+          {
+            id: "demo-barberries-product",
+            company_id,
+            branch: "Branch 1",
+            type: "new_product",
+            product_code: "0015",
+            status: "pending",
+            proposed_price: newLine.calculated_selling_price,
+            current_price: null,
+          },
+        ],
+        alerts: [
+          {
+            id: "demo-tea-conflict",
             company_id,
             branch: "all",
-            product_code: product.code,
-            label: product.offer!,
-            price: product.selling_price,
-            pool: mapping.mix_and_match_pool,
-            mix_and_match: true,
-            status: "active",
-            scope: "all",
-            currency: configSeed.company.currency,
-          };
-        }),
-      templates: [],
-      returns: demoSeed.open_returns.map((record, index) => ({
-        ...record,
-        company_id,
-        branch: record.branch as Branch,
-        id: `demo-return-${index + 1}`,
-        status: record.status as "open" | "partially_resolved",
-      })),
-      expiry: demoSeed.expiring_soon_examples.map((record, index) => ({
-        ...record,
-        company_id,
-        branch: record.branch as Branch,
-        id: `demo-expiry-${index + 1}`,
-        date: relativeDate(record.expires_in_days),
-        status: "active",
-      })),
-      notes: demoSeed.notes.map((record, index) => ({
-        ...record,
-        company_id,
-        branch: "Branch 1",
-        id: `demo-note-${index + 1}`,
-        type: record.type as "to_order" | "store_use" | "note_to_supervisor",
-        status: "open",
-        created_at: new Date().toISOString(),
-      })),
-      ledger: [],
-      stock: Object.fromEntries(
-        products.flatMap((product) =>
-          branches.map((branch) => [
-            `${branch}:${product.code}`,
-            demoSeed.open_returns.reduce(
-              (count, record) =>
-                count +
-                (record.branch === branch &&
-                record.replacement_received?.product_code === product.code
-                  ? record.replacement_received.qty
-                  : 0),
-              0,
-            ),
-          ]),
+            type: "price_conflict",
+            product_code: demoSeed.cross_branch_price_conflict.product_code,
+            status: "pending",
+            branch_prices: {
+              "Branch 1": demoSeed.cross_branch_price_conflict.branch_1_price,
+              "Branch 2": demoSeed.cross_branch_price_conflict.branch_2_price,
+            },
+          },
+        ],
+        invoice: {
+          ...demoSeed.demo_invoice,
+          id: "demo-fv-20417",
+          company_id,
+          branch: "Branch 1",
+          status: "empty",
+          lines: demoSeed.demo_invoice.lines.map((line) => ({
+            ...line,
+            company_id,
+          })),
+          invoice_date: relativeDate(0),
+          received_at: new Date().toISOString(),
+          receiving_employee: demoSeed.demo_users.find(
+            (user) => user.role === "floor_worker",
+          )!.name,
+          due_date: relativeDate(14),
+          supplier_confirmed: true,
+        },
+        invoices: [],
+        offers: products
+          .filter((product) => product.offer)
+          .map((product) => {
+            const mapping = configSeed.promotions.price_to_offer.find(
+              (offer) => offer.price === product.selling_price,
+            )!;
+            return {
+              id: `demo-offer-${product.code}`,
+              company_id,
+              branch: "all",
+              product_code: product.code,
+              label: product.offer!,
+              price: product.selling_price,
+              pool: mapping.mix_and_match_pool,
+              mix_and_match: true,
+              status: "active",
+              scope: "all",
+              currency: configSeed.company.currency,
+            };
+          }),
+        templates: [],
+        returns: demoSeed.open_returns.map((record, index) => ({
+          ...record,
+          company_id,
+          branch: record.branch as Branch,
+          id: `demo-return-${index + 1}`,
+          status: record.status as "open" | "partially_resolved",
+        })),
+        expiry: demoSeed.expiring_soon_examples.map((record, index) => ({
+          ...record,
+          company_id,
+          branch: record.branch as Branch,
+          id: `demo-expiry-${index + 1}`,
+          date: relativeDate(record.expires_in_days),
+          status: "active",
+        })),
+        notes: demoSeed.notes.map((record, index) => ({
+          ...record,
+          company_id,
+          branch: "Branch 1",
+          id: `demo-note-${index + 1}`,
+          type: record.type as "to_order" | "store_use" | "note_to_supervisor",
+          status: "open",
+          created_at: new Date().toISOString(),
+        })),
+        ledger: [],
+        stock: Object.fromEntries(
+          products.flatMap((product) =>
+            branches.map((branch) => [
+              `${branch}:${product.code}`,
+              demoSeed.open_returns.reduce(
+                (count, record) =>
+                  count +
+                  (record.branch === branch &&
+                  record.replacement_received?.product_code === product.code
+                    ? record.replacement_received.qty
+                    : 0),
+                0,
+              ),
+            ]),
+          ),
         ),
-      ),
-      activity: [],
-    } satisfies DemoState),
+        activity: [],
+      } satisfies DemoState),
+    ),
   );
 }
 
@@ -275,7 +294,10 @@ function readState(): DemoState {
           }
           candidate.pricing_minimum_margin_schema = 2;
         }
-        return restoreDemoFixture(candidate, localStorage);
+        return restoreBState(
+          restoreDemoFixture(candidate, localStorage),
+          localStorage,
+        );
       }
     }
   } catch {
@@ -290,6 +312,13 @@ interface DemoContextValue {
   branch: Branch;
   lang: Language;
   t: (en: string, fa: string) => string;
+  tCount: (
+    enSingular: string,
+    enPlural: string,
+    faSingular: string,
+    faPlural: string,
+    count: number,
+  ) => string;
   money: (value: string) => string;
   setBranch: (branch: Branch) => void;
   setLang: (lang: Language) => void;
@@ -313,13 +342,20 @@ interface DemoContextValue {
   reset: () => void;
   navigate: (page: string) => void;
   resetGeneration: number;
+  undoToasts: UndoToast[];
+  pauseUndo: (id: string, paused: boolean) => void;
+  undoActivity: (id: string) => void;
+  revertActivity: (id: string) => void;
+  historyContext: HistoryContext | null;
 }
 const DemoContext = createContext<DemoContextValue | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(readState);
   const stateRef = useRef(state);
-  const [session, setSession] = useState(readAuthSession);
+  const [session, setSession] = useState(() =>
+    readAuthSession(configuredBranches(state.config, true)),
+  );
   const sessionRef = useRef(session);
   const [auth, setAuth] = useState(readAuth);
   const authRef = useRef(auth);
@@ -343,37 +379,146 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const mustChangePassword = Boolean(
     user && auth.accounts[user.username]?.mustChangePassword,
   );
-  const preferences = useMemo(
-    () => preferencesFor(auth, session.username),
-    [auth, session.username],
-  );
+  const preferences = useMemo(() => {
+    const preference = preferencesFor(auth, session.username);
+    return {
+      ...preference,
+      comfortableText: preference.comfortableTextExplicit
+        ? preference.comfortableText
+        : state.config.company.text_size === "large",
+    };
+  }, [auth, session.username, state.config.company.text_size]);
   const [storageError, setStorageError] = useState(false);
   const [resetGeneration, setResetGeneration] = useState(0);
-  const update = useCallback((mutator: (draft: DemoState) => void) => {
-    // Validate synchronously so the screen can catch a failed business action.
-    // Publish only successful drafts; the ref also preserves same-event updates.
-    if (
-      sessionRef.current.locked ||
-      (sessionRef.current.username &&
-        authRef.current.accounts[sessionRef.current.username]
-          ?.mustChangePassword)
-    )
-      throw new Error("Sign in and choose your password before continuing.");
-    const draft = structuredClone(stateRef.current);
-    mutator(draft);
+  const [undoToasts, setUndoToasts] = useState<UndoToast[]>([]);
+  const undoRef = useRef(undoToasts);
+  const commitToasts = useCallback((next: UndoToast[]) => {
+    undoRef.current = next;
+    setUndoToasts(next);
+  }, []);
+  const actionContext = useCallback((): HistoryContext | null => {
     const actor = demoUsers.find(
       (candidate) => candidate.username === sessionRef.current.username,
     );
-    if (actor) {
-      const previousIds = new Set(
-        stateRef.current.activity.map((entry) => entry.id),
-      );
-      for (const entry of draft.activity)
-        if (!previousIds.has(entry.id)) entry.by = actor.name;
-    }
-    stateRef.current = draft;
-    setState(draft);
+    if (
+      !actor ||
+      sessionRef.current.locked ||
+      authRef.current.accounts[actor.username]?.mustChangePassword
+    )
+      return null;
+    return {
+      company_id: stateRef.current.config.company.seed_key,
+      role: actor.role,
+      actor: actor.name,
+      username: actor.username,
+      branch: sessionRef.current.branch,
+      allowed_branches:
+        actor.role === "supervisor"
+          ? configuredBranches(stateRef.current.config, true)
+          : [actor.branch],
+    };
   }, []);
+  const update = useCallback(
+    (mutator: (draft: DemoState) => void) => {
+      // Validate synchronously so the screen can catch a failed business action.
+      // Publish only successful drafts; the ref also preserves same-event updates.
+      if (
+        sessionRef.current.locked ||
+        (sessionRef.current.username &&
+          authRef.current.accounts[sessionRef.current.username]
+            ?.mustChangePassword)
+      )
+        throw new Error("Sign in and choose your password before continuing.");
+      const draft = structuredClone(stateRef.current);
+      mutator(draft);
+      const context = actionContext();
+      if (context) {
+        autoAddApprovedLabelChanges(stateRef.current, draft, context.actor);
+        const previousIds = new Set(
+          stateRef.current.activity.map((entry) => entry.id),
+        );
+        if (
+          !draft.activity.some((entry) => !previousIds.has(entry.id)) &&
+          draft.invoice.status === "draft" &&
+          stateRef.current.invoice.status !== "posted" &&
+          JSON.stringify(draft.invoice) !==
+            JSON.stringify(stateRef.current.invoice)
+        ) {
+          draft.activity.push({
+            id: createId("draft-edit"),
+            company_id: context.company_id,
+            branch: draft.invoice.branch,
+            action:
+              stateRef.current.invoice.status === "draft"
+                ? "Edit draft"
+                : "Save draft",
+            by: context.actor,
+            at: new Date().toISOString(),
+            reversible: true,
+            entity_type: "invoice",
+            entity_id: draft.invoice.id,
+          });
+        }
+        const entries = attachReversals(stateRef.current, draft, context);
+        let queue = undoRef.current;
+        for (const entry of entries.filter(
+          (item) =>
+            context.role !== "cashier" &&
+            item.reversible &&
+            item.reversal?.length &&
+            item.by === context.actor,
+        ))
+          queue = addUndoToast(
+            queue,
+            {
+              id: entry.id,
+              action: entry.action,
+              actor_username: context.username,
+            },
+            Date.now(),
+          );
+        if (queue !== undoRef.current) commitToasts(queue);
+      }
+      stateRef.current = draft;
+      setState(draft);
+    },
+    [actionContext, commitToasts],
+  );
+  useEffect(() => {
+    const languages = state.config.company.ui_languages?.length
+      ? state.config.company.ui_languages
+      : ["en", "fa"];
+    if (!languages.includes(session.lang))
+      commitSession({ ...sessionRef.current, lang: languages[0] as Language });
+  }, [state.config.company.ui_languages, session.lang, commitSession]);
+  useEffect(() => {
+    const running = undoToasts.filter((item) => item.running_since !== null);
+    if (!running.length) return;
+    const delay = Math.min(
+      ...running.map((item) => remainingTime(item, Date.now())),
+    );
+    const timer = window.setTimeout(
+      () => commitToasts(expireUndoToasts(undoRef.current, Date.now())),
+      Math.max(1, delay),
+    );
+    return () => window.clearTimeout(timer);
+  }, [undoToasts, commitToasts]);
+  const reverse = useCallback(
+    (id: string, mode: "undo" | "revert") => {
+      const context = actionContext();
+      if (!context) throw new HistoryError("permission");
+      if (mode === "undo") {
+        const toast = undoRef.current.find(
+          (item) => item.id === id && item.actor_username === context.username,
+        );
+        if (!toast || remainingTime(toast, Date.now()) <= 0)
+          throw new HistoryError("expired");
+      }
+      update((draft) => reverseActivity(draft, context, id, mode));
+      commitToasts(undoRef.current.filter((item) => item.id !== id));
+    },
+    [actionContext, update, commitToasts],
+  );
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -454,10 +599,40 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     state.config.session.idle_lock_minutes,
     lockSession,
   ]);
+  const historyContext = useMemo<HistoryContext | null>(
+    () =>
+      user && role && !session.locked && !mustChangePassword
+        ? {
+            company_id: state.config.company.seed_key,
+            role,
+            actor: user.name,
+            username: user.username,
+            branch: session.branch,
+            allowed_branches:
+              role === "supervisor"
+                ? configuredBranches(state.config, true)
+                : [user.branch],
+          }
+        : null,
+    [
+      user,
+      role,
+      session.locked,
+      session.branch,
+      mustChangePassword,
+      state.config,
+    ],
+  );
   const value = useMemo<DemoContextValue>(
     () => ({
       state,
       update,
+      undoToasts,
+      historyContext,
+      pauseUndo: (id, paused) =>
+        commitToasts(pauseUndoToast(undoRef.current, id, paused, Date.now())),
+      undoActivity: (id) => reverse(id, "undo"),
+      revertActivity: (id) => reverse(id, "revert"),
       ...session,
       role,
       user,
@@ -484,6 +659,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         const preference = {
           ...preferencesFor(next, sessionRef.current.username),
           comfortableText,
+          comfortableTextExplicit: true,
         };
         next.devicePreferences = preference;
         if (sessionRef.current.username)
@@ -492,6 +668,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       },
       resetGeneration,
       t: (en, fa) => translate(en, fa, session.lang),
+      tCount: (one, other, faOne, faOther, count) =>
+        translateCount(one, other, faOne, faOther, count, session.lang),
       money: (amount) => {
         try {
           return formatMoney(amount || "0", {
@@ -505,7 +683,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         if (
           role === "supervisor" &&
           (branch === "all" ||
-            branches.includes(branch as Exclude<Branch, "all">))
+            configuredBranches(stateRef.current.config).includes(branch))
         )
           commitSession({ ...sessionRef.current, branch });
       },
@@ -522,11 +700,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         );
         commitAuth(result.state);
         if (!result.user) return result.error ?? "invalid";
+        commitToasts([]);
         commitSession({
           ...sessionRef.current,
           username: result.user.username,
           branch:
-            result.user.branch === "all" ? "Branch 1" : result.user.branch,
+            result.user.branch === "all"
+              ? configuredBranches(stateRef.current.config)[0]
+              : result.user.branch,
           locked: false,
           authenticatedAt: Date.now(),
         });
@@ -566,6 +747,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           (candidate) => candidate.username === username,
         );
         if (!demoUser) return;
+        commitToasts([]);
         const next = structuredClone(authRef.current);
         auditAuth(next, "Switched demo user", username);
         next.recentUsers = [
@@ -576,7 +758,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         commitSession({
           ...sessionRef.current,
           username,
-          branch: demoUser.branch === "all" ? "Branch 1" : demoUser.branch,
+          branch:
+            demoUser.branch === "all"
+              ? configuredBranches(stateRef.current.config)[0]
+              : demoUser.branch,
           locked: false,
           authenticatedAt: Date.now(),
         });
@@ -609,6 +794,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       },
       lock: lockSession,
       signOut: () => {
+        commitToasts([]);
         const current = sessionRef.current;
         const next = structuredClone(authRef.current);
         if (current.username) auditAuth(next, "Signed out", current.username);
@@ -623,6 +809,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         });
       },
       reset: () => {
+        commitToasts([]);
         const seed = initialState();
         stateRef.current = seed;
         setState(seed);
@@ -645,6 +832,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       commitAuth,
       commitSession,
       lockSession,
+      undoToasts,
+      historyContext,
+      commitToasts,
+      reverse,
     ],
   );
   return (

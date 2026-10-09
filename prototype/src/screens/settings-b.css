@@ -1,0 +1,222 @@
+.settings-layout {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.settings-group-menu {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--surface);
+  position: sticky;
+  inset-block-start: 88px;
+}
+.settings-group-menu button {
+  min-block-size: 40px;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: start;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font: inherit;
+  line-height: 1.35;
+}
+.settings-group-menu button.active {
+  background: var(--nav-active);
+  color: var(--text);
+  font-weight: 600;
+}
+.settings-group-menu button:hover {
+  background: var(--surface-soft);
+}
+.settings-group-menu button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.settings-group-content {
+  min-inline-size: 0;
+  display: grid;
+  gap: 24px;
+}
+.settings-group-content > .card {
+  margin-block: 0;
+}
+.settings-group-intro h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.settings-group-intro p {
+  margin-block: 8px 0;
+}
+.settings-form-card {
+  max-inline-size: 720px;
+}
+.settings-company-fields,
+.settings-dialog-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.settings-company-fields .field {
+  min-inline-size: 0;
+}
+.settings-company-fields input,
+.settings-dialog-fields input {
+  max-inline-size: 100%;
+}
+.settings-switch-list {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-block-start: 24px;
+}
+.settings-form-card > .settings-switch-list:first-child {
+  margin-block-start: 0;
+}
+.settings-save-bar {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  max-inline-size: 720px;
+}
+.settings-save-bar > span {
+  margin-inline-end: auto;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.settings-section-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 24px;
+}
+.settings-pricing-table {
+  max-inline-size: 100%;
+}
+.settings-pricing-table table {
+  min-inline-size: 900px;
+}
+.ui-dialog.settings-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: min(720px, calc(100vw - 32px));
+}
+.settings-dialog .settings-save-bar {
+  position: static;
+  margin-block-start: 24px;
+  padding-inline: 0;
+}
+.settings-dialog .settings-section-actions:last-child {
+  margin-block-end: 0;
+}
+.settings-logo-preview {
+  display: block;
+  max-inline-size: 240px;
+  max-block-size: 96px;
+  object-fit: contain;
+  margin-block-start: 24px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+}
+.settings-bands,
+.settings-correction-list,
+.settings-offer-mappings {
+  display: grid;
+  gap: 20px;
+  margin-block-start: 24px;
+}
+.settings-band-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 140px));
+  gap: 16px;
+}
+.settings-correction-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+.settings-correction-row .field,
+.settings-short-field {
+  max-inline-size: 140px;
+}
+.settings-short-field {
+  margin-block-start: 24px;
+}
+.settings-offer-mapping {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+.settings-planned-list {
+  display: grid;
+  gap: 16px;
+  padding-inline-start: 20px;
+  margin-block: 24px 0;
+}
+.settings-history-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 24px;
+}
+.settings-changed-line {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  margin-block: 0;
+}
+@media (max-width: 1100px) {
+  .settings-layout {
+    grid-template-columns: 176px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .settings-offer-mapping {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .settings-band-row {
+    grid-template-columns: repeat(2, minmax(0, 140px));
+  }
+}
+@media (max-width: 760px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-group-menu {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 8px;
+  }
+  .settings-group-menu button {
+    flex-shrink: 0;
+    max-inline-size: 228px;
+  }
+  .settings-company-fields,
+  .settings-dialog-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-save-bar {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  .settings-save-bar > span {
+    flex-basis: 100%;
+  }
+  .settings-offer-mapping {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+}

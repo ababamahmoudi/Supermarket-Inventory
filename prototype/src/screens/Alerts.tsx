@@ -113,8 +113,8 @@ export function Alerts() {
       {alerts.length === 0 && (
         <EmptyState>
           {t(
-            "No pending alerts. Receive the demo invoice to review a lower supplier cost.",
-            "هشدار در انتظار وجود ندارد. فاکتور نمایشی را دریافت کنید تا کاهش هزینه تأمین‌کننده را بررسی کنید.",
+            "No pending alerts. Receive an invoice to review a lower supplier cost.",
+            "هشدار در انتظار وجود ندارد. فاکتور را دریافت کنید تا کاهش هزینه تأمین‌کننده را بررسی کنید.",
           )}
         </EmptyState>
       )}

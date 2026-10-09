@@ -25,7 +25,15 @@ import {
   Truck,
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png?inline";
-import { branchLabel, demoUserLabel, LtrText } from "./presentation";
+import { demoUserLabel, LtrText } from "./presentation";
+import { branchLabel, configuredBranches, moduleEnabled } from "./settings";
+import {
+  canAccessNotebooks,
+  readableNotebookEntries,
+  visibleNotebooks,
+} from "./notebooks";
+import UndoToasts from "./UndoToasts";
+import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
 import { Lookup, Products, ProductPage } from "./screens/Catalog";
@@ -41,7 +49,7 @@ import Payables from "./screens/Payables";
 import Dashboard from "./screens/Dashboard";
 import Suppliers from "./screens/Suppliers";
 import "./a2-shared.css";
-import { branches, demoUsers, useDemo } from "./store";
+import { demoUsers, useDemo } from "./store";
 import type { AuthError } from "./auth";
 import type { Branch, Role } from "./types";
 import {
@@ -183,8 +191,7 @@ export const pages: {
     fa: "تاریخچه",
     icon: History,
     group: "Admin",
-    roles: ["supervisor"],
-    disabled: true,
+    roles: ["supervisor", "floor_worker"],
   },
 ];
 const roleNames: Record<Role, [string, string]> = {
@@ -197,26 +204,30 @@ export function RoleName({ role }: { role: Role }) {
   return t(...roleNames[role]);
 }
 function LanguageToggle() {
-  const { lang, setLang, t } = useDemo();
+  const { lang, setLang, t, state } = useDemo();
   return (
     <div className="pills language-toggle" aria-label={t("Language", "زبان")}>
-      <button
-        type="button"
-        aria-label="English"
-        aria-pressed={lang === "en"}
-        onClick={() => setLang("en")}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        lang="fa"
-        aria-label="فارسی"
-        aria-pressed={lang === "fa"}
-        onClick={() => setLang("fa")}
-      >
-        فا
-      </button>
+      {state.config.company.ui_languages.includes("en") && (
+        <button
+          type="button"
+          aria-label="English"
+          aria-pressed={lang === "en"}
+          onClick={() => setLang("en")}
+        >
+          EN
+        </button>
+      )}
+      {state.config.company.ui_languages.includes("fa") && (
+        <button
+          type="button"
+          lang="fa"
+          aria-label="فارسی"
+          aria-pressed={lang === "fa"}
+          onClick={() => setLang("fa")}
+        >
+          فا
+        </button>
+      )}
     </div>
   );
 }
@@ -445,7 +456,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
           <span className="brand-logo-window signin-logo-window">
             <img
               className="signin-logo"
-              src={logo}
+              src={state.config.company.logo_data ?? logo}
               alt={t(
                 state.config.company.name_en,
                 state.config.company.name_fa,
@@ -585,6 +596,7 @@ function Reauthenticate() {
 }
 const screenRegistry: Record<string, ReactNode> = {
   suppliers: <Suppliers />,
+  history: <HistoryScreen />,
   lookup: <Lookup />,
   products: <Products />,
   product: <ProductPage />,
@@ -715,7 +727,19 @@ export default function App() {
   if (!role || !user) return <SignIn />;
   if (mustChangePassword) return <ChoosePassword />;
   if (locked) return <LockScreen />;
-  const allowed = pages.filter((page) => page.roles.includes(role));
+  const context = {
+    company_id: state.config.company.seed_key,
+    branch,
+    role,
+    actor: user.name,
+  };
+  const branches = configuredBranches(state.config);
+  const allowed = pages.filter(
+    (page) =>
+      moduleEnabled(state.config, page.key) &&
+      (page.roles.includes(role) ||
+        (page.key === "notes" && canAccessNotebooks(state, context))),
+  );
   const defaultKey =
     role === "supervisor"
       ? "dashboard"
@@ -754,16 +778,28 @@ export default function App() {
   const page =
     allowed.find(
       (candidate) => !candidate.disabled && candidate.key === parentKey,
-    ) ?? allowed.find((candidate) => candidate.key === defaultKey)!;
+    ) ??
+    allowed.find((candidate) => candidate.key === defaultKey) ??
+    allowed[0];
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
     (branch === "all" || record.branch === branch || record.branch === "all");
-  const unread = state.notes.filter(
-    (note) =>
-      inBranch(note) &&
-      note.type === "note_to_supervisor" &&
-      note.status === "open",
+  const activeNotebookIds = new Set(
+    visibleNotebooks(state, context).map((notebook) => notebook.id),
+  );
+  const customUnread = readableNotebookEntries(state, context).filter(
+    (entry) =>
+      activeNotebookIds.has(entry.notebook_id) &&
+      entry.notify_supervisor &&
+      entry.status === "open",
   ).length;
+  const unread =
+    state.notes.filter(
+      (note) =>
+        inBranch(note) &&
+        note.type === "note_to_supervisor" &&
+        note.status === "open",
+    ).length + customUnread;
   const approvalCount = state.approvals.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
@@ -811,7 +847,7 @@ export default function App() {
             <span className="brand-logo-window">
               <img
                 className="brand-logo"
-                src={logo}
+                src={state.config.company.logo_data ?? logo}
                 alt={t(
                   state.config.company.name_en,
                   state.config.company.name_fa,
@@ -929,7 +965,7 @@ export default function App() {
             className="breadcrumbs"
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
-            <span>{branchLabel(branch, lang)}</span>
+            <span>{branchLabel(state.config, branch, lang)}</span>
             <ChevronRight size={14} aria-hidden="true" />
             {currentProduct || currentReturn || supplierDetail ? (
               <>
@@ -952,12 +988,17 @@ export default function App() {
             ) : (
               <span aria-current="page">{t(page.en, page.fa)}</span>
             )}
-            {page.key === "invoices" && state.invoice.status !== "empty" && (
-              <>
-                <ChevronRight size={14} aria-hidden="true" />
-                <LtrText>{state.invoice.supplier_invoice_number}</LtrText>
-              </>
-            )}
+            {page.key === "invoices" &&
+              state.invoice.status !== "empty" &&
+              state.invoice.company_id === state.config.company.seed_key &&
+              (role === "supervisor" ||
+                (role === "floor_worker" &&
+                  state.invoice.branch === user.branch)) && (
+                <>
+                  <ChevronRight size={14} aria-hidden="true" />
+                  <LtrText>{state.invoice.supplier_invoice_number}</LtrText>
+                </>
+              )}
           </nav>
           <form
             className="topbar-search"
@@ -985,12 +1026,12 @@ export default function App() {
               onChange={(value) => setBranch(value as Branch)}
               options={[...branches, "all" as const].map((value) => ({
                 value,
-                label: branchLabel(value, lang),
+                label: branchLabel(state.config, value, lang),
               }))}
             />
           ) : (
             <span className="branch-pill static">
-              {branchLabel(branch, lang)}
+              {branchLabel(state.config, branch, lang)}
             </span>
           )}
           <LanguageToggle />
@@ -1066,6 +1107,9 @@ export default function App() {
             )}
           </Menu>
           <Menu className="demo-menu" label={t("Demo", "دمو")}>
+            <p className="helper">
+              {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
+            </p>
             {demoUsers.map((candidate) => (
               <MenuItem
                 key={candidate.username}
@@ -1115,6 +1159,7 @@ export default function App() {
           )}
         </main>
       </div>
+      <UndoToasts />
       <ConfirmDialog
         open={resetOpen}
         onOpenChange={setResetOpen}

@@ -1,8 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
 import { ChevronDown } from "lucide-react";
 import { demoSeed as demo } from "../config";
-import { useDemo, branches, demoUsers } from "../store";
+import { useDemo, demoUsers } from "../store";
+import {
+  configuredBranches,
+  branchLabel as configuredBranchLabel,
+} from "../settings";
+import {
+  supplierChoices,
+  supplierRecords,
+  supplierMatches,
+} from "../supplier-editor";
+import { SupplierEditor } from "./SupplierEditor";
+import { ProductEditor } from "./Catalog";
+import "./manual-entry.css";
 import {
   Badge,
   Button,
@@ -21,7 +33,6 @@ import {
   Tabs,
 } from "../ui";
 import {
-  branchLabel,
   DateText,
   demoUserLabel,
   LtrText,
@@ -47,7 +58,13 @@ import {
   shortTotals,
   type InvoiceBlocker,
 } from "../invoice";
-import type { Branch, InvoiceLine } from "../types";
+import type {
+  Branch,
+  DemoInvoice,
+  DemoState,
+  InvoiceLine,
+  Role,
+} from "../types";
 
 type Translate = (en: string, fa: string) => string;
 type InvoiceTab =
@@ -127,9 +144,69 @@ function categoryText(key: string, label: string, t: Translate) {
   return t(label, fa[key] ?? label);
 }
 
+type InvoiceReader = { role: Role | null; branch?: Branch };
+function readableInvoice(
+  invoice: DemoInvoice,
+  company: string,
+  reader: InvoiceReader,
+) {
+  return (
+    invoice.company_id === company &&
+    (reader.role === "supervisor" ||
+      (reader.role === "floor_worker" && invoice.branch === reader.branch))
+  );
+}
+/** Keep the previous workspace as a resumable record before opening another. */
+function retainInvoiceWorkspace(draft: DemoState) {
+  if (
+    draft.invoice.status === "empty" ||
+    draft.invoice.company_id !== draft.config.company.seed_key
+  )
+    return;
+  draft.invoices ??= [];
+  const index = draft.invoices.findIndex(
+    (item) =>
+      item.company_id === draft.invoice.company_id &&
+      item.id === draft.invoice.id,
+  );
+  const saved = structuredClone(draft.invoice);
+  if (index >= 0) draft.invoices[index] = saved;
+  else draft.invoices.push(saved);
+}
+
 export default function Invoices() {
-  const { state, update, role, branch, lang, t, money, user } = useDemo();
+  const { state, update, role, branch, setBranch, lang, t, money, user } =
+    useDemo();
+  const branches = configuredBranches(state.config);
+  const [supplierEditorOpen, setSupplierEditorOpen] = useState(false);
+  const [productEditorOpen, setProductEditorOpen] = useState(false);
   const invoice = state.invoice;
+  const reader = { role, branch: user?.branch };
+  const readerRef = useRef<InvoiceReader>(reader);
+  useEffect(() => {
+    readerRef.current = { role, branch: user?.branch };
+  }, [role, user]);
+  const canReadWorkspace = readableInvoice(
+    invoice,
+    state.config.company.seed_key,
+    reader,
+  );
+  const updateInvoice = useCallback(
+    (mutator: (draft: DemoState) => void) => {
+      update((draft) => {
+        if (
+          !readableInvoice(
+            draft.invoice,
+            draft.config.company.seed_key,
+            readerRef.current,
+          )
+        )
+          throw new Error("Choose an invoice in your allowed branch.");
+        mutator(draft);
+      });
+    },
+    [update],
+  );
   const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
   const [message, setMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
@@ -185,22 +262,23 @@ export default function Invoices() {
 
   // Refreshing a processing draft resumes the honest simulated reading state.
   useEffect(() => {
-    if (invoice.status !== "reading") return;
+    if (!canReadWorkspace || invoice.status !== "reading") return;
     const id = invoice.id;
-    window.setTimeout(
+    const timer = window.setTimeout(
       () =>
-        update((draft) => {
+        updateInvoice((draft) => {
           if (draft.invoice.id === id && draft.invoice.status === "reading")
             draft.invoice.status = "review";
         }),
       2500,
     );
-  }, [invoice.id, invoice.status, update]);
+    return () => window.clearTimeout(timer);
+  }, [invoice.id, invoice.status, canReadWorkspace, updateInvoice]);
 
   useEffect(() => {
     const applyDemoAnswer = () => {
-      if (!active || locked || !lowerLines.length) return;
-      update((draft) => {
+      if (!canReadWorkspace || !active || locked || !lowerLines.length) return;
+      updateInvoice((draft) => {
         const today = companyDate(draft.config);
         draft.invoice.lower_price_answers = {
           same_expiry: "no",
@@ -223,7 +301,7 @@ export default function Invoices() {
     window.addEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
     return () =>
       window.removeEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
-  }, [active, locked, lowerLines.length, update]);
+  }, [active, locked, lowerLines.length, canReadWorkspace, updateInvoice]);
 
   useEffect(() => {
     const loadLinkedInvoice = () => {
@@ -233,10 +311,24 @@ export default function Invoices() {
         (item) =>
           item.id === id &&
           item.company_id === state.config.company.seed_key &&
-          (branch === "all" || item.branch === branch),
+          (branch === "all" || item.branch === branch) &&
+          readableInvoice(
+            item,
+            state.config.company.seed_key,
+            readerRef.current,
+          ),
       );
       if (!linked || linked.id === invoice.id) return;
       update((draft) => {
+        if (
+          !readableInvoice(
+            linked,
+            draft.config.company.seed_key,
+            readerRef.current,
+          )
+        )
+          return;
+        retainInvoiceWorkspace(draft);
         draft.invoice = structuredClone(linked);
       });
       setDetailsOpen(false);
@@ -265,11 +357,25 @@ export default function Invoices() {
   function start(manual = false) {
     window.history.replaceState(null, "", "#invoices");
     update((draft) => {
-      draft.invoice = createInvoice(
-        draft,
-        branch === "all" ? "Branch 1" : branch,
-        manual,
-      );
+      const currentReader = readerRef.current;
+      if (
+        currentReader.role !== "supervisor" &&
+        currentReader.role !== "floor_worker"
+      )
+        return;
+      const targetBranch =
+        currentReader.role === "supervisor"
+          ? branch === "all"
+            ? configuredBranches(draft.config)[0]
+            : branch
+          : currentReader.branch;
+      if (
+        !targetBranch ||
+        !configuredBranches(draft.config).includes(targetBranch)
+      )
+        return;
+      retainInvoiceWorkspace(draft);
+      draft.invoice = createInvoice(draft, targetBranch, manual);
       draft.invoice.receiving_employee = user?.name;
     });
     chooseTab("drafts");
@@ -295,7 +401,7 @@ export default function Invoices() {
     if (file.size > 2_500_000) {
       setUploadError(
         t(
-          "Choose a file smaller than 2.5 MB so this browser demo can save the original.",
+          "Choose a file smaller than 2.5 MB so the original can be saved.",
           "برای ذخیره اصل فاکتور در این دموی مرورگر، فایل کوچک‌تر از 2.5 مگابایت انتخاب کنید.",
         ),
       );
@@ -308,19 +414,24 @@ export default function Invoices() {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      update((draft) => {
+      updateInvoice((draft) => {
         const existing = draft.invoice;
         if (existing.status === "posted") return;
         const next =
           existing.status === "empty"
-            ? createInvoice(draft, branch === "all" ? "Branch 1" : branch)
+            ? createInvoice(draft, branch === "all" ? branches[0] : branch)
             : existing;
         if (existing.status === "empty") next.receiving_employee = user?.name;
         next.file_name = file.name;
         next.file_type = file.type;
         next.file_data = data;
         // Existing manual entries stay intact when their original is attached.
-        next.status = next.lines.length ? "reading" : "draft";
+        next.status =
+          next.entry_mode === "manual"
+            ? "review"
+            : next.lines.length
+              ? "reading"
+              : "draft";
         draft.invoice = next;
       });
       setUploadError("");
@@ -342,7 +453,7 @@ export default function Invoices() {
     change: (line: InvoiceLine) => void,
     recalculate = false,
   ) {
-    update((draft) => {
+    updateInvoice((draft) => {
       if (draft.invoice.status === "posted") return;
       change(draft.invoice.lines[index]);
       draft.invoice.lines[index].review_confirmed = false;
@@ -361,7 +472,7 @@ export default function Invoices() {
       );
       return;
     }
-    update((draft) => {
+    updateInvoice((draft) => {
       postInvoice(draft, role!, branch, user?.name);
     });
     setMessage(
@@ -413,7 +524,7 @@ export default function Invoices() {
       );
       return;
     }
-    update((draft) => {
+    updateInvoice((draft) => {
       receiveShort(draft, code, quantity, receipt, role!, branch);
     });
     setMessage(
@@ -426,10 +537,100 @@ export default function Invoices() {
     state.invoices?.filter(
       (item) =>
         item.company_id === state.config.company.seed_key &&
+        item.status === "posted" &&
         (branch === "all" || item.branch === branch),
     ) ?? [];
+  const savedDrafts =
+    state.invoices?.filter(
+      (item) =>
+        item.id !== invoice.id &&
+        item.status !== "empty" &&
+        item.status !== "posted" &&
+        readableInvoice(item, state.config.company.seed_key, reader) &&
+        (branch === "all" || item.branch === branch),
+    ) ?? [];
+  const resume = (saved: DemoInvoice) => {
+    update((draft) => {
+      if (
+        !readableInvoice(
+          saved,
+          draft.config.company.seed_key,
+          readerRef.current,
+        )
+      )
+        return;
+      retainInvoiceWorkspace(draft);
+      draft.invoice = structuredClone(saved);
+    });
+    setDetailsOpen(true);
+    setSelectedView(null);
+  };
+  const draftList = savedDrafts.length ? (
+    <Card title={t("Drafts", "پیش‌نویس‌ها")} className="invoice-saved-drafts">
+      {savedDrafts.map((saved) => (
+        <div className="dialog-actions" key={saved.id}>
+          <LtrText>
+            {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
+          </LtrText>
+          <LtrText>{saved.supplier}</LtrText>
+          <Button variant="secondary" onClick={() => resume(saved)}>
+            {t("Resume draft", "ادامه پیش‌نویس")}
+          </Button>
+        </div>
+      ))}
+    </Card>
+  ) : null;
+  if (!canReadWorkspace)
+    return (
+      <>
+        <PageHeader
+          title={t("Invoices", "فاکتورها")}
+          description={t(
+            "Deliveries and supplier invoices",
+            "تحویل‌ها و فاکتورهای تأمین‌کننده",
+          )}
+          actions={
+            <Button onClick={() => start()}>
+              {t("New invoice", "فاکتور جدید")}
+            </Button>
+          }
+        />
+        <EmptyState>
+          {t(
+            "Choose an invoice in your branch, or start a new invoice.",
+            "فاکتوری در شعبه خود انتخاب کنید یا فاکتور جدید شروع کنید.",
+          )}
+        </EmptyState>
+        {draftList}
+      </>
+    );
   return (
     <>
+      {supplierEditorOpen && (
+        <SupplierEditor
+          invoiceQuickAdd
+          onClose={() => setSupplierEditorOpen(false)}
+          onSaved={(record) =>
+            updateInvoice((draft) => {
+              draft.invoice.supplier = record.name;
+              draft.invoice.supplier_confirmed = record.status === "confirmed";
+              draft.invoice.payment_terms = record.payment_terms;
+              draft.invoice.lower_price_answers = undefined;
+            })
+          }
+        />
+      )}
+      {productEditorOpen && (
+        <ProductEditor
+          invoiceQuickAdd
+          onClose={() => setProductEditorOpen(false)}
+          onCreated={(product) =>
+            updateInvoice((draft) => {
+              addManualLine(draft, product.code);
+            })
+          }
+        />
+      )}
       <PageHeader
         title={t("Invoices", "فاکتورها")}
         description={t(
@@ -466,6 +667,7 @@ export default function Invoices() {
           {message}
         </div>
       )}
+      {tab === "drafts" && draftList}
       {tab === "posted" && !showPostedDetail ? (
         <Card title={t("Posted invoices", "فاکتورهای ثبت‌شده")}>
           {!branchInvoices.length ? (
@@ -496,7 +698,9 @@ export default function Invoices() {
                     <td>
                       <LtrText>{item.supplier}</LtrText>
                     </td>
-                    <td>{branchLabel(item.branch, lang)}</td>
+                    <td>
+                      {configuredBranchLabel(state.config, item.branch, lang)}
+                    </td>
                     <td>
                       <DateText value={item.invoice_date} />
                     </td>
@@ -508,7 +712,8 @@ export default function Invoices() {
                         variant="secondary"
                         size="sm"
                         onClick={() => {
-                          update((draft) => {
+                          updateInvoice((draft) => {
+                            retainInvoiceWorkspace(draft);
                             draft.invoice = structuredClone(item);
                           });
                           chooseTab("posted", true);
@@ -566,16 +771,44 @@ export default function Invoices() {
                 <>
                   <p className="muted">
                     {t(
-                      "Demo: AI invoice reading is simulated",
-                      "دمو: خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+                      "AI invoice reading is simulated",
+                      "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
                     )}
                   </p>
-                  <p className="muted">
-                    {t(
-                      "Your PDF or photo is displayed locally. The review uses fictional demo lines, not the contents of your file.",
-                      "PDF یا عکس شما فقط محلی نمایش داده می‌شود. بررسی از ردیف‌های ساختگی دمو استفاده می‌کند، نه محتوای فایل شما.",
+                  {!invoice.file_data &&
+                    (invoice.entry_mode !== "manual" ||
+                      !invoice.lines.length) && (
+                      <div
+                        className="invoice-entry-choices"
+                        aria-label={t(
+                          "New invoice entry method",
+                          "روش ورود فاکتور جدید",
+                        )}
+                      >
+                        <Button
+                          variant={
+                            invoice.entry_mode === "manual"
+                              ? "secondary"
+                              : "primary"
+                          }
+                          onClick={() => start(false)}
+                        >
+                          {t("Upload", "بارگذاری")}
+                        </Button>
+                        {role === "supervisor" && (
+                          <Button
+                            variant={
+                              invoice.entry_mode === "manual"
+                                ? "primary"
+                                : "secondary"
+                            }
+                            onClick={() => start(true)}
+                          >
+                            {t("Manual entry", "ورود دستی")}
+                          </Button>
+                        )}
+                      </div>
                     )}
-                  </p>
                   <Field
                     label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
                     error={uploadError}
@@ -589,7 +822,7 @@ export default function Invoices() {
                       }}
                       disabled={invoice.status === "reading"}
                       onRemove={() => {
-                        update((draft) => {
+                        updateInvoice((draft) => {
                           if (draft.invoice.status === "posted") return;
                           draft.invoice.file_name = undefined;
                           draft.invoice.file_type = undefined;
@@ -599,14 +832,6 @@ export default function Invoices() {
                       }}
                     />
                   </Field>
-                  {!active && (
-                    <Button variant="secondary" onClick={() => start(true)}>
-                      {t(
-                        "Enter manually without a file",
-                        "ورود دستی بدون فایل",
-                      )}
-                    </Button>
-                  )}
                 </>
               )}
               {invoice.file_data && (
@@ -651,8 +876,8 @@ export default function Invoices() {
                 </p>
                 <p className="muted">
                   {t(
-                    "Simulated reading takes 2–3 seconds. Your file is not sent anywhere.",
-                    "خواندن شبیه‌سازی‌شده ۲ تا ۳ ثانیه طول می‌کشد. فایل شما به جایی فرستاده نمی‌شود.",
+                    "AI invoice reading is simulated",
+                    "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
                   )}
                 </p>
               </Card>
@@ -692,7 +917,13 @@ export default function Invoices() {
                           <td>
                             <LtrText>{invoice.supplier || "—"}</LtrText>
                           </td>
-                          <td>{branchLabel(invoice.branch, lang)}</td>
+                          <td>
+                            {configuredBranchLabel(
+                              state.config,
+                              invoice.branch,
+                              lang,
+                            )}
+                          </td>
                           <td>
                             <DateText value={invoice.invoice_date} />
                           </td>
@@ -787,8 +1018,9 @@ export default function Invoices() {
                   <p className="muted invoice-details-meta">
                     <LtrText>{invoice.supplier}</LtrText> ·{" "}
                     <LtrText>{invoice.supplier_invoice_number || "—"}</LtrText>{" "}
-                    · {branchLabel(invoice.branch, lang)} ·{" "}
-                    <DateText value={invoice.invoice_date} />
+                    ·{" "}
+                    {configuredBranchLabel(state.config, invoice.branch, lang)}{" "}
+                    · <DateText value={invoice.invoice_date} />
                   </p>
                   <p>
                     <Badge tone={locked ? "approved" : "progress"}>
@@ -814,19 +1046,55 @@ export default function Invoices() {
                       <Field label={t("Supplier", "تأمین‌کننده")}>
                         <Select
                           value={invoice.supplier}
-                          onChange={(value) =>
-                            update((draft) => {
+                          onChange={(value) => {
+                            if (value === "__add_supplier") {
+                              setSupplierEditorOpen(true);
+                              return;
+                            }
+                            updateInvoice((draft) => {
+                              const supplier = supplierRecords(draft).find(
+                                (record) =>
+                                  record.company_id ===
+                                    draft.config.company.seed_key &&
+                                  supplierMatches(record, value),
+                              );
                               draft.invoice.supplier = value;
-                              draft.invoice.supplier_confirmed = true;
+                              draft.invoice.supplier_confirmed =
+                                supplier?.status === "confirmed";
+                              draft.invoice.payment_terms =
+                                supplier?.payment_terms ?? "";
                               draft.invoice.lower_price_answers = undefined;
-                            })
-                          }
+                            });
+                          }}
 
                           disabled={locked}
-                          options={demo.suppliers.map((supplier) => ({
-                            value: supplier,
-                            label: `\u2066${supplier}\u2069`,
-                          }))}
+                          options={[
+                            {
+                              value: "",
+                              label: t("Choose supplier", "انتخاب تأمین‌کننده"),
+                            },
+                            ...supplierChoices(state).map((supplier) => ({
+                              value: supplier.name,
+                              label: `\u2066${supplier.name}\u2069`,
+                            })),
+                            ...(!supplierChoices(state).some((record) =>
+                              supplierMatches(record, invoice.supplier),
+                            ) && invoice.supplier
+                              ? [
+                                  {
+                                    value: invoice.supplier,
+                                    label: invoice.supplier,
+                                  },
+                                ]
+                              : []),
+                            {
+                              value: "__add_supplier",
+                              label: t(
+                                "+ Add supplier",
+                                "+ افزودن تأمین‌کننده",
+                              ),
+                            },
+                          ]}
                         />
                       </Field>
                       <Field
@@ -839,7 +1107,7 @@ export default function Invoices() {
                           dir="ltr"
                           value={invoice.supplier_invoice_number}
                           onChange={(event) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.supplier_invoice_number =
                                 event.target.value;
                             })
@@ -855,7 +1123,7 @@ export default function Invoices() {
                           dir="ltr"
                           value={invoice.invoice_date ?? ""}
                           onChange={(value) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.invoice_date = value;
                             })
                           }
@@ -869,7 +1137,7 @@ export default function Invoices() {
                             value={invoice.received_at?.slice(0, 10) ?? ""}
                             disabled={locked}
                             onChange={(value) =>
-                              update((draft) => {
+                              updateInvoice((draft) => {
                                 const time =
                                   draft.invoice.received_at?.slice(11, 16) ||
                                   "00:00";
@@ -895,7 +1163,7 @@ export default function Invoices() {
                             placeholder="HH:mm"
                             value={invoice.received_at?.slice(11, 16) ?? ""}
                             onChange={(event) =>
-                              update((draft) => {
+                              updateInvoice((draft) => {
                                 const date =
                                   draft.invoice.received_at?.slice(0, 10) || "";
                                 draft.invoice.received_at = event.target.value
@@ -912,7 +1180,7 @@ export default function Invoices() {
                         <Select
                           value={invoice.receiving_employee ?? ""}
                           onChange={(value) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.receiving_employee = value;
                             })
                           }
@@ -930,16 +1198,21 @@ export default function Invoices() {
                         <Select
                           value={invoice.branch}
                           disabled={locked || role !== "supervisor"}
-                          onChange={(value) =>
-                            update((draft) => {
+                          onChange={(value) => {
+                            setBranch(value as Branch);
+                            updateInvoice((draft) => {
                               draft.invoice.branch = value as Branch;
                               draft.invoice.lower_price_answers = undefined;
-                            })
-                          }
+                            });
+                          }}
 
                           options={branches.map((item) => ({
                             value: item,
-                            label: branchLabel(item, lang),
+                            label: configuredBranchLabel(
+                              state.config,
+                              item,
+                              lang,
+                            ),
                           }))}
                         />
                       </Field>
@@ -950,7 +1223,7 @@ export default function Invoices() {
                           inputMode="decimal"
                           value={invoice.subtotal}
                           onChange={(event) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.subtotal = event.target.value;
                             })
                           }
@@ -963,7 +1236,7 @@ export default function Invoices() {
                           inputMode="decimal"
                           value={invoice.tax}
                           onChange={(event) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.tax = event.target.value;
                             })
                           }
@@ -976,7 +1249,7 @@ export default function Invoices() {
                           inputMode="decimal"
                           value={invoice.final_total}
                           onChange={(event) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.final_total = event.target.value;
                             })
                           }
@@ -992,7 +1265,7 @@ export default function Invoices() {
                           dir="ltr"
                           value={invoice.due_date ?? ""}
                           onChange={(value) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.due_date = value;
                             })
                           }
@@ -1007,7 +1280,7 @@ export default function Invoices() {
                         <input
                           value={invoice.payment_terms}
                           onChange={(event) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.payment_terms = event.target.value;
                             })
                           }
@@ -1362,10 +1635,7 @@ export default function Invoices() {
                                 {expanded &&
                                   (oldPrice ? (
                                     <p className="muted">
-                                      {t(
-                                        "Approved price to charge:",
-                                        "قیمت تأییدشده برای فروش:",
-                                      )}{" "}
+                                      {t("Approved:", "تأییدشده:")}{" "}
                                       <Money
                                         value={oldPrice}
                                         currency={state.config.company.currency}
@@ -1678,7 +1948,7 @@ export default function Invoices() {
                                     disabled={locked}
                                     checked={line.review_confirmed ?? false}
                                     onChange={(checked) => {
-                                      update((draft) => {
+                                      updateInvoice((draft) => {
                                         draft.invoice.lines[
                                           index
                                         ].review_confirmed = checked;
@@ -1713,30 +1983,49 @@ export default function Invoices() {
                       >
                         <Select
                           value={manualCode}
-                          onChange={(value) => setManualCode(value)}
+                          onChange={(value) => {
+                            if (value === "__add_product")
+                              setProductEditorOpen(true);
+                            else setManualCode(value);
+                          }}
 
                           disabled={locked}
-                          options={state.products
-                            .filter(
-                              (item) =>
-                                item.company_id === invoice.company_id &&
-                                item.status !== "archived",
-                            )
-                            .map((item) => ({
-                              value: item.code,
-                              label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
-                            }))}
+                          options={[
+                            ...state.products
+                              .filter(
+                                (item) =>
+                                  item.company_id === invoice.company_id &&
+                                  item.status !== "archived",
+                              )
+                              .map((item) => ({
+                                value: item.code,
+                                label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
+                              })),
+                            {
+                              value: "__add_product",
+                              label: t(
+                                "+ Add new product",
+                                "+ افزودن کالای جدید",
+                              ),
+                            },
+                          ]}
                         />
                       </Field>
                       <Button
                         variant="secondary"
                         onClick={() =>
-                          update((draft) => {
+                          updateInvoice((draft) => {
                             addManualLine(draft, manualCode);
                           })
                         }
                       >
                         {t("Add line", "افزودن ردیف")}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setProductEditorOpen(true)}
+                      >
+                        {t("+ Add new product", "+ افزودن کالای جدید")}
                       </Button>
                     </div>
                   )}
@@ -1794,7 +2083,7 @@ export default function Invoices() {
                         <Select
                           value={invoice.lower_price_answers?.same_expiry ?? ""}
                           onChange={(value) =>
-                            update((draft) => {
+                            updateInvoice((draft) => {
                               draft.invoice.lower_price_answers = {
                                 same_expiry: value,
                               };
@@ -1857,7 +2146,7 @@ export default function Invoices() {
                             dir="ltr"
                             value={invoice.lower_price_answers.units_left ?? ""}
                             onChange={(value) =>
-                              update((draft) => {
+                              updateInvoice((draft) => {
                                 draft.invoice.lower_price_answers!.units_left =
                                   value === "" ? undefined : Number(value);
                               })
@@ -1876,7 +2165,7 @@ export default function Invoices() {
                                 invoice.lower_price_answers.old_expiry ?? ""
                               }
                               onChange={(value) =>
-                                update((draft) => {
+                                updateInvoice((draft) => {
                                   draft.invoice.lower_price_answers!.old_expiry =
                                     value;
                                 })
@@ -1895,7 +2184,7 @@ export default function Invoices() {
                                 invoice.lower_price_answers.new_expiry ?? ""
                               }
                               onChange={(value) =>
-                                update((draft) => {
+                                updateInvoice((draft) => {
                                   draft.invoice.lower_price_answers!.new_expiry =
                                     value;
                                 })
@@ -1917,13 +2206,13 @@ export default function Invoices() {
                               invoice.lower_price_answers.note ===
                               "Demo only: old stock label cannot be read."
                                 ? t(
-                                    "Demo only: old stock label cannot be read.",
-                                    "فقط برای دمو: برچسب موجودی قبلی خوانا نیست.",
+                                    "Old stock label cannot be read.",
+                                    "برچسب موجودی قبلی خوانا نیست.",
                                   )
                                 : (invoice.lower_price_answers.note ?? "")
                             }
                             onChange={(event) =>
-                              update((draft) => {
+                              updateInvoice((draft) => {
                                 draft.invoice.lower_price_answers!.note =
                                   event.target.value;
                               })
@@ -2065,7 +2354,7 @@ export default function Invoices() {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    update((draft) => {
+                    updateInvoice((draft) => {
                       draft.invoice.status = "draft";
                     });
                     setMessage(

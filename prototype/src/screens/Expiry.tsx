@@ -1,20 +1,19 @@
-import { useState } from "react";
-import { demoUsers, useDemo } from "../store";
-import { companyDate } from "../invoice";
 import {
-  branchLabel,
-  categoryLabel,
-  DateText,
-  LtrText,
-  ProductName,
-} from "../presentation";
+  branchLabel as configuredBranchLabel,
+  configuredBranches,
+} from "../settings";
+import { translateCount } from "../i18n";
+import { useState } from "react";
+import { useDemo } from "../store";
+import type { Branch } from "../types";
+import { companyDate } from "../invoice";
+import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
 import {
   Badge,
   Button,
   Card,
   DataTable,
   EmptyState,
-  Field,
   FilterToolbar,
   PageHeader,
   Select,
@@ -27,12 +26,13 @@ import {
 } from "../operations";
 
 export function Expiry() {
-  const { state, update, branch, role, lang, t } = useDemo();
+  const { state, update, branch, setBranch, role, user, lang, t } = useDemo();
+  const branches = configuredBranches(state.config);
   const context: OperationsContext = {
     company_id: state.config.company.seed_key,
     branch,
     role: role ?? "cashier",
-    actor: demoUsers.find((user) => user.role === role)?.name ?? "Demo user",
+    actor: user?.name ?? t("Floor Worker", "کارمند فروشگاه"),
   };
   const [window, setWindow] = useState("soon");
   const [category, setCategory] = useState("all");
@@ -102,64 +102,103 @@ export function Expiry() {
           )}
         </div>
       )}
-      <FilterToolbar count={`${entries.length} ${t("entries", "مورد")}`}>
-        <Field label={t("Search products", "جستجوی محصولات")}>
+      <FilterToolbar
+        className="expiry-filters"
+        aria-label={t("Date tracking filters", "فیلترهای پیگیری تاریخ")}
+        count={translateCount(
+          "{{count}} entry",
+          "{{count}} entries",
+          "{{count}} مورد",
+          "{{count}} مورد",
+          entries.length,
+          lang,
+        )}
+        search={
           <input
+            className="ui-input"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            aria-label={t("Search products", "جستجوی محصولات")}
             placeholder={t("Name or Product Code", "نام یا کد محصول")}
           />
-        </Field>
-        <Field label={t("Time window", "بازه زمانی")}>
-          <Select
-            value={window}
-            onChange={setWindow}
-            options={[
-              {
-                value: "soon",
-                label: `${t("Expiring soon", "به‌زودی منقضی")} (${state.config.expiry.expiring_soon_days} ${t("days", "روز")})`,
-              },
-              { value: "expired", label: t("Expired", "منقضی‌شده") },
-              {
-                value: "active",
-                label: t("All active dates", "همه تاریخ‌های فعال"),
-              },
-              {
-                value: "cleared",
-                label: t("Cleared history", "سوابق پاک‌شده"),
-              },
-            ]}
-          />
-        </Field>
-        <Field label={t("AI category", "دسته‌بندی هوش مصنوعی")}>
-          <Select
-            value={category}
-            onChange={setCategory}
-            options={[
-              { value: "all", label: t("All categories", "همه دسته‌ها") },
-              ...[
-                ...new Set(
-                  state.products
-                    .filter((item) => item.company_id === context.company_id)
-                    .map((product) => product.ai_category),
-                ),
-              ].map((value) => ({
-                value,
-                label: categoryLabel(value, lang),
-              })),
-            ]}
-          />
-        </Field>
-        <Field label={t("Sort by", "مرتب‌سازی بر اساس")}>
-          <Select
-            value={sort}
-            onChange={(value) => setSort(value as "date" | "name")}
-            options={[
-              { value: "date", label: t("Date", "تاریخ") },
-              { value: "name", label: t("Product", "محصول") },
-            ]}
-          />
-        </Field>
+        }
+      >
+        <Select
+          aria-label={t("Time window", "بازه زمانی")}
+          value={window}
+          onChange={setWindow}
+          options={[
+            {
+              value: "soon",
+              label: `${t("Expiring soon", "به‌زودی منقضی")} (${translateCount(
+                "{{count}} day",
+                "{{count}} days",
+                "{{count}} روز",
+                "{{count}} روز",
+                state.config.expiry.expiring_soon_days,
+                lang,
+              )})`,
+            },
+            { value: "expired", label: t("Expired", "منقضی‌شده") },
+            {
+              value: "active",
+              label: t("All active dates", "همه تاریخ‌های فعال"),
+            },
+            {
+              value: "cleared",
+              label: t("Cleared history", "سوابق پاک‌شده"),
+            },
+          ]}
+        />
+        <Select
+          aria-label={t("AI category", "دسته‌بندی هوش مصنوعی")}
+          value={category}
+          onChange={setCategory}
+          options={[
+            { value: "all", label: t("All categories", "همه دسته‌ها") },
+            ...[
+              ...new Set(
+                state.products
+                  .filter((item) => item.company_id === context.company_id)
+                  .map((product) => product.ai_category),
+              ),
+            ].map((value) => ({
+              value,
+              label: categoryLabel(value, lang),
+            })),
+          ]}
+        />
+        <Select
+          aria-label={t("Date tracking branch", "شعبه پیگیری تاریخ")}
+          value={branch}
+          onChange={(value) => setBranch(value as Branch)}
+          disabled={role !== "supervisor"}
+          options={
+            role === "supervisor"
+              ? [
+                  { value: "all", label: t("All branches", "همه شعبه‌ها") },
+                  ...branches.map((value) => ({
+                    value,
+                    label: configuredBranchLabel(state.config, value, lang),
+                  })),
+                ]
+              : [
+                  {
+                    value: branch,
+                    label: configuredBranchLabel(state.config, branch, lang),
+                  },
+                ]
+          }
+        />
+        <Select
+          aria-label={t("Sort by", "مرتب‌سازی بر اساس")}
+          value={sort}
+          onChange={(value) => setSort(value as "date" | "name")}
+          options={[
+            { value: "date", label: t("Date", "تاریخ") },
+            { value: "name", label: t("Product", "محصول") },
+          ]}
+        />
         <Button
           variant="ghost"
           onClick={() => {
@@ -167,6 +206,7 @@ export function Expiry() {
             setCategory("all");
             setWindow("soon");
             setSort("date");
+            if (role === "supervisor") setBranch("all");
           }}
         >
           {t("Clear filters", "پاک کردن فیلترها")}
@@ -240,7 +280,9 @@ export function Expiry() {
                         <LtrText>{entry.product_code}</LtrText>
                       </div>
                     </td>
-                    <td>{branchLabel(entry.branch, lang)}</td>
+                    <td className="branch-label">
+                      {configuredBranchLabel(state.config, entry.branch, lang)}
+                    </td>
                     <td>
                       <DateText value={entry.date} />
                     </td>
