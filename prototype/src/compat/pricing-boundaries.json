@@ -1,0 +1,32 @@
+[
+  {
+    "name": "grocery exact .73 boundary with four-decimal cost",
+    "category": "grocery",
+    "cost_before_tax": "0.4745",
+    "raw_price": "0.73",
+    "after_band_rounding": "0.99",
+    "special_2_49_3_49_correction_applied": false,
+    "expected_selling_price": "0.99",
+    "note": "0.4745 / 0.65 = 0.73 exactly; upper band includes its lower bound"
+  },
+  {
+    "name": "rice exact .99 with four-decimal cost stays at that .99",
+    "category": "rice",
+    "cost_before_tax": "3.1920",
+    "raw_price": "3.99",
+    "after_band_rounding": null,
+    "special_2_49_3_49_correction_applied": false,
+    "expected_selling_price": "3.99",
+    "note": "Unrounded raw is exactly 3.99"
+  },
+  {
+    "name": "rice raw just above .99 must use next dollar .99",
+    "category": "rice",
+    "cost_before_tax": "3.1921",
+    "raw_price": "3.99",
+    "after_band_rounding": null,
+    "special_2_49_3_49_correction_applied": false,
+    "expected_selling_price": "4.99",
+    "note": "Unrounded raw 3.990125 exceeds 3.99 even though cent-rounded raw is 3.99"
+  }
+]

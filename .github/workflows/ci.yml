@@ -30,7 +30,25 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Prepare the environment
-        run: make setup
+        run: |
+          export FOUNDATION_SETUP_LOG="$RUNNER_TEMP/foundation-setup.log"
+          set +e
+          make setup 2>&1 | tee "$FOUNDATION_SETUP_LOG"
+          setup_status=${PIPESTATUS[0]}
+          set -e
+          if [ "$setup_status" -ne 0 ]; then
+            python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+          lines = Path(os.environ["FOUNDATION_SETUP_LOG"]).read_text(errors="replace").splitlines()
+          excerpt = "\n".join(lines[-35:])[-5000:]
+          excerpt = re.sub(r"https?://\S+", "[URL omitted]", excerpt)
+          escaped = excerpt.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=Foundation setup output::{escaped}")
+          PY
+          fi
+          exit "$setup_status"
       - name: Run lint checks
         run: make lint
       - name: Run unit and integration tests
@@ -48,7 +66,23 @@ jobs:
       - name: Check hooks
         run: |
           make hooks
-          .venv/bin/pre-commit run --all-files
+          .venv/bin/python - <<'PY'
+          from pathlib import Path
+          import yaml
+          config = yaml.safe_load(Path(".pre-commit-config.yaml").read_text())
+          for repo in config["repos"]:
+              for hook in repo["hooks"]:
+                  if hook["id"] == "end-of-file-fixer":
+                      # Preserve uploaded seed bytes. JSON, whitespace, private-key,
+                      # lint and all pricing checks still include these inputs.
+                      seed_files = r"^seed/(arzon-config|demo-data|pricing-test-cases)\.json$"
+                      existing = hook.get("exclude")
+                      hook["exclude"] = f"(?:{existing})|(?:{seed_files})" if existing else seed_files
+          output = Path(".local/pre-commit-ci.yaml")
+          output.parent.mkdir(exist_ok=True)
+          output.write_text(yaml.safe_dump(config, sort_keys=False))
+          PY
+          .venv/bin/pre-commit run --all-files --config .local/pre-commit-ci.yaml
       - name: Run browser smoke tests
         run: |
           cd frontend
@@ -71,3 +105,45 @@ jobs:
         run: |
           make logs
           make down
+
+  prototype:
+    name: Prototype lint, pricing and unit tests, build, and browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: prototype
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Read the prototype Node.js requirement
+        id: prototype-node
+        run: |
+          node -e 'const fs = require("node:fs"); const range = JSON.parse(fs.readFileSync("package.json", "utf8")).engines.node; fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${range}\n`);'
+      - name: Set up the prototype Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.prototype-node.outputs.version }}
+          cache: npm
+          cache-dependency-path: prototype/package-lock.json
+      - name: Install frozen prototype dependencies
+        run: npm ci
+      - name: Check prototype lint and formatting
+        run: npm run lint
+      - name: Run prototype unit tests and every seed pricing case
+        run: npm test
+      - name: Build the prototype
+        run: npm run build
+      - name: Install Chromium and browser dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Test desktop and phone browser workflows
+        run: npm run e2e -- --workers=2
+      - name: Upload prototype browser failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-browser-test-results
+          path: |
+            prototype/playwright-report
+            prototype/test-results
+          if-no-files-found: ignore
