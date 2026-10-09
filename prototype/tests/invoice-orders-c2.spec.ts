@@ -225,7 +225,9 @@ test("short-dated expiry discount requires a real date and preserves an existing
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("2.49");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("2.49");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();

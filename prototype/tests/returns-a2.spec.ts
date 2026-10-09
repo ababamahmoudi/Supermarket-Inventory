@@ -45,7 +45,7 @@ async function checkAlignment(table: Locator) {
   }
 }
 
-test("Returns starts with all suppliers and pending records, and opens each return as its own page", async ({
+test("Returns starts with all suppliers and Open records, and opens each return as its own page", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -54,7 +54,7 @@ test("Returns starts with all suppliers and pending records, and opens each retu
     "All suppliers",
   );
   await expect(page.getByLabel("Status", { exact: true })).toHaveText(
-    "Pending",
+    "All statuses",
   );
   await expect(page.getByLabel("Return branch", { exact: true })).toHaveText(
     "All branches",
@@ -195,12 +195,7 @@ test("Overview and direct return links enforce company and worker branch scope",
   await expect(page.locator(".returns-overview-table")).not.toContainText(
     "Cancelled Return Supplier",
   );
-  await chooseOption(
-    page,
-    page.getByLabel("Status", { exact: true }),
-    "all",
-    "All statuses",
-  );
+  await page.getByRole("tab", { name: "History", exact: true }).click();
   await expect(page.locator(".returns-overview-table")).toContainText(
     "Cancelled Return Supplier",
   );

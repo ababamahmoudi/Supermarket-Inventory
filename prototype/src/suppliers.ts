@@ -1,8 +1,15 @@
 import { supplierRecords, supplierMatches } from "./supplier-editor";
+import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
 import { OperationError, type OperationsContext } from "./operations";
 import { supplierBalanceSummary } from "./supplier-balances";
 import { projectInvoiceLocation } from "./received";
+import {
+  returnUiStatus,
+  returnClosureSubtype,
+  type ReturnUiStatus,
+  type ReturnClosureSubtype,
+} from "./return-workflow";
 import type {
   Alert,
   Branch,
@@ -14,6 +21,8 @@ import type {
 
 export interface SupplierMoney {
   balance: string;
+  confirmed_balance: string;
+  pending_credit: string;
   overdue: string;
   next_due_date?: string;
 }
@@ -62,9 +71,11 @@ export interface SupplierReturnRow {
   number: number;
   branch: Branch;
   status: ReturnRecord["status"];
+  ui_status: ReturnUiStatus;
+  closure_subtype?: ReturnClosureSubtype;
   items: number;
   created_at?: string;
-  financial?: { compensation?: string };
+  financial?: { compensation?: string; pending_credit?: string };
 }
 export interface SupplierShortRow {
   invoice_id: string;
@@ -250,6 +261,8 @@ export function suppliersOverview(
               );
               return {
                 balance: summary.balance,
+                confirmed_balance: summary.confirmed_balance,
+                pending_credit: summary.pending_credit,
                 overdue: summary.overdue,
                 next_due_date: summary.next_due_date,
               };
@@ -348,11 +361,24 @@ export function supplierPage(
         number: state.returns.indexOf(record) + 1,
         branch: record.branch,
         status: record.status,
+        ui_status: returnUiStatus(record),
+        closure_subtype: returnClosureSubtype(record),
         items: record.lines.length,
         created_at:
           "created_at" in record ? (record.created_at as string) : undefined,
         ...(financial
-          ? { financial: { compensation: record.compensation_amount } }
+          ? {
+              financial: {
+                compensation: record.compensation_amount,
+                pending_credit: financial.pending_returns
+                  .filter((claim) => claim.return_id === record.id)
+                  .reduce(
+                    (sum, claim) => sum.plus(claim.amount),
+                    new Decimal(0),
+                  )
+                  .toFixed(2),
+              },
+            }
           : {}),
       })),
     shorts: supplierShorts(state, context, name),

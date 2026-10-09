@@ -82,6 +82,7 @@ function receiptFixture(
         qty_invoiced: 12,
         qty_received_at_posting: received,
         unit_cost_before_tax: "2.5000",
+        case_cost_before_tax: "30.0000",
         qty_later_received: 0,
         refused_units: 0,
       },

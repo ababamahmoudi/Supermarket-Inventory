@@ -210,6 +210,34 @@
       "special_2_49_3_49_correction_applied": false,
       "expected_selling_price": "0.49",
       "note": "raw 0.15"
+    },
+    {
+      "name": "weighed grocery from 11.0000 per kg",
+      "category": "grocery",
+      "cost_before_tax": "4.9895",
+      "source_cost_before_tax": "11.0000",
+      "source_cost_unit": "kg",
+      "canonical_cost_per_lb": "4.9895",
+      "raw_price": "7.68",
+      "after_band_rounding": "7.49",
+      "special_2_49_3_49_correction_applied": false,
+      "expected_selling_price": "7.49",
+      "expected_secondary_price_per_kg": "16.51",
+      "note": "The source cost is normalized per lb before the unchanged grocery rule."
+    },
+    {
+      "name": "weighed grocery from 4.9895 per lb",
+      "category": "grocery",
+      "cost_before_tax": "4.9895",
+      "source_cost_before_tax": "4.9895",
+      "source_cost_unit": "lb",
+      "canonical_cost_per_lb": "4.9895",
+      "raw_price": "7.68",
+      "after_band_rounding": "7.49",
+      "special_2_49_3_49_correction_applied": false,
+      "expected_selling_price": "7.49",
+      "expected_secondary_price_per_kg": "16.51",
+      "note": "The source cost is normalized per lb before the unchanged grocery rule."
     }
   ]
 }

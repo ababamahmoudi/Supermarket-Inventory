@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { effectiveInvoiceVersion } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
 import type { OperationsContext } from "./operations";
 import type { DemoState, Product } from "./types";
@@ -13,6 +14,7 @@ export interface ProductCostEntry {
   posted_at: string;
   unit_cost_before_tax: string;
   short_dated: boolean;
+  sold_by: "each" | "weight";
 }
 
 /** Catalog costs are Supervisor-only, including calls outside the presentation. */
@@ -37,8 +39,9 @@ export function productCostHistory(
       .map((invoice) => [invoice.id, invoice]),
   );
   return [...invoices.values()]
-    .flatMap((invoice) => {
-      const branch = effectiveInvoiceLocation(state, invoice);
+    .flatMap((original) => {
+      const invoice = effectiveInvoiceVersion(state, original);
+      const branch = effectiveInvoiceLocation(state, original);
       if (context.branch !== "all" && branch !== context.branch) return [];
       return invoice.lines.flatMap((line, index): ProductCostEntry[] => {
         if (
@@ -59,16 +62,18 @@ export function productCostHistory(
             invoice_number: invoice.supplier_invoice_number,
             supplier: invoice.supplier,
             branch,
-            date: invoice.invoice_date ?? invoice.posted_at?.slice(0, 10) ?? "",
+            date:
+              original.invoice_date ?? original.posted_at?.slice(0, 10) ?? "",
             posted_at:
-              invoice.posted_at ??
-              invoice.received_at ??
-              invoice.invoice_date ??
+              original.posted_at ??
+              original.received_at ??
+              original.invoice_date ??
               "",
             unit_cost_before_tax: new Decimal(
               line.unit_cost_before_tax,
             ).toFixed(4),
             short_dated: line.short_dated === true,
+            sold_by: line.sold_by ?? "each",
           },
         ];
       });

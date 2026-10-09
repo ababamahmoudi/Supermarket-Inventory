@@ -22,6 +22,12 @@ import {
 } from "../pricing";
 import { savePricingSettings, type PricingCategory } from "../settings";
 import type { CompanyConfig } from "../types";
+import {
+  calculateWeighedPrice,
+  weighedSettings,
+  type WeightUnit,
+} from "../weighed";
+import { ProductPrice } from "../weight-price-presentation";
 
 type Translate = (en: string, fa: string) => string;
 type RuleArea = "bands" | "minimum" | "corrections";
@@ -101,6 +107,8 @@ export default function PricingSettings() {
     state.config.pricing_categories[0]?.key ?? "",
   );
   const [cost, setCost] = useState("1.00");
+  const [soldBy, setSoldBy] = useState("each");
+  const [costUnit, setCostUnit] = useState<WeightUnit>("kg");
   const [invalidDivisors, setInvalidDivisors] = useState<
     Record<string, string>
   >({});
@@ -111,7 +119,10 @@ export default function PricingSettings() {
   let costError: string | undefined;
   let categoryError: string | undefined;
   try {
-    result = calculatePrice(cost, categoryKey, draft);
+    result =
+      soldBy === "weight"
+        ? calculateWeighedPrice(cost, costUnit, categoryKey, draft)
+        : calculatePrice(cost, categoryKey, draft);
   } catch (error) {
     const code =
       error instanceof PricingValidationError ? error.code : "invalid_cost";
@@ -200,11 +211,13 @@ export default function PricingSettings() {
       draft.pricing_categories,
       draft.rounding_bands,
       draft.special_corrections,
+      weighedSettings(draft),
     ]) !==
     JSON.stringify([
       state.config.pricing_categories,
       state.config.rounding_bands,
       state.config.special_corrections,
+      weighedSettings(state.config),
     ]);
   function save() {
     try {
@@ -664,6 +677,28 @@ export default function PricingSettings() {
           )}
         </p>
         <div className="form-grid settings-tester-fields">
+          <Field label={t("Sold by", "روش فروش")}>
+            <Select
+              value={soldBy}
+              onChange={setSoldBy}
+              options={[
+                { value: "each", label: t("Each", "عدد") },
+                { value: "weight", label: t("Weight", "وزن") },
+              ]}
+            />
+          </Field>
+          {soldBy === "weight" && (
+            <Field label={t("Cost unit", "واحد هزینه")}>
+              <Select
+                value={costUnit}
+                onChange={(value) => setCostUnit(value as WeightUnit)}
+                options={[
+                  { value: "kg", label: "kg" },
+                  { value: "lb", label: "lb" },
+                ]}
+              />
+            </Field>
+          )}
           <Field
             label={t("Pricing category", "دسته قیمت‌گذاری")}
             error={categoryError}
@@ -698,7 +733,15 @@ export default function PricingSettings() {
           <div aria-live="polite">
             <div className="price-display">
               <bdi dir="ltr" className="numeric">
-                {money(result.selling_price)}
+                {soldBy === "weight" ? (
+                  <ProductPrice
+                    value={result.selling_price}
+                    product={{ sold_by: "weight" }}
+                    config={draft}
+                  />
+                ) : (
+                  money(result.selling_price)
+                )}
               </bdi>
             </div>
             <p className="muted">

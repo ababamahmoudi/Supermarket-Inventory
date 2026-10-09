@@ -15,6 +15,8 @@ import { hydrateDemoFixture, restoreDemoFixture } from "./demo-fixtures";
 import { hydrateBState, restoreBState } from "./b-state";
 import { hydrateCState, restoreCState } from "./c-state";
 import { hydrateC2State, restoreC2State } from "./c2-state";
+import { hydrateC4State, restoreC4State } from "./c4-state";
+import { syncReturnCreditAlerts } from "./return-workflow";
 import { configuredBranches, branchAllowsRole } from "./settings";
 import { autoAddApprovedLabelChanges } from "./label-workflow";
 import {
@@ -70,6 +72,8 @@ export function initialState(): DemoState {
   const products: DemoState["products"] = demoSeed.products.map((product) => ({
     ...product,
     status: "active",
+    sold_by:
+      "sold_by" in product && product.sold_by === "weight" ? "weight" : "each",
     company_id,
     branch_prices:
       product.code === demoSeed.cross_branch_price_conflict.product_code
@@ -112,150 +116,159 @@ export function initialState(): DemoState {
     status: "pending_approval",
     tax_profile: newLine.tax_profile,
   });
-  return hydrateC2State(
-    hydrateCState(
-      hydrateBState(
-        hydrateDemoFixture(
-          structuredClone({
-            version: 1,
-            supplier_balance_snapshot_date: relativeDate(0),
-            supplier_balance_snapshot_currency: configSeed.company.currency,
-            pricing_minimum_margin_schema: 2,
-            config: configSeed,
-            products,
-            approvals: [
-              {
-                id: "demo-lavash-price",
-                company_id,
-                branch: "Branch 1",
-                type: "price_change",
-                product_code: "0006",
-                status: "pending",
-                proposed_price: "2.99",
-                current_price: "1.99",
-              },
-              {
-                id: "demo-barberries-product",
-                company_id,
-                branch: "Branch 1",
-                type: "new_product",
-                product_code: "0015",
-                status: "pending",
-                proposed_price: newLine.calculated_selling_price,
-                current_price: null,
-              },
-            ],
-            alerts: [
-              {
-                id: "demo-tea-conflict",
-                company_id,
-                branch: "all",
-                type: "price_conflict",
-                product_code: demoSeed.cross_branch_price_conflict.product_code,
-                status: "pending",
-                branch_prices: {
-                  "Branch 1":
-                    demoSeed.cross_branch_price_conflict.branch_1_price,
-                  "Branch 2":
-                    demoSeed.cross_branch_price_conflict.branch_2_price,
+  const state = hydrateC4State(
+    hydrateC2State(
+      hydrateCState(
+        hydrateBState(
+          hydrateDemoFixture(
+            structuredClone({
+              version: 1,
+              supplier_balance_snapshot_date: relativeDate(0),
+              supplier_balance_snapshot_currency: configSeed.company.currency,
+              pricing_minimum_margin_schema: 2,
+              config: configSeed,
+              products,
+              approvals: [
+                {
+                  id: "demo-lavash-price",
+                  company_id,
+                  branch: "Branch 1",
+                  type: "price_change",
+                  product_code: "0006",
+                  status: "pending",
+                  proposed_price: "2.99",
+                  current_price: "1.99",
                 },
-              },
-            ],
-            invoice: {
-              ...demoSeed.demo_invoice,
-              id: "demo-fv-20417",
-              company_id,
-              branch: "Branch 1",
-              status: "empty",
-              lines: demoSeed.demo_invoice.lines.map((line) => ({
-                ...line,
-                company_id,
-              })),
-              invoice_date: relativeDate(0),
-              received_at: new Date().toISOString(),
-              receiving_employee: demoSeed.demo_users.find(
-                (user) => user.role === "floor_worker",
-              )!.name,
-              due_date: relativeDate(14),
-              supplier_confirmed: true,
-            },
-            invoices: [],
-            offers: products
-              .filter((product) => product.offer)
-              .map((product) => {
-                const mapping = configSeed.promotions.price_to_offer.find(
-                  (offer) => offer.price === product.selling_price,
-                )!;
-                return {
-                  id: `demo-offer-${product.code}`,
+                {
+                  id: "demo-barberries-product",
+                  company_id,
+                  branch: "Branch 1",
+                  type: "new_product",
+                  product_code: "0015",
+                  status: "pending",
+                  proposed_price: newLine.calculated_selling_price,
+                  current_price: null,
+                },
+              ],
+              alerts: [
+                {
+                  id: "demo-tea-conflict",
                   company_id,
                   branch: "all",
-                  product_code: product.code,
-                  label: product.offer!,
-                  price: product.selling_price,
-                  pool: mapping.mix_and_match_pool,
-                  mix_and_match: true,
-                  status: "active",
-                  scope: "all",
-                  currency: configSeed.company.currency,
-                };
-              }),
-            templates: [],
-            returns: demoSeed.open_returns.map((record, index) => ({
-              ...record,
-              company_id,
-              branch: record.branch as Branch,
-              id: `demo-return-${index + 1}`,
-              status: record.status as "open" | "partially_resolved",
-            })),
-            expiry: demoSeed.expiring_soon_examples.map((record, index) => ({
-              ...record,
-              company_id,
-              branch: record.branch as Branch,
-              id: `demo-expiry-${index + 1}`,
-              date: relativeDate(record.expires_in_days),
-              status: "active",
-            })),
-            notes: demoSeed.notes.map((record, index) => ({
-              ...record,
-              company_id,
-              branch: "Branch 1",
-              id: `demo-note-${index + 1}`,
-              type: record.type as
-                "to_order" | "store_use" | "note_to_supervisor",
-              status: "open",
-              created_at: new Date().toISOString(),
-            })),
-            ledger: [],
-            stock: Object.fromEntries(
-              products.flatMap((product) =>
-                branches.map((branch) => [
-                  `${branch}:${product.code}`,
-                  demoSeed.open_returns.reduce(
-                    (count, record) =>
-                      count +
-                      (record.branch === branch &&
-                      record.replacement_received?.product_code === product.code
-                        ? record.replacement_received.qty
-                        : 0),
-                    0,
-                  ),
-                ]),
+                  type: "price_conflict",
+                  product_code:
+                    demoSeed.cross_branch_price_conflict.product_code,
+                  status: "pending",
+                  branch_prices: {
+                    "Branch 1":
+                      demoSeed.cross_branch_price_conflict.branch_1_price,
+                    "Branch 2":
+                      demoSeed.cross_branch_price_conflict.branch_2_price,
+                  },
+                },
+              ],
+              invoice: {
+                ...demoSeed.demo_invoice,
+                id: "demo-fv-20417",
+                company_id,
+                branch: "Branch 1",
+                status: "empty",
+                lines: demoSeed.demo_invoice.lines.map((line) => ({
+                  ...line,
+                  company_id,
+                  sold_by: line.sold_by === "weight" ? "weight" : "each",
+                  quantity_unit:
+                    line.quantity_unit === "cases" ? "cases" : "units",
+                })),
+                invoice_date: relativeDate(0),
+                received_at: new Date().toISOString(),
+                receiving_employee: demoSeed.demo_users.find(
+                  (user) => user.role === "floor_worker",
+                )!.name,
+                due_date: relativeDate(14),
+                supplier_confirmed: true,
+              },
+              invoices: [],
+              offers: products
+                .filter((product) => product.offer)
+                .map((product) => {
+                  const mapping = configSeed.promotions.price_to_offer.find(
+                    (offer) => offer.price === product.selling_price,
+                  )!;
+                  return {
+                    id: `demo-offer-${product.code}`,
+                    company_id,
+                    branch: "all",
+                    product_code: product.code,
+                    label: product.offer!,
+                    price: product.selling_price,
+                    pool: mapping.mix_and_match_pool,
+                    mix_and_match: true,
+                    status: "active",
+                    scope: "all",
+                    currency: configSeed.company.currency,
+                  };
+                }),
+              templates: [],
+              returns: demoSeed.open_returns.map((record, index) => ({
+                ...record,
+                company_id,
+                branch: record.branch as Branch,
+                id: `demo-return-${index + 1}`,
+                status: record.status as "open" | "partially_resolved",
+              })),
+              expiry: demoSeed.expiring_soon_examples.map((record, index) => ({
+                ...record,
+                company_id,
+                branch: record.branch as Branch,
+                id: `demo-expiry-${index + 1}`,
+                date: relativeDate(record.expires_in_days),
+                status: "active",
+              })),
+              notes: demoSeed.notes.map((record, index) => ({
+                ...record,
+                company_id,
+                branch: "Branch 1",
+                id: `demo-note-${index + 1}`,
+                type: record.type as
+                  "to_order" | "store_use" | "note_to_supervisor",
+                status: "open",
+                created_at: new Date().toISOString(),
+              })),
+              ledger: [],
+              stock: Object.fromEntries(
+                products.flatMap((product) =>
+                  branches.map((branch) => [
+                    `${branch}:${product.code}`,
+                    demoSeed.open_returns.reduce(
+                      (count, record) =>
+                        count +
+                        (record.branch === branch &&
+                        record.replacement_received?.product_code ===
+                          product.code
+                          ? record.replacement_received.qty
+                          : 0),
+                      0,
+                    ),
+                  ]),
+                ),
               ),
-            ),
-            activity: [],
-          } satisfies DemoState),
+              activity: [],
+            } satisfies DemoState),
+          ),
         ),
       ),
     ),
+    true,
   );
+  syncReturnCreditAlerts(state);
+  return state;
 }
 
 function readState(): DemoState {
   try {
-    const saved: unknown = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "null",
-    );
+    const rawSaved = localStorage.getItem(STORAGE_KEY) ?? "null";
+    const saved: unknown = JSON.parse(rawSaved);
     if (
       saved &&
       typeof saved === "object" &&
@@ -303,16 +316,23 @@ function readState(): DemoState {
           }
           candidate.pricing_minimum_margin_schema = 2;
         }
-        return restoreC2State(
-          restoreCState(
-            restoreBState(
-              restoreDemoFixture(candidate, localStorage),
+        const migrated = restoreC4State(
+          restoreC2State(
+            restoreCState(
+              restoreBState(
+                restoreDemoFixture(candidate, localStorage),
+                localStorage,
+              ),
               localStorage,
             ),
             localStorage,
           ),
           localStorage,
+          rawSaved,
         );
+        if (migrated.prototype_c4_schema === 1)
+          syncReturnCreditAlerts(migrated);
+        return migrated;
       }
     }
   } catch {
@@ -466,6 +486,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         );
       const draft = structuredClone(stateRef.current);
       mutator(draft);
+      syncReturnCreditAlerts(draft);
       const context = actionContext();
       if (context) {
         autoAddApprovedLabelChanges(stateRef.current, draft, context.actor);

@@ -34,9 +34,7 @@ import {
 
 export function Approvals() {
   const { state, update, role, branch, lang, t } = useDemo();
-  const [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
-    "pending",
-  );
+  const [filter, setFilter] = useState<Approval["status"]>("pending");
   const [scope, setScope] = useState<"all" | "branch">("all");
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
@@ -224,6 +222,7 @@ export function Approvals() {
           { value: "pending", label: t("Pending", "در انتظار") },
           { value: "approved", label: t("Approved", "تأییدشده") },
           { value: "rejected", label: t("Rejected", "ردشده") },
+          { value: "superseded", label: t("Superseded", "جایگزین‌شده") },
         ]}
       />
       {message && (
@@ -325,7 +324,9 @@ export function Approvals() {
                   ? t("Pending", "در انتظار")
                   : item.status === "approved"
                     ? t("Approved", "تأییدشده")
-                    : t("Rejected", "ردشده")}
+                    : item.status === "superseded"
+                      ? t("Superseded", "جایگزین‌شده")
+                      : t("Rejected", "ردشده")}
               </Badge>
               <Badge tone="info">{typeName(item)}</Badge>
               <span>

@@ -114,8 +114,11 @@ test("new branch configuration works in the live branch switcher and retains his
 }) => {
   await open(page);
   await group(page, "Branches");
-  await page.getByRole("button", { name: "Add branch", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Add branch", exact: true });
+  await page.getByRole("button", { name: "Add location", exact: true }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Add location",
+    exact: true,
+  });
   await dialog
     .getByLabel("Name (English)", { exact: true })
     .fill("North Market");
@@ -160,14 +163,47 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
   await open(page);
   await group(page, "Catalog");
   const pricingTable = page.locator(".settings-pricing-table");
+  await page.evaluate(async () => document.fonts.ready);
   const tableGeometry = await pricingTable.evaluate((wrapper) => {
     const table = wrapper.querySelector("table")!;
+    const wrapperBounds = wrapper.getBoundingClientRect();
+    const tableBounds = table.getBoundingClientRect();
     const actionsCell = table.querySelector("tbody tr td:last-child")!;
     const buttons = Array.from(actionsCell.querySelectorAll("button"));
+    const clippedText: string[] = [];
+    let textFragments = 0;
+    for (const cell of table.querySelectorAll("th, td")) {
+      if (!cell.getClientRects().length) continue;
+      const bounds = cell.getBoundingClientRect();
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (
+          !node.textContent?.trim() ||
+          !node.parentElement?.getClientRects().length ||
+          node.parentElement.closest(".sr-only, [aria-hidden=true], [hidden]")
+        )
+          continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const rect of range.getClientRects()) {
+          textFragments++;
+          if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
+            clippedText.push(node.textContent.trim());
+        }
+      }
+    }
     return {
       wrapperWidth: wrapper.clientWidth,
       scrollWidth: wrapper.scrollWidth,
-      tableWidth: table.getBoundingClientRect().width,
+      tableWidth: tableBounds.width,
+      tableContained:
+        tableBounds.left >= wrapperBounds.left - 2 &&
+        tableBounds.right <= wrapperBounds.right + 2,
+      panelContained:
+        wrapperBounds.left >= -2 && wrapperBounds.right <= innerWidth + 2,
+      textFragments,
+      clippedText,
       overflowX: getComputedStyle(wrapper).overflowX,
       actionsContained: buttons.every((button) => {
         const bounds = button.getBoundingClientRect();
@@ -179,22 +215,30 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
       pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
     };
   });
-  expect(tableGeometry.tableWidth).toBeGreaterThanOrEqual(900);
   expect(tableGeometry.actionsContained).toBe(true);
   expect(tableGeometry.pageOverflow).toBe(false);
+  expect(tableGeometry.panelContained).toBe(true);
+  expect(tableGeometry.textFragments).toBeGreaterThan(0);
+  expect(tableGeometry.clippedText).toEqual([]);
   if (await page.evaluate(() => window.innerWidth <= 760)) {
+    expect(tableGeometry.tableWidth).toBeGreaterThanOrEqual(900);
     expect(tableGeometry.scrollWidth).toBeGreaterThan(
       tableGeometry.wrapperWidth,
     );
     expect(["auto", "scroll"]).toContain(tableGeometry.overflowX);
+    const firstArchive = pricingTable
+      .getByRole("button", { name: "Archive", exact: true })
+      .first();
+    await firstArchive.scrollIntoViewIfNeeded();
     await pricingTable.evaluate((wrapper) => {
       wrapper.scrollLeft = wrapper.scrollWidth;
     });
-    await expect(
-      pricingTable
-        .getByRole("button", { name: "Archive", exact: true })
-        .first(),
-    ).toBeInViewport();
+    await expect(firstArchive).toBeInViewport();
+  } else {
+    expect(tableGeometry.tableContained).toBe(true);
+    expect(tableGeometry.scrollWidth).toBeLessThanOrEqual(
+      tableGeometry.wrapperWidth + 2,
+    );
   }
   const before = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(

@@ -62,8 +62,11 @@ test("location type can be chosen when adding a location and Cashiers cannot acc
     .getByRole("navigation", { name: "Settings groups" })
     .getByRole("button", { name: "Branches", exact: true })
     .click();
-  await page.getByRole("button", { name: "Add branch", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Add branch", exact: true });
+  await page.getByRole("button", { name: "Add location", exact: true }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Add location",
+    exact: true,
+  });
   await dialog
     .getByLabel("Name (English)", { exact: true })
     .fill("East Warehouse");

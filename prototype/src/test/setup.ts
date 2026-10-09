@@ -10,3 +10,11 @@ if (!HTMLDialogElement.prototype.close)
   HTMLDialogElement.prototype.close = function () {
     this.open = false;
   };
+// jsdom has no layout observer. Geometry is verified against real Chromium;
+// component tests retain the viewer's default width without simulated layout.
+if (!globalThis.ResizeObserver)
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };

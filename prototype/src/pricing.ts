@@ -128,6 +128,7 @@ export function calculatePrice(
   costInput: string,
   categoryKey: string,
   config: PricingConfig = seedConfig,
+  options: { skip_band_rounding?: boolean } = {},
 ): PricingResult {
   const cost = decimal(costInput, "invalid_cost");
   const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
@@ -149,6 +150,8 @@ export function calculatePrice(
     // Rice compares with the unrounded quotient, including values just above .99.
     const candidate = raw.floor().plus(ending(category.rounding_ending!));
     price = candidate.gte(raw) ? candidate : candidate.plus("1");
+  } else if (options.skip_band_rounding) {
+    price = roundedRaw;
   } else {
     const dollars = roundedRaw.floor();
     const fraction = roundedRaw.minus(dollars);

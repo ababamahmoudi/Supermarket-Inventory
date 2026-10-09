@@ -156,6 +156,7 @@ export function Dashboard() {
     other_supplier: 3,
     barcode_conflict: 4,
     order_differences: 5,
+    return_credit_overdue: 6,
   };
   const alerts = state.alerts
     .filter(
@@ -294,6 +295,10 @@ export function Dashboard() {
       other_supplier: t("Different supplier price", "قیمت تأمین‌کننده دیگر"),
       barcode_conflict: t("Barcode conflict", "تعارض بارکد"),
       order_differences: t("Order differences", "اختلاف‌های سفارش"),
+      return_credit_overdue: t(
+        "Return waiting for credit",
+        "مرجوعی در انتظار اعتبار",
+      ),
     })[type];
   const invoiceStatus = (status: DemoInvoice["status"]) =>
     ({

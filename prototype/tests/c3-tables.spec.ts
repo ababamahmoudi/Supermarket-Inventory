@@ -350,7 +350,7 @@ test("external payment is unchanged until explicit money confirmation, and cance
   await page
     .locator(".payables-overview tbody tr")
     .filter({ hasText: "Fresh Valley Foods" })
-    .getByRole("button", { name: /^View / })
+    .getByRole("button", { name: "View", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Record external payment", exact: true })

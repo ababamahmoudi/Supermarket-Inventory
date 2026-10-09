@@ -46,7 +46,29 @@ import {
 } from "../presentation";
 import "./invoice-settings-labels.css";
 import "./invoice-a2.css";
-import { calculatePrice } from "../pricing";
+import {
+  invoiceLineCalculation,
+  initializeInvoiceWeight,
+  setInvoiceWeightQuantity,
+  setInvoiceWeightReceived,
+  setInvoiceWeightCost,
+} from "../invoice-weight";
+import {
+  weightQuantityFromLb,
+  weightQuantityPerLb,
+  validateWeightQuantity,
+} from "../weighed";
+import { ProductPrice } from "../weight-price-presentation";
+import { trackingChoiceForProduct } from "../date-tracking";
+import {
+  invoiceVersion,
+  invoiceContentVersions,
+  effectiveInvoiceVersion,
+} from "../invoice-version";
+import { OriginalInvoice } from "./OriginalInvoice";
+import { PostedInvoice } from "./PostedInvoice";
+import { InvoiceCorrectionDialog } from "./InvoiceCorrectionDialog";
+import { attachPostedInvoiceOriginal } from "../invoice-corrections";
 import {
   addManualLine,
   companyDate,
@@ -63,7 +85,7 @@ import {
   refusedTotals,
   lineRefused,
   acceptedInvoiceUnits,
-  setInvoiceLineQuantity,
+  setInvoiceLineQuantity as setEachInvoiceLineQuantity,
   type InvoiceBlocker,
 } from "../invoice";
 import { manualPrice } from "../manual-prices";
@@ -225,6 +247,9 @@ export default function Invoices() {
   const { state, update, role, branch, lang, t, money, user, navigate } =
     useDemo();
   const routeId = useRouteParam("id");
+  const routeVersion = useRouteParam("version");
+  const [correctionOpen, setCorrectionOpen] = useState(false);
+  const originalInput = useRef<HTMLInputElement>(null);
   const postedColumns = useTableColumns("invoices", [
     {
       key: "invoice",
@@ -339,6 +364,7 @@ export default function Invoices() {
     : "0.00";
   const lowerLines = lowerPriceLines(state);
   const locked = invoice.status === "posted";
+  const displayedVersion = invoiceVersion(state, invoice, routeVersion);
   const active = invoice.status !== "empty";
   let movePreview: InvoiceMovePreview | null = null;
   if (moveOpen && role === "supervisor" && moveTarget) {
@@ -524,7 +550,21 @@ export default function Invoices() {
       let attachedId = "";
       updateInvoice((draft) => {
         const existing = draft.invoice;
-        if (existing.status === "posted") return;
+        if (existing.status === "posted") {
+          attachPostedInvoiceOriginal(
+            draft,
+            {
+              company_id: draft.config.company.seed_key,
+              role: role!,
+              branch,
+              actor: user?.name ?? "",
+            },
+            existing.id,
+            { file_name: file.name, file_type: file.type, file_data: data },
+          );
+          attachedId = existing.id;
+          return;
+        }
         const next =
           existing.status === "empty"
             ? createInvoice(
@@ -566,6 +606,28 @@ export default function Invoices() {
     }
   }
 
+  function setInvoiceLineQuantity(
+    line: InvoiceLine,
+    value: string | number,
+    unit: NonNullable<InvoiceLine["quantity_unit"]>,
+    pack?: number,
+  ) {
+    if (line.sold_by === "weight")
+      setInvoiceWeightQuantity(
+        line,
+        value,
+        unit === "units" ? "lb" : unit,
+        state.config,
+      );
+    else
+      setEachInvoiceLineQuantity(
+        line,
+        value,
+        unit === "cases" ? "cases" : "units",
+        pack,
+      );
+  }
+
   function editLine(
     index: number,
     change: (line: InvoiceLine) => void,
@@ -586,6 +648,13 @@ export default function Invoices() {
           line.units_per_case,
           line.quantity_unit,
           line.quantity_entered,
+          line.source_quantity,
+          line.source_received_quantity,
+          line.source_quantity_unit,
+          line.source_cost_before_tax,
+          line.source_cost_unit,
+          line.case_weight,
+          line.case_weight_unit,
         ]);
       const old = fingerprint(before);
       change(draft.invoice.lines[index]);
@@ -624,17 +693,50 @@ export default function Invoices() {
     );
   }
 
+  function sourceDeliveryQuantity(line: InvoiceLine, canonical: number) {
+    return line.sold_by === "weight"
+      ? new Decimal(
+          weightQuantityFromLb(
+            canonical,
+            line.source_quantity_unit ?? "lb",
+            line.weight_conversion_factor ?? state.config,
+          ),
+        )
+          .toDecimalPlaces(3, Decimal.ROUND_DOWN)
+          .toNumber()
+      : canonical;
+  }
+
   function receive(index: number) {
-    const line = invoice.lines[index];
+    const line = effectiveInvoiceVersion(state, invoice).lines[index];
     const code = line.product_code;
     const remaining = lineShort(line).quantity - (line.qty_later_received ?? 0);
-    const quantity = deliveryQuantities[index] ?? Math.min(2, remaining);
+    const enteredQuantity =
+      deliveryQuantities[index] ??
+      Math.min(2, sourceDeliveryQuantity(line, remaining));
+    let quantity = enteredQuantity;
+    let validQuantity = Number.isSafeInteger(enteredQuantity);
+    if (line.sold_by === "weight") {
+      try {
+        const validated = validateWeightQuantity(enteredQuantity);
+        quantity = new Decimal(
+          weightQuantityPerLb(
+            validated,
+            line.source_quantity_unit ?? "lb",
+            line.weight_conversion_factor ?? state.config,
+          ),
+        ).toNumber();
+        validQuantity = true;
+      } catch {
+        validQuantity = false;
+      }
+    }
     const receipt =
       deliveryRefs[index] ??
       `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`;
     if (
       !receipt.trim() ||
-      !Number.isSafeInteger(quantity) ||
+      !validQuantity ||
       quantity <= 0 ||
       quantity > remaining
     ) {
@@ -645,9 +747,7 @@ export default function Invoices() {
             ? t("Enter a delivery reference.", "مرجع تحویل را وارد کنید.")
             : undefined,
           quantity:
-            !Number.isSafeInteger(quantity) ||
-            quantity <= 0 ||
-            quantity > remaining
+            !validQuantity || quantity <= 0 || quantity > remaining
               ? t(
                   "Enter no more than the remaining missing units.",
                   "تعداد نباید از واحدهای کمبود باقی‌مانده بیشتر باشد.",
@@ -800,8 +900,161 @@ export default function Invoices() {
         {draftList}
       </>
     );
+  const laterShortDeliveries = (
+    <>
+      {locked &&
+        effectiveInvoiceVersion(state, invoice)
+          .lines.map((line, index) => ({ line, index }))
+          .filter(({ line }) => lineShort(line).quantity > 0)
+          .map(({ line, index }) => {
+            const remaining =
+              lineShort(line).quantity - (line.qty_later_received ?? 0);
+            const product = state.products.find(
+              (item) => item.code === line.product_code,
+            )!;
+            return (
+              <Card
+                key={`${invoice.id}:${index}`}
+                title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? (product?.name_fa ?? line.new_name_fa ?? line.description) : `\u2066${product?.name_en ?? line.description}\u2069`} · ${line.supplier_item_code ?? ""}`}
+                className="invoice-short-receipt"
+              >
+                <p>
+                  <Badge tone={remaining ? "danger" : "approved"}>
+                    {remaining ? t("Short", "کسری") : t("Resolved", "رفع شد")}
+                  </Badge>{" "}
+                  {t("Still missing:", "کمبود باقی‌مانده:")}{" "}
+                  {sourceDeliveryQuantity(line, remaining)}{" "}
+                  {line.sold_by === "weight" && (
+                    <LtrText>{line.source_quantity_unit}</LtrText>
+                  )}{" "}
+                  · {t("Received later:", "دریافت بعدی:")}{" "}
+                  {sourceDeliveryQuantity(line, line.qty_later_received ?? 0)}
+                </p>
+                <p>
+                  {t(
+                    "Received from this invoice:",
+                    "دریافت‌شده از این فاکتور:",
+                  )}{" "}
+                  {sourceDeliveryQuantity(
+                    line,
+                    new Decimal(acceptedInvoiceUnits(line))
+                      .plus(line.qty_later_received ?? 0)
+                      .toNumber(),
+                  )}
+                </p>
+                {remaining > 0 && (
+                  <>
+                    <div className="form-grid invoice-details-form">
+                      <Field
+                        label={t(
+                          "Actual units received now",
+                          "واحدهای واقعاً دریافت‌شده اکنون",
+                        )}
+                        error={deliveryErrors[index]?.quantity}
+                      >
+                        <NumberField
+                          className="control-narrow"
+                          dir="ltr"
+
+                          min={line.sold_by === "weight" ? "0.001" : "1"}
+                          max={sourceDeliveryQuantity(line, remaining)}
+                          step={line.sold_by === "weight" ? "0.001" : "1"}
+                          value={
+                            deliveryQuantities[index] ??
+                            Math.min(2, sourceDeliveryQuantity(line, remaining))
+                          }
+                          onChange={(value) => {
+                            setDeliveryQuantities((current) => ({
+                              ...current,
+                              [index]: Number(value),
+                            }));
+                            setDeliveryErrors((current) => ({
+                              ...current,
+                              [index]: {
+                                ...current[index],
+                                quantity: undefined,
+                              },
+                            }));
+                          }}
+                        />
+                      </Field>
+                      <Field
+                        label={t(
+                          "Delivery document reference",
+                          "مرجع سند تحویل",
+                        )}
+                        error={deliveryErrors[index]?.reference}
+                      >
+                        <input
+                          dir="ltr"
+                          value={
+                            deliveryRefs[index] ??
+                            `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`
+                          }
+                          onChange={(event) => {
+                            setDeliveryRefs((current) => ({
+                              ...current,
+                              [index]: event.target.value,
+                            }));
+                            setDeliveryErrors((current) => ({
+                              ...current,
+                              [index]: {
+                                ...current[index],
+                                reference: undefined,
+                              },
+                            }));
+                          }}
+                        />
+                      </Field>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() => receive(index)}
+                      disabled={branch !== invoiceLocation}
+                    >
+                      {t("Receive short delivery", "دریافت تحویل کسری")}
+                    </Button>
+                  </>
+                )}
+                {state.ledger
+                  .filter(
+                    (entry) =>
+                      entry.invoice_id === invoice.id &&
+                      entry.type === "short_restoration" &&
+                      (entry.invoice_line_index === index ||
+                        (entry.invoice_line_index === undefined &&
+                          invoice.lines.filter(
+                            (item) => lineShort(item).quantity > 0,
+                          ).length === 1)),
+                  )
+                  .map((entry) => (
+                    <p key={entry.id}>
+                      <LtrText>{entry.reference}</LtrText> ·{" "}
+                      {t("Restored:", "بازگردانده شد:")}{" "}
+                      <Money
+                        value={entry.amount}
+                        currency={state.config.company.currency}
+                      />
+                    </p>
+                  ))}
+              </Card>
+            );
+          })}
+    </>
+  );
   return (
     <>
+      {correctionOpen && (
+        <InvoiceCorrectionDialog
+          original={invoice}
+          onClose={() => setCorrectionOpen(false)}
+          onSaved={() => {
+            setCorrectionOpen(false);
+            navigate(`invoices?id=${encodeURIComponent(invoice.id)}`);
+            setMessage(t("Invoice corrected.", "فاکتور اصلاح شد."));
+          }}
+        />
+      )}
       {supplierEditorOpen && (
         <SupplierEditor
           invoiceQuickAdd
@@ -975,6 +1228,57 @@ export default function Invoices() {
                       )}
           </EmptyState>
         </Card>
+      ) : locked ? (
+        <div className="invoice-workspace invoice-posted-workspace">
+          <aside
+            className="invoice-document-pane"
+            aria-label={t("Original invoice", "اصل فاکتور")}
+          >
+            <OriginalInvoice
+              invoice={invoice}
+              onAttach={
+                !invoice.file_data && role === "supervisor"
+                  ? () => originalInput.current?.click()
+                  : undefined
+              }
+            />
+            <input
+              ref={originalInput}
+              className="visually-hidden"
+              type="file"
+              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+              aria-label={t("Attach original", "پیوست اصل فاکتور")}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void attachFile(file);
+                event.target.value = "";
+              }}
+            />
+            {uploadError && (
+              <p role="alert" className="form-error">
+                {uploadError}
+              </p>
+            )}
+          </aside>
+          <div className="invoice-review-pane">
+            <PostedInvoice
+              original={invoice}
+              invoice={displayedVersion.invoice}
+              versionId={displayedVersion.version_id}
+              onCorrect={() => setCorrectionOpen(true)}
+              onMove={() => {
+                setMoveTarget("");
+                setMoveReason("");
+                setMoveError("");
+                setMoveOpen(true);
+              }}
+            >
+              {displayedVersion.version_id ===
+                invoiceContentVersions(state, invoice).at(-1)!.version_id &&
+                laterShortDeliveries}
+            </PostedInvoice>
+          </div>
+        </div>
       ) : (
         <div
           className={`invoice-workspace${!active || tab === "drafts" ? " invoice-start-stack" : ""}`}
@@ -1054,38 +1358,20 @@ export default function Invoices() {
                   </Field>
                 </>
               )}
-              {invoice.file_data && (
-                <div className="invoice-preview">
-                  {locked && <p dir="auto">{invoice.file_name}</p>}
-                  {invoice.file_type === "text/plain" ? (
-                    <pre className="invoice-preview-text" dir="ltr">
-                      {(() => {
-                        const content = invoice.file_data
-                          .split(",")
-                          .slice(1)
-                          .join(",");
-                        try {
-                          return decodeURIComponent(content);
-                        } catch {
-                          return content;
-                        }
-                      })()}
-                    </pre>
-                  ) : invoice.file_type === "application/pdf" ? (
-                    <iframe
-                      className="invoice-preview-pdf"
-                      title={t("Original invoice PDF", "PDF اصل فاکتور")}
-                      src={invoice.file_data}
-                    />
-                  ) : (
-                    <img
-                      className="invoice-preview-image"
-                      src={invoice.file_data}
-                      alt={t("Original invoice image", "تصویر اصل فاکتور")}
-                    />
-                  )}
-                </div>
-              )}
+              <OriginalInvoice
+                invoice={invoice}
+                bare
+                onAttach={
+                  !invoice.file_data && invoice.entry_mode === "manual"
+                    ? () =>
+                        window.document
+                          .querySelector<HTMLInputElement>(
+                            ".invoice-document-card input[type=file]",
+                          )
+                          ?.click()
+                    : undefined
+                }
+              />
             </Card>
           </aside>
           <div className="invoice-review-pane">
@@ -1661,8 +1947,8 @@ export default function Invoices() {
                       try {
                         price = locked
                           ? line.calculated_selling_price
-                          : calculatePrice(
-                              line.unit_cost_before_tax,
+                          : invoiceLineCalculation(
+                              line,
                               category.key,
                               state.config,
                             ).selling_price;
@@ -1803,8 +2089,13 @@ export default function Invoices() {
                               {" "}
                               {!expanded && (
                                 <LtrText>
-                                  {line.qty_received_at_posting} /{" "}
-                                  {line.qty_invoiced}
+                                  {line.sold_by === "weight"
+                                    ? line.source_received_quantity
+                                    : line.qty_received_at_posting}{" "}
+                                  /{" "}
+                                  {line.sold_by === "weight"
+                                    ? `${line.source_quantity} ${line.source_quantity_unit}`
+                                    : line.qty_invoiced}
                                 </LtrText>
                               )}
                               {expanded && (
@@ -1821,14 +2112,20 @@ export default function Invoices() {
 
                                       min="1"
                                       step={
-                                        line.quantity_unit === "cases"
-                                          ? "0.01"
-                                          : "1"
+                                        line.sold_by === "weight"
+                                          ? "0.001"
+                                          : line.quantity_unit === "cases"
+                                            ? "0.01"
+                                            : "1"
                                       }
                                       dir="ltr"
                                       value={
-                                        line.quantity_entered ??
-                                        line.qty_invoiced
+                                        line.sold_by === "weight"
+                                          ? line.quantity_unit === "cases"
+                                            ? (line.quantity_entered ?? "")
+                                            : (line.source_quantity ?? "")
+                                          : (line.quantity_entered ??
+                                            line.qty_invoiced)
                                       }
                                       onChange={(value) =>
                                         editLine(
@@ -1856,14 +2153,34 @@ export default function Invoices() {
                                       className="control-narrow"
 
                                       min="0"
-                                      max={line.qty_invoiced}
-                                      step="1"
+                                      max={
+                                        line.sold_by === "weight"
+                                          ? line.source_quantity
+                                          : line.qty_invoiced
+                                      }
+                                      step={
+                                        line.sold_by === "weight"
+                                          ? "0.001"
+                                          : "1"
+                                      }
                                       dir="ltr"
-                                      value={line.qty_received_at_posting}
+                                      value={
+                                        line.sold_by === "weight"
+                                          ? (line.source_received_quantity ??
+                                            "")
+                                          : line.qty_received_at_posting
+                                      }
                                       onChange={(value) =>
                                         editLine(index, (item) => {
-                                          item.qty_received_at_posting =
-                                            Number(value);
+                                          if (item.sold_by === "weight")
+                                            setInvoiceWeightReceived(
+                                              item,
+                                              value,
+                                              state.config,
+                                            );
+                                          else
+                                            item.qty_received_at_posting =
+                                              Number(value);
                                         })
                                       }
                                     />
@@ -1873,10 +2190,21 @@ export default function Invoices() {
                             </td>
                             <td className="numeric">
                               {!expanded && (
-                                <Money
-                                  value={line.unit_cost_before_tax}
-                                  currency={state.config.company.currency}
-                                />
+                                <>
+                                  <Money
+                                    value={
+                                      line.sold_by === "weight"
+                                        ? (line.source_cost_before_tax ??
+                                          line.unit_cost_before_tax)
+                                        : line.unit_cost_before_tax
+                                    }
+                                    decimals={line.sold_by === "weight" ? 4 : 2}
+                                    currency={state.config.company.currency}
+                                  />
+                                  {line.sold_by === "weight" && (
+                                    <LtrText>/{line.source_cost_unit}</LtrText>
+                                  )}
+                                </>
                               )}
                               {expanded && (
                                 <Field
@@ -1898,11 +2226,24 @@ export default function Invoices() {
                                     dir="ltr"
                                     className="control-narrow"
                                     inputMode="decimal"
-                                    value={line.unit_cost_before_tax}
+                                    value={
+                                      line.sold_by === "weight"
+                                        ? (line.source_cost_before_tax ?? "")
+                                        : line.unit_cost_before_tax
+                                    }
                                     onChange={(event) =>
                                       editLine(
                                         index,
                                         (item) => {
+                                          if (item.sold_by === "weight") {
+                                            setInvoiceWeightCost(
+                                              item,
+                                              event.target.value,
+                                              item.source_cost_unit ?? "lb",
+                                              state.config,
+                                            );
+                                            return;
+                                          }
                                           item.unit_cost_before_tax =
                                             event.target.value;
                                           if (
@@ -1938,13 +2279,16 @@ export default function Invoices() {
                                   dir="ltr"
                                 >
                                   {price ? (
-                                    <Money
+                                    <ProductPrice
+                                      product={{
+                                        sold_by: line.sold_by ?? "each",
+                                      }}
+                                      config={state.config}
                                       value={
                                         line.short_dated
                                           ? (oldPrice ?? price)
                                           : (manual?.price ?? price)
                                       }
-                                      currency={state.config.company.currency}
                                     />
                                   ) : (
                                     "—"
@@ -2034,16 +2378,37 @@ export default function Invoices() {
                                             index,
                                             (item) => {
                                               const quantity =
-                                                value === "cases"
-                                                  ? new Decimal(
-                                                      item.qty_invoiced,
-                                                    )
-                                                      .div(
-                                                        item.units_per_case ??
-                                                          1,
+                                                item.sold_by === "weight"
+                                                  ? value === "cases"
+                                                    ? item.case_weight
+                                                      ? new Decimal(
+                                                          weightQuantityFromLb(
+                                                            item.qty_invoiced,
+                                                            item.case_weight_unit ??
+                                                              "kg",
+                                                            item.weight_conversion_factor ??
+                                                              state.config,
+                                                          ),
+                                                        )
+                                                          .div(item.case_weight)
+                                                          .toString()
+                                                      : "1"
+                                                    : weightQuantityFromLb(
+                                                        item.qty_invoiced,
+                                                        value as "kg" | "lb",
+                                                        item.weight_conversion_factor ??
+                                                          state.config,
                                                       )
-                                                      .toString()
-                                                  : String(item.qty_invoiced);
+                                                  : value === "cases"
+                                                    ? new Decimal(
+                                                        item.qty_invoiced,
+                                                      )
+                                                        .div(
+                                                          item.units_per_case ??
+                                                            1,
+                                                        )
+                                                        .toString()
+                                                    : String(item.qty_invoiced);
                                               setInvoiceLineQuantity(
                                                 item,
                                                 quantity,
@@ -2053,46 +2418,155 @@ export default function Invoices() {
                                             true,
                                           )
                                         }
-                                        options={[
-                                          {
-                                            value: "units",
-                                            label: t("Units", "واحد"),
-                                          },
-                                          {
-                                            value: "cases",
-                                            label: t("Cases", "کارتن"),
-                                          },
-                                        ]}
-                                      />
-                                    </Field>
-                                    <Field
-                                      label={t(
-                                        "Units per case",
-                                        "واحد در هر کارتن",
-                                      )}
-                                    >
-                                      <NumberField
-                                        className="control-narrow"
-                                        min="1"
-                                        step="1"
-                                        value={line.units_per_case ?? 1}
-                                        disabled={locked}
-                                        onChange={(value) =>
-                                          editLine(
-                                            index,
-                                            (item) =>
-                                              setInvoiceLineQuantity(
-                                                item,
-                                                item.quantity_entered ??
-                                                  item.qty_invoiced,
-                                                item.quantity_unit ?? "units",
-                                                Number(value),
-                                              ),
-                                            true,
-                                          )
+                                        options={
+                                          line.sold_by === "weight"
+                                            ? [
+                                                { value: "kg", label: "kg" },
+                                                { value: "lb", label: "lb" },
+                                                {
+                                                  value: "cases",
+                                                  label: t("Cases", "کارتن"),
+                                                },
+                                              ]
+                                            : [
+                                                {
+                                                  value: "units",
+                                                  label: t("Units", "واحد"),
+                                                },
+                                                {
+                                                  value: "cases",
+                                                  label: t("Cases", "کارتن"),
+                                                },
+                                              ]
                                         }
                                       />
                                     </Field>
+                                    {line.sold_by === "weight" ? (
+                                      <>
+                                        <Field
+                                          label={t("Case weight", "وزن کارتن")}
+                                        >
+                                          <NumberField
+                                            step="0.001"
+                                            min="0"
+                                            value={line.case_weight ?? ""}
+                                            onChange={(value) =>
+                                              editLine(
+                                                index,
+                                                (item) => {
+                                                  item.case_weight = value;
+                                                  if (
+                                                    item.quantity_unit ===
+                                                    "cases"
+                                                  )
+                                                    setInvoiceWeightQuantity(
+                                                      item,
+                                                      item.quantity_entered ??
+                                                        "1",
+                                                      "cases",
+                                                      state.config,
+                                                    );
+                                                },
+                                                true,
+                                              )
+                                            }
+                                          />
+                                        </Field>
+                                        <Field
+                                          label={t(
+                                            "Case weight unit",
+                                            "واحد وزن کارتن",
+                                          )}
+                                        >
+                                          <Select
+                                            value={
+                                              line.case_weight_unit ?? "kg"
+                                            }
+                                            options={[
+                                              { value: "kg", label: "kg" },
+                                              { value: "lb", label: "lb" },
+                                            ]}
+                                            onChange={(value) =>
+                                              editLine(
+                                                index,
+                                                (item) => {
+                                                  item.case_weight_unit =
+                                                    value as "kg" | "lb";
+                                                  if (
+                                                    item.quantity_unit ===
+                                                    "cases"
+                                                  )
+                                                    setInvoiceWeightQuantity(
+                                                      item,
+                                                      item.quantity_entered ??
+                                                        "1",
+                                                      "cases",
+                                                      state.config,
+                                                    );
+                                                },
+                                                true,
+                                              )
+                                            }
+                                          />
+                                        </Field>
+                                        <Field
+                                          label={t("Cost unit", "واحد هزینه")}
+                                        >
+                                          <Select
+                                            value={
+                                              line.source_cost_unit ?? "lb"
+                                            }
+                                            options={[
+                                              { value: "kg", label: "kg" },
+                                              { value: "lb", label: "lb" },
+                                            ]}
+                                            onChange={(value) =>
+                                              editLine(
+                                                index,
+                                                (item) =>
+                                                  setInvoiceWeightCost(
+                                                    item,
+                                                    item.source_cost_before_tax ??
+                                                      "0",
+                                                    value as "kg" | "lb",
+                                                    state.config,
+                                                  ),
+                                                true,
+                                              )
+                                            }
+                                          />
+                                        </Field>
+                                      </>
+                                    ) : (
+                                      <Field
+                                        label={t(
+                                          "Units per case",
+                                          "واحد در هر کارتن",
+                                        )}
+                                      >
+                                        <NumberField
+                                          className="control-narrow"
+                                          min="1"
+                                          step="1"
+                                          value={line.units_per_case ?? 1}
+                                          disabled={locked}
+                                          onChange={(value) =>
+                                            editLine(
+                                              index,
+                                              (item) =>
+                                                setInvoiceLineQuantity(
+                                                  item,
+                                                  item.quantity_entered ??
+                                                    item.qty_invoiced,
+                                                  item.quantity_unit ?? "units",
+                                                  Number(value),
+                                                ),
+                                              true,
+                                            )
+                                          }
+                                        />
+                                      </Field>
+                                    )}
                                     <Field
                                       label={t(
                                         "Supplier item code (optional)",
@@ -2125,51 +2599,58 @@ export default function Invoices() {
                                         }
                                       />
                                     </Field>
-                                    {line.quantity_unit === "cases" && (
-                                      <Field
-                                        label={t(
-                                          "Case cost before tax",
-                                          "هزینه کارتن پیش از مالیات",
-                                        )}
-                                      >
-                                        <input
-                                          className="control-narrow"
-                                          dir="ltr"
-                                          inputMode="decimal"
-                                          disabled={locked}
-                                          value={
-                                            line.case_cost_before_tax ?? ""
-                                          }
-                                          onChange={(event) =>
-                                            editLine(
-                                              index,
-                                              (item) => {
-                                                item.case_cost_before_tax =
-                                                  event.target.value;
-                                                try {
-                                                  item.unit_cost_before_tax =
-                                                    costPerUnit(
-                                                      event.target.value,
-                                                      item.units_per_case ?? 1,
-                                                    );
-                                                } catch {
-                                                  item.unit_cost_before_tax =
-                                                    "";
-                                                }
-                                              },
-                                              true,
-                                            )
-                                          }
-                                        />
-                                      </Field>
-                                    )}
+                                    {line.sold_by !== "weight" &&
+                                      line.quantity_unit === "cases" && (
+                                        <Field
+                                          label={t(
+                                            "Case cost before tax",
+                                            "هزینه کارتن پیش از مالیات",
+                                          )}
+                                        >
+                                          <input
+                                            className="control-narrow"
+                                            dir="ltr"
+                                            inputMode="decimal"
+                                            disabled={locked}
+                                            value={
+                                              line.case_cost_before_tax ?? ""
+                                            }
+                                            onChange={(event) =>
+                                              editLine(
+                                                index,
+                                                (item) => {
+                                                  item.case_cost_before_tax =
+                                                    event.target.value;
+                                                  try {
+                                                    item.unit_cost_before_tax =
+                                                      costPerUnit(
+                                                        event.target.value,
+                                                        item.units_per_case ??
+                                                          1,
+                                                      );
+                                                  } catch {
+                                                    item.unit_cost_before_tax =
+                                                      "";
+                                                  }
+                                                },
+                                                true,
+                                              )
+                                            }
+                                          />
+                                        </Field>
+                                      )}
                                     <p className="invoice-pack-equation muted">
                                       <LtrText>
-                                        {line.quantity_unit === "cases"
-                                          ? `${line.quantity_entered ?? ""} × ${line.units_per_case ?? 1} = ${line.qty_invoiced}`
-                                          : line.qty_invoiced}
+                                        {line.sold_by === "weight"
+                                          ? line.quantity_unit === "cases"
+                                            ? `${line.quantity_entered ?? ""} × ${line.case_weight ?? ""} ${line.case_weight_unit ?? "kg"} = ${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
+                                            : `${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
+                                          : line.quantity_unit === "cases"
+                                            ? `${line.quantity_entered ?? ""} × ${line.units_per_case ?? 1} = ${line.qty_invoiced}`
+                                            : line.qty_invoiced}
                                       </LtrText>{" "}
-                                      {t("units", "واحد")}
+                                      {line.sold_by !== "weight" &&
+                                        t("units", "واحد")}
                                     </p>
                                     <Field
                                       label={t(
@@ -2196,7 +2677,26 @@ export default function Invoices() {
                                                 item.tax_profile =
                                                   chosen.tax_profile;
                                               }
-                                              item.date_confirmed = false;
+                                              item.sold_by =
+                                                chosen?.sold_by ?? "each";
+                                              if (item.sold_by === "weight")
+                                                initializeInvoiceWeight(
+                                                  item,
+                                                  state.config,
+                                                );
+                                              else {
+                                                item.quantity_unit = "units";
+                                                item.quantity_entered =
+                                                  item.qty_invoiced;
+                                              }
+                                              const preference =
+                                                trackingChoiceForProduct(
+                                                  chosen,
+                                                );
+                                              item.date_tracking =
+                                                preference === "yes";
+                                              item.date_confirmed =
+                                                preference !== undefined;
                                             },
                                             true,
                                           )
@@ -2296,6 +2796,28 @@ export default function Invoices() {
                                       checked={short.quantity > 0}
                                       onChange={(checked) =>
                                         editLine(index, (item) => {
+                                          if (item.sold_by === "weight") {
+                                            setInvoiceWeightReceived(
+                                              item,
+                                              checked
+                                                ? Decimal.max(
+                                                    0,
+                                                    new Decimal(
+                                                      item.source_quantity ??
+                                                        "0",
+                                                    ).minus(
+                                                      Decimal.min(
+                                                        4,
+                                                        item.source_quantity ??
+                                                          "0",
+                                                      ),
+                                                    ),
+                                                  ).toString()
+                                                : (item.source_quantity ?? "0"),
+                                              state.config,
+                                            );
+                                            return;
+                                          }
                                           item.qty_received_at_posting = checked
                                             ? Math.max(
                                                 0,
@@ -2896,142 +3418,6 @@ export default function Invoices() {
                     </fieldset>
                   </Card>
                 )}
-                {locked &&
-                  invoice.lines
-                    .filter((line) => lineShort(line).quantity > 0)
-                    .map((line) => {
-                      const index = invoice.lines.indexOf(line);
-                      const remaining =
-                        lineShort(line).quantity -
-                        (line.qty_later_received ?? 0);
-                      const product = state.products.find(
-                        (item) => item.code === line.product_code,
-                      )!;
-                      return (
-                        <Card
-                          key={`${invoice.id}:${index}`}
-                          title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? (product?.name_fa ?? line.new_name_fa ?? line.description) : `\u2066${product?.name_en ?? line.description}\u2069`} · ${line.supplier_item_code ?? ""}`}
-                          className="invoice-short-receipt"
-                        >
-                          <p>
-                            <Badge tone={remaining ? "danger" : "approved"}>
-                              {remaining
-                                ? t("Short", "کسری")
-                                : t("Resolved", "رفع شد")}
-                            </Badge>{" "}
-                            {t("Still missing:", "کمبود باقی‌مانده:")}{" "}
-                            {remaining} · {t("Received later:", "دریافت بعدی:")}{" "}
-                            {line.qty_later_received ?? 0}
-                          </p>
-                          <p>
-                            {t(
-                              "Received from this invoice:",
-                              "دریافت‌شده از این فاکتور:",
-                            )}{" "}
-                            {acceptedInvoiceUnits(line) +
-                              (line.qty_later_received ?? 0)}
-                          </p>
-                          {remaining > 0 && (
-                            <>
-                              <div className="form-grid invoice-details-form">
-                                <Field
-                                  label={t(
-                                    "Actual units received now",
-                                    "واحدهای واقعاً دریافت‌شده اکنون",
-                                  )}
-                                  error={deliveryErrors[index]?.quantity}
-                                >
-                                  <NumberField
-                                    className="control-narrow"
-                                    dir="ltr"
-
-                                    min="1"
-                                    max={remaining}
-                                    step="1"
-                                    value={
-                                      deliveryQuantities[index] ??
-                                      Math.min(2, remaining)
-                                    }
-                                    onChange={(value) => {
-                                      setDeliveryQuantities((current) => ({
-                                        ...current,
-                                        [index]: Number(value),
-                                      }));
-                                      setDeliveryErrors((current) => ({
-                                        ...current,
-                                        [index]: {
-                                          ...current[index],
-                                          quantity: undefined,
-                                        },
-                                      }));
-                                    }}
-                                  />
-                                </Field>
-                                <Field
-                                  label={t(
-                                    "Delivery document reference",
-                                    "مرجع سند تحویل",
-                                  )}
-                                  error={deliveryErrors[index]?.reference}
-                                >
-                                  <input
-                                    dir="ltr"
-                                    value={
-                                      deliveryRefs[index] ??
-                                      `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`
-                                    }
-                                    onChange={(event) => {
-                                      setDeliveryRefs((current) => ({
-                                        ...current,
-                                        [index]: event.target.value,
-                                      }));
-                                      setDeliveryErrors((current) => ({
-                                        ...current,
-                                        [index]: {
-                                          ...current[index],
-                                          reference: undefined,
-                                        },
-                                      }));
-                                    }}
-                                  />
-                                </Field>
-                              </div>
-                              <Button
-                                variant="secondary"
-                                onClick={() => receive(index)}
-                                disabled={branch !== invoiceLocation}
-                              >
-                                {t(
-                                  "Receive short delivery",
-                                  "دریافت تحویل کسری",
-                                )}
-                              </Button>
-                            </>
-                          )}
-                          {state.ledger
-                            .filter(
-                              (entry) =>
-                                entry.invoice_id === invoice.id &&
-                                entry.type === "short_restoration" &&
-                                (entry.invoice_line_index === index ||
-                                  (entry.invoice_line_index === undefined &&
-                                    invoice.lines.filter(
-                                      (item) => lineShort(item).quantity > 0,
-                                    ).length === 1)),
-                            )
-                            .map((entry) => (
-                              <p key={entry.id}>
-                                <LtrText>{entry.reference}</LtrText> ·{" "}
-                                {t("Restored:", "بازگردانده شد:")}{" "}
-                                <Money
-                                  value={entry.amount}
-                                  currency={state.config.company.currency}
-                                />
-                              </p>
-                            ))}
-                        </Card>
-                      );
-                    })}
               </>
             )}
           </div>

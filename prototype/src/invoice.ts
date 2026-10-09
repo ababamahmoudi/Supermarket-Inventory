@@ -1,6 +1,5 @@
 import Decimal from "decimal.js";
 import { configSeed, demoSeed as demo } from "./config";
-import { calculatePrice } from "./pricing";
 import { effectivePrice } from "./catalog";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
@@ -8,6 +7,18 @@ import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { nextProductCode } from "./manual-product";
 import { manualPrice } from "./manual-prices";
 import { effectiveInvoiceLocation } from "./received";
+import { effectiveInvoiceVersion } from "./invoice-version";
+import { trackingChoiceForProduct } from "./date-tracking";
+import {
+  initializeInvoiceWeight,
+  invoiceLineCalculation,
+  refreshInvoiceWeight,
+} from "./invoice-weight";
+import {
+  validateWeightQuantity,
+  weightCostPerLb,
+  weightQuantityPerLb,
+} from "./weighed";
 import {
   costPerCase,
   costPerUnit,
@@ -67,7 +78,9 @@ function recordReceiptStock(
     return;
   physical.stock_movements.push(movement);
   const stockKey = key(movement.branch, movement.product_code);
-  state.stock[stockKey] = (state.stock[stockKey] ?? 0) + movement.qty;
+  state.stock[stockKey] = new Decimal(state.stock[stockKey] ?? 0)
+    .plus(movement.qty)
+    .toNumber();
 }
 
 /** A local business date follows the company setting, including Toronto daylight saving. */
@@ -148,36 +161,57 @@ export function createInvoice(
     lines: manual
       ? []
       : seed.lines.map((line) =>
-          rememberInvoiceSupplierItem(
-            state,
-            {
-              company_id: company,
-              supplier: seed.supplier,
-              branch,
-            },
-            {
-              ...line,
-              company_id: company,
-              // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
-              qty_received_at_posting: line.qty_invoiced,
-              qty_later_received: 0,
-              pricing_category:
-                state.products.find(
-                  (product) => product.code === line.product_code,
-                )?.pricing_category ?? "grocery",
-              review_confirmed: false,
-              date_tracking: false,
-              date_confirmed: false,
-              new_name_en:
-                line.product_code === "NEW" ? line.description : undefined,
-              new_name_fa:
-                line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
-              line_tax: line.taxable
-                ? cents(
-                    new Decimal(line.line_total).times(state.config.tax.rate),
-                  )
-                : "0.00",
-            },
+          initializeInvoiceWeight(
+            rememberInvoiceSupplierItem(
+              state,
+              {
+                company_id: company,
+                supplier: seed.supplier,
+                branch,
+              },
+              {
+                ...line,
+                company_id: company,
+                // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
+                qty_received_at_posting: line.qty_invoiced,
+                qty_later_received: 0,
+                pricing_category:
+                  state.products.find(
+                    (product) => product.code === line.product_code,
+                  )?.pricing_category ?? "grocery",
+                review_confirmed: false,
+                sold_by:
+                  line.sold_by === "weight"
+                    ? "weight"
+                    : (state.products.find(
+                        (product) => product.code === line.product_code,
+                      )?.sold_by ?? "each"),
+                quantity_unit:
+                  line.quantity_unit === "cases" ? "cases" : "units",
+                date_tracking:
+                  trackingChoiceForProduct(
+                    state.products.find(
+                      (product) => product.code === line.product_code,
+                    ),
+                  ) === "yes",
+                date_confirmed:
+                  trackingChoiceForProduct(
+                    state.products.find(
+                      (product) => product.code === line.product_code,
+                    ),
+                  ) !== undefined,
+                new_name_en:
+                  line.product_code === "NEW" ? line.description : undefined,
+                new_name_fa:
+                  line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
+                line_tax: line.taxable
+                  ? cents(
+                      new Decimal(line.line_total).times(state.config.tax.rate),
+                    )
+                  : "0.00",
+              },
+            ),
+            state.config,
           ),
         ),
     ...(manual
@@ -235,14 +269,16 @@ export function addManualLine(
     pricing_category: product.pricing_category,
     demo_note: "",
     review_confirmed: false,
-    date_tracking: false,
-    date_confirmed: false,
+    sold_by: product.sold_by ?? "each",
+    date_tracking: trackingChoiceForProduct(product) === "yes",
+    date_confirmed: trackingChoiceForProduct(product) !== undefined,
     supplier_item_id: item?.id,
     supplier_item_code: item?.supplier_item_code,
     units_per_case: item?.units_per_case ?? 1,
     quantity_unit: "units",
     quantity_entered: "1",
   });
+  initializeInvoiceWeight(state.invoice.lines.at(-1)!, state.config);
   recalculateInvoice(state.invoice, state.config);
 }
 
@@ -293,23 +329,31 @@ export function recalculateInvoice(
   let subtotal = new Decimal(0);
   let tax = new Decimal(0);
   for (const line of invoice.lines) {
+    if (line.sold_by === "weight") {
+      try {
+        refreshInvoiceWeight(line, config);
+      } catch {
+        continue;
+      }
+    }
     if (line.quantity_unit === "units")
       line.quantity_entered = String(line.qty_invoiced);
     if (
       !validCost(line.unit_cost_before_tax) ||
-      !validQuantity(line.qty_invoiced)
+      !validInvoiceLineQuantity(line)
     )
       continue;
-    line.line_total = cents(
-      line.quantity_unit === "cases" &&
-        line.case_cost_before_tax !== undefined &&
-        validCost(line.case_cost_before_tax)
-        ? new Decimal(line.case_cost_before_tax).times(
-            line.quantity_entered ??
-              new Decimal(line.qty_invoiced).div(line.units_per_case ?? 1),
-          )
-        : new Decimal(line.unit_cost_before_tax).times(line.qty_invoiced),
-    );
+    if (line.sold_by !== "weight")
+      line.line_total = cents(
+        line.quantity_unit === "cases" &&
+          line.case_cost_before_tax !== undefined &&
+          validCost(line.case_cost_before_tax)
+          ? new Decimal(line.case_cost_before_tax).times(
+              line.quantity_entered ??
+                new Decimal(line.qty_invoiced).div(line.units_per_case ?? 1),
+            )
+          : new Decimal(line.unit_cost_before_tax).times(line.qty_invoiced),
+      );
     const profile = config.tax.profiles.find(
       (item) => item.key === line.tax_profile,
     );
@@ -332,7 +376,9 @@ export function recalculateInvoice(
 
 /** An arrived extra that went back with the driver is not an accepted receipt. */
 export function acceptedInvoiceUnits(line: InvoiceLine): number {
-  return line.qty_received_at_posting - (line.refused_units ?? 0);
+  return new Decimal(line.qty_received_at_posting)
+    .minus(line.refused_units ?? 0)
+    .toNumber();
 }
 
 /** Allocate the original tax once across Shorts and refused extras together. */
@@ -343,10 +389,10 @@ export function lineRefused(line: InvoiceLine): {
   total: string;
 } {
   const quantity = line.refused_units ?? 0;
-  if (!quantity || !validQuantity(line.qty_invoiced))
+  if (!quantity || !validInvoiceLineQuantity(line))
     return { quantity, beforeTax: "0.00", tax: "0.00", total: "0.00" };
   const short = lineShort(line);
-  const excluded = short.quantity + quantity;
+  const excluded = new Decimal(short.quantity).plus(quantity);
   const beforeTax = cents(
     new Decimal(line.line_total)
       .times(excluded)
@@ -386,6 +432,69 @@ function validQuantity(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
+export function validInvoiceLineQuantity(line: InvoiceLine): boolean {
+  if (line.sold_by !== "weight") return validQuantity(line.qty_invoiced);
+  try {
+    const source =
+      line.quantity_unit === "cases"
+        ? new Decimal(validateWeightQuantity(line.quantity_entered ?? ""))
+            .times(validateWeightQuantity(line.case_weight ?? ""))
+            .toString()
+        : validateWeightQuantity(line.source_quantity ?? "");
+    if (!new Decimal(source).eq(line.source_quantity ?? "0")) return false;
+    const canonical = weightQuantityPerLb(
+      source,
+      line.source_quantity_unit ?? "lb",
+      line.weight_conversion_factor ?? "2.20462",
+    );
+    if (!new Decimal(canonical).eq(line.qty_invoiced)) return false;
+    if (line.quantity_unit === "cases") {
+      const cases = validateWeightQuantity(line.quantity_entered ?? "");
+      const caseWeight = validateWeightQuantity(line.case_weight ?? "");
+      if (
+        !new Decimal(cases).times(caseWeight).eq(source) ||
+        line.case_weight_unit !== line.source_quantity_unit
+      )
+        return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function validInvoiceLineReceived(line: InvoiceLine): boolean {
+  if (line.sold_by !== "weight")
+    return (
+      Number.isSafeInteger(line.qty_received_at_posting) &&
+      line.qty_received_at_posting >= 0 &&
+      line.qty_received_at_posting <= line.qty_invoiced
+    );
+  try {
+    const source =
+      line.quantity_unit === "cases" &&
+      new Decimal(line.source_received_quantity ?? "0").eq(
+        line.source_quantity ?? "0",
+      )
+        ? line.source_received_quantity!
+        : validateWeightQuantity(line.source_received_quantity ?? "", {
+            allowZero: true,
+          });
+    return (
+      new Decimal(
+        weightQuantityPerLb(
+          source,
+          line.source_quantity_unit ?? "lb",
+          line.weight_conversion_factor ?? "2.20462",
+        ),
+      ).eq(line.qty_received_at_posting) &&
+      new Decimal(line.qty_received_at_posting).lte(line.qty_invoiced)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function validCost(value: string): boolean {
   return /^\d+(?:\.\d{1,4})?$/.test(value);
 }
@@ -408,13 +517,13 @@ export function lineShort(line: InvoiceLine): {
   tax: string;
   total: string;
 } {
-  const quantity = Math.max(
+  const quantity = Decimal.max(
     0,
-    line.qty_invoiced - line.qty_received_at_posting,
-  );
+    new Decimal(line.qty_invoiced).minus(line.qty_received_at_posting),
+  ).toNumber();
   if (
     !quantity ||
-    !validQuantity(line.qty_invoiced) ||
+    !validInvoiceLineQuantity(line) ||
     !validCost(line.unit_cost_before_tax)
   ) {
     return { quantity, beforeTax: "0.00", tax: "0.00", total: "0.00" };
@@ -449,10 +558,24 @@ export function shortTotals(invoice: DemoInvoice): {
     const restored = line.qty_later_received ?? 0;
     beforeTax = beforeTax
       .plus(short.beforeTax)
-      .minus(cumulativeAllocation(short.beforeTax, restored, short.quantity));
+      .minus(
+        cumulativeAllocation(
+          short.beforeTax,
+          restored,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
     tax = tax
       .plus(short.tax)
-      .minus(cumulativeAllocation(short.tax, restored, short.quantity));
+      .minus(
+        cumulativeAllocation(
+          short.tax,
+          restored,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
   }
   return {
     beforeTax: cents(beforeTax),
@@ -465,10 +588,13 @@ export function cumulativeAllocation(
   amount: string,
   delivered: number,
   originallyMissing: number,
+  allowFractional = false,
 ): string {
   if (delivered === 0 || originallyMissing === 0) return "0.00";
   if (
-    !Number.isSafeInteger(delivered) ||
+    !(allowFractional
+      ? Number.isFinite(delivered)
+      : Number.isSafeInteger(delivered)) ||
     delivered < 0 ||
     delivered > originallyMissing
   ) {
@@ -652,25 +778,22 @@ export function invoiceBlockers(
       )
     )
       blockers.push("matching");
-    if (
-      !validQuantity(line.qty_invoiced) ||
-      !Number.isSafeInteger(line.qty_received_at_posting) ||
-      line.qty_received_at_posting < 0 ||
-      line.qty_received_at_posting > line.qty_invoiced
-    )
+    if (!validInvoiceLineQuantity(line) || !validInvoiceLineReceived(line))
       blockers.push("quantity");
     if (
-      !Number.isSafeInteger(line.refused_units ?? 0) ||
+      !(line.sold_by === "weight"
+        ? Number.isFinite(line.refused_units ?? 0)
+        : Number.isSafeInteger(line.refused_units ?? 0)) ||
       (line.refused_units ?? 0) < 0 ||
       (line.refused_units ?? 0) > line.qty_received_at_posting
     )
       blockers.push("quantity");
-    if (line.quantity_unit !== undefined) {
+    if (line.sold_by !== "weight" && line.quantity_unit !== undefined) {
       try {
         if (
           packUnits(
             line.quantity_entered ?? line.qty_invoiced,
-            line.quantity_unit,
+            line.quantity_unit as "cases" | "units",
             line.units_per_case ?? 1,
           ) !== line.qty_invoiced
         )
@@ -689,17 +812,27 @@ export function invoiceBlockers(
       }
     }
     if (!validCost(line.unit_cost_before_tax)) blockers.push("cost");
+    if (line.sold_by === "weight") {
+      try {
+        if (
+          weightCostPerLb(
+            line.source_cost_before_tax ?? "",
+            line.source_cost_unit ?? "lb",
+            line.weight_conversion_factor ?? state.config,
+          ) !== line.unit_cost_before_tax
+        )
+          blockers.push("cost");
+      } catch {
+        blockers.push("cost");
+      }
+    }
     if (!line.review_confirmed) blockers.push("review");
     const category = state.config.pricing_categories.find(
       (item) =>
         item.key === (line.pricing_category ?? product?.pricing_category),
     );
     try {
-      calculatePrice(
-        line.unit_cost_before_tax,
-        category?.key ?? "",
-        state.config,
-      );
+      invoiceLineCalculation(line, category?.key ?? "", state.config);
     } catch {
       blockers.push("cost");
     }
@@ -810,12 +943,13 @@ export function postInvoice(
         name_en: line.new_name_en!,
         name_fa: line.new_name_fa!,
         pricing_category: line.pricing_category ?? "grocery",
-        unit_size: "100 g",
+        unit_size: line.sold_by === "weight" ? "" : "100 g",
+        sold_by: line.sold_by ?? "each",
         last_cost_before_tax: line.unit_cost_before_tax,
         selling_price: "",
         offer: null,
         taxable: line.taxable,
-        date_tracking: true,
+        date_tracking: line.date_tracking ?? true,
         main_supplier: invoice.supplier,
         ai_category: "Dried fruits & spices",
         barcode: "",
@@ -825,8 +959,8 @@ export function postInvoice(
       state.products.push(product);
     }
     if (!product) throw new Error("Resolve every product before posting.");
-    const calculation = calculatePrice(
-      line.unit_cost_before_tax,
+    const calculation = invoiceLineCalculation(
+      line,
       line.pricing_category ?? product.pricing_category,
       state.config,
     );
@@ -975,6 +1109,16 @@ export function postInvoice(
         ).slice(0, 10),
         date: line.date_value,
         status: "active",
+        source: "invoice",
+        date_type: line.date_type ?? "expiry",
+        invoice_line_index: lineIndex,
+        quantity:
+          line.sold_by === "weight"
+            ? line.source_received_quantity
+            : String(acceptedInvoiceUnits(line)),
+        lot_number: line.lot_number,
+        created_by: actor ?? invoice.receiving_employee,
+        created_at: now,
         expires_in_days: Math.round(
           (new Date(`${line.date_value}T12:00:00Z`).getTime() -
             new Date(`${companyDate(state.config)}T12:00:00Z`).getTime()) /
@@ -1142,7 +1286,8 @@ export function receiveShort(
   invoiceLineIndex?: number,
   actor?: string,
 ): string {
-  const invoice = state.invoice;
+  const original = state.invoice;
+  const invoice = effectiveInvoiceVersion(state, original);
   const effectiveBranch = effectiveInvoiceLocation(state, invoice);
   if (
     role === "cashier" ||
@@ -1181,14 +1326,43 @@ export function receiveShort(
     invoiceLineIndex === undefined ? receiptReference : lineReceiptKey;
   const short = lineShort(line);
   const previous = line.qty_later_received ?? 0;
-  if (!validQuantity(quantity) || previous + quantity > short.quantity)
+  if (
+    !(line.sold_by === "weight"
+      ? Number.isFinite(quantity) && quantity > 0
+      : validQuantity(quantity)) ||
+    new Decimal(previous).plus(quantity).gt(short.quantity)
+  )
     throw new Error("Receive no more than the remaining missing quantity.");
   const baseDelta = new Decimal(
-    cumulativeAllocation(short.beforeTax, previous + quantity, short.quantity),
-  ).minus(cumulativeAllocation(short.beforeTax, previous, short.quantity));
+    cumulativeAllocation(
+      short.beforeTax,
+      new Decimal(previous).plus(quantity).toNumber(),
+      short.quantity,
+      line.sold_by === "weight",
+    ),
+  ).minus(
+    cumulativeAllocation(
+      short.beforeTax,
+      previous,
+      short.quantity,
+      line.sold_by === "weight",
+    ),
+  );
   const taxDelta = new Decimal(
-    cumulativeAllocation(short.tax, previous + quantity, short.quantity),
-  ).minus(cumulativeAllocation(short.tax, previous, short.quantity));
+    cumulativeAllocation(
+      short.tax,
+      new Decimal(previous).plus(quantity).toNumber(),
+      short.quantity,
+      line.sold_by === "weight",
+    ),
+  ).minus(
+    cumulativeAllocation(
+      short.tax,
+      previous,
+      short.quantity,
+      line.sold_by === "weight",
+    ),
+  );
   const restored = cents(baseDelta.plus(taxDelta));
   const orderReceipt = shortOrderReceipt(
     state,
@@ -1204,7 +1378,9 @@ export function receiveShort(
   };
   if (orderReceipt) {
     const preview = structuredClone(state);
-    preview.invoice.lines[lineIndex].qty_later_received = previous + quantity;
+    preview.invoice.lines[lineIndex].qty_later_received = new Decimal(previous)
+      .plus(quantity)
+      .toNumber();
     const saved = preview.invoices?.find(
       (item) =>
         item.id === invoice.id && item.company_id === invoice.company_id,
@@ -1212,8 +1388,13 @@ export function receiveShort(
     if (saved) Object.assign(saved, structuredClone(preview.invoice));
     validateShortOrderReceipt(preview, orderContext, orderReceipt);
   }
-  line.qty_later_received = previous + quantity;
+  line.qty_later_received = new Decimal(previous).plus(quantity).toNumber();
   invoice.short_receipt_keys.push(receiptEvent);
+  if (invoice !== original) {
+    original.lines[lineIndex].qty_later_received = line.qty_later_received;
+    original.short_receipt_keys ??= [];
+    original.short_receipt_keys.push(receiptEvent);
+  }
   recordReceiptStock(state, {
     id: `${invoice.id}:delivery:${receiptEvent}:stock`,
     company_id: invoice.company_id,
@@ -1247,7 +1428,7 @@ export function receiveShort(
       .minus(refusedTotals(invoice).total),
   );
   const history = state.invoices?.find((item) => item.id === invoice.id);
-  if (history) Object.assign(history, structuredClone(invoice));
+  if (history) Object.assign(history, structuredClone(original));
   if (orderReceipt) applyShortOrderReceipt(state, orderContext, orderReceipt);
   state.activity.push({
     id: `${invoice.id}:delivery:${receiptEvent}:activity`,

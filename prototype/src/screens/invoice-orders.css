@@ -5,7 +5,54 @@
   margin-block-start: 20px;
 }
 .invoice-order-table table {
-  min-inline-size: 860px;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.invoice-order-table td,
+.invoice-order-table th {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.invoice-order-table .product-name strong,
+.invoice-order-table .product-name small {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+.invoice-order-table .pill {
+  white-space: nowrap;
+  overflow: visible;
+}
+.invoice-new-item-matches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 20px;
+  margin-block: 24px;
+}
+.invoice-new-item-match {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-inline-size: 0;
+  padding: 16px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+}
+.invoice-new-item-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.invoice-new-item-match .field {
+  max-inline-size: 100%;
+}
+@media (max-width: 700px) {
+  .invoice-order-table table {
+    min-inline-size: 720px;
+  }
 }
 .invoice-order-decisions {
   display: flex;

@@ -18,6 +18,7 @@ import {
   branchLabel as configuredBranchLabel,
   activePricingCategories,
   sellingBranches,
+  branchSellsToCustomers,
 } from "../settings";
 import {
   supplierChoices,
@@ -32,6 +33,19 @@ import {
   type NewProductEdits,
 } from "../manual-product";
 import { calculatePrice } from "../pricing";
+import {
+  approvedWeightPricePerLb,
+  calculateWeighedPrice,
+  weightCostPerLb,
+  weightPriceDisplay,
+  weighedSettings,
+  type WeightUnit,
+} from "../weighed";
+import {
+  ProductPrice as SellingPrice,
+  ProductCost,
+} from "../weight-price-presentation";
+import { AddDateDialog, NextTrackedDate } from "../AddDateDialog";
 import { manualPrice, sellingMargin } from "../manual-prices";
 import {
   ManualPriceDetails,
@@ -70,7 +84,6 @@ import {
   demoUserLabel,
   DateText,
   LtrText,
-  Money,
   OfferLabel,
   UnitSize,
 } from "../presentation";
@@ -78,7 +91,7 @@ import {
 const PAGE_SIZE = 8;
 
 function ProductProvenance({ product }: { product: Product }) {
-  const { branch, t, lang } = useDemo();
+  const { branch, t, lang, state } = useDemo();
   const source =
     product.price_provenance?.[lookupBranch(branch)] ??
     product.price_provenance?.all;
@@ -87,14 +100,22 @@ function ProductProvenance({ product }: { product: Product }) {
     <p className="helper product-price-provenance">
       {t("Calculated from invoice", "محاسبه‌شده از فاکتور")}{" "}
       <LtrText>{source.invoice_number}</LtrText>:{" "}
-      <Money value={source.calculated_price} />
+      <SellingPrice
+        value={source.calculated_price}
+        product={product}
+        config={state.config}
+      />
       {source.changed_price && (
         <>
           {" "}
           · {t("Changed by", "تغییریافته توسط")}{" "}
           <bdi dir="auto">{demoUserLabel(source.changed_by ?? "", lang)}</bdi>{" "}
           {t("on", "در")} <DateText value={source.changed_at} />:{" "}
-          <Money value={source.changed_price} />
+          <SellingPrice
+            value={source.changed_price}
+            product={product}
+            config={state.config}
+          />
         </>
       )}
     </p>
@@ -176,6 +197,7 @@ export function ProductEditor({
 }) {
   const { state, branch, role, user, lang, t, update, navigate } = useDemo();
   const branches = configuredBranches(state.config);
+  const priceLocations = sellingBranches(state.config);
   const isNew = !existingProduct;
   const product: Product = existingProduct ?? {
     company_id: state.config.company.seed_key,
@@ -201,12 +223,12 @@ export function ProductEditor({
     date_tracking: false,
   };
   const [cost, setCost] = useState("");
+  const [costUnit, setCostUnit] = useState<WeightUnit>("lb");
+  const [addDateNow, setAddDateNow] = useState(false);
+  const [dateProduct, setDateProduct] = useState<string>();
   const [manualPrice, setManualPrice] = useState(false);
   const [similarConfirmed, setSimilarConfirmed] = useState(false);
   const [marginConfirmed, setMarginConfirmed] = useState(false);
-  const category = state.config.pricing_categories.find(
-    (item) => item.key === product.pricing_category,
-  );
   const startingPrice = effectivePrice(state, product, branch) ?? "";
   const [values, setValues] = useState<ProductEdits>({
     name_en: product.name_en,
@@ -218,11 +240,15 @@ export function ProductEditor({
     pricing_category: product.pricing_category,
     barcode: product.barcode,
     main_supplier: product.main_supplier,
-    date_tracking:
-      product.date_tracking ?? category?.date_tracking_prompt ?? false,
+    date_tracking: product.date_tracking,
+    sold_by: product.sold_by ?? "each",
     scope: "all",
   });
-  const [sellingPrice, setSellingPrice] = useState(startingPrice);
+  const [sellingPrice, setSellingPrice] = useState(() =>
+    product.sold_by === "weight" && startingPrice
+      ? weightPriceDisplay(startingPrice, state.config).main.amount
+      : startingPrice,
+  );
   const [targetBranch, setTargetBranch] = useState<Branch>(
     lookupBranch(branch),
   );
@@ -247,7 +273,13 @@ export function ProductEditor({
       (key === "scope" && error === "branch");
     if (related) setError(null);
   };
-  const priceChanged = sellingPrice !== startingPrice;
+  const weightProduct = values.sold_by === "weight";
+  const displayUnit = weighedSettings(state.config).main_display_unit;
+  const startingDisplayPrice =
+    weightProduct && startingPrice
+      ? weightPriceDisplay(startingPrice, state.config).main.amount
+      : startingPrice;
+  const priceChanged = sellingPrice !== startingDisplayPrice;
   const categories = [
     ...new Set(
       state.products
@@ -264,29 +296,50 @@ export function ProductEditor({
   )
     suppliers.push(values.main_supplier);
   let calculatedPrice = "";
+  let canonicalCost = cost;
   try {
-    calculatedPrice = calculatePrice(
-      cost,
-      values.pricing_category,
-      state.config,
-    ).selling_price;
+    const calculation = weightProduct
+      ? calculateWeighedPrice(
+          cost,
+          costUnit,
+          values.pricing_category,
+          state.config,
+        )
+      : calculatePrice(cost, values.pricing_category, state.config);
+    calculatedPrice = weightProduct
+      ? weightPriceDisplay(calculation.selling_price, state.config).main.amount
+      : calculation.selling_price;
+    canonicalCost = weightProduct
+      ? weightCostPerLb(cost, costUnit, state.config)
+      : cost;
   } catch {
     /* Invalid draft cost is explained on Save. */
   }
   const effectiveSellingPrice =
     isNew && !manualPrice ? calculatedPrice : sellingPrice;
+  let canonicalSellingPrice = effectiveSellingPrice;
+  try {
+    if (weightProduct && effectiveSellingPrice)
+      canonicalSellingPrice = approvedWeightPricePerLb(
+        effectiveSellingPrice,
+        displayUnit,
+        state.config,
+      );
+  } catch {
+    /* Save validates the same draft field. */
+  }
   const minimum = state.config.pricing_categories.find(
     (item) => item.key === values.pricing_category,
   )?.minimum_margin;
   const belowMinimum =
     isNew &&
     /^\d+(\.\d{1,4})?$/.test(cost) &&
-    /^\d+(\.\d{1,2})?$/.test(effectiveSellingPrice) &&
+    /^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) &&
     minimum !== null &&
     minimum !== undefined &&
-    new Decimal(effectiveSellingPrice)
-      .minus(cost)
-      .lt(new Decimal(effectiveSellingPrice).times(minimum));
+    new Decimal(canonicalSellingPrice)
+      .minus(canonicalCost)
+      .lt(new Decimal(canonicalSellingPrice).times(minimum));
   const similar = isNew ? similarProductNames(state, values.name_en) : [];
   if (
     isNew &&
@@ -294,6 +347,17 @@ export function ProductEditor({
     !(role === "floor_worker" && invoiceQuickAdd)
   )
     return null;
+  if (dateProduct)
+    return (
+      <AddDateDialog
+        open
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        productCode={dateProduct}
+        defaultLocation={lookupBranch(branch)}
+      />
+    );
   return (
     <Dialog
       open
@@ -335,7 +399,11 @@ export function ProductEditor({
                     {
                       ...values,
                       last_cost_before_tax: cost,
-                      selling_price: effectiveSellingPrice || undefined,
+                      last_cost_unit: costUnit,
+                      selling_price:
+                        isNew && !manualPrice
+                          ? undefined
+                          : canonicalSellingPrice || undefined,
                       minimum_margin_confirmed: marginConfirmed,
                       similar_name_confirmed: similarConfirmed,
                     } as NewProductEdits,
@@ -344,6 +412,10 @@ export function ProductEditor({
                 );
               });
               onCreated?.(created!);
+              if (addDateNow && values.date_tracking) {
+                setDateProduct(created!.code);
+                return;
+              }
               onClose();
               return;
             }
@@ -354,12 +426,16 @@ export function ProductEditor({
                 product.code,
                 {
                   ...values,
-                  ...(priceChanged ? { selling_price: sellingPrice } : {}),
+                  ...(priceChanged
+                    ? { selling_price: canonicalSellingPrice }
+                    : {}),
                 },
                 expected,
               ),
             );
-            onClose();
+            if (addDateNow && values.date_tracking)
+              setDateProduct(product.code);
+            else onClose();
           } catch (cause) {
             const code =
               cause instanceof ProductEditError ||
@@ -440,6 +516,26 @@ export function ProductEditor({
               onChange={(event) => patch("unit_size", event.target.value)}
             />
           </Field>
+          <Field label={t("Sold by", "روش فروش")}>
+            <Select
+              value={values.sold_by ?? "each"}
+              onChange={(value) => {
+                patch("sold_by", value as "each" | "weight");
+                setSellingPrice(
+                  value === "weight" && startingPrice
+                    ? weightPriceDisplay(startingPrice, state.config).main
+                        .amount
+                    : startingPrice,
+                );
+                setManualPrice(false);
+                setMarginConfirmed(false);
+              }}
+              options={[
+                { value: "each", label: t("Each", "عدد") },
+                { value: "weight", label: t("Weight", "وزن") },
+              ]}
+            />
+          </Field>
           <Field
             label={t("Category", "دسته")}
             error={error === "category" ? editorError(error, t) : undefined}
@@ -511,8 +607,30 @@ export function ProductEditor({
               />
             </Field>
           )}
+          {isNew && weightProduct && (
+            <Field label={t("Cost unit", "واحد هزینه")}>
+              <Select
+                value={costUnit}
+                onChange={(value) => {
+                  setCostUnit(value as WeightUnit);
+                  setMarginConfirmed(false);
+                  if (error === "cost" || error === "margin") setError(null);
+                }}
+                options={[
+                  { value: "lb", label: "lb" },
+                  { value: "kg", label: "kg" },
+                ]}
+              />
+            </Field>
+          )}
           <Field
-            label={t("Selling price", "قیمت فروش")}
+            label={
+              weightProduct
+                ? displayUnit === "lb"
+                  ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                  : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+                : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
+            }
             error={error === "price" ? editorError(error, t) : undefined}
             className="short-field"
           >
@@ -531,14 +649,32 @@ export function ProductEditor({
           </Field>
           <Field label={t("Date tracking", "پیگیری تاریخ")}>
             <Select
-              value={values.date_tracking ? "yes" : "no"}
-              onChange={(value) => patch("date_tracking", value === "yes")}
+              value={
+                values.date_tracking === undefined
+                  ? "unset"
+                  : values.date_tracking
+                    ? "yes"
+                    : "no"
+              }
+              onChange={(value) => {
+                patch(
+                  "date_tracking",
+                  value === "unset" ? undefined : value === "yes",
+                );
+                if (value !== "yes") setAddDateNow(false);
+              }}
               options={[
+                { value: "unset", label: t("Not set", "تنظیم نشده") },
                 { value: "yes", label: t("Yes", "بله") },
                 { value: "no", label: t("No", "خیر") },
               ]}
             />
           </Field>
+          {values.date_tracking && !product.date_tracking && (
+            <Checkbox checked={addDateNow} onChange={setAddDateNow}>
+              {t("Add a date now", "اکنون یک تاریخ اضافه کنید")}
+            </Checkbox>
+          )}
         </div>
         {isNew && belowMinimum && role === "supervisor" && (
           <div className="banner info">
@@ -605,10 +741,15 @@ export function ProductEditor({
                 onChange={(value) => patch("scope", value as "all" | "branch")}
                 options={[
                   { value: "all", label: t("All branches", "همهٔ شعبه‌ها") },
-                  {
-                    value: "branch",
-                    label: t("This branch only", "فقط این شعبه"),
-                  },
+                  ...(branch === "all" ||
+                  branchSellsToCustomers(state.config, branch)
+                    ? [
+                        {
+                          value: "branch",
+                          label: t("This branch only", "فقط این شعبه"),
+                        },
+                      ]
+                    : []),
                 ]}
               />
             </Field>
@@ -620,7 +761,7 @@ export function ProductEditor({
                     setTargetBranch(value as Branch);
                     if (error === "branch") setError(null);
                   }}
-                  options={branches.map((value) => ({
+                  options={priceLocations.map((value) => ({
                     value,
                     label: configuredBranchLabel(state.config, value, lang),
                   }))}
@@ -642,14 +783,16 @@ export function ProductEditor({
                 </tr>
               </thead>
               <tbody>
-                {(values.scope === "all" ? branches : [targetBranch]).map(
+                {(values.scope === "all" ? priceLocations : [targetBranch]).map(
                   (item) => (
                     <tr key={item}>
                       <td>{configuredBranchLabel(state.config, item, lang)}</td>
                       <td>
                         {effectivePrice(state, product, item) ? (
-                          <Money
+                          <SellingPrice
                             value={effectivePrice(state, product, item)!}
+                            product={product}
+                            config={state.config}
                           />
                         ) : (
                           "—"
@@ -658,7 +801,11 @@ export function ProductEditor({
                       <td>
                         <LtrText>
                           {/^\d+(\.\d{1,2})?$/.test(sellingPrice) ? (
-                            <Money value={sellingPrice} />
+                            <SellingPrice
+                              value={canonicalSellingPrice}
+                              product={{ ...product, sold_by: values.sold_by }}
+                              config={state.config}
+                            />
                           ) : (
                             "—"
                           )}
@@ -743,11 +890,23 @@ function ProductPrice({ product }: { product: Product }) {
         <p className="muted">
           {!approved && pending
             ? t("Proposed price before tax", "قیمت پیشنهادی پیش از مالیات")
-            : t("Selling price before tax", "قیمت فروش پیش از مالیات")}
+            : product.sold_by === "weight"
+              ? weighedSettings(state.config).main_display_unit === "lb"
+                ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+              : t("Selling price before tax", "قیمت فروش پیش از مالیات")}
         </p>
         <div className="actions">
           <strong className="price" dir="ltr">
-            {approved || pending ? <Money value={approved || pending!} /> : "—"}
+            {approved || pending ? (
+              <SellingPrice
+                value={approved || pending!}
+                product={product}
+                config={state.config}
+              />
+            ) : (
+              "—"
+            )}
           </strong>
           <ManualPricePill product={product} />
           {profile?.taxable && (
@@ -777,7 +936,11 @@ function ProductPrice({ product }: { product: Product }) {
             <span>
               {t("Proposed price", "قیمت پیشنهادی")}:{" "}
               <strong>
-                <Money value={pending} />
+                <SellingPrice
+                  value={pending}
+                  product={product}
+                  config={state.config}
+                />
               </strong>
               .{" "}
               {t(
@@ -803,6 +966,29 @@ function ProductPrice({ product }: { product: Product }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ProductDates({ product }: { product: Product }) {
+  const { role, branch, t } = useDemo();
+  const [adding, setAdding] = useState(false);
+  return (
+    <div className="stack product-dates">
+      <NextTrackedDate productCode={product.code} />
+      {(role === "supervisor" || role === "floor_worker") && (
+        <div className="actions">
+          <Button variant="secondary" onClick={() => setAdding(true)}>
+            {t("Add date", "افزودن تاریخ")}
+          </Button>
+        </div>
+      )}
+      <AddDateDialog
+        open={adding}
+        onOpenChange={setAdding}
+        productCode={product.code}
+        defaultLocation={lookupBranch(branch)}
+      />
     </div>
   );
 }
@@ -882,6 +1068,7 @@ function ProductDetail({
           </Badge>
         </div>
         <ProductPrice product={product} />
+        <ProductDates product={product} />
         <ProductProvenance product={product} />
         <dl className="form-grid">
           <div>
@@ -988,7 +1175,15 @@ function ProductDetail({
                             {configuredBranchLabel(state.config, item, lang)}
                           </td>
                           <td className="numeric">
-                            {price ? <Money value={price} /> : "—"}
+                            {price ? (
+                              <SellingPrice
+                                value={price}
+                                product={product}
+                                config={state.config}
+                              />
+                            ) : (
+                              "—"
+                            )}
                             <ManualPricePill product={product} branch={item} />
                           </td>
                           <td>
@@ -1004,7 +1199,15 @@ function ProductDetail({
                 <p>
                   {t("Store cost", "هزینهٔ فروشگاه")}:{" "}
                   <strong>
-                    {storeCost ? <Money value={storeCost} /> : "—"}
+                    {storeCost ? (
+                      <ProductCost
+                        value={storeCost}
+                        product={product}
+                        config={state.config}
+                      />
+                    ) : (
+                      "—"
+                    )}
                   </strong>
                 </p>
                 <div className="stack">
@@ -1067,7 +1270,11 @@ function ProductDetail({
                               </a>
                             </td>
                             <td>
-                              <Money value={entry.unit_cost_before_tax} />
+                              <ProductCost
+                                value={entry.unit_cost_before_tax}
+                                product={{ sold_by: entry.sold_by }}
+                                config={state.config}
+                              />
                             </td>
                             <td>
                               {entry.short_dated ? (
@@ -1226,17 +1433,25 @@ function LookupProductDetail({ product }: { product: Product }) {
       <div className="lookup-price-block">
         <div className="lookup-approved-price">
           <p className="muted">
-            {t(
-              state.config.terminology.selling_price.replace(
-                /^Selling Price$/,
-                "Selling price",
-              ),
-              "قیمت فروش",
-            )}
+            {product.sold_by === "weight"
+              ? weighedSettings(state.config).main_display_unit === "lb"
+                ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+              : t(
+                  state.config.terminology.selling_price.replace(
+                    /^Selling Price$/,
+                    "Selling price",
+                  ),
+                  "قیمت فروش",
+                )}
           </p>
           {approved ? (
             <strong className="price" dir="ltr">
-              <Money value={approved} />
+              <SellingPrice
+                value={approved}
+                product={product}
+                config={state.config}
+              />
             </strong>
           ) : (
             <p className="muted lookup-missing-price">
@@ -1253,11 +1468,16 @@ function LookupProductDetail({ product }: { product: Product }) {
                 ? t("New price pending", "قیمت جدید در انتظار تأیید")
                 : t("Pending", "در انتظار تأیید")}
             </Badge>
-            <Money value={pending} />
+            <SellingPrice
+              value={pending}
+              product={product}
+              config={state.config}
+            />
           </div>
         )}
       </div>
       <ManualPriceDetails product={product} />
+      <ProductDates product={product} />
       {(profile?.taxable || offer) && (
         <div className="lookup-price-tags actions">
           {profile?.taxable && (
@@ -1565,7 +1785,11 @@ export function Lookup() {
                     </span>
                     <span className="lookup-result-price">
                       {price ? (
-                        <Money value={price} />
+                        <SellingPrice
+                          value={price}
+                          product={product}
+                          config={state.config}
+                        />
                       ) : (
                         <span className="muted">
                           {t(
@@ -2010,7 +2234,17 @@ export function Products() {
                       </td>
                       {role === "supervisor" && (
                         <>
-                          <td>{cost ? <Money value={cost} /> : "—"}</td>
+                          <td>
+                            {cost ? (
+                              <ProductCost
+                                value={cost}
+                                product={product}
+                                config={state.config}
+                              />
+                            ) : (
+                              "—"
+                            )}
+                          </td>
                           <td>
                             {margin !== null ? (
                               <LtrText>{margin}%</LtrText>
@@ -2021,7 +2255,15 @@ export function Products() {
                         </>
                       )}
                       <td className="numeric">
-                        {price ? <Money value={price} /> : "—"}
+                        {price ? (
+                          <SellingPrice
+                            value={price}
+                            product={product}
+                            config={state.config}
+                          />
+                        ) : (
+                          "—"
+                        )}
                       </td>
                       <td>
                         <div className="actions">
@@ -2029,7 +2271,11 @@ export function Products() {
                           {pending && (
                             <Badge tone="pending">
                               {t("Pending", "در انتظار تأیید")}{" "}
-                              <Money value={pending} />
+                              <SellingPrice
+                                value={pending}
+                                product={product}
+                                config={state.config}
+                              />
                             </Badge>
                           )}
                           {!pending && (

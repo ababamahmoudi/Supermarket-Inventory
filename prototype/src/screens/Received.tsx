@@ -85,7 +85,22 @@ export function ReceivedTable({ rows }: { rows: DeliveryReceipt[] }) {
                   )}
                 </td>
                 <td className="numeric">
-                  {receipt.units_per_case > 1 && (
+                  {receipt.sold_by === "weight" ? (
+                    <>
+                      <LtrText>
+                        {receipt.source_quantity}{" "}
+                        {receipt.source_quantity_unit ?? "lb"}
+                      </LtrText>
+                      {receipt.case_weight && (
+                        <small className="muted received-units">
+                          {t("Case of", "کارتنِ")}{" "}
+                          <LtrText>
+                            {receipt.case_weight} {receipt.case_weight_unit}
+                          </LtrText>
+                        </small>
+                      )}
+                    </>
+                  ) : receipt.units_per_case > 1 ? (
                     <>
                       {tCount(
                         "{{count}} case",
@@ -93,24 +108,28 @@ export function ReceivedTable({ rows }: { rows: DeliveryReceipt[] }) {
                         "{{count}} کارتن",
                         "{{count}} کارتن",
                         Number(receipt.cases),
-                      )}
+                      )}{" "}
+                      <span className="muted">
+                        (
+                        {tCount(
+                          "{{count}} unit",
+                          "{{count}} units",
+                          "{{count}} واحد",
+                          "{{count}} واحد",
+                          receipt.units,
+                        )}
+                        )
+                      </span>
                     </>
-                  )}
-                  <span
-                    className={
-                      receipt.units_per_case > 1
-                        ? "muted received-units"
-                        : undefined
-                    }
-                  >
-                    {tCount(
+                  ) : (
+                    tCount(
                       "{{count}} unit",
                       "{{count}} units",
                       "{{count}} واحد",
                       "{{count}} واحد",
                       receipt.units,
-                    )}
-                  </span>
+                    )
+                  )}
                 </td>
                 <td className="received-location">
                   {branchLabel(state.config, receipt.branch, lang)}

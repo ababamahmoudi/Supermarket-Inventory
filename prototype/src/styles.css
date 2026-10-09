@@ -1184,9 +1184,8 @@ button.stat-card:hover {
   margin-block-start: 0;
 }
 .kpi-detail {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .invoice-details-toggle {
   display: flex;

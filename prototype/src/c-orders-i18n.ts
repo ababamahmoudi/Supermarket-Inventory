@@ -28,13 +28,26 @@ const errors: Record<string, [string, string]> = {
     "Choose each supplier item only once.",
     "هر کالای تأمین‌کننده را فقط یک بار انتخاب کنید.",
   ],
+  name: ["Enter a name for the New item.", "نام کالای جدید را وارد کنید."],
+  pack: [
+    "Enter positive whole Units per case, or leave the pack empty.",
+    "تعداد صحیح و مثبت واحد در کارتن وارد کنید یا بسته را خالی بگذارید.",
+  ],
+  match: [
+    "Choose a different, matched invoice line for each New item. If the invoice line changed, choose it again.",
+    "برای هر کالای جدید یک ردیف متفاوت و تطبیق‌داده‌شدهٔ فاکتور انتخاب کنید. اگر ردیف فاکتور تغییر کرده است، آن را دوباره انتخاب کنید.",
+  ],
+  case_weight: [
+    "Cases need a Case weight and weight unit. Review the supplier invoice before ordering or matching this item.",
+    "برای تعداد کارتن، وزن کارتن و واحد وزن لازم است. پیش از سفارش یا تطبیق این کالا، فاکتور تأمین‌کننده را بررسی کنید.",
+  ],
   quantity: [
     "Enter positive Cases that convert to whole units with this pack.",
     "تعداد مثبت کارتن وارد کنید که با این بسته به تعداد صحیح واحد تبدیل شود.",
   ],
   cost: [
-    "Enter Expected unit cost for every item before placing the order (up to 4 decimals).",
-    "پیش از ثبت سفارش، هزینهٔ مورد انتظار هر واحد را برای همهٔ کالاها وارد کنید (تا ۴ رقم اعشار).",
+    "Enter Expected unit cost for each existing item before placing the order (up to 4 decimals).",
+    "پیش از ثبت سفارش، هزینهٔ مورد انتظار هر واحد را برای کالاهای موجود وارد کنید (تا ۴ رقم اعشار).",
   ],
   empty: [
     "Add at least one supplier item before placing the order.",

@@ -1,0 +1,128 @@
+.invoice-original-name {
+  margin-block: 0 20px;
+  overflow-wrap: anywhere;
+}
+.invoice-original-controls,
+.invoice-pdf-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block: 0 20px;
+}
+.invoice-original-media {
+  min-inline-size: 0;
+  inline-size: 100%;
+  overflow: auto;
+  background: white;
+}
+.invoice-original-media img,
+.invoice-original-media canvas {
+  display: block;
+  max-inline-size: none;
+  height: auto;
+}
+.invoice-original-media[data-zoom="1"] img,
+.invoice-original-media[data-zoom="1"] canvas {
+  max-inline-size: 100%;
+}
+.posted-invoice-header,
+.posted-invoice-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-block: 20px 24px;
+}
+.posted-invoice-header div,
+.posted-invoice-totals div {
+  min-inline-size: 0;
+}
+.posted-invoice-header dt,
+.posted-invoice-totals dt {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-block-end: 8px;
+}
+.posted-invoice-header dd,
+.posted-invoice-totals dd {
+  margin: 0;
+  overflow-wrap: break-word;
+}
+.posted-invoice-totals {
+  max-inline-size: 440px;
+  margin-inline-start: auto;
+}
+.posted-invoice-totals dd {
+  text-align: end;
+  font-weight: 600;
+}
+.posted-invoice-versions,
+.posted-invoice-line-decisions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 12px;
+}
+.posted-invoice-line-decisions {
+  font-size: 13px;
+}
+.invoice-correction-lines {
+  display: grid;
+  gap: 24px;
+}
+.invoice-correction-line {
+  background: var(--surface-soft);
+  border-radius: 16px;
+  padding: 20px;
+}
+.invoice-correction-line h3 {
+  margin-block: 0 20px;
+}
+.invoice-correction-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.invoice-correction-preview .invoice-correction-impact {
+  margin-block-start: 24px;
+}
+.invoice-correction-form > .field {
+  margin-block: 24px;
+}
+.invoice-correction-preview .banner {
+  margin-block-start: 20px;
+}
+@media (max-width: 600px) {
+  .posted-invoice-header,
+  .invoice-correction-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.invoice-correction-dialog {
+  inline-size: min(880px, calc(100vw - 32px));
+  max-inline-size: 880px;
+}
+.invoice-correction-line + .invoice-correction-line,
+.invoice-correction-dialog > .field {
+  margin-block-start: 24px;
+}
+.invoice-correction-dialog .field > input,
+.invoice-correction-dialog .field > .number-field,
+.invoice-correction-dialog .field > .ui-select {
+  max-inline-size: 300px;
+}
+.posted-invoice-lines .numeric {
+  white-space: normal;
+}
+.posted-invoice-lines p {
+  margin-block: 8px 0;
+}
+.posted-invoice-header dd,
+.posted-invoice-lines td {
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  .posted-invoice-lines {
+    --table-min-width: 640px;
+  }
+}

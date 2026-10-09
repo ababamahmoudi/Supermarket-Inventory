@@ -9,7 +9,16 @@ import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import type { Branch } from "../types";
 import { companyDate } from "../invoice";
-import { projectExpiryLocation } from "../received";
+import {
+  AddDateDialog,
+  RemoveDateDialog,
+  StopTrackingDialog,
+} from "../AddDateDialog";
+import {
+  dateRemovalReasonLabel,
+  scopedTrackedDates,
+  trackedDateDaysLeft,
+} from "../date-tracking";
 import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
 import {
   Badge,
@@ -22,28 +31,17 @@ import {
   Select,
   useTableColumns,
 } from "../ui";
-import {
-  clearExpiry,
-  operationError,
-  scopedRecords,
-  type OperationsContext,
-} from "../operations";
-
 export function Expiry() {
-  const { state, update, branch, setBranch, role, user, lang, t } = useDemo();
+  const { state, branch, setBranch, role, historyContext, lang, t } = useDemo();
   const branches = configuredBranches(state.config);
-  const context: OperationsContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? t("Floor Worker", "کارمند فروشگاه"),
-  };
   const [window, setWindow] = useListState("expiry.window", "soon");
   const [category, setCategory] = useListState("expiry.category", "all");
   const [search, setSearch] = useListState("expiry.search", "");
   const [sort, setSort] = useListState<"date" | "name">("expiry.sort", "date");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [stopping, setStopping] = useState<string | null>(null);
   const tableColumns = useTableColumns("expiry", [
     {
       key: "product",
@@ -51,7 +49,7 @@ export function Expiry() {
       required: true,
       width: 220,
     },
-    { key: "location", label: t("Branch", "شعبه"), width: 128 },
+    { key: "location", label: t("Location", "مکان"), width: 112 },
     { key: "date", label: t("Date", "تاریخ"), width: 128 },
     { key: "type", label: t("Type", "نوع"), width: 104 },
     {
@@ -62,8 +60,8 @@ export function Expiry() {
     },
     {
       key: "supplier",
-      label: t("Supplier / invoice", "تأمین‌کننده / فاکتور"),
-      width: 200,
+      label: t("Source / invoice", "منبع / فاکتور"),
+      width: 168,
     },
     { key: "status", label: t("Status", "وضعیت"), width: 136 },
     {
@@ -75,22 +73,20 @@ export function Expiry() {
     },
   ]);
   const today = companyDate(state.config);
-  const daysLeft = (date: string) =>
-    Math.ceil((Date.parse(date) - Date.parse(today)) / 86_400_000);
-  const entries = scopedRecords(
-    state.expiry.map((entry) => projectExpiryLocation(state, entry)),
-    context,
+  const daysLeft = (date: string) => trackedDateDaysLeft(date, today);
+  const entries = (
+    historyContext ? scopedTrackedDates(state, historyContext, true) : []
   )
     .filter((entry) => {
       const product = state.products.find(
         (item) =>
-          item.company_id === context.company_id &&
+          item.company_id === state.config.company.seed_key &&
           item.code === entry.product_code,
       );
       const days = daysLeft(entry.date);
       return (
-        (window === "cleared"
-          ? entry.status === "cleared"
+        (window === "removed" || window === "cleared"
+          ? entry.status !== "active"
           : entry.status === "active") &&
         (category === "all" || product?.ai_category === category) &&
         (window !== "soon" ||
@@ -106,11 +102,17 @@ export function Expiry() {
       sort === "date"
         ? a.date.localeCompare(b.date)
         : (
-            state.products.find((item) => item.code === a.product_code)
-              ?.name_en ?? ""
+            state.products.find(
+              (item) =>
+                item.company_id === state.config.company.seed_key &&
+                item.code === a.product_code,
+            )?.name_en ?? ""
           ).localeCompare(
-            state.products.find((item) => item.code === b.product_code)
-              ?.name_en ?? "",
+            state.products.find(
+              (item) =>
+                item.company_id === state.config.company.seed_key &&
+                item.code === b.product_code,
+            )?.name_en ?? "",
           ),
     );
   if (!role || role === "cashier")
@@ -123,22 +125,24 @@ export function Expiry() {
       </EmptyState>
     );
   return (
-    <>
+    <div className="date-tracking-page">
       <PageHeader
         title={t("Date tracking", "پیگیری تاریخ")}
         description={t(
           "Check expiry and best-before dates.",
           "تاریخ انقضا و بهترین زمان مصرف را بررسی کنید.",
         )}
+        actions={
+          <Button
+            onClick={() => {
+              setAdding(true);
+              setMessage("");
+            }}
+          >
+            {t("Add date", "افزودن تاریخ")}
+          </Button>
+        }
       />
-      {branch === "all" && (
-        <div className="banner info">
-          {t(
-            "Choose one branch before clearing a date entry.",
-            "پیش از پاک کردن تاریخ، یک شعبه انتخاب کنید.",
-          )}
-        </div>
-      )}
       <FilterToolbar
         className="expiry-filters"
         aria-label={t("Date tracking filters", "فیلترهای پیگیری تاریخ")}
@@ -162,7 +166,7 @@ export function Expiry() {
       >
         <Select
           aria-label={t("Time window", "بازه زمانی")}
-          value={window}
+          value={window === "cleared" ? "removed" : window}
           onChange={setWindow}
           options={[
             {
@@ -182,8 +186,8 @@ export function Expiry() {
               label: t("All active dates", "همه تاریخ‌های فعال"),
             },
             {
-              value: "cleared",
-              label: t("Cleared history", "سوابق پاک‌شده"),
+              value: "removed",
+              label: t("Removed", "حذف‌شده"),
             },
           ]}
         />
@@ -196,7 +200,9 @@ export function Expiry() {
             ...[
               ...new Set(
                 state.products
-                  .filter((item) => item.company_id === context.company_id)
+                  .filter(
+                    (item) => item.company_id === state.config.company.seed_key,
+                  )
                   .map((product) => product.ai_category),
               ),
             ].map((value) => ({
@@ -206,7 +212,7 @@ export function Expiry() {
           ]}
         />
         <Select
-          aria-label={t("Date tracking branch", "شعبه پیگیری تاریخ")}
+          aria-label={t("Date tracking location", "مکان پیگیری تاریخ")}
           value={branch}
           onChange={(value) => setBranch(value as Branch)}
           disabled={role !== "supervisor"}
@@ -255,11 +261,6 @@ export function Expiry() {
           {message}
         </div>
       )}
-      {error && (
-        <div className="banner danger" role="alert">
-          {error}
-        </div>
-      )}
       {entries.length === 0 ? (
         <EmptyState>
           {t(
@@ -273,13 +274,13 @@ export function Expiry() {
             <thead>
               <tr>
                 <th>{t("Product", "محصول")}</th>
-                <th>{t("Branch", "شعبه")}</th>
+                <th>{t("Location", "مکان")}</th>
                 <th>{t("Date", "تاریخ")}</th>
                 <th>{t("Type", "نوع")}</th>
                 <th className="number-cell">
                   {t("Days left", "روز باقی‌مانده")}
                 </th>
-                <th>{t("Supplier / invoice", "تأمین‌کننده / فاکتور")}</th>
+                <th>{t("Source / invoice", "منبع / فاکتور")}</th>
                 <th>{t("Status", "وضعیت")}</th>
                 <th>{t("Action", "عملیات")}</th>
               </tr>
@@ -288,14 +289,17 @@ export function Expiry() {
               {entries.map((entry) => {
                 const product = state.products.find(
                   (item) =>
-                    item.company_id === context.company_id &&
+                    item.company_id === state.config.company.seed_key &&
                     item.code === entry.product_code,
                 );
-                const richer = entry as typeof entry & {
-                  date_type?: "expiry" | "best_before";
-                  invoice_id?: string;
-                  supplier?: string;
-                };
+                const invoice = [...(state.invoices ?? []), state.invoice].find(
+                  (item) =>
+                    item.company_id === entry.company_id &&
+                    item.id === entry.invoice_id,
+                );
+                const retainedSupplier = (
+                  entry as typeof entry & { supplier?: string }
+                ).supplier;
                 const days = daysLeft(entry.date);
                 return (
                   <tr key={entry.id}>
@@ -306,6 +310,23 @@ export function Expiry() {
                       <div className="muted">
                         <LtrText>{entry.product_code}</LtrText>
                       </div>
+                      {(entry.quantity || entry.lot_number || entry.note) && (
+                        <div className="date-entry-evidence">
+                          {entry.quantity && (
+                            <div>
+                              {t("Quantity", "مقدار")}:{" "}
+                              <LtrText>{entry.quantity}</LtrText>
+                            </div>
+                          )}
+                          {entry.lot_number && (
+                            <div>
+                              {t("Lot", "سری ساخت")}:{" "}
+                              <LtrText>{entry.lot_number}</LtrText>
+                            </div>
+                          )}
+                          {entry.note && <div>{entry.note}</div>}
+                        </div>
+                      )}
                     </td>
                     <td className="branch-label">
                       {configuredBranchLabel(state.config, entry.branch, lang)}
@@ -314,7 +335,7 @@ export function Expiry() {
                       <DateText value={entry.date} />
                     </td>
                     <td>
-                      {richer.date_type === "best_before"
+                      {entry.date_type === "best_before"
                         ? t("Best before", "بهترین زمان مصرف")
                         : t("Expiry", "انقضا")}
                     </td>
@@ -322,20 +343,36 @@ export function Expiry() {
                       <LtrText>{days}</LtrText>
                     </td>
                     <td>
-                      <LtrText>
-                        {richer.supplier ?? product?.main_supplier}
-                      </LtrText>
-                      <div className="muted">
+                      {entry.source === "manual" || !entry.invoice_id ? (
+                        t("Manual entry", "ثبت دستی")
+                      ) : (
                         <LtrText>
-                          {entry.invoice_number ??
-                            state.invoices?.find(
-                              (invoice) => invoice.id === entry.invoice_id,
-                            )?.supplier_invoice_number ??
-                            "—"}
+                          {invoice?.supplier ??
+                            retainedSupplier ??
+                            product?.main_supplier}
                         </LtrText>
+                      )}
+                      <div className="muted">
+                        {entry.source === "manual" ? (
+                          entry.created_by
+                        ) : (
+                          <LtrText>
+                            {entry.invoice_number ??
+                              invoice?.supplier_invoice_number ??
+                              "—"}
+                          </LtrText>
+                        )}
+                        {entry.source === "correction" && (
+                          <div>{t("Corrected", "اصلاح‌شده")}</div>
+                        )}
                         {entry.received_date && (
                           <div>
                             <DateText value={entry.received_date} />
+                          </div>
+                        )}
+                        {entry.source === "manual" && entry.created_at && (
+                          <div>
+                            <DateText value={entry.created_at.slice(0, 10)} />
                           </div>
                         )}
                       </div>
@@ -343,7 +380,7 @@ export function Expiry() {
                     <td>
                       <Badge
                         tone={
-                          entry.status === "cleared"
+                          entry.status !== "active"
                             ? "neutral"
                             : days < 0
                               ? "danger"
@@ -352,40 +389,73 @@ export function Expiry() {
                                 : "info"
                         }
                       >
-                        {entry.status === "cleared"
-                          ? t("Cleared", "پاک‌شده")
+                        {entry.status !== "active"
+                          ? t("Removed", "حذف‌شده")
                           : days < 0
                             ? t("Expired", "منقضی‌شده")
                             : days <= state.config.expiry.expiring_soon_days
                               ? t("Expiring soon", "به‌زودی منقضی")
                               : t("Open", "باز")}
                       </Badge>
+                      {entry.status !== "active" && (
+                        <div className="date-entry-evidence">
+                          {entry.removed_reason && (
+                            <div>
+                              {dateRemovalReasonLabel(entry.removed_reason, t)}
+                            </div>
+                          )}
+                          {entry.removal_action === "stop_tracking" && (
+                            <div>
+                              {t(
+                                "Stop tracking this product",
+                                "توقف پیگیری این محصول",
+                              )}
+                            </div>
+                          )}
+                          {entry.removal_action === "undo" && (
+                            <div>{t("Undone", "واگرد شد")}</div>
+                          )}
+                          {entry.removal_action === "correction" && (
+                            <div>{t("Corrected", "اصلاح‌شده")}</div>
+                          )}
+                          {entry.removed_by && <div>{entry.removed_by}</div>}
+                          {entry.removed_at && (
+                            <div>
+                              <DateText value={entry.removed_at.slice(0, 10)} />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td>
                       {entry.status === "active" && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={branch === "all"}
-                          onClick={() => {
-                            try {
-                              update((draft) =>
-                                clearExpiry(draft, context, entry.id),
-                              );
-                              setMessage(t("Cleared.", "پاک شد."));
-                              setError("");
-                            } catch (caught) {
-                              setError(
-                                operationError(
-                                  caught instanceof Error ? caught.message : "",
-                                  t,
-                                ),
-                              );
-                            }
-                          }}
-                        >
-                          {t("Mark as cleared", "علامت‌گذاری به‌عنوان پاک‌شده")}
-                        </Button>
+                        <div className="actions">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              setRemoving(entry.id);
+                              setMessage("");
+                            }}
+                          >
+                            {t("Remove", "حذف")}
+                          </Button>
+                          {role === "supervisor" && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => {
+                                setStopping(entry.product_code);
+                                setMessage("");
+                              }}
+                            >
+                              {t(
+                                "Stop tracking this product",
+                                "توقف پیگیری این محصول",
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -397,11 +467,44 @@ export function Expiry() {
       )}
       <p className="muted">
         {t(
-          "Dates do not prove stock is still on the shelf. Clear only after checking the product. New tracked dates from posted invoices appear here.",
-          "تاریخ‌ها ثابت نمی‌کنند که کالا هنوز در قفسه است. فقط پس از بررسی کالا پاک کنید. تاریخ‌های پیگیری‌شده فاکتورهای ثبت‌شده اینجا ظاهر می‌شوند.",
+          "Dates do not prove stock is still on the shelf. Adding or removing a date does not change stock or supplier balances.",
+          "تاریخ‌ها ثابت نمی‌کنند که کالا هنوز در قفسه است. افزودن یا حذف تاریخ موجودی یا مانده تأمین‌کننده را تغییر نمی‌دهد.",
         )}
       </p>
-    </>
+      <AddDateDialog
+        open={adding}
+        onOpenChange={setAdding}
+        onAdded={(_id, location) => {
+          setWindow("active");
+          setSearch("");
+          setCategory("all");
+          if (role === "supervisor" && branch !== "all") setBranch(location);
+          setMessage(t("Date added.", "تاریخ اضافه شد."));
+        }}
+      />
+      {removing && (
+        <RemoveDateDialog
+          open
+          entryId={removing}
+          onOpenChange={(open) => {
+            if (!open) setRemoving(null);
+          }}
+          onSaved={() => setMessage(t("Date removed.", "تاریخ حذف شد."))}
+        />
+      )}
+      {stopping && (
+        <StopTrackingDialog
+          open
+          productCode={stopping}
+          onOpenChange={(open) => {
+            if (!open) setStopping(null);
+          }}
+          onSaved={() =>
+            setMessage(t("Date tracking stopped.", "پیگیری تاریخ متوقف شد."))
+          }
+        />
+      )}
+    </div>
   );
 }
 export default Expiry;

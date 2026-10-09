@@ -24,6 +24,55 @@
   inline-size: 120px;
   max-inline-size: 120px;
 }
+.order-items-table td,
+.order-items-table th {
+  padding-inline: 12px;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+}
+.order-items-table .product-name strong,
+.order-items-table .product-name small {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: visible;
+  text-overflow: clip;
+}
+.order-items-heading {
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-block-start: 24px;
+}
+.order-items-heading h2 {
+  margin: 0;
+}
+.order-new-item-row td:first-child {
+  display: table-cell;
+}
+.order-new-item-row td:first-child > strong,
+.order-new-item-row td:first-child > .pill {
+  display: block;
+  inline-size: fit-content;
+  margin-block-end: 8px;
+}
+.new-order-item-dialog form {
+  display: grid;
+  gap: 20px;
+}
+.new-order-item-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.new-order-item-fields .field {
+  inline-size: 144px;
+}
+.new-order-item-dialog .actions {
+  margin-block-start: 4px;
+}
+.order-estimate-incomplete {
+  margin-block: 0 20px;
+}
 .order-item-caption {
   display: block;
   color: var(--text-muted);
@@ -86,20 +135,30 @@
 .order-progress-table {
   margin-block-start: 20px;
 }
-.order-print-dialog {
-  max-inline-size: 1040px;
+.ui-dialog.order-print-dialog {
+  inline-size: min(900px, calc(100vw - 32px));
+  max-inline-size: 900px;
 }
 .order-sheet-preview {
-  overflow: auto;
-  max-block-size: 60vh;
+  inline-size: 100%;
+  min-inline-size: 0;
   margin-block-end: 20px;
-  border-radius: 8px;
-  background: #fff;
-  color: #000;
+  background: var(--surface-soft);
+  padding: 0;
+}
+.order-sheet-frame {
+  position: relative;
+  margin-inline: auto;
+}
+.order-sheet-scaled {
+  position: absolute;
+  inset-block-start: 0;
+  left: 0;
+  inline-size: 210mm;
+  transform-origin: top left;
 }
 .order-sheet-preview .order-print-output {
-  padding: 24px;
-  min-inline-size: 680px;
+  padding: 0;
 }
 .order-print-output .operational-print-meta {
   display: flex;
@@ -135,6 +194,25 @@
   display: block;
   margin-block-start: 6px;
 }
+.order-print-table th .operational-bilingual {
+  justify-items: end;
+}
+.order-print-table th:first-child .operational-bilingual {
+  justify-items: start;
+}
+.order-print-table th .operational-bilingual > span {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.order-print-new-item {
+  display: block;
+  inline-size: fit-content;
+  border: 0.25mm solid #777;
+  border-radius: 3mm;
+  padding: 1mm 2mm;
+  margin-block: 2mm;
+  font-size: 8pt;
+}
 .order-print-table .order-print-unit-size {
   display: block;
   margin-block-start: 4px;
@@ -149,7 +227,72 @@
 .order-print-total strong {
   font-size: 18px;
 }
-@media (max-width: 700px) {
+@media (max-width: 760px) {
+  .order-items-table {
+    overflow: visible;
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .order-items-table table,
+  .order-items-table tbody {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .order-items-table colgroup,
+  .order-items-table thead {
+    display: none;
+  }
+  .order-items-table tbody {
+    display: grid;
+    gap: 16px;
+  }
+  .order-items-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--surface-soft);
+  }
+  .order-items-table tbody td,
+  .order-new-item-row td:first-child {
+    display: block;
+    min-inline-size: 0;
+    padding: 0;
+    border-radius: 0;
+    text-align: start;
+    background: transparent;
+  }
+  .order-items-table tbody td:first-child {
+    grid-column: 1 / -1;
+  }
+  .order-items-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-block-end: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .order-items-table td:first-child::before {
+    display: none;
+  }
+  .order-items-table .ui-number {
+    inline-size: 100%;
+    max-inline-size: 144px;
+    min-inline-size: 0;
+  }
+  .order-items-table .ui-number input {
+    min-inline-size: 0;
+  }
+  .order-items-table .field-label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
   .order-detail-meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;

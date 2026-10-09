@@ -1,7 +1,8 @@
 import { useDemo } from "./store";
 import { manualPrice, rulePrice, sellingMargin } from "./manual-prices";
 import { Badge } from "./ui";
-import { LtrText, Money } from "./presentation";
+import { LtrText } from "./presentation";
+import { ProductPrice } from "./weight-price-presentation";
 import type { Branch, Product } from "./types";
 
 export function ManualPricePill({
@@ -42,8 +43,14 @@ export function ManualPriceDetails({
   return (
     <div className="manual-price-details">
       <p className="helper manual-price-comparison">
-        {t("Rule price", "قیمت طبق قاعده")} <Money value={rule} /> ·{" "}
-        {t("Manual price", "قیمت دستی")} <Money value={marker.price} />
+        {t("Rule price", "قیمت طبق قاعده")}{" "}
+        <ProductPrice value={rule} product={product} config={state.config} /> ·{" "}
+        {t("Manual price", "قیمت دستی")}{" "}
+        <ProductPrice
+          value={marker.price}
+          product={product}
+          config={state.config}
+        />
       </p>
       {role === "supervisor" && margin !== null && (
         <p className="helper manual-price-margin">

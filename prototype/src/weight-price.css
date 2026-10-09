@@ -1,0 +1,31 @@
+.weight-price,
+.weight-cost {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15em;
+  max-inline-size: 100%;
+}
+.weight-price-main {
+  white-space: nowrap;
+}
+.weight-price-secondary {
+  font-size: max(0.65em, 11px);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.shelf-label .shelf-label-content .price .weight-price {
+  flex-wrap: nowrap;
+  gap: 0.1em;
+  font-size: 25px;
+  line-height: 36px;
+}
+.shelf-label .shelf-label-content .price .weight-price-secondary {
+  font-size: 11px;
+}
+.shelf-label .promo-label-price .weight-price {
+  justify-content: center;
+}
+.shelf-label .promo-label-price .weight-price-secondary {
+  font-size: 32px;
+}

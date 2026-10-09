@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import Decimal from "decimal.js";
 import { configSeed, demoSeed } from "./config";
 import {
   activateOffer,
@@ -19,7 +20,12 @@ import {
   isOfferScheduledNow,
   pendingPrice,
 } from "./catalog";
-import { createInvoice, postInvoice, recalculateInvoice } from "./invoice";
+import {
+  companyDate,
+  createInvoice,
+  postInvoice,
+  recalculateInvoice,
+} from "./invoice";
 import { initialState } from "./store";
 import type { Approval, DemoState, Offer, Product } from "./types";
 
@@ -93,14 +99,26 @@ function prepareInvoice(state: DemoState, cost?: string): void {
     note: "Fictional supplier label needs checking.",
   };
   if (cost) {
-    state.invoice.lines.find(
+    const line = state.invoice.lines.find(
       (line) => line.product_code === "0002",
-    )!.unit_cost_before_tax = cost;
+    )!;
+    line.unit_cost_before_tax = cost;
+    if (line.quantity_unit === "cases")
+      line.case_cost_before_tax = new Decimal(cost)
+        .times(line.units_per_case!)
+        .toFixed(4);
     recalculateInvoice(state.invoice, state.config);
   }
   state.invoice.lines.forEach((line) => {
     line.review_confirmed = true;
     line.date_confirmed = true;
+    if (line.date_tracking)
+      line.date_value = new Date(
+        new Date(`${companyDate(state.config)}T12:00:00Z`).getTime() +
+          180 * 86400000,
+      )
+        .toISOString()
+        .slice(0, 10);
   });
 }
 

@@ -8,6 +8,7 @@ import { createOrder, placeOrder, type OrderContext } from "./orders";
 import {
   addManualLine,
   createInvoice,
+  dateAfter,
   invoiceBlockers,
   lowerPriceLines,
   postInvoice,
@@ -87,6 +88,10 @@ function fixture(
     line.qty_received_at_posting = [firstReceived, secondReceived][index];
     line.review_confirmed = true;
     line.date_confirmed = true;
+    if (line.date_tracking) {
+      line.date_type = "best_before";
+      line.date_value = dateAfter(state.invoice.invoice_date!, 180);
+    }
   }
   recalculateInvoice(state.invoice, state.config);
   setInvoiceOrder(state, "supervisor", branch, order.id);
@@ -94,12 +99,19 @@ function fixture(
     setInvoiceExtraDecision(state, "supervisor", branch, 0, "refuse");
   state.invoice.order_missing_decisions = Object.fromEntries(
     order.lines
-      .filter(
-        (line) =>
+      .filter((line) => {
+        expect(line.new_item).toBeUndefined();
+        expect(line.ordered_units).not.toBeNull();
+        if (line.ordered_units === null)
+          throw new Error(
+            "This receipt fixture requires a normal packed supplier item.",
+          );
+        return (
           state.invoice.lines.find(
             (received) => received.supplier_item_id === line.supplier_item_id,
-          )!.qty_received_at_posting < line.ordered_units,
-      )
+          )!.qty_received_at_posting < line.ordered_units
+        );
+      })
       .map((line) => [line.id, "short"]),
   );
   for (const line of state.invoice.lines) {

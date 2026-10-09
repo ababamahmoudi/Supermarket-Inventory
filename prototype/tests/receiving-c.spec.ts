@@ -194,7 +194,9 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("2.79");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("2.79");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();

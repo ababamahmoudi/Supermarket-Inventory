@@ -8,6 +8,7 @@ import {
 import { createPortal, flushSync } from "react-dom";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { ProductPrice } from "../weight-price-presentation";
 import { translateCount } from "../i18n";
 import {
   labelContentGeometry,
@@ -254,9 +255,10 @@ function ShelfLabel({
                 currency={state.config.company.currency}
               />
             ) : (
-              <Money
+              <ProductPrice
                 value={effectivePrice(state, product, branch)!}
-                currency={state.config.company.currency}
+                product={product}
+                config={state.config}
               />
             )}
           </div>
@@ -264,9 +266,10 @@ function ShelfLabel({
             {offer && (
               <>
                 {t("Regular", "عادی")}{" "}
-                <Money
+                <ProductPrice
                   value={effectivePrice(state, product, branch)!}
-                  currency={state.config.company.currency}
+                  product={product}
+                  config={state.config}
                 />
               </>
             )}
@@ -318,9 +321,10 @@ function ShelfLabel({
       >
         <span className="price" dir="ltr">
           {fields.price && (
-            <Money
+            <ProductPrice
               value={effectivePrice(state, product, branch)!}
-              currency={state.config.company.currency}
+              product={product}
+              config={state.config}
             />
           )}
         </span>

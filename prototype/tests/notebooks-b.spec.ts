@@ -19,7 +19,9 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
   await dialog
     .getByLabel("Name (English)", { exact: true })
     .fill("Cleaning log");
-  await dialog.getByLabel("Name (Persian)", { exact: true }).fill("دفتر نظافت");
+  await dialog
+    .getByLabel("Name (Persian, optional)", { exact: true })
+    .fill("دفتر نظافت");
   await chooseOption(
     page,
     dialog.getByLabel("Branch", { exact: true }),

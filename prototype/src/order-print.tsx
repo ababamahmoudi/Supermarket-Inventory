@@ -67,7 +67,7 @@ export function OrderPrintDocument({
                 />
               </th>
               <th>
-                <BilingualPrintText en="Units per case" fa="واحد در کارتن" />
+                <BilingualPrintText en="Pack" fa="بسته" />
               </th>
               <th>
                 <BilingualPrintText en="Cases" fa="کارتن" />
@@ -97,6 +97,11 @@ export function OrderPrintDocument({
                     product={line}
                     language={line.name_fa ? language : "en"}
                   />
+                  {line.new_item && (
+                    <span className="order-print-new-item">
+                      <BilingualPrintText en="New item" fa="کالای جدید" />
+                    </span>
+                  )}
                   {line.unit_size &&
                     !line.name_en
                       .replace(/\s/g, "")
@@ -114,13 +119,20 @@ export function OrderPrintDocument({
                   </bdi>
                 </td>
                 <td>
-                  <bdi dir="ltr">{line.units_per_case}</bdi>
+                  <bdi dir="ltr">
+                    {line.quantity_unit === "lb"
+                      ? `${line.case_weight ?? "—"} ${line.case_weight_unit ?? ""}`
+                      : (line.units_per_case ?? "—")}
+                  </bdi>
                 </td>
                 <td>
                   <bdi dir="ltr">{line.ordered_cases}</bdi>
                 </td>
                 <td>
-                  <bdi dir="ltr">{line.ordered_units}</bdi>
+                  <bdi dir="ltr">
+                    {line.ordered_units ?? "—"}
+                    {line.quantity_unit === "lb" ? " lb" : ""}
+                  </bdi>
                 </td>
                 <td>
                   <bdi dir="ltr">{amount(line.expected_unit_cost)}</bdi>
@@ -143,6 +155,12 @@ export function OrderPrintDocument({
           <strong>
             <bdi dir="ltr">{amount(order.expected_total_before_tax)}</bdi>
           </strong>
+          {order.estimate_incomplete && (
+            <BilingualPrintText
+              en="Estimate incomplete"
+              fa="برآورد کامل نیست"
+            />
+          )}
         </div>
       </OperationalPrintDocument>
     </div>

@@ -56,7 +56,8 @@ export function NotebookEditor({
     value: NotebookInput[K],
   ) => {
     if (
-      (["name", "duplicate"].includes(errorField) &&
+      (errorField === "name" && key === "name_en") ||
+      (errorField === "duplicate" &&
         (key === "name_en" || key === "name_fa")) ||
       (errorField === "unit" && key === "fields") ||
       (["branch", "location_unavailable"].includes(errorField) &&
@@ -145,12 +146,7 @@ export function NotebookEditor({
               autoFocus
             />
           </Field>
-          <Field
-            label={t("Name (Persian)", "نام (فارسی)")}
-            error={
-              errorField === "name" && !form.name_fa.trim() ? error : undefined
-            }
-          >
+          <Field label={t("Name (Persian, optional)", "نام (فارسی، اختیاری)")}>
             <input
               dir="rtl"
               value={form.name_fa}
@@ -341,7 +337,9 @@ export function NotebookSettings() {
               <div>
                 <strong>
                   <bdi dir="auto">
-                    {lang === "fa" ? item.name_fa : item.name_en}
+                    {lang === "fa"
+                      ? item.name_fa || item.name_en
+                      : item.name_en}
                   </bdi>
                 </strong>
                 <p className="muted">

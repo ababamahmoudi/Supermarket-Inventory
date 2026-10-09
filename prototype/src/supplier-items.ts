@@ -3,8 +3,10 @@ import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import { effectiveInvoiceLocation, receivedLog } from "./received";
+import { effectiveInvoiceVersion } from "./invoice-version";
+import { weightQuantityPerLb, weightQuantityFromLb } from "./weighed";
 import type { OperationsContext } from "./operations";
-import type { Branch, DemoState } from "./types";
+import type { Branch, DemoState, DemoInvoice } from "./types";
 
 /** Editable supplier metadata. Purchases remain immutable invoice evidence. */
 export interface SupplierItemDefinition {
@@ -15,6 +17,9 @@ export interface SupplierItemDefinition {
   product_code: string;
   supplier_item_code: string;
   units_per_case: number;
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
   source_keys?: { product_code: string; supplier_item_code: string }[];
   quoted_unit_cost_before_tax?: string;
   quoted_by?: string;
@@ -44,6 +49,9 @@ export interface SupplierItemPurchase {
   unit_cost_before_tax: string;
   case_cost_before_tax: string;
   short_dated: boolean;
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
 }
 
 /** Internal purchasing facts; presentation must use the role-redacted selector. */
@@ -69,6 +77,9 @@ export interface SupplierItemFact {
   quoted_by?: string;
   quoted_at?: string;
   history: SupplierItemPurchase[];
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
 }
 
 export interface SupplierItemRow {
@@ -155,6 +166,36 @@ export function costPerCase(unitCost: string, pack: number): string {
 
 export function costPerUnit(caseCost: string, pack: number): string {
   return cost(caseCost).div(validPack(pack)).toFixed(4, Decimal.ROUND_HALF_UP);
+}
+
+/** Retained source weight/cost preserve case estimates independently of rounded per-lb prices. */
+export function invoiceCaseCostBeforeTax(
+  line: DemoInvoice["lines"][number],
+): string {
+  if (
+    line.source_quantity_unit &&
+    line.case_weight &&
+    line.case_weight_unit &&
+    line.weight_conversion_factor &&
+    line.source_cost_before_tax &&
+    line.source_cost_unit
+  )
+    return new Decimal(line.source_cost_before_tax)
+      .times(
+        weightQuantityFromLb(
+          weightQuantityPerLb(
+            line.case_weight,
+            line.case_weight_unit,
+            line.weight_conversion_factor,
+          ),
+          line.source_cost_unit,
+          line.weight_conversion_factor,
+        ),
+      )
+      .toFixed(4, Decimal.ROUND_HALF_UP);
+  return line.case_cost_before_tax !== undefined
+    ? cost(line.case_cost_before_tax).toFixed(4)
+    : costPerCase(line.unit_cost_before_tax, line.units_per_case ?? 1);
 }
 
 const sourceKey = (product: string, code: string) =>
@@ -251,6 +292,13 @@ export function supplierItemFacts(
           }
         : {}),
       history: [],
+      ...(definition?.case_weight
+        ? {
+            case_weight: definition.case_weight,
+            case_weight_unit: definition.case_weight_unit,
+            weight_conversion_factor: definition.weight_conversion_factor,
+          }
+        : {}),
     };
     facts.set(id, fact);
     return fact;
@@ -262,11 +310,17 @@ export function supplierItemFacts(
       definition.supplier_item_code,
       definition.units_per_case,
     );
-  for (const invoice of invoices.values()) {
+  for (const original of invoices.values()) {
+    const invoice = effectiveInvoiceVersion(state, original);
     invoice.lines.forEach((line, index) => {
-      const accepted =
-        Math.max(0, line.qty_received_at_posting - (line.refused_units ?? 0)) +
-        (line.qty_later_received ?? 0);
+      const accepted = Decimal.max(
+        0,
+        new Decimal(line.qty_received_at_posting).minus(
+          line.refused_units ?? 0,
+        ),
+      )
+        .plus(line.qty_later_received ?? 0)
+        .toNumber();
       if (line.company_id !== company || accepted <= 0) return;
       const itemCode = line.supplier_item_code?.trim() ?? "";
       const key = sourceKey(line.product_code, itemCode);
@@ -299,16 +353,16 @@ export function supplierItemFacts(
       const latest = matchingReceipts[0];
       const at =
         latest?.received_at ??
-        invoice.posted_at ??
-        invoice.received_at ??
-        invoice.invoice_date ??
+        original.posted_at ??
+        original.received_at ??
+        original.invoice_date ??
         "";
       const date =
         latest?.date ??
         (
-          invoice.received_at ??
-          invoice.posted_at ??
-          invoice.invoice_date ??
+          original.received_at ??
+          original.posted_at ??
+          original.invoice_date ??
           ""
         ).slice(0, 10);
       const fact = factFor(
@@ -334,11 +388,15 @@ export function supplierItemFacts(
         units_per_case: pack,
         received_units: accepted,
         unit_cost_before_tax: cost(line.unit_cost_before_tax).toFixed(4),
-        case_cost_before_tax:
-          line.case_cost_before_tax !== undefined
-            ? cost(line.case_cost_before_tax).toFixed(4)
-            : costPerCase(line.unit_cost_before_tax, pack),
+        case_cost_before_tax: invoiceCaseCostBeforeTax(line),
         short_dated: line.short_dated === true,
+        ...(line.case_weight
+          ? {
+              case_weight: line.case_weight,
+              case_weight_unit: line.case_weight_unit,
+              weight_conversion_factor: line.weight_conversion_factor,
+            }
+          : {}),
       });
     });
   }
@@ -356,6 +414,12 @@ export function supplierItemFacts(
         (purchase) => branch === "all" || purchase.branch === branch,
       );
       const last = fact.history[0];
+      const definition = definitions.find((record) => record.id === fact.id);
+      if (!definition?.case_weight && last?.case_weight) {
+        fact.case_weight = last.case_weight;
+        fact.case_weight_unit = last.case_weight_unit;
+        fact.weight_conversion_factor = last.weight_conversion_factor;
+      }
       fact.last_bought_unit_cost = last?.unit_cost_before_tax ?? null;
       fact.last_bought_case_cost = last?.case_cost_before_tax ?? null;
       fact.last_bought_units_per_case = last?.units_per_case ?? null;
@@ -584,6 +648,116 @@ export function saveSupplierItem(
     entity_type: "supplier_item",
     entity_id: record.id,
     before,
+    after: structuredClone(record),
+  });
+  return record;
+}
+
+/** A received temporary order item becomes supplier metadata only at posting. */
+export function associatePostedSupplierItem(
+  state: DemoState,
+  context: OperationsContext,
+  invoice: DemoInvoice,
+  lineIndex: number,
+): SupplierItemDefinition {
+  scope(state, context.company_id, context.branch);
+  const line = invoice.lines[lineIndex];
+  if (context.role === "cashier") throw new SupplierItemError("permission");
+  if (
+    invoice.company_id !== context.company_id ||
+    invoice.status !== "posted" ||
+    !line ||
+    line.company_id !== context.company_id ||
+    (context.role !== "supervisor" &&
+      context.branch !== (invoice.handling_branch ?? invoice.branch))
+  )
+    throw new SupplierItemError("scope");
+  if (
+    new Decimal(line.qty_received_at_posting)
+      .minus(line.refused_units ?? 0)
+      .lte(0)
+  )
+    throw new SupplierItemError("quantity");
+  const supplier = supplierRecords(state).find(
+    (item) =>
+      item.company_id === context.company_id &&
+      supplierMatches(item, invoice.supplier),
+  );
+  if (!supplier?.active || supplier.status !== "confirmed")
+    throw new SupplierItemError("supplier");
+  if (
+    !state.products.some(
+      (product) =>
+        product.company_id === context.company_id &&
+        product.code === line.product_code &&
+        product.status !== "archived",
+    )
+  )
+    throw new SupplierItemError("product");
+  const pack = validPack(line.units_per_case ?? 1);
+  const code = line.supplier_item_code?.trim() ?? "";
+  const facts = supplierItemFacts(
+    state,
+    context.company_id,
+    invoice.supplier,
+    "all",
+  );
+  const fact = facts.find(
+    (item) =>
+      item.product_code === line.product_code &&
+      item.supplier_item_code === code,
+  );
+  const prior = state.supplier_items?.find(
+    (item) =>
+      item.company_id === context.company_id &&
+      item.supplier_id === supplier.id &&
+      (item.id === line.supplier_item_id ||
+        (item.product_code === line.product_code &&
+          item.supplier_item_code === code)),
+  );
+  if (prior) {
+    if (
+      prior.archived ||
+      prior.product_code !== line.product_code ||
+      prior.supplier_item_code !== code
+    )
+      throw new SupplierItemError("duplicate");
+    return prior;
+  }
+  if (
+    line.supplier_item_id &&
+    state.supplier_items?.some(
+      (item) =>
+        item.id === line.supplier_item_id &&
+        (item.company_id !== context.company_id ||
+          item.supplier_id !== supplier.id),
+    )
+  )
+    throw new SupplierItemError("scope");
+  const record: SupplierItemDefinition = {
+    id: fact?.id ?? line.supplier_item_id ?? createId("supplier-item"),
+    company_id: context.company_id,
+    supplier_id: supplier.id,
+    supplier_name: supplier.name,
+    product_code: line.product_code,
+    supplier_item_code: code,
+    units_per_case: pack,
+    created_at: invoice.posted_at ?? new Date().toISOString(),
+    created_by: context.actor,
+  };
+  state.supplier_items ??= [];
+  state.supplier_items.push(record);
+  state.activity.push({
+    id: `${invoice.id}:order-supplier-item:${lineIndex}`,
+    company_id: context.company_id,
+    branch: effectiveInvoiceLocation(state, invoice),
+    action: "Associate ordered new item",
+    by: context.actor,
+    at: record.created_at,
+    reversible: false,
+    entity_type: "supplier_item",
+    entity_id: record.id,
+    before: null,
     after: structuredClone(record),
   });
   return record;

@@ -1,4 +1,6 @@
 import Decimal from "decimal.js";
+import { effectiveInvoiceVersion } from "./invoice-version";
+import { weightQuantityFromLb } from "./weighed";
 import { clearInvoiceOrder } from "./invoice-orders";
 import { companyDate } from "./invoice";
 import { branchId, configuredBranches } from "./settings";
@@ -55,6 +57,11 @@ export interface DeliveryReceipt {
   cases: string;
   kind: "invoice" | "short_delivery" | "replacement";
   return_id?: string;
+  sold_by?: "each" | "weight";
+  source_quantity?: string;
+  source_quantity_unit?: "kg" | "lb";
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
 }
 
 export interface ReceivedFilters {
@@ -192,7 +199,9 @@ export function receivedLog(
     if (
       !line ||
       line.company_id !== context.company_id ||
-      !Number.isSafeInteger(units) ||
+      (line.sold_by === "weight"
+        ? !Number.isFinite(units)
+        : !Number.isSafeInteger(units)) ||
       units <= 0
     )
       return;
@@ -217,15 +226,34 @@ export function receivedLog(
       units_per_case: pack,
       cases: new Decimal(units).div(pack).toDecimalPlaces(4).toString(),
       kind,
+      sold_by: line.sold_by ?? "each",
+      source_quantity:
+        line.sold_by === "weight"
+          ? new Decimal(
+              weightQuantityFromLb(
+                units,
+                line.source_quantity_unit ?? "lb",
+                line.weight_conversion_factor ?? state.config,
+              ),
+            )
+              .toDecimalPlaces(3)
+              .toString()
+          : undefined,
+      source_quantity_unit: line.source_quantity_unit,
+      case_weight: line.case_weight,
+      case_weight_unit: line.case_weight_unit,
     });
   };
-  for (const invoice of postedInvoices(state)) {
-    if (invoice.company_id !== context.company_id) continue;
+  for (const original of postedInvoices(state)) {
+    if (original.company_id !== context.company_id) continue;
+    const invoice = effectiveInvoiceVersion(state, original);
     invoice.lines.forEach((line, index) => {
       add(
         invoice,
         index,
-        line.qty_received_at_posting - (line.refused_units ?? 0),
+        new Decimal(line.qty_received_at_posting)
+          .minus(line.refused_units ?? 0)
+          .toNumber(),
         `${invoice.id}:received:${index}`,
         invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
         invoice.receiving_employee ?? "",

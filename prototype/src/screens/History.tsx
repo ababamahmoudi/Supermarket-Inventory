@@ -28,17 +28,61 @@ import {
   Select,
 } from "../ui";
 import type { Activity } from "../types";
+import { useListState } from "../navigation";
 import "./history-b.css";
+
+function InvoiceVersionLinks({ entry }: { entry: Activity }) {
+  const { t } = useDemo();
+  if (entry.entity_type !== "invoice_content_correction" || !entry.entity_id)
+    return null;
+  const before = entry.before as { version_id?: string } | undefined;
+  const after = entry.after as { version_id?: string } | undefined;
+  if (!after?.version_id) return null;
+  const route = `#invoices?id=${encodeURIComponent(entry.entity_id)}&version=`;
+  return (
+    <div className="history-invoice-version-links">
+      <Button asChild variant="secondary" size="sm">
+        <a href={`${route}original`}>{t("View original", "نمایش اصل")}</a>
+      </Button>
+      {before?.version_id && before.version_id !== "original" && (
+        <Button asChild variant="secondary" size="sm">
+          <a href={`${route}${encodeURIComponent(before.version_id)}`}>
+            {t("View previous version", "نمایش نسخه قبلی")}
+          </a>
+        </Button>
+      )}
+      <Button asChild variant="secondary" size="sm">
+        <a href={`${route}${encodeURIComponent(after.version_id)}`}>
+          {t("View corrected", "نمایش اصلاح‌شده")}
+        </a>
+      </Button>
+    </div>
+  );
+}
 
 export default function History() {
   const { state, role, user, lang, t, tCount, historyContext, revertActivity } =
     useDemo();
-  const [person, setPerson] = useState("all");
-  const [branch, setBranch] = useState("all");
-  const [action, setAction] = useState("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useListState("history", {
+    person: "all",
+    branch: "all",
+    action: "all",
+    from: "",
+    to: "",
+    search: "",
+  });
+  const { person, branch, action, from, to, search } = filters;
+  const setPerson = (person: string) =>
+    setFilters((current) => ({ ...current, person }));
+  const setBranch = (branch: string) =>
+    setFilters((current) => ({ ...current, branch }));
+  const setAction = (action: string) =>
+    setFilters((current) => ({ ...current, action }));
+  const setFrom = (from: string) =>
+    setFilters((current) => ({ ...current, from }));
+  const setTo = (to: string) => setFilters((current) => ({ ...current, to }));
+  const setSearch = (search: string) =>
+    setFilters((current) => ({ ...current, search }));
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -106,6 +150,23 @@ export default function History() {
         draft: ["Draft", "پیش‌نویس"],
         review: ["Needs review", "نیاز به بررسی"],
         cleared: ["Cleared", "پاک‌شده"],
+        removed: ["Removed", "حذف‌شده"],
+        sold_out: ["Sold out", "فروخته شد"],
+        thrown_away: ["Thrown away", "دور ریخته شد"],
+        returned_to_supplier: [
+          "Returned to supplier",
+          "به تأمین‌کننده برگشت داده شد",
+        ],
+        entered_by_mistake: ["Entered by mistake", "اشتباهی وارد شد"],
+        stop_tracking: ["Stop tracking this product", "توقف پیگیری این کالا"],
+        expiry: ["Expiry", "انقضا"],
+        best_before: ["Best before", "بهترین زمان مصرف"],
+        manual: ["Manual", "دستی"],
+        invoice: ["Invoice", "فاکتور"],
+        correction: ["Correction", "اصلاح"],
+        undo: ["Undo", "واگرد"],
+        remove: ["Remove", "حذف"],
+        superseded: ["Superseded", "جایگزین‌شده"],
         confirmed: ["Confirmed", "تأییدشده"],
         proposed: ["Proposed", "پیشنهادی"],
       };
@@ -319,6 +380,8 @@ export default function History() {
                       <LtrText>
                         {t("Product Code", "کد محصول")} {entry.product_code}
                       </LtrText>
+                    ) : entry.entity_type === "invoice_content_correction" ? (
+                      t("Invoice", "فاکتور")
                     ) : entry.entity_type === "settings" ? (
                       t("Settings", "تنظیمات")
                     ) : entry.entity_type === "supplier" ? (
@@ -337,7 +400,9 @@ export default function History() {
                   </td>
                   <td>{summary(entry)}</td>
                   <td>
-                    {canReverse(state, entry, historyContext, "revert") ? (
+                    {entry.entity_type === "invoice_content_correction" ? (
+                      <InvoiceVersionLinks entry={entry} />
+                    ) : canReverse(state, entry, historyContext, "revert") ? (
                       <Button
                         variant="secondary"
                         size="sm"

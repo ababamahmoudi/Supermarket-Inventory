@@ -15,6 +15,7 @@ import {
 } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
 import SupplierItems from "./SupplierItems";
+import { SupplierReturnsPanel } from "./SupplierReturnsPanel";
 import { supplierItems } from "../supplier-items";
 import Received from "./Received";
 import { translateCount } from "../i18n";
@@ -212,16 +213,6 @@ export default function Suppliers() {
     value === "proposed"
       ? t("Proposed", "پیشنهادی")
       : t("Confirmed", "تأییدشده");
-  const returnStatus = (value: string) =>
-    ({
-      open: t("Open", "باز"),
-      picked_up: t("Picked up", "جمع‌آوری‌شده"),
-      partially_resolved: t("Partially resolved", "تا حدی حل‌شده"),
-      resolved: t("Resolved", "حل‌شده"),
-      cancelled: t("Cancelled", "لغوشده"),
-      cancellation_review: t("Needs review", "نیاز به بررسی"),
-      claim_pending: t("Pending", "در انتظار"),
-    })[value] ?? value;
   const invoiceStatus = (value: string) =>
     value === "posted" ? t("Posted", "ثبت‌شده") : t("Draft", "پیش‌نویس");
   const compareValue = (supplier: SupplierOverviewRow, key: SortKey) => {
@@ -804,70 +795,7 @@ export default function Suppliers() {
           />
         )}
         {effectiveTab === "returns" && (
-          <DataTable
-            columns={[
-              { width: "140px" },
-              { width: "120px" },
-              { width: "140px" },
-              { width: "80px", align: "end" },
-              { width: "170px" },
-              ...(supervisor
-                ? [{ width: "140px", align: "end" as const }]
-                : []),
-              { width: "80px", actions: true },
-            ]}
-          >
-            <thead>
-              <tr>
-                <th>{t("Return #", "مرجوعی شماره")}</th>
-                <th>{t("Branch", "شعبه")}</th>
-                <th>{t("Created", "ایجادشده")}</th>
-                <th>{t("Items", "اقلام")}</th>
-                <th>{t("Status", "وضعیت")}</th>
-                {supervisor && (
-                  <th>{t("Credit or compensation", "اعتبار یا جبران")}</th>
-                )}
-                <th>{t("Actions", "عملیات")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.returns.map((record) => (
-                <tr key={record.id}>
-                  <td>
-                    {t("Return", "مرجوعی")} <LtrText>#{record.number}</LtrText>
-                  </td>
-                  <td>{branchName(record.branch)}</td>
-                  <td>
-                    <DateText value={record.created_at} />
-                  </td>
-                  <td>{record.items}</td>
-                  <td>
-                    <Badge>{returnStatus(record.status)}</Badge>
-                  </td>
-                  {record.financial && (
-                    <td>
-                      {record.financial.compensation ? (
-                        money(record.financial.compensation)
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                  )}
-                  <td>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`return?id=${encodeURIComponent(record.id)}`)
-                      }
-                    >
-                      {t("View", "نمایش")}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DataTable>
+          <SupplierReturnsPanel rows={detail.returns} supplier={current.name} />
         )}
         {effectiveTab === "shorts" && (
           <DataTable
@@ -948,6 +876,10 @@ export default function Suppliers() {
                         order_differences: t(
                           "Invoice and order differences",
                           "اختلاف‌های فاکتور و سفارش",
+                        ),
+                        return_credit_overdue: t(
+                          "Return waiting for credit",
+                          "مرجوعی در انتظار اعتبار",
                         ),
                       }[alert.type]
                     }

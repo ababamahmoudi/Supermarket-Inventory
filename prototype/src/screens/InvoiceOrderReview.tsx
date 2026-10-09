@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { useState } from "react";
 import { useDemo } from "../store";
 import {
   compatibleInvoiceOrders,
@@ -7,7 +8,9 @@ import {
   linkedInvoiceOrder,
   setInvoiceExtraDecision,
   setInvoiceOrder,
+  setInvoiceNewItemMatch,
 } from "../invoice-orders";
+import { orderError } from "../c-orders-i18n";
 import { previousReceiptCost } from "../invoice";
 import {
   Badge,
@@ -25,6 +28,7 @@ import "./invoice-orders.css";
 
 export function InvoiceOrderReview() {
   const { state, update, role, branch, user, lang, t } = useDemo();
+  const [matchErrors, setMatchErrors] = useState<Record<string, string>>({});
   const invoice = state.invoice;
   const origin = user?.branch ?? branch;
   if (!role || !invoiceReviewerAllowed(state, invoice, role, origin))
@@ -84,6 +88,146 @@ export function InvoiceOrderReview() {
           <LtrText>{order.reference}</LtrText> ·{" "}
           <LtrText>{order.supplier}</LtrText>
         </p>
+      )}
+      {order?.lines.some((line) => line.new_item) && (
+        <div className="invoice-new-item-matches">
+          {order.lines
+            .filter((line) => line.new_item)
+            .map((temporary) => {
+              const matchedIndex = invoice.lines.findIndex(
+                (line) =>
+                  line.order_new_item_match?.order_line_id === temporary.id ||
+                  line.order_item_id === temporary.id,
+              );
+              const actual =
+                matchedIndex >= 0 ? invoice.lines[matchedIndex] : undefined;
+              return (
+                <div key={temporary.id} className="invoice-new-item-match">
+                  <div className="invoice-new-item-name">
+                    <strong>
+                      <bdi dir="auto">
+                        {lang === "fa"
+                          ? temporary.name_fa || temporary.name_en
+                          : temporary.name_en}
+                      </bdi>
+                    </strong>
+                    <Badge tone="info">{t("New item", "کالای جدید")}</Badge>
+                  </div>
+                  {!locked && !temporary.new_item_association ? (
+                    <Field
+                      label={`${t("Match invoice line", "تطبیق ردیف فاکتور")} — ${temporary.name_en}`}
+                      error={
+                        matchErrors[temporary.id]
+                          ? orderError(new Error(matchErrors[temporary.id]), t)
+                          : undefined
+                      }
+                      hint={t(
+                        "Choose the actual product in the invoice. Supplier items are added only after posting.",
+                        "کالای واقعی در فاکتور را انتخاب کنید. کالاهای تأمین‌کننده فقط پس از ثبت فاکتور اضافه می‌شوند.",
+                      )}
+                    >
+                      <Select
+                        value={matchedIndex < 0 ? "" : String(matchedIndex)}
+                        disabled={!!stale}
+                        onChange={(value) => {
+                          setMatchErrors((current) => ({
+                            ...current,
+                            [temporary.id]: "",
+                          }));
+                          try {
+                            mutate((draft) =>
+                              setInvoiceNewItemMatch(
+                                draft,
+                                role,
+                                origin,
+                                temporary.id,
+                                value === "" ? null : Number(value),
+                              ),
+                            );
+                          } catch (cause) {
+                            setMatchErrors((current) => ({
+                              ...current,
+                              [temporary.id]:
+                                cause instanceof Error
+                                  ? cause.message
+                                  : "match",
+                            }));
+                          }
+                        }}
+                        options={[
+                          {
+                            value: "",
+                            label: t(
+                              "Choose invoice line",
+                              "انتخاب ردیف فاکتور",
+                            ),
+                          },
+                          ...invoice.lines
+                            .map((line, index) => ({ line, index }))
+                            .filter(
+                              ({ line }) =>
+                                (!line.order_item_id ||
+                                  line.order_item_id === temporary.id) &&
+                                (line.product_code !== "NEW" ||
+                                  !!line.new_name_en?.trim()),
+                            )
+                            .map(({ line, index }) => {
+                              const product = state.products.find(
+                                (item) =>
+                                  item.company_id === invoice.company_id &&
+                                  item.code === line.product_code,
+                              );
+                              const name =
+                                lang === "fa"
+                                  ? product?.name_fa ||
+                                    line.new_name_fa ||
+                                    product?.name_en ||
+                                    line.new_name_en ||
+                                    line.description
+                                  : product?.name_en ||
+                                    line.new_name_en ||
+                                    line.description;
+                              return {
+                                value: String(index),
+                                label: `${index + 1} · ${name}${line.supplier_item_code ? ` · ${line.supplier_item_code}` : ""}`,
+                              };
+                            }),
+                        ]}
+                      />
+                    </Field>
+                  ) : (
+                    <p className="muted">
+                      {actual ? (
+                        <ProductName
+                          product={{
+                            name_en:
+                              state.products.find(
+                                (product) =>
+                                  product.code === actual.product_code &&
+                                  product.company_id === invoice.company_id,
+                              )?.name_en ??
+                              actual.new_name_en ??
+                              actual.description,
+                            name_fa:
+                              state.products.find(
+                                (product) =>
+                                  product.code === actual.product_code &&
+                                  product.company_id === invoice.company_id,
+                              )?.name_fa ??
+                              actual.new_name_fa ??
+                              "",
+                          }}
+                          language={lang}
+                        />
+                      ) : (
+                        t("Not delivered", "تحویل نشده")
+                      )}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+        </div>
       )}
       {stale && (
         <div className="banner danger">
@@ -162,10 +306,16 @@ export function InvoiceOrderReview() {
                     </small>
                   </td>
                   <td className="numeric">
-                    <LtrText>{row.expected_remaining_units}</LtrText>
+                    <LtrText>
+                      {row.expected_remaining_units}
+                      {line.source_quantity_unit ? " lb" : ""}
+                    </LtrText>
                   </td>
                   <td className="numeric">
-                    <LtrText>{row.delivered_units}</LtrText>
+                    <LtrText>
+                      {row.delivered_units}
+                      {line.source_quantity_unit ? " lb" : ""}
+                    </LtrText>
                   </td>
                   <td>
                     <div className="invoice-order-decisions">
@@ -352,6 +502,12 @@ export function InvoiceOrderReview() {
                   </td>
                   <td className="numeric">
                     <LtrText>{row.missing_units}</LtrText>
+                    {row.missing_units === null && (
+                      <span>
+                        <LtrText>{row.missing_cases}</LtrText>{" "}
+                        {t("Cases", "کارتن")}
+                      </span>
+                    )}
                   </td>
                   <td className="numeric">
                     <LtrText>0</LtrText>

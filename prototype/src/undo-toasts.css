@@ -58,6 +58,9 @@
   font-size: 12px;
 }
 @media (max-width: 760px) {
+  .ui-dialog.confirm-dialog:has(> .undo-toast-stack) {
+    padding-block-end: calc(var(--undo-toast-block-size, 64px) + 32px);
+  }
   .undo-toast-stack {
     inset-inline-end: 16px;
     inset-block-end: max(16px, env(safe-area-inset-bottom));

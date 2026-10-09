@@ -51,6 +51,37 @@ const input = (values: Partial<NotebookInput> = {}): NotebookInput => ({
 });
 
 describe("custom notebook permissions and retained records", () => {
+  it("requires English but accepts distinct notebooks without Persian names", () => {
+    const state = initialState();
+    const first = createNotebook(
+      state,
+      supervisor,
+      input({ name_en: "English only", name_fa: " " }),
+    );
+    expect(first.name_fa).toBe("");
+    expect(
+      createNotebook(
+        state,
+        supervisor,
+        input({ name_en: "Second English name", name_fa: "" }),
+      ).name_en,
+    ).toBe("Second English name");
+    expect(() =>
+      createNotebook(
+        state,
+        supervisor,
+        input({ name_en: " ", name_fa: "فارسی" }),
+      ),
+    ).toThrow("name");
+    expect(() =>
+      createNotebook(
+        state,
+        supervisor,
+        input({ name_en: "english only", name_fa: "" }),
+      ),
+    ).toThrow("duplicate");
+  });
+
   it("hydrates fictional Deli temperatures once and preserves saved custom definitions", () => {
     const state = initialState();
     expect(visibleNotebooks(state, worker)[0].name_en).toBe(

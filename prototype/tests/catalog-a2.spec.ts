@@ -71,7 +71,9 @@ test("Lookup price editor defaults to all branches and records the signed-in Sup
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("3.29");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("3.29");
   await expect(editor.getByLabel("Approval scope", { exact: true })).toHaveText(
     /All branches/,
   );
@@ -109,13 +111,17 @@ test("same editor changes this branch only, and validation stays inside the open
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("3.291");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("3.291");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor.getByRole("alert")).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
-  await editor.getByLabel("Selling price", { exact: true }).fill("3.29");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("3.29");
   await chooseOption(
     page,
     editor.getByLabel("Approval scope", { exact: true }),

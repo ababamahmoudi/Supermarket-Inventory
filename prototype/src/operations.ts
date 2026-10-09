@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
 import { configuredBranches } from "./settings";
 import { projectExpiryLocation } from "./received";
+import { createReturnMemo, syncReturnCreditAlerts } from "./return-workflow";
 import type {
   Branch,
   CompanyConfig,
@@ -33,6 +34,7 @@ export interface EvidenceEvent {
   received_date?: string;
   product_code?: string;
   actual_qty?: number;
+  invoice_id?: string;
 }
 export interface ReturnClaim {
   id: string;
@@ -118,6 +120,33 @@ const quantity = (value: number, allowZero = false) => {
     fail("quantity");
   return value;
 };
+function returnQuantity(
+  state: DemoState,
+  line: ReturnRecord["lines"][number],
+  value: number,
+  allowZero = false,
+) {
+  const product = state.products.find(
+    (item) =>
+      item.company_id === state.config.company.seed_key &&
+      item.code === line.product_code,
+  );
+  if (!product) fail("product");
+  const weighted =
+    line.quantity_unit === "lb" ||
+    (!line.quantity_unit && product.sold_by === "weight");
+  if (!weighted) return quantity(value, allowZero);
+  const amount = new Decimal(value);
+  if (
+    !amount.isFinite() ||
+    amount.lt(0) ||
+    (!allowZero && amount.eq(0)) ||
+    !amount.eq(amount.toDecimalPlaces(3)) ||
+    amount.gt(Number.MAX_SAFE_INTEGER)
+  )
+    fail("weight_quantity");
+  return amount.toNumber();
+}
 const canOperate = (context: OperationsContext) => {
   if (context.role === "cashier") fail("role");
   if (context.branch === "all") fail("branch");
@@ -138,6 +167,7 @@ function getReturn(
   returnId: string,
 ): OperationalReturn {
   canOperate(context);
+  if (context.company_id !== state.config.company.seed_key) fail("scope");
   const record = state.returns.find(
     (item) => item.id === returnId && belongs(item, context),
   ) as OperationalReturn | undefined;
@@ -175,6 +205,7 @@ export interface PhysicalStockMovement {
   reference: string;
   by: string;
   at: string;
+  quantity_unit?: "units" | "lb";
 }
 function stock(
   state: DemoState,
@@ -183,6 +214,7 @@ function stock(
   delta: number,
   type: string,
   reference: string,
+  unit: "units" | "lb" = "units",
 ) {
   if (
     !state.products.some(
@@ -193,8 +225,10 @@ function stock(
   const key = `${context.branch}:${product}`;
   const next = (state.stock[key] ?? 0) + delta;
   // An incomplete sales ledger cannot establish available stock in Phase 1.
-  if (!Number.isSafeInteger(next)) fail("quantity");
-  state.stock[key] = next;
+  if (unit === "units") {
+    if (!Number.isSafeInteger(next)) fail("quantity");
+    state.stock[key] = next;
+  }
   const physicalState = state as DemoState & {
     stock_movements?: PhysicalStockMovement[];
   };
@@ -204,6 +238,7 @@ function stock(
     branch: context.branch,
     product_code: product,
     qty: delta,
+    quantity_unit: unit,
     type,
     reference,
     by: context.actor,
@@ -226,21 +261,27 @@ function settled(line: ReturnRecord["lines"][number]) {
   return line.settled ?? line.replaced ?? 0;
 }
 function validateCoverage(
+  state: DemoState,
   record: OperationalReturn,
   covers: Record<string, number>,
   includePending = true,
 ) {
   let total = 0;
   for (const [code, count] of Object.entries(covers)) {
-    quantity(count, true);
     const line = record.lines.find((item) => item.product_code === code);
     if (!line) fail("product");
+    returnQuantity(state, line, count, true);
     const pending = includePending
       ? (record.claims ?? [])
           .filter((claim) => claim.status === "submitted")
-          .reduce((sum, claim) => sum + (claim.covers[code] ?? 0), 0)
+          .reduce(
+            (sum, claim) => sum.plus(claim.covers[code] ?? 0),
+            new Decimal(0),
+          )
+          .toNumber()
       : 0;
-    if (count + settled(line) + pending > line.qty) fail("coverage");
+    if (new Decimal(count).plus(settled(line)).plus(pending).gt(line.qty))
+      fail("coverage");
     total += count;
   }
   if (total === 0) fail("quantity");
@@ -250,7 +291,9 @@ function applyCoverage(
   covers: Record<string, number>,
 ) {
   for (const line of record.lines)
-    line.settled = settled(line) + (covers[line.product_code] ?? 0);
+    line.settled = new Decimal(settled(line))
+      .plus(covers[line.product_code] ?? 0)
+      .toNumber();
   record.status = record.lines.every((line) => settled(line) >= line.qty)
     ? "resolved"
     : "partially_resolved";
@@ -290,22 +333,44 @@ export function recordPickup(
   }
   let total = 0;
   for (const line of record.lines) {
-    const count = quantity(input.quantities[line.product_code] ?? 0, true);
+    const count = returnQuantity(
+      state,
+      line,
+      input.quantities[line.product_code] ?? 0,
+      true,
+    );
     if (
-      count +
-        (line.picked_up ?? 0) +
-        (record.recovered?.[line.product_code] ?? 0) >
-      line.qty
+      new Decimal(count)
+        .plus(line.picked_up ?? 0)
+        .plus(record.recovered?.[line.product_code] ?? 0)
+        .gt(line.qty)
     )
       fail("pickup_cap");
     total += count;
   }
   if (total === 0) fail("quantity");
-  for (const line of record.lines)
-    line.picked_up =
-      (line.picked_up ?? 0) + (input.quantities[line.product_code] ?? 0);
+  if (
+    Object.keys(input.quantities).some(
+      (code) => !record.lines.some((line) => line.product_code === code),
+    )
+  )
+    fail("product");
+  const memo = createReturnMemo(state, context, record, input);
+  for (const line of record.lines) {
+    line.picked_up = new Decimal(line.picked_up ?? 0)
+      .plus(input.quantities[line.product_code] ?? 0)
+      .toNumber();
+    line.quantity_unit ??= memo.lines.find(
+      (item) => item.product_code === line.product_code,
+    )?.quantity_unit;
+    line.unit_cost ??= memo.lines.find(
+      (item) => item.product_code === line.product_code,
+    )?.unit_cost;
+  }
   record.supplier_rep_name = input.representative.trim();
   record.signed_pickup_slip_reference = input.slip.trim();
+  (record.pickup_memos ??= []).push(memo);
+  record.picked_up_at ??= memo.picked_up_at;
   if (record.status === "open") record.status = "picked_up";
   history(record, context, {
     kind: "pickup",
@@ -316,6 +381,7 @@ export function recordPickup(
     quantities: input.quantities,
   });
   audit(state, context, "return_pickup");
+  syncReturnCreditAlerts(state);
 }
 export function receiveReplacement(
   state: DemoState,
@@ -330,6 +396,7 @@ export function receiveReplacement(
     note?: string;
     photo?: string;
     receipt: string;
+    invoice_id?: string;
     fully?: boolean;
   },
 ) {
@@ -354,15 +421,45 @@ export function receiveReplacement(
       fail("duplicate_document");
     return;
   }
-  quantity(input.qty);
+  const replacementProduct = state.products.find(
+    (item) =>
+      item.company_id === context.company_id &&
+      item.code === input.product_code,
+  );
+  const replacementUnit =
+    replacementProduct?.sold_by === "weight" ? "lb" : "units";
+  returnQuantity(
+    state,
+    {
+      product_code: input.product_code,
+      qty: input.qty,
+      reason: "",
+      quantity_unit: replacementUnit,
+    },
+    input.qty,
+  );
   if (!input.date || !input.representative.trim() || !input.receipt.trim())
     fail("replacement_evidence");
-  validateCoverage(record, input.covers);
+  if (
+    input.invoice_id &&
+    ![...(state.invoices ?? []), state.invoice].some(
+      (invoice) =>
+        invoice.id === input.invoice_id &&
+        invoice.company_id === context.company_id &&
+        invoice.branch === record.branch &&
+        invoice.supplier === record.supplier &&
+        invoice.status === "posted",
+    )
+  )
+    fail("invoice");
+  validateCoverage(state, record, input.covers);
   if (
     input.fully &&
     record.lines.some(
       (line) =>
-        settled(line) + (input.covers[line.product_code] ?? 0) !== line.qty,
+        !new Decimal(settled(line))
+          .plus(input.covers[line.product_code] ?? 0)
+          .eq(line.qty),
     )
   )
     fail("coverage");
@@ -373,9 +470,11 @@ export function receiveReplacement(
     input.qty,
     "replacement_received",
     input.receipt,
+    replacementUnit,
   );
   applyCoverage(record, input.covers);
   record.resolution = "replacement_received";
+  if (record.status === "resolved") record.closure_subtype = "replaced";
   record.replacement_received = {
     product_code: input.product_code,
     qty: input.qty,
@@ -391,11 +490,13 @@ export function receiveReplacement(
     received_date: input.date,
     product_code: input.product_code,
     actual_qty: input.qty,
+    invoice_id: input.invoice_id,
     photo: input.photo,
     note: `${input.date} | ${input.representative} | ${input.product_code} × ${input.qty}${input.note ? ` | ${input.note}` : ""}`,
     quantities: input.covers,
   });
   audit(state, context, "replacement_received", input.product_code);
+  syncReturnCreditAlerts(state);
 }
 export function submitFinancialClaim(
   state: DemoState,
@@ -450,7 +551,7 @@ export function submitFinancialClaim(
     )
   )
     fail("duplicate_document");
-  validateCoverage(record, input.covers);
+  validateCoverage(state, record, input.covers);
   (record.claims ??= []).push({
     ...input,
     id: id("claim"),
@@ -482,7 +583,7 @@ export function postReturnClaim(
   if (record.status === "cancelled" || record.status === "cancellation_review")
     fail("closed");
   if (claim.status !== "submitted") fail("claim");
-  validateCoverage(record, claim.covers, false);
+  validateCoverage(state, record, claim.covers, false);
   if (claim.type !== "no_compensation") {
     if (!claim.document?.trim()) fail("credit_document");
     const amount = exactMoney(amountInput ?? claim.amount ?? "0");
@@ -545,12 +646,17 @@ export function postReturnClaim(
   claim.status = "posted";
   claim.posted_by = context.actor;
   applyCoverage(record, claim.covers);
+  record.resolution = claim.type;
+  if (record.status === "resolved")
+    record.closure_subtype =
+      claim.type === "no_compensation" ? "written_off" : "credited";
   history(record, context, {
     kind: "claim_posted",
     document: claim.document,
     quantities: claim.covers,
   });
   audit(state, context, "return_claim_posted");
+  syncReturnCreditAlerts(state);
 }
 export function cancelReturn(
   state: DemoState,
@@ -570,14 +676,23 @@ export function cancelReturn(
   let recoveredTotal = 0;
   for (const line of record.lines) {
     if (!input.dispositions[line.product_code]) fail("disposition");
-    const count = quantity(input.recovered[line.product_code] ?? 0, true);
+    const count = returnQuantity(
+      state,
+      line,
+      input.recovered[line.product_code] ?? 0,
+      true,
+    );
     if (
       count > 0 &&
       (input.dispositions[line.product_code] !== "recovered_sellable" ||
         !input.safe)
     )
       fail("safe");
-    if (count + (record.recovered?.[line.product_code] ?? 0) > line.qty)
+    if (
+      new Decimal(count)
+        .plus(record.recovered?.[line.product_code] ?? 0)
+        .gt(line.qty)
+    )
       fail("recovery_cap");
     recoveredTotal += count;
   }
@@ -592,9 +707,20 @@ export function cancelReturn(
         count,
         "return_original_recovered",
         record.id,
+        line.quantity_unit ??
+          (state.products.find(
+            (item) =>
+              item.company_id === context.company_id &&
+              item.code === line.product_code,
+          )?.sold_by === "weight"
+            ? "lb"
+            : "units"),
       );
-      (record.recovered ??= {})[line.product_code] =
-        (record.recovered?.[line.product_code] ?? 0) + count;
+      (record.recovered ??= {})[line.product_code] = new Decimal(
+        record.recovered?.[line.product_code] ?? 0,
+      )
+        .plus(count)
+        .toNumber();
     }
   }
   if (recoveredTotal > 0) {
@@ -605,7 +731,9 @@ export function cancelReturn(
     });
     audit(state, context, "return_original_recovered");
   }
-  record.original_units_recovered += recoveredTotal;
+  record.original_units_recovered = new Decimal(record.original_units_recovered)
+    .plus(recoveredTotal)
+    .toNumber();
   record.cancellation_reason = input.reason.trim();
   record.cancellation_dispositions = input.dispositions;
   const existingSettlement =
@@ -624,6 +752,7 @@ export function cancelReturn(
     context,
     existingSettlement ? "return_cancellation_review" : "return_cancelled",
   );
+  syncReturnCreditAlerts(state);
 }
 export function reviewCancellation(
   state: DemoState,
@@ -652,6 +781,7 @@ export function reviewCancellation(
       ? "return_cancellation_approved"
       : "return_cancellation_declined",
   );
+  syncReturnCreditAlerts(state);
 }
 export function addNote(
   state: DemoState,
@@ -1128,6 +1258,10 @@ export function operationError(
       "Enter a positive whole quantity; use zero only for goods not received.",
       "تعداد صحیح مثبت وارد کنید؛ برای کالای دریافت‌نشده صفر وارد کنید.",
     ],
+    weight_quantity: [
+      "Enter a positive weight in lb with up to three decimal places; zero means not received.",
+      "وزن مثبت بر حسب پوند با حداکثر سه رقم اعشار وارد کنید؛ صفر یعنی دریافت‌نشده.",
+    ],
     product: [
       "Choose a product from this company.",
       "یک محصول از همین شرکت انتخاب کنید.",
@@ -1147,6 +1281,10 @@ export function operationError(
     coverage: [
       "Covered original quantities exceed the unsettled return. Check each line.",
       "تعداد اصلی پوشش‌داده‌شده از مرجوعی حل‌نشده بیشتر است. هر ردیف را بررسی کنید.",
+    ],
+    return_cost: [
+      "Review the original purchase cost for this return before recording pickup.",
+      "پیش از ثبت جمع‌آوری، هزینه خرید اصلی این مرجوعی را بررسی کنید.",
     ],
     replacement_evidence: [
       "Add actual quantity, date, representative, and replacement receipt reference.",

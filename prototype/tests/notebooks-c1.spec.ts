@@ -14,7 +14,9 @@ async function createNotebook(
   await dialog
     .getByLabel("Name (English)", { exact: true })
     .fill("Cleaning log");
-  await dialog.getByLabel("Name (Persian)", { exact: true }).fill("دفتر نظافت");
+  await dialog
+    .getByLabel("Name (Persian, optional)", { exact: true })
+    .fill("دفتر نظافت");
   for (const group of ["Who can read", "Who can add"])
     for (const role of ["Supervisor", "Floor Worker"])
       await expect(
@@ -89,12 +91,14 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await page.reload();
   await page.getByRole("tab", { name: /^Cleaning log/ }).click();
   await expect(entry).toBeVisible();
-  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await setLanguage(page, "fa");
   await expect(page.getByRole("tab", { name: /^دفتر نظافت/ })).toHaveAttribute(
     "aria-selected",
     "true",
   );
+  await page
+    .getByRole("button", { name: "افزودن یادداشت", exact: true })
+    .click();
   await expect(page.getByLabel("مکان", { exact: true })).toHaveAttribute(
     "role",
     "combobox",
@@ -104,8 +108,10 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
       ".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]",
     ),
   ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await setLanguage(page, "en");
   await setBranch(page, "North York");
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await expect(page.getByLabel("Location", { exact: true })).toHaveCount(0);
   await form
     .getByLabel("Note", { exact: true })

@@ -47,6 +47,7 @@ function draft(): DemoState {
 }
 function confirm(state: DemoState) {
   for (const line of state.invoice.lines) {
+    if (!line.short_dated) line.date_tracking = false;
     line.review_confirmed = true;
     line.date_confirmed = true;
   }

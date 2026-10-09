@@ -140,7 +140,7 @@ export function Notes() {
     ...builtinTabs,
     ...definitions.map((item) => ({
       key: item.id,
-      label: lang === "fa" ? item.name_fa : item.name_en,
+      label: lang === "fa" ? item.name_fa || item.name_en : item.name_en,
     })),
   ];
   const activeTab = tabs.some((item) => item.key === tab)
@@ -466,7 +466,10 @@ export function Notes() {
                         )
                         .map((item) => ({
                           value: item.code,
-                          label: lang === "fa" ? item.name_fa : item.name_en,
+                          label:
+                            lang === "fa"
+                              ? item.name_fa || item.name_en
+                              : item.name_en,
                         })),
                     ]}
                   />
@@ -772,7 +775,9 @@ export function Notes() {
                   {" "}
                   ·{" "}
                   <bdi dir="auto">
-                    {lang === "fa" ? owner.name_fa : owner.name_en}
+                    {lang === "fa"
+                      ? owner.name_fa || owner.name_en
+                      : owner.name_en}
                   </bdi>
                 </>
               )}

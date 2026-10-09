@@ -220,13 +220,78 @@ try {
       await page.evaluate(async () => {
         await document.fonts.ready;
         window.scrollTo(0, 0);
+        await new Promise((resolve) =>
+          window.requestAnimationFrame(() =>
+            window.requestAnimationFrame(resolve),
+          ),
+        );
       });
+
+      if (
+        variant === "phone" &&
+        ["dashboard-approvals", "labels-selection"].includes(scene)
+      ) {
+        const target = page.locator(
+          scene === "dashboard-approvals"
+            ? ".dashboard-approvals"
+            : ".labels-product-table",
+        );
+        await target.evaluate((element) => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+          window.scrollTo(
+            0,
+            window.scrollY + element.getBoundingClientRect().top - 200,
+          );
+        });
+        await page.evaluate(
+          () =>
+            new Promise((resolve) =>
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(resolve),
+              ),
+            ),
+        );
+      }
+      if (
+        variant === "phone" &&
+        ["products-buttons", "products-columns"].includes(scene)
+      ) {
+        // A phone may pan this table horizontally. Frame the real action
+        // column and first rows so the review proves Edit is visible.
+        const table = page.locator(".catalog-products-table");
+        await table.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth - element.clientWidth;
+          window.scrollTo(
+            0,
+            window.scrollY + element.getBoundingClientRect().top - 200,
+          );
+        });
+        if (scene === "products-buttons")
+          await expect(
+            table
+              .locator("tbody tr")
+              .first()
+              .getByRole("button", {
+                name: /^Edit /,
+              }),
+          ).toBeInViewport();
+        await page.evaluate(
+          () =>
+            new Promise((resolve) =>
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(resolve),
+              ),
+            ),
+        );
+      }
       await page.mouse.move(0, 0);
       const findings = await geometry(page);
       const filename = `${scene}-${variant}.png`;
       await page.screenshot({
         path: resolve(destination, filename),
-        fullPage: true,
+        fullPage:
+          variant !== "phone" && !(await page.locator("dialog[open]").count()),
         animations: "disabled",
       });
       results.push({ scene, variant, filename, layoutFindings: findings });

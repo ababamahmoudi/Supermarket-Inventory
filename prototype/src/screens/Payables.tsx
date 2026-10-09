@@ -5,7 +5,11 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
-import { useListState } from "../navigation";
+import {
+  useListState,
+  navigationKey,
+  saveNavigationValue,
+} from "../navigation";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
@@ -183,7 +187,26 @@ export function Payables() {
     setErrorKey("");
     setConfirmMoney(null);
   };
-  const changeBranch = (value: string) => {
+  const changeBranch = (value: string, clear = false) => {
+    // This explicit filter change keeps the other filters and selected report.
+    // A top-bar/session switch still reads its separately scoped preferences.
+    for (const [field, retained] of Object.entries({
+      "payables.supplier": supplier,
+      "payables.search": clear ? "" : search,
+      "payables.overdue": clear ? false : overdueOnly,
+      "payables.balance": clear ? false : withBalance,
+      "payables.mode": mode,
+      "payables.month": month,
+    }))
+      saveNavigationValue(
+        navigationKey(
+          state.config.company.seed_key,
+          user?.username ?? "signed-out",
+          value,
+          field,
+        ),
+        retained,
+      );
     setBranch(value as Branch);
     resetEntryForms();
   };
@@ -191,7 +214,7 @@ export function Payables() {
     setSearch("");
     setOverdueOnly(false);
     setWithBalance(false);
-    changeBranch("all");
+    changeBranch("all", true);
   };
   const summary = supplierBalanceSummary(
     state,
@@ -408,6 +431,12 @@ export function Payables() {
                 </td>
                 <td className="numeric">
                   <Money value={item.balance} />
+                  {item.pending_credit !== "0.00" && (
+                    <small className="muted">
+                      {t("Pending credit", "اعتبار در انتظار")}:{" "}
+                      <Money value={item.pending_credit} />
+                    </small>
+                  )}
                 </td>
                 <td className="numeric">
                   <Money value={item.overdue} />
@@ -554,6 +583,62 @@ export function Payables() {
                 {error}
               </div>
             )}
+          {summary.pending_returns.length > 0 && (
+            <Card
+              title={t("Pending credit", "اعتبار در انتظار")}
+              className="pending-return-credits"
+            >
+              <p className="muted">
+                {t("Confirmed balance", "مانده تأییدشده")}:{" "}
+                <Money value={summary.confirmed_balance} /> ·{" "}
+                {t("Pending credit", "اعتبار در انتظار")}:{" "}
+                <Money value={summary.pending_credit} /> · {t("Owed", "بدهی")}:{" "}
+                <Money value={summary.balance} />
+              </p>
+              <DataTable
+                columns={[
+                  { width: "40%" },
+                  { width: "35%" },
+                  { width: "25%", align: "end" },
+                ]}
+              >
+                <thead>
+                  <tr>
+                    <th>{t("Return", "مرجوعی")}</th>
+                    <th>{t("Return memo", "یادداشت مرجوعی")}</th>
+                    <th>{t("Pending credit", "اعتبار در انتظار")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.pending_returns.map((claim) => (
+                    <tr key={claim.memo_id}>
+                      <td>
+                        <Button asChild variant="secondary" size="sm">
+                          <a
+                            href={`#return?id=${encodeURIComponent(claim.return_id)}`}
+                          >
+                            {t("View return", "نمایش مرجوعی")}
+                          </a>
+                        </Button>
+                      </td>
+                      <td>
+                        <Button asChild variant="secondary" size="sm">
+                          <a
+                            href={`#return?id=${encodeURIComponent(claim.return_id)}&memo=${encodeURIComponent(claim.reference)}`}
+                          >
+                            <LtrText>{claim.reference}</LtrText>
+                          </a>
+                        </Button>
+                      </td>
+                      <td>
+                        <Money value={claim.amount} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            </Card>
+          )}
           {paymentOpen && (
             <Card
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}

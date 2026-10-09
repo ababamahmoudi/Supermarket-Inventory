@@ -1,5 +1,5 @@
 import "../c3-tables.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useListState, useRouteParam } from "../navigation";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft, X } from "lucide-react";
@@ -28,18 +28,23 @@ import {
   cancelOrder,
   createOrder,
   orderCandidates,
+  orderCandidateQuantity,
+  orderCandidateCaseCost,
   orderLocations,
   placeOrder,
   remainingOrderUnits,
   saveOrderDraft,
   scopedOrders,
   type Order,
+  type OrderLine,
   type OrderContext,
   type OrderDraftInput,
 } from "../orders";
 import { orderError, orderStatusCopy } from "../c-orders-i18n";
 import { OrderPrintDocument } from "../order-print";
 import { useOperationalPrint } from "../operational-print-hook";
+import { createId } from "../ids";
+import type { CompanyConfig, Language } from "../types";
 import "./orders.css";
 
 interface FormState {
@@ -51,6 +56,82 @@ interface FormState {
   costs: Record<string, string>;
   selectedNotes: string[];
   noteItems: Record<string, string>;
+  newItems: NewOrderItem[];
+}
+interface NewOrderItem {
+  id: string;
+  name_en: string;
+  name_fa?: string;
+  units_per_case: number | null;
+}
+function orderQuantitySuffix(line: OrderLine): string {
+  return line.quantity_unit === "lb" ||
+    line.new_item_association?.quantity_unit === "lb"
+    ? " lb"
+    : "";
+}
+function ScaledOrderPreview({
+  order,
+  config,
+  language,
+}: {
+  order: Order;
+  config: CompanyConfig;
+  language: Language;
+}) {
+  const viewport = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 794, height: 1123, scale: 1 });
+  useEffect(() => {
+    const measure = () => {
+      if (!viewport.current || !sheet.current) return;
+      const article = sheet.current.querySelector<HTMLElement>(
+        ".operational-print-document",
+      );
+      if (!article) return;
+      const width = article.offsetWidth;
+      const height = article.offsetHeight;
+      if (width <= 0 || height <= 0) return;
+      const scale = Math.min(
+        1,
+        viewport.current.clientWidth / width,
+        Math.max(220, window.innerHeight * 0.62) / height,
+      );
+      setSize({ width, height, scale });
+    };
+    const observer = new ResizeObserver(measure);
+    if (viewport.current) observer.observe(viewport.current);
+    if (sheet.current) observer.observe(sheet.current);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  return (
+    <div className="order-sheet-preview" ref={viewport}>
+      <div
+        className="order-sheet-frame"
+        style={{
+          width: size.width * size.scale,
+          height: size.height * size.scale,
+        }}
+      >
+        <div
+          ref={sheet}
+          className="order-sheet-scaled"
+          style={{ transform: `scale(${size.scale})` }}
+        >
+          <OrderPrintDocument
+            order={order}
+            config={config}
+            language={language}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function Orders() {
@@ -91,6 +172,14 @@ export default function Orders() {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [printPreview, setPrintPreview] = useState<Order | null>(null);
+  const [newItemOpen, setNewItemOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemPack, setNewItemPack] = useState("");
+  const [newItemCases, setNewItemCases] = useState("");
+  const [newItemCost, setNewItemCost] = useState("");
+  const [newItemErrors, setNewItemErrors] = useState<Record<string, string>>(
+    {},
+  );
   const tableColumns = useTableColumns("orders", [
     {
       key: "reference",
@@ -123,6 +212,7 @@ export default function Orders() {
     setPrintPreview(null);
     clearPrint();
     setCancelId(null);
+    setNewItemOpen(false);
     setReason("");
     setError("");
     setMessage("");
@@ -189,7 +279,7 @@ export default function Orders() {
         if (!cases) return false;
         if (key === "quantity") {
           try {
-            packUnits(cases, "cases", item.units_per_case);
+            orderCandidateQuantity(item, cases);
             return false;
           } catch {
             return true;
@@ -205,7 +295,33 @@ export default function Orders() {
         }
         return false;
       });
-      setErrorItemId(invalidItem?.id ?? null);
+      const invalidNewItem = form?.newItems.find((item) => {
+        if (key === "name") return !item.name_en.trim();
+        if (key === "pack")
+          return (
+            item.units_per_case !== null &&
+            (!Number.isSafeInteger(item.units_per_case) ||
+              item.units_per_case <= 0)
+          );
+        if (key === "cost")
+          return (
+            Boolean(form.costs[item.id]?.trim()) &&
+            !/^\d+(\.\d{1,4})?$/.test(form.costs[item.id].trim())
+          );
+        if (key === "quantity") {
+          try {
+            if (item.units_per_case === null) {
+              const cases = new Decimal(form.cases[item.id]);
+              if (!cases.isInteger() || cases.lte(0)) return true;
+            } else packUnits(form.cases[item.id], "cases", item.units_per_case);
+            return false;
+          } catch {
+            return true;
+          }
+        }
+        return false;
+      });
+      setErrorItemId(invalidItem?.id ?? invalidNewItem?.id ?? null);
       setMessage("");
       return false;
     }
@@ -221,6 +337,57 @@ export default function Orders() {
     keys.includes(errorKey) ? error : undefined;
   const itemError = (id: string, key: string) =>
     errorItemId === id && errorKey === key ? error : undefined;
+  const openNewItem = () => {
+    setNewItemName("");
+    setNewItemPack("");
+    setNewItemCases("");
+    setNewItemCost("");
+    setNewItemErrors({});
+    setNewItemOpen(true);
+  };
+  const addNewItem = () => {
+    const errors: Record<string, string> = {};
+    if (!newItemName.trim()) errors.name = orderError(new Error("name"), t);
+    const pack = newItemPack.trim() ? Number(newItemPack) : null;
+    if (
+      pack !== null &&
+      (!/^\d+$/.test(newItemPack.trim()) ||
+        !Number.isSafeInteger(pack) ||
+        pack <= 0)
+    )
+      errors.pack = orderError(new Error("pack"), t);
+    try {
+      if (pack === null) {
+        const quantity = new Decimal(newItemCases);
+        if (!quantity.isFinite() || !quantity.isInteger() || quantity.lte(0))
+          throw new Error();
+      } else packUnits(newItemCases, "cases", pack);
+    } catch {
+      errors.quantity = orderError(new Error("quantity"), t);
+    }
+    if (newItemCost.trim() && !/^\d+(\.\d{1,4})?$/.test(newItemCost.trim()))
+      errors.cost = orderError(new Error("cost"), t);
+    if (Object.keys(errors).length) {
+      setNewItemErrors(errors);
+      return;
+    }
+    const id = createId("new-order-line");
+    setForm((current) =>
+      current
+        ? {
+            ...current,
+            newItems: [
+              ...current.newItems,
+              { id, name_en: newItemName.trim(), units_per_case: pack },
+            ],
+            cases: { ...current.cases, [id]: newItemCases },
+            costs: { ...current.costs, [id]: newItemCost.trim() },
+          }
+        : null,
+    );
+    clearFieldError("empty", "item");
+    setNewItemOpen(false);
+  };
   const newForm = () => {
     setForm({
       branch:
@@ -234,6 +401,7 @@ export default function Orders() {
       costs: {},
       selectedNotes: [],
       noteItems: {},
+      newItems: [],
     });
     setError("");
     setMessage("");
@@ -245,20 +413,34 @@ export default function Orders() {
       branch: order.branch,
       supplier: order.supplier,
       cases: Object.fromEntries(
-        order.lines.map((line) => [line.supplier_item_id, line.ordered_cases]),
+        order.lines.map((line) => [
+          line.new_item ? line.id : line.supplier_item_id,
+          line.ordered_cases,
+        ]),
       ),
       costs: Object.fromEntries(
         order.lines.map((line) => [
-          line.supplier_item_id,
+          line.new_item ? line.id : line.supplier_item_id,
           line.expected_unit_cost ?? "",
         ]),
       ),
       selectedNotes: [...order.source_note_ids],
       noteItems: Object.fromEntries(
         order.lines.flatMap((line) =>
-          line.source_note_ids.map((id) => [id, line.supplier_item_id]),
+          line.source_note_ids.map((id) => [
+            id,
+            line.new_item ? line.id : line.supplier_item_id,
+          ]),
         ),
       ),
+      newItems: order.lines
+        .filter((line) => line.new_item)
+        .map((line) => ({
+          id: line.id,
+          name_en: line.name_en,
+          name_fa: line.name_fa,
+          units_per_case: line.units_per_case,
+        })),
     });
     setError("");
     setMessage("");
@@ -301,16 +483,26 @@ export default function Orders() {
     branch: form!.branch,
     supplier: form!.supplier,
     source_note_ids: form!.selectedNotes,
-    lines: candidates
-      .filter((item) => Boolean(form!.cases[item.id]?.trim()))
-      .map((item) => ({
-        supplier_item_id: item.id,
-        cases: form!.cases[item.id],
+    lines: [
+      ...candidates
+        .filter((item) => Boolean(form!.cases[item.id]?.trim()))
+        .map((item) => ({
+          supplier_item_id: item.id,
+          cases: form!.cases[item.id],
+          expected_unit_cost: form!.costs[item.id],
+          source_note_ids: form!.selectedNotes.filter(
+            (id) => form!.noteItems[id] === item.id,
+          ),
+        })),
+      ...form!.newItems.map((item) => ({
+        new_item: item,
+        cases: form!.cases[item.id] ?? "",
         expected_unit_cost: form!.costs[item.id],
         source_note_ids: form!.selectedNotes.filter(
           (id) => form!.noteItems[id] === item.id,
         ),
       })),
+    ],
   });
   const save = (place: boolean) => {
     let savedId = "";
@@ -343,14 +535,14 @@ export default function Orders() {
         selected: false,
       };
     try {
-      const units = packUnits(cases, "cases", item.units_per_case);
+      const units = orderCandidateQuantity(item, cases);
       const entered = form?.costs[item.id]?.trim();
       const changed =
         entered &&
         (item.expected_unit_cost === null ||
           !new Decimal(entered).eq(item.expected_unit_cost));
       const caseCost = changed
-        ? costPerCase(entered!, item.units_per_case)
+        ? orderCandidateCaseCost(item, entered!)
         : item.expected_case_cost;
       return {
         id: item.id,
@@ -374,11 +566,35 @@ export default function Orders() {
       };
     }
   });
-  const total = rowAmounts.some((row) => row.selected && row.total === null)
-    ? null
-    : rowAmounts
-        .reduce((sum, row) => sum.plus(row.total ?? 0), new Decimal(0))
-        .toFixed(2);
+  const temporaryAmounts = (form?.newItems ?? []).map((item) => {
+    try {
+      const cases = form!.cases[item.id];
+      const pack = item.units_per_case;
+      const unit = form!.costs[item.id]?.trim();
+      const units = pack === null ? null : packUnits(cases, "cases", pack);
+      const caseCost = !unit || pack === null ? null : costPerCase(unit, pack);
+      return {
+        id: item.id,
+        units,
+        caseCost,
+        total:
+          caseCost === null
+            ? null
+            : new Decimal(caseCost)
+                .times(cases)
+                .toFixed(2, Decimal.ROUND_HALF_UP),
+      };
+    } catch {
+      return { id: item.id, units: null, caseCost: null, total: null };
+    }
+  });
+  const total =
+    rowAmounts.some((row) => row.selected && row.total === null) ||
+    temporaryAmounts.some((row) => row.total === null)
+      ? null
+      : [...rowAmounts, ...temporaryAmounts]
+          .reduce((sum, row) => sum.plus(row.total ?? 0), new Decimal(0))
+          .toFixed(2);
   const back = () => {
     setForm(null);
     setError("");
@@ -414,7 +630,10 @@ export default function Orders() {
           errorKey === "supplier" ||
           errorKey === "location" ||
           errorKey === "reason" ||
-          ((errorKey === "cost" || errorKey === "quantity") && errorItemId)
+          ((errorKey === "cost" ||
+            errorKey === "quantity" ||
+            errorKey === "pack") &&
+            errorItemId)
         ) && (
           <p className="banner danger" role="alert">
             {error}
@@ -498,8 +717,14 @@ export default function Orders() {
               </div>
               {form.supplier && (
                 <>
-                  <h2>{t("Supplier items", "کالاهای تأمین‌کننده")}</h2>
-                  {!candidates.length ? (
+                  <div className="row-between order-items-heading">
+                    <h2>{t("Supplier items", "کالاهای تأمین‌کننده")}</h2>
+                    <Button variant="secondary" onClick={openNewItem}>
+                      <Plus size={16} />
+                      {t("New item", "کالای جدید")}
+                    </Button>
+                  </div>
+                  {!candidates.length && !form.newItems.length ? (
                     <EmptyState>
                       {t(
                         "No supplier items yet. Ask your Supervisor to add items on the supplier page.",
@@ -510,13 +735,13 @@ export default function Orders() {
                     <DataTable
                       className="order-items-table"
                       columns={[
-                        { width: "26%" },
-                        { width: "8%", align: "end" },
-                        { width: "16%", align: "end" },
-                        { width: "7%", align: "end" },
-                        { width: "16%", align: "end" },
-                        { width: "13%", align: "end" },
-                        { width: "14%", align: "end" },
+                        {},
+                        { width: 144, align: "end" },
+                        { width: 144, align: "end" },
+                        { width: 68, align: "end" },
+                        { width: 144, align: "end" },
+                        { width: 100, align: "end" },
+                        { width: 110, align: "end" },
                       ]}
                     >
                       <thead>
@@ -527,7 +752,7 @@ export default function Orders() {
                               "کالا / کد تأمین‌کننده",
                             )}
                           </th>
-                          <th>{t("Units per case", "واحد در کارتن")}</th>
+                          <th>{t("Pack", "بسته")}</th>
                           <th>{t("Cases", "کارتن")}</th>
                           <th>{t("Units", "واحد")}</th>
                           <th>
@@ -564,7 +789,12 @@ export default function Orders() {
                               : item.name_en;
                           return (
                             <tr key={item.id} data-item-id={item.id}>
-                              <td>
+                              <td
+                                data-label={t(
+                                  "Product / supplier code",
+                                  "کالا / کد تأمین‌کننده",
+                                )}
+                              >
                                 <ProductName product={item} language={lang} />
                                 <span className="order-item-caption">
                                   <LtrText>
@@ -574,10 +804,14 @@ export default function Orders() {
                                   </LtrText>
                                 </span>
                               </td>
-                              <td>
-                                <LtrText>{item.units_per_case}</LtrText>
+                              <td data-label={t("Pack", "بسته")}>
+                                <LtrText>
+                                  {item.quantity_unit === "lb"
+                                    ? `${item.case_weight ?? "—"} ${item.case_weight_unit ?? ""}`
+                                    : item.units_per_case}
+                                </LtrText>
                               </td>
-                              <td>
+                              <td data-label={t("Cases", "کارتن")}>
                                 <Field
                                   label={t("Cases", "کارتن")}
                                   className="order-table-field"
@@ -594,10 +828,22 @@ export default function Orders() {
                                   />
                                 </Field>
                               </td>
-                              <td className="numeric">
+                              <td
+                                className="numeric"
+                                data-label={t("Units", "واحد")}
+                              >
                                 <LtrText>{row.units ?? "—"}</LtrText>
+                                {item.quantity_unit === "lb" && (
+                                  <LtrText> lb</LtrText>
+                                )}
                               </td>
-                              <td className="numeric">
+                              <td
+                                className="numeric"
+                                data-label={t(
+                                  "Expected unit cost",
+                                  "هزینهٔ مورد انتظار واحد",
+                                )}
+                              >
                                 <Field
                                   label={t(
                                     "Expected unit cost",
@@ -634,8 +880,177 @@ export default function Orders() {
                                         )}
                                 </span>
                               </td>
-                              <td className="numeric">{money(row.caseCost)}</td>
-                              <td className="numeric">{money(row.total)}</td>
+                              <td
+                                className="numeric"
+                                data-label={t("Case cost", "هزینهٔ کارتن")}
+                              >
+                                {money(row.caseCost)}
+                              </td>
+                              <td
+                                className="numeric"
+                                data-label={t(
+                                  "Before-tax total",
+                                  "جمع پیش از مالیات",
+                                )}
+                              >
+                                {money(row.total)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {form.newItems.map((item) => {
+                          const row = temporaryAmounts.find(
+                            (amount) => amount.id === item.id,
+                          )!;
+                          return (
+                            <tr
+                              key={item.id}
+                              data-item-id={item.id}
+                              className="order-new-item-row"
+                            >
+                              <td data-label={t("Product", "کالا")}>
+                                <strong>
+                                  <bdi dir="auto">{item.name_en}</bdi>
+                                </strong>
+                                <Badge tone="info">
+                                  {t("New item", "کالای جدید")}
+                                </Badge>
+                                <Button
+                                  variant="quiet"
+                                  onClick={() => {
+                                    clearFieldError(
+                                      "item",
+                                      "name",
+                                      "pack",
+                                      "quantity",
+                                      "cost",
+                                    );
+                                    setForm({
+                                      ...form,
+                                      newItems: form.newItems.filter(
+                                        (row) => row.id !== item.id,
+                                      ),
+                                      noteItems: Object.fromEntries(
+                                        Object.entries(form.noteItems).map(
+                                          ([note, selected]) => [
+                                            note,
+                                            selected === item.id
+                                              ? ""
+                                              : selected,
+                                          ],
+                                        ),
+                                      ),
+                                    });
+                                  }}
+                                >
+                                  {t("Remove", "حذف")}
+                                </Button>
+                              </td>
+                              <td
+                                data-label={t(
+                                  "Units per case",
+                                  "واحد در کارتن",
+                                )}
+                              >
+                                <Field
+                                  label={t(
+                                    "Units per case (optional)",
+                                    "واحد در کارتن (اختیاری)",
+                                  )}
+                                  className="order-table-field"
+                                  error={itemError(item.id, "pack")}
+                                >
+                                  <NumberField
+                                    aria-label={`${t("Units per case", "واحد در کارتن")} — ${item.name_en}`}
+                                    value={item.units_per_case ?? ""}
+                                    min="1"
+                                    step="1"
+                                    onChange={(value) => {
+                                      if (errorItemId === item.id)
+                                        clearFieldError("pack", "quantity");
+                                      setForm({
+                                        ...form,
+                                        newItems: form.newItems.map((row) =>
+                                          row.id === item.id
+                                            ? {
+                                                ...row,
+                                                units_per_case:
+                                                  value === ""
+                                                    ? null
+                                                    : Number(value),
+                                              }
+                                            : row,
+                                        ),
+                                      });
+                                    }}
+                                  />
+                                </Field>
+                              </td>
+                              <td data-label={t("Cases", "کارتن")}>
+                                <Field
+                                  label={t("Cases", "کارتن")}
+                                  className="order-table-field"
+                                  error={itemError(item.id, "quantity")}
+                                >
+                                  <NumberField
+                                    aria-label={`${t("Cases", "کارتن")} — ${item.name_en}`}
+                                    value={form.cases[item.id] ?? ""}
+                                    min="0"
+                                    step={
+                                      item.units_per_case === null ? "1" : "0.5"
+                                    }
+                                    onChange={(value) => {
+                                      setItemCases(item.id, value);
+                                    }}
+                                  />
+                                </Field>
+                              </td>
+                              <td
+                                className="numeric"
+                                data-label={t("Units", "واحد")}
+                              >
+                                <LtrText>{row.units ?? "—"}</LtrText>
+                              </td>
+                              <td
+                                data-label={t(
+                                  "Expected unit cost",
+                                  "هزینهٔ مورد انتظار واحد",
+                                )}
+                              >
+                                <Field
+                                  label={t(
+                                    "Expected unit cost (optional)",
+                                    "هزینهٔ مورد انتظار واحد (اختیاری)",
+                                  )}
+                                  className="order-table-field"
+                                  error={itemError(item.id, "cost")}
+                                >
+                                  <NumberField
+                                    aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${item.name_en}`}
+                                    value={form.costs[item.id] ?? ""}
+                                    min="0"
+                                    step="0.0001"
+                                    onChange={(value) => {
+                                      setItemCost(item.id, value);
+                                    }}
+                                  />
+                                </Field>
+                              </td>
+                              <td
+                                className="numeric"
+                                data-label={t("Case cost", "هزینهٔ کارتن")}
+                              >
+                                {money(row.caseCost)}
+                              </td>
+                              <td
+                                className="numeric"
+                                data-label={t(
+                                  "Before-tax total",
+                                  "جمع پیش از مالیات",
+                                )}
+                              >
+                                {money(row.total)}
+                              </td>
                             </tr>
                           );
                         })}
@@ -653,6 +1068,14 @@ export default function Orders() {
                 </span>
                 <strong>{money(total)}</strong>
               </div>
+              {total === null && (
+                <p className="helper order-estimate-incomplete">
+                  {t(
+                    "Estimate incomplete: some packs or expected costs are not known.",
+                    "برآورد کامل نیست: برخی بسته‌ها یا هزینه‌های مورد انتظار مشخص نشده‌اند.",
+                  )}
+                </p>
+              )}
               <div className="actions order-form-actions">
                 <Button type="submit" variant="secondary">
                   {t("Save as draft", "ذخیره پیش‌نویس")}
@@ -757,6 +1180,10 @@ export default function Orders() {
                                   ...candidates.map((item) => ({
                                     value: item.id,
                                     label: `${lang === "fa" ? item.name_fa || item.name_en : item.name_en} · ${item.supplier_item_code || item.product_code}`,
+                                  })),
+                                  ...form.newItems.map((item) => ({
+                                    value: item.id,
+                                    label: `${item.name_en} · ${t("New item", "کالای جدید")}`,
                                   })),
                                 ]}
                               />
@@ -868,6 +1295,11 @@ export default function Orders() {
                 </dt>
                 <dd>
                   {money(selected.expected_total_before_tax, selected.currency)}
+                  {selected.estimate_incomplete && (
+                    <span className="order-item-caption">
+                      {t("Estimate incomplete", "برآورد کامل نیست")}
+                    </span>
+                  )}
                 </dd>
               </div>
             </dl>
@@ -907,10 +1339,24 @@ export default function Orders() {
                       </strong>
                       <span className="order-item-caption">
                         <LtrText>
-                          {line.supplier_item_code || line.product_code} ·{" "}
-                          {line.units_per_case}
+                          {line.supplier_item_code || line.product_code || "—"}{" "}
+                          ·{" "}
+                          {line.quantity_unit === "lb"
+                            ? `${line.case_weight ?? "—"} ${line.case_weight_unit ?? ""}`
+                            : (line.units_per_case ?? "—")}
                         </LtrText>
                       </span>
+                      {line.new_item && (
+                        <Badge tone="info">{t("New item", "کالای جدید")}</Badge>
+                      )}
+                      {line.new_item_association && (
+                        <span className="order-item-caption">
+                          {t("Product Code", "کد کالا")}:{" "}
+                          <LtrText>
+                            {line.new_item_association.product_code}
+                          </LtrText>
+                        </span>
+                      )}
                       {line.outstanding_decision && (
                         <span className="order-item-caption">
                           {line.outstanding_decision === "short"
@@ -925,16 +1371,32 @@ export default function Orders() {
                       <LtrText>{line.ordered_cases}</LtrText>
                     </td>
                     <td className="numeric">
-                      <LtrText>{line.ordered_units}</LtrText>
+                      <LtrText>
+                        {line.ordered_units ?? "—"}
+                        {line.ordered_units !== null
+                          ? orderQuantitySuffix(line)
+                          : ""}
+                      </LtrText>
                     </td>
                     <td className="numeric">
-                      <LtrText>{line.received_units}</LtrText>
+                      <LtrText>
+                        {line.received_units}
+                        {orderQuantitySuffix(line)}
+                      </LtrText>
                     </td>
                     <td className="numeric">
-                      <LtrText>{line.cancelled_units}</LtrText>
+                      <LtrText>
+                        {line.cancelled_units}
+                        {orderQuantitySuffix(line)}
+                      </LtrText>
                     </td>
                     <td className="numeric">
-                      <LtrText>{remainingOrderUnits(line)}</LtrText>
+                      <LtrText>
+                        {remainingOrderUnits(line) ?? "—"}
+                        {remainingOrderUnits(line) !== null
+                          ? orderQuantitySuffix(line)
+                          : ""}
+                      </LtrText>
                     </td>
                     <td className="numeric">
                       {money(line.expected_line_total, selected.currency)}
@@ -1148,6 +1610,86 @@ export default function Orders() {
         </Card>
       )}
       <Dialog
+        open={newItemOpen}
+        onOpenChange={setNewItemOpen}
+        title={t("New item", "کالای جدید")}
+        className="new-order-item-dialog"
+      >
+        <form
+          aria-label={t("New item", "کالای جدید")}
+          onSubmit={(event) => {
+            event.preventDefault();
+            addNewItem();
+          }}
+        >
+          <Field label={t("Name", "نام")} error={newItemErrors.name}>
+            <input
+              value={newItemName}
+              onChange={(event) => {
+                setNewItemName(event.target.value);
+                setNewItemErrors((current) => ({ ...current, name: "" }));
+              }}
+            />
+          </Field>
+          <div className="new-order-item-fields">
+            <Field
+              label={t("Units per case (optional)", "واحد در کارتن (اختیاری)")}
+              error={newItemErrors.pack}
+            >
+              <NumberField
+                value={newItemPack}
+                min="1"
+                step="1"
+                onChange={(value) => {
+                  setNewItemPack(value);
+                  setNewItemErrors((current) => ({ ...current, pack: "" }));
+                }}
+              />
+            </Field>
+            <Field label={t("Cases", "کارتن")} error={newItemErrors.quantity}>
+              <NumberField
+                value={newItemCases}
+                min="0"
+                step={newItemPack ? "0.5" : "1"}
+                onChange={(value) => {
+                  setNewItemCases(value);
+                  setNewItemErrors((current) => ({ ...current, quantity: "" }));
+                }}
+              />
+            </Field>
+            <Field
+              label={t(
+                "Expected unit cost (optional)",
+                "هزینهٔ مورد انتظار واحد (اختیاری)",
+              )}
+              error={newItemErrors.cost}
+            >
+              <NumberField
+                value={newItemCost}
+                min="0"
+                step="0.0001"
+                onChange={(value) => {
+                  setNewItemCost(value);
+                  setNewItemErrors((current) => ({ ...current, cost: "" }));
+                }}
+              />
+            </Field>
+          </div>
+          <p className="helper">
+            {t(
+              "This item is temporary. Choose its actual invoice line when the delivery arrives.",
+              "این کالا موقت است. هنگام رسیدن تحویل، ردیف واقعی آن را در فاکتور انتخاب کنید.",
+            )}
+          </p>
+          <div className="actions">
+            <Button variant="secondary" onClick={() => setNewItemOpen(false)}>
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button type="submit">{t("Add item", "افزودن کالا")}</Button>
+          </div>
+        </form>
+      </Dialog>
+      <Dialog
         open={cancelId !== null}
         onOpenChange={(open) => {
           if (!open) setCancelId(null);
@@ -1206,13 +1748,11 @@ export default function Orders() {
       >
         {printPreview && (
           <>
-            <div className="order-sheet-preview">
-              <OrderPrintDocument
-                order={printPreview}
-                config={state.config}
-                language={lang}
-              />
-            </div>
+            <ScaledOrderPreview
+              order={printPreview}
+              config={state.config}
+              language={lang}
+            />
             <div className="actions">
               <Button variant="secondary" onClick={() => setPrintPreview(null)}>
                 {t("Close", "بستن")}

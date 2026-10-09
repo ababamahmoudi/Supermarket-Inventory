@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { validatePricingConfig } from "./pricing";
+import { validateWeighedSettings, weighedSettings } from "./weighed";
 import type { Branch, CompanyConfig, DemoState, Language, Role } from "./types";
 
 export type SettingsGroup =
@@ -265,12 +266,14 @@ export function savePricingSettings(
 ) {
   guard(state, actor);
   validatePricingConfig(candidate);
+  validateWeighedSettings(candidate);
   if (candidate.pricing_categories.some((category) => !category.label.trim()))
     throw new SettingsError("name");
   const before = {
     pricing_categories: structuredClone(state.config.pricing_categories),
     rounding_bands: structuredClone(state.config.rounding_bands),
     special_corrections: structuredClone(state.config.special_corrections),
+    weighed_items: weighedSettings(state.config),
   };
   state.config.pricing_categories = structuredClone(
     candidate.pricing_categories,
@@ -279,6 +282,7 @@ export function savePricingSettings(
   state.config.special_corrections = structuredClone(
     candidate.special_corrections,
   );
+  state.config.weighed_items = weighedSettings(candidate);
   record(
     state,
     "catalog",
@@ -287,6 +291,7 @@ export function savePricingSettings(
       pricing_categories: state.config.pricing_categories,
       rounding_bands: state.config.rounding_bands,
       special_corrections: state.config.special_corrections,
+      weighed_items: state.config.weighed_items,
     },
     actor,
   );

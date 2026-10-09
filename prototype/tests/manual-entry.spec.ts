@@ -131,7 +131,7 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
     "Grocery",
   );
   await expect(
-    dialog.getByLabel("Selling price", { exact: true }),
+    dialog.getByLabel("Selling price (per unit)", { exact: true }),
   ).not.toHaveValue("");
   const conflictingBarcode = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)!).products[0].barcode,

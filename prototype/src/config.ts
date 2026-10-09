@@ -77,6 +77,13 @@ export const configSeed = {
   },
   invoices: { ...retainedConfig.invoices, ...sourceConfig.invoices },
   session: sourceConfig.session,
+  weighed_items: {
+    ...sourceConfig.weighed_items,
+    main_display_unit:
+      sourceConfig.weighed_items.main_display_unit === "kg"
+        ? ("kg" as const)
+        : ("lb" as const),
+  },
 };
 
 const products = sourceDemo.products.map((product) => ({

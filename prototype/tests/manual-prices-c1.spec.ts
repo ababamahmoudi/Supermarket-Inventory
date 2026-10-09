@@ -27,7 +27,9 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("3.29");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("3.29");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
@@ -118,7 +120,9 @@ test("branch-only manual prices do not flag the other location", async ({
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("3.29");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("3.29");
   await chooseOption(
     page,
     editor.getByLabel("Approval scope", { exact: true }),

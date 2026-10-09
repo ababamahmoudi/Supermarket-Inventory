@@ -2,8 +2,14 @@ import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
-import { costPerCase, packUnits, supplierItemFacts } from "./supplier-items";
+import {
+  costPerCase,
+  invoiceCaseCostBeforeTax,
+  packUnits,
+  supplierItemFacts,
+} from "./supplier-items";
 import { effectiveInvoiceLocation } from "./received";
+import { weightQuantityPerLb } from "./weighed";
 import type { OperationsContext } from "./operations";
 import type { Branch, DemoInvoice, DemoState, NoteRecord } from "./types";
 
@@ -19,9 +25,16 @@ export interface OrderLine {
   name_en: string;
   name_fa: string;
   unit_size: string;
-  units_per_case: number;
+  /** Unknown temporary packs remain null; no one-unit pack is invented. */
+  units_per_case: number | null;
   ordered_cases: string;
-  ordered_units: number;
+  ordered_units: number | null;
+  new_item?: boolean;
+  new_item_association?: OrderNewItemAssociation;
+  quantity_unit?: "units" | "lb";
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
   expected_unit_cost: string | null;
   expected_case_cost: string | null;
   expected_line_total: string | null;
@@ -30,6 +43,29 @@ export interface OrderLine {
   cancelled_units: number;
   outstanding_decision?: OrderDecision;
   source_note_ids: string[];
+}
+export interface InvoiceNewItemMatch {
+  order_line_id: string;
+  order_version: number;
+  invoice_line_index: number;
+  product_code: string;
+  supplier_item_code: string;
+  units_per_case: number;
+  fingerprint: string;
+}
+export interface OrderNewItemAssociation {
+  invoice_id: string;
+  invoice_line_index: number;
+  product_code: string;
+  supplier_item_id: string;
+  supplier_item_code: string;
+  units_per_case: number;
+  ordered_quantity: number;
+  quantity_unit: "units" | "lb";
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
+  fingerprint: string;
 }
 export interface OrderReceiptInput {
   invoice_id: string;
@@ -69,6 +105,7 @@ export interface Order {
   cancelled_by?: string;
   cancellation_reason?: string;
   expected_total_before_tax: string | null;
+  estimate_incomplete?: boolean;
   source_note_ids: string[];
   linked_invoice_ids: string[];
   version: number;
@@ -91,9 +128,19 @@ export interface OrderCandidate {
   expected_unit_cost: string | null;
   expected_case_cost: string | null;
   expected_cost_source: "last_bought" | "quoted" | null;
+  quantity_unit?: "units" | "lb";
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
 }
 export interface OrderDraftLineInput {
-  supplier_item_id: string;
+  supplier_item_id?: string;
+  new_item?: {
+    id: string;
+    name_en: string;
+    name_fa?: string;
+    units_per_case?: number | null;
+  };
   cases: string;
   expected_unit_cost?: string;
   source_note_ids?: string[];
@@ -126,9 +173,10 @@ export interface OrderComparison {
   lines: OrderComparisonLine[];
   residual: {
     order_line_id: string;
-    expected_remaining_units: number;
+    expected_remaining_units: number | null;
     received_units: number;
-    missing_units: number;
+    missing_units: number | null;
+    missing_cases?: string;
     absent: boolean;
   }[];
 }
@@ -140,6 +188,10 @@ export class OrderError extends Error {
       | "location"
       | "supplier"
       | "item"
+      | "name"
+      | "pack"
+      | "match"
+      | "case_weight"
       | "quantity"
       | "cost"
       | "empty"
@@ -157,8 +209,33 @@ function fail(code: OrderError["code"]): never {
   throw new OrderError(code);
 }
 const now = () => new Date().toISOString();
-export const remainingOrderUnits = (line: OrderLine) =>
-  Math.max(0, line.ordered_units - line.received_units - line.cancelled_units);
+export function orderQuantity(line: OrderLine): number | null {
+  return line.new_item_association?.ordered_quantity ?? line.ordered_units;
+}
+export function remainingOrderUnits(line: OrderLine): number | null {
+  const quantity = orderQuantity(line);
+  return quantity === null
+    ? null
+    : Decimal.max(
+        0,
+        new Decimal(quantity)
+          .minus(line.received_units)
+          .minus(line.cancelled_units),
+      ).toNumber();
+}
+export function remainingOrderCases(line: OrderLine): string {
+  const total = orderQuantity(line);
+  return total === null
+    ? line.outstanding_decision === "cancelled"
+      ? "0"
+      : line.ordered_cases
+    : total === 0
+      ? "0"
+      : new Decimal(remainingOrderUnits(line) ?? 0)
+          .times(line.ordered_cases)
+          .div(total)
+          .toString();
+}
 export function canUseOrders(state: DemoState, context: OrderContext): boolean {
   return (
     context.company_id === state.config.company.seed_key &&
@@ -232,8 +309,48 @@ export function orderCandidates(
       ),
     )
     .map((item) => {
+      const weighted = state.products.some(
+        (product) =>
+          product.company_id === context.company_id &&
+          product.code === item.product_code &&
+          product.sold_by === "weight",
+      );
       const unit =
         item.last_bought_unit_cost ?? item.quoted_unit_cost_before_tax ?? null;
+      const lastWeight = item.history[0];
+      const currentCaseWeight =
+        item.case_weight &&
+        item.case_weight_unit &&
+        item.weight_conversion_factor
+          ? weightQuantityPerLb(
+              item.case_weight,
+              item.case_weight_unit,
+              item.weight_conversion_factor,
+            )
+          : null;
+      const lastCaseWeight =
+        lastWeight?.case_weight &&
+        lastWeight.case_weight_unit &&
+        lastWeight.weight_conversion_factor
+          ? weightQuantityPerLb(
+              lastWeight.case_weight,
+              lastWeight.case_weight_unit,
+              lastWeight.weight_conversion_factor,
+            )
+          : null;
+      const weightedCaseCost =
+        currentCaseWeight === null
+          ? null
+          : item.last_bought_case_cost !== null && lastCaseWeight !== null
+            ? new Decimal(item.last_bought_case_cost)
+                .times(currentCaseWeight)
+                .div(lastCaseWeight)
+                .toFixed(4, Decimal.ROUND_HALF_UP)
+            : unit === null
+              ? null
+              : new Decimal(unit)
+                  .times(currentCaseWeight)
+                  .toFixed(4, Decimal.ROUND_HALF_UP);
       return {
         id: item.id,
         product_code: item.product_code,
@@ -243,9 +360,10 @@ export function orderCandidates(
         unit_size: item.unit_size,
         units_per_case: item.units_per_case,
         expected_unit_cost: unit,
-        expected_case_cost:
-          item.last_bought_case_cost !== null &&
-          item.last_bought_units_per_case !== null
+        expected_case_cost: weighted
+          ? weightedCaseCost
+          : item.last_bought_case_cost !== null &&
+              item.last_bought_units_per_case !== null
             ? new Decimal(item.last_bought_case_cost)
                 .times(item.units_per_case)
                 .div(item.last_bought_units_per_case)
@@ -259,6 +377,14 @@ export function orderCandidates(
             : item.quoted_unit_cost_before_tax !== undefined
               ? "quoted"
               : null,
+        ...(weighted
+          ? {
+              quantity_unit: "lb" as const,
+              case_weight: item.case_weight,
+              case_weight_unit: item.case_weight_unit,
+              weight_conversion_factor: item.weight_conversion_factor,
+            }
+          : {}),
       };
     });
 }
@@ -282,6 +408,54 @@ function expectedCost(value: string): string {
     fail("cost");
   return new Decimal(value).toFixed(4);
 }
+export function orderCandidateQuantity(
+  item: OrderCandidate,
+  cases: string,
+): number {
+  if (item.quantity_unit !== "lb") {
+    try {
+      return packUnits(cases, "cases", item.units_per_case);
+    } catch {
+      return fail("quantity");
+    }
+  }
+  if (
+    !item.case_weight ||
+    !item.case_weight_unit ||
+    !item.weight_conversion_factor
+  )
+    fail("case_weight");
+  if (!/^\d+(\.\d{1,3})?$/.test(cases)) fail("quantity");
+  const quantity = new Decimal(cases);
+  if (!quantity.isFinite() || quantity.lte(0) || quantity.decimalPlaces() > 3)
+    fail("quantity");
+  return new Decimal(
+    weightQuantityPerLb(
+      quantity.times(item.case_weight),
+      item.case_weight_unit,
+      item.weight_conversion_factor,
+    ),
+  ).toNumber();
+}
+export function orderCandidateCaseCost(
+  item: OrderCandidate,
+  unitCost: string,
+): string {
+  return item.quantity_unit === "lb" &&
+    item.case_weight &&
+    item.case_weight_unit &&
+    item.weight_conversion_factor
+    ? new Decimal(expectedCost(unitCost))
+        .times(
+          weightQuantityPerLb(
+            item.case_weight,
+            item.case_weight_unit,
+            item.weight_conversion_factor,
+          ),
+        )
+        .toFixed(4, Decimal.ROUND_HALF_UP)
+    : costPerCase(unitCost, item.units_per_case);
+}
 function draftValues(
   state: DemoState,
   context: OrderContext,
@@ -295,6 +469,7 @@ function draftValues(
   | "lines"
   | "source_note_ids"
   | "expected_total_before_tax"
+  | "estimate_incomplete"
 > {
   if (!locationAllowed(state, context, input.branch, true)) fail("location");
   const supplier = supplierRecords(state).find(
@@ -315,18 +490,86 @@ function draftValues(
     )
       fail("notes");
   const seen = new Set<string>();
-  const lines = input.lines.map((inputLine) => {
+  const lines = input.lines.map((inputLine): OrderLine => {
+    if (inputLine.new_item) {
+      const temporary = inputLine.new_item;
+      if (
+        !temporary.id.trim() ||
+        seen.has(temporary.id) ||
+        inputLine.supplier_item_id
+      )
+        fail("item");
+      seen.add(temporary.id);
+      const old = prior?.lines.find((line) => line.id === temporary.id);
+      if (
+        (old && !old.new_item) ||
+        (state.orders ?? []).some(
+          (order) =>
+            order.id !== prior?.id &&
+            order.lines.some((line) => line.id === temporary.id),
+        )
+      )
+        fail("item");
+      const name = temporary.name_en.trim();
+      if (!name) fail("name");
+      const pack = temporary.units_per_case ?? null;
+      if (pack !== null && (!Number.isSafeInteger(pack) || pack <= 0))
+        fail("pack");
+      let units: number | null;
+      try {
+        if (pack === null) {
+          const cases = new Decimal(inputLine.cases);
+          if (
+            !cases.isFinite() ||
+            !cases.isInteger() ||
+            cases.lte(0) ||
+            cases.gt(Number.MAX_SAFE_INTEGER)
+          )
+            fail("quantity");
+          units = null;
+        } else units = packUnits(inputLine.cases, "cases", pack);
+      } catch {
+        return fail("quantity");
+      }
+      const raw = inputLine.expected_unit_cost?.trim();
+      const unit = raw ? expectedCost(raw) : null;
+      const caseCost =
+        unit === null || pack === null ? null : costPerCase(unit, pack);
+      const noteIds = [...new Set(inputLine.source_note_ids ?? [])];
+      if (noteIds.some((id) => !selected.includes(id))) fail("notes");
+      return {
+        id: temporary.id,
+        company_id: context.company_id,
+        supplier_item_id: "",
+        product_code: "",
+        supplier_item_code: "",
+        name_en: name,
+        name_fa: temporary.name_fa?.trim() ?? "",
+        unit_size: "",
+        units_per_case: pack,
+        ordered_cases: new Decimal(inputLine.cases).toString(),
+        ordered_units: units,
+        new_item: true,
+        expected_unit_cost: unit,
+        expected_case_cost: caseCost,
+        expected_line_total:
+          caseCost === null
+            ? null
+            : new Decimal(caseCost)
+                .times(inputLine.cases)
+                .toFixed(2, Decimal.ROUND_HALF_UP),
+        expected_cost_source: raw ? "entered" : null,
+        received_units: 0,
+        cancelled_units: 0,
+        source_note_ids: noteIds,
+      };
+    }
     const item = candidates.find(
       (candidate) => candidate.id === inputLine.supplier_item_id,
     );
     if (!item || seen.has(item.id)) fail("item");
     seen.add(item.id);
-    let units: number;
-    try {
-      units = packUnits(inputLine.cases, "cases", item.units_per_case);
-    } catch {
-      return fail("quantity");
-    }
+    const units = orderCandidateQuantity(item, inputLine.cases);
     const rawCost = inputLine.expected_unit_cost?.trim();
     const unit = rawCost
       ? expectedCost(rawCost)
@@ -342,7 +585,7 @@ function draftValues(
       unit === null
         ? null
         : entered
-          ? costPerCase(unit, item.units_per_case)
+          ? orderCandidateCaseCost(item, unit)
           : item.expected_case_cost;
     const noteIds = [...new Set(inputLine.source_note_ids ?? [])];
     if (noteIds.some((id) => !selected.includes(id))) fail("notes");
@@ -373,6 +616,14 @@ function draftValues(
       received_units: 0,
       cancelled_units: 0,
       source_note_ids: noteIds,
+      ...(item.quantity_unit === "lb"
+        ? {
+            quantity_unit: item.quantity_unit,
+            case_weight: item.case_weight,
+            case_weight_unit: item.case_weight_unit,
+            weight_conversion_factor: item.weight_conversion_factor,
+          }
+        : {}),
     };
   });
   if (
@@ -386,6 +637,9 @@ function draftValues(
     supplier_id: supplier.id,
     lines,
     source_note_ids: selected,
+    estimate_incomplete: lines.some(
+      (line) => line.expected_line_total === null,
+    ),
     expected_total_before_tax: lines.some(
       (line) => line.expected_line_total === null,
     )
@@ -529,16 +783,21 @@ export function placeOrder(
     order.lines.some(
       (line) =>
         line.company_id !== context.company_id ||
-        !state.products.some(
-          (product) =>
-            product.company_id === context.company_id &&
-            product.code === line.product_code &&
-            product.status !== "archived",
-        ),
+        (!line.new_item &&
+          !state.products.some(
+            (product) =>
+              product.company_id === context.company_id &&
+              product.code === line.product_code &&
+              product.status !== "archived",
+          )),
     )
   )
     fail("item");
-  if (order.lines.some((line) => line.expected_unit_cost === null))
+  if (
+    order.lines.some(
+      (line) => !line.new_item && line.expected_unit_cost === null,
+    )
+  )
     fail("cost");
   for (const noteId of order.source_note_ids)
     if (
@@ -592,7 +851,9 @@ export function cancelOrder(
   if (!reason.trim()) fail("reason");
   const before = structuredClone(order);
   for (const line of order.lines) {
-    line.cancelled_units += remainingOrderUnits(line);
+    line.cancelled_units = new Decimal(line.cancelled_units)
+      .plus(remainingOrderUnits(line) ?? 0)
+      .toNumber();
     line.outstanding_decision = "cancelled";
   }
   order.status = "cancelled";
@@ -603,22 +864,131 @@ export function cancelOrder(
   audit(state, context, "Cancel order", order, before);
   return order;
 }
+export function invoiceNewItemFingerprint(
+  line: DemoInvoice["lines"][number],
+  index: number,
+  originalProductCode = line.product_code,
+): string {
+  return JSON.stringify([
+    index,
+    originalProductCode,
+    line.new_name_en ?? "",
+    line.new_name_fa ?? "",
+    line.supplier_item_code ?? "",
+    line.units_per_case ?? 1,
+    String(line.qty_invoiced),
+    String(line.qty_received_at_posting),
+    line.source_quantity ?? "",
+    line.source_quantity_unit ?? "",
+    line.case_weight ?? "",
+    line.case_weight_unit ?? "",
+    line.weight_conversion_factor ?? "",
+  ]);
+}
 function matchingLine(
   order: Order,
   invoiceLine: DemoInvoice["lines"][number],
+  index = 0,
+  invoice?: DemoInvoice,
 ): OrderLine | undefined {
+  const explicit = invoiceLine.order_new_item_match;
+  if (explicit) {
+    const matched = order.lines.find(
+      (line) => line.id === explicit.order_line_id && line.new_item,
+    );
+    const original =
+      invoice?.status === "posted" && explicit.product_code === "NEW"
+        ? "NEW"
+        : invoiceLine.product_code;
+    if (
+      !matched ||
+      invoiceLine.order_item_id !== matched.id ||
+      explicit.invoice_line_index !== index ||
+      explicit.order_version !== invoice?.order_review_version ||
+      explicit.fingerprint !==
+        invoiceNewItemFingerprint(invoiceLine, index, original)
+    )
+      fail("match");
+    if (
+      matched.new_item_association &&
+      (matched.new_item_association.invoice_id !== invoice?.id ||
+        matched.new_item_association.invoice_line_index !== index ||
+        matched.new_item_association.product_code !== invoiceLine.product_code)
+    )
+      fail("match");
+    return matched;
+  }
+  const associated = order.lines.find(
+    (line) =>
+      line.new_item_association &&
+      line.new_item_association.product_code === invoiceLine.product_code &&
+      line.new_item_association.supplier_item_code ===
+        (invoiceLine.supplier_item_code ?? "") &&
+      (!invoiceLine.supplier_item_id ||
+        line.new_item_association.supplier_item_id ===
+          invoiceLine.supplier_item_id),
+  );
+  if (associated) return associated;
   if (invoiceLine.supplier_item_id)
     return order.lines.find(
       (line) =>
+        !line.new_item &&
         line.supplier_item_id === invoiceLine.supplier_item_id &&
         line.product_code === invoiceLine.product_code,
     );
   const matches = order.lines.filter(
     (line) =>
+      !line.new_item &&
       line.product_code === invoiceLine.product_code &&
       line.supplier_item_code === (invoiceLine.supplier_item_code ?? ""),
   );
   return matches.length === 1 ? matches[0] : undefined;
+}
+export function orderLineInvoiceQuantity(
+  line: OrderLine,
+  invoiceLine: DemoInvoice["lines"][number],
+): number {
+  if (!line.new_item || line.new_item_association) {
+    const orderUsesWeight =
+      line.quantity_unit === "lb" ||
+      line.new_item_association?.quantity_unit === "lb";
+    const invoiceUsesWeight =
+      invoiceLine.sold_by === "weight" ||
+      invoiceLine.source_quantity_unit !== undefined;
+    if (orderUsesWeight !== invoiceUsesWeight) fail("quantity");
+  }
+  if (line.new_item_association)
+    return line.new_item_association.ordered_quantity;
+  if (!line.new_item) return line.ordered_units ?? fail("quantity");
+  if (
+    invoiceLine.source_quantity_unit === "kg" ||
+    invoiceLine.source_quantity_unit === "lb"
+  ) {
+    if (
+      !invoiceLine.case_weight ||
+      !invoiceLine.case_weight_unit ||
+      !invoiceLine.weight_conversion_factor
+    )
+      fail("case_weight");
+    const weight = new Decimal(invoiceLine.case_weight);
+    if (!weight.isFinite() || weight.lte(0)) fail("case_weight");
+    return new Decimal(
+      weightQuantityPerLb(
+        new Decimal(line.ordered_cases).times(weight),
+        invoiceLine.case_weight_unit,
+        invoiceLine.weight_conversion_factor,
+      ),
+    ).toNumber();
+  }
+  try {
+    return packUnits(
+      line.ordered_cases,
+      "cases",
+      line.units_per_case ?? invoiceLine.units_per_case ?? 1,
+    );
+  } catch {
+    return fail("quantity");
+  }
 }
 /** Pure comparison uses the pre-post remaining snapshot; never re-run a posted invoice for its locked review. */
 export function compareInvoiceOrder(
@@ -627,28 +997,56 @@ export function compareInvoiceOrder(
 ): OrderComparison {
   const consumed = new Map<string, number>();
   const present = new Set<string>();
+  const resolvedQuantities = new Map<string, number>();
+  const explicitlyMatched = new Set<string>();
   const lines = invoice.lines.map((line, index): OrderComparisonLine => {
-    const matched = matchingLine(order, line);
-    const expected = matched ? remainingOrderUnits(matched) : 0;
+    const matched = matchingLine(order, line, index, invoice);
+    if (matched?.new_item && line.order_new_item_match) {
+      if (explicitlyMatched.has(matched.id)) fail("match");
+      explicitlyMatched.add(matched.id);
+    }
+    const orderedQuantity = matched
+      ? orderLineInvoiceQuantity(matched, line)
+      : 0;
+    const expected = matched
+      ? Decimal.max(
+          0,
+          new Decimal(orderedQuantity)
+            .minus(matched.received_units)
+            .minus(matched.cancelled_units),
+        ).toNumber()
+      : 0;
+    if (matched) resolvedQuantities.set(matched.id, expected);
     const delivered = line.qty_received_at_posting;
-    const accepted = Math.max(0, delivered - (line.refused_units ?? 0));
+    const accepted = Decimal.max(
+      0,
+      new Decimal(delivered).minus(line.refused_units ?? 0),
+    ).toNumber();
     const before = matched ? (consumed.get(matched.id) ?? 0) : 0;
-    const available = Math.max(0, expected - before);
+    const available = Decimal.max(
+      0,
+      new Decimal(expected).minus(before),
+    ).toNumber();
     if (matched) {
-      consumed.set(matched.id, before + accepted);
+      consumed.set(matched.id, new Decimal(before).plus(accepted).toNumber());
       present.add(matched.id);
     }
     const pack = line.units_per_case ?? 1;
-    const newCaseCost =
-      line.case_cost_before_tax ?? costPerCase(line.unit_cost_before_tax, pack);
+    const newCaseCost = invoiceCaseCostBeforeTax(line);
     return {
       invoice_line_index: index,
       order_line_id: matched?.id,
       expected_remaining_units: expected,
       delivered_units: delivered,
       accepted_units: accepted,
-      extra_units: Math.max(0, delivered - available),
-      short_units: Math.max(0, line.qty_invoiced - delivered),
+      extra_units: Decimal.max(
+        0,
+        new Decimal(delivered).minus(available),
+      ).toNumber(),
+      short_units: Decimal.max(
+        0,
+        new Decimal(line.qty_invoiced).minus(delivered),
+      ).toNumber(),
       previous_unit_cost: matched?.expected_unit_cost ?? null,
       new_unit_cost: line.unit_cost_before_tax,
       price_changed:
@@ -671,19 +1069,33 @@ export function compareInvoiceOrder(
     order_version: order.version,
     lines,
     residual: order.lines
-      .filter((line) => remainingOrderUnits(line) > 0)
+      .filter(
+        (line) =>
+          remainingOrderUnits(line) !== 0 &&
+          line.outstanding_decision !== "cancelled",
+      )
       .map((line) => {
-        const expected = remainingOrderUnits(line);
+        const expected =
+          resolvedQuantities.get(line.id) ?? remainingOrderUnits(line);
         const received = consumed.get(line.id) ?? 0;
         return {
           order_line_id: line.id,
           expected_remaining_units: expected,
-          received_units: Math.min(expected, received),
-          missing_units: Math.max(0, expected - received),
+          received_units: expected === null ? 0 : Math.min(expected, received),
+          missing_units:
+            expected === null
+              ? null
+              : Decimal.max(
+                  0,
+                  new Decimal(expected).minus(received),
+                ).toNumber(),
+          ...(expected === null
+            ? { missing_cases: remainingOrderCases(line) }
+            : {}),
           absent: !present.has(line.id),
         };
       })
-      .filter((line) => line.missing_units > 0),
+      .filter((line) => line.missing_units === null || line.missing_units > 0),
   };
 }
 /** Invoice callers already authorize review. This narrowly suggests compatible open orders, not general browsing. */
@@ -839,11 +1251,15 @@ export function validateOrderReceipt(
     if (
       !line ||
       line.company_id !== context.company_id ||
-      matchingLine(order, line)?.id !== entry.order_line_id ||
+      matchingLine(order, line, entry.invoice_line_index, invoice)?.id !==
+        entry.order_line_id ||
       seen.has(entry.invoice_line_index) ||
       comparison?.order_line_id !== entry.order_line_id ||
       !order.lines.some((item) => item.id === entry.order_line_id) ||
-      !Number.isSafeInteger(entry.accepted_units) ||
+      !(line.source_quantity_unit
+        ? Number.isFinite(entry.accepted_units) &&
+          new Decimal(entry.accepted_units).decimalPlaces() <= 8
+        : Number.isSafeInteger(entry.accepted_units)) ||
       entry.accepted_units < 0
     )
       fail("receipt");
@@ -856,19 +1272,35 @@ export function validateOrderReceipt(
       )
       .flatMap((event) => event.lines)
       .filter((row) => row.invoice_line_index === entry.invoice_line_index)
-      .reduce((total, row) => total + row.accepted_units, 0);
+      .reduce((total, row) => total.plus(row.accepted_units), new Decimal(0));
     const expected =
       input.kind === "invoice"
-        ? line.qty_received_at_posting - (line.refused_units ?? 0)
-        : (line.qty_later_received ?? 0) - already;
+        ? new Decimal(line.qty_received_at_posting)
+            .minus(line.refused_units ?? 0)
+            .toNumber()
+        : new Decimal(line.qty_later_received ?? 0).minus(already).toNumber();
     if (
       input.kind === "invoice" &&
       (comparison!.delivered_units !== line.qty_received_at_posting ||
         comparison!.accepted_units !== expected ||
         comparison!.expected_remaining_units !==
-          remainingOrderUnits(
-            order.lines.find((item) => item.id === entry.order_line_id)!,
-          ))
+          Decimal.max(
+            0,
+            new Decimal(
+              orderLineInvoiceQuantity(
+                order.lines.find((item) => item.id === entry.order_line_id)!,
+                line,
+              ),
+            )
+              .minus(
+                order.lines.find((item) => item.id === entry.order_line_id)!
+                  .received_units,
+              )
+              .minus(
+                order.lines.find((item) => item.id === entry.order_line_id)!
+                  .cancelled_units,
+              ),
+          ).toNumber())
     )
       fail("receipt");
     if (
@@ -941,13 +1373,18 @@ export function applyInvoiceToOrder(
     const line = order.lines.find(
       (record) => record.id === entry.order_line_id,
     )!;
-    const credited = Math.min(remainingOrderUnits(line), entry.accepted_units);
-    line.received_units += credited;
+    const credited = Math.min(
+      remainingOrderUnits(line) ?? 0,
+      entry.accepted_units,
+    );
+    line.received_units = new Decimal(line.received_units)
+      .plus(credited)
+      .toNumber();
     if (remainingOrderUnits(line) === 0) delete line.outstanding_decision;
     return {
       ...entry,
       credited_units: credited,
-      extra_units: entry.accepted_units - credited,
+      extra_units: new Decimal(entry.accepted_units).minus(credited).toNumber(),
     };
   });
   for (const residual of input.residual) {
@@ -955,7 +1392,9 @@ export function applyInvoiceToOrder(
       (record) => record.id === residual.order_line_id,
     )!;
     if (residual.decision === "cancelled")
-      line.cancelled_units += remainingOrderUnits(line);
+      line.cancelled_units = new Decimal(line.cancelled_units)
+        .plus(remainingOrderUnits(line) ?? 0)
+        .toNumber();
     line.outstanding_decision = residual.decision;
   }
   order.receipts.push({
@@ -967,7 +1406,11 @@ export function applyInvoiceToOrder(
   });
   if (!order.linked_invoice_ids.includes(input.invoice_id))
     order.linked_invoice_ids.push(input.invoice_id);
-  order.status = order.lines.every((line) => remainingOrderUnits(line) === 0)
+  order.status = order.lines.every(
+    (line) =>
+      remainingOrderUnits(line) === 0 ||
+      line.outstanding_decision === "cancelled",
+  )
     ? "received"
     : "partially_received";
   order.version++;

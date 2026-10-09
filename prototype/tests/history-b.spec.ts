@@ -14,6 +14,7 @@ async function saveName(page: Page, name: string) {
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await page.mouse.move(0, 0);
 }
 async function freezeClock(page: Page) {
   await page.clock.install();
@@ -170,7 +171,9 @@ test("an intervening edit displays a conflict and cannot be silently overwritten
     name: "Revert change",
     exact: true,
   });
-  await expect(dialog.getByRole("alert")).toContainText("changed again");
+  await expect(
+    dialog.getByRole("alert").filter({ hasText: "changed again" }),
+  ).toContainText("changed again");
   await expect(
     dialog.getByRole("button", { name: "Revert change", exact: true }),
   ).toBeDisabled();
