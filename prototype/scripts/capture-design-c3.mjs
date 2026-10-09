@@ -220,13 +220,17 @@ try {
       await page.evaluate(async () => {
         await document.fonts.ready;
         window.scrollTo(0, 0);
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        );
       });
       await page.mouse.move(0, 0);
       const findings = await geometry(page);
       const filename = `${scene}-${variant}.png`;
       await page.screenshot({
         path: resolve(destination, filename),
-        fullPage: true,
+        fullPage:
+          variant !== "phone" && !(await page.locator("dialog[open]").count()),
         animations: "disabled",
       });
       results.push({ scene, variant, filename, layoutFindings: findings });
