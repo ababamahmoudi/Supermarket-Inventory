@@ -4,7 +4,7 @@
 }
 .order-form-card,
 .order-notes-card {
-  max-inline-size: 960px;
+  max-inline-size: none;
   inline-size: 100%;
 }
 .order-heading-fields {
@@ -21,12 +21,8 @@
   margin-block: 20px;
 }
 .order-items-table .ui-number {
-  inline-size: 140px;
-  max-inline-size: 140px;
-}
-.order-items-table col:nth-child(3),
-.order-items-table col:nth-child(5) {
-  width: 164px !important;
+  inline-size: 120px;
+  max-inline-size: 120px;
 }
 .order-item-caption {
   display: block;

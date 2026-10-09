@@ -4,7 +4,7 @@ import {
   ArrowLeftRight,
   Bell,
   ChevronRight,
-  ClipboardList,
+  BadgeCheck,
   CreditCard,
   Eye,
   EyeOff,
@@ -17,10 +17,12 @@ import {
   Package,
   PanelLeftClose,
   RotateCcw,
+  Receipt,
   Search,
   Settings,
   Sun,
   Store,
+  ShoppingCart,
   Tag,
   Tags,
   Truck,
@@ -64,6 +66,7 @@ import BranchRequests from "./screens/BranchRequests";
 import { branchRequestCount } from "./branch-requests";
 import "./a2-shared.css";
 import { demoUsers, useDemo } from "./store";
+import { useNavigationRestoration } from "./navigation";
 import type { AuthError } from "./auth";
 import type { Branch, Role } from "./types";
 import {
@@ -99,7 +102,7 @@ export const pages: {
     key: "invoices",
     en: "Invoices",
     fa: "فاکتورها",
-    icon: Truck,
+    icon: Receipt,
     group: "Daily",
     roles: ["floor_worker", "supervisor"],
   },
@@ -187,7 +190,7 @@ export const pages: {
     key: "approvals",
     en: "Approvals",
     fa: "تأییدها",
-    icon: ClipboardList,
+    icon: BadgeCheck,
     group: "Supervisor",
     roles: ["supervisor"],
   },
@@ -211,7 +214,7 @@ export const pages: {
     key: "orders",
     en: "Orders",
     fa: "سفارش‌ها",
-    icon: ClipboardList,
+    icon: ShoppingCart,
     group: "Supervisor",
     roles: ["floor_worker", "supervisor"],
   },
@@ -683,6 +686,7 @@ export default function App() {
     t,
   } = useDemo();
   const [hash, setHash] = useState(() => window.location.hash.slice(1));
+  useNavigationRestoration();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [compactGroups, setCompactGroups] = useState(
@@ -867,6 +871,47 @@ export default function App() {
     ) ??
     allowed.find((candidate) => candidate.key === defaultKey) ??
     allowed[0];
+  const routeDetailId = routeParams.get("id");
+  const detailInvoice =
+    page.key === "invoices" && routeDetailId
+      ? [state.invoice, ...(state.invoices ?? [])].find(
+          (item) =>
+            item.id === routeDetailId &&
+            item.company_id === context.company_id &&
+            (role === "supervisor" ||
+              effectiveInvoiceLocation(state, item) === user.branch),
+        )
+      : undefined;
+  const detailOrder =
+    page.key === "orders" && routeDetailId
+      ? state.orders?.find(
+          (item) =>
+            item.id === routeDetailId &&
+            item.company_id === context.company_id &&
+            (role === "supervisor" || item.branch === user.branch),
+        )
+      : undefined;
+  const detailRequest =
+    page.key === "requests" && routeDetailId
+      ? state.branch_requests?.find(
+          (item) =>
+            item.id === routeDetailId &&
+            item.company_id === context.company_id &&
+            (role === "supervisor" ||
+              item.from_branch === user.branch ||
+              item.to_branch === user.branch),
+        )
+      : undefined;
+  const detailBreadcrumb = currentProduct
+    ? lang === "fa"
+      ? currentProduct.name_fa
+      : currentProduct.name_en
+    : currentReturn
+      ? returnBreadcrumb
+      : (supplierDetail ??
+        detailInvoice?.supplier_invoice_number ??
+        detailOrder?.reference ??
+        detailRequest?.reference);
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
     (branch === "all" || record.branch === branch || record.branch === "all");
@@ -883,6 +928,7 @@ export default function App() {
     state.notes.filter(
       (note) =>
         inBranch(note) &&
+        !note.archived &&
         note.type === "note_to_supervisor" &&
         note.status === "open",
     ).length + customUnread;
@@ -1083,58 +1129,24 @@ export default function App() {
             className="breadcrumbs"
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
-            <span>
-              {branchLabel(
-                state.config,
-                page.key === "invoices" &&
-                  state.invoice.status !== "empty" &&
-                  (role === "supervisor" ||
-                    (state.invoice.status !== "posted"
-                      ? (state.invoice.handling_branch ??
-                          state.invoice.branch) === user.branch
-                      : effectiveInvoiceLocation(state, state.invoice) ===
-                        user.branch))
-                  ? effectiveInvoiceLocation(state, state.invoice)
-                  : branch,
-                lang,
-              )}
-            </span>
+            <a href={`#${defaultKey}`}>
+              {branchLabel(state.config, branch, lang)}
+            </a>
             <ChevronRight size={14} aria-hidden="true" />
-            {currentProduct || currentReturn || supplierDetail ? (
+            <a
+              href={`#${page.key}`}
+              aria-current={detailBreadcrumb ? undefined : "page"}
+            >
+              {t(page.en, page.fa)}
+            </a>
+            {detailBreadcrumb && (
               <>
-                <a href={`#${page.key}`}>{t(page.en, page.fa)}</a>
                 <ChevronRight size={14} aria-hidden="true" />
-                <span aria-current="page">
-                  {currentProduct ? (
-                    <bdi dir="auto">
-                      {lang === "fa"
-                        ? currentProduct.name_fa
-                        : currentProduct.name_en}
-                    </bdi>
-                  ) : supplierDetail ? (
-                    <LtrText>{supplierDetail}</LtrText>
-                  ) : (
-                    <bdi dir="auto">{returnBreadcrumb}</bdi>
-                  )}
-                </span>
+                <a href={`#${hash}`} aria-current="page">
+                  <bdi dir="auto">{detailBreadcrumb}</bdi>
+                </a>
               </>
-            ) : (
-              <span aria-current="page">{t(page.en, page.fa)}</span>
             )}
-            {page.key === "invoices" &&
-              state.invoice.status !== "empty" &&
-              state.invoice.company_id === state.config.company.seed_key &&
-              (role === "supervisor" ||
-                (role === "floor_worker" &&
-                  (state.invoice.status === "posted"
-                    ? effectiveInvoiceLocation(state, state.invoice)
-                    : (state.invoice.handling_branch ??
-                      state.invoice.branch)) === user.branch)) && (
-                <>
-                  <ChevronRight size={14} aria-hidden="true" />
-                  <LtrText>{state.invoice.supplier_invoice_number}</LtrText>
-                </>
-              )}
           </nav>
           <form
             className="topbar-search"

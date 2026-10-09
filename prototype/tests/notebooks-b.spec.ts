@@ -38,6 +38,7 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
     .click();
   await expect(dialog).not.toBeVisible();
   await notebookTab(page, "Cleaning log");
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
 }
 
 test("Notes search has a search icon, a placeholder, 44px controls and the singular note count", async ({
@@ -47,7 +48,7 @@ test("Notes search has a search icon, a placeholder, 44px controls and the singu
   await page.goto("/#notes");
   const search = page.getByLabel("Search notes", { exact: true });
   await expect(search).toHaveAttribute("placeholder", "Search all notebooks");
-  await expect(page.locator(".notebook-search-pill svg")).toBeVisible();
+  await expect(page.locator(".filter-search-pill svg")).toBeVisible();
   await search.fill("Sunflower oil");
   await expect(page.locator(".filter-count")).toHaveText("1 note");
   await expect(page.locator(".filter-count")).not.toHaveText("1 notes");
@@ -94,6 +95,7 @@ test("Supervisor configures a custom notebook and entries persist with author, b
     .getByRole("button", { name: "Save notebook", exact: true })
     .click();
   await expect(entry).toContainText("3.5 °C");
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await expect(
     page.getByLabel("Measurement (°F)", { exact: true }),
   ).toBeVisible();
@@ -144,6 +146,7 @@ test("archive retains authorized search results, restore keeps entries, and work
   await expect(
     page.getByRole("button", { name: /^(New|Edit|Archive) notebook$/ }),
   ).toHaveCount(0);
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
     .fill("Floor Worker cleaning check");

@@ -48,6 +48,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
   await createNotebook(page);
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const form = page.getByRole("form", { name: "Add note", exact: true });
   await expect(form).toBeVisible();
   const location = form.getByLabel("Location", { exact: true });
@@ -88,6 +89,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await page.reload();
   await page.getByRole("tab", { name: /^Cleaning log/ }).click();
   await expect(entry).toBeVisible();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await setLanguage(page, "fa");
   await expect(page.getByRole("tab", { name: /^دفتر نظافت/ })).toHaveAttribute(
     "aria-selected",
@@ -117,6 +119,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await signIn(page, "Floor Worker");
   await page.goto("/#notes");
   await page.getByRole("tab", { name: /^Cleaning log/ }).click();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await form
     .getByLabel("Note", { exact: true })
     .fill("Floor Worker cleaning check");
@@ -159,6 +162,7 @@ test("All branches notebook add picker is restricted to its configured location"
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
   await createNotebook(page, { location: "North York" });
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const location = page.getByLabel("Location", { exact: true });
   await location.click();
   await expect(

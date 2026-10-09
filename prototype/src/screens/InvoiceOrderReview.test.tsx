@@ -55,6 +55,7 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
   });
   placeOrder(state, context, order.id);
   setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
+  window.location.hash = `#invoices?id=${encodeURIComponent(state.invoice.id)}`;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   sessionStorage.setItem(
     SESSION_KEY,

@@ -78,8 +78,10 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     filters.getByLabel("Offer branch", { exact: true }),
     "Richmond Hill",
   );
-  const create = page.locator("section.card").filter({
-    has: page.getByRole("heading", { name: "Create offer", exact: true }),
+  await page.getByRole("button", { name: "Create offer", exact: true }).click();
+  const create = page.getByRole("dialog", {
+    name: "Create offer",
+    exact: true,
   });
   await chooseOption(
     page,

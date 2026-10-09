@@ -111,7 +111,7 @@ test("the document sticks beside the review and the action bar has a full surfac
     testInfo.project.name === "phone",
     "Phone review uses one stacked column.",
   );
-  await page.setViewportSize({ width: 1600, height: 1080 });
+  await page.setViewportSize({ width: 1920, height: 1080 });
   await review(page);
   await page.evaluate(() => window.scrollTo(0, 450));
   const pane = await page.locator(".invoice-document-pane").boundingBox();

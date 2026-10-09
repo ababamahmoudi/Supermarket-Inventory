@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
 import { effectiveApprovalLocation } from "./received";
+import { branchSellsToCustomers } from "./settings";
 import type { Branch, DemoState, Offer, Product } from "./types";
 
 /** The all-branches lookup previews the first configured demo branch. */
@@ -71,6 +72,7 @@ export function effectiveOffer(
   const price = effectivePrice(state, product, branch);
   if (!price) return null;
   const selectedBranch = lookupBranch(branch);
+  if (!branchSellsToCustomers(state.config, selectedBranch)) return null;
   const eligible = state.offers.filter(
     (offer) =>
       offer.company_id === product.company_id &&

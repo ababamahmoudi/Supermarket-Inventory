@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
 import { effectiveOffer, effectivePrice } from "./catalog";
-import { configuredBranches } from "./settings";
+import { branchSellsToCustomers, sellingBranches } from "./settings";
 import {
   clearManualPriceMarker,
   hydrateProductManualPriceMarkers,
@@ -34,6 +34,7 @@ export function recordDemoActivity(
     branch,
     product_code: productCode,
     action,
+    reversible: true,
     by: demoSeed.demo_users.find((user) => user.role === role)!.name,
     at: new Date().toISOString(),
   });
@@ -77,6 +78,7 @@ export function approvalSnapshot(
 ): string {
   const product = currentProduct(state, productCode);
   return JSON.stringify({
+    selling_locations: sellingBranches(state.config),
     price: product.selling_price,
     overrides: product.branch_prices ?? {},
     manual_prices: product.manual_prices,
@@ -124,6 +126,56 @@ export function approvalSnapshot(
   });
 }
 
+export interface ApprovalLocationEffect {
+  locations: Branch[];
+  old_price: string | null;
+  new_price: string;
+  offer_label?: string;
+  offer_stops: boolean;
+  override_removed: boolean;
+}
+
+/** Group locations only when every visible consequence is identical. */
+export function approvalLocationEffects(
+  state: DemoState,
+  approval: Approval,
+  scope: PriceScope,
+  target: Branch,
+): ApprovalLocationEffect[] {
+  if (approval.company_id !== state.config.company.seed_key) return [];
+  const product = currentProduct(state, approval.product_code);
+  const locations =
+    scope === "all"
+      ? sellingBranches(state.config)
+      : branchSellsToCustomers(state.config, target)
+        ? [target]
+        : [];
+  const groups = new Map<string, ApprovalLocationEffect>();
+  for (const location of locations) {
+    const offer = effectiveOffer(state, product, location);
+    const mapping = offerMapping(state, approval.proposed_price);
+    const effect: ApprovalLocationEffect = {
+      locations: [location],
+      old_price: effectivePrice(state, product, location),
+      new_price: approval.proposed_price,
+      offer_label: offer?.label,
+      offer_stops: Boolean(
+        offer &&
+        (!samePrice(offer.price, approval.proposed_price) ||
+          !mapping ||
+          mapping.offer !== offer.label),
+      ),
+      override_removed:
+        scope === "all" && Boolean(product.branch_prices?.[location]),
+    };
+    const key = JSON.stringify({ ...effect, locations: undefined });
+    const previous = groups.get(key);
+    if (previous) previous.locations.push(location);
+    else groups.set(key, effect);
+  }
+  return [...groups.values()];
+}
+
 /** Recheck after every effective price change, including removal of branch overrides. */
 export function reconcileOffers(
   state: DemoState,
@@ -137,6 +189,13 @@ export function reconcileOffers(
       offer.company_id === companyId && offer.product_code === productCode,
   );
   for (const offer of ownOffers) {
+    // Keep historical warehouse offers as evidence, without treating a warehouse
+    // receipt or company-price change as a retail offer action there.
+    if (
+      offer.scope === "branch" &&
+      !branchSellsToCustomers(state.config, offer.branch)
+    )
+      continue;
     const price =
       offer.scope === "all"
         ? product.selling_price
@@ -152,8 +211,16 @@ export function reconcileOffers(
   }
   const scopes: { scope: PriceScope; branch: Branch; price: string | null }[] =
     [
-      { scope: "all", branch: "all", price: product.selling_price || null },
-      ...configuredBranches(state.config, true)
+      ...(sellingBranches(state.config).length
+        ? [
+            {
+              scope: "all" as const,
+              branch: "all",
+              price: product.selling_price || null,
+            },
+          ]
+        : []),
+      ...sellingBranches(state.config)
         .filter((branch) => Boolean(product.branch_prices?.[branch]))
         .map((branch) => ({
           scope: "branch" as const,
@@ -208,7 +275,7 @@ export function syncPriceConflicts(
   if (companyId !== state.config.company.seed_key) return;
   const product = currentProduct(state, productCode);
   const prices = Object.fromEntries(
-    configuredBranches(state.config, true)
+    sellingBranches(state.config, true)
       .map((branch) => [branch, effectivePrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );
@@ -250,16 +317,30 @@ export function applyApprovedPrice(
 ): void {
   const product = currentProduct(state, productCode);
   const amount = priceAmount(price);
+  const sellingLocations = sellingBranches(state.config);
+  if (
+    (scope === "all" && !sellingLocations.length) ||
+    (scope === "branch" && !branchSellsToCustomers(state.config, branch))
+  )
+    throw new Error("Choose one branch that sells to customers");
   hydrateProductManualPriceMarkers(state, product);
   if (scope === "all") {
     product.selling_price = amount;
-    product.branch_prices = {};
+    product.branch_prices = Object.fromEntries(
+      Object.entries(product.branch_prices ?? {}).filter(
+        ([location]) => !sellingLocations.includes(location),
+      ),
+    );
+    product.manual_prices = Object.fromEntries(
+      Object.entries(product.manual_prices ?? {}).filter(
+        ([location]) =>
+          location !== "all" && !sellingLocations.includes(location),
+      ),
+    );
   } else {
-    if (branch === "all" || !configuredBranches(state.config).includes(branch))
-      throw new Error("Choose one branch");
     product.branch_prices = { ...product.branch_prices, [branch]: amount };
+    clearManualPriceMarker(product, branch);
   }
-  clearManualPriceMarker(product, scope === "all" ? "all" : branch);
   product.status = "active";
   reconcileOffers(state, productCode);
   syncPriceConflicts(state, productCode);
@@ -323,7 +404,9 @@ export function resolveApproval(
       targetBranch,
       approval.type === "new_product" ? "Approve product" : "Approve price",
     );
-  if (decision === "approve" && approval.manual_override)
+  if (decision === "approve" && approval.manual_override) {
+    const retained =
+      scope === "all" ? structuredClone(product.manual_prices ?? {}) : {};
     setManualPriceMarker(
       state,
       product,
@@ -333,6 +416,9 @@ export function resolveApproval(
       new Date(),
       approval.unit_cost,
     );
+    if (scope === "all")
+      product.manual_prices = { ...retained, ...product.manual_prices };
+  }
   approval.status = decision === "approve" ? "approved" : "rejected";
   approval.scope = scope;
   if (decision === "reject")
@@ -435,7 +521,7 @@ export function markPriceConflictIntentional(
   if (!alert) throw new Error("Conflict is no longer pending");
   const product = currentProduct(state, alert.product_code);
   const prices = Object.fromEntries(
-    configuredBranches(state.config, true)
+    sellingBranches(state.config, true)
       .map((branch) => [branch, effectivePrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );
@@ -472,7 +558,8 @@ export function offerReadiness(
   | "price_changed"
   | "mapping_missing"
   | "dates_invalid"
-  | "company_mismatch" {
+  | "company_mismatch"
+  | "location_not_selling" {
   const product = state.products.find(
     (item) =>
       item.code === offer.product_code &&
@@ -480,6 +567,12 @@ export function offerReadiness(
   );
   if (offer.company_id !== state.config.company.seed_key || !product)
     return "company_mismatch";
+  if (
+    (offer.scope === "all" && !sellingBranches(state.config).length) ||
+    (offer.scope === "branch" &&
+      !branchSellsToCustomers(state.config, offer.branch))
+  )
+    return "location_not_selling";
   const price =
     offer.scope === "all"
       ? product.selling_price
@@ -591,7 +684,7 @@ export function effectivePool(
   pool: string,
   currency: string,
 ): Product[] {
-  if (branch === "all") return [];
+  if (!branchSellsToCustomers(state.config, branch)) return [];
   return state.products
     .filter(
       (product) =>

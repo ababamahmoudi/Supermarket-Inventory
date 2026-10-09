@@ -1,4 +1,6 @@
-import { useState } from "react";
+import "../c3-tables.css";
+import { useEffect, useState } from "react";
+import { useListState, useRouteParam } from "../navigation";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft, X } from "lucide-react";
 import { useDemo } from "../store";
@@ -15,6 +17,7 @@ import {
   NumberField,
   PageHeader,
   Select,
+  useTableColumns,
 } from "../ui";
 import { DateText, LtrText, Money, ProductName } from "../presentation";
 import { branchLabel, configuredBranches } from "../settings";
@@ -68,39 +71,61 @@ export default function Orders() {
           : [],
   };
   const [form, setForm] = useState<FormState | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("id"),
+  const selectedId = useRouteParam("id");
+  const [search, setSearch] = useListState("orders.search", "");
+  const [status, setStatus] = useListState("orders.status", "all");
+  const [supplierFilter, setSupplierFilter] = useListState(
+    "orders.supplier",
+    "all",
   );
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [supplierFilter, setSupplierFilter] = useState("all");
-  const [locationFilter, setLocationFilter] = useState("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [locationFilter, setLocationFilter] = useListState(
+    "orders.location",
+    "all",
+  );
+  const [from, setFrom] = useListState("orders.from", "");
+  const [to, setTo] = useListState("orders.to", "");
   const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState("");
+  const [errorItemId, setErrorItemId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [printPreview, setPrintPreview] = useState<Order | null>(null);
+  const tableColumns = useTableColumns("orders", [
+    {
+      key: "reference",
+      label: t("Reference", "شماره"),
+      required: true,
+      width: "16%",
+    },
+    { key: "location", label: t("Location", "مکان"), width: "15%" },
+    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "25%" },
+    { key: "date", label: t("Date", "تاریخ"), width: "13%" },
+    {
+      key: "total",
+      label: t("Before-tax expected total", "جمع مورد انتظار پیش از مالیات"),
+      width: "16%",
+      align: "end",
+    },
+    { key: "status", label: t("Status", "وضعیت"), width: "15%" },
+  ]);
+  useEffect(() => {
+    const leaveForm = () => setForm(null);
+    window.addEventListener("hashchange", leaveForm);
+    return () => window.removeEventListener("hashchange", leaveForm);
+  }, []);
   const { printDocument, printOutput, clearPrint } = useOperationalPrint();
   const sessionScope = `${context.company_id}:${context.role}:${context.username ?? ""}:${context.branch}`;
   const [boundScope, setBoundScope] = useState(sessionScope);
   if (boundScope !== sessionScope) {
     setBoundScope(sessionScope);
     setForm(null);
-    setSelectedId(null);
     setPrintPreview(null);
     clearPrint();
     setCancelId(null);
     setReason("");
     setError("");
     setMessage("");
-    setSearch("");
-    setStatus("all");
-    setSupplierFilter("all");
-    setLocationFilter("all");
-    setFrom("");
-    setTo("");
     return null;
   }
   if (!canUseOrders(state, context))
@@ -151,14 +176,51 @@ export default function Orders() {
     try {
       update(mutator);
       setError("");
+      setErrorKey("");
+      setErrorItemId(null);
       setMessage(success);
       return true;
     } catch (caught) {
       setError(orderError(caught, t));
+      const key = caught instanceof Error ? caught.message : "";
+      setErrorKey(key);
+      const invalidItem = candidates.find((item) => {
+        const cases = form?.cases[item.id]?.trim();
+        if (!cases) return false;
+        if (key === "quantity") {
+          try {
+            packUnits(cases, "cases", item.units_per_case);
+            return false;
+          } catch {
+            return true;
+          }
+        }
+        if (key === "cost") {
+          const cost = form?.costs[item.id]?.trim() || item.expected_unit_cost;
+          return (
+            cost === null ||
+            cost === undefined ||
+            !/^\d+(\.\d{1,4})?$/.test(cost)
+          );
+        }
+        return false;
+      });
+      setErrorItemId(invalidItem?.id ?? null);
       setMessage("");
       return false;
     }
   };
+  const clearFieldError = (...keys: string[]) => {
+    if (keys.includes(errorKey)) {
+      setError("");
+      setErrorKey("");
+      setErrorItemId(null);
+    }
+  };
+  const fieldError = (...keys: string[]) =>
+    keys.includes(errorKey) ? error : undefined;
+  const itemError = (id: string, key: string) =>
+    errorItemId === id && errorKey === key ? error : undefined;
   const newForm = () => {
     setForm({
       branch:
@@ -173,7 +235,6 @@ export default function Orders() {
       selectedNotes: [],
       noteItems: {},
     });
-    setSelectedId(null);
     setError("");
     setMessage("");
   };
@@ -202,15 +263,23 @@ export default function Orders() {
     setError("");
     setMessage("");
   };
-  const setItemCases = (id: string, value: string) =>
+  const setItemCases = (id: string, value: string) => {
+    if (errorItemId === id) clearFieldError("quantity");
+    clearFieldError("empty");
+    if (form?.selectedNotes.some((noteId) => form.noteItems[noteId] === id))
+      clearFieldError("notes");
     setForm((current) =>
       current ? { ...current, cases: { ...current.cases, [id]: value } } : null,
     );
-  const setItemCost = (id: string, value: string) =>
+  };
+  const setItemCost = (id: string, value: string) => {
+    if (errorItemId === id) clearFieldError("cost");
     setForm((current) =>
       current ? { ...current, costs: { ...current.costs, [id]: value } } : null,
     );
+  };
   const addNote = (id: string) => {
+    clearFieldError("notes");
     const note = notes.find((item) => item.id === id);
     const matches = note?.product_code
       ? candidates.filter((item) => item.product_code === note.product_code)
@@ -259,8 +328,8 @@ export default function Orders() {
           : t("Draft saved.", "پیش‌نویس ذخیره شد."),
       )
     ) {
-      setSelectedId(savedId);
       setForm(null);
+      navigate(`orders?id=${encodeURIComponent(savedId)}`);
     }
   };
   const rowAmounts = candidates.map((item) => {
@@ -312,7 +381,6 @@ export default function Orders() {
         .toFixed(2);
   const back = () => {
     setForm(null);
-    setSelectedId(null);
     setError("");
     setMessage("");
     navigate("orders");
@@ -331,7 +399,7 @@ export default function Orders() {
           form || selected ? (
             <Button variant="ghost" onClick={back}>
               <ArrowLeft size={16} />
-              {t("All orders", "همه سفارش‌ها")}
+              {t("Back to Orders", "بازگشت به سفارش‌ها")}
             </Button>
           ) : (
             <Button onClick={newForm}>
@@ -341,11 +409,17 @@ export default function Orders() {
           )
         }
       />
-      {error && (
-        <p className="banner danger" role="alert">
-          {error}
-        </p>
-      )}
+      {error &&
+        !(
+          errorKey === "supplier" ||
+          errorKey === "location" ||
+          errorKey === "reason" ||
+          ((errorKey === "cost" || errorKey === "quantity") && errorItemId)
+        ) && (
+          <p className="banner danger" role="alert">
+            {error}
+          </p>
+        )}
       {message && (
         <p className="banner success" role="status">
           {message}
@@ -362,17 +436,21 @@ export default function Orders() {
               }}
             >
               <div className="order-heading-fields">
-                <Field label={t("Location", "مکان")}>
+                <Field
+                  label={t("Location", "مکان")}
+                  error={fieldError("location")}
+                >
                   <Select
                     value={form.branch}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      clearFieldError("location", "notes");
                       setForm({
                         ...form,
                         branch: value,
                         selectedNotes: [],
                         noteItems: {},
-                      })
-                    }
+                      });
+                    }}
                     options={[
                       { value: "", label: t("Choose location", "انتخاب مکان") },
                       ...locations.map((id) => ({
@@ -382,18 +460,29 @@ export default function Orders() {
                     ]}
                   />
                 </Field>
-                <Field label={t("Supplier", "تأمین‌کننده")}>
+                <Field
+                  label={t("Supplier", "تأمین‌کننده")}
+                  error={fieldError("supplier")}
+                >
                   <Select
                     value={form.supplier}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      clearFieldError(
+                        "supplier",
+                        "item",
+                        "notes",
+                        "empty",
+                        "quantity",
+                        "cost",
+                      );
                       setForm({
                         ...form,
                         supplier: value,
                         cases: {},
                         costs: {},
                         noteItems: {},
-                      })
-                    }
+                      });
+                    }}
                     options={[
                       {
                         value: "",
@@ -421,13 +510,13 @@ export default function Orders() {
                     <DataTable
                       className="order-items-table"
                       columns={[
-                        { width: "240px" },
-                        { width: "130px" },
-                        { width: "120px" },
-                        { width: "110px", align: "end" },
-                        { width: "160px", align: "end" },
-                        { width: "160px", align: "end" },
-                        { width: "150px", align: "end" },
+                        { width: "26%" },
+                        { width: "8%", align: "end" },
+                        { width: "16%", align: "end" },
+                        { width: "7%", align: "end" },
+                        { width: "16%", align: "end" },
+                        { width: "13%", align: "end" },
+                        { width: "14%", align: "end" },
                       ]}
                     >
                       <thead>
@@ -489,33 +578,48 @@ export default function Orders() {
                                 <LtrText>{item.units_per_case}</LtrText>
                               </td>
                               <td>
-                                <NumberField
-                                  aria-label={`${t("Cases", "کارتن")} — ${name}`}
-                                  value={form.cases[item.id] ?? ""}
-                                  min="0"
-                                  step="0.5"
-                                  onChange={(value) =>
-                                    setItemCases(item.id, value)
-                                  }
-                                />
+                                <Field
+                                  label={t("Cases", "کارتن")}
+                                  className="order-table-field"
+                                  error={itemError(item.id, "quantity")}
+                                >
+                                  <NumberField
+                                    aria-label={`${t("Cases", "کارتن")} — ${name}`}
+                                    value={form.cases[item.id] ?? ""}
+                                    min="0"
+                                    step="0.5"
+                                    onChange={(value) =>
+                                      setItemCases(item.id, value)
+                                    }
+                                  />
+                                </Field>
                               </td>
                               <td className="numeric">
                                 <LtrText>{row.units ?? "—"}</LtrText>
                               </td>
                               <td className="numeric">
-                                <NumberField
-                                  aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${name}`}
-                                  value={
-                                    form.costs[item.id] ??
-                                    item.expected_unit_cost ??
-                                    ""
-                                  }
-                                  onChange={(value) =>
-                                    setItemCost(item.id, value)
-                                  }
-                                  step="0.0001"
-                                  min="0"
-                                />
+                                <Field
+                                  label={t(
+                                    "Expected unit cost",
+                                    "هزینهٔ مورد انتظار واحد",
+                                  )}
+                                  className="order-table-field"
+                                  error={itemError(item.id, "cost")}
+                                >
+                                  <NumberField
+                                    aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${name}`}
+                                    value={
+                                      form.costs[item.id] ??
+                                      item.expected_unit_cost ??
+                                      ""
+                                    }
+                                    onChange={(value) =>
+                                      setItemCost(item.id, value)
+                                    }
+                                    step="0.0001"
+                                    min="0"
+                                  />
+                                </Field>
                                 <span className="order-item-caption">
                                   {costSource === "last_bought"
                                     ? t("Last bought", "آخرین خرید")
@@ -597,7 +701,8 @@ export default function Orders() {
                                 "Remove note from order",
                                 "حذف یادداشت از سفارش",
                               )}
-                              onClick={() =>
+                              onClick={() => {
+                                clearFieldError("notes");
                                 setForm({
                                   ...form,
                                   selectedNotes: form.selectedNotes.filter(
@@ -607,8 +712,8 @@ export default function Orders() {
                                     ...form.noteItems,
                                     [note.id]: "",
                                   },
-                                })
-                              }
+                                });
+                              }}
                             >
                               <X size={16} />
                               {t("Remove", "حذف")}
@@ -626,18 +731,24 @@ export default function Orders() {
                           <div className="order-note-mapping">
                             <Field
                               label={t("Supplier item", "کالای تأمین‌کننده")}
+                              error={
+                                !form.noteItems[note.id]
+                                  ? fieldError("notes")
+                                  : undefined
+                              }
                             >
                               <Select
                                 value={form.noteItems[note.id] ?? ""}
-                                onChange={(value) =>
+                                onChange={(value) => {
+                                  clearFieldError("notes");
                                   setForm({
                                     ...form,
                                     noteItems: {
                                       ...form.noteItems,
                                       [note.id]: value,
                                     },
-                                  })
-                                }
+                                  });
+                                }}
                                 options={[
                                   {
                                     value: "",
@@ -963,6 +1074,7 @@ export default function Orders() {
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
           </FilterToolbar>
+          <div className="table-column-actions">{tableColumns.chooser}</div>
           {!visible.length ? (
             <EmptyState>
               {t(
@@ -973,14 +1085,7 @@ export default function Orders() {
           ) : (
             <DataTable
               className="orders-list-table"
-              columns={[
-                { width: "145px" },
-                { width: "165px" },
-                { width: "220px" },
-                { width: "135px" },
-                { width: "170px", align: "end" },
-                { width: "180px" },
-              ]}
+              columns={tableColumns.columns}
             >
               <thead>
                 <tr>
@@ -1002,9 +1107,9 @@ export default function Orders() {
                   <tr key={order.id}>
                     <td>
                       <Button
-                        variant="ghost"
+                        variant="secondary"
                         onClick={() => {
-                          setSelectedId(order.id);
+                          navigate(`orders?id=${encodeURIComponent(order.id)}`);
                           setError("");
                           setMessage("");
                         }}
@@ -1053,10 +1158,13 @@ export default function Orders() {
           "رسیدهای قبلی و ارتباط با فاکتورها حفظ می‌شوند.",
         )}
       >
-        <Field label={t("Reason", "دلیل")}>
+        <Field label={t("Reason", "دلیل")} error={fieldError("reason")}>
           <textarea
             value={reason}
-            onChange={(event) => setReason(event.target.value)}
+            onChange={(event) => {
+              setReason(event.target.value);
+              clearFieldError("reason");
+            }}
             rows={3}
           />
         </Field>

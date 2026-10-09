@@ -35,9 +35,20 @@ import {
   Inbox,
   Search,
   ArrowUpRight,
+  Columns3,
 } from "lucide-react";
 import { useDemo } from "./store";
+import {
+  defaultHiddenColumns,
+  normaliseHiddenColumns,
+  readTableColumns,
+  resetTableColumns,
+  saveTableColumns,
+  tablePreferenceKey,
+  type TableColumnDefinition,
+} from "./c3-column-preferences";
 import "./controls.css";
+import "./c3-components.css";
 
 export function cn(...values: ClassValue[]) {
   return twMerge(clsx(values));
@@ -48,7 +59,8 @@ const buttonVariants = cva("button", {
       primary: "button-primary",
       secondary: "button-secondary",
       danger: "button-danger",
-      ghost: "button-ghost",
+      quiet: "button-quiet",
+      ghost: "button-quiet button-ghost",
     },
     size: { default: "", sm: "button-sm" },
   },
@@ -62,7 +74,7 @@ export function Button({
   type = "button",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "danger" | "quiet" | "ghost";
   size?: "default" | "sm";
   asChild?: boolean;
 }) {
@@ -267,7 +279,11 @@ export function Field({
           })
         : children}
       {(error || hint) && (
-        <p id={descriptionId} className={error ? "form-error" : "helper"}>
+        <p
+          id={descriptionId}
+          className={error ? "form-error" : "helper"}
+          role={error ? "alert" : undefined}
+        >
           {error ?? hint}
         </p>
       )}
@@ -301,9 +317,11 @@ export function DataTable({
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: {
     key?: string;
+    label?: string;
     width?: string | number;
     align?: "start" | "end";
     actions?: boolean;
+    hidden?: boolean;
   }[];
 }) {
   const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
@@ -324,6 +342,17 @@ export function DataTable({
         (node) => isValidElement(node) && node.type === "tr",
       )
     : undefined;
+  const textOf = (node: ReactNode): string => {
+    if (typeof node === "string" || typeof node === "number")
+      return String(node);
+    if (Array.isArray(node)) return node.map(textOf).join(" ");
+    if (isValidElement<{ children?: ReactNode }>(node))
+      return textOf(node.props.children);
+    return "";
+  };
+  const headerCells = isValidElement<{ children?: ReactNode }>(headerRow)
+    ? cells(headerRow.props.children)
+    : [];
   const resolvedColumns =
     columns ??
     (isValidElement<{ children?: ReactNode }>(headerRow)
@@ -338,13 +367,28 @@ export function DataTable({
             typeof label === "string" &&
             ["Action", "Actions", "عملیات", "اقدام"].includes(label);
           return {
+            label: textOf(label),
             width: actions ? 120 : numeric ? 140 : undefined,
             align: numeric || actions ? ("end" as const) : ("start" as const),
             actions,
             key: undefined as string | undefined,
+            hidden: false,
           };
         })
       : []);
+  const visibleColumns = resolvedColumns.filter((column) => !column.hidden);
+  const columnWeight = (column: (typeof resolvedColumns)[number]): number => {
+    if (typeof column.width === "number") return Math.max(1, column.width);
+    if (column.width?.endsWith("%"))
+      return Math.max(1, parseFloat(column.width) * 10);
+    if (column.width && /^\d+(?:\.\d+)?(?:px)?$/.test(column.width))
+      return Math.max(1, parseFloat(column.width));
+    return column.actions ? 120 : column.align === "end" ? 112 : 220;
+  };
+  const totalWeight = visibleColumns.reduce(
+    (total, column) => total + columnWeight(column),
+    0,
+  );
   const decorate = (nodes: ReactNode): ReactNode =>
     Children.map(nodes, (node) => {
       if (
@@ -356,21 +400,34 @@ export function DataTable({
         }>(node)
       )
         return node;
-      if (node.type === "tr")
+      if (node.type === "tr") {
+        let columnIndex = 0;
         return cloneElement(node, {
-          children: Children.map(cells(node.props.children), (cell, index) => {
+          children: Children.map(cells(node.props.children), (cell) => {
             if (
               !isValidElement<{
                 className?: string;
                 style?: CSSProperties;
                 colSpan?: number;
-              }>(cell) ||
-              (cell.props.colSpan ?? 1) > 1
+                "data-column-key"?: string;
+                "data-column-label"?: string;
+              }>(cell)
             )
               return cell;
-            const column = resolvedColumns[index];
+            const originalIndex = columnIndex;
+            const span = cell.props.colSpan ?? 1;
+            columnIndex += span;
+            const covered = resolvedColumns
+              .slice(originalIndex, originalIndex + span)
+              .filter((column) => !column.hidden);
+            if (resolvedColumns.length && !covered.length) return null;
+            const column = covered[0];
             if (!column) return cell;
             return cloneElement(cell, {
+              colSpan: span > 1 ? covered.length : cell.props.colSpan,
+              "data-column-key": column.key,
+              "data-column-label":
+                column.label || textOf(headerCells[originalIndex]),
               className: cn(
                 cell.props.className,
                 column.align === "end" && "numeric",
@@ -383,21 +440,33 @@ export function DataTable({
             });
           }),
         });
+      }
       return cloneElement(node, { children: decorate(node.props.children) });
     });
   return (
     <div
       className={cn("table-wrap", "ui-data-table", className)}
       tabIndex={0}
+      data-visible-column-count={visibleColumns.length}
       {...props}
     >
-      <table className="has-defined-columns">
+      <table
+        className="has-defined-columns"
+        data-visible-column-count={visibleColumns.length}
+        style={
+          {
+            "--table-min-width": `${Math.ceil(totalWeight)}px`,
+          } as CSSProperties
+        }
+      >
         <colgroup>
-          {resolvedColumns.map((column, index) => (
+          {visibleColumns.map((column, index) => (
             <col
               key={column.key ?? index}
               style={{
-                width: column.width ?? (column.actions ? "120px" : undefined),
+                width: totalWeight
+                  ? `${(columnWeight(column) / totalWeight) * 100}%`
+                  : undefined,
               }}
             />
           ))}
@@ -407,6 +476,113 @@ export function DataTable({
     </div>
   );
 }
+export function useTableColumns(
+  table: string,
+  definitions: readonly TableColumnDefinition[],
+) {
+  const { state, user } = useDemo();
+  const scope = {
+    company: state.config.company.seed_key,
+    user: user?.username ?? "signed-out",
+    table,
+  };
+  const key = tablePreferenceKey(scope);
+  let storage: Storage | undefined;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // Presentation preferences do not block the table in restricted browsers.
+  }
+  const [preference, setPreference] = useState(() => ({
+    key,
+    hidden: readTableColumns(storage, scope, definitions),
+  }));
+  const hidden = normaliseHiddenColumns(
+    definitions,
+    preference.key === key
+      ? preference.hidden
+      : readTableColumns(storage, scope, definitions),
+  );
+  const isVisible = (column: string) => !hidden.includes(column);
+  const change = (column: string, visible: boolean) => {
+    const next = normaliseHiddenColumns(
+      definitions,
+      visible ? hidden.filter((item) => item !== column) : [...hidden, column],
+    );
+    saveTableColumns(storage, scope, definitions, next);
+    setPreference({ key, hidden: next });
+  };
+  const reset = () => {
+    resetTableColumns(storage, scope);
+    setPreference({ key, hidden: defaultHiddenColumns(definitions) });
+  };
+  return {
+    columns: definitions.map((column) => ({
+      ...column,
+      hidden: !isVisible(column.key),
+    })),
+    isVisible,
+    chooser: (
+      <ColumnChooser
+        columns={definitions}
+        isVisible={isVisible}
+        onChange={change}
+        onReset={reset}
+      />
+    ),
+  };
+}
+
+export function ColumnChooser({
+  columns,
+  isVisible,
+  onChange,
+  onReset,
+}: {
+  columns: readonly TableColumnDefinition[];
+  isVisible: (key: string) => boolean;
+  onChange: (key: string, visible: boolean) => void;
+  onReset: () => void;
+}) {
+  const { t } = useDemo();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setOpen(true)}>
+        <Columns3 size={18} strokeWidth={1.5} aria-hidden="true" />
+        {t("Columns", "ستون‌ها")}
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t("Columns", "ستون‌ها")}
+        className="c3-column-dialog"
+      >
+        <div className="c3-column-options">
+          {columns.map((column, index) => (
+            <Checkbox
+              key={column.key}
+              checked={isVisible(column.key)}
+              disabled={index === 0 || column.required}
+              onChange={(visible) => onChange(column.key, visible)}
+            >
+              {column.label}
+            </Checkbox>
+          ))}
+        </div>
+        <div className="actions c3-dialog-actions">
+          <Button variant="quiet" onClick={onReset}>
+            {t("Reset columns", "بازنشانی ستون‌ها")}
+          </Button>
+          <Button variant="secondary" onClick={() => setOpen(false)}>
+            {t("Close", "بستن")}
+          </Button>
+        </div>
+      </Dialog>
+    </>
+  );
+}
+
 export function FilterToolbar({
   children,
   search,
@@ -524,6 +700,8 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   children,
+  confirmVariant = "primary",
+  confirmDisabled = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -532,6 +710,8 @@ export function ConfirmDialog({
   confirmLabel: string;
   onConfirm: () => void;
   children?: ReactNode;
+  confirmVariant?: "primary" | "secondary" | "danger" | "quiet" | "ghost";
+  confirmDisabled?: boolean;
 }) {
   const { t } = useDemo();
   return (
@@ -542,11 +722,13 @@ export function ConfirmDialog({
       description={description}
     >
       {children}
-      <div className="actions">
+      <div className="actions c3-dialog-actions">
         <Button variant="secondary" onClick={() => onOpenChange(false)}>
           {t("Cancel", "انصراف")}
         </Button>
         <Button
+          variant={confirmVariant}
+          disabled={confirmDisabled}
           onClick={() => {
             onConfirm();
             onOpenChange(false);

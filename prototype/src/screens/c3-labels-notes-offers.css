@@ -1,0 +1,122 @@
+.labels-selection-toolbar {
+  display: flex;
+  align-items: center;
+  margin-block: 12px 16px;
+}
+.labels-selection-toolbar .ui-checked-control {
+  margin-block: 0;
+}
+.labels-product-table .ui-checked-control {
+  margin: 0;
+  min-inline-size: 40px;
+  min-block-size: 40px;
+  justify-content: center;
+}
+.labels-product-table th:first-child,
+.labels-product-table td:first-child {
+  padding-inline: 4px;
+}
+.labels-selection-bar {
+  position: sticky;
+  inset-block-end: 16px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-block-start: 20px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+.labels-selection-bar .field {
+  margin: 0;
+}
+.labels-selection-bar .ui-button {
+  min-block-size: 44px;
+}
+.labels-products-card {
+  padding-block-end: 24px;
+}
+.ui-dialog.c3-operation-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: 720px;
+}
+.c3-operation-dialog form {
+  display: grid;
+  gap: 20px;
+}
+.c3-operation-dialog .form-grid {
+  margin-block: 0;
+  max-inline-size: none;
+}
+.notebook-entry-dialog .notebook-note-field {
+  grid-column: 1 / -1;
+}
+.notebook-entry-dialog textarea {
+  min-block-size: 112px;
+}
+.c3-operation-dialog .dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-block-start: 4px;
+}
+.offers-create-dialog form > p,
+.offers-create-dialog form > .ui-checked-control {
+  margin-block: 0;
+}
+.current-offers-table .product-name strong,
+.current-offers-table .product-name small,
+.labels-product-table .product-name strong,
+.labels-product-table .product-name small,
+.labels-waitlist-table .product-name strong,
+.labels-waitlist-table .product-name small {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+.current-offers-table td > .muted {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 8px;
+}
+.current-offers-table td > .muted .manual-price-pill {
+  margin: 0;
+}
+.current-offers-table .offer-scope {
+  white-space: nowrap;
+}
+@media (min-width: 761px) {
+  .labels-products-card .labels-product-table {
+    max-block-size: 560px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .labels-product-table table,
+  .labels-waitlist-table table,
+  .current-offers-table table {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+}
+@media (max-width: 760px) {
+  .labels-selection-bar {
+    inset-block-end: 8px;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .labels-selection-bar .ui-button {
+    inline-size: 100%;
+  }
+  .labels-product-table table {
+    min-inline-size: 680px;
+  }
+  .current-offers-table table {
+    min-inline-size: 720px;
+  }
+}

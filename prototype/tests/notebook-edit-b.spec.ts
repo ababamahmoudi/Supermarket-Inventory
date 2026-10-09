@@ -17,13 +17,14 @@ async function storedEntry(page: Page, text: string) {
   );
 }
 
-test("a worker corrects their own note within five seconds, the original author window expires, and the Supervisor can edit later", async ({
+test("a worker corrects their own note within ten seconds, the original author window expires, and the Supervisor can edit later", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await deliTab(page);
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page.getByLabel("Note", { exact: true }).fill("Afternoon fridge check");
   await page.getByLabel("Measurement (°C)", { exact: true }).fill("3.4");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
@@ -32,7 +33,7 @@ test("a worker corrects their own note within five seconds, the original author 
   await expect(
     card.getByRole("button", { name: "Edit note", exact: true }),
   ).toBeVisible();
-  await page.clock.runFor(4000);
+  await page.clock.runFor(9000);
   await card.getByRole("button", { name: "Edit note", exact: true }).click();
   const editor = page.getByRole("form", { name: "Edit note", exact: true });
   await editor
@@ -104,13 +105,14 @@ test("a worker corrects their own note within five seconds, the original author 
   });
 });
 
-test("an already-open worker editor expires after five seconds and Cancel keeps the saved record intact", async ({
+test("an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await deliTab(page);
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page.getByLabel("Note", { exact: true }).fill("Unchanged saved check");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   const original = await storedEntry(page, "Unchanged saved check");
@@ -120,7 +122,7 @@ test("an already-open worker editor expires after five seconds and Cancel keeps 
     .click();
   const editor = page.getByRole("form", { name: "Edit note", exact: true });
   await editor.getByLabel("Note", { exact: true }).fill("Unsaved correction");
-  await page.clock.runFor(5001);
+  await page.clock.runFor(10001);
   await expect(
     editor.getByRole("button", { name: "Save changes", exact: true }),
   ).toBeDisabled();

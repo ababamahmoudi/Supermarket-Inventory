@@ -1,6 +1,8 @@
+import "../c3-tables.css";
 import { useEffect, useState } from "react";
+import { useListState } from "../navigation";
 import Decimal from "decimal.js";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
 import {
   configuredBranches,
@@ -40,6 +42,7 @@ import {
   Select,
   Tabs,
   ConfirmDialog,
+  useTableColumns,
 } from "../ui";
 import type { OperationsContext } from "../operations";
 import "./suppliers-a2.css";
@@ -73,13 +76,16 @@ export default function Suppliers() {
   const branches = configuredBranches(state.config);
   const [editor, setEditor] = useState<"new" | "edit" | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
-  const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<string[]>([]);
-  const [sort, setSort] = useState<{ key: SortKey; descending: boolean }>({
-    key: "name",
-    descending: false,
-  });
-  const [tab, setTab] = useState<Tab>("overview");
+  const [query, setQuery] = useListState("suppliers.search", "");
+  const [filters, setFilters] = useListState<string[]>("suppliers.filters", []);
+  const [sort, setSort] = useListState<{ key: SortKey; descending: boolean }>(
+    "suppliers.sort",
+    {
+      key: "name",
+      descending: false,
+    },
+  );
+  const [tab, setTab] = useListState<Tab>("suppliers.tab", "overview");
   const [name, setName] = useState(() =>
     new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("name"),
   );
@@ -90,7 +96,6 @@ export default function Suppliers() {
           "name",
         ),
       );
-      setTab("overview");
     };
     window.addEventListener("hashchange", changed);
     return () => window.removeEventListener("hashchange", changed);
@@ -102,6 +107,79 @@ export default function Suppliers() {
     actor: user?.name ?? "",
   };
   const supervisor = role === "supervisor";
+  const tableColumns = useTableColumns("suppliers", [
+    {
+      key: "name",
+      label: t("Supplier", "تأمین‌کننده"),
+      required: true,
+      width: 210,
+    },
+    { key: "status", label: t("Status", "وضعیت"), width: 136 },
+    {
+      key: "last_delivery",
+      label: t("Last delivery", "آخرین تحویل"),
+      width: 128,
+    },
+    {
+      key: "deliveries",
+      label: t("Deliveries", "تحویل‌ها"),
+      width: 84,
+      align: "end",
+    },
+    {
+      key: "returns",
+      label: t("Open returns", "مرجوعی‌های باز"),
+      width: 88,
+      align: "end",
+    },
+    {
+      key: "shorts",
+      label: t("Open shorts", "کسری‌های باز"),
+      width: 88,
+      align: "end",
+    },
+    {
+      key: "terms",
+      label: t("Payment terms", "شرایط پرداخت"),
+      width: 96,
+      defaultVisible: false,
+    },
+    {
+      key: "contact",
+      label: t("Sales rep and phone", "نماینده فروش و تلفن"),
+      width: 160,
+      defaultVisible: false,
+    },
+    ...(supervisor
+      ? [
+          {
+            key: "balance",
+            label: t("Balance", "مانده"),
+            width: 120,
+            align: "end" as const,
+          },
+          {
+            key: "overdue",
+            label: t("Overdue", "سررسید گذشته"),
+            width: 120,
+            align: "end" as const,
+          },
+          {
+            key: "due",
+            label: t("Next due date", "سررسید بعدی"),
+            width: 128,
+            defaultVisible: false,
+          },
+        ]
+      : []),
+    {
+      key: "actions",
+      label: t("Actions", "عملیات"),
+      width: 104,
+      align: "end",
+      actions: true,
+    },
+  ]);
   if (role !== "supervisor" && role !== "floor_worker")
     return (
       <EmptyState>
@@ -236,15 +314,12 @@ export default function Suppliers() {
               </>
             }
             search={
-              <label className="supplier-search">
-                <Search size={18} aria-hidden="true" />
-                <input
-                  aria-label={t("Search suppliers", "جست‌وجوی تأمین‌کنندگان")}
-                  placeholder={t("Search suppliers", "جست‌وجوی تأمین‌کنندگان")}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </label>
+              <input
+                aria-label={t("Search suppliers", "جست‌وجوی تأمین‌کنندگان")}
+                placeholder={t("Search suppliers", "جست‌وجوی تأمین‌کنندگان")}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
             }
           >
             {supervisor ? (
@@ -295,29 +370,13 @@ export default function Suppliers() {
             >
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
+            {tableColumns.chooser}
           </FilterToolbar>
           <DataTable
             className={
               supervisor ? "suppliers-table supervisor" : "suppliers-table"
             }
-            columns={[
-              { width: "190px" },
-              { width: "95px" },
-              { width: "105px" },
-              { width: "95px", align: "end" },
-              { width: "80px", align: "end" },
-              { width: "80px", align: "end" },
-              { width: "90px" },
-              { width: "140px" },
-              ...(supervisor
-                ? [
-                    { width: "85px", align: "end" as const },
-                    { width: "85px", align: "end" as const },
-                    { width: "105px" },
-                  ]
-                : []),
-              { width: "70px", actions: true },
-            ]}
+            columns={tableColumns.columns}
           >
             <thead>
               <tr>
@@ -329,8 +388,8 @@ export default function Suppliers() {
                 <th>
                   {sortHeader(
                     "deliveries_this_month",
-                    "Deliveries this month",
-                    "تحویل‌های این ماه",
+                    "Deliveries",
+                    "تحویل‌ها",
                   )}
                 </th>
                 <th>

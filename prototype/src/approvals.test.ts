@@ -204,10 +204,11 @@ describe("approval scopes and prices", () => {
         ?.branch_prices,
     ).toEqual(
       Object.fromEntries(
-        state.config.branches.map((_, index) => [
-          `shop-${index + 1}`,
-          index === 1 ? "2.99" : "1.99",
-        ]),
+        state.config.branches.flatMap((branch, index) =>
+          branch.type === "warehouse"
+            ? []
+            : [[`shop-${index + 1}`, index === 1 ? "2.99" : "1.99"]],
+        ),
       ),
     );
     expect(

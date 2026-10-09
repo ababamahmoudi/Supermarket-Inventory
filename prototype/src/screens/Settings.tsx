@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { History, Plus } from "lucide-react";
 import { useDemo } from "../store";
 import {
@@ -16,6 +16,7 @@ import {
 } from "../ui";
 import {
   branchId,
+  branchSellsToCustomers,
   branchLabel,
   newBranch,
   saveBranchSettings,
@@ -66,8 +67,8 @@ const groups: {
     key: "branches",
     label: ["Branches", "شعب"],
     description: [
-      "Add branches and keep their details up to date.",
-      "شعب را اضافه کنید و اطلاعات آن‌ها را به‌روز نگه دارید.",
+      "Add locations and keep their details up to date.",
+      "مکان‌ها را اضافه کنید و اطلاعات آن‌ها را به‌روز نگه دارید.",
     ],
   },
   {
@@ -272,10 +273,33 @@ function SaveBar({
 function CompanySettings() {
   const { state, update, t, role, user } = useDemo();
   const persisted = JSON.stringify(state.config.company);
-  const [draft, setDraft] = useState<CompanyConfig["company"]>(() =>
+  const [draft, commitDraft] = useState<CompanyConfig["company"]>(() =>
     structuredClone(state.config.company),
   );
   const [error, setError] = useState<string>();
+  const [errorField, setErrorField] = useState<string>();
+  function setDraft(next: SetStateAction<CompanyConfig["company"]>) {
+    const value = typeof next === "function" ? next(draft) : next;
+    const changed =
+      errorField === "name"
+        ? value.name_en !== draft.name_en || value.name_fa !== draft.name_fa
+        : errorField === "color"
+          ? JSON.stringify(value.branding) !== JSON.stringify(draft.branding)
+          : errorField === "logo"
+            ? value.logo_data !== draft.logo_data
+            : errorField === "currency"
+              ? value.currency !== draft.currency
+              : errorField === "timezone"
+                ? value.timezone !== draft.timezone
+                : false;
+    if (changed) {
+      setError(undefined);
+      setErrorField(undefined);
+    }
+    commitDraft(value);
+  }
+  const fieldError = (field: string) =>
+    errorField === field ? error : undefined;
   function save() {
     try {
       const check = structuredClone(state);
@@ -294,6 +318,9 @@ function CompanySettings() {
       setError(undefined);
     } catch (failure) {
       setError(settingsError(failure, t));
+      setErrorField(
+        failure instanceof SettingsError ? failure.code : undefined,
+      );
     }
   }
   function logo(file: File) {
@@ -301,6 +328,7 @@ function CompanySettings() {
       !/^image\/(png|jpeg|webp)$/.test(file.type) ||
       file.size > 2 * 1024 * 1024
     ) {
+      setErrorField("logo");
       setError(
         t(
           "Use a PNG, JPEG or WebP logo smaller than 2 MB.",
@@ -321,7 +349,10 @@ function CompanySettings() {
         className="settings-form-card"
       >
         <div className="form-grid settings-company-fields">
-          <Field label={t("Name (English)", "نام (انگلیسی)")}>
+          <Field
+            label={t("Name (English)", "نام (انگلیسی)")}
+            error={!draft.name_en.trim() ? fieldError("name") : undefined}
+          >
             <input
               value={draft.name_en}
               onChange={(event) =>
@@ -329,7 +360,10 @@ function CompanySettings() {
               }
             />
           </Field>
-          <Field label={t("Name (Persian)", "نام (فارسی)")}>
+          <Field
+            label={t("Name (Persian)", "نام (فارسی)")}
+            error={!draft.name_fa.trim() ? fieldError("name") : undefined}
+          >
             <input
               dir="rtl"
               value={draft.name_fa}
@@ -338,7 +372,7 @@ function CompanySettings() {
               }
             />
           </Field>
-          <Field label={t("Currency", "ارز")}>
+          <Field label={t("Currency", "ارز")} error={fieldError("currency")}>
             <input
               dir="ltr"
               maxLength={3}
@@ -351,7 +385,10 @@ function CompanySettings() {
               }
             />
           </Field>
-          <Field label={t("Time zone", "منطقه زمانی")}>
+          <Field
+            label={t("Time zone", "منطقه زمانی")}
+            error={fieldError("timezone")}
+          >
             <input
               dir="ltr"
               value={draft.timezone}
@@ -360,7 +397,10 @@ function CompanySettings() {
               }
             />
           </Field>
-          <Field label={t("Brand color", "رنگ برند")}>
+          <Field
+            label={t("Brand color", "رنگ برند")}
+            error={fieldError("color")}
+          >
             <input
               dir="ltr"
               value={draft.branding.primary_color}
@@ -375,7 +415,10 @@ function CompanySettings() {
               }
             />
           </Field>
-          <Field label={t("Dark-theme brand color", "رنگ برند در حالت تیره")}>
+          <Field
+            label={t("Dark-theme brand color", "رنگ برند در حالت تیره")}
+            error={fieldError("color")}
+          >
             <input
               dir="ltr"
               value={draft.branding.dark_primary_color}
@@ -438,6 +481,11 @@ function CompanySettings() {
         </div>
       </Card>
       <Card title={t("Logo", "نشان")} className="settings-form-card">
+        {fieldError("logo") && (
+          <p role="alert" className="form-error">
+            {error}
+          </p>
+        )}
         <Dropzone
           accept="image/png,image/jpeg,image/webp"
           fileName={
@@ -454,11 +502,14 @@ function CompanySettings() {
           />
         )}
       </Card>
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
+      {error &&
+        !["name", "currency", "timezone", "color", "logo"].includes(
+          errorField ?? "",
+        ) && (
+          <p role="alert" className="form-error">
+            {error}
+          </p>
+        )}
       <SaveBar
         dirty={JSON.stringify(draft) !== persisted}
         save={save}
@@ -472,8 +523,26 @@ function CompanySettings() {
 }
 function BranchSettings() {
   const { state, update, t, role, user, lang } = useDemo();
-  const [editing, setEditing] = useState<ConfigBranch | null>(null);
+  const [editing, commitEditing] = useState<ConfigBranch | null>(null);
   const [error, setError] = useState<string>();
+  const [errorField, setErrorField] = useState<string>();
+  const [sellingEdited, setSellingEdited] = useState(false);
+  function setEditing(value: ConfigBranch | null) {
+    if (
+      editing &&
+      value &&
+      ((["name", "duplicate"].includes(errorField ?? "") &&
+        (editing.name_en !== value.name_en ||
+          editing.name_fa !== value.name_fa)) ||
+        (errorField === "branch" &&
+          (editing.type !== value.type ||
+            editing.sells_to_customers !== value.sells_to_customers)))
+    ) {
+      setError(undefined);
+      setErrorField(undefined);
+    }
+    commitEditing(value);
+  }
   const actor = {
     role: role ?? "cashier",
     company_id: state.config.company.seed_key,
@@ -488,6 +557,9 @@ function BranchSettings() {
       setError(undefined);
     } catch (failure) {
       setError(settingsError(failure, t));
+      setErrorField(
+        failure instanceof SettingsError ? failure.code : undefined,
+      );
     }
   }
   function active(code: string, value: boolean) {
@@ -497,6 +569,9 @@ function BranchSettings() {
       setError(undefined);
     } catch (failure) {
       setError(settingsError(failure, t));
+      setErrorField(
+        failure instanceof SettingsError ? failure.code : undefined,
+      );
     }
   }
   return (
@@ -505,6 +580,7 @@ function BranchSettings() {
         <div className="settings-section-actions">
           <Button
             onClick={() => {
+              setSellingEdited(false);
               setEditing(newBranch(state.config));
               setError(undefined);
             }}
@@ -517,7 +593,8 @@ function BranchSettings() {
           columns={[
             { width: "20%" },
             { width: "13%" },
-            { width: "22%" },
+            { width: "12%" },
+            { width: "17%" },
             { width: "15%" },
             { width: "12%" },
             { width: 176, actions: true },
@@ -527,6 +604,7 @@ function BranchSettings() {
             <tr>
               <th>{t("Name", "نام")}</th>
               <th>{t("Location type", "نوع مکان")}</th>
+              <th>{t("Sells to customers", "فروش به مشتری")}</th>
               <th>{t("Address", "نشانی")}</th>
               <th>{t("Phone", "تلفن")}</th>
               <th>{t("Status", "وضعیت")}</th>
@@ -543,6 +621,11 @@ function BranchSettings() {
                   {branch.type === "warehouse"
                     ? t("Warehouse", "انبار")
                     : t("Store", "فروشگاه")}
+                </td>
+                <td>
+                  {branchSellsToCustomers(state.config, branchId(branch, index))
+                    ? t("Yes", "بله")
+                    : t("No", "خیر")}
                 </td>
                 <td>{branch.address || "—"}</td>
                 <td>
@@ -562,6 +645,7 @@ function BranchSettings() {
                     size="sm"
                     variant="secondary"
                     onClick={() => {
+                      setSellingEdited(branch.sells_to_customers !== undefined);
                       setEditing({
                         ...structuredClone(branch),
                         id: branchId(branch, index),
@@ -613,7 +697,15 @@ function BranchSettings() {
         {editing && (
           <>
             <div className="form-grid settings-dialog-fields">
-              <Field label={t("Name (English)", "نام (انگلیسی)")}>
+              <Field
+                label={t("Name (English)", "نام (انگلیسی)")}
+                error={
+                  errorField === "duplicate" ||
+                  (errorField === "name" && !editing.name_en.trim())
+                    ? error
+                    : undefined
+                }
+              >
                 <input
                   value={editing.name_en}
                   onChange={(event) =>
@@ -621,7 +713,14 @@ function BranchSettings() {
                   }
                 />
               </Field>
-              <Field label={t("Name (Persian)", "نام (فارسی)")}>
+              <Field
+                label={t("Name (Persian)", "نام (فارسی)")}
+                error={
+                  errorField === "name" && !editing.name_fa.trim()
+                    ? error
+                    : undefined
+                }
+              >
                 <input
                   dir="rtl"
                   value={editing.name_fa}
@@ -645,6 +744,9 @@ function BranchSettings() {
                     setEditing({
                       ...editing,
                       type: value as "store" | "warehouse",
+                      sells_to_customers: sellingEdited
+                        ? editing.sells_to_customers
+                        : value !== "warehouse",
                     })
                   }
                   options={[
@@ -653,6 +755,17 @@ function BranchSettings() {
                   ]}
                 />
               </Field>
+              <Switch
+                checked={
+                  editing.sells_to_customers ?? editing.type !== "warehouse"
+                }
+                onChange={(checked) => {
+                  setSellingEdited(true);
+                  setEditing({ ...editing, sells_to_customers: checked });
+                }}
+              >
+                {t("Sells to customers", "فروش به مشتری")}
+              </Switch>
               <Field label={t("Phone", "تلفن")}>
                 <input
                   dir="ltr"
@@ -682,7 +795,7 @@ function BranchSettings() {
                 />
               </Field>
             </div>
-            {error && (
+            {error && !["name", "duplicate"].includes(errorField ?? "") && (
               <p role="alert" className="form-error">
                 {error}
               </p>
@@ -705,10 +818,19 @@ function BranchSettings() {
 function OfferSettings() {
   const { state, update, t, role, user } = useDemo();
   const persisted = JSON.stringify(state.config.promotions);
-  const [draft, setDraft] = useState(() =>
+  const [draft, commitDraft] = useState(() =>
     structuredClone(state.config.promotions),
   );
   const [error, setError] = useState<string>();
+  function setDraft(next: SetStateAction<CompanyConfig["promotions"]>) {
+    const value = typeof next === "function" ? next(draft) : next;
+    if (
+      JSON.stringify(value.price_to_offer) !==
+      JSON.stringify(draft.price_to_offer)
+    )
+      setError(undefined);
+    commitDraft(value);
+  }
   function save() {
     try {
       const actor = {
@@ -732,7 +854,14 @@ function OfferSettings() {
         <div className="settings-offer-mappings">
           {draft.price_to_offer.map((mapping, index) => (
             <div className="settings-offer-mapping" key={index}>
-              <Field label={t("Selling price", "قیمت فروش")}>
+              <Field
+                label={t("Selling price", "قیمت فروش")}
+                error={
+                  error && !/^\d+(?:\.\d{1,2})?$/.test(mapping.price)
+                    ? error
+                    : undefined
+                }
+              >
                 <NumberField
                   dir="ltr"
                   value={mapping.price}
@@ -749,7 +878,10 @@ function OfferSettings() {
                   }
                 />
               </Field>
-              <Field label={t("Offer", "پیشنهاد")}>
+              <Field
+                label={t("Offer", "پیشنهاد")}
+                error={error && !mapping.offer.trim() ? error : undefined}
+              >
                 <input
                   dir="ltr"
                   value={mapping.offer}
@@ -766,7 +898,14 @@ function OfferSettings() {
                   }
                 />
               </Field>
-              <Field label={t("Mix-and-match pool", "گروه ترکیبی")}>
+              <Field
+                label={t("Mix-and-match pool", "گروه ترکیبی")}
+                error={
+                  error && !mapping.mix_and_match_pool.trim()
+                    ? error
+                    : undefined
+                }
+              >
                 <input
                   dir="ltr"
                   value={mapping.mix_and_match_pool}

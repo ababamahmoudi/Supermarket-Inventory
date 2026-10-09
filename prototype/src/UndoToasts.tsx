@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDemo } from "./store";
 import { historyActionLabel, historyErrorMessage } from "./history-copy";
 import type { UndoToast } from "./undo-queue";
@@ -13,6 +14,12 @@ function UndoToastItem({
 }) {
   const { lang, t, undoActivity, pauseUndo } = useDemo();
   const [error, setError] = useState("");
+  useEffect(() => () => pauseUndo(toast.id, false), [toast.id, pauseUndo]);
+  useEffect(() => {
+    // A hovered/focused item can become the hidden fourth item after another
+    // action. Hidden items must keep counting down instead of staying paused.
+    if (hidden && toast.running_since === null) pauseUndo(toast.id, false);
+  }, [hidden, toast.id, toast.running_since, pauseUndo]);
   return (
     <div
       className="undo-toast"
@@ -57,9 +64,28 @@ function UndoToastItem({
 
 export default function UndoToasts() {
   const { undoToasts, user, locked, mustChangePassword, t, tCount } = useDemo();
+  const [host, setHost] = useState<HTMLElement>(() => document.body);
+  useEffect(() => {
+    // showModal dialogs live above every CSS stacking context. Keeping the
+    // stack in the active dialog also keeps Undo inside its keyboard boundary.
+    const chooseHost = () => {
+      const dialogs =
+        document.querySelectorAll<HTMLDialogElement>("dialog[open]");
+      setHost(dialogs.item(dialogs.length - 1) ?? document.body);
+    };
+    chooseHost();
+    const observer = new MutationObserver(chooseHost);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["open"],
+    });
+    return () => observer.disconnect();
+  }, []);
   if (!user || locked || mustChangePassword || !undoToasts.length) return null;
   const extra = Math.max(0, undoToasts.length - 3);
-  return (
+  return createPortal(
     <aside
       className="undo-toast-stack"
       aria-label={t("Recent actions", "کارهای اخیر")}
@@ -80,6 +106,7 @@ export default function UndoToasts() {
           )}
         </span>
       )}
-    </aside>
+    </aside>,
+    host,
   );
 }

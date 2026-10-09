@@ -318,6 +318,10 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Post invoice", exact: true })
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click();
   const saved = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)!),
     storage,

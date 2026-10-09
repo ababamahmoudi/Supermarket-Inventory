@@ -5,7 +5,7 @@ export interface UndoToast {
   remaining: number;
   running_since: number | null;
 }
-export const UNDO_DURATION = 5_000;
+export const UNDO_DURATION = 10_000;
 export function remainingTime(toast: UndoToast, now: number): number {
   return Math.max(
     0,
@@ -33,7 +33,7 @@ export function pauseUndoToast(
   paused: boolean,
   now: number,
 ): UndoToast[] {
-  return queue.map((item) =>
+  const next = queue.map((item) =>
     item.id !== id || (item.running_since === null) === paused
       ? item
       : {
@@ -42,6 +42,7 @@ export function pauseUndoToast(
           running_since: paused ? null : now,
         },
   );
+  return next.some((item, index) => item !== queue[index]) ? next : queue;
 }
 export function expireUndoToasts(queue: UndoToast[], now: number): UndoToast[] {
   return queue.filter((item) => remainingTime(item, now) > 0);

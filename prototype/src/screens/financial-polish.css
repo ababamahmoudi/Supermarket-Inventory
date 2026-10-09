@@ -62,11 +62,6 @@
 .dashboard-alert-item > .button {
   justify-self: start;
 }
-.dashboard-queue-row .button-secondary,
-.dashboard-queue-row .button-ghost {
-  background: var(--search-fill);
-  box-shadow: inset 0 0 0 1px var(--divider);
-}
 .payables-overview + .payables-toolbar {
   margin-block-start: 24px;
 }

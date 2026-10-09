@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
+import { addSelectedLabels } from "./label-selection";
 
 for (const language of ["en", "fa"] as const) {
   for (const dimensions of [
@@ -35,12 +36,7 @@ for (const language of ["en", "fa"] as const) {
         page.getByLabel("Saved template", { exact: true }),
       ).toHaveText("Template 1");
       await page.getByRole("tab", { name: "Products", exact: true }).click();
-      for (const code of ["0003", "0005", "0009"]) {
-        await page.getByLabel("Search products", { exact: true }).fill(code);
-        await page
-          .getByRole("button", { name: "Add to waitlist", exact: true })
-          .click();
-      }
+      await addSelectedLabels(page, ["0003", "0005", "0009"]);
       await page.getByRole("tab", { name: /^Waitlist/ }).click();
       await page
         .getByRole("button", { name: "Print labels", exact: true })

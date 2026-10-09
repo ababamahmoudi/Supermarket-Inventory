@@ -350,6 +350,10 @@ describe("scoped catalog cost history", () => {
 
 describe("approval location follows append-only invoice corrections", () => {
   it("invalidates an approval preview after a move and approves only the corrected location", () => {
+    // A warehouse can receive goods; branch retail approval requires explicit selling opt-in.
+    state.config.branches.find(
+      (location) => location.type === "warehouse",
+    )!.sells_to_customers = true;
     const original = state.invoices!.find(
       (record) =>
         record.branch === "Branch 1" &&

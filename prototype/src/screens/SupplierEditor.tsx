@@ -43,12 +43,19 @@ export function SupplierEditor({
   });
   const [error, setError] = useState<SupplierEditError["code"] | null>(null);
   const matches = similarSupplierNames(state, values.name, supplier?.id);
-  const patch = (key: keyof SupplierEdits, value: string | boolean) =>
+  const patch = (key: keyof SupplierEdits, value: string | boolean) => {
+    if (
+      (key === "name" && (error === "name" || error === "similar")) ||
+      (key === "email" && error === "email") ||
+      (key === "similar_name_confirmed" && error === "similar")
+    )
+      setError(null);
     setValues((current) => ({
       ...current,
       [key]: value,
       ...(key === "name" ? { similar_name_confirmed: false } : {}),
     }));
+  };
   const errors: Record<SupplierEditError["code"], string> = {
     permission: t(
       "Only a Supervisor can save this supplier.",
@@ -202,13 +209,23 @@ export function SupplierEditor({
             {values.opening_balances!.map((row, index) => (
               <div className="manual-opening-row" key={row.branch}>
                 <span>{branchLabel(state.config, row.branch, lang)}</span>
-                <Field label={t("Opening balance", "ماندهٔ اولیه")}>
+                <Field
+                  label={t("Opening balance", "ماندهٔ اولیه")}
+                  error={
+                    error === "balance" &&
+                    row.amount &&
+                    !/^-?\d+(?:\.\d{1,2})?$/.test(row.amount)
+                      ? errors.balance
+                      : undefined
+                  }
+                >
                   <input
                     dir="ltr"
                     inputMode="decimal"
                     className="control-narrow"
                     value={row.amount}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      if (error === "balance") setError(null);
                       setValues((current) => ({
                         ...current,
                         opening_balances: current.opening_balances!.map(
@@ -217,22 +234,26 @@ export function SupplierEditor({
                               ? { ...item, amount: event.target.value }
                               : item,
                         ),
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 </Field>
-                <Field label={t("As of", "در تاریخ")}>
+                <Field
+                  label={t("As of", "در تاریخ")}
+                  error={error === "date" ? errors.date : undefined}
+                >
                   <DateField
                     value={row.date}
-                    onChange={(date) =>
+                    onChange={(date) => {
+                      if (error === "date") setError(null);
                       setValues((current) => ({
                         ...current,
                         opening_balances: current.opening_balances!.map(
                           (item, itemIndex) =>
                             itemIndex === index ? { ...item, date } : item,
                         ),
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 </Field>
               </div>
@@ -241,6 +262,11 @@ export function SupplierEditor({
         )}
         {!!matches.length && (
           <div className="banner info manual-similar-warning" role="status">
+            {error === "similar" && (
+              <p role="alert" className="form-error">
+                {errors.similar}
+              </p>
+            )}
             <p>
               {t(
                 "A similar supplier already exists.",
@@ -270,11 +296,12 @@ export function SupplierEditor({
             </Checkbox>
           </div>
         )}
-        {error && (
-          <p className="form-error" role="alert">
-            {errors[error]}
-          </p>
-        )}
+        {error &&
+          !["name", "email", "balance", "date", "similar"].includes(error) && (
+            <p className="form-error" role="alert">
+              {errors[error]}
+            </p>
+          )}
         <div className="actions">
           <Button variant="secondary" onClick={onClose}>
             {t("Cancel", "انصراف")}

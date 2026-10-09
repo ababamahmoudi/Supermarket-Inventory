@@ -95,7 +95,9 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     ordered_cases: "0.5",
   });
   await page.reload();
-  await page.getByRole("button", { name: "ORD-0001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ORD-0001", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Place order", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Order placed.");
   await page.getByRole("button", { name: "Print order", exact: true }).click();
@@ -171,6 +173,7 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await page.goto("/#notes");
   await page.getByRole("tab", { name: "To order", exact: true }).click();
   const noteText = "Order cooking oil for the next delivery.";
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const noteForm = page.getByRole("form", { name: "Add note", exact: true });
   await noteForm.getByLabel("Note", { exact: true }).fill(noteText);
   await expect(
@@ -261,7 +264,9 @@ test("free-text To order note saves unresolved selection but needs explicit item
     )
     .toBe("ordered");
   await page.reload();
-  await page.getByRole("button", { name: "ORD-0001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ORD-0001", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Place order", exact: true }),
   ).toHaveCount(0);

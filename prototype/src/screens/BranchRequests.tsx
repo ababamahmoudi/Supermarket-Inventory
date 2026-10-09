@@ -2,6 +2,7 @@ import { useState } from "react";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
+import { useListState, useRouteParam } from "../navigation";
 import {
   Badge,
   Button,
@@ -251,7 +252,7 @@ export function RequestPickingList({
 
 type DraftLine = BranchRequestItemInput & { key: string };
 export default function BranchRequests() {
-  const { state, update, branch, role, user, lang, t } = useDemo();
+  const { state, update, branch, role, user, lang, t, navigate } = useDemo();
   const active = configuredBranches(state.config),
     allowed =
       role === "supervisor"
@@ -267,13 +268,13 @@ export default function BranchRequests() {
     branch,
     allowed_branches: allowed,
   };
-  const [tab, setTab] = useState("outgoing"),
-    [query, setQuery] = useState(""),
-    [statusFilter, setStatusFilter] = useState("open"),
-    [locationFilter, setLocationFilter] = useState("");
-  const [selected, setSelected] = useState<string | null>(() =>
-    new URLSearchParams(window.location.hash.split("?")[1]).get("id"),
-  );
+  const [tab, setTab] = useListState("requests.tab", "outgoing"),
+    [query, setQuery] = useListState("requests.search", ""),
+    [statusFilter, setStatusFilter] = useListState("requests.status", "open"),
+    [locationFilter, setLocationFilter] = useListState("requests.location", "");
+  const routeId = useRouteParam("id");
+  const [selected, setSelected] = useState<string | null>(routeId);
+  const [selectionRoute, setSelectionRoute] = useState(routeId);
   const [editing, setEditing] = useState<BranchRequest | null>(null),
     [formOpen, setFormOpen] = useState(false),
     [source, setSource] = useState(branch === "all" ? "" : branch),
@@ -290,6 +291,26 @@ export default function BranchRequests() {
     [reason, setReason] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState<string>("");
+  const [errorField, setErrorField] = useState<
+    BranchRequestError["code"] | null
+  >(null);
+  if (selectionRoute !== routeId) {
+    setSelectionRoute(routeId);
+    setSelected(routeId);
+    setFormOpen(false);
+  }
+  const openRequest = (id: string | null) => {
+    setSelected(id);
+    navigate(id ? `requests?id=${encodeURIComponent(id)}` : "requests");
+  };
+  const clearError = (...fields: BranchRequestError["code"][]) => {
+    if (errorField && fields.includes(errorField)) {
+      setError("");
+      setErrorField(null);
+    }
+  };
+  const fieldError = (field: BranchRequestError["code"]) =>
+    errorField === field ? error : undefined;
   const currentSessionKey = `${context.company_id}:${context.role}:${branch}:${context.username ?? ""}`;
   const [sessionKey, setSessionKey] = useState(currentSessionKey);
   if (sessionKey !== currentSessionKey) {
@@ -337,7 +358,11 @@ export default function BranchRequests() {
       update(work);
       setError("");
       setMessage(success);
+      setErrorField(null);
     } catch (failure) {
+      setErrorField(
+        failure instanceof BranchRequestError ? failure.code : null,
+      );
       setError(
         failure instanceof BranchRequestError
           ? t(...errorText[failure.code])
@@ -396,7 +421,7 @@ export default function BranchRequests() {
     );
     if (id) {
       setFormOpen(false);
-      setSelected(id);
+      openRequest(id);
     }
   };
   if (role === "cashier")
@@ -434,10 +459,27 @@ export default function BranchRequests() {
           {message}
         </p>
       )}
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
+      {error &&
+        (!formOpen ||
+          !["location", "quantity", "pack", "items"].includes(
+            errorField ?? "",
+          )) &&
+        errorField !== "reason" && (
+          <p role="alert" className="form-error">
+            {error}
+          </p>
+        )}
+      {formOpen && (
+        <Button
+          variant="quiet"
+          onClick={() => {
+            setFormOpen(false);
+            openRequest(null);
+          }}
+        >
+          <ArrowLeft size={16} />
+          {t("Back to requests", "بازگشت به درخواست‌ها")}
+        </Button>
       )}
       {formOpen ? (
         <Card
@@ -449,10 +491,18 @@ export default function BranchRequests() {
           className="request-form"
         >
           <div className="request-location-fields">
-            <Field label={t("Requesting location", "محل درخواست‌کننده")}>
+            <Field
+              label={t("Requesting location", "محل درخواست‌کننده")}
+              error={
+                !active.includes(source) ? fieldError("location") : undefined
+              }
+            >
               <Select
                 value={source}
-                onChange={setSource}
+                onChange={(value) => {
+                  setSource(value);
+                  clearError("location");
+                }}
                 disabled={branch !== "all" || Boolean(editing)}
                 options={[
                   { value: "", label: t("Choose location", "انتخاب محل") },
@@ -465,10 +515,20 @@ export default function BranchRequests() {
                 ]}
               />
             </Field>
-            <Field label={t("Sending location", "محل ارسال‌کننده")}>
+            <Field
+              label={t("Sending location", "محل ارسال‌کننده")}
+              error={
+                !active.includes(destination) || destination === source
+                  ? fieldError("location")
+                  : undefined
+              }
+            >
               <Select
                 value={destination}
-                onChange={setDestination}
+                onChange={(value) => {
+                  setDestination(value);
+                  clearError("location");
+                }}
                 options={[
                   { value: "", label: t("Choose location", "انتخاب محل") },
                   ...active
@@ -481,7 +541,10 @@ export default function BranchRequests() {
               />
             </Field>
           </div>
-          <Field label={t("Search products", "جستجوی کالا")}>
+          <Field
+            label={t("Search products", "جستجوی کالا")}
+            error={fieldError("items")}
+          >
             <input
               className="ui-input"
               value={productSearch}
@@ -524,6 +587,7 @@ export default function BranchRequests() {
                               .map((item) => item.units_per_case),
                           ),
                         ];
+                        clearError("items");
                         setLines([
                           ...lines,
                           {
@@ -557,6 +621,7 @@ export default function BranchRequests() {
               variant="secondary"
               disabled={!freeText.trim()}
               onClick={() => {
+                clearError("items");
                 setLines([
                   ...lines,
                   {
@@ -580,12 +645,16 @@ export default function BranchRequests() {
                   item.company_id === context.company_id &&
                   item.code === line.product_code,
               );
-              const change = (patch: Partial<DraftLine>) =>
+              const change = (patch: Partial<DraftLine>) => {
+                if ("quantity" in patch || "quantity_unit" in patch)
+                  clearError("quantity");
+                if ("units_per_case" in patch) clearError("pack", "quantity");
                 setLines(
                   lines.map((entry, i) =>
                     i === index ? { ...entry, ...patch } : entry,
                   ),
                 );
+              };
               return (
                 <div className="request-draft-line" key={line.key}>
                   <div className="request-line-heading">
@@ -611,7 +680,10 @@ export default function BranchRequests() {
                     </Button>
                   </div>
                   <div className="request-quantity-fields">
-                    <Field label={t("Quantity", "تعداد")}>
+                    <Field
+                      label={t("Quantity", "تعداد")}
+                      error={fieldError("quantity")}
+                    >
                       <NumberField
                         value={line.quantity}
                         onChange={(quantity) => change({ quantity })}
@@ -632,6 +704,7 @@ export default function BranchRequests() {
                     {line.quantity_unit === "cases" && (
                       <Field
                         label={t("Units per case", "تعداد در کارتن")}
+                        error={fieldError("pack")}
                         hint={
                           line.kind === "free_text"
                             ? t(
@@ -685,7 +758,7 @@ export default function BranchRequests() {
           <Button
             variant="ghost"
             onClick={() => {
-              setSelected(null);
+              openRequest(null);
               setMessage("");
             }}
           >
@@ -765,7 +838,7 @@ export default function BranchRequests() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelected(request.source_request_id!)}
+                  onClick={() => openRequest(request.source_request_id!)}
                 >
                   {readable.find(
                     (item) => item.id === request.source_request_id,
@@ -777,11 +850,15 @@ export default function BranchRequests() {
               !["closed", "cancelled"].includes(request.status) && (
                 <Field
                   label={t("Acting location", "محل انجام اقدام")}
+                  error={fieldError("location")}
                   className="request-acting-location"
                 >
                   <Select
                     value={actingLocation}
-                    onChange={setActingLocation}
+                    onChange={(value) => {
+                      setActingLocation(value);
+                      clearError("location");
+                    }}
                     options={[
                       { value: "", label: t("Choose location", "انتخاب محل") },
                       ...[request.from_branch, request.to_branch]
@@ -882,6 +959,7 @@ export default function BranchRequests() {
                             (sendSide ? "sent" : "received")
                           }
                           onChange={(checked) => {
+                            clearError("decision", "quantity");
                             if (checked) mark(sendSide ? "sent" : "received");
                             else {
                               const next = { ...decisions };
@@ -902,7 +980,10 @@ export default function BranchRequests() {
                               : "secondary"
                           }
                           size="sm"
-                          onClick={() => mark(sendSide ? "short" : "missing")}
+                          onClick={() => {
+                            clearError("decision", "quantity");
+                            mark(sendSide ? "short" : "missing");
+                          }}
                         >
                           {sendSide
                             ? t("Short", "کسری")
@@ -919,12 +1000,13 @@ export default function BranchRequests() {
                           >
                             <NumberField
                               value={current.quantity}
-                              onChange={(quantity) =>
+                              onChange={(quantity) => {
+                                clearError("quantity", "decision");
                                 setDecisions({
                                   ...decisions,
                                   [item.id]: { ...current, quantity },
-                                })
-                              }
+                                });
+                              }}
                             />
                           </Field>
                         )}
@@ -1094,7 +1176,7 @@ export default function BranchRequests() {
                           "موارد کسری یا نرسیده در پیش‌نویس جدید کپی شدند.",
                         ),
                       );
-                      if (copied) setSelected(copied.id);
+                      if (copied) openRequest(copied.id);
                     }}
                   >
                     {t(
@@ -1112,11 +1194,14 @@ export default function BranchRequests() {
             </div>
             {cancelOpen && (
               <div className="request-cancel">
-                <Field label={t("Reason", "دلیل")}>
+                <Field label={t("Reason", "دلیل")} error={fieldError("reason")}>
                   <input
                     className="ui-input"
                     value={reason}
-                    onChange={(event) => setReason(event.target.value)}
+                    onChange={(event) => {
+                      setReason(event.target.value);
+                      clearError("reason");
+                    }}
                   />
                 </Field>
                 <Button
@@ -1252,7 +1337,7 @@ export default function BranchRequests() {
                           variant="secondary"
                           size="sm"
                           onClick={() => {
-                            setSelected(item.id);
+                            openRequest(item.id);
                             setError("");
                             setMessage("");
                           }}

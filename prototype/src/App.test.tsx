@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App from "./App";
+import App, { pages } from "./App";
 import { DemoProvider, initialState, STORAGE_KEY } from "./store";
 import { AUTH_STORAGE_KEY, SESSION_KEY } from "./auth";
 import i18n from "./i18n";
@@ -31,6 +31,15 @@ async function openUserMenu(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "User menu" }));
 }
 describe("V2 authentication and role-aware shell", () => {
+  it("assigns a distinct icon to every sidebar destination", () => {
+    expect(new Set(pages.map((page) => page.icon)).size).toBe(pages.length);
+    expect(pages.find((page) => page.key === "invoices")?.icon).not.toBe(
+      pages.find((page) => page.key === "received")?.icon,
+    );
+    expect(pages.find((page) => page.key === "orders")?.icon).not.toBe(
+      pages.find((page) => page.key === "approvals")?.icon,
+    );
+  });
   it("hides lookup and navigation for a retained Cashier session whose store has become a warehouse", () => {
     const state = initialState();
     state.config.branches[0].type = "warehouse";
@@ -237,7 +246,12 @@ describe("V2 authentication and role-aware shell", () => {
   it("focuses global product search with / and routes its query to Lookup", async () => {
     show();
     const user = await signIn("cashier");
-    await user.click(screen.getByRole("link", { name: "Lookup" }));
+    await user.click(
+      within(screen.getByRole("navigation", { name: "Pages" })).getByRole(
+        "link",
+        { name: "Lookup" },
+      ),
+    );
     await user.keyboard("/");
     const search = screen.getByRole("textbox", { name: "Search all products" });
     expect(search).toHaveFocus();

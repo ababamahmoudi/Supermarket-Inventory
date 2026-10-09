@@ -1,9 +1,11 @@
+import "../c3-tables.css";
 import {
   branchLabel as configuredBranchLabel,
   configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
+import { useListState } from "../navigation";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
@@ -29,6 +31,8 @@ import {
   NumberField,
   SummaryTile,
   Tabs,
+  ConfirmDialog,
+  useTableColumns,
 } from "../ui";
 import {
   markLedgerDispute,
@@ -62,12 +66,15 @@ export function Payables() {
         .map((item) => item.main_supplier),
     ]),
   ];
-  const [supplier, setSupplier] = useState("");
-  const [search, setSearch] = useState("");
-  const [overdueOnly, setOverdueOnly] = useState(false);
-  const [withBalance, setWithBalance] = useState(false);
-  const [mode, setMode] = useState<"ledger" | "month">("ledger");
-  const [month, setMonth] = useState(() =>
+  const [supplier, setSupplier] = useListState("payables.supplier", "");
+  const [search, setSearch] = useListState("payables.search", "");
+  const [overdueOnly, setOverdueOnly] = useListState("payables.overdue", false);
+  const [withBalance, setWithBalance] = useListState("payables.balance", false);
+  const [mode, setMode] = useListState<"ledger" | "month">(
+    "payables.mode",
+    "ledger",
+  );
+  const [month, setMonth] = useListState("payables.month", () =>
     companyDate(state.config).slice(0, 7),
   );
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -87,7 +94,65 @@ export function Payables() {
   const [disputeId, setDisputeId] = useState<string | null>(null);
   const [disputeNote, setDisputeNote] = useState("");
   const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState("");
   const [message, setMessage] = useState("");
+  const [confirmMoney, setConfirmMoney] = useState<"payment" | "entry" | null>(
+    null,
+  );
+  const tableColumns = useTableColumns("payables", [
+    {
+      key: "supplier",
+      label: t("Supplier", "تأمین‌کننده"),
+      required: true,
+      width: "30%",
+    },
+    { key: "branch", label: t("Branch", "شعبه"), width: "17%" },
+    {
+      key: "balance",
+      label: t("Balance", "مانده"),
+      width: "14%",
+      align: "end",
+    },
+    {
+      key: "overdue",
+      label: t("Overdue", "سررسید گذشته"),
+      width: "14%",
+      align: "end",
+    },
+    { key: "due", label: t("Next due date", "سررسید بعدی"), width: "15%" },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: "10%",
+      align: "end",
+      actions: true,
+    },
+  ]);
+  const ledgerColumns = useTableColumns("payables.ledger", [
+    { key: "date", label: t("Date", "تاریخ"), width: 124 },
+    { key: "branch", label: t("Branch", "شعبه"), width: 132 },
+    { key: "type", label: t("Type", "نوع"), width: 156 },
+    {
+      key: "reference",
+      label: t("Reference / note", "مرجع / یادداشت"),
+      required: true,
+      width: 240,
+    },
+    { key: "amount", label: t("Amount", "مبلغ"), width: 112, align: "end" },
+    {
+      key: "cheque",
+      label: t("Cheque / payment date", "چک / تاریخ پرداخت"),
+      width: 140,
+    },
+    { key: "allocations", label: t("Allocations", "تخصیص‌ها"), width: 176 },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 148,
+      align: "end",
+      actions: true,
+    },
+  ]);
   if (role !== "supervisor")
     return (
       <EmptyState>
@@ -115,6 +180,8 @@ export function Payables() {
     setDisputeId(null);
     setError("");
     setMessage("");
+    setErrorKey("");
+    setConfirmMoney(null);
   };
   const changeBranch = (value: string) => {
     setBranch(value as Branch);
@@ -153,13 +220,85 @@ export function Payables() {
     try {
       update(action);
       setError("");
+      setErrorKey("");
       setMessage(feedback);
       return true;
     } catch (caught) {
+      const key = caught instanceof Error ? caught.message : "";
+      const localKey =
+        key === "payment_evidence"
+          ? !date
+            ? "payment_date"
+            : "payment_receipt"
+          : key === "adjustment_evidence"
+            ? !date
+              ? "entry_date"
+              : !entryReference.trim()
+                ? "entry_reference"
+                : !entryNote.trim()
+                  ? "entry_note"
+                  : "amount"
+            : key;
+      setErrorKey(localKey);
       setError(
         operationError(caught instanceof Error ? caught.message : "", t),
       );
       return false;
+    }
+  };
+  const clearFieldError = (...keys: string[]) => {
+    if (keys.includes(errorKey)) {
+      setError("");
+      setErrorKey("");
+    }
+  };
+  const fieldError = (...keys: string[]) =>
+    keys.includes(errorKey) ? error : undefined;
+  const confirmMoneyRecord = () => {
+    const payment = confirmMoney === "payment";
+    const saved = payment
+      ? run(
+          (draft) =>
+            postPayment(draft, context, {
+              supplier,
+              amount,
+              date,
+              cheque,
+              receipt,
+              note,
+              allocations: allocations ?? [],
+            }),
+          t(
+            "Recorded external payment and allocations. No money was transferred.",
+            "پرداخت خارج از برنامه و تخصیص‌ها ثبت شد. هیچ پولی منتقل نشد.",
+          ),
+        )
+      : run(
+          (draft) =>
+            postLedgerAdjustment(draft, context, {
+              supplier,
+              type: entryType,
+              amount: adjustment,
+              date,
+              reference: entryReference,
+              note: entryNote,
+            }),
+          t(
+            "Recorded ledger entry. Previous records were preserved.",
+            "ردیف دفتر ثبت شد. سوابق قبلی حفظ شدند.",
+          ),
+        );
+    setConfirmMoney(null);
+    if (!saved) return;
+    if (payment) {
+      setPaymentOpen(false);
+      setAllocations(null);
+      setReceipt("");
+    } else {
+      setEntryOpen(false);
+      setAdjustment("");
+      setEntryReference("");
+      setEntryNote("");
     }
   };
   const csv = () => {
@@ -238,20 +377,15 @@ export function Payables() {
         <Button variant="ghost" onClick={clearFilters}>
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
+        {tableColumns.chooser}
       </FilterToolbar>
       <Card
         title={t("Suppliers", "تأمین‌کنندگان")}
         className="payables-overview"
       >
         <DataTable
-          columns={[
-            { width: "32%" },
-            { width: "16%" },
-            { width: "14%", align: "end" },
-            { width: "14%", align: "end" },
-            { width: 156 },
-            { width: 96, actions: true },
-          ]}
+          className="payables-overview-table"
+          columns={tableColumns.columns}
         >
           <thead>
             <tr>
@@ -322,8 +456,7 @@ export function Payables() {
                   value={supplier}
                   onChange={(value) => {
                     setSupplier(value);
-                    setAllocations(null);
-                    setDisputeId(null);
+                    resetEntryForms();
                   }}
                   options={overview.map((item) => ({
                     value: item.supplier,
@@ -402,11 +535,25 @@ export function Payables() {
               {message}
             </div>
           )}
-          {error && (
-            <div className="banner danger" role="alert">
-              {error}
-            </div>
-          )}
+          {error &&
+            ![
+              "amount",
+              "credit_sign",
+              "opening_exists",
+              "payment_evidence",
+              "payment_date",
+              "payment_receipt",
+              "duplicate_document",
+              "adjustment_evidence",
+              "entry_date",
+              "entry_reference",
+              "entry_note",
+              "reason",
+            ].includes(errorKey) && (
+              <div className="banner danger" role="alert">
+                {error}
+              </div>
+            )}
           {paymentOpen && (
             <Card
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}
@@ -419,17 +566,30 @@ export function Payables() {
                 )}
               </p>
               <div className="form-grid">
-                <Field label={t("Payment amount", "مبلغ پرداخت")}>
+                <Field
+                  label={t("Payment amount", "مبلغ پرداخت")}
+                  error={fieldError("amount")}
+                >
                   <NumberField
                     value={amount}
                     onChange={(value) => {
                       setAmount(value);
                       setAllocations(null);
+                      clearFieldError("amount", "allocation");
                     }}
                   />
                 </Field>
-                <Field label={t("Payment date", "تاریخ پرداخت")}>
-                  <DateField value={date} onChange={setDate} />
+                <Field
+                  label={t("Payment date", "تاریخ پرداخت")}
+                  error={fieldError("payment_date")}
+                >
+                  <DateField
+                    value={date}
+                    onChange={(value) => {
+                      setDate(value);
+                      clearFieldError("payment_date");
+                    }}
+                  />
                 </Field>
                 <Field
                   label={t("Cheque number (optional)", "شماره چک (اختیاری)")}
@@ -441,10 +601,14 @@ export function Payables() {
                 </Field>
                 <Field
                   label={t("Payment receipt reference", "مرجع رسید پرداخت")}
+                  error={fieldError("payment_receipt", "duplicate_document")}
                 >
                   <input
                     value={receipt}
-                    onChange={(event) => setReceipt(event.target.value)}
+                    onChange={(event) => {
+                      setReceipt(event.target.value);
+                      clearFieldError("payment_receipt", "duplicate_document");
+                    }}
                     placeholder="DEMO-PAYMENT-001"
                   />
                 </Field>
@@ -465,6 +629,7 @@ export function Payables() {
                     );
                     setError("");
                   } catch (caught) {
+                    setErrorKey(caught instanceof Error ? caught.message : "");
                     setError(
                       operationError(
                         caught instanceof Error ? caught.message : "",
@@ -494,6 +659,7 @@ export function Payables() {
                     .map((invoice) => (
                       <Field
                         key={invoice.invoice_id}
+                        error={fieldError("allocation")}
                         label={`⁦${invoice.reference}⁩ · ${t("Outstanding", "مانده")}: ⁦${formatMoney(invoice.amount)}⁩`}
                       >
                         <NumberField
@@ -502,7 +668,8 @@ export function Payables() {
                               (item) => item.invoice_id === invoice.invoice_id,
                             )?.amount ?? "0.00"
                           }
-                          onChange={(value) =>
+                          onChange={(value) => {
+                            clearFieldError("allocation");
                             setAllocations((current) => [
                               ...(current ?? []).filter(
                                 (item) =>
@@ -512,8 +679,8 @@ export function Payables() {
                                 invoice_id: invoice.invoice_id,
                                 amount: value,
                               },
-                            ])
-                          }
+                            ]);
+                          }}
                         />
                       </Field>
                     ))}
@@ -527,30 +694,7 @@ export function Payables() {
                   )}
                   <Button
                     disabled={branch === "all"}
-                    onClick={() => {
-                      if (
-                        run(
-                          (draft) =>
-                            postPayment(draft, context, {
-                              supplier,
-                              amount,
-                              date,
-                              cheque,
-                              receipt,
-                              note,
-                              allocations,
-                            }),
-                          t(
-                            "Recorded external payment and allocations. No money was transferred.",
-                            "پرداخت خارج از برنامه و تخصیص‌ها ثبت شد. هیچ پولی منتقل نشد.",
-                          ),
-                        )
-                      ) {
-                        setPaymentOpen(false);
-                        setAllocations(null);
-                        setReceipt("");
-                      }
-                    }}
+                    onClick={() => setConfirmMoney("payment")}
                   >
                     {t("Confirm and record payment", "تأیید و ثبت پرداخت")}
                   </Button>
@@ -564,12 +708,16 @@ export function Payables() {
               className="form-card"
             >
               <div className="form-grid">
-                <Field label={t("Entry type", "نوع ردیف")}>
+                <Field
+                  label={t("Entry type", "نوع ردیف")}
+                  error={fieldError("opening_exists")}
+                >
                   <Select
                     value={entryType}
-                    onChange={(value) =>
-                      setEntryType(value as typeof entryType)
-                    }
+                    onChange={(value) => {
+                      setEntryType(value as typeof entryType);
+                      clearFieldError("opening_exists", "credit_sign");
+                    }}
                     options={[
                       {
                         value: "opening_balance",
@@ -594,19 +742,42 @@ export function Payables() {
                     "Signed amount (credits are negative)",
                     "مبلغ علامت‌دار (بستانکاری منفی است)",
                   )}
+                  error={fieldError("amount", "credit_sign")}
                 >
-                  <NumberField value={adjustment} onChange={setAdjustment} />
-                </Field>
-                <Field label={t("Date", "تاریخ")}>
-                  <DateField value={date} onChange={setDate} />
-                </Field>
-                <Field label={t("Evidence reference", "مرجع مدرک")}>
-                  <input
-                    value={entryReference}
-                    onChange={(event) => setEntryReference(event.target.value)}
+                  <NumberField
+                    value={adjustment}
+                    onChange={(value) => {
+                      setAdjustment(value);
+                      clearFieldError("amount", "credit_sign");
+                    }}
                   />
                 </Field>
                 <Field
+                  label={t("Date", "تاریخ")}
+                  error={fieldError("entry_date")}
+                >
+                  <DateField
+                    value={date}
+                    onChange={(value) => {
+                      setDate(value);
+                      clearFieldError("entry_date");
+                    }}
+                  />
+                </Field>
+                <Field
+                  label={t("Evidence reference", "مرجع مدرک")}
+                  error={fieldError("entry_reference", "duplicate_document")}
+                >
+                  <input
+                    value={entryReference}
+                    onChange={(event) => {
+                      setEntryReference(event.target.value);
+                      clearFieldError("entry_reference", "duplicate_document");
+                    }}
+                  />
+                </Field>
+                <Field
+                  error={fieldError("entry_note")}
                   label={t(
                     "Reason / dispute note (required)",
                     "دلیل / یادداشت اختلاف (ضروری)",
@@ -614,36 +785,16 @@ export function Payables() {
                 >
                   <textarea
                     value={entryNote}
-                    onChange={(event) => setEntryNote(event.target.value)}
+                    onChange={(event) => {
+                      setEntryNote(event.target.value);
+                      clearFieldError("entry_note");
+                    }}
                   />
                 </Field>
               </div>
               <Button
                 disabled={branch === "all"}
-                onClick={() => {
-                  if (
-                    run(
-                      (draft) =>
-                        postLedgerAdjustment(draft, context, {
-                          supplier,
-                          type: entryType,
-                          amount: adjustment,
-                          date,
-                          reference: entryReference,
-                          note: entryNote,
-                        }),
-                      t(
-                        "Recorded ledger entry. Previous records were preserved.",
-                        "ردیف دفتر ثبت شد. سوابق قبلی حفظ شدند.",
-                      ),
-                    )
-                  ) {
-                    setEntryOpen(false);
-                    setAdjustment("");
-                    setEntryReference("");
-                    setEntryNote("");
-                  }
-                }}
+                onClick={() => setConfirmMoney("entry")}
               >
                 {t("Record ledger entry", "ثبت ردیف دفتر")}
               </Button>
@@ -656,10 +807,14 @@ export function Payables() {
             >
               <Field
                 label={t("Dispute note (required)", "یادداشت اختلاف (ضروری)")}
+                error={fieldError("reason")}
               >
                 <textarea
                   value={disputeNote}
-                  onChange={(event) => setDisputeNote(event.target.value)}
+                  onChange={(event) => {
+                    setDisputeNote(event.target.value);
+                    clearFieldError("reason");
+                  }}
                 />
               </Field>
               <div className="actions">
@@ -780,17 +935,12 @@ export function Payables() {
                     : t("Supplier ledger", "دفتر تأمین‌کننده")
                 }
               >
+                <div className="table-column-actions">
+                  {ledgerColumns.chooser}
+                </div>
                 <DataTable
-                  columns={[
-                    { width: 132 },
-                    { width: 112 },
-                    { width: 144 },
-                    { width: "28%" },
-                    { width: 116, align: "end" },
-                    { width: 152 },
-                    { width: 168 },
-                    { width: 152, actions: true },
-                  ]}
+                  className="payables-ledger-table"
+                  columns={ledgerColumns.columns}
                 >
                   <thead>
                     <tr>
@@ -958,6 +1108,71 @@ export function Payables() {
           </section>
         </>
       )}
+      <ConfirmDialog
+        open={confirmMoney !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmMoney(null);
+        }}
+        title={
+          confirmMoney === "payment"
+            ? t("Record external payment", "ثبت پرداخت خارج از برنامه")
+            : t("Record ledger entry", "ثبت ردیف دفتر")
+        }
+        description=""
+        confirmLabel={
+          confirmMoney === "payment"
+            ? t("Confirm and record payment", "تأیید و ثبت پرداخت")
+            : t("Record ledger entry", "ثبت ردیف دفتر")
+        }
+        onConfirm={confirmMoneyRecord}
+      >
+        <dl className="money-confirmation-summary">
+          <div>
+            <dt>{t("Supplier", "تأمین‌کننده")}</dt>
+            <dd>
+              <LtrText>{supplier}</LtrText>
+            </dd>
+          </div>
+          <div>
+            <dt>{t("Branch", "شعبه")}</dt>
+            <dd>{configuredBranchLabel(state.config, branch, lang)}</dd>
+          </div>
+          <div>
+            <dt>{t("Amount", "مبلغ")}</dt>
+            <dd>
+              {/^[+-]?\d+(\.\d{1,2})?$/.test(
+                confirmMoney === "payment" ? amount : adjustment,
+              ) ? (
+                <Money
+                  value={confirmMoney === "payment" ? amount : adjustment}
+                />
+              ) : (
+                <LtrText>
+                  {(confirmMoney === "payment" ? amount : adjustment) || "—"}
+                </LtrText>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>{t("Date", "تاریخ")}</dt>
+            <dd>
+              <DateText value={date} />
+            </dd>
+          </div>
+          <div>
+            <dt>
+              {confirmMoney === "payment"
+                ? t("Payment receipt reference", "مرجع رسید پرداخت")
+                : t("Evidence reference", "مرجع مدرک")}
+            </dt>
+            <dd>
+              <LtrText>
+                {(confirmMoney === "payment" ? receipt : entryReference) || "—"}
+              </LtrText>
+            </dd>
+          </div>
+        </dl>
+      </ConfirmDialog>
     </>
   );
 }

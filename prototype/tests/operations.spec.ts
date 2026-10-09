@@ -148,6 +148,7 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
   ).toHaveCount(1);
   await visit(page, "Notes");
   await page.getByRole("tab", { name: "Store use", exact: true }).click();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const beforeStoreUse = await stored(page);
   await page.getByLabel("Note", { exact: true }).fill("Demo staff lunch");
   await chooseOption(
@@ -164,6 +165,7 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
     beforeStoreUse.stock["Branch 1:0006"] - 2,
   );
   await page.getByRole("tab", { name: "For Supervisor", exact: true }).click();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
     .fill("Fictional supervisor check requested");
@@ -228,6 +230,10 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
     })
     .click();
   await page
+    .getByRole("button", { name: "Confirm and record payment", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Record external payment", exact: true })
     .getByRole("button", { name: "Confirm and record payment", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
@@ -381,6 +387,7 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
 
   await visit(page, "Notes");
   await page.getByRole("tab", { name: "Store use", exact: true }).click();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
     .fill("Fictional actual quantity validation");
@@ -395,9 +402,9 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .getByLabel("Actual quantity used (required)", { exact: true })
     .fill("0");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Enter a positive whole quantity",
-  );
+  await expect(
+    page.locator(".notebook-entry-dialog .form-error"),
+  ).toContainText("Enter a positive whole quantity");
   expect(await stored(page)).toEqual(beforeStoreUse);
   await expect(
     page.getByRole("heading", { name: "Notes", exact: true, level: 1 }),
@@ -456,6 +463,10 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .fill("Fictional validation check");
   const beforeAmount = await stored(page);
   await page
+    .getByRole("button", { name: "Record ledger entry", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Record ledger entry", exact: true })
     .getByRole("button", { name: "Record ledger entry", exact: true })
     .click();
   await expect(page.getByRole("alert")).toContainText(

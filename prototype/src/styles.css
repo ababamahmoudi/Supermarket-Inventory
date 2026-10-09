@@ -14,6 +14,11 @@
   --accent-hover: var(--company-primary-hover, #234aa8);
   --accent-soft: var(--company-primary-soft, #e6edfa);
   --accent-fill: var(--company-primary-fill, var(--company-primary, #2b59c3));
+  --secondary-fill: #ffffff;
+  --secondary-text: #1c1c1c;
+  --secondary-border: var(--company-primary, #2b59c3);
+  --secondary-glow: rgb(43 89 195 / 0.14);
+  --secondary-glow-hover: rgb(43 89 195 / 0.22);
   --kpi-accent: linear-gradient(
     135deg,
     var(--company-primary-hover, #234aa8),
@@ -63,6 +68,11 @@
   --accent-hover: var(--company-dark-primary-hover, #7398ea);
   --accent-soft: var(--company-dark-primary-soft, rgba(91, 134, 229, 0.18));
   --accent-fill: var(--company-dark-primary-fill, #3d68d4);
+  --secondary-fill: #292b30;
+  --secondary-text: #ffffff;
+  --secondary-border: var(--company-dark-primary-hover, #7398ea);
+  --secondary-glow: rgb(115 152 234 / 0.18);
+  --secondary-glow-hover: rgb(115 152 234 / 0.28);
   --kpi-charcoal: linear-gradient(135deg, #4a4a4a, #5e5e5e);
   --tile-lavender: rgba(149, 164, 252, 0.14);
   --tile-sky: rgba(0, 122, 255, 0.14);
@@ -1211,9 +1221,7 @@ button,
 a,
 input,
 textarea {
-  transition:
-    background-color 160ms,
-    color 160ms;
+  transition: box-shadow 160ms;
 }
 svg.lucide {
   stroke-width: 1.5;
@@ -1641,7 +1649,7 @@ th.numeric {
   font-size: 0.8125rem;
 }
 .main-content {
-  max-inline-size: 1440px;
+  max-inline-size: none;
   margin-inline: auto;
   padding: 28px;
 }

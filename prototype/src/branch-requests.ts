@@ -69,7 +69,9 @@ export interface RequestTransferEvent {
   company_id: string;
   request_id: string;
   item_id: string;
-  kind: "transfer_sent" | "transfer_received";
+  kind: "transfer_sent" | "transfer_received" | "transfer_correction";
+  /** Corrects a recorded quantity; never claims that goods moved back. */
+  reverses_event_id?: string;
   branch: Branch;
   from_branch: Branch;
   to_branch: Branch;

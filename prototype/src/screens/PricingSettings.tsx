@@ -24,6 +24,7 @@ import { savePricingSettings, type PricingCategory } from "../settings";
 import type { CompanyConfig } from "../types";
 
 type Translate = (en: string, fa: string) => string;
+type RuleArea = "bands" | "minimum" | "corrections";
 
 function errorText(code: PricingErrorCode, t: Translate): string {
   const messages: Record<PricingErrorCode, [string, string]> = {
@@ -90,6 +91,12 @@ export default function PricingSettings() {
   const [editing, setEditing] = useState<PricingCategory | null>(null);
   const [newCategory, setNewCategory] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [categoryErrors, setCategoryErrors] = useState<
+    Partial<Record<keyof PricingCategory, string>>
+  >({});
+  const [ruleErrors, setRuleErrors] = useState<
+    Partial<Record<RuleArea, string>>
+  >({});
   const [categoryKey, setCategoryKey] = useState(
     state.config.pricing_categories[0]?.key ?? "",
   );
@@ -102,13 +109,55 @@ export default function PricingSettings() {
   >({});
   let result: PricingResult | null = null;
   let costError: string | undefined;
+  let categoryError: string | undefined;
   try {
     result = calculatePrice(cost, categoryKey, draft);
   } catch (error) {
-    costError = errorText(
-      error instanceof PricingValidationError ? error.code : "invalid_cost",
-      t,
-    );
+    const code =
+      error instanceof PricingValidationError ? error.code : "invalid_cost";
+    if (code === "invalid_cost") costError = errorText(code, t);
+    if (code === "unknown_category") categoryError = errorText(code, t);
+  }
+
+  function changeDraft(
+    area: RuleArea,
+    change: (previous: CompanyConfig) => CompanyConfig,
+  ) {
+    setDraft(change);
+    setRuleErrors((previous) => {
+      const next = { ...previous };
+      delete next[area];
+      return next;
+    });
+  }
+
+  function changeCategory(changes: Partial<PricingCategory>) {
+    if (!editing) return;
+    setEditing({ ...editing, ...changes });
+    setCategoryErrors((previous) => {
+      const next = { ...previous };
+      for (const field of Object.keys(changes) as (keyof PricingCategory)[])
+        delete next[field];
+      return next;
+    });
+  }
+
+  function pricingRuleError(error: unknown): boolean {
+    if (!(error instanceof PricingValidationError)) return false;
+    const area =
+      error.code === "invalid_bands" || error.code === "invalid_ending"
+        ? "bands"
+        : error.code === "invalid_minimum"
+          ? "minimum"
+          : error.code === "invalid_correction"
+            ? "corrections"
+            : undefined;
+    if (!area) return false;
+    setRuleErrors((previous) => ({
+      ...previous,
+      [area]: errorText(error.code, t),
+    }));
+    return true;
   }
 
   function editDivisor(key: string, value: string) {
@@ -117,7 +166,12 @@ export default function PricingSettings() {
       (entry) => entry.key === key,
     )!.cost_divisor = value;
     try {
-      validatePricingConfig(candidate);
+      // An unfinished rule field must not make a valid divisor look invalid.
+      validatePricingConfig({
+        ...candidate,
+        rounding_bands: state.config.rounding_bands,
+        special_corrections: state.config.special_corrections,
+      });
       setDraft(candidate);
       setInvalidDivisors((previous) => {
         const next = { ...previous };
@@ -163,7 +217,9 @@ export default function PricingSettings() {
         }),
       );
       setSaveError(undefined);
+      setRuleErrors({});
     } catch (error) {
+      if (pricingRuleError(error)) return;
       setSaveError(
         error instanceof PricingValidationError
           ? errorText(error.code, t)
@@ -188,6 +244,7 @@ export default function PricingSettings() {
           },
     );
     setSaveError(undefined);
+    setCategoryErrors({});
   }
   function confirmCategory() {
     if (!editing) return;
@@ -207,12 +264,12 @@ export default function PricingSettings() {
       (newCategory &&
         draft.pricing_categories.some((item) => item.key === category.key))
     ) {
-      setSaveError(
-        t(
+      setCategoryErrors({
+        label: t(
           "Use a category name that is not already in the list.",
           "نام دسته‌ای را وارد کنید که در فهرست وجود ندارد.",
         ),
-      );
+      });
       return;
     }
     const candidate = structuredClone(draft);
@@ -226,15 +283,29 @@ export default function PricingSettings() {
       setDraft(candidate);
       setEditing(null);
       setSaveError(undefined);
+      setCategoryErrors({});
     } catch (error) {
-      setSaveError(
-        errorText(
-          error instanceof PricingValidationError
-            ? error.code
-            : "invalid_divisor",
-          t,
-        ),
-      );
+      const code =
+        error instanceof PricingValidationError
+          ? error.code
+          : "invalid_divisor";
+      const field =
+        code === "invalid_divisor"
+          ? "cost_divisor"
+          : code === "invalid_margin"
+            ? "minimum_margin"
+            : code === "invalid_rounding"
+              ? "rounding"
+              : code === "invalid_ending" &&
+                  editing.rounding === "always_up_to_next_99"
+                ? "rounding_ending"
+                : undefined;
+      if (field)
+        setCategoryErrors((previous) => ({
+          ...previous,
+          [field]: errorText(code, t),
+        }));
+      else setSaveError(errorText(code, t));
     }
   }
 
@@ -397,12 +468,15 @@ export default function PricingSettings() {
         <div className="settings-bands">
           {draft.rounding_bands.bands.map((band, index) => (
             <div className="settings-band-row" key={index}>
-              <Field label={t("From", "از")}>
+              <Field
+                label={t("From", "از")}
+                error={index === 0 ? ruleErrors.bands : undefined}
+              >
                 <NumberField
                   dir="ltr"
                   value={band.lower_inclusive}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("bands", (previous) => ({
                       ...previous,
                       rounding_bands: {
                         ...previous.rounding_bands,
@@ -422,7 +496,7 @@ export default function PricingSettings() {
                   dir="ltr"
                   value={band.upper_exclusive}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("bands", (previous) => ({
                       ...previous,
                       rounding_bands: {
                         ...previous.rounding_bands,
@@ -442,7 +516,7 @@ export default function PricingSettings() {
                   dir="ltr"
                   value={String(band.dollar_offset)}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("bands", (previous) => ({
                       ...previous,
                       rounding_bands: {
                         ...previous.rounding_bands,
@@ -462,7 +536,7 @@ export default function PricingSettings() {
                   dir="ltr"
                   value={band.ending}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("bands", (previous) => ({
                       ...previous,
                       rounding_bands: {
                         ...previous.rounding_bands,
@@ -483,6 +557,7 @@ export default function PricingSettings() {
         <Field
           label={t("Minimum result", "حداقل نتیجه")}
           className="settings-short-field"
+          error={ruleErrors.minimum}
         >
           <NumberField
             dir="ltr"
@@ -491,7 +566,7 @@ export default function PricingSettings() {
                 .minimum_result_when_previous_dollar_does_not_exist
             }
             onChange={(value) =>
-              setDraft((previous) => ({
+              changeDraft("minimum", (previous) => ({
                 ...previous,
                 rounding_bands: {
                   ...previous.rounding_bands,
@@ -509,12 +584,15 @@ export default function PricingSettings() {
         <div className="settings-correction-list">
           {draft.special_corrections.map((correction, index) => (
             <div className="settings-correction-row" key={index}>
-              <Field label={t("From price", "از قیمت")}>
+              <Field
+                label={t("From price", "از قیمت")}
+                error={index === 0 ? ruleErrors.corrections : undefined}
+              >
                 <NumberField
                   dir="ltr"
                   value={correction.from}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("corrections", (previous) => ({
                       ...previous,
                       special_corrections: previous.special_corrections.map(
                         (entry, position) =>
@@ -531,7 +609,7 @@ export default function PricingSettings() {
                   dir="ltr"
                   value={correction.to}
                   onChange={(value) =>
-                    setDraft((previous) => ({
+                    changeDraft("corrections", (previous) => ({
                       ...previous,
                       special_corrections: previous.special_corrections.map(
                         (entry, position) =>
@@ -544,7 +622,7 @@ export default function PricingSettings() {
               <Button
                 variant="secondary"
                 onClick={() =>
-                  setDraft((previous) => ({
+                  changeDraft("corrections", (previous) => ({
                     ...previous,
                     special_corrections: previous.special_corrections.filter(
                       (_, position) => position !== index,
@@ -561,7 +639,7 @@ export default function PricingSettings() {
           <Button
             variant="secondary"
             onClick={() =>
-              setDraft((previous) => ({
+              changeDraft("corrections", (previous) => ({
                 ...previous,
                 special_corrections: [
                   ...previous.special_corrections,
@@ -586,7 +664,10 @@ export default function PricingSettings() {
           )}
         </p>
         <div className="form-grid settings-tester-fields">
-          <Field label={t("Pricing category", "دسته قیمت‌گذاری")}>
+          <Field
+            label={t("Pricing category", "دسته قیمت‌گذاری")}
+            error={categoryError}
+          >
             <Select
               value={categoryKey}
               onChange={setCategoryKey}
@@ -675,6 +756,7 @@ export default function PricingSettings() {
               setInvalidDivisors({});
               setDivisorErrors({});
               setSaveError(undefined);
+              setRuleErrors({});
             }}
           >
             {t("Cancel", "لغو")}
@@ -693,6 +775,7 @@ export default function PricingSettings() {
           if (!open) {
             setEditing(null);
             setSaveError(undefined);
+            setCategoryErrors({});
           }
         }}
         title={
@@ -705,11 +788,14 @@ export default function PricingSettings() {
         {editing && (
           <>
             <div className="form-grid settings-dialog-fields">
-              <Field label={t("Name (English)", "نام (انگلیسی)")}>
+              <Field
+                label={t("Name (English)", "نام (انگلیسی)")}
+                error={categoryErrors.label}
+              >
                 <input
                   value={editing.label}
                   onChange={(event) =>
-                    setEditing({ ...editing, label: event.target.value })
+                    changeCategory({ label: event.target.value })
                   }
                 />
               </Field>
@@ -718,25 +804,28 @@ export default function PricingSettings() {
                   dir="rtl"
                   value={editing.label_fa ?? ""}
                   onChange={(event) =>
-                    setEditing({ ...editing, label_fa: event.target.value })
+                    changeCategory({ label_fa: event.target.value })
                   }
                 />
               </Field>
-              <Field label={t("Cost divisor", "ضریب تقسیم هزینه")}>
+              <Field
+                label={t("Cost divisor", "ضریب تقسیم هزینه")}
+                error={categoryErrors.cost_divisor}
+              >
                 <NumberField
                   dir="ltr"
                   value={editing.cost_divisor}
-                  onChange={(value) =>
-                    setEditing({ ...editing, cost_divisor: value })
-                  }
+                  onChange={(value) => changeCategory({ cost_divisor: value })}
                 />
               </Field>
-              <Field label={t("Rounding rule", "قاعده گرد کردن")}>
+              <Field
+                label={t("Rounding rule", "قاعده گرد کردن")}
+                error={categoryErrors.rounding}
+              >
                 <Select
                   value={editing.rounding}
                   onChange={(value) =>
-                    setEditing({
-                      ...editing,
+                    changeCategory({
                       rounding: value,
                       rounding_ending: editing.rounding_ending ?? "0.99",
                     })
@@ -757,12 +846,15 @@ export default function PricingSettings() {
                 />
               </Field>
               {editing.rounding === "always_up_to_next_99" && (
-                <Field label={t("Price ending", "پایان قیمت")}>
+                <Field
+                  label={t("Price ending", "پایان قیمت")}
+                  error={categoryErrors.rounding_ending}
+                >
                   <NumberField
                     dir="ltr"
                     value={editing.rounding_ending ?? "0.99"}
                     onChange={(value) =>
-                      setEditing({ ...editing, rounding_ending: value })
+                      changeCategory({ rounding_ending: value })
                     }
                   />
                 </Field>
@@ -771,8 +863,7 @@ export default function PricingSettings() {
                 <Select
                   value={editing.default_tax_profile}
                   onChange={(value) =>
-                    setEditing({
-                      ...editing,
+                    changeCategory({
                       default_tax_profile: value,
                       taxable:
                         draft.tax.profiles.find(
@@ -788,6 +879,7 @@ export default function PricingSettings() {
               </Field>
               <Field
                 label={t("Minimum margin", "حداقل حاشیه سود")}
+                error={categoryErrors.minimum_margin}
                 hint={t(
                   "A fraction from 0 to 1; for example, 0.25 means 25%.",
                   "کسر بین 0 و 1؛ برای نمونه 0.25 یعنی 25٪.",
@@ -798,7 +890,7 @@ export default function PricingSettings() {
                   value={editing.minimum_margin ?? ""}
                   disabled={editing.minimum_margin === null}
                   onChange={(value) =>
-                    setEditing({ ...editing, minimum_margin: value })
+                    changeCategory({ minimum_margin: value })
                   }
                 />
               </Field>
@@ -807,8 +899,7 @@ export default function PricingSettings() {
               <Switch
                 checked={editing.minimum_margin !== null}
                 onChange={(value) =>
-                  setEditing({
-                    ...editing,
+                  changeCategory({
                     minimum_margin: value ? "0.25" : null,
                   })
                 }
@@ -818,8 +909,7 @@ export default function PricingSettings() {
               <Switch
                 checked={editing.apply_special_correction}
                 onChange={(value) =>
-                  setEditing({
-                    ...editing,
+                  changeCategory({
                     apply_special_correction: value,
                     apply_2_49_3_49_correction: value,
                   })
@@ -830,7 +920,7 @@ export default function PricingSettings() {
               <Switch
                 checked={editing.date_tracking_prompt}
                 onChange={(value) =>
-                  setEditing({ ...editing, date_tracking_prompt: value })
+                  changeCategory({ date_tracking_prompt: value })
                 }
               >
                 {t("Date tracking prompt", "پرسش پیگیری تاریخ")}
@@ -841,7 +931,7 @@ export default function PricingSettings() {
                 {saveError}
               </p>
             )}
-            <div className="settings-section-actions">
+            <div className="settings-section-actions c3-dialog-actions">
               <Button variant="secondary" onClick={() => setEditing(null)}>
                 {t("Cancel", "لغو")}
               </Button>

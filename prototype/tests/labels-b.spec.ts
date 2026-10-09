@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setBranch, signIn } from "./helpers";
+import { addSelectedLabels } from "./label-selection";
 
 async function saveTemplate(page: Parameters<typeof signIn>[0]) {
   await page
@@ -99,13 +100,10 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await page.getByLabel("Search products", { exact: true }).fill("0015");
   await expect(
-    page.getByRole("button", { name: "Add to waitlist", exact: true }),
+    page.getByRole("checkbox", { name: "Select product 0015", exact: true }),
   ).toBeDisabled();
   await page.getByLabel("Search products", { exact: true }).fill("0003");
-  await page.getByLabel("Copies for 0003", { exact: true }).fill("20");
-  await page
-    .getByRole("button", { name: "Add to waitlist", exact: true })
-    .click();
+  await addSelectedLabels(page, ["0003"], 20);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
     "20",
@@ -164,7 +162,10 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await page.getByLabel("Search products", { exact: true }).fill("0003");
   await page
-    .getByRole("button", { name: "Add all filtered", exact: true })
+    .getByRole("checkbox", { name: "Select all filtered", exact: true })
+    .check();
+  await page
+    .getByRole("button", { name: "Add 1 product to waitlist", exact: true })
     .click();
   await setBranch(page, "Branch 2");
   await page.getByRole("tab", { name: /^Waitlist/ }).click();

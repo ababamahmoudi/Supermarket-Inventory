@@ -1,0 +1,128 @@
+/* Reflow the original and review instead of squeezing a readable invoice into
+   a horizontally scrolling half-width panel. The large-screen review remains
+   wide enough for quantities, costs and intact price/status fragments. */
+:root .invoice-workspace {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  inline-size: 100%;
+}
+:root .invoice-workspace .invoice-document-pane {
+  position: static;
+  max-block-size: none;
+  overflow: visible;
+}
+:root .invoice-review-pane,
+:root .invoice-document-pane,
+:root .invoice-order-card,
+:root .invoice-lines-card {
+  min-inline-size: 0;
+}
+:root .invoice-workspace .invoice-preview {
+  overflow: visible;
+}
+:root .invoice-workspace .invoice-preview-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-inline-size: 100%;
+}
+:root .invoice-workspace .invoice-details-form,
+:root .invoice-workspace .invoice-line-form {
+  inline-size: 100%;
+  max-inline-size: none;
+}
+:root .invoice-lines-table table.has-defined-columns,
+:root .invoice-order-table table.has-defined-columns {
+  min-inline-size: 0;
+  inline-size: 100%;
+  table-layout: fixed;
+}
+:root .invoice-lines-table col:first-child {
+  width: 34%;
+}
+:root .invoice-lines-table th,
+:root .invoice-lines-table td,
+:root .invoice-order-table th,
+:root .invoice-order-table td {
+  padding-inline: 10px;
+  overflow-wrap: break-word;
+}
+:root .invoice-line-toggle .product-name strong,
+:root .invoice-line-toggle .product-name small,
+:root .invoice-line-price > small,
+:root .invoice-line-price > p {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+:root .invoice-line-summary .control-narrow,
+:root .invoice-line-summary .ui-number {
+  max-inline-size: 100%;
+}
+:root .invoice-line-summary .ui-number input {
+  min-inline-size: 0;
+}
+:root .invoice-line-price {
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+:root .invoice-line-price .badge,
+:root .invoice-line-price .price-display {
+  white-space: nowrap;
+}
+:root .invoice-line-price .manual-price-details {
+  text-align: end;
+}
+:root .invoice-order-decisions,
+:root .invoice-order-decisions .ui-segments {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:root .invoice-order-decisions .ui-segments button {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal;
+  text-align: center;
+}
+:root .invoice-order-costs {
+  max-inline-size: 100%;
+  overflow-wrap: break-word;
+}
+:root .invoice-posted-list .table-column-actions {
+  display: flex;
+  justify-content: end;
+  margin-block-end: 20px;
+}
+:root .invoice-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 16px;
+}
+:root [dir="rtl"] .invoice-back-link svg {
+  transform: rotate(180deg);
+}
+:root .invoice-saved-drafts .dialog-actions {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1800px) {
+  :root .invoice-workspace:not(.invoice-start-stack) {
+    grid-template-columns: minmax(0, 0.3fr) minmax(0, 0.7fr);
+  }
+  :root .invoice-workspace:not(.invoice-start-stack) .invoice-document-pane {
+    position: sticky;
+    inset-block-start: 88px;
+    max-block-size: calc(100dvh - 112px);
+    overflow-y: auto;
+  }
+}
+@media (max-width: 760px) {
+  :root .invoice-lines-table table.has-defined-columns,
+  :root .invoice-order-table table.has-defined-columns {
+    /* A phone may scroll this operational table; desktop never needs to. */
+    min-inline-size: 860px;
+  }
+  :root .invoice-workspace .invoice-details-form,
+  :root .invoice-workspace .invoice-line-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,6 +1,8 @@
 import { createId } from "./ids";
 import { configuredBranches, branchId } from "./settings";
 import type { Activity, Branch, DemoState, Role } from "./types";
+import type { RequestTransferEvent } from "./branch-requests";
+import Decimal from "decimal.js";
 
 export interface HistoryContext {
   company_id: string;
@@ -18,8 +20,18 @@ export interface ReversalPatch {
   before_exists: boolean;
   after_exists: boolean;
   creation?:
-    "archive" | "deactivate" | "stop" | "reject" | "resolve" | "remove";
+    | "archive"
+    | "deactivate"
+    | "stop"
+    | "reject"
+    | "resolve"
+    | "remove"
+    | "cancel"
+    | "clear";
   guards?: { path: HistoryPath; after?: unknown; exists: boolean }[];
+  /** Immutable originals retained when recording a request transition is undone. */
+  transfer_events?: RequestTransferEvent[];
+  transfer_movements?: NonNullable<DemoState["stock_movements"]>;
 }
 export type HistoryErrorCode =
   | "permission"
@@ -60,15 +72,18 @@ const safeRoots = new Set([
   "expiry",
   "notes",
   "invoice",
+  "invoices",
   "suppliers",
   "supplier_items",
   "notebooks",
   "notebook_entries",
   "label_waitlist",
   "label_settings",
+  "orders",
+  "branch_requests",
 ]);
 const neverUndo =
-  /print|posted invoice|invoice_posted|payment|ledger|opening count|opening balance|stock|return_|replacement|received short|new_supplier_confirmed/i;
+  /print|posted invoice|invoice_posted|payment|ledger|opening count|opening balance|stock|return_|replacement|received short|new_supplier_confirmed|move invoice|correct invoice|invoice_location_correction|invoice_content_correction/i;
 const simpleActions = new Set([
   "Stop offer",
   "Dismiss",
@@ -76,6 +91,9 @@ const simpleActions = new Set([
   "Create offer",
   "Approve price",
   "Approve product",
+  "Keep barcode mappings",
+  "Reject barcode change",
+  "Reject proposal",
   "Apply price to all branches",
   "Keep approved price",
   "Mark as taken care of",
@@ -85,7 +103,82 @@ const simpleActions = new Set([
   "note_added",
   "Save draft",
   "Edit draft",
+  "Mark ordered",
+  "Add date",
+  "Remove date",
+  "Stop tracking this product",
 ]);
+const requestActions = new Set([
+  "Save draft",
+  "Send request",
+  "Mark as sent",
+  "Mark as received",
+  "Close request",
+  "Cancel request",
+  "Copy short or missing items",
+]);
+const orderActions = new Set([
+  "Create order draft",
+  "Edit order draft",
+  "Add To order note to draft",
+  "Place order",
+  "Cancel order",
+]);
+function eligibleOperationalAction(
+  entry: Activity,
+  before: DemoState,
+  after: DemoState,
+) {
+  if (
+    entry.entity_type === "branch_request" &&
+    requestActions.has(entry.action)
+  ) {
+    const request = after.branch_requests?.find(
+      (item) => item.id === entry.entity_id,
+    );
+    const previous = before.branch_requests?.find(
+      (item) => item.id === entry.entity_id,
+    );
+    if (!request || request.company_id !== entry.company_id) return false;
+    const transitions: Record<string, [string | undefined, string][]> = {
+      "Save draft": [
+        [undefined, "draft"],
+        ["draft", "draft"],
+      ],
+      "Copy short or missing items": [[undefined, "draft"]],
+      "Send request": [["draft", "requested"]],
+      "Mark as sent": [["requested", "sent"]],
+      "Mark as received": [["sent", "received"]],
+      "Close request": [["received", "closed"]],
+      "Cancel request": [
+        ["draft", "cancelled"],
+        ["requested", "cancelled"],
+      ],
+    };
+    return transitions[entry.action].some(
+      ([from, to]) => previous?.status === from && request.status === to,
+    );
+  }
+  if (entry.entity_type === "order" && orderActions.has(entry.action)) {
+    const old = before.orders?.find((item) => item.id === entry.entity_id);
+    const order = after.orders?.find((item) => item.id === entry.entity_id);
+    if (
+      !order ||
+      order.company_id !== entry.company_id ||
+      order.receipts.length ||
+      order.linked_invoice_ids.length
+    )
+      return false;
+    return entry.action === "Create order draft"
+      ? !old && order.status === "draft"
+      : old?.status === "draft" &&
+          ["draft", "ordered", "cancelled"].includes(order.status);
+  }
+  return (
+    entry.entity_type === "supplier" &&
+    ["Confirm supplier", "Reject supplier"].includes(entry.action)
+  );
+}
 const creationMode = (root: string): ReversalPatch["creation"] => {
   if (
     [
@@ -102,6 +195,8 @@ const creationMode = (root: string): ReversalPatch["creation"] => {
   if (root === "offers") return "stop";
   if (root === "approvals") return "reject";
   if (root === "alerts") return "resolve";
+  if (["orders", "branch_requests", "invoices"].includes(root)) return "cancel";
+  if (root === "expiry") return "clear";
   if (["label_waitlist", "config"].includes(root)) return "remove";
   return undefined;
 };
@@ -220,13 +315,89 @@ export function changedPaths(
   }
   return result;
 }
-function unsafeTransaction(before: DemoState, after: DemoState): boolean {
+function postedInvoicesChanged(before: DemoState, after: DemoState): boolean {
+  const snapshots = [...(before.invoices ?? []), ...(after.invoices ?? [])];
+  return snapshots.some(
+    (invoice) =>
+      invoice.status === "posted" &&
+      !equal(
+        before.invoices?.find((item) => item.id === invoice.id),
+        after.invoices?.find((item) => item.id === invoice.id),
+      ),
+  );
+}
+function appendedRequestTransfers(
+  before: DemoState,
+  after: DemoState,
+  entry: Activity,
+) {
+  if (
+    entry.entity_type !== "branch_request" ||
+    !["Mark as sent", "Mark as received"].includes(entry.action)
+  )
+    return null;
+  const prior = before.request_transfer_events ?? [];
+  const current = after.request_transfer_events ?? [];
+  if (!equal(prior, current.slice(0, prior.length))) return null;
+  const events = current.slice(prior.length);
+  const expectedKind =
+    entry.action === "Mark as sent" ? "transfer_sent" : "transfer_received";
+  if (
+    events.some(
+      (event) =>
+        event.company_id !== entry.company_id ||
+        event.request_id !== entry.entity_id ||
+        event.kind !== expectedKind ||
+        event.branch !== entry.branch,
+    )
+  )
+    return null;
+  const oldMovements = before.stock_movements ?? [];
+  const currentMovements = after.stock_movements ?? [];
+  if (!equal(oldMovements, currentMovements.slice(0, oldMovements.length)))
+    return null;
+  const movements = currentMovements.slice(oldMovements.length);
+  const catalogEvents = events.filter(
+    (event) => event.product_code && event.normalized_units !== null,
+  );
+  if (
+    movements.length !== catalogEvents.length ||
+    movements.some(
+      (movement) =>
+        !catalogEvents.some(
+          (event) =>
+            movement.id === event.id &&
+            movement.company_id === event.company_id &&
+            movement.branch === event.branch &&
+            movement.product_code === event.product_code &&
+            movement.type === event.kind &&
+            movement.qty ===
+              (event.kind === "transfer_sent"
+                ? -event.normalized_units!
+                : event.normalized_units!),
+        ),
+    )
+  )
+    return null;
+  return { events, movements };
+}
+function unsafeTransaction(
+  before: DemoState,
+  after: DemoState,
+  transfers: ReturnType<typeof appendedRequestTransfers>,
+): boolean {
   return (
     !equal(before.ledger, after.ledger) ||
     !equal(before.stock, after.stock) ||
-    !equal(before.stock_movements, after.stock_movements) ||
+    (!transfers && !equal(before.stock_movements, after.stock_movements)) ||
+    (!transfers &&
+      !equal(before.request_transfer_events, after.request_transfer_events)) ||
     !equal(before.returns, after.returns) ||
-    !equal(before.invoices, after.invoices) ||
+    !equal(
+      before.invoice_location_corrections,
+      after.invoice_location_corrections,
+    ) ||
+    postedInvoicesChanged(before, after) ||
     (!equal(before.invoice, after.invoice) &&
       (before.invoice.status === "posted" || after.invoice.status === "posted"))
   );
@@ -241,24 +412,55 @@ export function attachReversals(
   const previous = new Set(before.activity.map((entry) => entry.id));
   const entries = after.activity.filter((entry) => !previous.has(entry.id));
   const patches = changedPaths(before, after);
-  const unsafe = unsafeTransaction(before, after);
   for (const entry of entries) {
     entry.by = context.actor;
     entry.actor_username = context.username;
     entry.device = "Browser";
     if (entry.reversal_kind) continue;
+    if (
+      entry.action === "note_resolved" &&
+      patches.some(
+        (patch) =>
+          patch.path[0] === "notes" &&
+          patch.path.at(-1) === "status" &&
+          patch.guards?.some(
+            (guard) => own(guard.after) && guard.after.type === "to_order",
+          ),
+      )
+    )
+      entry.action = "Mark ordered";
+    // Placing an order and marking its source notes are one transaction. The
+    // parent action owns one Undo; its companion audit entries stay retained.
+    if (
+      entry.action === "To order note ordered" &&
+      entries.some((item) => item.action === "Place order")
+    ) {
+      entry.reversible = false;
+      continue;
+    }
+    const operational = eligibleOperationalAction(entry, before, after);
+    const transfers = operational
+      ? appendedRequestTransfers(before, after, entry)
+      : null;
     const allowed =
-      entry.reversible !== false &&
-      (entry.reversible === true || simpleActions.has(entry.action));
+      operational ||
+      (entry.reversible !== false &&
+        (entry.reversible === true || simpleActions.has(entry.action)));
     entry.reversible = Boolean(
       allowed &&
       patches.length &&
-      !unsafe &&
+      !unsafeTransaction(before, after, transfers) &&
       !neverUndo.test(entry.action) &&
       patches.every((patch) => patch.before_exists || patch.creation),
     );
     if (!entry.reversible) continue;
     entry.reversal = structuredClone(patches);
+    if (transfers?.events.length) {
+      entry.reversal[0].transfer_events = structuredClone(transfers.events);
+      entry.reversal[0].transfer_movements = structuredClone(
+        transfers.movements,
+      );
+    }
     entry.before ??= Object.fromEntries(
       patches.map((patch) => [pathLabel(patch.path), patch.before]),
     );
@@ -390,6 +592,7 @@ function patchScope(
   state: DemoState,
   patch: ReversalPatch,
   context: HistoryContext,
+  entry: Activity,
 ) {
   if (typeof patch.path[0] !== "string" || !safeRoots.has(patch.path[0]))
     throw new HistoryError("irreversible");
@@ -403,9 +606,32 @@ function patchScope(
       "invoice",
       "templates",
       "offers",
+      "orders",
+      "branch_requests",
     ].includes(patch.path[0])
   )
     throw new HistoryError("permission");
+  if (
+    patch.path[0] === "orders" &&
+    context.role === "floor_worker" &&
+    !state.config.orders?.allow_floor_worker
+  )
+    throw new HistoryError("permission");
+  if (patch.path[0] === "branch_requests") {
+    const request = state.branch_requests?.find(
+      (item) => item.id === entry.entity_id,
+    );
+    if (!request || request.company_id !== context.company_id)
+      throw new HistoryError("scope");
+    const endpoint =
+      entry.action === "Mark as sent" ? request.to_branch : request.from_branch;
+    if (
+      !context.allowed_branches.includes(endpoint) ||
+      (context.branch !== endpoint &&
+        !(context.role === "supervisor" && context.branch === "all"))
+    )
+      throw new HistoryError("scope");
+  }
   for (let i = 1; i <= patch.path.length; i++) {
     const value = readPath(state, patch.path.slice(0, i)).value;
     if (!own(value)) continue;
@@ -417,10 +643,14 @@ function patchScope(
     if (
       typeof value.branch === "string" &&
       value.branch !== "all" &&
+      patch.path[0] !== "branch_requests" &&
       !context.allowed_branches.includes(value.branch)
     )
       throw new HistoryError("scope");
-    if (value.status === "posted" && patch.path[0] === "invoice")
+    if (
+      value.status === "posted" &&
+      ["invoice", "invoices"].includes(String(patch.path[0]))
+    )
       throw new HistoryError("irreversible");
   }
   if (
@@ -473,7 +703,59 @@ export function reverseActivity(
     throw new HistoryError("irreversible");
   const preview = historyChangePreview(state, entry);
   if (preview.some((item) => item.conflict)) throw new HistoryError("conflict");
-  for (const { patch } of preview) patchScope(state, patch, context);
+  for (const { patch } of preview) patchScope(state, patch, context, entry);
+  const request =
+    entry.entity_type === "branch_request"
+      ? state.branch_requests?.find((item) => item.id === entry.entity_id)
+      : undefined;
+  if (
+    request &&
+    (state.branch_requests ?? []).some(
+      (item) =>
+        item.company_id === context.company_id &&
+        item.source_request_id === request.id &&
+        item.status !== "cancelled",
+    )
+  )
+    throw new HistoryError("conflict");
+  const order =
+    entry.entity_type === "order"
+      ? state.orders?.find((item) => item.id === entry.entity_id)
+      : undefined;
+  if (
+    order &&
+    (order.receipts.length ||
+      order.linked_invoice_ids.length ||
+      [state.invoice, ...(state.invoices ?? [])].some(
+        (invoice) =>
+          invoice.status === "posted" &&
+          invoice.company_id === context.company_id &&
+          invoice.order_id === order.id,
+      ))
+  )
+    throw new HistoryError("conflict");
+  for (const { patch } of preview) {
+    for (const event of patch.transfer_events ?? []) {
+      if (
+        !equal(
+          state.request_transfer_events?.find((item) => item.id === event.id),
+          event,
+        ) ||
+        state.request_transfer_events?.some(
+          (item) => item.reverses_event_id === event.id,
+        )
+      )
+        throw new HistoryError("conflict");
+    }
+    for (const movement of patch.transfer_movements ?? [])
+      if (
+        !equal(
+          state.stock_movements?.find((item) => item.id === movement.id),
+          movement,
+        )
+      )
+        throw new HistoryError("conflict");
+  }
   for (const { patch } of preview) {
     if (
       patch.path[0] === "supplier_items" &&
@@ -540,9 +822,15 @@ export function reverseActivity(
           ...(state.notebook_entries ?? []),
           ...(state.label_waitlist ?? []),
           ...(state.stock_movements ?? []),
+          ...(state.orders ?? []),
         ].some(
           (record) =>
             record.company_id === context.company_id && record.branch === id,
+        ) ||
+        (state.branch_requests ?? []).some(
+          (request) =>
+            request.company_id === context.company_id &&
+            [request.from_branch, request.to_branch].includes(id),
         ) ||
         (state.invoice.branch === id && state.invoice.status !== "empty")
       )
@@ -564,9 +852,53 @@ export function reverseActivity(
         record.status = "rejected";
         record.reason = "Reverted approved decision";
       }
+      if (patch.creation === "cancel") record.status = "cancelled";
+      if (patch.creation === "clear") record.status = "cleared";
       writePath(candidate, patch.path, record, true);
     } else writePath(candidate, patch.path, patch.before, patch.before_exists);
   }
+  // Original quantities remain immutable. These inverse entries correct the
+  // recording only; they are not receipts or evidence that goods moved back.
+  for (const { patch } of preview) {
+    for (const event of patch.transfer_events ?? []) {
+      candidate.request_transfer_events ??= [];
+      candidate.request_transfer_events.push({
+        ...structuredClone(event),
+        id: createId("request-transfer-correction"),
+        kind: "transfer_correction",
+        reverses_event_id: event.id,
+        quantity: new Decimal(event.quantity).negated().toFixed(),
+        normalized_units:
+          event.normalized_units === null ? null : -event.normalized_units,
+        at: now.toISOString(),
+        by: context.actor,
+        username: context.username,
+        device: "Browser",
+      });
+    }
+    for (const movement of patch.transfer_movements ?? []) {
+      candidate.stock_movements ??= [];
+      candidate.stock_movements.push({
+        ...structuredClone(movement),
+        id: createId("request-movement-correction"),
+        type: "request_transfer_correction",
+        qty: -movement.qty,
+        reference: movement.id,
+        by: context.actor,
+        at: now.toISOString(),
+      });
+    }
+  }
+  if (request) {
+    const restored = candidate.branch_requests!.find(
+      (item) => item.id === request.id,
+    )!;
+    restored.revision = request.revision + 1;
+    restored.updated_at = now.toISOString();
+  }
+  if (order)
+    candidate.orders!.find((item) => item.id === order.id)!.version =
+      order.version + 1;
   // Names are labels, while older invoice/ledger records retain their original
   // supplier text. Restoring a display name must keep every recorded alias.
   for (const supplier of candidate.suppliers ?? []) {

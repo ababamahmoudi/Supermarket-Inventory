@@ -8,9 +8,7 @@
   font-weight: 500;
   line-height: 1.4;
   gap: 0.5rem;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
+  transition: box-shadow 150ms ease;
 }
 .ui-button.button-primary {
   background: var(--accent-fill);

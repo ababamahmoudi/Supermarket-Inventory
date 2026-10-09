@@ -14,7 +14,7 @@ import {
   OfferLabel,
   ProductName,
 } from "../presentation";
-import { branchLabel, configuredBranches } from "../settings";
+import { branchLabel, sellingBranches } from "../settings";
 import "./financial-polish.css";
 import {
   Badge,
@@ -33,6 +33,10 @@ export function Alerts() {
   const [showResolved, setShowResolved] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
+  const [error, setError] = useState<{
+    product_code: string;
+    message: string;
+  }>();
   const [confirm, setConfirm] = useState<{
     code: string;
     price: string;
@@ -55,7 +59,7 @@ export function Alerts() {
       </EmptyState>
     );
   const branchName = (value: string) => branchLabel(state.config, value, lang);
-  const demoBranches = configuredBranches(state.config);
+  const demoBranches = sellingBranches(state.config);
   const resolve = (id: string, status: "pending" | "resolved") => {
     update((draft) => setAlertStatus(draft, id, status, notes[id]));
     setMessage(
@@ -69,12 +73,13 @@ export function Alerts() {
     const current = approvalSnapshot(state, confirm.code);
     if (current !== confirm.snapshot) {
       setConfirm(null);
-      setMessage(
-        t(
+      setError({
+        product_code: confirm.code,
+        message: t(
           "Prices changed. Review the latest conflict and choose the price again.",
           "قیمت‌ها تغییر کردند. اختلاف تازه را بررسی و دوباره قیمت را انتخاب کنید.",
         ),
-      );
+      });
       return;
     }
     update((draft) =>
@@ -87,6 +92,7 @@ export function Alerts() {
       ),
     );
     setConfirm(null);
+    setError(undefined);
   };
   return (
     <>
@@ -191,8 +197,9 @@ export function Alerts() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(alert.branch_prices ?? {}).map(
-                      ([name, price]) => (
+                    {Object.entries(alert.branch_prices ?? {})
+                      .filter(([name]) => demoBranches.includes(name))
+                      .map(([name, price]) => (
                         <tr key={name}>
                           <td>{branchName(name)}</td>
                           <td className="numeric">
@@ -202,7 +209,8 @@ export function Alerts() {
                             {alert.status === "pending" && (
                               <Button
                                 variant="secondary"
-                                onClick={() =>
+                                onClick={() => {
+                                  setError(undefined);
                                   setConfirm({
                                     code: alert.product_code,
                                     price,
@@ -210,8 +218,8 @@ export function Alerts() {
                                       state,
                                       alert.product_code,
                                     ),
-                                  })
-                                }
+                                  });
+                                }}
                               >
                                 {t(
                                   "Apply this price to all",
@@ -221,10 +229,14 @@ export function Alerts() {
                             )}
                           </td>
                         </tr>
-                      ),
-                    )}
+                      ))}
                   </tbody>
                 </DataTable>
+                {error?.product_code === alert.product_code && (
+                  <p className="banner danger" role="alert">
+                    {error.message}
+                  </p>
+                )}
                 <p className="muted">
                   {t(
                     "Intentional differences stay quiet until an approved branch price changes.",

@@ -411,6 +411,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     undoRef.current = next;
     setUndoToasts(next);
   }, []);
+  const pauseUndo = useCallback(
+    (id: string, paused: boolean) => {
+      commitToasts(pauseUndoToast(undoRef.current, id, paused, Date.now()));
+    },
+    [commitToasts],
+  );
   const actionContext = useCallback((): HistoryContext | null => {
     const actor = demoUsers.find(
       (candidate) => candidate.username === sessionRef.current.username,
@@ -658,8 +664,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       update,
       undoToasts,
       historyContext,
-      pauseUndo: (id, paused) =>
-        commitToasts(pauseUndoToast(undoRef.current, id, paused, Date.now())),
+      pauseUndo,
       undoActivity: (id) => reverse(id, "undo"),
       revertActivity: (id) => reverse(id, "revert"),
       ...session,
@@ -885,6 +890,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       historyContext,
       commitToasts,
       reverse,
+      pauseUndo,
     ],
   );
   return (

@@ -1,18 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch } from "./helpers";
+import { addSelectedLabels } from "./label-selection";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 
 async function addProducts(page: Page, codes: string[], copies = 1) {
   await page.getByRole("tab", { name: "Products", exact: true }).click();
-  for (const code of codes) {
-    await page.getByLabel("Search products", { exact: true }).fill(code);
-    await page
-      .getByLabel(`Copies for ${code}`, { exact: true })
-      .fill(String(copies));
-    await page
-      .getByRole("button", { name: "Add to waitlist", exact: true })
-      .click();
-  }
+  await addSelectedLabels(page, codes, copies);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
 }
 
@@ -145,7 +138,7 @@ test("requires one branch and prints its approved price instead of a pending pro
   ).toBeVisible();
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Add all filtered", exact: true }),
+    page.getByRole("checkbox", { name: "Select all filtered", exact: true }),
   ).toBeDisabled();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await expect(

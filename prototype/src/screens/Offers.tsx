@@ -1,6 +1,7 @@
 import {
   branchLabel as configuredBranchLabel,
-  configuredBranches,
+  branchSellsToCustomers,
+  sellingBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
@@ -31,12 +32,14 @@ import {
 } from "../presentation";
 import type { Branch, Offer } from "../types";
 import "./filters-a2.css";
+import "./c3-labels-notes-offers.css";
 import {
   Badge,
   Button,
   Card,
   ConfirmDialog,
   DataTable,
+  Dialog,
   EmptyState,
   Field,
   FilterToolbar,
@@ -49,7 +52,7 @@ import {
 
 export function Offers() {
   const { state, update, role, branch, setBranch, lang, t } = useDemo();
-  const branches = configuredBranches(state.config);
+  const branches = sellingBranches(state.config);
   const [tab, setTab] = useState<"offers" | "pools">("offers");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -66,14 +69,22 @@ export function Offers() {
   >({});
   const [message, setMessage] = useState("");
   const [stopId, setStopId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const company = state.config.company.seed_key;
-  const viewBranch = lookupBranch(branch);
+  const viewBranch =
+    branch === "all" ? (branches[0] ?? lookupBranch(branch)) : branch;
+  const locationCanSell =
+    branch === "all"
+      ? branches.length > 0
+      : branchSellsToCustomers(state.config, branch);
   const products = state.products.filter(
     (product) => product.company_id === company && product.status === "active",
   );
   const ownOffers = state.offers.filter(
     (offer) =>
       offer.company_id === company &&
+      (offer.scope === "all" ||
+        branchSellsToCustomers(state.config, offer.branch)) &&
       (offer.scope === "all" || branch === "all" || offer.branch === branch),
   );
   const needle = search.trim().toLocaleLowerCase();
@@ -157,6 +168,10 @@ export function Offers() {
         "Choose an active product in this company.",
         "یک کالای فعال از همین شرکت انتخاب کنید.",
       ),
+      location_not_selling: t(
+        "Choose a location that sells to customers.",
+        "مکانی را انتخاب کنید که به مشتریان فروش دارد.",
+      ),
     })[reason];
   const activate = (offer: Offer) => {
     const readiness = offerReadiness(state, offer);
@@ -165,6 +180,7 @@ export function Offers() {
       return;
     }
     update((draft) => activateOffer(draft, offer, role ?? "floor_worker"));
+    setCreateOpen(false);
     const manual = offer.status !== "suggested";
     setMessage(
       isOfferScheduledNow(offer, state.config.company.timezone)
@@ -222,6 +238,17 @@ export function Offers() {
           end_date: end || undefined,
         }
       : null;
+  const dateError =
+    candidate && offerReadiness(state, candidate) === "dates_invalid"
+      ? readyMessage("dates_invalid")
+      : undefined;
+  if (!locationCanSell)
+    return (
+      <>
+        <PageHeader title={t("Offers", "پیشنهادهای فروش")} />
+        <EmptyState>{readyMessage("location_not_selling")}</EmptyState>
+      </>
+    );
   return (
     <>
       <PageHeader
@@ -230,6 +257,16 @@ export function Offers() {
           "Confirm suggestions or create offers. The approved price chooses the offer definition.",
           "پیشنهادها را تأیید یا ایجاد کنید. قیمت تأییدشده نوع پیشنهاد را تعیین می‌کند.",
         )}
+        actions={
+          <Button
+            onClick={() => {
+              setCreateOpen(true);
+              setMessage("");
+            }}
+          >
+            {t("Create offer", "ایجاد پیشنهاد")}
+          </Button>
+        }
       />
       <Tabs
         value={tab}
@@ -473,18 +510,19 @@ export function Offers() {
             {rows.length === 0 ? (
               <EmptyState>
                 {t(
-                  "No offers match these filters. Clear filters or create an offer below.",
-                  "هیچ پیشنهادی با این فیلترها مطابقت ندارد. فیلترها را پاک کنید یا در پایین پیشنهاد ایجاد کنید.",
+                  "No offers match these filters. Clear filters or create an offer.",
+                  "هیچ پیشنهادی با این فیلترها مطابقت ندارد. فیلترها را پاک کنید یا پیشنهاد ایجاد کنید.",
                 )}
               </EmptyState>
             ) : (
               <DataTable
+                className="current-offers-table"
                 columns={[
-                  { width: "35%" },
-                  { width: "20%" },
-                  { width: "15%" },
-                  { width: "20%" },
-                  { width: 128, actions: true },
+                  {},
+                  { width: 140 },
+                  { width: 140 },
+                  { width: 220 },
+                  { width: 124, actions: true },
                 ]}
               >
                 <thead>
@@ -547,7 +585,7 @@ export function Offers() {
                             </>
                           )}
                         </td>
-                        <td className="branch-label">
+                        <td className="branch-label offer-scope">
                           {branchName(offer.branch)}
                         </td>
                         <td>
@@ -589,7 +627,7 @@ export function Offers() {
                         <td>
                           {offer.status === "active" && (
                             <Button
-                              variant="secondary"
+                              variant="danger"
                               size="sm"
                               onClick={() => setStopId(offer.id)}
                             >
@@ -603,105 +641,6 @@ export function Offers() {
                 </tbody>
               </DataTable>
             )}
-          </Card>
-          <Card
-            title={t("Create offer", "ایجاد پیشنهاد")}
-            className="form-card"
-          >
-            <div className="grid-2">
-              <Field label={t("Product", "کالا")}>
-                <Select
-                  value={code}
-                  onChange={(value) => {
-                    setCode(value);
-                    const product = products.find(
-                      (item) => item.code === value,
-                    );
-                    setScope(
-                      product?.branch_prices?.[viewBranch] ? "branch" : "all",
-                    );
-                  }}
-                  options={[
-                    {
-                      value: "",
-                      label: t("Choose a product", "یک کالا انتخاب کنید"),
-                    },
-                    ...products.map((product) => ({
-                      value: product.code,
-                      label: `${lang === "fa" ? product.name_fa : product.name_en} · \u2066${product.code}\u2069`,
-                    })),
-                  ]}
-                />
-              </Field>
-              <Field label={t("Offer scope", "دامنه پیشنهاد")}>
-                <Select
-                  value={scope}
-                  onChange={(value) => setScope(value as "all" | "branch")}
-                  options={[
-                    {
-                      value: "branch",
-                      label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
-                    },
-                    {
-                      value: "all",
-                      label: t("Company default price", "قیمت پیش‌فرض شرکت"),
-                    },
-                  ]}
-                />
-              </Field>
-              <Field label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}>
-                <DateField value={start} onChange={setStart} />
-              </Field>
-              <Field label={t("End date (optional)", "تاریخ پایان (اختیاری)")}>
-                <DateField value={end} onChange={setEnd} />
-              </Field>
-            </div>
-            <Checkbox checked={mix} onChange={setMix}>
-              {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
-            </Checkbox>
-            <p>
-              {candidate ? (
-                <>
-                  {t("Offer", "پیشنهاد")}:{" "}
-                  <strong>{offerLabel(candidate.label)}</strong> ·{" "}
-                  {t("Approved price", "قیمت تأییدشده")}:{" "}
-                  <Money
-                    value={candidate.price}
-                    currency={state.config.company.currency}
-                  />
-                  {selected && (
-                    <ManualPricePill product={selected} branch={viewBranch} />
-                  )}
-                </>
-              ) : selected ? (
-                t(
-                  "This approved price has no configured offer. Choose another product or change the mapping in Settings.",
-                  "این قیمت تأییدشده پیشنهاد تنظیم‌شده ندارد. کالای دیگری انتخاب کنید یا نگاشت را در تنظیمات تغییر دهید.",
-                )
-              ) : (
-                t(
-                  "Choose a product with an approved price to create an offer.",
-                  "برای ایجاد پیشنهاد، کالایی با قیمت تأییدشده انتخاب کنید.",
-                )
-              )}
-            </p>
-            {candidate && (
-              <p className="muted">
-                {readyMessage(offerReadiness(state, candidate))}
-              </p>
-            )}
-            <div className="actions">
-              <Button
-                disabled={
-                  !candidate || offerReadiness(state, candidate) !== "ready"
-                }
-                onClick={() => {
-                  if (candidate) activate(candidate);
-                }}
-              >
-                {t("Create offer", "ایجاد پیشنهاد")}
-              </Button>
-            </div>
           </Card>
         </>
       ) : (
@@ -790,6 +729,137 @@ export function Offers() {
           })}
         </>
       )}
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) setMessage("");
+        }}
+        title={t("Create offer", "ایجاد پیشنهاد")}
+        className="c3-operation-dialog offers-create-dialog"
+      >
+        <form
+          aria-label={t("Create offer", "ایجاد پیشنهاد")}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (candidate && offerReadiness(state, candidate) === "ready")
+              activate(candidate);
+          }}
+        >
+          <div className="grid-2">
+            <Field label={t("Product", "کالا")}>
+              <Select
+                value={code}
+                onChange={(value) => {
+                  setCode(value);
+                  setMessage("");
+                  const product = products.find((item) => item.code === value);
+                  setScope(
+                    product?.branch_prices?.[viewBranch] ? "branch" : "all",
+                  );
+                }}
+                options={[
+                  {
+                    value: "",
+                    label: t("Choose a product", "یک کالا انتخاب کنید"),
+                  },
+                  ...products.map((product) => ({
+                    value: product.code,
+                    label: `${lang === "fa" ? product.name_fa : product.name_en} · \u2066${product.code}\u2069`,
+                  })),
+                ]}
+              />
+            </Field>
+            <Field label={t("Offer scope", "دامنه پیشنهاد")}>
+              <Select
+                value={scope}
+                onChange={(value) => {
+                  setScope(value as "all" | "branch");
+                  setMessage("");
+                }}
+                options={[
+                  {
+                    value: "branch",
+                    label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
+                  },
+                  {
+                    value: "all",
+                    label: t("Company default price", "قیمت پیش‌فرض شرکت"),
+                  },
+                ]}
+              />
+            </Field>
+            <Field label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}>
+              <DateField
+                value={start}
+                onChange={(value) => {
+                  setStart(value);
+                  setMessage("");
+                }}
+              />
+            </Field>
+            <Field
+              label={t("End date (optional)", "تاریخ پایان (اختیاری)")}
+              error={dateError}
+            >
+              <DateField
+                value={end}
+                onChange={(value) => {
+                  setEnd(value);
+                  setMessage("");
+                }}
+              />
+            </Field>
+          </div>
+          <Checkbox checked={mix} onChange={setMix}>
+            {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
+          </Checkbox>
+          <p>
+            {candidate ? (
+              <>
+                {t("Offer", "پیشنهاد")}:{" "}
+                <strong>{offerLabel(candidate.label)}</strong> ·{" "}
+                {t("Approved price", "قیمت تأییدشده")}:{" "}
+                <Money
+                  value={candidate.price}
+                  currency={state.config.company.currency}
+                />
+                {selected && (
+                  <ManualPricePill product={selected} branch={viewBranch} />
+                )}
+              </>
+            ) : selected ? (
+              t(
+                "This approved price has no configured offer. Choose another product or change the mapping in Settings.",
+                "این قیمت تأییدشده پیشنهاد تنظیم‌شده ندارد. کالای دیگری انتخاب کنید یا نگاشت را در تنظیمات تغییر دهید.",
+              )
+            ) : (
+              t(
+                "Choose a product with an approved price to create an offer.",
+                "برای ایجاد پیشنهاد، کالایی با قیمت تأییدشده انتخاب کنید.",
+              )
+            )}
+          </p>
+          {candidate && (
+            <p className="muted">
+              {readyMessage(offerReadiness(state, candidate))}
+            </p>
+          )}
+          <div className="dialog-actions">
+            <Button variant="secondary" onClick={() => setCreateOpen(false)}>
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                !candidate || offerReadiness(state, candidate) !== "ready"
+              }
+            >
+              {t("Create offer", "ایجاد پیشنهاد")}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
       {stopId && (
         <ConfirmDialog
           open
@@ -802,6 +872,7 @@ export function Offers() {
             "این پیشنهاد در دامنه خود متوقف می‌شود. پس از توقف پیشنهاد شعبه، پیشنهاد سازگار شرکت ممکن است دوباره مؤثر شود.",
           )}
           confirmLabel={t("Stop offer", "توقف پیشنهاد")}
+          confirmVariant="danger"
           onConfirm={() => stop(stopId)}
         />
       )}
