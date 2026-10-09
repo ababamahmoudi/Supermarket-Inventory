@@ -142,6 +142,7 @@ export function Payables() {
     ({
       invoice: t("Invoice", "فاکتور"),
       short_deduction: t("Short deduction", "کسر کسری"),
+      refused_deduction: t("Refused deduction", "کسر کالای نپذیرفته"),
       short_restoration: t("Short restoration", "بازگردانی کسری"),
       payment: t("Payment", "پرداخت"),
       credit: t("Credit", "بستانکاری"),
@@ -821,7 +822,8 @@ export function Payables() {
                             tone={
                               row.type === "payment" || row.type === "credit"
                                 ? "approved"
-                                : row.type === "short_deduction"
+                                : row.type === "short_deduction" ||
+                                    row.type === "refused_deduction"
                                   ? "danger"
                                   : "info"
                             }

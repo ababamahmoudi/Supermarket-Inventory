@@ -156,6 +156,7 @@ export function Dashboard() {
     tax_discrepancy: 2,
     other_supplier: 3,
     barcode_conflict: 4,
+    order_differences: 5,
   };
   const alerts = state.alerts
     .filter(
@@ -291,6 +292,7 @@ export function Dashboard() {
       tax_discrepancy: t("Tax discrepancy", "مغایرت مالیات"),
       other_supplier: t("Different supplier price", "قیمت تأمین‌کننده دیگر"),
       barcode_conflict: t("Barcode conflict", "تعارض بارکد"),
+      order_differences: t("Order differences", "اختلاف‌های سفارش"),
     })[type];
   const invoiceStatus = (status: DemoInvoice["status"]) =>
     ({

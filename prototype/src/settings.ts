@@ -4,7 +4,7 @@ import { validatePricingConfig } from "./pricing";
 import type { Branch, CompanyConfig, DemoState, Language, Role } from "./types";
 
 export type SettingsGroup =
-  "company" | "branches" | "catalog" | "offers" | "modules";
+  "company" | "branches" | "catalog" | "offers" | "modules" | "orders";
 export type SettingsActor = { role: Role; company_id: string; by: string };
 export type ConfigBranch = CompanyConfig["branches"][number];
 export type PricingCategory = CompanyConfig["pricing_categories"][number];
@@ -105,6 +105,7 @@ function record(
     catalog: "Pricing rules changed",
     offers: "Offer settings changed",
     modules: "Modules changed",
+    orders: "Order settings changed",
   };
   state.activity.unshift({
     id: createId("settings"),
@@ -302,4 +303,17 @@ export function saveModuleSettings(
     online_orders: false,
   };
   record(state, "modules", before, state.config.modules, actor);
+}
+
+export function saveOrderSettings(
+  state: DemoState,
+  orders: NonNullable<CompanyConfig["orders"]>,
+  actor: SettingsActor,
+) {
+  guard(state, actor);
+  if (typeof orders.allow_floor_worker !== "boolean")
+    throw new SettingsError("mapping");
+  const before = state.config.orders ?? { allow_floor_worker: false };
+  state.config.orders = { allow_floor_worker: orders.allow_floor_worker };
+  record(state, "orders", before, state.config.orders, actor);
 }

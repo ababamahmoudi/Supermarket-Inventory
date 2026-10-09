@@ -1,0 +1,56 @@
+{
+  "source_commit": "098c6c8d65b83976d92815e30d43778d0fac4f9e",
+  "node_version": "22.23.3",
+  "unit_tests": {
+    "passed": 525,
+    "files_passed": 42,
+    "failed": 0
+  },
+  "lint": "passed",
+  "typescript_vite_build": "passed",
+  "browser_tests": {
+    "passed": 273,
+    "skipped": 7,
+    "failed": 0,
+    "flaky": 0,
+    "retries": 0,
+    "total": 280,
+    "skipped_checks": [
+      {
+        "title": "C2 sidebar keeps new and existing pages accessible without scrolling at 720px desktop height",
+        "project": "phone"
+      },
+      {
+        "title": "C2 sidebar keeps new and existing pages accessible without scrolling at 950px desktop height",
+        "project": "phone"
+      },
+      {
+        "title": "C2 sidebar keeps new and existing pages accessible without scrolling at 1080px desktop height",
+        "project": "phone"
+      },
+      {
+        "title": "the topbar product search opens an encoded English or Persian lookup query",
+        "project": "phone"
+      },
+      {
+        "title": "the 1080p sidebar stays within the screen and page, lookup and invoice forms keep their maximum widths",
+        "project": "phone"
+      },
+      {
+        "title": "hover pauses only one toast and English/Persian corner placement mirrors",
+        "project": "phone"
+      },
+      {
+        "title": "the document sticks beside the review and the action bar has a full surface",
+        "project": "phone"
+      }
+    ]
+  },
+  "capture": {
+    "screenshots": 64,
+    "pdfs": 8,
+    "browser_errors": 0,
+    "review": "four variants and all eight actual PDFs independently reviewed"
+  },
+  "github_checks": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/15/checks"
+}

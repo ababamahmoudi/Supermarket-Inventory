@@ -1,0 +1,30 @@
+.invoice-order-card .field {
+  max-inline-size: 360px;
+}
+.invoice-order-card .invoice-order-table {
+  margin-block-start: 20px;
+}
+.invoice-order-table table {
+  min-inline-size: 860px;
+}
+.invoice-order-decisions {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 12px;
+}
+.invoice-order-decisions .ui-segments {
+  flex-wrap: wrap;
+  max-inline-size: 440px;
+}
+.invoice-order-decisions .field {
+  inline-size: 200px;
+}
+.invoice-order-costs {
+  margin: 0;
+  font-size: 13px;
+}
+.invoice-pack-equation {
+  align-self: center;
+  margin: 0;
+}

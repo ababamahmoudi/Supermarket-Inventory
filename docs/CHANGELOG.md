@@ -1,5 +1,19 @@
 # Project changelog
 
+## 2026-10-09 — Pull request C2: Orders and receiving workflow
+
+- Implemented `feat/prototype-c2-orders-requests`, [pull request #15](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/15), stacked on C1 [#14](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/14) without merging to main. It includes approved B and all C1 functionality.
+- Added scoped Supplier items and retained purchase/pack history, separate quoted costs, draft/placed/partial Orders with explicit To order links, bilingual A4 order printing, and the default-disabled Floor Worker Orders permission.
+- Added linked invoice comparison for matching, Short, absent, kept/refused extras, accepted cost changes and short-dated expiry. Normal pricing/manual provenance remains protected; posting retains exact pack/quantity/cost evidence and creates one differences alert without duplicate receipts or payable deductions.
+- Added endpoint-scoped outgoing/incoming Branch requests, sending/arrival checklists, bilingual A4 picking lists and safe residual-copy drafts. They preserve physical transfer evidence without visible inventory estimates or supplier-money effects.
+- Corrected short-window non-scrolling navigation and bilingual A4 print presentation, including full column headings, isolated names/units, white paper and two-decimal read-only cost display while retaining four-decimal stored computation.
+- Final compiled review source is `098c6c8d65b83976d92815e30d43778d0fac4f9e`. Passed 525 unit tests across 42 files, lint and typed production build. Captured 64 fresh real-interface screenshots and eight actual A4 print-portal PDFs in English light/dark, Persian and phone variants with zero runtime/layout/geometry errors. The full final browser suite passed 273 scenarios with seven desktop-only checks skipped in the phone project, zero failures/flaky cases/retries (280 total). The [C review guide](PR_C_REVIEW.md) records exact Ubuntu commands, click paths, screenshots and the separate live GitHub checks link.
+
+## 2026-10-09 — Pull request C1: receiving, locations and review proof
+
+- Implemented Received and named Store/Warehouse locations, safe preposting selection and append-only posted invoice corrections, Manual price provenance/cost visibility, built-in exact-mm Regular/Promo grayscale labels, and All branches notebook addition. Removed active stock estimates/opening counts and preserved historical physical events.
+- Added non-scrolling collapsible sidebar groups for short windows. Passed 412 unit tests across 30 files, lint and typed production build; focused browser checks passed. Captured 24 real-interface screenshots and 8 actual print-portal PDFs in four variants with zero runtime/layout/print geometry errors. The complete frozen C1 browser run is recorded separately in the [C review guide](PR_C_REVIEW.md).
+
 ## 2026-10-09 — C1/C2 specification-first store workflow
 
 - Recorded B approval and authorized two stacked C pull requests with no review pause; file scope prototype/docs plus arzon-config location metadata only. Updated all six mandatory source docs before implementation.

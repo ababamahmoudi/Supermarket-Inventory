@@ -323,6 +323,12 @@ export default function History() {
                       t("Settings", "تنظیمات")
                     ) : entry.entity_type === "supplier" ? (
                       t("Supplier", "تأمین‌کننده")
+                    ) : entry.entity_type === "order" ? (
+                      t("Orders", "سفارش‌ها")
+                    ) : entry.entity_type === "branch_request" ? (
+                      t("Branch requests", "درخواست‌های شعب")
+                    ) : entry.entity_type === "supplier_item" ? (
+                      t("Supplier items", "کالاهای تأمین‌کننده")
                     ) : entry.entity_type?.includes("notebook") ? (
                       t("Notebooks", "دفترچه‌ها")
                     ) : (

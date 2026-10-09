@@ -132,7 +132,12 @@ export function Alerts() {
                 ? t("Different-supplier price", "قیمت تأمین‌کننده دیگر")
                 : alert.type === "tax_discrepancy"
                   ? t("Tax discrepancy", "اختلاف مالیات")
-                  : t("Barcode conflict", "تداخل بارکد");
+                  : alert.type === "order_differences"
+                    ? t(
+                        "Invoice and order differences",
+                        "اختلاف‌های فاکتور و سفارش",
+                      )
+                    : t("Barcode conflict", "تداخل بارکد");
         return (
           <Card key={alert.id} title={title} className="alert-card">
             <div className="row">
@@ -252,6 +257,137 @@ export function Alerts() {
                     <LtrText>{alert.supplier}</LtrText>
                   </p>
                 )}
+                {alert.type === "order_differences" && (
+                  <>
+                    <div className="actions">
+                      <a
+                        className="text-link"
+                        href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
+                      >
+                        {t("View invoice", "مشاهده فاکتور")}
+                      </a>
+                      <a
+                        className="text-link"
+                        href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
+                      >
+                        {t("View order", "مشاهده سفارش")}
+                      </a>
+                    </div>
+                    <DataTable
+                      columns={[
+                        { width: "25%" },
+                        { width: 180 },
+                        { width: 100, align: "end" },
+                        { width: "25%" },
+                        { width: "25%" },
+                      ]}
+                    >
+                      <thead>
+                        <tr>
+                          <th>{t("Product", "کالا")}</th>
+                          <th>{t("Difference", "اختلاف")}</th>
+                          <th>{t("Units", "واحد")}</th>
+                          <th>{t("Before-tax cost", "هزینه پیش از مالیات")}</th>
+                          <th>{t("Decision", "تصمیم")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(alert.order_differences ?? []).map(
+                          (difference, index) => (
+                            <tr key={index}>
+                              <td>
+                                <ProductName
+                                  product={{
+                                    name_en:
+                                      difference.name_en ??
+                                      difference.product_code,
+                                    name_fa: difference.name_fa ?? "",
+                                  }}
+                                  language={lang}
+                                />
+                              </td>
+                              <td>
+                                {
+                                  {
+                                    short: t("Short", "کسری"),
+                                    not_delivered: t(
+                                      "Not delivered",
+                                      "تحویل نشده",
+                                    ),
+                                    extra: t("Extra delivered", "تحویل اضافه"),
+                                    price_change: t(
+                                      "Unit cost changed",
+                                      "هزینه واحد تغییر کرد",
+                                    ),
+                                    short_dated: t(
+                                      "Short-dated (expiry discount)",
+                                      "نزدیک انقضا (تخفیف انقضا)",
+                                    ),
+                                  }[difference.kind]
+                                }
+                              </td>
+                              <td className="numeric">
+                                <LtrText>{difference.units ?? "—"}</LtrText>
+                              </td>
+                              <td>
+                                {difference.new_unit_cost ? (
+                                  <>
+                                    <Money
+                                      value={
+                                        difference.previous_unit_cost ?? "0"
+                                      }
+                                      decimals={2}
+                                      currency={state.config.company.currency}
+                                    />{" "}
+                                    →{" "}
+                                    <Money
+                                      value={difference.new_unit_cost}
+                                      decimals={2}
+                                      currency={state.config.company.currency}
+                                    />
+                                  </>
+                                ) : (
+                                  "—"
+                                )}
+                                {difference.expiry_date && (
+                                  <p>
+                                    <DateText value={difference.expiry_date} />
+                                  </p>
+                                )}
+                              </td>
+                              <td>
+                                {{
+                                  short: t("Short", "کسری"),
+                                  back_ordered: t(
+                                    "Back-ordered",
+                                    "در انتظار تحویل بعدی",
+                                  ),
+                                  cancelled: t("Cancelled", "لغوشده"),
+                                  keep: t(
+                                    "Keep it (we pay for it)",
+                                    "نگه می‌داریم (هزینه را می‌پردازیم)",
+                                  ),
+                                  refuse: t(
+                                    "Refused / sent back with the driver",
+                                    "رد شد / با راننده برگشت",
+                                  ),
+                                  accept: t(
+                                    "Accept new cost",
+                                    "پذیرش هزینه جدید",
+                                  ),
+                                  short_dated: t(
+                                    "Short-dated (expiry discount)",
+                                    "نزدیک انقضا (تخفیف انقضا)",
+                                  ),
+                                }[difference.decision] ?? difference.decision}
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </DataTable>
+                  </>
+                )}
                 {alert.previous_cost && alert.new_cost && (
                   <div className="price-change-values alert-costs">
                     <span>
@@ -264,7 +400,9 @@ export function Alerts() {
                     </span>
                   </div>
                 )}
-                {alert.type === "lower_price" && (
+                {(alert.type === "lower_price" ||
+                  (alert.type === "order_differences" &&
+                    alert.same_expiry)) && (
                   <div className="grid-2">
                     <div>
                       <p>

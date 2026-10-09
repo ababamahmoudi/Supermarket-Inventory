@@ -342,3 +342,18 @@ html[data-theme="dark"] .signin-logo-tile {
     padding-inline: 7px;
   }
 }
+
+@media (max-width: 760px) {
+  .topbar .breadcrumbs {
+    order: 7;
+    flex: 1 0 100%;
+    inline-size: 100%;
+    overflow: hidden;
+  }
+  .topbar .breadcrumbs > [aria-current="page"],
+  .topbar .breadcrumbs > bdi:last-child {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

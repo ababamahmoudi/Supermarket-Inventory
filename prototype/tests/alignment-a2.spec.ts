@@ -22,7 +22,7 @@ for (const language of ["en", "fa"] as const) {
       "suppliers",
       "suppliers?name=Fresh%20Valley%20Foods",
       "suppliers?name=Fresh%20Valley%20Foods|Invoices|فاکتورها",
-      "suppliers?name=Fresh%20Valley%20Foods|Products supplied|کالاهای تأمین‌شده",
+      "suppliers?name=Fresh%20Valley%20Foods|Supplier items|کالاهای تأمین‌کننده",
       "suppliers?name=Fresh%20Valley%20Foods|Returns and credits|مرجوعی‌ها و اعتبارها",
       "suppliers?name=Fresh%20Valley%20Foods|Payments|پرداخت‌ها",
       "expiry",
