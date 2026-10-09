@@ -760,10 +760,18 @@ export default function App() {
     authenticatedAt,
     state.config.session.reprompt_password_after_minutes,
   ]);
+  useEffect(() => {
+    if (
+      role === "supervisor" &&
+      branch !== "all" &&
+      !branchAllowsRole(state.config, branch, role)
+    )
+      setBranch("all");
+  }, [role, branch, state.config, setBranch]);
   if (!role || !user) return <SignIn />;
   if (mustChangePassword) return <ChoosePassword />;
   if (locked) return <LockScreen />;
-  if (!branchAllowsRole(state.config, branch, role))
+  if (role !== "supervisor" && !branchAllowsRole(state.config, branch, role))
     return (
       <Card>
         <p>
