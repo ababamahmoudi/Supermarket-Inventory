@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDemo } from "./store";
 import { historyActionLabel, historyErrorMessage } from "./history-copy";
@@ -64,6 +64,7 @@ function UndoToastItem({
 
 export default function UndoToasts() {
   const { undoToasts, user, locked, mustChangePassword, t, tCount } = useDemo();
+  const stackRef = useRef<HTMLElement>(null);
   const [host, setHost] = useState<HTMLElement>(() => document.body);
   useEffect(() => {
     // showModal dialogs live above every CSS stacking context. Keeping the
@@ -83,10 +84,32 @@ export default function UndoToasts() {
     });
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    const stack = stackRef.current;
+    if (!(host instanceof HTMLDialogElement) || !stack) return;
+    // Phone dialogs need scrollable space below their actions so the fixed
+    // Undo stack remains accessible without covering Save or confirmation.
+    const reserveSpace = () =>
+      host.style.setProperty(
+        "--undo-toast-block-size",
+        `${Math.max(64, Math.ceil(stack.getBoundingClientRect().height))}px`,
+      );
+    reserveSpace();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(reserveSpace);
+    observer?.observe(stack);
+    return () => {
+      observer?.disconnect();
+      host.style.removeProperty("--undo-toast-block-size");
+    };
+  }, [host, undoToasts.length, user, locked, mustChangePassword]);
   if (!user || locked || mustChangePassword || !undoToasts.length) return null;
   const extra = Math.max(0, undoToasts.length - 3);
   return createPortal(
     <aside
+      ref={stackRef}
       className="undo-toast-stack"
       aria-label={t("Recent actions", "کارهای اخیر")}
     >

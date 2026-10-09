@@ -377,9 +377,17 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .getByRole("button", { name: "Record pickup", exact: true })
     .last()
     .click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Add the representative name and signed slip reference",
-  );
+  for (const label of [
+    "Supplier representative name",
+    "Signed paper pickup slip reference",
+  ]) {
+    await expect(
+      page
+        .locator(".field")
+        .filter({ has: page.getByLabel(label, { exact: true }) })
+        .getByRole("alert"),
+    ).toContainText("Add the representative name and signed slip reference");
+  }
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
     page.getByRole("heading", { name: /^Return #1 · created/, level: 1 }),
@@ -469,9 +477,16 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .getByRole("dialog", { name: "Record ledger entry", exact: true })
     .getByRole("button", { name: "Record ledger entry", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Enter a valid amount with no more than two decimal places",
-  );
+  await expect(
+    page
+      .locator(".field")
+      .filter({
+        has: page.getByLabel("Signed amount (credits are negative)", {
+          exact: true,
+        }),
+      })
+      .getByRole("alert"),
+  ).toContainText("Enter a valid amount with no more than two decimal places");
   expect(await stored(page)).toEqual(beforeAmount);
   await expect(
     page.getByRole("heading", { name: "Payables", exact: true, level: 1 }),

@@ -14,6 +14,7 @@ async function saveName(page: Page, name: string) {
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await page.mouse.move(0, 0);
 }
 async function freezeClock(page: Page) {
   await page.clock.install();

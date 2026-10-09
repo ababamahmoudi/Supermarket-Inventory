@@ -253,6 +253,38 @@ try {
             ),
         );
       }
+      if (
+        variant === "phone" &&
+        ["products-buttons", "products-columns"].includes(scene)
+      ) {
+        // A phone may pan this table horizontally. Frame the real action
+        // column and first rows so the review proves Edit is visible.
+        const table = page.locator(".catalog-products-table");
+        await table.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth - element.clientWidth;
+          window.scrollTo(
+            0,
+            window.scrollY + element.getBoundingClientRect().top - 200,
+          );
+        });
+        if (scene === "products-buttons")
+          await expect(
+            table
+              .locator("tbody tr")
+              .first()
+              .getByRole("button", {
+                name: /^Edit /,
+              }),
+          ).toBeInViewport();
+        await page.evaluate(
+          () =>
+            new Promise((resolve) =>
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(resolve),
+              ),
+            ),
+        );
+      }
       await page.mouse.move(0, 0);
       const findings = await geometry(page);
       const filename = `${scene}-${variant}.png`;
