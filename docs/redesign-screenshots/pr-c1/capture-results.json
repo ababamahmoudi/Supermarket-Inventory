@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-09T15:55:29.463Z",
+  "generatedAt": "2026-10-09T16:14:55.888Z",
   "phase": "c1",
-  "baseURL": "http://127.0.0.1:5222",
+  "baseURL": "http://127.0.0.1:5224",
   "method": "Real UI interactions in fresh profiles, no injected business state or edited images. Original fictional products, offers and historical deliveries are retained. A manual price and warehouse notebook note are created through authorized forms. A controlled browser clock clears expired toasts. Headless window.print is suppressed while page.pdf exports the real UI print portal; this does not validate a physical printer.",
   "requestedScenes": [
     "received",
@@ -21,27 +21,27 @@
   "productionBuilds": [
     {
       "variant": "en-light",
-      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
-      "entry": "./assets/index-DhMxrUeW.js",
-      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+      "htmlSHA256": "e5a73d6f597e2387d5ac9128107e7fc5e3258d34fb6afdfb724de516fdf53f4b",
+      "entry": "./assets/index-CHkP4guM.js",
+      "entrySHA256": "35db3155b2b59f660f6363ae709dc23692b8f95a64fb836587933aad29174579"
     },
     {
       "variant": "en-dark",
-      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
-      "entry": "./assets/index-DhMxrUeW.js",
-      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+      "htmlSHA256": "e5a73d6f597e2387d5ac9128107e7fc5e3258d34fb6afdfb724de516fdf53f4b",
+      "entry": "./assets/index-CHkP4guM.js",
+      "entrySHA256": "35db3155b2b59f660f6363ae709dc23692b8f95a64fb836587933aad29174579"
     },
     {
       "variant": "fa-light",
-      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
-      "entry": "./assets/index-DhMxrUeW.js",
-      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+      "htmlSHA256": "e5a73d6f597e2387d5ac9128107e7fc5e3258d34fb6afdfb724de516fdf53f4b",
+      "entry": "./assets/index-CHkP4guM.js",
+      "entrySHA256": "35db3155b2b59f660f6363ae709dc23692b8f95a64fb836587933aad29174579"
     },
     {
       "variant": "phone",
-      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
-      "entry": "./assets/index-DhMxrUeW.js",
-      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+      "htmlSHA256": "e5a73d6f597e2387d5ac9128107e7fc5e3258d34fb6afdfb724de516fdf53f4b",
+      "entry": "./assets/index-CHkP4guM.js",
+      "entrySHA256": "35db3155b2b59f660f6363ae709dc23692b8f95a64fb836587933aad29174579"
     }
   ],
   "browserErrors": [],

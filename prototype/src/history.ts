@@ -61,6 +61,7 @@ const safeRoots = new Set([
   "notes",
   "invoice",
   "suppliers",
+  "supplier_items",
   "notebooks",
   "notebook_entries",
   "label_waitlist",
@@ -93,6 +94,7 @@ const creationMode = (root: string): ReversalPatch["creation"] => {
       "notebook_entries",
       "notes",
       "templates",
+      "supplier_items",
     ].includes(root)
   )
     return "archive";
@@ -473,6 +475,28 @@ export function reverseActivity(
   if (preview.some((item) => item.conflict)) throw new HistoryError("conflict");
   for (const { patch } of preview) patchScope(state, patch, context);
   for (const { patch } of preview) {
+    if (
+      patch.path[0] === "supplier_items" &&
+      !patch.before_exists &&
+      patch.creation === "archive" &&
+      own(patch.after) &&
+      typeof patch.after.id === "string"
+    ) {
+      const itemId = patch.after.id;
+      if (
+        [state.invoice, ...(state.invoices ?? [])].some(
+          (invoice) =>
+            invoice.company_id === context.company_id &&
+            invoice.lines.some((line) => line.supplier_item_id === itemId),
+        ) ||
+        (state.orders ?? []).some(
+          (order) =>
+            order.company_id === context.company_id &&
+            order.lines.some((line) => line.supplier_item_id === itemId),
+        )
+      )
+        throw new HistoryError("conflict");
+    }
     if (
       patch.path[0] === "config" &&
       patch.path[1] === "pricing_categories" &&

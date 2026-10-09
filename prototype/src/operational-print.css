@@ -1,0 +1,104 @@
+.operational-print-output {
+  display: none;
+}
+.operational-print-document {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 15mm;
+  background: #fff;
+  color: #000;
+  font:
+    10pt/1.45 "Vazirmatn",
+    "Inter",
+    sans-serif;
+}
+.operational-print-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 8mm;
+  margin-bottom: 8mm;
+}
+.operational-print-heading h1 {
+  font-size: 17pt;
+  margin: 3mm 0 0;
+}
+.operational-bilingual {
+  display: grid;
+  gap: 1mm;
+}
+.operational-bilingual [lang="fa"] {
+  font-family: "Vazirmatn", sans-serif;
+}
+.operational-print-document table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 5mm;
+  table-layout: fixed;
+}
+.operational-print-document th,
+.operational-print-document td {
+  border-bottom: 0.25mm solid #aaa;
+  padding: 2.5mm 1.5mm;
+  text-align: start;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.operational-print-document th {
+  font-size: 9pt;
+}
+.operational-print-document thead {
+  display: table-header-group;
+}
+.operational-print-document tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.operational-print-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm 8mm;
+}
+.operational-print-check {
+  display: inline-block;
+  width: 4mm;
+  height: 4mm;
+  border: 0.3mm solid #000;
+}
+@page operational-document {
+  size: A4 portrait;
+  margin: 15mm;
+}
+@media print {
+  body:has(.operational-print-output) {
+    background: #fff !important;
+    color: #000 !important;
+    color-scheme: light;
+  }
+  body:has(.operational-print-output) #root {
+    display: none !important;
+  }
+  .operational-print-output,
+  .operational-print-output * {
+    visibility: visible !important;
+  }
+  .operational-print-output {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .operational-print-document {
+    page: operational-document;
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .operational-print-document * {
+    color: #000;
+  }
+}

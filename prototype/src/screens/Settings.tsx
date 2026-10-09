@@ -21,6 +21,7 @@ import {
   saveBranchSettings,
   saveCompanySettings,
   saveModuleSettings,
+  saveOrderSettings,
   saveOfferSettings,
   setBranchActive,
   SettingsError,
@@ -873,6 +874,9 @@ function ModuleSettings() {
   const [draft, setDraft] = useState(() =>
     structuredClone(state.config.modules),
   );
+  const [allowOrders, setAllowOrders] = useState(
+    state.config.orders?.allow_floor_worker ?? false,
+  );
   return (
     <>
       <Card title={t("Modules", "بخش‌ها")} className="settings-form-card">
@@ -886,6 +890,12 @@ function ModuleSettings() {
               {t(en, fa)}
             </Switch>
           ))}
+          <Switch checked={allowOrders} onChange={setAllowOrders}>
+            {t(
+              "Allow Floor Workers to use Orders",
+              "اجازه استفاده از سفارش‌ها به کارکنان فروشگاه",
+            )}
+          </Switch>
         </div>
       </Card>
       <Card
@@ -900,17 +910,25 @@ function ModuleSettings() {
         </p>
       </Card>
       <SaveBar
-        dirty={JSON.stringify(draft) !== persisted}
+        dirty={
+          JSON.stringify(draft) !== persisted ||
+          allowOrders !== (state.config.orders?.allow_floor_worker ?? false)
+        }
         save={() =>
-          update((next) =>
-            saveModuleSettings(next, draft, {
+          update((next) => {
+            const actor = {
               role: role ?? "cashier",
               company_id: state.config.company.seed_key,
               by: user?.name ?? "",
-            }),
-          )
+            };
+            saveModuleSettings(next, draft, actor);
+            saveOrderSettings(next, { allow_floor_worker: allowOrders }, actor);
+          })
         }
-        cancel={() => setDraft(structuredClone(state.config.modules))}
+        cancel={() => {
+          setDraft(structuredClone(state.config.modules));
+          setAllowOrders(state.config.orders?.allow_floor_worker ?? false);
+        }}
       />
     </>
   );
@@ -1026,7 +1044,12 @@ export default function Settings() {
           ) : selected === "returns" ? (
             <LabelsSettings />
           ) : selected === "modules" ? (
-            <ModuleSettings key={JSON.stringify(state.config.modules)} />
+            <ModuleSettings
+              key={JSON.stringify({
+                modules: state.config.modules,
+                orders: state.config.orders,
+              })}
+            />
           ) : (
             <PlannedSettings group={group} />
           )}{" "}

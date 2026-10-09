@@ -1,0 +1,145 @@
+.branch-requests-screen {
+  display: grid;
+  gap: 20px;
+}
+.branch-requests-screen > .button {
+  justify-self: start;
+}
+.request-form,
+.request-detail {
+  max-width: 820px;
+  display: grid;
+  gap: 20px;
+}
+.request-form {
+  max-width: 760px;
+}
+.request-form > .field {
+  max-width: 480px;
+}
+.request-location-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 20px;
+}
+.request-free-item {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  max-width: 580px;
+}
+.request-free-item .field {
+  flex: 1;
+}
+.request-draft-lines,
+.request-checklist {
+  display: grid;
+  gap: 12px;
+}
+.request-draft-line,
+.request-checklist-item {
+  padding: 18px;
+  background: var(--surface-soft, var(--bg));
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+}
+.request-line-heading,
+.request-checklist-heading,
+.request-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.request-checklist-heading strong {
+  white-space: nowrap;
+}
+.request-quantity-fields {
+  display: grid;
+  grid-template-columns: 120px 150px minmax(130px, 180px);
+  gap: 16px;
+}
+.request-draft-line > .field {
+  max-width: 520px;
+}
+.request-search-results {
+  display: grid;
+  gap: 8px;
+  max-width: 580px;
+}
+.request-search-results > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface-soft, var(--bg));
+  border-radius: 12px;
+  padding: 12px;
+}
+.request-metadata {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 0;
+}
+.request-metadata dt {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.request-metadata dd {
+  margin: 0;
+}
+.request-acting-location {
+  max-width: 280px;
+}
+.request-decisions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.request-decisions .field {
+  width: 165px;
+}
+.request-cancel {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  max-width: 580px;
+}
+.request-cancel .field {
+  flex: 1;
+}
+.request-checklist-item p {
+  margin: 0;
+}
+.branch-requests-screen .data-table .helper {
+  display: block;
+  margin-top: 4px;
+}
+@media (max-width: 620px) {
+  .request-location-fields,
+  .request-metadata {
+    grid-template-columns: 1fr;
+  }
+  .request-quantity-fields {
+    grid-template-columns: minmax(0, 120px) minmax(0, 150px);
+  }
+  .request-free-item,
+  .request-cancel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .request-line-heading,
+  .request-checklist-heading,
+  .request-detail-heading {
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  .request-draft-line,
+  .request-checklist-item {
+    padding: 14px;
+  }
+}

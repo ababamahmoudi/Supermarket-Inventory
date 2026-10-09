@@ -1,0 +1,137 @@
+import {
+  BilingualPrintText,
+  OperationalPrintDocument,
+} from "./operational-print";
+import { formatMoney } from "./formatters";
+import { branchLabel } from "./settings";
+import type { Order } from "./orders";
+import type { CompanyConfig, Language } from "./types";
+
+export function OrderPrintDocument({
+  order,
+  config,
+  language,
+}: {
+  order: Order;
+  config: CompanyConfig;
+  language: Language;
+}) {
+  const amount = (value: string | null, decimals = 2) =>
+    value === null
+      ? "—"
+      : formatMoney(value, { currency: order.currency, decimals });
+  return (
+    <div className="order-print-output">
+      <OperationalPrintDocument
+        title_en="Order"
+        title_fa="سفارش"
+        company_name={config.company.name}
+        reference={order.reference}
+        language={language}
+      >
+        <dl className="operational-print-meta">
+          <div>
+            <dt>
+              <BilingualPrintText en="Supplier" fa="تأمین‌کننده" />
+            </dt>
+            <dd>{order.supplier}</dd>
+          </div>
+          <div>
+            <dt>
+              <BilingualPrintText en="Location" fa="مکان" />
+            </dt>
+            <dd>
+              <BilingualPrintText
+                en={branchLabel(config, order.branch, "en")}
+                fa={branchLabel(config, order.branch, "fa")}
+              />
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <BilingualPrintText en="Date" fa="تاریخ" />
+            </dt>
+            <dd>
+              <bdi dir="ltr">{order.date}</bdi>
+            </dd>
+          </div>
+        </dl>
+        <table className="order-print-table">
+          <thead>
+            <tr>
+              <th>
+                <BilingualPrintText
+                  en="Product / supplier code"
+                  fa="کالا / کد تأمین‌کننده"
+                />
+              </th>
+              <th>
+                <BilingualPrintText en="Units per case" fa="واحد در کارتن" />
+              </th>
+              <th>
+                <BilingualPrintText en="Cases" fa="کارتن" />
+              </th>
+              <th>
+                <BilingualPrintText en="Units" fa="واحد" />
+              </th>
+              <th>
+                <BilingualPrintText en="Unit cost" fa="هزینهٔ واحد" />
+              </th>
+              <th>
+                <BilingualPrintText en="Case cost" fa="هزینهٔ کارتن" />
+              </th>
+              <th>
+                <BilingualPrintText
+                  en="Before-tax total"
+                  fa="جمع پیش از مالیات"
+                />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.lines.map((line) => (
+              <tr key={line.id}>
+                <td>
+                  <BilingualPrintText
+                    en={`${line.name_en} ${line.unit_size}`}
+                    fa={`${line.name_fa || line.name_en} ${line.unit_size}`}
+                  />
+                  <bdi dir="ltr">
+                    {line.supplier_item_code || line.product_code}
+                  </bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{line.units_per_case}</bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{line.ordered_cases}</bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{line.ordered_units}</bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{amount(line.expected_unit_cost, 4)}</bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{amount(line.expected_case_cost, 4)}</bdi>
+                </td>
+                <td>
+                  <bdi dir="ltr">{amount(line.expected_line_total)}</bdi>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="order-print-total">
+          <BilingualPrintText
+            en="Expected total before tax"
+            fa="جمع مورد انتظار پیش از مالیات"
+          />
+          <strong>
+            <bdi dir="ltr">{amount(order.expected_total_before_tax)}</bdi>
+          </strong>
+        </div>
+      </OperationalPrintDocument>
+    </div>
+  );
+}

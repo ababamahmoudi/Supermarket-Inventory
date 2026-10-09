@@ -57,6 +57,10 @@ import {
   recalculateInvoice,
   receiveShort,
   shortTotals,
+  refusedTotals,
+  lineRefused,
+  acceptedInvoiceUnits,
+  setInvoiceLineQuantity,
   type InvoiceBlocker,
 } from "../invoice";
 import { manualPrice } from "../manual-prices";
@@ -73,6 +77,14 @@ import {
   type InvoiceMovePreview,
 } from "../received";
 import "./received-c.css";
+import {
+  costPerCase,
+  costPerUnit,
+  resolveSupplierItem,
+  supplierItemFacts,
+} from "../supplier-items";
+import { clearInvoiceOrder, clearInvoiceOrderLine } from "../invoice-orders";
+import { InvoiceOrderReview } from "./InvoiceOrderReview";
 import type {
   Branch,
   DemoInvoice,
@@ -128,8 +140,8 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
     "هر ردیف را به کالا وصل کنید یا هر دو نام کالای جدید را وارد کنید.",
   ],
   quantity: [
-    "Use whole quantities; delivered units must be between zero and invoiced units.",
-    "تعداد صحیح وارد کنید؛ تعداد تحویل‌شده باید بین صفر و تعداد فاکتور باشد.",
+    "Use positive whole Units, or Cases that convert exactly to whole units; delivered units must be between zero and invoiced units.",
+    "واحد صحیح مثبت یا کارتن قابل تبدیل دقیق به واحد صحیح وارد کنید؛ تحویل باید بین صفر و واحدهای فاکتور باشد.",
   ],
   cost: [
     "Enter a nonnegative unit cost with no more than four decimal places.",
@@ -150,6 +162,14 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
   lower_price: [
     "Answer the lower-price questions; add a note if information is unknown.",
     "به پرسش‌های کاهش هزینه پاسخ دهید؛ اگر اطلاعات نامعلوم است یادداشت اضافه کنید.",
+  ],
+  order: [
+    "The linked order changed or no longer matches this supplier and receiving location. Refresh the comparison or choose another order.",
+    "سفارش مرتبط تغییر کرده یا با تأمین‌کننده و مکان دریافت سازگار نیست. مقایسه را تازه کنید یا سفارش دیگری انتخاب کنید.",
+  ],
+  order_decisions: [
+    "Choose a decision for every order difference before posting.",
+    "پیش از ثبت، برای همه اختلاف‌های سفارش تصمیم انتخاب کنید.",
   ],
 };
 
@@ -279,6 +299,7 @@ export default function Invoices() {
     });
   }
   const totals = shortTotals(invoice);
+  const refused = refusedTotals(invoice);
   const lowerLines = lowerPriceLines(state);
   const locked = invoice.status === "posted";
   const active = invoice.status !== "empty";
@@ -509,7 +530,28 @@ export default function Invoices() {
   ) {
     updateInvoice((draft) => {
       if (draft.invoice.status === "posted") return;
+      const before = draft.invoice.lines[index];
+      const fingerprint = (line: InvoiceLine) =>
+        JSON.stringify([
+          line.product_code,
+          line.supplier_item_id,
+          line.supplier_item_code,
+          line.qty_invoiced,
+          line.qty_received_at_posting,
+          line.unit_cost_before_tax,
+          line.case_cost_before_tax,
+          line.units_per_case,
+          line.quantity_unit,
+          line.quantity_entered,
+        ]);
+      const old = fingerprint(before);
       change(draft.invoice.lines[index]);
+      if (fingerprint(before) !== old) {
+        clearInvoiceOrderLine(before);
+        draft.invoice.order_missing_decisions = undefined;
+        draft.invoice.lower_price_answers = undefined;
+        before.short_dated = false;
+      }
       draft.invoice.lines[index].review_confirmed = false;
       if (recalculate) recalculateInvoice(draft.invoice, draft.config);
     });
@@ -537,12 +579,13 @@ export default function Invoices() {
     );
   }
 
-  function receive(code: string) {
-    const line = invoice.lines.find((item) => item.product_code === code)!;
+  function receive(index: number) {
+    const line = invoice.lines[index];
+    const code = line.product_code;
     const remaining = lineShort(line).quantity - (line.qty_later_received ?? 0);
-    const quantity = deliveryQuantities[code] ?? Math.min(2, remaining);
+    const quantity = deliveryQuantities[index] ?? Math.min(2, remaining);
     const receipt =
-      deliveryRefs[code] ??
+      deliveryRefs[index] ??
       `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`;
     if (
       !receipt.trim() ||
@@ -568,6 +611,7 @@ export default function Invoices() {
       receipt,
       role!,
       branch,
+      index,
     );
     if (preview.ledger.every((entry) => oldLedgerIds.has(entry.id))) {
       setMessage(
@@ -579,12 +623,12 @@ export default function Invoices() {
       return;
     }
     updateInvoice((draft) => {
-      receiveShort(draft, code, quantity, receipt, role!, branch);
+      receiveShort(draft, code, quantity, receipt, role!, branch, index);
     });
     setMessage(
       `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} \u2066${money(restored)}\u2069`,
     );
-    setDeliveryRefs((current) => ({ ...current, [code]: "" }));
+    setDeliveryRefs((current) => ({ ...current, [index]: "" }));
   }
 
   const branchInvoices =
@@ -1019,10 +1063,16 @@ export default function Invoices() {
                       tone="sky"
                     />
                     <SummaryTile
-                      label={t("Shorts deduction", "کسر کسری باز")}
+                      label={t(
+                        "Shorts and refused deduction",
+                        "کسر کسری و اقلام برگشتی",
+                      )}
                       value={
                         <Money
-                          value={new Decimal(totals.total).negated().toFixed(2)}
+                          value={new Decimal(totals.total)
+                            .plus(refused.total)
+                            .negated()
+                            .toFixed(2)}
                           currency={state.config.company.currency}
                         />
                       }
@@ -1039,6 +1089,7 @@ export default function Invoices() {
                             )
                               ? new Decimal(invoice.final_total)
                                   .minus(totals.total)
+                                  .minus(refused.total)
                                   .toFixed(2)
                               : "0"
                           }
@@ -1169,6 +1220,7 @@ export default function Invoices() {
                                   supplierMatches(record, value),
                               );
                               draft.invoice.supplier = value;
+                              clearInvoiceOrder(draft.invoice);
                               draft.invoice.supplier_confirmed =
                                 supplier?.status === "confirmed";
                               draft.invoice.payment_terms =
@@ -1423,14 +1475,15 @@ export default function Invoices() {
                     </p>
                   )}
                 </Card>
+                <InvoiceOrderReview />
                 <Card
                   title={t("Review invoice lines", "بررسی ردیف‌های فاکتور")}
                   className="invoice-lines-card"
                 >
                   <p className="muted">
                     {t(
-                      "Quantities are individual units. Confirm the product, quantities, cost, and date decision on each line.",
-                      "تعدادها واحد تکی هستند. کالا، تعداد، هزینه و تصمیم پیگیری تاریخ هر ردیف را تأیید کنید.",
+                      "Choose Cases or Units and confirm the product, pack, quantities, cost, and date decision on each line.",
+                      "کارتن یا واحد را انتخاب کنید و کالا، اندازه کارتن، تعداد، هزینه و تصمیم پیگیری تاریخ هر ردیف را تأیید کنید.",
                     )}
                   </p>
                   {!invoice.lines.length && (
@@ -1479,6 +1532,7 @@ export default function Invoices() {
                             "grocery"),
                       )!;
                       const short = lineShort(line);
+                      const refusedLine = lineRefused(line);
                       const manual = product
                         ? manualPrice(state, product, invoice.branch)
                         : null;
@@ -1512,6 +1566,7 @@ export default function Invoices() {
                           !line.date_confirmed ||
                           (line.date_tracking && !line.date_value) ||
                           (manual &&
+                            acceptedInvoiceUnits(line) > 0 &&
                             !line.short_dated &&
                             !line.manual_price_decision) ||
                           !costValid);
@@ -1600,6 +1655,12 @@ export default function Invoices() {
                                       {t("Matched", "تطبیق داده شد")}
                                     </Badge>
                                   )}
+                                  {refusedLine.quantity > 0 && (
+                                    <Badge tone="info">
+                                      {t("Refused", "ردشده")}:{" "}
+                                      <LtrText>{refusedLine.quantity}</LtrText>
+                                    </Badge>
+                                  )}
                                   {short.quantity > 0 && (
                                     <Badge tone="danger">
                                       {t("Short", "کسری")}: {short.quantity}
@@ -1639,19 +1700,25 @@ export default function Invoices() {
                                       className="control-narrow"
 
                                       min="1"
-                                      step="1"
+                                      step={
+                                        line.quantity_unit === "cases"
+                                          ? "0.01"
+                                          : "1"
+                                      }
                                       dir="ltr"
-                                      value={line.qty_invoiced}
+                                      value={
+                                        line.quantity_entered ??
+                                        line.qty_invoiced
+                                      }
                                       onChange={(value) =>
                                         editLine(
                                           index,
                                           (item) => {
-                                            item.qty_invoiced = Number(value);
-                                            item.qty_received_at_posting =
-                                              Math.min(
-                                                item.qty_received_at_posting,
-                                                item.qty_invoiced,
-                                              );
+                                            setInvoiceLineQuantity(
+                                              item,
+                                              value,
+                                              item.quantity_unit ?? "units",
+                                            );
                                           },
                                           true,
                                         )
@@ -1718,6 +1785,17 @@ export default function Invoices() {
                                         (item) => {
                                           item.unit_cost_before_tax =
                                             event.target.value;
+                                          if (
+                                            item.quantity_unit === "cases" &&
+                                            /^\d+(?:\.\d{1,4})?$/.test(
+                                              item.unit_cost_before_tax,
+                                            )
+                                          )
+                                            item.case_cost_before_tax =
+                                              costPerCase(
+                                                item.unit_cost_before_tax,
+                                                item.units_per_case ?? 1,
+                                              );
                                         },
                                         true,
                                       )
@@ -1741,7 +1819,11 @@ export default function Invoices() {
                                 >
                                   {price ? (
                                     <Money
-                                      value={manual?.price ?? price}
+                                      value={
+                                        line.short_dated
+                                          ? (oldPrice ?? price)
+                                          : (manual?.price ?? price)
+                                      }
                                       currency={state.config.company.currency}
                                     />
                                   ) : (
@@ -1762,7 +1844,17 @@ export default function Invoices() {
                                     />
                                   </>
                                 )}
+                                {line.short_dated && (
+                                  <small className="muted">
+                                    {t(
+                                      "Regular cost and selling price stay unchanged.",
+                                      "هزینه عادی و قیمت فروش بدون تغییر می‌مانند.",
+                                    )}
+                                  </small>
+                                )}
                                 {price &&
+                                  !line.short_dated &&
+                                  acceptedInvoiceUnits(line) > 0 &&
                                   (manual
                                     ? line.manual_price_decision === "rule"
                                     : oldPrice !== price) && (
@@ -1811,6 +1903,154 @@ export default function Invoices() {
                                     disabled={locked}
                                     className="form-grid invoice-line-form"
                                   >
+                                    <Field
+                                      label={t("Quantity unit", "واحد تعداد")}
+                                    >
+                                      <Select
+                                        value={line.quantity_unit ?? "units"}
+                                        disabled={locked}
+                                        onChange={(value) =>
+                                          editLine(
+                                            index,
+                                            (item) => {
+                                              const quantity =
+                                                value === "cases"
+                                                  ? new Decimal(
+                                                      item.qty_invoiced,
+                                                    )
+                                                      .div(
+                                                        item.units_per_case ??
+                                                          1,
+                                                      )
+                                                      .toString()
+                                                  : String(item.qty_invoiced);
+                                              setInvoiceLineQuantity(
+                                                item,
+                                                quantity,
+                                                value as "cases" | "units",
+                                              );
+                                            },
+                                            true,
+                                          )
+                                        }
+                                        options={[
+                                          {
+                                            value: "units",
+                                            label: t("Units", "واحد"),
+                                          },
+                                          {
+                                            value: "cases",
+                                            label: t("Cases", "کارتن"),
+                                          },
+                                        ]}
+                                      />
+                                    </Field>
+                                    <Field
+                                      label={t(
+                                        "Units per case",
+                                        "واحد در هر کارتن",
+                                      )}
+                                    >
+                                      <NumberField
+                                        className="control-narrow"
+                                        min="1"
+                                        step="1"
+                                        value={line.units_per_case ?? 1}
+                                        disabled={locked}
+                                        onChange={(value) =>
+                                          editLine(
+                                            index,
+                                            (item) =>
+                                              setInvoiceLineQuantity(
+                                                item,
+                                                item.quantity_entered ??
+                                                  item.qty_invoiced,
+                                                item.quantity_unit ?? "units",
+                                                Number(value),
+                                              ),
+                                            true,
+                                          )
+                                        }
+                                      />
+                                    </Field>
+                                    <Field
+                                      label={t(
+                                        "Supplier item code (optional)",
+                                        "کد کالای تأمین‌کننده (اختیاری)",
+                                      )}
+                                    >
+                                      <input
+                                        className="control-narrow"
+                                        dir="ltr"
+                                        disabled={locked}
+                                        value={line.supplier_item_code ?? ""}
+                                        onChange={(event) =>
+                                          editLine(index, (item) => {
+                                            item.supplier_item_code =
+                                              event.target.value;
+                                            item.supplier_item_id =
+                                              resolveSupplierItem(
+                                                state,
+                                                invoice.company_id,
+                                                invoice.supplier,
+                                                invoice.branch,
+                                                {
+                                                  product_code:
+                                                    item.product_code,
+                                                  supplier_item_code:
+                                                    event.target.value,
+                                                },
+                                              )?.id;
+                                          })
+                                        }
+                                      />
+                                    </Field>
+                                    {line.quantity_unit === "cases" && (
+                                      <Field
+                                        label={t(
+                                          "Case cost before tax",
+                                          "هزینه کارتن پیش از مالیات",
+                                        )}
+                                      >
+                                        <input
+                                          className="control-narrow"
+                                          dir="ltr"
+                                          inputMode="decimal"
+                                          disabled={locked}
+                                          value={
+                                            line.case_cost_before_tax ?? ""
+                                          }
+                                          onChange={(event) =>
+                                            editLine(
+                                              index,
+                                              (item) => {
+                                                item.case_cost_before_tax =
+                                                  event.target.value;
+                                                try {
+                                                  item.unit_cost_before_tax =
+                                                    costPerUnit(
+                                                      event.target.value,
+                                                      item.units_per_case ?? 1,
+                                                    );
+                                                } catch {
+                                                  item.unit_cost_before_tax =
+                                                    "";
+                                                }
+                                              },
+                                              true,
+                                            )
+                                          }
+                                        />
+                                      </Field>
+                                    )}
+                                    <p className="invoice-pack-equation muted">
+                                      <LtrText>
+                                        {line.quantity_unit === "cases"
+                                          ? `${line.quantity_entered ?? ""} × ${line.units_per_case ?? 1} = ${line.qty_invoiced}`
+                                          : line.qty_invoiced}
+                                      </LtrText>{" "}
+                                      {t("units", "واحد")}
+                                    </p>
                                     <Field
                                       label={t(
                                         "Matched product",
@@ -1983,6 +2223,88 @@ export default function Invoices() {
                                       {t("tax", "مالیات")}
                                     </p>
                                   )}
+                                  {(() => {
+                                    const previous = previousReceiptCost(
+                                      state,
+                                      line.product_code,
+                                    );
+                                    const lower =
+                                      previous &&
+                                      /^\d+(?:\.\d{1,4})?$/.test(
+                                        line.unit_cost_before_tax,
+                                      ) &&
+                                      new Decimal(line.unit_cost_before_tax).lt(
+                                        previous.cost,
+                                      );
+                                    return lower &&
+                                      acceptedInvoiceUnits(line) > 0 ? (
+                                      <Field
+                                        label={t(
+                                          "Lower-cost receipt",
+                                          "دریافت با هزینه کمتر",
+                                        )}
+                                      >
+                                        <SegmentedControl
+                                          aria-label={t(
+                                            "Lower-cost receipt",
+                                            "دریافت با هزینه کمتر",
+                                          )}
+                                          value={
+                                            line.short_dated
+                                              ? "short_dated"
+                                              : "regular"
+                                          }
+                                          onChange={(value) =>
+                                            editLine(index, (item) => {
+                                              item.short_dated =
+                                                value === "short_dated";
+                                              if (item.short_dated) {
+                                                item.date_tracking = true;
+                                                item.date_confirmed = true;
+                                                item.date_type = "expiry";
+                                                item.order_price_decision =
+                                                  "short_dated";
+                                              } else {
+                                                item.order_price_decision =
+                                                  undefined;
+                                              }
+                                            })
+                                          }
+                                          options={[
+                                            {
+                                              value: "regular",
+                                              label: t(
+                                                "Regular receipt",
+                                                "دریافت عادی",
+                                              ),
+                                              disabled: locked,
+                                            },
+                                            {
+                                              value: "short_dated",
+                                              label: t(
+                                                "Short-dated (expiry discount)",
+                                                "نزدیک انقضا (تخفیف انقضا)",
+                                              ),
+                                              disabled: locked,
+                                            },
+                                          ]}
+                                        />
+                                      </Field>
+                                    ) : null;
+                                  })()}
+                                  {refusedLine.quantity > 0 && (
+                                    <p className="banner info">
+                                      {t(
+                                        "Refused / sent back with the driver",
+                                        "رد شد / با راننده برگشت",
+                                      )}{" "}
+                                      · {t("Deduction:", "کسر مبلغ:")}{" "}
+                                      <Money
+                                        value={refusedLine.total}
+                                        currency={state.config.company.currency}
+                                      />
+                                    </p>
+                                  )}
                                   {
                                     <fieldset
                                       disabled={locked}
@@ -2020,7 +2342,8 @@ export default function Invoices() {
                                             {
                                               value: "no",
                                               label: t("No", "خیر"),
-                                              disabled: locked,
+                                              disabled:
+                                                locked || !!line.short_dated,
                                             },
                                           ]}
                                         />
@@ -2042,7 +2365,9 @@ export default function Invoices() {
                                                 })
                                               }
 
-                                              disabled={locked}
+                                              disabled={
+                                                locked || !!line.short_dated
+                                              }
                                               options={[
                                                 {
                                                   value: "expiry",
@@ -2092,49 +2417,53 @@ export default function Invoices() {
                                       )}
                                     </fieldset>
                                   }
-                                  {manual && !locked && !line.short_dated && (
-                                    <div className="invoice-manual-choice">
-                                      <Field
-                                        label={t("Manual price", "قیمت دستی")}
-                                      >
-                                        <SegmentedControl
-                                          aria-label={t(
-                                            "Manual price decision",
-                                            "تصمیم قیمت دستی",
-                                          )}
-                                          value={
-                                            line.manual_price_decision ?? ""
-                                          }
-                                          onChange={(value) =>
-                                            editLine(index, (item) => {
-                                              item.manual_price_decision =
-                                                value as "keep" | "rule";
-                                            })
-                                          }
-                                          options={[
-                                            {
-                                              value: "keep",
-                                              label: t(
-                                                "Keep manual price",
-                                                "حفظ قیمت دستی",
-                                              ),
-                                            },
-                                            {
-                                              value: "rule",
-                                              label: t(
-                                                "Use rule price",
-                                                "استفاده از قیمت قاعده",
-                                              ),
-                                            },
-                                          ]}
-                                        />
-                                      </Field>
-                                    </div>
-                                  )}
+                                  {manual &&
+                                    !locked &&
+                                    !line.short_dated &&
+                                    acceptedInvoiceUnits(line) > 0 && (
+                                      <div className="invoice-manual-choice">
+                                        <Field
+                                          label={t("Manual price", "قیمت دستی")}
+                                        >
+                                          <SegmentedControl
+                                            aria-label={t(
+                                              "Manual price decision",
+                                              "تصمیم قیمت دستی",
+                                            )}
+                                            value={
+                                              line.manual_price_decision ?? ""
+                                            }
+                                            onChange={(value) =>
+                                              editLine(index, (item) => {
+                                                item.manual_price_decision =
+                                                  value as "keep" | "rule";
+                                              })
+                                            }
+                                            options={[
+                                              {
+                                                value: "keep",
+                                                label: t(
+                                                  "Keep manual price",
+                                                  "حفظ قیمت دستی",
+                                                ),
+                                              },
+                                              {
+                                                value: "rule",
+                                                label: t(
+                                                  "Use rule price",
+                                                  "استفاده از قیمت قاعده",
+                                                ),
+                                              },
+                                            ]}
+                                          />
+                                        </Field>
+                                      </div>
+                                    )}
                                   <Checkbox
                                     disabled={
                                       locked ||
                                       (!!manual &&
+                                        acceptedInvoiceUnits(line) > 0 &&
                                         !line.short_dated &&
                                         !line.manual_price_decision)
                                     }
@@ -2183,6 +2512,15 @@ export default function Invoices() {
 
                           disabled={locked}
                           options={[
+                            ...supplierItemFacts(
+                              state,
+                              invoice.company_id,
+                              invoice.supplier,
+                              invoice.branch,
+                            ).map((item) => ({
+                              value: `supplier-item:${item.id}`,
+                              label: `${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`} · \u2066${item.supplier_item_code || item.product_code}\u2069 · ${t("Case of", "کارتنِ")} ${item.units_per_case}`,
+                            })),
                             ...state.products
                               .filter(
                                 (item) =>
@@ -2207,7 +2545,26 @@ export default function Invoices() {
                         variant="secondary"
                         onClick={() =>
                           updateInvoice((draft) => {
-                            addManualLine(draft, manualCode);
+                            const selectedItem = manualCode.startsWith(
+                              "supplier-item:",
+                            )
+                              ? resolveSupplierItem(
+                                  draft,
+                                  draft.invoice.company_id,
+                                  draft.invoice.supplier,
+                                  draft.invoice.branch,
+                                  {
+                                    id: manualCode.slice(
+                                      "supplier-item:".length,
+                                    ),
+                                  },
+                                )
+                              : null;
+                            addManualLine(
+                              draft,
+                              selectedItem?.product_code ?? manualCode,
+                              selectedItem?.id,
+                            );
                           })
                         }
                       >
@@ -2230,12 +2587,12 @@ export default function Invoices() {
                     )}
                     className="invoice-lower-price-card"
                   >
-                    {lowerLines.map((line) => {
+                    {lowerLines.map((line, index) => {
                       const product = state.products.find(
                         (item) => item.code === line.product_code,
                       )!;
                       return (
-                        <p key={line.product_code}>
+                        <p key={`${line.product_code}:${index}`}>
                           <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
                             {lang === "fa" ? product.name_fa : product.name_en}
                           </bdi>{" "}
@@ -2422,6 +2779,7 @@ export default function Invoices() {
                   invoice.lines
                     .filter((line) => lineShort(line).quantity > 0)
                     .map((line) => {
+                      const index = invoice.lines.indexOf(line);
                       const remaining =
                         lineShort(line).quantity -
                         (line.qty_later_received ?? 0);
@@ -2430,8 +2788,9 @@ export default function Invoices() {
                       )!;
                       return (
                         <Card
-                          key={line.product_code}
-                          title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? product.name_fa : `\u2066${product.name_en}\u2069`}`}
+                          key={`${invoice.id}:${index}`}
+                          title={`${t("Later short delivery", "تحویل بعدی کسری")} · ${lang === "fa" ? (product?.name_fa ?? line.new_name_fa ?? line.description) : `\u2066${product?.name_en ?? line.description}\u2069`} · ${line.supplier_item_code ?? ""}`}
+                          className="invoice-short-receipt"
                         >
                           <p>
                             <Badge tone={remaining ? "danger" : "approved"}>
@@ -2448,7 +2807,7 @@ export default function Invoices() {
                               "Received from this invoice:",
                               "دریافت‌شده از این فاکتور:",
                             )}{" "}
-                            {line.qty_received_at_posting +
+                            {acceptedInvoiceUnits(line) +
                               (line.qty_later_received ?? 0)}
                           </p>
                           {remaining > 0 && (
@@ -2468,13 +2827,13 @@ export default function Invoices() {
                                     max={remaining}
                                     step="1"
                                     value={
-                                      deliveryQuantities[line.product_code] ??
+                                      deliveryQuantities[index] ??
                                       Math.min(2, remaining)
                                     }
                                     onChange={(value) =>
                                       setDeliveryQuantities((current) => ({
                                         ...current,
-                                        [line.product_code]: Number(value),
+                                        [index]: Number(value),
                                       }))
                                     }
                                   />
@@ -2488,13 +2847,13 @@ export default function Invoices() {
                                   <input
                                     dir="ltr"
                                     value={
-                                      deliveryRefs[line.product_code] ??
+                                      deliveryRefs[index] ??
                                       `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`
                                     }
                                     onChange={(event) =>
                                       setDeliveryRefs((current) => ({
                                         ...current,
-                                        [line.product_code]: event.target.value,
+                                        [index]: event.target.value,
                                       }))
                                     }
                                   />
@@ -2502,7 +2861,7 @@ export default function Invoices() {
                               </div>
                               <Button
                                 variant="secondary"
-                                onClick={() => receive(line.product_code)}
+                                onClick={() => receive(index)}
                                 disabled={branch !== invoiceLocation}
                               >
                                 {t(
@@ -2516,7 +2875,12 @@ export default function Invoices() {
                             .filter(
                               (entry) =>
                                 entry.invoice_id === invoice.id &&
-                                entry.type === "short_restoration",
+                                entry.type === "short_restoration" &&
+                                (entry.invoice_line_index === index ||
+                                  (entry.invoice_line_index === undefined &&
+                                    invoice.lines.filter(
+                                      (item) => lineShort(item).quantity > 0,
+                                    ).length === 1)),
                             )
                             .map((entry) => (
                               <p key={entry.id}>

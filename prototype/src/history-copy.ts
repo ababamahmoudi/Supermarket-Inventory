@@ -30,6 +30,38 @@ const actions: Record<string, [string, string]> = {
   "Archive template": ["Archive template", "بایگانی قالب"],
   "Restore template": ["Restore template", "بازیابی قالب"],
   "Move invoice": ["Move invoice", "انتقال فاکتور"],
+  "Order settings changed": [
+    "Order settings changed",
+    "تنظیمات سفارش تغییر کرد",
+  ],
+  "Add supplier item": ["Add supplier item", "افزودن کالای تأمین‌کننده"],
+  "Save supplier item": ["Save supplier item", "ذخیره کالای تأمین‌کننده"],
+  "Create order draft": ["Create order draft", "ایجاد پیش‌نویس سفارش"],
+  "Edit order draft": ["Edit order draft", "ویرایش پیش‌نویس سفارش"],
+  "Add To order note to draft": [
+    "Add To order note to draft",
+    "افزودن یادداشت برای سفارش به پیش‌نویس",
+  ],
+  "To order note ordered": [
+    "To order note ordered",
+    "یادداشت برای سفارش ثبت شد",
+  ],
+  "Place order": ["Place order", "ثبت سفارش"],
+  "Cancel order": ["Cancel order", "لغو سفارش"],
+  "Receive order invoice": ["Receive order invoice", "دریافت فاکتور سفارش"],
+  "Receive order Short delivery": [
+    "Receive order Short delivery",
+    "دریافت کسری سفارش",
+  ],
+  "Send request": ["Send request", "ارسال درخواست"],
+  "Mark as sent": ["Mark as sent", "علامت ارسال‌شده"],
+  "Mark as received": ["Mark as received", "علامت دریافت‌شده"],
+  "Close request": ["Close request", "بستن درخواست"],
+  "Cancel request": ["Cancel request", "لغو درخواست"],
+  "Copy short or missing items": [
+    "Copy short or missing items",
+    "کپی کالاهای کسری یا دریافت‌نشده",
+  ],
   "Create template": ["Create template", "ایجاد قالب"],
   "Save label settings": ["Save label settings", "ذخیره تنظیمات برچسب"],
   "Print labels": ["Print labels", "چاپ برچسب‌ها"],
@@ -149,6 +181,17 @@ const fields: Record<string, [string, string]> = {
     "شماره فاکتور تأمین‌کننده",
   ],
   supplier: ["Supplier", "تأمین‌کننده"],
+  supplier_item_code: ["Supplier item code", "کد کالای تأمین‌کننده"],
+  product_code: ["Product Code", "کد کالا"],
+  units_per_case: ["Units per case", "واحد در هر کارتن"],
+  quoted_unit_cost_before_tax: [
+    "Expected unit cost",
+    "هزینه مورد انتظار هر واحد",
+  ],
+  allow_floor_worker: [
+    "Allow Floor Workers to use Orders",
+    "اجازه استفاده از سفارش‌ها به کارکنان فروشگاه",
+  ],
   lines: ["Invoice lines", "ردیف‌های فاکتور"],
 };
 export function historyFieldLabel(field: string, lang: Language): string {

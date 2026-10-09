@@ -37,14 +37,18 @@ test("Supervisor supplier overview reconciles balances and opens financial tabs"
   await expect(
     content.getByRole("row").filter({ hasText: "FV-20390" }),
   ).toContainText("$169.79");
-  await page
-    .getByRole("tab", { name: "Products supplied", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
   await expect(
-    content.getByRole("columnheader", { name: "Last cost", exact: true }),
+    content.getByRole("columnheader", {
+      name: "Last bought / case",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
-    content.getByRole("columnheader", { name: "Cost history", exact: true }),
+    content.getByRole("columnheader", {
+      name: "Last bought / unit",
+      exact: true,
+    }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Payments", exact: true }).click();
   await expect(

@@ -1,0 +1,46 @@
+.supplier-items-toolbar {
+  gap: 12px;
+  margin-block-end: 20px;
+}
+.supplier-item-count {
+  margin-inline-start: auto;
+  white-space: nowrap;
+}
+.supplier-items-table table {
+  min-inline-size: 950px;
+}
+.supplier-items-table.supervisor table {
+  min-inline-size: 1240px;
+}
+.supplier-item-history-row {
+  cursor: pointer;
+}
+.supplier-item-pack {
+  white-space: nowrap;
+}
+.supplier-item-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.supplier-item-history-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+}
+.supplier-item-price-history table {
+  min-inline-size: 780px;
+}
+.supplier-item-quote {
+  background: var(--surface-soft);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+.supplier-item-editor-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.supplier-item-editor input.supplier-item-narrow {
+  inline-size: 144px;
+  max-inline-size: 100%;
+}

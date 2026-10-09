@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { clearInvoiceOrder } from "./invoice-orders";
 import { companyDate } from "./invoice";
 import { branchId, configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
@@ -224,7 +225,7 @@ export function receivedLog(
       add(
         invoice,
         index,
-        line.qty_received_at_posting,
+        line.qty_received_at_posting - (line.refused_units ?? 0),
         `${invoice.id}:received:${index}`,
         invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
         invoice.receiving_employee ?? "",
@@ -422,6 +423,7 @@ export function setInvoiceLocation(
     throw new Error("Choose an allowed receiving location for your draft.");
   invoice.handling_branch ??= invoice.branch;
   if (invoice.branch === destination) return;
+  clearInvoiceOrder(invoice);
   invoice.branch = destination;
   invoice.lower_price_answers = undefined;
   for (const line of invoice.lines) {

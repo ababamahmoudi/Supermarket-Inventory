@@ -2,24 +2,24 @@
 
 This Phase 0.2 demo runs entirely in the browser. People, suppliers, files, and activity are fictional; invoice reading is simulated. There is no backend, database, production authentication, or AI connection. Uploaded files and saved changes stay in this browser.
 
-The current review branch, `feat/prototype-c1-receiving-locations`, is **pull request C1**. It includes approved B and adds Received, named store/Warehouse locations, safe invoice-location corrections, manual-price flags and Supervisor cost history, ready Regular/Promo grayscale labels, and the All branches notebook fix. It removes visible stock estimates and opening counts: inventory is a separate later paid phase. The [C review guide](../docs/PR_C_REVIEW.md) contains exact Ubuntu commands, click-by-click checks, screenshots and remaining scope. C2 (Orders, supplier items/packs and Branch requests) is the next stacked branch, planned as `feat/prototype-c2-orders-requests`; it will include C1 when finished. The [B review guide](../docs/PR_B_REVIEW.md) records the earlier approved review; real AI/item 30 remains deferred to Prompt 3D.
+The current working branch, `feat/prototype-c2-orders-requests`, stacks C2 on **pull request C1 (#14)**. C2 implementation and validation are in progress; its guide will include the executed results and gallery before review. C1 final tip is `95f4fe4`. It includes approved B and adds Received, named store/Warehouse locations, safe invoice-location corrections, manual-price flags and Supervisor cost history, ready Regular/Promo grayscale labels, and the All branches notebook fix. It removes visible stock estimates and opening counts: inventory is a separate later paid phase. The [C review guide](../docs/PR_C_REVIEW.md) contains exact Ubuntu commands, click-by-click checks, screenshots and remaining scope. C2 adds Orders, supplier items/packs, linked invoice differences and short-dated receiving, and Branch requests. Its final guide will record executed verification and screenshot evidence. The [B review guide](../docs/PR_B_REVIEW.md) records the earlier approved review; real AI/item 30 remains deferred to Prompt 3D.
 
 ## Run on Ubuntu
 
 First get the review branch. If you already tested the project, open Ubuntu **Files**, find your `Supermarket-Inventory` folder, right-click inside it, and choose **Open in Terminal**. Stop the previous demo with Ctrl+C in its terminal, then run:
 
 ```bash
-git fetch origin feat/prototype-c1-receiving-locations:refs/remotes/origin/feat/prototype-c1-receiving-locations
-git switch feat/prototype-c1-receiving-locations
-git pull --ff-only origin feat/prototype-c1-receiving-locations
+git fetch origin feat/prototype-c2-orders-requests:refs/remotes/origin/feat/prototype-c2-orders-requests
+git switch feat/prototype-c2-orders-requests
+git pull --ff-only origin feat/prototype-c2-orders-requests
 ```
 
-Expect Git to say it switched to `feat/prototype-c1-receiving-locations`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
+Expect Git to say it switched to `feat/prototype-c2-orders-requests`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
 
 For a fresh copy instead, open a terminal in the folder where you keep projects and run:
 
 ```bash
-git clone --branch feat/prototype-c1-receiving-locations https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch feat/prototype-c2-orders-requests https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory
 ```
 
@@ -64,7 +64,7 @@ Expect Node `v22.22.2`, a successful TypeScript/Vite build, and the preview serv
 5. Open the user menu at the bottom of the sidebar for **Lock** or **Sign out**. Recent-user chips fill the username without retaining a typed password. On a phone, open the sidebar first.
 6. Choose **Demo → Reset demo → Reset demo** in the confirmation dialog to restore fictional business data. Refresh preserves changes. Reset preserves the account, language, preferences, and changed passwords; use a fresh browser profile to repeat the first-sign-in example.
 
-[PR_C_REVIEW.md](../docs/PR_C_REVIEW.md) is the current guide for C1 and the planned C2 workflow. [PR_B_REVIEW.md](../docs/PR_B_REVIEW.md) records the earlier approved B review. [DESIGN_A2_REVIEW.md](../docs/DESIGN_A2_REVIEW.md) records the earlier A2 review. [REVIEW_GUIDE.md](REVIEW_GUIDE.md) and [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) record the earlier four-screen PR1 review.
+[PR_C_REVIEW.md](../docs/PR_C_REVIEW.md) is the current guide for C1 and the C2 workflow. [PR_B_REVIEW.md](../docs/PR_B_REVIEW.md) records the earlier approved B review. [DESIGN_A2_REVIEW.md](../docs/DESIGN_A2_REVIEW.md) records the earlier A2 review. [REVIEW_GUIDE.md](REVIEW_GUIDE.md) and [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) record the earlier four-screen PR1 review.
 
 ## Meaningful checks
 
@@ -78,7 +78,7 @@ npx playwright install --with-deps chromium
 npm run e2e
 ```
 
-Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving/posted relocation, warehouse rules, manual-price provenance, All branches notebook addition, exact Regular/Promo geometry, returns and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including the retained A2 controls/operational flows and B's live label designer/waitlist/printing, custom notebook roles, saved Settings, History/Revert/independent Undo timers, new supplier/product guards, manual invoice posting blockers, Persian RTL and theme/text persistence. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/alignment-a2.spec.ts` targets A2 table/dialog proof; the full command also checks the earlier sign-in/layout work and retained workflows.
+Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving/posted relocation, warehouse rules, manual-price provenance, All branches notebook addition, exact Regular/Promo geometry, Supplier item/pack snapshots, Orders/To order/discrepancy/short-dated receiving, request endpoint/checklist/residual-copy rules, returns and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including the retained A2 controls/operational flows and B's live label designer/waitlist/printing, custom notebook roles, saved Settings, History/Revert/independent Undo timers, new supplier/product guards, manual invoice posting blockers, Persian RTL and theme/text persistence. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/alignment-a2.spec.ts` targets A2 table/dialog proof; the full command also checks the earlier sign-in/layout work and retained workflows.
 
 These are commands and expected results; the PR validation report records actual run results. A check with no executed tests is not a pass.
 

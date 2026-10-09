@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   Archive,
+  ArrowLeftRight,
   Bell,
   ChevronRight,
   ClipboardList,
@@ -58,6 +59,9 @@ import Payables from "./screens/Payables";
 import Dashboard from "./screens/Dashboard";
 import Suppliers from "./screens/Suppliers";
 import Received from "./screens/Received";
+import Orders from "./screens/Orders";
+import BranchRequests from "./screens/BranchRequests";
+import { branchRequestCount } from "./branch-requests";
 import "./a2-shared.css";
 import { demoUsers, useDemo } from "./store";
 import type { AuthError } from "./auth";
@@ -140,6 +144,14 @@ export const pages: {
     roles: ["floor_worker", "supervisor"],
   },
   {
+    key: "requests",
+    en: "Branch requests",
+    fa: "درخواست‌های شعب",
+    icon: ArrowLeftRight,
+    group: "Daily",
+    roles: ["floor_worker", "supervisor"],
+  },
+  {
     key: "products",
     en: "Products",
     fa: "محصولات",
@@ -194,6 +206,14 @@ export const pages: {
     icon: CreditCard,
     group: "Supervisor",
     roles: ["supervisor"],
+  },
+  {
+    key: "orders",
+    en: "Orders",
+    fa: "سفارش‌ها",
+    icon: ClipboardList,
+    group: "Supervisor",
+    roles: ["floor_worker", "supervisor"],
   },
   {
     key: "settings",
@@ -625,6 +645,8 @@ const screenRegistry: Record<string, ReactNode> = {
   product: <ProductPage />,
   invoices: <Invoices />,
   received: <Received />,
+  orders: <Orders />,
+  requests: <BranchRequests />,
   approvals: <Approvals />,
   alerts: <Alerts />,
   offers: <Offers />,
@@ -664,7 +686,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [compactGroups, setCompactGroups] = useState(
-    () => window.matchMedia?.("(max-height: 920px)").matches ?? false,
+    () => window.matchMedia?.("(max-height: 1020px)").matches ?? false,
   );
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(
@@ -675,7 +697,7 @@ export default function App() {
   const [, setReauthenticationClock] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    const media = window.matchMedia?.("(max-height: 920px)");
+    const media = window.matchMedia?.("(max-height: 1020px)");
     if (!media) return;
     const resize = () => setCompactGroups(media.matches);
     media.addEventListener("change", resize);
@@ -760,10 +782,18 @@ export default function App() {
     authenticatedAt,
     state.config.session.reprompt_password_after_minutes,
   ]);
+  useEffect(() => {
+    if (
+      role === "supervisor" &&
+      branch !== "all" &&
+      !branchAllowsRole(state.config, branch, role)
+    )
+      setBranch("all");
+  }, [role, branch, state.config, setBranch]);
   if (!role || !user) return <SignIn />;
   if (mustChangePassword) return <ChoosePassword />;
   if (locked) return <LockScreen />;
-  if (!branchAllowsRole(state.config, branch, role))
+  if (role !== "supervisor" && !branchAllowsRole(state.config, branch, role))
     return (
       <Card>
         <p>
@@ -780,11 +810,19 @@ export default function App() {
     branch,
     role,
     actor: user.name,
+    username: user.username,
+    device: "Prototype browser",
+    allowed_branches:
+      role === "supervisor" ? configuredBranches(state.config) : [user.branch],
   };
   const branches = configuredBranches(state.config);
   const allowed = pages.filter(
     (page) =>
       moduleEnabled(state.config, page.key) &&
+      (page.key !== "orders" ||
+        role === "supervisor" ||
+        (role === "floor_worker" &&
+          state.config.orders?.allow_floor_worker === true)) &&
       (page.roles.includes(role) ||
         (page.key === "notes" && canAccessNotebooks(state, context))),
   );
@@ -942,11 +980,13 @@ export default function App() {
                     const count =
                       item.key === "notes" && role === "supervisor"
                         ? unread
-                        : item.key === "approvals"
-                          ? approvalCount
-                          : item.key === "alerts"
-                            ? alertCount
-                            : 0;
+                        : item.key === "requests"
+                          ? branchRequestCount(state, context)
+                          : item.key === "approvals"
+                            ? approvalCount
+                            : item.key === "alerts"
+                              ? alertCount
+                              : 0;
                     return (
                       <a
                         key={item.key}

@@ -44,7 +44,12 @@ export function productCostHistory(
         if (
           line.company_id !== context.company_id ||
           line.product_code !== product.code ||
-          line.qty_received_at_posting + (line.qty_later_received ?? 0) <= 0
+          Math.max(
+            0,
+            line.qty_received_at_posting - (line.refused_units ?? 0),
+          ) +
+            (line.qty_later_received ?? 0) <=
+            0
         )
           return [];
         return [

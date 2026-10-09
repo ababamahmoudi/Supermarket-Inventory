@@ -721,6 +721,7 @@ export function updateNoteStatus(
   if (!note) fail("scope");
   if (note.type === "note_to_supervisor" && context.role !== "supervisor")
     fail("supervisor");
+  if (status === "ordered" || note.status === "ordered") fail("status");
   note.status = status;
   const recordedNote = note as NoteRecord & {
     seen_by?: string;

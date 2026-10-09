@@ -168,7 +168,7 @@ export function Notes() {
   const notes = allNotes.filter(
     (item) =>
       (query || item.type === activeTab) &&
-      (showDone || item.status !== "resolved") &&
+      (showDone || (item.status !== "resolved" && item.status !== "ordered")) &&
       (!query || searchText(item)),
   );
   const entries = allEntries.filter(
@@ -549,20 +549,22 @@ export function Notes() {
             </strong>
             <Badge
               tone={
-                item.status === "resolved"
+                item.status === "resolved" || item.status === "ordered"
                   ? "approved"
                   : item.status === "read"
                     ? "info"
                     : "pending"
               }
             >
-              {item.status === "resolved"
-                ? item.type === "to_order"
-                  ? t("Ordered", "سفارش‌داده‌شده")
-                  : t("Done", "انجام‌شده")
-                : item.status === "read"
-                  ? t("Seen", "دیده‌شده")
-                  : t("Open", "باز")}
+              {item.status === "ordered"
+                ? t("Ordered", "سفارش‌داده‌شده")
+                : item.status === "resolved"
+                  ? item.type === "to_order"
+                    ? t("Ordered", "سفارش‌داده‌شده")
+                    : t("Done", "انجام‌شده")
+                  : item.status === "read"
+                    ? t("Seen", "دیده‌شده")
+                    : t("Open", "باز")}
             </Badge>
           </div>
           <p className="muted">
@@ -602,6 +604,7 @@ export function Notes() {
                 </Button>
               )}
             {item.status !== "resolved" &&
+              item.status !== "ordered" &&
               (item.type !== "note_to_supervisor" || role === "supervisor") && (
                 <Button
                   variant="secondary"

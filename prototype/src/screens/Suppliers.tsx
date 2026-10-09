@@ -12,6 +12,8 @@ import {
   deactivateSupplier,
 } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
+import SupplierItems from "./SupplierItems";
+import { supplierItems } from "../supplier-items";
 import Received from "./Received";
 import { translateCount } from "../i18n";
 import {
@@ -25,7 +27,6 @@ import {
   LtrText,
   Money,
   ProductName,
-  UnitSize,
 } from "../presentation";
 import {
   Badge,
@@ -457,7 +458,7 @@ export default function Suppliers() {
   const tabs = [
     ["overview", "Overview", "نمای کلی"],
     ["invoices", "Invoices", "فاکتورها"],
-    ["products", "Products supplied", "کالاهای تأمین‌شده"],
+    ["products", "Supplier items", "کالاهای تأمین‌کننده"],
     ["received", "Received", "دریافت‌شده‌ها"],
     ["returns", "Returns and credits", "مرجوعی‌ها و اعتبارها"],
     ["shorts", "Shorts", "کسری‌ها"],
@@ -636,8 +637,8 @@ export default function Suppliers() {
               <dd>{branchName(branch)}</dd>
             </div>
             <div>
-              <dt>{t("Products supplied", "کالاهای تأمین‌شده")}</dt>
-              <dd>{detail.products.length}</dd>
+              <dt>{t("Supplier items", "کالاهای تأمین‌کننده")}</dt>
+              <dd>{supplierItems(state, context, current.name).length}</dd>
             </div>
             <div>
               <dt>{t("Open shorts", "کسری‌های باز")}</dt>
@@ -736,80 +737,12 @@ export default function Suppliers() {
           </DataTable>
         )}
         {effectiveTab === "products" && (
-          <DataTable
-            columns={[
-              { width: "260px" },
-              { width: "110px" },
-              { width: "120px" },
-              { width: "130px" },
-              ...(supervisor
-                ? [
-                    { width: "110px", align: "end" as const },
-                    { width: "220px" },
-                  ]
-                : []),
-              { width: "80px", actions: true },
-            ]}
-          >
-            <thead>
-              <tr>
-                <th>{t("Product", "کالا")}</th>
-                <th>{t("Product Code", "کد کالا")}</th>
-                <th>{t("Unit size", "اندازه واحد")}</th>
-                <th>{t("Last delivery", "آخرین تحویل")}</th>
-                {supervisor && (
-                  <>
-                    <th>{t("Last cost", "آخرین هزینه")}</th>
-                    <th>{t("Cost history", "تاریخچه هزینه")}</th>
-                  </>
-                )}
-                <th>{t("Actions", "عملیات")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.products.map((product) => (
-                <tr key={product.code}>
-                  <td>
-                    <ProductName product={product} language={lang} />
-                  </td>
-                  <td>
-                    <LtrText>{product.code}</LtrText>
-                  </td>
-                  <td>
-                    <UnitSize value={product.unit_size} />
-                  </td>
-                  <td>
-                    <DateText value={product.last_delivery} />
-                  </td>
-                  {product.financial && (
-                    <>
-                      <td>{money(product.financial.last_cost)}</td>
-                      <td>
-                        <div className="supplier-cost-history">
-                          {product.financial.history.map((receipt) => (
-                            <span key={`${receipt.invoice}-${receipt.date}`}>
-                              <LtrText>{receipt.invoice}</LtrText> ·{" "}
-                              <DateText value={receipt.date} /> ·{" "}
-                              {money(receipt.cost)}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                    </>
-                  )}
-                  <td>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`product?code=${product.code}`)}
-                    >
-                      {t("View", "نمایش")}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DataTable>
+          <SupplierItems
+            supplier={current.name}
+            editable={
+              current.active !== false && current.status === "confirmed"
+            }
+          />
         )}
         {effectiveTab === "returns" && (
           <DataTable
@@ -953,6 +886,10 @@ export default function Suppliers() {
                         tax_discrepancy: t("Tax discrepancy", "اختلاف مالیات"),
                         barcode_conflict: t("Barcode conflict", "تعارض بارکد"),
                         other_supplier: t("Other supplier", "تأمین‌کننده دیگر"),
+                        order_differences: t(
+                          "Invoice and order differences",
+                          "اختلاف‌های فاکتور و سفارش",
+                        ),
                       }[alert.type]
                     }
                   </td>
@@ -1022,7 +959,6 @@ export default function Suppliers() {
           </div>
         )}
         {((effectiveTab === "invoices" && detail.invoices.length === 0) ||
-          (effectiveTab === "products" && detail.products.length === 0) ||
           (effectiveTab === "returns" && detail.returns.length === 0) ||
           (effectiveTab === "shorts" && detail.shorts.length === 0) ||
           (effectiveTab === "alerts" && detail.alerts.length === 0) ||

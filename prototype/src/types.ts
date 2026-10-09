@@ -2,6 +2,10 @@ import { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
 import type { ReversalPatch } from "./history";
 import type { InvoiceLocationCorrection } from "./received";
+import type { SupplierItemDefinition } from "./supplier-items";
+import type { Order, OrderComparison } from "./orders";
+import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
+import type { InvoiceOrderDifference } from "./invoice-orders";
 
 export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
@@ -31,6 +35,7 @@ export type CompanyConfig = Omit<
   promotions: typeof configSeed.promotions & {
     ai_suggestions_enabled?: boolean;
   };
+  orders?: { allow_floor_worker: boolean };
 };
 export interface PriceProvenance {
   invoice_number: string;
@@ -110,7 +115,8 @@ export interface Alert extends ScopedRecord {
     | "price_conflict"
     | "tax_discrepancy"
     | "barcode_conflict"
-    | "other_supplier";
+    | "other_supplier"
+    | "order_differences";
   product_code: string;
   status: "pending" | "resolved" | "intentional";
   supplier?: string;
@@ -122,6 +128,9 @@ export interface Alert extends ScopedRecord {
   units_left?: number;
   note?: string;
   branch_prices?: Record<string, string>;
+  invoice_id?: string;
+  order_id?: string;
+  order_differences?: InvoiceOrderDifference[];
 }
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
@@ -146,6 +155,15 @@ export type InvoiceLine = Omit<
   units_per_case?: number;
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
+  supplier_item_id?: string;
+  supplier_item_code?: string;
+  quantity_unit?: "cases" | "units";
+  quantity_entered?: string | number;
+  case_cost_before_tax?: string;
+  order_item_id?: string;
+  refused_units?: number;
+  extra_delivery_decision?: "keep" | "refuse";
+  order_price_decision?: "accept" | "short_dated";
 };
 export type DemoInvoice = Omit<
   typeof demoSeed.demo_invoice,
@@ -170,6 +188,13 @@ export type DemoInvoice = Omit<
     short_receipt_keys?: string[];
     handling_branch?: Branch;
     ship_to?: string;
+    order_id?: string;
+    order_missing_decisions?: Record<
+      string,
+      "short" | "back_ordered" | "cancelled"
+    >;
+    order_review_version?: number;
+    order_comparison?: OrderComparison;
     lower_price_answers?: {
       same_expiry: string;
       old_expiry?: string;
@@ -271,7 +296,7 @@ export interface NoteRecord extends ScopedRecord {
   type: "to_order" | "store_use" | "note_to_supervisor";
   text: string;
   by: string;
-  status: "open" | "read" | "resolved";
+  status: "open" | "read" | "resolved" | "ordered";
   created_at: string;
   product_code?: string;
   qty?: number;
@@ -283,6 +308,7 @@ export interface LedgerEntry extends ScopedRecord {
     | "invoice"
     | "short_deduction"
     | "short_restoration"
+    | "refused_deduction"
     | "payment"
     | "credit"
     | "opening_balance"
@@ -291,6 +317,7 @@ export interface LedgerEntry extends ScopedRecord {
   date: string;
   reference: string;
   invoice_id?: string;
+  invoice_line_index?: number;
   cheque_number?: string;
   currency: string;
   note?: string;
@@ -339,6 +366,11 @@ export interface DemoState {
   demo_fixture_schema?: 2;
   prototype_b_schema?: 1;
   prototype_c1_schema?: 1;
+  prototype_c2_schema?: 1;
+  supplier_items?: SupplierItemDefinition[];
+  orders?: Order[];
+  branch_requests?: BranchRequest[];
+  request_transfer_events?: RequestTransferEvent[];
   invoice_location_corrections?: InvoiceLocationCorrection[];
   demo_fixture_anchor_date?: string;
   stock_movements?: {

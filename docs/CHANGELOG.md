@@ -1,5 +1,15 @@
 # Project changelog
 
+## 2026-10-09 — Pull request C2: Orders and receiving workflow (in progress)
+
+- Started `feat/prototype-c2-orders-requests`, stacked on C1 (`9c2311a`, draft pull request #14), without merging to main. It includes approved B and all C1 functionality.
+- Confirmed explicit item/Cases selection for free-text To order notes, supplier quote field `quoted_unit_cost_before_tax` with separate actor/time provenance, and retained purchase snapshots. Implementation, full validation and real-interface screenshot capture will be recorded in the [C review guide](PR_C_REVIEW.md) after execution.
+
+## 2026-10-09 — Pull request C1: receiving, locations and review proof
+
+- Implemented Received and named Store/Warehouse locations, safe preposting selection and append-only posted invoice corrections, Manual price provenance/cost visibility, built-in exact-mm Regular/Promo grayscale labels, and All branches notebook addition. Removed active stock estimates/opening counts and preserved historical physical events.
+- Added non-scrolling collapsible sidebar groups for short windows. Passed 412 unit tests across 30 files, lint and typed production build; focused browser checks passed. Captured 24 real-interface screenshots and 8 actual print-portal PDFs in four variants with zero runtime/layout/print geometry errors. The complete frozen C1 browser run is recorded separately in the [C review guide](PR_C_REVIEW.md).
+
 ## 2026-10-09 — C1/C2 specification-first store workflow
 
 - Recorded B approval and authorized two stacked C pull requests with no review pause; file scope prototype/docs plus arzon-config location metadata only. Updated all six mandatory source docs before implementation.
