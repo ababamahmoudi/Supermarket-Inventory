@@ -1,0 +1,2793 @@
+{
+  "generatedAt": "2026-10-09T23:27:46.731Z",
+  "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+  "method": "Fresh browser profiles and real interface actions, retained original documents, frozen production HTML/JavaScript/CSS SHA-256 checks; unedited PNG screenshots. All scenes assert their real fixture and Supervisor role. Theme transitions and fonts finish before captures. Phone scenes scroll to relevant content; Undo is paused with user-accessible keyboard focus. Desktop probes inspect panel/table scroll and individual visible cell text bounds.",
+  "baseURL": "http://127.0.0.1:5273",
+  "expectedCount": 52,
+  "productionBuilds": [
+    {
+      "variant": "en-light",
+      "scene": "posted-invoice-original",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "posted-invoice-original",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "correct-invoice-preview",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "correct-invoice-preview",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "invoice-order-comparison",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "invoice-order-comparison",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "new-order-new-item",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "new-order-new-item",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "weighed-lookup",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "weighed-lookup",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "weighed-label",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "weighed-label",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "add-date",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "add-date",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "remove-date-dialog",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "remove-date-dialog",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "returns-open",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "returns-open",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "returns-history",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "returns-history",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "return-memo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "return-memo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "payables-pending-credit",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "payables-pending-credit",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "undo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-light",
+      "scene": "undo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "posted-invoice-original",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "posted-invoice-original",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "correct-invoice-preview",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "correct-invoice-preview",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "invoice-order-comparison",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "invoice-order-comparison",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "new-order-new-item",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "new-order-new-item",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "weighed-lookup",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "weighed-lookup",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "weighed-label",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "weighed-label",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "add-date",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "add-date",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "remove-date-dialog",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "remove-date-dialog",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "returns-open",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "returns-open",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "returns-history",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "returns-history",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "return-memo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "return-memo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "payables-pending-credit",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "payables-pending-credit",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "undo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "undo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "posted-invoice-original",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "posted-invoice-original",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "correct-invoice-preview",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "correct-invoice-preview",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "invoice-order-comparison",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "invoice-order-comparison",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "new-order-new-item",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "new-order-new-item",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "weighed-lookup",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "weighed-lookup",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "weighed-label",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "weighed-label",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "add-date",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "add-date",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "remove-date-dialog",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "remove-date-dialog",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "returns-open",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "returns-open",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "returns-history",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "returns-history",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "return-memo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "return-memo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "payables-pending-credit",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "payables-pending-credit",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "undo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "undo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "posted-invoice-original",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "posted-invoice-original",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "correct-invoice-preview",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "correct-invoice-preview",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "invoice-order-comparison",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "invoice-order-comparison",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "new-order-new-item",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "new-order-new-item",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "weighed-lookup",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "weighed-lookup",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "weighed-label",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "weighed-label",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "add-date",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "add-date",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "remove-date-dialog",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "remove-date-dialog",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "returns-open",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "returns-open",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "returns-history",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "returns-history",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "return-memo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "return-memo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "payables-pending-credit",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "payables-pending-credit",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "undo",
+      "phase": "before",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    },
+    {
+      "variant": "phone",
+      "scene": "undo",
+      "phase": "after",
+      "htmlSHA256": "a087d9044fb5bd7fdb17d4fb98ba67b9cb75f09865035e6c4f8d2cc7959089ae",
+      "entry": "./assets/index-DrobZ8Cj.js",
+      "assets": [
+        {
+          "path": "./assets/index-DrobZ8Cj.js",
+          "SHA256": "b25eec5f62237777b8a0aa3be8fba0e594e4278300a6d84f697126bd98b0ed13"
+        },
+        {
+          "path": "./assets/index-apugEzlY.css",
+          "SHA256": "85ffc2233785be154f8b661e44b6058e823fc03ba2f52260422c7bdfec4750be"
+        }
+      ],
+      "fingerprint": "b4047b9b850f55dae225f83d3cbfc84ecc726de1b618a4810ba56132de2ced68"
+    }
+  ],
+  "screens": [
+    {
+      "scene": "posted-invoice-original",
+      "variant": "en-light",
+      "filename": "posted-invoice-original-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": {
+        "document": "FV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-08\nReceived at\n2026-10-08 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-22\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.9800\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.2000\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.5500\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.9500\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 cases (6 units)\n\nDelivered quantity: 6\n\n\t$3.4000\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.6000\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22",
+        "originalName": "fictional-fv-20390.svg",
+        "originalWidth": 1000
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "correct-invoice-preview",
+      "variant": "en-light",
+      "filename": "correct-invoice-preview-en-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\n\nReview the correction before confirming. The original invoice and payment allocations are retained.\n\nCurrent payable\n$181.22\nCorrected payable\n$181.94\nPayable delta\n$0.72\nAllocated payments and credits\n$11.43\nReceived\n\nNo receipt quantity changes\n\nPending approvals\n\nNo pending approval changes\n\nDate tracking\n\nNo tracked date changes\n\nReason: Correct the bean unit cost.\n\nBack\nContinue",
+      "layoutFindings": []
+    },
+    {
+      "scene": "invoice-order-comparison",
+      "variant": "en-light",
+      "filename": "invoice-order-comparison-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=invoice-bdb34f2f-837f-4740-badf-e1aef4238dfa",
+      "fixtureEvidence": {
+        "reference": "ORD-0001",
+        "comparison": "Compare with order\nOrder (optional)\nORD-0001 · 2026-10-09\n\nChoose an open order for this supplier and receiving location.\n\nORD-0001 · Fresh Valley Foods\n\nProduct\tOrdered units remaining\tDelivered units\tDecision\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\t12\t12\t\nOK"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "new-order-new-item",
+      "variant": "en-light",
+      "filename": "new-order-new-item-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#orders",
+      "fixtureEvidence": "Sample barley biscuits\nNew itemRemove\t\n\t\n\t24\t\n\t$15.00\t$30.00",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-lookup",
+      "variant": "en-light",
+      "filename": "weighed-lookup-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#lookup",
+      "fixtureEvidence": "Selling price (per lb)\n\n$7.49/lb\n· $16.51/kg\n\nBefore tax",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-label",
+      "variant": "en-light",
+      "filename": "weighed-label-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#labels",
+      "fixtureEvidence": "$7.49/lb\n· $16.51/kg\nBulk Almonds\nبادام فله\nProduct Code: 0016 · lb",
+      "layoutFindings": []
+    },
+    {
+      "scene": "add-date",
+      "variant": "en-light",
+      "filename": "add-date-en-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "form": "Add date\nProduct\nBasmati Rice 4.5 kg · برنج باسماتی ۴٫۵ کیلوگرمی · 0001\nLocation\nNorth York\nType\nExpiry\nDate\n2026-10-09\nQuantity (optional)\n\nLot (optional)\nNote (optional)\nCancel\nAdd date",
+        "lot": "LOT-C4-001"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "remove-date-dialog",
+      "variant": "en-light",
+      "filename": "remove-date-dialog-en-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": "Remove date\nBasmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n\n2026-10-09 · North York\n\nReason\nSold out\n\nRemoving a date does not change stock or supplier balances.\n\nCancel\nRemove\nAdd date\nUndo",
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-open",
+      "variant": "en-light",
+      "filename": "returns-open-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-05\t2\t\nWaiting for credit\tRecord resolution"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-history",
+      "variant": "en-light",
+      "filename": "returns-history-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nClosed (Replaced)\tView"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "return-memo",
+      "variant": "en-light",
+      "filename": "return-memo-en-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "memo": "Return memo\nRM-0001\nSuper Arzon\nReturn memo\nیادداشت مرجوعی\nRM-0001\nSupplier\nتأمین‌کننده\nFresh Valley Foods\nLocation\nمکان\nNorth York\nنورث یورک\nDate\nتاریخ\n2026-10-09\nReturn reference\nمرجع مرجوعی\ndemo-return-1\nProduct\nکالا\n\t\nQuantity\nتعداد\n\t\nUnit cost\nهزینهٔ واحد\n\t\nExpected credit\nاعتبار مورد انتظار\n\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n0003\t3\t$1.9500\t$5.85\nTotal credit expected\nجمع اعتبار مورد انتظار\n$5.85\nDriver name\nنام راننده\nDemo Driver\nRecorded by\nثبت‌کننده\nDemo Supervisor\nSigned paper evidence\nمدرک کاغذی امضاشده\nSIGNED-C4-001\nSignature\nامضا\n\nExpected credit is a pending claim, not a supplier credit note.\nاعتبار مورد انتظار یک ادعای در انتظار است، نه یادداشت اعتبار تأمین‌کننده.\n\nChoose Save as PDF in the print window to download a copy.\n\nPrint"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "payables-pending-credit",
+      "variant": "en-light",
+      "filename": "payables-pending-credit-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#payables",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "pendingCredits": "Pending credit\n\nConfirmed balance: $169.79 · Pending credit: $5.85 · Owed: $163.94\n\nReturn\tReturn memo\tPending credit\nView return\t\nRM-0001\n\t$5.85"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "en-light",
+      "filename": "undo-en-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "removedRow": "Basmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n0001\nQuantity: 2\nLot: LOT-C4-001\nShelf check recorded in the demo.\n\tNorth York\t2026-10-09\tExpiry\t0\tManual entry\nDemo Supervisor\n2026-10-09\n\t\nRemoved\nSold out\nDemo Supervisor\n2026-10-09\n\t",
+        "undo": "Remove date\nUndo"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "posted-invoice-original",
+      "variant": "en-dark",
+      "filename": "posted-invoice-original-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": {
+        "document": "FV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-08\nReceived at\n2026-10-08 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-22\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.9800\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.2000\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.5500\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.9500\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 cases (6 units)\n\nDelivered quantity: 6\n\n\t$3.4000\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.6000\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22",
+        "originalName": "fictional-fv-20390.svg",
+        "originalWidth": 1000
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "correct-invoice-preview",
+      "variant": "en-dark",
+      "filename": "correct-invoice-preview-en-dark.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\n\nReview the correction before confirming. The original invoice and payment allocations are retained.\n\nCurrent payable\n$181.22\nCorrected payable\n$181.94\nPayable delta\n$0.72\nAllocated payments and credits\n$11.43\nReceived\n\nNo receipt quantity changes\n\nPending approvals\n\nNo pending approval changes\n\nDate tracking\n\nNo tracked date changes\n\nReason: Correct the bean unit cost.\n\nBack\nContinue",
+      "layoutFindings": []
+    },
+    {
+      "scene": "invoice-order-comparison",
+      "variant": "en-dark",
+      "filename": "invoice-order-comparison-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=invoice-b0dc7c23-87a4-499e-8e33-eccbf3763949",
+      "fixtureEvidence": {
+        "reference": "ORD-0001",
+        "comparison": "Compare with order\nOrder (optional)\nORD-0001 · 2026-10-09\n\nChoose an open order for this supplier and receiving location.\n\nORD-0001 · Fresh Valley Foods\n\nProduct\tOrdered units remaining\tDelivered units\tDecision\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\t12\t12\t\nOK"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "new-order-new-item",
+      "variant": "en-dark",
+      "filename": "new-order-new-item-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#orders",
+      "fixtureEvidence": "Sample barley biscuits\nNew itemRemove\t\n\t\n\t24\t\n\t$15.00\t$30.00",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-lookup",
+      "variant": "en-dark",
+      "filename": "weighed-lookup-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#lookup",
+      "fixtureEvidence": "Selling price (per lb)\n\n$7.49/lb\n· $16.51/kg\n\nBefore tax",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-label",
+      "variant": "en-dark",
+      "filename": "weighed-label-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#labels",
+      "fixtureEvidence": "$7.49/lb\n· $16.51/kg\nBulk Almonds\nبادام فله\nProduct Code: 0016 · lb",
+      "layoutFindings": []
+    },
+    {
+      "scene": "add-date",
+      "variant": "en-dark",
+      "filename": "add-date-en-dark.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "form": "Add date\nProduct\nBasmati Rice 4.5 kg · برنج باسماتی ۴٫۵ کیلوگرمی · 0001\nLocation\nNorth York\nType\nExpiry\nDate\n2026-10-09\nQuantity (optional)\n\nLot (optional)\nNote (optional)\nCancel\nAdd date",
+        "lot": "LOT-C4-001"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "remove-date-dialog",
+      "variant": "en-dark",
+      "filename": "remove-date-dialog-en-dark.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": "Remove date\nBasmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n\n2026-10-09 · North York\n\nReason\nSold out\n\nRemoving a date does not change stock or supplier balances.\n\nCancel\nRemove\nAdd date\nUndo",
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-open",
+      "variant": "en-dark",
+      "filename": "returns-open-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-05\t2\t\nWaiting for credit\tRecord resolution"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-history",
+      "variant": "en-dark",
+      "filename": "returns-history-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nClosed (Replaced)\tView"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "return-memo",
+      "variant": "en-dark",
+      "filename": "return-memo-en-dark.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "memo": "Return memo\nRM-0001\nSuper Arzon\nReturn memo\nیادداشت مرجوعی\nRM-0001\nSupplier\nتأمین‌کننده\nFresh Valley Foods\nLocation\nمکان\nNorth York\nنورث یورک\nDate\nتاریخ\n2026-10-09\nReturn reference\nمرجع مرجوعی\ndemo-return-1\nProduct\nکالا\n\t\nQuantity\nتعداد\n\t\nUnit cost\nهزینهٔ واحد\n\t\nExpected credit\nاعتبار مورد انتظار\n\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n0003\t3\t$1.9500\t$5.85\nTotal credit expected\nجمع اعتبار مورد انتظار\n$5.85\nDriver name\nنام راننده\nDemo Driver\nRecorded by\nثبت‌کننده\nDemo Supervisor\nSigned paper evidence\nمدرک کاغذی امضاشده\nSIGNED-C4-001\nSignature\nامضا\n\nExpected credit is a pending claim, not a supplier credit note.\nاعتبار مورد انتظار یک ادعای در انتظار است، نه یادداشت اعتبار تأمین‌کننده.\n\nChoose Save as PDF in the print window to download a copy.\n\nPrint"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "payables-pending-credit",
+      "variant": "en-dark",
+      "filename": "payables-pending-credit-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#payables",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "pendingCredits": "Pending credit\n\nConfirmed balance: $169.79 · Pending credit: $5.85 · Owed: $163.94\n\nReturn\tReturn memo\tPending credit\nView return\t\nRM-0001\n\t$5.85"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "en-dark",
+      "filename": "undo-en-dark.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "removedRow": "Basmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n0001\nQuantity: 2\nLot: LOT-C4-001\nShelf check recorded in the demo.\n\tNorth York\t2026-10-09\tExpiry\t0\tManual entry\nDemo Supervisor\n2026-10-09\n\t\nRemoved\nSold out\nDemo Supervisor\n2026-10-09\n\t",
+        "undo": "Remove date\nUndo"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "posted-invoice-original",
+      "variant": "fa-light",
+      "filename": "posted-invoice-original-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": {
+        "document": "FV-20390\nثبت‌شده\nاصلاح فاکتور\nانتقال فاکتور\nتأمین‌کننده\nFresh Valley Foods\nشماره فاکتور\nFV-20390\nمکان\nنورث یورک\nتاریخ فاکتور\n2026-10-08\nزمان دریافت\n2026-10-08 16:00\nدریافت‌کننده\nDemo Floor Worker\nشرایط پرداخت\nNet 14\nسررسید\n2026-10-22\nکالا\tتعداد\tهزینه هر واحد پیش از مالیات\tجمع ردیف\tتاریخ پیگیری‌شده\n\nباقالا کنسرو شده ۴۰۰ گرمی\nCanned Fava Beans 400 g\n\n0002\n\n\t2 کارتن (24 واحد)\n\nتعداد تحویل‌شده: 24\n\n\t$0.9800\t$23.52\tخیر\n\nسماق ۱۰۰ گرمی\nGround Sumac 100 g\n\n0005\n\n\t1 کارتن (12 واحد)\n\nتعداد تحویل‌شده: 12\n\n\t$1.2000\t$14.40\tخیر\n\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n\n0006\n\n\t2 کارتن (20 واحد)\n\nتعداد تحویل‌شده: 20\n\n\t$1.5500\t$31.00\tخیر\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n\n0003\n\n\t3 کارتن (36 واحد)\n\nتعداد تحویل‌شده: 36\n\n\t$1.9500\t$70.20\tخیر\n\nزرشک خشک 100 گرمی\nDried Barberries 100 g\n\n0015\n\n\t1 کارتن (6 واحد)\n\nتعداد تحویل‌شده: 6\n\n\t$3.4000\t$20.40\tخیر\n\nچیپس سیب‌زمینی ۱۵۰ گرمی\nPotato Chips 150 g\n\n0009\n\n\t1 کارتن (12 واحد)\n\nتعداد تحویل‌شده: 12\n\n\t$1.6000\t$19.20\tخیر\nجمع پیش از مالیات\n$178.72\nمالیات\n$2.50\nجمع فاکتور\n$181.22\nکسورات\n$0.00\nقابل پرداخت\n$181.22",
+        "originalName": "fictional-fv-20390.svg",
+        "originalWidth": 1000
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "correct-invoice-preview",
+      "variant": "fa-light",
+      "filename": "correct-invoice-preview-fa-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "اصلاح فاکتور\n\nپیش از تأیید، اصلاح را بررسی کنید. اصل فاکتور و تخصیص پرداخت‌ها حفظ می‌شوند.\n\nقابل پرداخت فعلی\n$181.22\nقابل پرداخت اصلاح‌شده\n$181.94\nتغییر قابل پرداخت\n$0.72\nپرداخت‌ها و اعتبارهای تخصیص‌یافته\n$11.43\nدریافت‌شده‌ها\n\nتعداد دریافت تغییر نمی‌کند\n\nتأییدهای در انتظار\n\nتأییدهای در انتظار تغییر نمی‌کنند\n\nپیگیری تاریخ\n\nتاریخ‌های پیگیری‌شده تغییر نمی‌کنند\n\nدلیل: Correct the bean unit cost.\n\nبازگشت\nادامه",
+      "layoutFindings": []
+    },
+    {
+      "scene": "invoice-order-comparison",
+      "variant": "fa-light",
+      "filename": "invoice-order-comparison-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=invoice-aff3caf7-607f-4246-98ef-0e8040efb52f",
+      "fixtureEvidence": {
+        "reference": "ORD-0001",
+        "comparison": "مقایسه با سفارش\nسفارش (اختیاری)\nORD-0001 · 2026-10-09\n\nسفارش باز همین تأمین‌کننده و مکان دریافت را انتخاب کنید.\n\nORD-0001 · Fresh Valley Foods\n\nکالا\tواحدهای باقی‌مانده سفارش\tواحدهای تحویل‌شده\tتصمیم\n\nباقالا کنسرو شده ۴۰۰ گرمی\nCanned Fava Beans 400 g\n\t12\t12\t\nدرست"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "new-order-new-item",
+      "variant": "fa-light",
+      "filename": "new-order-new-item-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#orders",
+      "fixtureEvidence": "Sample barley biscuits\nکالای جدیدحذف\t\n\t\n\t24\t\n\t$15.00\t$30.00",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-lookup",
+      "variant": "fa-light",
+      "filename": "weighed-lookup-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#lookup",
+      "fixtureEvidence": "قیمت فروش (هر پوند)\n\n$7.49/lb\n· $16.51/kg\n\nپیش از مالیات",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-label",
+      "variant": "fa-light",
+      "filename": "weighed-label-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#labels",
+      "fixtureEvidence": "$7.49/lb\n· $16.51/kg\nبادام فله\nBulk Almonds\nکد کالا: 0016 · lb",
+      "layoutFindings": []
+    },
+    {
+      "scene": "add-date",
+      "variant": "fa-light",
+      "filename": "add-date-fa-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "form": "افزودن تاریخ\nمحصول\nبرنج باسماتی ۴٫۵ کیلوگرمی · Basmati Rice 4.5 kg · 0001\nمکان\nنورث یورک\nنوع\nانقضا\nتاریخ\n2026-10-09\nمقدار (اختیاری)\n\nسری ساخت (اختیاری)\nیادداشت (اختیاری)\nلغو\nافزودن تاریخ",
+        "lot": "LOT-C4-001"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "remove-date-dialog",
+      "variant": "fa-light",
+      "filename": "remove-date-dialog-fa-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": "حذف تاریخ\nبرنج باسماتی ۴٫۵ کیلوگرمی\nBasmati Rice 4.5 kg\n\n2026-10-09 · نورث یورک\n\nدلیل\nتمام‌شده\n\nحذف تاریخ موجودی یا مانده تأمین‌کننده را تغییر نمی‌دهد.\n\nلغو\nحذف\nافزودن تاریخ\nواگرد",
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-open",
+      "variant": "fa-light",
+      "filename": "returns-open-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "شماره مرجوعی\tتأمین‌کننده\tشعبه\tایجادشده\tاقلام\tوضعیت\tاقدام بعدی\n#1\tFresh Valley Foods\tنورث یورک\t2026-10-08\t3\t\nدر انتظار اعتبار\tثبت حل‌وفصل\n#2\tGolden Grain Distributors\tنورث یورک\t2026-10-05\t2\t\nدر انتظار اعتبار\tثبت حل‌وفصل"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-history",
+      "variant": "fa-light",
+      "filename": "returns-history-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "شماره مرجوعی\tتأمین‌کننده\tشعبه\tایجادشده\tاقلام\tوضعیت\tاقدام بعدی\n#1\tFresh Valley Foods\tنورث یورک\t2026-10-08\t3\t\nبسته‌شده (جایگزین‌شده)\tمشاهده"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "return-memo",
+      "variant": "fa-light",
+      "filename": "return-memo-fa-light.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "memo": "یادداشت مرجوعی\nRM-0001\nSuper Arzon\nReturn memo\nیادداشت مرجوعی\nRM-0001\nSupplier\nتأمین‌کننده\nFresh Valley Foods\nLocation\nمکان\nNorth York\nنورث یورک\nDate\nتاریخ\n2026-10-09\nReturn reference\nمرجع مرجوعی\ndemo-return-1\nProduct\nکالا\n\t\nQuantity\nتعداد\n\t\nUnit cost\nهزینهٔ واحد\n\t\nExpected credit\nاعتبار مورد انتظار\n\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n0003\t3\t$1.9500\t$5.85\nTotal credit expected\nجمع اعتبار مورد انتظار\n$5.85\nDriver name\nنام راننده\nDemo Driver\nRecorded by\nثبت‌کننده\nDemo Supervisor\nSigned paper evidence\nمدرک کاغذی امضاشده\nSIGNED-C4-001\nSignature\nامضا\n\nExpected credit is a pending claim, not a supplier credit note.\nاعتبار مورد انتظار یک ادعای در انتظار است، نه یادداشت اعتبار تأمین‌کننده.\n\nبرای بارگیری نسخه، در پنجره چاپ گزینه ذخیره به صورت PDF را انتخاب کنید.\n\nچاپ"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "payables-pending-credit",
+      "variant": "fa-light",
+      "filename": "payables-pending-credit-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#payables",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "pendingCredits": "اعتبار در انتظار\n\nمانده تأییدشده: $169.79 · اعتبار در انتظار: $5.85 · بدهی: $163.94\n\nمرجوعی\tیادداشت مرجوعی\tاعتبار در انتظار\nنمایش مرجوعی\t\nRM-0001\n\t$5.85"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "fa-light",
+      "filename": "undo-fa-light.png",
+      "captureMode": "full-page",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "removedRow": "برنج باسماتی ۴٫۵ کیلوگرمی\nBasmati Rice 4.5 kg\n0001\nمقدار: 2\nسری ساخت: LOT-C4-001\nShelf check recorded in the demo.\n\tنورث یورک\t2026-10-09\tانقضا\t0\tثبت دستی\nDemo Supervisor\n2026-10-09\n\t\nحذف‌شده\nتمام‌شده\nDemo Supervisor\n2026-10-09\n\t",
+        "undo": "حذف تاریخ\nواگرد"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "posted-invoice-original",
+      "variant": "phone",
+      "filename": "posted-invoice-original-phone.png",
+      "captureMode": "full-page",
+      "capturePurpose": "The 390px-wide full page shows the read-only posted invoice and its retained original image together.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": {
+        "document": "FV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-08\nReceived at\n2026-10-08 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-22\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.9800\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.2000\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.5500\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.9500\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 cases (6 units)\n\nDelivered quantity: 6\n\n\t$3.4000\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 cases (12 units)\n\nDelivered quantity: 12\n\n\t$1.6000\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22",
+        "originalName": "fictional-fv-20390.svg",
+        "originalWidth": 1000
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "correct-invoice-preview",
+      "variant": "phone",
+      "filename": "correct-invoice-preview-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\n\nReview the correction before confirming. The original invoice and payment allocations are retained.\n\nCurrent payable\n$181.22\nCorrected payable\n$181.94\nPayable delta\n$0.72\nAllocated payments and credits\n$11.43\nReceived\n\nNo receipt quantity changes\n\nPending approvals\n\nNo pending approval changes\n\nDate tracking\n\nNo tracked date changes\n\nReason: Correct the bean unit cost.\n\nBack\nContinue",
+      "layoutFindings": []
+    },
+    {
+      "scene": "invoice-order-comparison",
+      "variant": "phone",
+      "filename": "invoice-order-comparison-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#invoices?id=invoice-68a4c827-d3a5-41c5-b1f7-a20a8b9663dc",
+      "fixtureEvidence": {
+        "reference": "ORD-0001",
+        "comparison": "Compare with order\nOrder (optional)\nORD-0001 · 2026-10-09\n\nChoose an open order for this supplier and receiving location.\n\nORD-0001 · Fresh Valley Foods\n\nProduct\tOrdered units remaining\tDelivered units\tDecision\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\t12\t12\t\nOK"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "new-order-new-item",
+      "variant": "phone",
+      "filename": "new-order-new-item-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#orders",
+      "fixtureEvidence": "Sample barley biscuits\nNew itemRemove\n24\n$15.00\n$30.00",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-lookup",
+      "variant": "phone",
+      "filename": "weighed-lookup-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#lookup",
+      "fixtureEvidence": "Selling price (per lb)\n\n$7.49/lb\n· $16.51/kg\n\nBefore tax",
+      "layoutFindings": []
+    },
+    {
+      "scene": "weighed-label",
+      "variant": "phone",
+      "filename": "weighed-label-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "The existing A4 preview preserves the real physical shelf-label size; no capture-only zoom or DOM rescaling is applied. Verified price text is retained in fixtureEvidence.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#labels",
+      "fixtureEvidence": "$7.49/lb\n· $16.51/kg\nBulk Almonds\nبادام فله\nProduct Code: 0016 · lb",
+      "layoutFindings": []
+    },
+    {
+      "scene": "add-date",
+      "variant": "phone",
+      "filename": "add-date-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "form": "Add date\nProduct\nBasmati Rice 4.5 kg · برنج باسماتی ۴٫۵ کیلوگرمی · 0001\nLocation\nNorth York\nType\nExpiry\nDate\n2026-10-09\nQuantity (optional)\n\nLot (optional)\nNote (optional)\nCancel\nAdd date",
+        "lot": "LOT-C4-001"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "remove-date-dialog",
+      "variant": "phone",
+      "filename": "remove-date-dialog-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": "Remove date\nBasmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n\n2026-10-09 · North York\n\nReason\nSold out\n\nRemoving a date does not change stock or supplier balances.\n\nCancel\nRemove\nAdd date\nUndo",
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-open",
+      "variant": "phone",
+      "filename": "returns-open-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-05\t2\t\nWaiting for credit\tRecord resolution"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "returns-history",
+      "variant": "phone",
+      "filename": "returns-history-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "table": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-08\t3\t\nClosed (Replaced)\tView"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "return-memo",
+      "variant": "phone",
+      "filename": "return-memo-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "memo": "Return memo\nRM-0001\nSuper Arzon\nReturn memo\nیادداشت مرجوعی\nRM-0001\nSupplier\nتأمین‌کننده\nFresh Valley Foods\nLocation\nمکان\nNorth York\nنورث یورک\nDate\nتاریخ\n2026-10-09\nReturn reference\nمرجع مرجوعی\ndemo-return-1\nProduct\nکالا\n\t\nQuantity\nتعداد\n\t\nUnit cost\nهزینهٔ واحد\n\t\nExpected credit\nاعتبار مورد انتظار\n\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n0003\t3\t$1.9500\t$5.85\nTotal credit expected\nجمع اعتبار مورد انتظار\n$5.85\nDriver name\nنام راننده\nDemo Driver\nRecorded by\nثبت‌کننده\nDemo Supervisor\nSigned paper evidence\nمدرک کاغذی امضاشده\nSIGNED-C4-001\nSignature\nامضا\n\nExpected credit is a pending claim, not a supplier credit note.\nاعتبار مورد انتظار یک ادعای در انتظار است، نه یادداشت اعتبار تأمین‌کننده.\n\nChoose Save as PDF in the print window to download a copy.\n\nPrint"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "payables-pending-credit",
+      "variant": "phone",
+      "filename": "payables-pending-credit-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#payables",
+      "fixtureEvidence": {
+        "reference": "RM-0001",
+        "pendingCredits": "Pending credit\n\nConfirmed balance: $169.79 · Pending credit: $5.85 · Owed: $163.94\n\nReturn\tReturn memo\tPending credit\nView return\t\nRM-0001\n\t$5.85"
+      },
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "phone",
+      "filename": "undo-phone.png",
+      "captureMode": "viewport",
+      "capturePurpose": "Actual feature content, focused at the requested viewport width.",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": {
+        "removedRow": "Basmati Rice 4.5 kg\nبرنج باسماتی ۴٫۵ کیلوگرمی\n0001\nQuantity: 2\nLot: LOT-C4-001\nShelf check recorded in the demo.\n\tNorth York\t2026-10-09\tExpiry\t0\tManual entry\nDemo Supervisor\n2026-10-09\n\t\nRemoved\nSold out\nDemo Supervisor\n2026-10-09\n\t",
+        "undo": "Remove date\nUndo"
+      },
+      "framingEvidence": {
+        "beforeY": 110,
+        "afterY": 68,
+        "maxScroll": 110,
+        "topbarBottom": 179,
+        "addDateBefore": {
+          "top": 156.890625,
+          "bottom": 198.484375
+        },
+        "addDateAfter": {
+          "top": 198.890625,
+          "bottom": 240.484375
+        }
+      },
+      "layoutFindings": []
+    }
+  ],
+  "browserErrors": [],
+  "captureRevisions": [
+    {
+      "scene": "undo",
+      "variant": "phone",
+      "generatedAt": "2026-10-09T23:30:21.134Z",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "method": "Fresh browser profile and real interface actions on the same frozen production build; only actual page scrolling changed. The short page clamps at scrollY=110, so the page is scrolled upward to scrollY=68 to show the whole Add date button below the sticky topbar. No image editing or application-source change.",
+      "captureScript": "prototype/scripts/capture-design-c4.mjs",
+      "captureScriptSHA256": "ee88c183c9a70b05659536f1747a319b998ad3cbfabb72476b1e0cc8d29d6be7",
+      "previousPNG_SHA256": "f7a57eeaf3f3020534a37aec8daf76b7f878a96ec24e6c43f877e45bf8e9bb79",
+      "replacementPNG_SHA256": "9219612ea36038b3f7dac83b9e10300ad750d05952a67b4b66f773ce25435ad0",
+      "screenRecordsReplaced": 1,
+      "productionAssetChecksReplaced": 2
+    }
+  ]
+}

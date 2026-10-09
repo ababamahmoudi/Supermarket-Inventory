@@ -459,7 +459,7 @@ async function setupScene(page, scene, variant) {
   return { target, evidence };
 }
 
-async function frame(page, variant, target, fullPage) {
+async function frame(page, variant, target, fullPage, scene) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise((resolve) =>
@@ -492,6 +492,45 @@ async function frame(page, variant, target, fullPage) {
         });
     } else await page.evaluate(() => window.scrollTo(0, 0));
   }
+  let framingEvidence;
+  if (variant === "phone" && scene === "undo") {
+    const addDate = button(page, "Add date", "افزودن تاریخ");
+    framingEvidence = await addDate.evaluate((element) => {
+      const topbarBottom =
+        document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0;
+      const bounds = element.getBoundingClientRect();
+      const beforeY = window.scrollY;
+      const maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+      // A short page can clamp the row-focused scroll at its end, leaving
+      // half of Add date behind the sticky bar. Scroll the real page upward
+      // just enough to expose the whole control; do not alter its styling.
+      if (bounds.top < topbarBottom && bounds.bottom > topbarBottom)
+        window.scrollBy(0, bounds.top - topbarBottom - 20);
+      const after = element.getBoundingClientRect();
+      return {
+        beforeY,
+        afterY: window.scrollY,
+        maxScroll,
+        topbarBottom,
+        addDateBefore: { top: bounds.top, bottom: bounds.bottom },
+        addDateAfter: { top: after.top, bottom: after.bottom },
+      };
+    });
+    await expect
+      .poll(() =>
+        addDate.evaluate((element) => {
+          const boundary =
+            document.querySelector(".topbar")?.getBoundingClientRect().bottom ??
+            0;
+          const bounds = element.getBoundingClientRect();
+          return bounds.bottom <= boundary || bounds.top >= boundary;
+        }),
+      )
+      .toBe(true);
+  }
   await page.mouse.move(0, 0);
   await page.evaluate(
     () =>
@@ -501,6 +540,7 @@ async function frame(page, variant, target, fullPage) {
         ),
       ),
   );
+  return framingEvidence;
 }
 async function geometry(page) {
   return page.evaluate(() => {
@@ -646,7 +686,13 @@ try {
         const fullPage =
           (variant !== "phone" || scene === "posted-invoice-original") &&
           !(await page.locator("dialog[open]").count());
-        await frame(page, variant, fixture.target, fullPage);
+        const framingEvidence = await frame(
+          page,
+          variant,
+          fixture.target,
+          fullPage,
+          scene,
+        );
         const findings = await geometry(page);
         const after = await productionAssets(page);
         builds.push({ variant, scene, phase: "after", ...after });
@@ -676,6 +722,7 @@ try {
           role: "supervisor",
           route: new URL(page.url()).hash,
           fixtureEvidence: fixture.evidence,
+          framingEvidence,
           layoutFindings: findings,
         });
         console.log(`${filename}: ${findings.length} layout findings`);

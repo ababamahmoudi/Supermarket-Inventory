@@ -21,6 +21,8 @@ git pull --ff-only origin feat/prototype-c4-workflows
 
 The first command should print nothing. If it lists changed files, keep those files. If Git refuses to switch because they would be overwritten, stop and send the exact message; do not discard your work. The other commands should report that you are on `feat/prototype-c4-workflows`, followed by `Already up to date` or a list of downloaded changes. The explicit fetch command downloads the review branch even when your original clone was configured to fetch only `main`.
 
+If `git switch` says the branch is unknown after a successful fetch, run `git switch -c feat/prototype-c4-workflows origin/feat/prototype-c4-workflows`, then repeat the `git pull --ff-only` command above. If Ubuntu says `git: command not found`, run `sudo apt-get update` and `sudo apt-get install -y git`, then repeat the Git commands.
+
 If you do not have a copy of the repository, open a terminal in the folder where you keep projects and run this instead:
 
 ```bash
@@ -91,16 +93,16 @@ You can test the following sections in any order. For an exact fresh-data exampl
 3. Click **Correct invoice**. Its fields start with the current posted values. In the first Canned Fava Beans line, change **Unit cost before tax** from `0.9800` to `1.0100`. Leave its quantity and pack unchanged. Enter `Correct the bean unit cost` in **Reason (required)**.
 4. Click **Preview correction**. For the fresh FV-20390 example, the payable increases by **$0.72**: 24 units × $0.03. Review the payable, Received, approval and Date tracking effects before proceeding. Existing payment allocations remain visible.
 5. Click **Continue**, read the confirmation and confirm the correction. The invoice should show **Corrected**. This creates a linked correction; it does not overwrite the original. Financial/legal corrections have no Undo message.
-6. Open **History**, find the **Correct invoice** action and open its **Original** and **Corrected** version links. If there is an earlier correction, its retained version link is available too. The original still shows the old cost and original file; the current document shows the corrected cost. Open **Received** to check the corresponding latest corrected receipt details.
+6. Open **History**, find the **Correct invoice** action and open its **View original** and **View corrected** links. If there is an earlier correction, its **View previous version** link is available too. The original still shows the old cost and original file; the current document shows the corrected cost. Open **Received** to check the corresponding latest corrected receipt details.
 7. Switch to Floor Worker, reopen that invoice and check that **Correct invoice** is unavailable. Workers can read their authorized document; correction is Supervisor-only.
 
 A correction can be blocked when a later delivery or supplier-return record relies on the quantity, product or pack being changed. The preview identifies the affected line. Preserve that later evidence and try a permitted cost/date correction, or resolve the linked workflow first.
 
 ## Uploads, PDFs and a manual invoice without an original
 
-1. As Supervisor or Floor Worker, open **Invoices → Manual entry**. A manual invoice without a file shows **No original attached** and **Attach original**.
+1. As Supervisor, open **Invoices → New invoice → Manual entry**. A manual invoice without a file shows **No original attached** and **Attach original**. Floor Workers can start **Invoices → New invoice → Upload** for their permitted file-based flow; Manual entry remains Supervisor-only.
 2. Click **Attach original** and use the styled dropzone to attach a harmless test invoice photo or PDF. The selected file should appear in **Original invoice**. A photo fits the panel and supports zoom; a PDF has page navigation and **Download**.
-3. Save the draft, refresh and reopen it from Drafts. The same original should remain. You may also attach an original to an authorized posted manual invoice that has none; the attachment is audited without changing its money or receipt.
+3. Save the draft, refresh and reopen it from Drafts. The same original should remain. As Supervisor, you may also attach an original to an authorized posted manual invoice that has none; the attachment is audited without changing its money or receipt.
 4. If you test posting, complete every required invoice field and line decision first. Posting still requires a valid original and a confirmation. The app's AI reading remains simulated; attaching a file does not connect to real AI.
 
 The file-picker window that opens after clicking the custom dropzone belongs to your operating system. The app itself should not show a default **Choose File / No file chosen** field or a native PDF toolbar.
@@ -113,13 +115,13 @@ The file-picker window that opens after clicking the custom dropzone belongs to 
 4. Click **Save as draft**, reopen the draft, then **Place order** when you are ready. Open **Print order**. The complete A4 page is scaled into the preview; the New item pill remains, and each English heading sits with its matching Persian heading, including Cases and Units. Cancel the browser print window if you only want to inspect the preview.
 5. Open **Invoices**, create or review a draft for Fresh Valley Foods and use **Order (optional)** to select the order you just placed. In **Compare with order**, product names and difference choices must remain visible.
 6. For the temporary item, use **Match invoice line — Sample barley biscuits** to select its actual invoice line. Choose or create the actual product for that line, complete the required pack/quantity/cost/date decisions and attach the original. Matching is explicit; similar names alone do not select a product.
-7. After a confirmed posting, open the supplier's **Items** tab. The actual product is associated with the supplier and the temporary order line retains its link. Reopening or refreshing must not create a duplicate association or receipt.
+7. After a confirmed posting, open the supplier's **Supplier items** tab. The actual product is associated with the supplier and the temporary order line retains its link. Reopening or refreshing must not create a duplicate association or receipt.
 8. At phone width, repeat **New order → New item**. Each order item becomes a card with Cases and Expected cost visible. The items must not require sideways scrolling.
 
 ## Weighed products and pricing settings
 
 1. With fresh demo data, open **Lookup** and search for Product Code **0016**, **Bulk Almonds**. Expect **$7.49/lb** with **$16.51/kg** smaller beside it. Repeat as Cashier and Floor Worker; selling prices remain visible while Supervisor-only costs and margins stay private.
-2. Open **Products**, search for `0016` and click **Edit**. **Sold by** should be **Weight**, and the editable selling-price label names the unit. Each products keep their per-unit label and existing pricing rules.
+2. Switch back to Supervisor, open **Products**, search for `0016` and click **Edit**. **Sold by** should be **Weight**, and the editable selling-price label names the unit. Each products keep their per-unit label and existing pricing rules.
 3. Open **Labels → Products**, search for `0016`, select it and use the bottom bar to add one copy to the waitlist. Open **Waitlist** and inspect the label: the weighed prices include `/lb` and the optional `/kg` line. Existing print dimensions remain unchanged.
 4. As Supervisor, open **Settings → Pricing and approvals → Weighed items**. Defaults are **Main display unit: lb**, **Show second unit: on**, and **Use rounding bands: on**. Select kg, save changes, and revisit Lookup to inspect the alternate presentation. Display settings do not silently rewrite an already approved price. Use Undo to restore the setting if offered.
 5. In an invoice line for a weighed product, enter its source quantity in kg or lb with up to three decimal places and select the cost unit. A weighed case uses its actual case weight and kg/lb unit. The documented example is **$11.00/kg → $4.9895/lb cost → $7.49/lb rule selling price**. The ordinary Each and rice calculations still use their existing rules.
@@ -156,7 +158,7 @@ Cancellation still requires a reason and disposition of the original goods. A ca
 
 ## Optional automated checks on Ubuntu
 
-The executed review results will be recorded below. You do not need to run these commands to review the screenshots. If you want to repeat the checks yourself, stop the preview with **Ctrl+C**, remain in `prototype/` with supported Node 22 active, and run:
+The executed review results are recorded below. You do not need to run these commands to review the screenshots. If you want to repeat the checks yourself, stop the preview with **Ctrl+C**, remain in `prototype/` with supported Node 22 active, and run:
 
 ```bash
 npm test
@@ -170,11 +172,28 @@ The first command runs pricing and workflow unit tests; lint checks source and f
 
 ## Verification status
 
-Final executed results are pending the complete C4 regression run and screenshot review. Planned checks are not passed checks. Before completion, this section will record the verified source commit, pricing/unit/browser totals, lint/build result, GitHub checks and individual screenshot audit.
+The frozen application and seed source is **`cbdc2bf0afbc0b8f39d954d72efd32ef1892899a`**. The final evidence commit adds the screenshots, review records, guide and capture framing only; it does not change the application or seed used for these checks.
+
+| Check                           | Executed result                                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Unit tests                      | **719 passed across 62 files**, including all **23** cases in `seed/pricing-test-cases.json` and retained pricing boundary tests                                   |
+| Lint and formatting             | **Passed**                                                                                                                                                         |
+| Type check and production build | **Passed**; Vite's bundle-size advisory is informational                                                                                                           |
+| New C4 browser checks           | **37 passed**, **9 intentionally skipped** duplicate desktop-only checks in the phone project; zero failures or retries                                            |
+| Updated legacy browser checks   | **38 passed**, zero failures, skips or retries, covering the changed cases in eleven existing specifications on desktop and phone                                  |
+| Desktop layout matrix           | English and Persian at **1280, 1440 and 1920 px**; all six checks passed with strict panel/table/text bounds                                                       |
+| Screenshot capture              | **52 real-interface PNGs**, zero browser errors or layout/native-control findings; one frozen production asset fingerprint verified before and after every capture |
+| Individual visual review        | All **52** exact PNGs opened individually and their SHA-256 hashes checked; zero remaining issues                                                                  |
+| Fictional originals             | All **14** originals opened individually; retained image hashes and line/subtotal/tax/total arithmetic verified                                                    |
+| Complete GitHub CI              | Open [C4's current Checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/17/checks) for the result on the latest evidence commit                     |
+
+The browser checks exercise retained photo/PDF bytes and page navigation, correction versions and money, temporary order associations, all three roles' weighed prices and financial privacy, physical label dimensions, date/Undo persistence, return memo/pending-credit reconciliation, and notebook/location copy. The updated legacy assertions preserve money, stock, ledger, branch scope, original files, retained drafts, code allocation and supplier approval checks. An earlier diagnostic full run found obsolete pre-C4 fixture/presentation expectations; its failed result is not counted as a passing run. The complete final suite is the GitHub CI check linked above.
+
+Machine-readable evidence is attached in [verification-results.json](redesign-screenshots/pr-c4/verification-results.json), [capture-results.json](redesign-screenshots/pr-c4/capture-results.json), [visual-audits.json](redesign-screenshots/pr-c4/visual-audits.json), [legacy-browser-results.json](redesign-screenshots/pr-c4/legacy-browser-results.json) and [demo-original-audit.json](redesign-screenshots/pr-c4/demo-original-audit.json).
 
 ## Screenshot index
 
-The filenames below are the required capture plan. The final files and their reviewed results will be attached after the frozen production build is checked. Each row has English light, English dark, Persian light and a 390-pixel phone view. Phone scenes may focus on the relevant document, dialog or action; desktop checks also inspect panel/table and visible-text bounds at 1280, 1440 and 1920 pixels.
+All 52 final files below were captured from the frozen production build and opened individually. Each row has English light, English dark, Persian light and a **390 px** phone version. Phone scenes may focus on the relevant document, dialog or action. Desktop captures use 1440 px; the separate six-check width matrix also covers 1280 and 1920 px in both languages. Phones may pan inside appropriate data tables; order items become cards. A4 documents and 60 × 40 mm labels retain their physical print dimensions while their previews scale to fit.
 
 | Scene                       | English light                                                            | English dark                                                            | Persian                                                                  | Phone                                                                 |
 | --------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
@@ -200,4 +219,4 @@ The prototype has no backend, database, real AI, production authentication, auto
 
 Browser checks verify full A4 previews and the labels' physical millimeter dimensions. A real printer's paper feed, margins and calibration cannot be tested in this cloud environment. Before using physical labels, print the existing alignment page on your printer and check its measurements.
 
-C3 and C4 remain separate review pull requests. Their final verification and screenshots are still being completed. No further setup or approval is needed from you while that work continues; when the finished evidence is attached, review both together and report any remaining behavior or visual changes you want.
+C3 [#16](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/16) and C4 [#17](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/17) remain separate review pull requests and have not been merged. C4 includes C3, so use the C4 branch to review both together. The screenshot matrices and Ubuntu click paths are complete; the current GitHub Checks links show the latest full CI results. Your next action is to review both and report any remaining behavior or visual changes you want.

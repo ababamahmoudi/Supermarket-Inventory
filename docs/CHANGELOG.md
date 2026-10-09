@@ -1,5 +1,14 @@
 # Project changelog
 
+## 2026-10-09 — Pull request C4: invoices, orders, weighed items, dates and returns
+
+- Built readable posted invoices with retained photo/PDF originals and Supervisor-only, reasoned correction previews. Appended versions preserve originals, payment allocations and linked receipt/approval/date evidence; only the exact correction delta changes money.
+- Added realistic packs without changing demo invoice totals, temporary New item order lines with explicit receiving associations, phone order cards and scaled bilingual A4 previews. Existing browser data is preserved through an exact verified backup before additive migration.
+- Added Decimal kg/lb weighed pricing, unit-aware Lookup/Products/Labels and Supervisor display/rounding settings without silently repricing approved amounts. Added product-driven date choices, manual Add date, reasoned Remove/history, Stop tracking and safe Undo.
+- Simplified Returns Open/History, retained signed-pickup RM documents, and separated expected pickup-credit projections from confirmed supplier settlements. Replacement releases the expected-credit deduction (the approved $570 → $600 example), with no new purchase or confirmed-credit ledger posting. Added the configurable 14-day reminder and retained worker financial privacy.
+- Made notebook English names required and Persian optional with fallback, retained local field errors and used Add location wording. Kept all C3 presentation/navigation behavior.
+- Verification on frozen application source cbdc2bf: **719 unit tests/62 files**, all **23 pricing cases**, lint/format/type check/build, **37 new browser checks** (nine intentional desktop-only phone skips), and **38 updated legacy browser checks** passed. Attached **52 individually reviewed final screenshots** and verified all 14 fictional originals. Current complete CI, exact Ubuntu commands, click paths and evidence are in [PR_C4_REVIEW.md](PR_C4_REVIEW.md). C3 and C4 await joint owner review and have not been merged.
+
 ## 2026-10-09 — Pull request C3: presentation, navigation and Undo
 
 - Implemented four readable shared button styles, single search fields, proportioned table columns and user/table Columns preferences, available desktop form width and distinct sidebar icons.
