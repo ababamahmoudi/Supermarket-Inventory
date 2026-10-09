@@ -1,0 +1,1404 @@
+{
+  "generatedAt": "2026-10-09T15:55:29.463Z",
+  "phase": "c1",
+  "baseURL": "http://127.0.0.1:5222",
+  "method": "Real UI interactions in fresh profiles, no injected business state or edited images. Original fictional products, offers and historical deliveries are retained. A manual price and warehouse notebook note are created through authorized forms. A controlled browser clock clears expired toasts. Headless window.print is suppressed while page.pdf exports the real UI print portal; this does not validate a physical printer.",
+  "requestedScenes": [
+    "received",
+    "warehouse-picker",
+    "regular-labels-grayscale",
+    "promo-labels-grayscale",
+    "manual-price",
+    "custom-notebook-all-branches"
+  ],
+  "requestedVariants": [
+    "en-light",
+    "en-dark",
+    "fa-light",
+    "phone"
+  ],
+  "expectedCapturesThisRun": 24,
+  "productionBuilds": [
+    {
+      "variant": "en-light",
+      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
+      "entry": "./assets/index-DhMxrUeW.js",
+      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+    },
+    {
+      "variant": "en-dark",
+      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
+      "entry": "./assets/index-DhMxrUeW.js",
+      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+    },
+    {
+      "variant": "fa-light",
+      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
+      "entry": "./assets/index-DhMxrUeW.js",
+      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+    },
+    {
+      "variant": "phone",
+      "htmlSHA256": "391f196f7d3f8cb04bce805d66a28f6d454ed2e7f1b97363a0c0dfe764cfbd85",
+      "entry": "./assets/index-DhMxrUeW.js",
+      "entrySHA256": "9e12e9aa5854b5c6f340b8f2a6e29bb3cc9f1370cb55ad59829876c56a2becb3"
+    }
+  ],
+  "browserErrors": [],
+  "printProof": [
+    {
+      "style": "regular",
+      "variant": "en-light",
+      "file": "regular-labels-en-light.pdf",
+      "geometry": [
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        },
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        }
+      ]
+    },
+    {
+      "style": "promo",
+      "variant": "en-light",
+      "file": "promo-labels-en-light.pdf",
+      "geometry": [
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        },
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        }
+      ]
+    },
+    {
+      "style": "regular",
+      "variant": "en-dark",
+      "file": "regular-labels-en-dark.pdf",
+      "geometry": [
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        },
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        }
+      ]
+    },
+    {
+      "style": "promo",
+      "variant": "en-dark",
+      "file": "promo-labels-en-dark.pdf",
+      "geometry": [
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        },
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        }
+      ]
+    },
+    {
+      "style": "regular",
+      "variant": "fa-light",
+      "file": "regular-labels-fa-light.pdf",
+      "geometry": [
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        },
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        }
+      ]
+    },
+    {
+      "style": "promo",
+      "variant": "fa-light",
+      "file": "promo-labels-fa-light.pdf",
+      "geometry": [
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        },
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        }
+      ]
+    },
+    {
+      "style": "regular",
+      "variant": "phone",
+      "file": "regular-labels-phone.pdf",
+      "geometry": [
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        },
+        {
+          "widthMM": 59.99840494791666,
+          "heightMM": 39.99755859375,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": null,
+          "frameStrokeMM": null
+        }
+      ]
+    },
+    {
+      "style": "promo",
+      "variant": "phone",
+      "file": "promo-labels-phone.pdf",
+      "geometry": [
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        },
+        {
+          "widthMM": 209.996484375,
+          "heightMM": 148.49739583333334,
+          "sheetWidthMM": 209.996484375,
+          "sheetHeightMM": 296.99892578124997,
+          "frameInsetMM": 4.9981445312499995,
+          "frameStrokeMM": 1.499970458984375
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "screen": "received",
+      "variant": "en-light",
+      "file": "received-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "warehouse-picker",
+      "variant": "en-light",
+      "file": "warehouse-picker-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "regular-labels-grayscale",
+      "variant": "en-light",
+      "file": "regular-labels-grayscale-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "promo-labels-grayscale",
+      "variant": "en-light",
+      "file": "promo-labels-grayscale-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "manual-price",
+      "variant": "en-light",
+      "file": "manual-price-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#lookup",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "custom-notebook-all-branches",
+      "variant": "en-light",
+      "file": "custom-notebook-all-branches-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#notes",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "received",
+      "variant": "en-dark",
+      "file": "received-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "warehouse-picker",
+      "variant": "en-dark",
+      "file": "warehouse-picker-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "regular-labels-grayscale",
+      "variant": "en-dark",
+      "file": "regular-labels-grayscale-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "promo-labels-grayscale",
+      "variant": "en-dark",
+      "file": "promo-labels-grayscale-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "manual-price",
+      "variant": "en-dark",
+      "file": "manual-price-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#lookup",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "custom-notebook-all-branches",
+      "variant": "en-dark",
+      "file": "custom-notebook-all-branches-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#notes",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "received",
+      "variant": "fa-light",
+      "file": "received-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کارتن و واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "مکان",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "شماره فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "دریافت‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "warehouse-picker",
+      "variant": "fa-light",
+      "file": "warehouse-picker-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#received",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کارتن و واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "مکان",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "شماره فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "دریافت‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "regular-labels-grayscale",
+      "variant": "fa-light",
+      "file": "regular-labels-grayscale-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کد کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "عملیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99ویژه۲ عدد $5آب آلبالو ۱ لیتریSour Cherry Juice 1 Lکد کالا: 0003 · 1 L"
+        },
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99ویژه۲ عدد $5آب آلبالو ۱ لیتریSour Cherry Juice 1 Lکد کالا: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "promo-labels-grayscale",
+      "variant": "fa-light",
+      "file": "promo-labels-grayscale-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#labels",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کد کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "عملیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "ویژه۲ عدد $5عادی $2.99آب آلبالو ۱ لیتریSour Cherry Juice 1 Lکد کالا: 0003 · 1 L"
+        },
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "ویژه۲ عدد $5عادی $2.99آب آلبالو ۱ لیتریSour Cherry Juice 1 Lکد کالا: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "manual-price",
+      "variant": "fa-light",
+      "file": "manual-price-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#lookup",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "custom-notebook-all-branches",
+      "variant": "fa-light",
+      "file": "custom-notebook-all-branches-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#notes",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "received",
+      "variant": "phone",
+      "file": "received-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "warehouse-picker",
+      "variant": "phone",
+      "file": "warehouse-picker-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#received",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases and units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice number",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received by",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "regular-labels-grayscale",
+      "variant": "phone",
+      "file": "regular-labels-grayscale-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 59.99850416666666,
+          "height": 39.997591666666665,
+          "style": "regular",
+          "text": "$2.99SPECIAL2 for $5Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "promo-labels-grayscale",
+      "variant": "phone",
+      "file": "promo-labels-grayscale-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#labels",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Product Code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Copies",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [
+        {
+          "width": 209.99661666666665,
+          "height": 297.0000833333333
+        }
+      ],
+      "labels": [
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        },
+        {
+          "width": 209.99661666666665,
+          "height": 148.49739583333334,
+          "style": "promo",
+          "text": "SPECIAL2 for $5Regular $2.99Sour Cherry Juice 1 Lآب آلبالو ۱ لیتریProduct Code: 0003 · 1 L"
+        }
+      ],
+      "grayscaleFilters": [
+        "grayscale(1)"
+      ]
+    },
+    {
+      "screen": "manual-price",
+      "variant": "phone",
+      "file": "manual-price-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#lookup",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "custom-notebook-all-branches",
+      "variant": "phone",
+      "file": "custom-notebook-all-branches-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#notes",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    }
+  ]
+}
