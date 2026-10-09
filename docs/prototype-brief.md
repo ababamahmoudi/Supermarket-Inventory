@@ -16,24 +16,26 @@ A **username and password** sign-in screen (layout in `design-language.md`) with
 
 ## The moments to build (in this order)
 1. **Cashier lookup.** Search "sumac", "سماق", a Product Code, or a barcode. Big price, Taxable tag, offer pill, "New price pending" tag on Lavash Bread.
-2. **Receive an invoice (simulated AI).** Floor Worker uploads any PDF/photo (the file is only displayed), a 2–3 second "Reading invoice…" state, then the **review screen** prefilled from `demo_invoice` in the data file: lines matched to products, calculated selling prices computed live by the engine, status badges, a date-tracking control only for Grocery lines, Save as draft and Post invoice. Editing a unit cost recalculates the price immediately.
+2. **Receive an invoice (AI reading).** Floor Worker uploads a PDF/photo. Simulated mode must look exactly like the real product: a progress state with steps ("Reading the invoice" → "Finding products" → "Calculating prices"), the original document shown beside the lines, and **low-confidence fields highlighted** (use `confidence` in the demo data; below the setting, default 0.80, the field gets a soft amber highlight and a tooltip "Please check"). Then the **review screen** prefilled from `demo_invoice` in the data file: lines matched to products, calculated selling prices computed live by the engine, status badges, a date-tracking control only for Grocery lines, Save as draft and Post invoice. Editing a unit cost recalculates the price immediately.
 3. **Same-supplier lower price.** The Sour Cherry Juice line (1.95 → 1.80) asks the three expiry questions; answers create an alert on the Supervisor dashboard.
 4. **Short item.** Mark 4 potato chips as Short: the invoice total shows the deduction and the net payable (`payable_after_open_shorts`); resolving restores it.
 5. **Approvals.** As Supervisor: new product (Dried Barberries) and the Lavash price change (1.99 → 2.99) appear in Approvals; approve one for **All branches**, one for **This branch only**; the cashier lookup reflects it.
 6. **Cross-branch price conflict.** Black Tea: Branch 1 $6.49 vs Branch 2 $6.99 appears on the dashboard with **Mark as intentional** and **Apply to all**.
 7. **Offers.** After approval, the AI suggestion "Confirm offer: 2 for $5" appears for the Floor Worker with the mix-and-match toggle; show a pool page where juice and chips share "2 for $5".
-8. **Labels.** Pick products, create "Template 1" (width/height/margins/gaps), choose the starting slot on an A4 preview where the first four slots are already used, show a bilingual label preview (logo, name EN + FA, price, offer, product code, unit size, Taxable). Printing can open the browser print dialog.
+8. **Labels (must really print).** Products tab with search and filters (Arrived today, Price changed recently, On offer, categories, supplier) → add products to the **waitlist** with copies → create "Template 1" (sizes, margins, gaps, calibration offsets) → A4 preview with the first four slots grayed and printing from slot 5 → bilingual label preview (logo, name EN + FA, price, offer, Product Code, unit size, Taxable) → **Print** opens the browser print dialog at exact size (or Save as PDF), multiple pages if needed → "Did the labels print correctly?" removes printed items. Include the test alignment page. Use `last_received_relative_days` from the demo data for "Arrived today".
 9. **Returns.** Select Fresh Valley Foods → its open return appears immediately → record pickup (type representative name) → choose resolution; show a replacement-received example that does not affect Payables.
 10. **Expiry list.** Lavash (5 days) and Sour Cherry Juice (25 days) as expiring soon; **Cleared** removes one.
-11. **Notes.** To order, Store use, For Supervisor, with the Supervisor's unread badge.
+11. **Notes and notebooks.** Built-in To order, Store use, For Supervisor (unread badge), plus the demo custom notebook "Deli temperatures" from the data file; as Supervisor, create a new notebook live and add an entry as Floor Worker.
 12. **Payables.** Supervisor-only: a supplier balance with the invoice, shorts deduction, a payment with cheque number, and a month-end summary view. Show that the Floor Worker menu has no Payables.
 13. **Supervisor dashboard** tying it together in the order from `requirements.md` §17.
 14. **Suppliers overview** (`requirements.md` §21): table with last delivery, deliveries this month, open returns, open shorts, payment terms, sales rep; Supervisor also sees balance, overdue, next due date. Supplier page with tabs. Switch to Floor Worker to show the money columns disappear.
+15. **Settings.** Working groups: Branches (add a fourth branch, edit details), Pricing categories (add a category with its own divisor and rounding; edit one and watch prices change; price tester), Offers (mappings), Notebooks, Labels. Other groups visible with their structure from `requirements.md` §22.
+16. **History and undo.** Stop an offer → **Undo** toast restores it. As Supervisor, open History, find a price approval or a product name change, and **Revert** it.
 
-Out of the prototype: real AI, real printing precision, real auth, real storage, user management screens beyond a static list, settings beyond showing the pricing categories table (make that screen editable so changing a divisor visibly changes prices: it proves the app is configurable for other supermarkets).
+Out of the prototype: real auth, real storage, and real AI reading **until step 0.3** (see below). User management can stay a simple list with New employee and Reset password. Printing must be real (browser print at exact size).
 
 ## Definition of done
-- All 14 moments work for the right role; role menus are correct; sign-in uses username and password, and the first-sign-in password change works.
+- All 16 moments work for the right role; role menus are correct; sign-in uses username and password, and the first-sign-in password change works.
 - Pricing tests pass; changing a divisor in Settings changes prices live.
 - English and Persian both work with correct RTL.
 - Runs offline after load; Reset demo works; no console errors.
@@ -44,9 +46,16 @@ Out of the prototype: real AI, real printing precision, real auth, real storage,
 2. **Switch to Floor Worker; receive an invoice (2 min).** "Drop in the supplier's PDF or a photo. The app reads it into lines. The system calculates every selling price with your own rules, so nobody does it by hand." Edit a cost to show the price update.
 3. **Short and lower price (1.5 min).** "If the supplier forgot items, mark them short; the amount comes off the invoice automatically. If a supplier sells us the same item cheaper, the worker answers two quick questions and the Supervisor is alerted."
 4. **Switch to Supervisor; approvals and dashboard (2 min).** "Every price change waits for approval. Approve for all branches or just one. If branches ever differ, you get an alert instead of finding out at the register."
-5. **Offers and labels (1.5 min).** "Offers like 2 for $5 are suggested automatically; mix-and-match works across any products. Labels print in English and Persian on your own sheet sizes, starting wherever the last sheet stopped."
+5. **Offers and labels (2 min).** "Offers like 2 for $5 are suggested automatically; mix-and-match works across any products." Filter Labels by "Price changed recently", add them to the waitlist, print a real sheet: "English and Persian, your own sheet sizes, starting wherever the last sheet stopped."
 6. **Returns, expiry, notes (1 min).** "When a supplier arrives, their open returns are right there. Expiring items are listed before they become a problem. The notebook becomes a searchable log."
 7. **Suppliers and payables (1 min).** Open Suppliers: "Every supplier at a glance: last delivery, open returns, shorts." Then as Supervisor: "and only you see the balances, overdue amounts and payments, ready for QuickBooks."
-8. **Settings (30 s).** Change a pricing divisor and show prices update: "Your rules live in settings, not in code."
+8. **Settings and history (1 min).** Add a branch, add a pricing category, change a divisor and watch prices update: "Your rules live in settings, not in code." Stop an offer, press Undo: "Mistakes can always be undone or reverted."
 9. **Close.** The roadmap: Phase 1 core app; later the cash register connection (live stock, loss detection) and an online food-ordering site.
-Say plainly that AI reading is simulated in the demo. Do not quote prices or timelines in the demo itself.
+If real AI reading is ready (step 0.3), ask the owner for any invoice from today's delivery and read it live; otherwise say plainly that the reading is simulated. Do not quote prices or timelines in the demo itself.
+
+## Step 0.3: Real AI invoice reading for the demo (after the design work)
+- Add one small server piece (for example, a single serverless function or a tiny local server) whose only job is to send the uploaded invoice to an AI provider and return the extraction JSON from `data-model.md`. The AI key lives **only** there, never in browser code or the repository.
+- Before building it, list 2–3 vision-capable AI providers with the estimated cost per invoice and trade-offs, recommend one, and wait for Ali's choice. Set a monthly spending cap on the provider account.
+- The browser sends the file, shows the same progress steps, and fills the same review screen with real lines and real confidence values. Matching, pricing, and approvals stay in the existing app logic; the AI never writes prices or stock directly.
+- Keep the simulated mode: a **"Simulated reading"** switch in the Demo menu, and an automatic fallback to it (with a calm message) if the real call fails or takes longer than 30 seconds.
+- Rehearse with 5–10 invoices of different layouts that Ali is allowed to use, and list what went wrong and what was fixed. Never commit real invoices to the repository.

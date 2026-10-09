@@ -12,7 +12,7 @@ When Ali answers one, update the requirement it affects, record the date here, a
 | 6 | Price → offer mapping | 1.99 → 3 for $5; 2.99 → 2 for $5; 3.99 → 2 for $7 (editable) |
 | 7 | Branch names and whether all three go live together | Placeholders "Branch 1/2/3"; rename in Settings |
 | 8 | Persian digits or Western digits in the Persian UI | Western digits for prices, codes, dates; translations for text |
-| 9 | Can cashiers add to-order notes? | No (lookup only) |
+| 9 | Can cashiers add notes? | Not to built-in notebooks; yes to a custom notebook if the Supervisor allows it |
 | 10 | Do Floor Workers see unit cost and margin? | Cost on invoices they handle only; margins hidden |
 | 11 | Units per case: who enters it for a new supplier product? | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards |
 | 12 | Expiring-soon entries with no sales data | Manual **Cleared** action |
@@ -28,3 +28,8 @@ When Ali answers one, update the requirement it affects, record the date here, a
 | 22 | Username format | First name + last initial (e.g., `sara.k`), editable by the Supervisor |
 | 23 | Google sign-in and a second sign-in step for Supervisors | Not in Phase 1; designed so they can be added |
 | 24 | Lockout settings | 5 attempts, 15 minutes (settings) |
+| 25 | Label waitlist auto-add on price approval | Off by default (setting) |
+| 26 | "Price changed recently" window for labels | 3 days (setting) |
+| 27 | Undo window | 10 seconds (setting) |
+| 28 | Persian wording for offers ("2 for $5") | "۲ عدد $5" style; Ali reviews |
+| 29 | AI provider for real invoice reading | Decide at step 0.3 with cost per invoice |
