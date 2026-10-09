@@ -10,6 +10,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page
     .getByLabel("Supplier invoice number (optional)", { exact: true })
@@ -46,7 +47,11 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
-  await page.getByRole("button", { name: "Resume draft", exact: true }).click();
+  await page
+    .locator(".invoice-saved-drafts .dialog-actions")
+    .filter({ has: page.getByText("PRIVATE-BRANCH-2", { exact: true }) })
+    .getByRole("button", { name: "Resume draft", exact: true })
+    .click();
   await expect(
     page.getByLabel("Supplier invoice number (optional)", { exact: true }),
   ).toHaveValue("PRIVATE-BRANCH-2");

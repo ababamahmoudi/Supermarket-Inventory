@@ -27,6 +27,7 @@ async function rememberedPack(page: Page) {
 
 async function manual(page: Page) {
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page
     .locator("#invoice-details-fields")
@@ -198,9 +199,20 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     ]),
   );
   await page.reload();
+  const postedLine = page
+    .locator(".posted-invoice-document tbody tr")
+    .filter({ hasText: "Canned Fava Beans 400 g" });
+  await expect(postedLine).toContainText("Delivered quantity: 12");
+  await expect(postedLine).toContainText(
+    "Refused / sent back with the driver · 6 · $6.60",
+  );
+  await expect(postedLine).toContainText("Accept new cost");
+  await expect(postedLine.getByRole("cell").nth(2)).toHaveText("$1.1000");
   await expect(
-    page.locator('.invoice-order-card tr[data-invoice-line="0"]'),
-  ).toContainText("12");
+    page.locator(
+      ".posted-invoice-document input, .posted-invoice-document select",
+    ),
+  ).toHaveCount(0);
   await page.goto("/#alerts");
   await expect(
     page.getByRole("heading", {

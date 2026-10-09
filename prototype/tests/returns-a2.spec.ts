@@ -220,7 +220,7 @@ test("Overview and direct return links enforce company and worker branch scope",
   await expect(page.locator(".return-detail")).toHaveCount(0);
 });
 
-test("Return detail pickup does not deduct stock twice and replacement increases actual stock without touching Payables", async ({
+test("Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -279,7 +279,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByRole("button", { name: "Receive replacement", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Payables did not change",
+    "Replacement received. Pending credit was released for the covered quantities.",
   );
   const received = await snapshot(page);
   expect(received.ledger).toEqual(before.ledger);

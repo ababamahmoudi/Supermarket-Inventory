@@ -146,6 +146,7 @@ test("manual invoice drafts work when randomUUID is unavailable", async ({
   });
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   expect(

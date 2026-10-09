@@ -127,24 +127,46 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   expect(errors).toEqual([]);
 });
 
-test("expiry clearing, notes store-use, and unread Supervisor actions survive refresh", async ({
+test("date removal, notes store-use, and unread Supervisor actions survive refresh", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
   await visit(page, "Date tracking");
+  const beforeDateRemoval = await stored(page);
   await expect(
-    page.getByRole("button", { name: "Mark as cleared", exact: true }),
+    page.getByRole("button", { name: "Remove", exact: true }),
   ).toHaveCount(2);
   await page
-    .getByRole("button", { name: "Mark as cleared", exact: true })
+    .getByRole("button", { name: "Remove", exact: true })
     .first()
     .click();
+  const removal = page.getByRole("dialog", {
+    name: "Remove date",
+    exact: true,
+  });
+  await chooseOption(
+    page,
+    removal.getByLabel("Reason", { exact: true }),
+    "sold_out",
+    "Sold out",
+  );
+  await removal.getByRole("button", { name: "Remove", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Mark as cleared", exact: true }),
+    page.getByRole("button", { name: "Remove", exact: true }),
   ).toHaveCount(1);
+  const removed = await stored(page);
+  expect(removed.expiry).toHaveLength(beforeDateRemoval.expiry.length);
+  expect(
+    removed.expiry.find(
+      (entry: { branch: string; product_code: string }) =>
+        entry.branch === "Branch 1" && entry.product_code === "0006",
+    ),
+  ).toMatchObject({ status: "removed", removed_reason: "sold_out" });
+  expect(removed.stock).toEqual(beforeDateRemoval.stock);
+  expect(removed.ledger).toEqual(beforeDateRemoval.ledger);
   await page.reload();
   await expect(
-    page.getByRole("button", { name: "Mark as cleared", exact: true }),
+    page.getByRole("button", { name: "Remove", exact: true }),
   ).toHaveCount(1);
   await visit(page, "Notes");
   await page.getByRole("tab", { name: "Store use", exact: true }).click();

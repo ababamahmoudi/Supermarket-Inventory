@@ -164,7 +164,7 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
     (record: { name_en: string }) => record.name_en === "Orchard Pears",
   );
   expect(product.status).toBe("active");
-  expect(product.code).toBe("0016");
+  expect(product.code).toBe("0017");
   expect(saved.stock[`Branch 1:${product.code}`]).toBeUndefined();
   expect(
     saved.stock_movements.filter(
@@ -187,6 +187,7 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
     page.getByRole("button", { name: "Add product", exact: true }),
   ).toHaveCount(0);
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Upload", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Manual entry", exact: true }),
@@ -246,6 +247,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await chooseOption(
     page,

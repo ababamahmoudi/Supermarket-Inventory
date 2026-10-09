@@ -198,4 +198,6 @@ The filenames below are the required capture plan. The final files and their rev
 
 The prototype has no backend, database, real AI, production authentication, automatic sales/inventory feed, email delivery, accounting integration or production deployment. Files and demo state are local to one browser profile; another computer does not automatically receive them. Roles and scope are exercised in the frontend for this demo; production server enforcement is a later implementation. The signed references and signatures entered during review are fictional evidence, not real supplier confirmations.
 
+Browser checks verify full A4 previews and the labels' physical millimeter dimensions. A real printer's paper feed, margins and calibration cannot be tested in this cloud environment. Before using physical labels, print the existing alignment page on your printer and check its measurements.
+
 C3 and C4 remain separate review pull requests. Their final verification and screenshots are still being completed. No further setup or approval is needed from you while that work continues; when the finished evidence is attached, review both together and report any remaining behavior or visual changes you want.

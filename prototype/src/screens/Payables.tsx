@@ -432,7 +432,7 @@ export function Payables() {
                 <td className="numeric">
                   <Money value={item.balance} />
                   {item.pending_credit !== "0.00" && (
-                    <small className="muted">
+                    <small className="muted payables-pending-note">
                       {t("Pending credit", "اعتبار در انتظار")}:{" "}
                       <Money value={item.pending_credit} />
                     </small>

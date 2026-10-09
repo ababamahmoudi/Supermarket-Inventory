@@ -81,6 +81,8 @@ export interface InvoiceCorrectionPreview {
     margin: string | null;
     manual: boolean;
     updates_regular_cost: boolean;
+    creates_pending_proposal: boolean;
+    superseded_approval_ids: string[];
   }[];
   date_changes: {
     line_index: number;
@@ -173,6 +175,60 @@ function originalInvoice(
       "The original invoice ledger is missing. Review the retained invoice before correcting it.",
     );
   return original;
+}
+
+/** Preview and save must make the same decision without dropping cost changes. */
+function correctionProposalDecision(
+  state: DemoState,
+  companyId: string,
+  branch: string,
+  change: Pick<
+    InvoiceCorrectionPreview["approval_changes"][number],
+    "product_code" | "selling_price" | "margin"
+  >,
+) {
+  const product = state.products.find(
+    (product) =>
+      product.company_id === companyId && product.code === change.product_code,
+  )!;
+  const current = effectivePrice(state, product, branch);
+  const category = state.config.pricing_categories.find(
+    (category) => category.key === product.pricing_category,
+  )!;
+  const below =
+    change.margin !== null &&
+    category.minimum_margin !== null &&
+    category.minimum_margin !== "" &&
+    new Decimal(change.margin).lt(category.minimum_margin);
+  const type: Approval["type"] | null =
+    current !== change.selling_price || below
+      ? current === null
+        ? "new_product"
+        : current === change.selling_price
+          ? "margin_review"
+          : "price_change"
+      : null;
+  return { current, type, threshold: category.minimum_margin };
+}
+
+function correctionPendingApprovals(
+  state: DemoState,
+  companyId: string,
+  invoiceId: string,
+  change: Pick<
+    InvoiceCorrectionPreview["approval_changes"][number],
+    "product_code" | "before_product_code"
+  >,
+) {
+  return state.approvals.filter(
+    (approval) =>
+      approval.company_id === companyId &&
+      approval.status === "pending" &&
+      [change.product_code, change.before_product_code].includes(
+        approval.product_code,
+      ) &&
+      approval.source_invoice_id === invoiceId,
+  );
 }
 
 export function invoiceContentCorrectionPreview(
@@ -563,22 +619,34 @@ export function invoiceContentCorrectionPreview(
       state.config,
     );
     const manual = manualPrice(state, product, branch);
+    const change = {
+      line_index: index,
+      product_code: product.code,
+      before_product_code: before.lines[index].product_code,
+      selling_price: manual?.price ?? calculation.selling_price,
+      unit_cost: line.unit_cost_before_tax,
+      margin:
+        manual && new Decimal(manual.price).gt(0)
+          ? new Decimal(manual.price)
+              .minus(line.unit_cost_before_tax)
+              .div(manual.price)
+              .toFixed(8)
+          : calculation.margin,
+      manual: !!manual,
+      updates_regular_cost: newerAccepted.length === 0,
+    };
     return [
       {
-        line_index: index,
-        product_code: product.code,
-        before_product_code: before.lines[index].product_code,
-        selling_price: manual?.price ?? calculation.selling_price,
-        unit_cost: line.unit_cost_before_tax,
-        margin:
-          manual && new Decimal(manual.price).gt(0)
-            ? new Decimal(manual.price)
-                .minus(line.unit_cost_before_tax)
-                .div(manual.price)
-                .toFixed(8)
-            : calculation.margin,
-        manual: !!manual,
-        updates_regular_cost: newerAccepted.length === 0,
+        ...change,
+        creates_pending_proposal:
+          correctionProposalDecision(state, context.company_id, branch, change)
+            .type !== null,
+        superseded_approval_ids: correctionPendingApprovals(
+          state,
+          context.company_id,
+          id,
+          change,
+        ).map((approval) => approval.id),
       },
     ];
   });
@@ -782,22 +850,18 @@ export function correctPostedInvoice(
         product.code === change.product_code,
     )!;
     const contributorIds = new Set<string>([id]);
-    for (const approval of state.approvals) {
-      if (
-        approval.company_id === context.company_id &&
-        approval.status === "pending" &&
-        [change.product_code, change.before_product_code].includes(
-          approval.product_code,
-        ) &&
-        approval.source_invoice_id === id
-      ) {
-        if (approval.product_code === change.product_code)
-          for (const contributor of approval.invoice_ids ?? [])
-            contributorIds.add(contributor);
-        approval.status = "superseded";
-        approval.correction_id = correctionId;
-        correction.superseded_approval_ids.push(approval.id);
-      }
+    for (const approval of correctionPendingApprovals(
+      state,
+      context.company_id,
+      id,
+      change,
+    )) {
+      if (approval.product_code === change.product_code)
+        for (const contributor of approval.invoice_ids ?? [])
+          contributorIds.add(contributor);
+      approval.status = "superseded";
+      approval.correction_id = correctionId;
+      correction.superseded_approval_ids.push(approval.id);
     }
     if (
       product.pending_branch === preview.branch &&
@@ -813,33 +877,25 @@ export function correctPostedInvoice(
       product.pending_price = null;
       product.pending_branch = undefined;
     }
-    const current = effectivePrice(state, product, preview.branch);
-    const category = state.config.pricing_categories.find(
-      (category) => category.key === product.pricing_category,
-    )!;
-    const below =
-      change.margin !== null &&
-      category.minimum_margin !== null &&
-      category.minimum_margin !== "" &&
-      new Decimal(change.margin).lt(category.minimum_margin);
-    if (current !== change.selling_price || below) {
+    const { current, type, threshold } = correctionProposalDecision(
+      state,
+      context.company_id,
+      preview.branch,
+      change,
+    );
+    if (type !== null) {
       const approval: Approval = {
         id: `${correctionId}:proposal:${change.line_index}`,
         company_id: context.company_id,
         branch: preview.branch,
         product_code: change.product_code,
         status: "pending",
-        type:
-          current === null
-            ? "new_product"
-            : current === change.selling_price
-              ? "margin_review"
-              : "price_change",
+        type,
         proposed_price: change.selling_price,
         current_price: current,
         unit_cost: change.unit_cost,
         margin: change.margin,
-        threshold: category.minimum_margin,
+        threshold,
         source_invoice_id: id,
         invoice_ids: [...contributorIds],
         invoice_number: preview.before.supplier_invoice_number,

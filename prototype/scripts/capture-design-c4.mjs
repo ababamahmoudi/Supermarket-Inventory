@@ -234,6 +234,12 @@ async function setupScene(page, scene, variant) {
       await expect(modal.locator(".posted-invoice-totals")).toContainText(
         "$0.72",
       );
+      await expect(modal.locator(".invoice-correction-pending")).toContainText(
+        /No pending approval changes|تأییدهای در انتظار تغییر نمی‌کنند/,
+      );
+      await expect(
+        modal.locator(".invoice-correction-pending"),
+      ).not.toContainText("$1.49");
       await expect(button(modal, "Continue", "ادامه")).toBeEnabled();
       target = ".invoice-correction-dialog";
       evidence = await modal.innerText();
@@ -362,7 +368,15 @@ async function setupScene(page, scene, variant) {
       await button(toast, "Undo", "واگرد").focus();
       await expect(row).toContainText(dateLot);
       await expect(row).toContainText(/Sold out|تمام‌شده/);
-      target = ".expiry-table";
+      if (variant === "phone") {
+        // The Remove action scrolls the genuine table to its final columns.
+        // Pan back to the product/lot evidence while keeping Undo focused.
+        await page.locator(".expiry-table").evaluate((element) => {
+          element.scrollLeft = 0;
+        });
+        await expect(row.getByText(dateLot, { exact: true })).toBeInViewport();
+      }
+      target = ".expiry-table tbody tr";
       evidence = {
         removedRow: await row.innerText(),
         undo: await toast.innerText(),
@@ -445,7 +459,7 @@ async function setupScene(page, scene, variant) {
   return { target, evidence };
 }
 
-async function frame(page, variant, target) {
+async function frame(page, variant, target, fullPage) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise((resolve) =>
@@ -453,7 +467,13 @@ async function frame(page, variant, target) {
     );
   });
   if (!(await page.locator("dialog[open]").count())) {
-    if (variant === "phone") {
+    if (variant === "phone" && fullPage) {
+      // A real heading click clears any restored Skip-link focus. Start at
+      // the page top so the sticky topbar stays there in a full-page image.
+      await page.locator(target).getByRole("heading").first().click();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    } else if (variant === "phone") {
       // Keep the actual feature, table data or label in the 390px capture.
       // Scrolling changes presentation only; fixtures are created through UI.
       await page
@@ -621,7 +641,12 @@ try {
           "North York",
         );
         const fixture = await setupScene(page, scene, variant);
-        await frame(page, variant, fixture.target);
+        // The original lives after the retained read-only invoice. This one
+        // phone-width full-page capture proves both in the same unedited PNG.
+        const fullPage =
+          (variant !== "phone" || scene === "posted-invoice-original") &&
+          !(await page.locator("dialog[open]").count());
+        await frame(page, variant, fixture.target, fullPage);
         const findings = await geometry(page);
         const after = await productionAssets(page);
         builds.push({ variant, scene, phase: "after", ...after });
@@ -631,11 +656,6 @@ try {
         )
           throw new Error("The production build changed during capture.");
         const filename = `${scene}-${variant}.png`;
-        // The original lives after the retained read-only invoice. This one
-        // phone-width full-page capture proves both in the same unedited PNG.
-        const fullPage =
-          (variant !== "phone" || scene === "posted-invoice-original") &&
-          !(await page.locator("dialog[open]").count());
         await page.screenshot({
           path: resolve(destination, filename),
           fullPage,

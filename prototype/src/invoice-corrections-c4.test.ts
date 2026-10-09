@@ -350,6 +350,13 @@ describe("immutable invoice content corrections", () => {
       { lines, reason: "Correct bean unit cost." },
     );
     expect(preview.blockers).toEqual([]);
+    expect(preview.approval_changes).toEqual([
+      expect.objectContaining({
+        product_code: "0002",
+        selling_price: "1.49",
+        creates_pending_proposal: false,
+      }),
+    ]);
     correctPostedInvoice(
       state,
       context(state, "all"),
@@ -359,6 +366,108 @@ describe("immutable invoice content corrections", () => {
       "seed-correction",
     );
     expect(state.invoice.supplier_invoice_number).toBe("FV-20390");
+  });
+  it("previews no new approval at the approved price while retaining supersession and the corrected cost", () => {
+    const state = posted();
+    const product = state.products.find((product) => product.code === "0002")!;
+    const staleProposal = {
+      ...structuredClone(state.approvals[0]),
+      id: "same-price-source-pending",
+      company_id: state.invoice.company_id,
+      product_code: product.code,
+      branch: "Branch 1",
+      status: "pending" as const,
+      proposed_price: "1.79",
+      source_invoice_id: state.invoice.id,
+      invoice_ids: [state.invoice.id],
+    };
+    state.approvals.push(staleProposal);
+    product.pending_price = staleProposal.proposed_price;
+    product.pending_branch = "Branch 1";
+    const approvedPrice = product.selling_price;
+    const untouched = structuredClone(
+      state.approvals.filter(
+        (approval) => approval.source_invoice_id !== state.invoice.id,
+      ),
+    );
+    const proposal = input(state, "1.0100");
+    const preview = invoiceContentCorrectionPreview(
+      state,
+      context(state),
+      state.invoice.id,
+      proposal,
+    );
+    expect(preview.approval_changes).toEqual([
+      expect.objectContaining({
+        selling_price: approvedPrice,
+        creates_pending_proposal: false,
+        superseded_approval_ids: expect.arrayContaining([staleProposal.id]),
+        updates_regular_cost: true,
+      }),
+    ]);
+    const correction = correctPostedInvoice(
+      state,
+      context(state),
+      state.invoice.id,
+      proposal,
+      preview.snapshot,
+      "same-price-correction",
+    );
+    expect(correction.approval_ids).toEqual([]);
+    expect(correction.superseded_approval_ids).toEqual(
+      preview.approval_changes[0].superseded_approval_ids,
+    );
+    expect(staleProposal.status).toBe("superseded");
+    expect(product.pending_price).toBeNull();
+    expect(product.pending_branch).toBeUndefined();
+    expect(product.selling_price).toBe(approvedPrice);
+    expect(product.last_cost_before_tax).toBe("1.0100");
+    expect(product.price_provenance?.["Branch 1"]?.calculated_price).toBe(
+      approvedPrice,
+    );
+    expect(
+      state.approvals.filter(
+        (approval) => approval.source_invoice_id !== state.invoice.id,
+      ),
+    ).toEqual(untouched);
+  });
+  it("previews and creates a margin review when the unchanged approved price is below the configured margin", () => {
+    const state = posted();
+    const product = state.products.find((product) => product.code === "0002")!;
+    state.config.pricing_categories.find(
+      (category) => category.key === product.pricing_category,
+    )!.minimum_margin = "0.40";
+    const proposal = input(state, "1.0100");
+    const preview = invoiceContentCorrectionPreview(
+      state,
+      context(state),
+      state.invoice.id,
+      proposal,
+    );
+    expect(preview.approval_changes[0]).toMatchObject({
+      selling_price: product.selling_price,
+      creates_pending_proposal: true,
+    });
+    const correction = correctPostedInvoice(
+      state,
+      context(state),
+      state.invoice.id,
+      proposal,
+      preview.snapshot,
+      "same-price-margin-review",
+    );
+    expect(correction.approval_ids).toHaveLength(1);
+    expect(
+      state.approvals.find(
+        (approval) => approval.id === correction.approval_ids[0],
+      ),
+    ).toMatchObject({
+      status: "pending",
+      type: "margin_review",
+      current_price: "1.49",
+      proposed_price: "1.49",
+    });
+    expect(product.selling_price).toBe("1.49");
   });
   it("blocks only affected linked order receipt lines while allowing cost and date corrections", () => {
     const state = posted();

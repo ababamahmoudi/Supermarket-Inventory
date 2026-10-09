@@ -185,6 +185,23 @@ export function InvoiceCorrectionDialog({
       </>
     );
   }
+  const pendingProposalChanges =
+    preview?.approval_changes.filter(
+      (change) => change.creates_pending_proposal,
+    ) ?? [];
+  const supersededApprovals = [
+    ...new Set(
+      preview?.approval_changes.flatMap(
+        (change) => change.superseded_approval_ids,
+      ) ?? [],
+    ),
+  ].flatMap((id) => {
+    const approval = state.approvals.find(
+      (approval) =>
+        approval.company_id === context.company_id && approval.id === id,
+    );
+    return approval ? [approval] : [];
+  });
   return (
     <Dialog
       open
@@ -262,21 +279,29 @@ export function InvoiceCorrectionDialog({
             </p>
           )}
           <h3>{t("Pending approvals", "تأییدهای در انتظار")}</h3>
-          {preview.approval_changes.length ? (
-            preview.approval_changes.map((change) => (
+          <div className="invoice-correction-pending">
+            {pendingProposalChanges.map((change) => (
               <p key={change.line_index}>
                 <LtrText>{change.product_code}</LtrText> ·{" "}
                 <Money value={change.selling_price} />
               </p>
-            ))
-          ) : (
-            <p className="muted">
-              {t(
-                "No pending approval changes",
-                "تأییدهای در انتظار تغییر نمی‌کنند",
-              )}
-            </p>
-          )}
+            ))}
+            {supersededApprovals.map((approval) => (
+              <p key={approval.id}>
+                <LtrText>{approval.product_code}</LtrText> ·{" "}
+                <Money value={approval.proposed_price} /> ·{" "}
+                {t("Superseded", "جایگزین‌شده")}
+              </p>
+            ))}
+            {!pendingProposalChanges.length && !supersededApprovals.length && (
+              <p className="muted">
+                {t(
+                  "No pending approval changes",
+                  "تأییدهای در انتظار تغییر نمی‌کنند",
+                )}
+              </p>
+            )}
+          </div>
           <h3>{t("Date tracking", "پیگیری تاریخ")}</h3>
           {preview.date_changes.length ? (
             preview.date_changes.map((change) => (

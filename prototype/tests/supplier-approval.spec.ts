@@ -5,6 +5,7 @@ const storage = "supermarket-prototype-v1";
 async function proposeSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Upload", exact: true }).click();
   if (!(await page.locator("#invoice-details-fields").isVisible()))
     await page
@@ -132,7 +133,13 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   ).toBe("rejected");
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
-  await page.getByRole("button", { name: "Resume draft", exact: true }).click();
+  await page
+    .locator(".invoice-saved-drafts .dialog-actions")
+    .filter({
+      has: page.getByText("Orchard Rejection Supply", { exact: true }),
+    })
+    .getByRole("button", { name: "Resume draft", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeDisabled();

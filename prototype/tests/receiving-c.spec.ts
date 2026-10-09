@@ -24,6 +24,7 @@ async function saved(
 
 async function manualInvoice(page: import("@playwright/test").Page) {
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   const header = page.locator("#invoice-details-fields");
   await header.getByLabel("Supplier", { exact: true }).click();
