@@ -20,6 +20,34 @@ beforeEach(() => {
   void i18n.changeLanguage("en");
 });
 
+it("never includes a different location's current draft in a worker's saved-draft list", () => {
+  const state = initialState();
+  state.invoice = createInvoice(state, "Branch 2", true);
+  state.invoice.supplier_invoice_number = "PRIVATE-BRANCH-2";
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  sessionStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      username: "floorworker",
+      branch: "Branch 1",
+      lang: "en",
+      locked: false,
+      authenticatedAt: Date.now(),
+    }),
+  );
+  window.location.hash = "#invoices";
+  render(
+    <DemoProvider>
+      <Invoices />
+    </DemoProvider>,
+  );
+  expect(screen.queryByText("PRIVATE-BRANCH-2")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "New invoice" })).toBeVisible();
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).invoice.id).toBe(
+    state.invoice.id,
+  );
+});
+
 it("keeps linked invoice review rendered during blank cost and pack edits, preserving Units until corrected", () => {
   const state = initialState();
   state.invoice = createInvoice(state, "Branch 1", true);

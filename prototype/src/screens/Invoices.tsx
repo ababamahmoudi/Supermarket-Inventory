@@ -715,7 +715,13 @@ export default function Invoices() {
         readableInvoice(item, state.config.company.seed_key, reader, state) &&
         (role === "floor_worker" || branch === "all" || item.branch === branch),
     ) ?? []),
-    ...(!routeId && active && !locked ? [invoice] : []),
+    ...(!routeId &&
+    active &&
+    !locked &&
+    canReadWorkspace &&
+    (branch === "all" || invoiceLocation === branch)
+      ? [invoice]
+      : []),
   ].filter((saved) => {
     if (tab === "drafts") return saved.status === "draft";
     if (tab === "processing") return saved.status === "reading";

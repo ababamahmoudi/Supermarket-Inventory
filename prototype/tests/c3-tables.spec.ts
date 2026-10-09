@@ -3,6 +3,7 @@ import { chooseOption, setLanguage, signIn } from "./helpers";
 
 const storage = "supermarket-prototype-v1";
 test.setTimeout(180000);
+test.use({ actionTimeout: 10000 });
 
 async function newOrder(page: Page) {
   await page.goto("/#orders");
@@ -143,8 +144,7 @@ for (const width of [1280, 1440, 1920]) {
             .locator(".catalog-products-table tbody tr")
             .first()
             .getByRole("button", {
-              name: language === "en" ? "Edit" : "ویرایش",
-              exact: true,
+              name: language === "en" ? /^Edit / : /^ویرایش /,
             });
           await edit.scrollIntoViewIfNeeded();
           const hit = await edit.evaluate((button) => {
