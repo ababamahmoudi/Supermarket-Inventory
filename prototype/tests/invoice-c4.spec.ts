@@ -25,6 +25,22 @@ for (const language of ["en", "fa"] as const)
     );
     await expect(page.locator(".invoice-line input")).toHaveCount(0);
     await expect(
+      page.getByLabel(fa ? "پیوست اصل فاکتور" : "Attach original", {
+        exact: true,
+      }),
+    ).toBeHidden();
+    const documentOrder = await page
+      .locator(".invoice-posted-workspace")
+      .evaluate((element) => {
+        const header = element.querySelector(".posted-invoice-header")!;
+        const original = element.querySelector(".invoice-original-card")!;
+        return !!(
+          header.compareDocumentPosition(original) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        );
+      });
+    expect(documentOrder).toBe(true);
+    await expect(
       page.getByText("Changes save automatically in this browser", {
         exact: true,
       }),
@@ -193,6 +209,7 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })

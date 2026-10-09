@@ -1230,36 +1230,6 @@ export default function Invoices() {
         </Card>
       ) : locked ? (
         <div className="invoice-workspace invoice-posted-workspace">
-          <aside
-            className="invoice-document-pane"
-            aria-label={t("Original invoice", "اصل فاکتور")}
-          >
-            <OriginalInvoice
-              invoice={invoice}
-              onAttach={
-                !invoice.file_data && role === "supervisor"
-                  ? () => originalInput.current?.click()
-                  : undefined
-              }
-            />
-            <input
-              ref={originalInput}
-              className="visually-hidden"
-              type="file"
-              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
-              aria-label={t("Attach original", "پیوست اصل فاکتور")}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void attachFile(file);
-                event.target.value = "";
-              }}
-            />
-            {uploadError && (
-              <p role="alert" className="form-error">
-                {uploadError}
-              </p>
-            )}
-          </aside>
           <div className="invoice-review-pane">
             <PostedInvoice
               original={invoice}
@@ -1278,6 +1248,37 @@ export default function Invoices() {
                 laterShortDeliveries}
             </PostedInvoice>
           </div>
+          <aside
+            className="invoice-document-pane"
+            aria-label={t("Original invoice", "اصل فاکتور")}
+          >
+            <OriginalInvoice
+              invoice={invoice}
+              onAttach={
+                !invoice.file_data && role === "supervisor"
+                  ? () => originalInput.current?.click()
+                  : undefined
+              }
+            />
+            <input
+              ref={originalInput}
+              className="ui-file-input"
+              hidden
+              type="file"
+              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+              aria-label={t("Attach original", "پیوست اصل فاکتور")}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void attachFile(file);
+                event.target.value = "";
+              }}
+            />
+            {uploadError && (
+              <p role="alert" className="form-error">
+                {uploadError}
+              </p>
+            )}
+          </aside>
         </div>
       ) : (
         <div

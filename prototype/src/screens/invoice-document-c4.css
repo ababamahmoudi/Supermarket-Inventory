@@ -2,6 +2,19 @@
   margin-block: 0 20px;
   overflow-wrap: anywhere;
 }
+:root .invoice-workspace.invoice-posted-workspace:not(.invoice-start-stack) {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root
+  .invoice-workspace.invoice-posted-workspace:not(.invoice-start-stack)
+  .invoice-document-pane {
+  position: static;
+  max-block-size: none;
+  overflow: visible;
+}
+.invoice-posted-workspace input[type="file"].ui-file-input[hidden] {
+  display: none;
+}
 .invoice-original-controls,
 .invoice-pdf-pages {
   display: flex;
@@ -98,9 +111,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.invoice-correction-dialog {
+.ui-dialog.confirm-dialog.invoice-correction-dialog {
   inline-size: min(880px, calc(100vw - 32px));
-  max-inline-size: 880px;
+  max-inline-size: min(880px, calc(100vw - 32px));
 }
 .invoice-correction-line + .invoice-correction-line,
 .invoice-correction-dialog > .field {
@@ -110,6 +123,11 @@
 .invoice-correction-dialog .field > .number-field,
 .invoice-correction-dialog .field > .ui-select {
   max-inline-size: 300px;
+}
+.ui-dialog.invoice-correction-dialog .field > button.ui-select {
+  inline-size: min(300px, 100%);
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 .posted-invoice-lines .numeric {
   white-space: normal;

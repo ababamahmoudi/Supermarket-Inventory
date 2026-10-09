@@ -48,6 +48,9 @@ async function geometry(page: Page) {
       "th, td, .field > label, .posted-invoice-totals dt, .posted-invoice-totals dd, .lookup-approved-price",
     )) {
       if (!container.getClientRects().length) continue;
+      // Compact invoice rows retain accessible labels using the same
+      // visually-hidden clip as sr-only; these are not visible text.
+      if (getComputedStyle(container).clipPath !== "none") continue;
       if (container.matches("th, td")) cells++;
       const bounds = container.getBoundingClientRect();
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
@@ -57,6 +60,7 @@ async function geometry(page: Page) {
         if (
           !node.textContent?.trim() ||
           !parent?.getClientRects().length ||
+          getComputedStyle(parent).clipPath !== "none" ||
           parent.closest(
             ".sr-only, .visually-hidden, [hidden], [aria-hidden=true]",
           )
@@ -168,13 +172,19 @@ for (const width of [1280, 1440, 1920]) {
       await setLanguage(page, "en");
       await page.goto("/#invoices");
       await page
+        .getByRole("button", { name: "New invoice", exact: true })
+        .click();
+      await page
         .getByRole("button", { name: "Manual entry", exact: true })
         .click();
       await page
         .locator("#invoice-details-fields")
         .getByLabel("Supplier", { exact: true })
         .click();
-      await page.getByRole("option", { name: /^Fresh Valley Foods/ }).click();
+      await page
+        .getByRole("listbox", { name: "Supplier", exact: true })
+        .getByRole("option", { name: /Fresh Valley Foods/ })
+        .click();
       await page.getByRole("button", { name: "Add line", exact: true }).click();
       const line = page.locator(".invoice-line").first();
       const quantity = line.getByLabel("Invoiced quantity", { exact: true });

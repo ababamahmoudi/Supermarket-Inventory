@@ -228,7 +228,7 @@
   font-size: 18px;
 }
 @media (max-width: 760px) {
-  .order-items-table {
+  :root .order-items-table.ui-data-table {
     overflow: visible;
     min-inline-size: 0;
     inline-size: 100%;
@@ -237,6 +237,9 @@
   .order-items-table tbody {
     display: block;
     inline-size: 100%;
+    min-inline-size: 0;
+  }
+  :root .order-items-table.ui-data-table table.has-defined-columns {
     min-inline-size: 0;
   }
   .order-items-table colgroup,

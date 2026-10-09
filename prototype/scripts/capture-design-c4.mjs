@@ -248,6 +248,8 @@ async function setupScene(page, scene, variant) {
   } else if (scene === "invoice-order-comparison") {
     const reference = await createKnownOrder(page);
     await visit(page, "invoices");
+    const newInvoice = button(page, "New invoice");
+    if (await newInvoice.isVisible()) await newInvoice.click();
     await button(page, "Manual entry").click();
     await choose(
       page,
@@ -458,11 +460,13 @@ async function frame(page, variant, target) {
         .locator(target)
         .first()
         .evaluate((element) => {
+          const topbar = document.querySelector(".topbar");
+          const offset = (topbar?.getBoundingClientRect().bottom ?? 0) + 20;
           window.scrollTo(
             0,
             Math.max(
               0,
-              window.scrollY + element.getBoundingClientRect().top - 110,
+              window.scrollY + element.getBoundingClientRect().top - offset,
             ),
           );
         });
@@ -484,6 +488,28 @@ async function geometry(page) {
     const modal = document.querySelector("dialog[open]");
     const area = modal ?? document.querySelector("#main-content");
     if (!area) return [{ kind: "missing-capture-area" }];
+    // Hidden input helpers are permitted; browser-default controls must never
+    // be visible. Geometry alone would miss a native Choose File button.
+    for (const control of document.querySelectorAll(
+      'select,input[type="file"],input[type="checkbox"],input[type="radio"],input[type="date"]',
+    )) {
+      const bounds = control.getBoundingClientRect();
+      const style = getComputedStyle(control);
+      if (
+        control.getClientRects().length &&
+        bounds.width > 2 &&
+        bounds.height > 2 &&
+        style.visibility !== "hidden" &&
+        style.clipPath === "none" &&
+        style.clip === "auto"
+      )
+        findings.push({
+          kind: "visible-native-control",
+          tag: control.tagName,
+          type: control.getAttribute("type"),
+          class: control.className,
+        });
+    }
     if (document.documentElement.scrollWidth > window.innerWidth + 2)
       findings.push({
         kind: "document-horizontal",
@@ -623,7 +649,9 @@ try {
           capturePurpose:
             variant === "phone" && scene === "posted-invoice-original"
               ? "The 390px-wide full page shows the read-only posted invoice and its retained original image together."
-              : "Actual feature content, focused at the requested viewport width.",
+              : variant === "phone" && scene === "weighed-label"
+                ? "The existing A4 preview preserves the real physical shelf-label size; no capture-only zoom or DOM rescaling is applied. Verified price text is retained in fixtureEvidence."
+                : "Actual feature content, focused at the requested viewport width.",
           viewport: page.viewportSize(),
           role: "supervisor",
           route: new URL(page.url()).hash,

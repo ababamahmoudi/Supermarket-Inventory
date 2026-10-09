@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import Decimal from "decimal.js";
 import { signIn } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
@@ -213,7 +214,7 @@ test("fictional invoice answers are available only inside Demo and retain Persia
   expect(answer.units_left).toBeGreaterThan(0);
 });
 
-test("Supplier invoice links open the actual posted receipt and its original text in either language", async ({
+test("Supplier invoice links open the actual posted document and retained original image in either language", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -226,10 +227,27 @@ test("Supplier invoice links open the actual posted receipt and its original tex
     .filter({ has: page.getByRole("cell", { name: "FV-20390", exact: true }) });
   await row.getByRole("button", { name: "View", exact: true }).click();
   await expect(page).toHaveURL(/#invoices\?id=/);
-  const original = page.locator(".invoice-preview-text");
+  const original = page.locator(".invoice-original-media img");
   await expect(original).toBeVisible();
-  await expect(original).toContainText("Fictional prototype invoice FV-20390");
-  await expect(original).toContainText("Fresh Valley Foods");
+  await expect(original).toHaveJSProperty("complete", true);
+  expect(
+    await original.evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  const source = await original.evaluate((image) => {
+    const data = image.getAttribute("src")!;
+    const document = new DOMParser().parseFromString(
+      decodeURIComponent(data.slice(data.indexOf(",") + 1)),
+      "image/svg+xml",
+    );
+    return {
+      data,
+      text: Array.from(document.querySelectorAll("text")).map(
+        (entry) => entry.textContent,
+      ),
+    };
+  });
+  expect(source.text).toContain("FV-20390");
+  expect(source.text).toContain("Fresh Valley Foods");
   const receipt = receiptFixtures.invoices.find(
     (invoice) => invoice.number === "FV-20390",
   )!;
@@ -244,8 +262,10 @@ test("Supplier invoice links open the actual posted receipt and its original tex
           )!.description
         : product?.name_en;
     expect(name).toBeDefined();
-    await expect(original).toContainText(
-      `${name}: ${line.qty} × ${line.unit_cost}`,
+    expect(source.text).toContain(name);
+    expect(source.text).toContain(new Decimal(line.unit_cost).toFixed(4));
+    expect(source.text).toContain(
+      new Decimal(line.unit_cost).times(line.qty).toFixed(2),
     );
   }
   const invoice = await page.evaluate(
@@ -253,11 +273,19 @@ test("Supplier invoice links open the actual posted receipt and its original tex
   );
   expect(invoice.supplier_invoice_number).toBe("FV-20390");
   expect(invoice.status).toBe("posted");
-  await expect(original).toContainText(`Total ${invoice.final_total}`);
-  await expect(page.locator(".invoice-preview-image")).toHaveCount(0);
+  expect(invoice.file_type).toBe("image/svg+xml");
+  expect(source.data).toBe(invoice.file_data);
+  expect(source.text).toContain(invoice.final_total);
+  const document = page.locator(".posted-invoice-document");
+  await expect(document).toContainText("FV-20390");
+  await expect(document.locator("input,select,textarea")).toHaveCount(0);
+  await expect(page.locator(".invoice-preview-text")).toHaveCount(0);
   await page.getByRole("button", { name: "فارسی", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(original).toHaveAttribute("dir", "ltr");
-  await expect(original).toContainText("FV-20390");
+  await expect(original).toHaveAttribute("src", source.data);
+  await expect(document).toContainText("FV-20390");
+  await page.reload();
+  await expect(original).toHaveAttribute("src", source.data);
+  await expect(original).toBeVisible();
   expect(errors).toEqual([]);
 });
