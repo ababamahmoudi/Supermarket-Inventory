@@ -1,9 +1,13 @@
 # Project changelog
 
-## 2026-10-09 — Pull request C2: Orders and receiving workflow (in progress)
+## 2026-10-09 — Pull request C2: Orders and receiving workflow
 
-- Started `feat/prototype-c2-orders-requests`, stacked on C1 (`9c2311a`, draft pull request #14), without merging to main. It includes approved B and all C1 functionality.
-- Confirmed explicit item/Cases selection for free-text To order notes, supplier quote field `quoted_unit_cost_before_tax` with separate actor/time provenance, and retained purchase snapshots. Implementation, full validation and real-interface screenshot capture will be recorded in the [C review guide](PR_C_REVIEW.md) after execution.
+- Implemented `feat/prototype-c2-orders-requests`, [pull request #15](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/15), stacked on C1 [#14](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/14) without merging to main. It includes approved B and all C1 functionality.
+- Added scoped Supplier items and retained purchase/pack history, separate quoted costs, draft/placed/partial Orders with explicit To order links, bilingual A4 order printing, and the default-disabled Floor Worker Orders permission.
+- Added linked invoice comparison for matching, Short, absent, kept/refused extras, accepted cost changes and short-dated expiry. Normal pricing/manual provenance remains protected; posting retains exact pack/quantity/cost evidence and creates one differences alert without duplicate receipts or payable deductions.
+- Added endpoint-scoped outgoing/incoming Branch requests, sending/arrival checklists, bilingual A4 picking lists and safe residual-copy drafts. They preserve physical transfer evidence without visible inventory estimates or supplier-money effects.
+- Corrected short-window non-scrolling navigation and bilingual A4 print presentation, including full column headings, isolated names/units, white paper and two-decimal read-only cost display while retaining four-decimal stored computation.
+- Final compiled review source is `e13b1d2cbcbe213188bc698aeccc16fd4e0b44be`. Passed 525 unit tests across 42 files, lint and typed production build. Final browser and four-variant screenshot/PDF proof will be recorded in the [C review guide](PR_C_REVIEW.md) after completion.
 
 ## 2026-10-09 — Pull request C1: receiving, locations and review proof
 

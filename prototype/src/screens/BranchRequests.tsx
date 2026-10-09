@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
-import { Plus, Search, Printer, ArrowLeft } from "lucide-react";
+import { Plus, Printer, ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
 import {
   Badge,
@@ -1154,16 +1154,16 @@ export default function BranchRequests() {
               { value: "outgoing", label: t("Outgoing", "خروجی") },
             ]}
           />
-          <FilterToolbar>
-            <div className="search-pill">
-              <Search size={16} />
+          <FilterToolbar
+            search={
               <input
                 aria-label={t("Search requests", "جستجوی درخواست‌ها")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t("Search requests", "جستجوی درخواست‌ها")}
               />
-            </div>
+            }
+          >
             <Select
               aria-label={t("Status", "وضعیت")}
               value={statusFilter}

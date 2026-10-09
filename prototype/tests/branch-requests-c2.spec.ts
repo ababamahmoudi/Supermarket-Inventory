@@ -266,6 +266,12 @@ for (const language of ["en", "fa"] as const) {
         .backgroundColor,
       canvasBackground: getComputedStyle(element.ownerDocument.documentElement)
         .backgroundColor,
+      canvasColorScheme: getComputedStyle(element.ownerDocument.documentElement)
+        .colorScheme,
+      tableCellBackgrounds: Array.from(
+        element.querySelectorAll("th, td"),
+        (cell) => getComputedStyle(cell).backgroundColor,
+      ),
       thead: getComputedStyle(element.querySelector("thead")!).display,
       rowBreak: getComputedStyle(element.querySelector("tr")!).breakInside,
       pages: Array.from(element.ownerDocument.styleSheets)
@@ -283,6 +289,12 @@ for (const language of ["en", "fa"] as const) {
     expect(styles.background).toBe("rgb(255, 255, 255)");
     expect(styles.paperBackground).toBe("rgb(255, 255, 255)");
     expect(styles.canvasBackground).toBe("rgb(255, 255, 255)");
+    expect(styles.canvasColorScheme).toBe("light");
+    expect(
+      styles.tableCellBackgrounds.every(
+        (value) => value === "rgb(255, 255, 255)",
+      ),
+    ).toBe(true);
     expect(styles.thead).toBe("table-header-group");
     expect(styles.rowBreak).toBe("avoid");
     expect(styles.pages.join(" ")).toContain("15mm");

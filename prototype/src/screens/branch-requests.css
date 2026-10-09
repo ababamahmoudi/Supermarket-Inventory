@@ -57,7 +57,7 @@
 }
 .request-quantity-fields {
   display: grid;
-  grid-template-columns: 120px 150px minmax(130px, 180px);
+  grid-template-columns: 120px 150px minmax(130px, 160px);
   gap: 16px;
 }
 .request-draft-line > .field {
@@ -101,7 +101,13 @@
   gap: 16px;
 }
 .request-decisions .field {
-  width: 165px;
+  width: 160px;
+}
+.request-decisions input.ui-number {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  min-inline-size: 120px;
+  max-inline-size: 160px;
 }
 .request-cancel {
   display: flex;
@@ -115,7 +121,7 @@
 .request-checklist-item p {
   margin: 0;
 }
-.branch-requests-screen .data-table .helper {
+.branch-requests-screen .ui-data-table .helper {
   display: block;
   margin-top: 4px;
 }

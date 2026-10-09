@@ -21,11 +21,12 @@
   margin-block: 20px;
 }
 .order-items-table .ui-number {
-  inline-size: 116px;
-  max-inline-size: 100%;
+  inline-size: 140px;
+  max-inline-size: 140px;
 }
-.order-items-table td:nth-child(3) .ui-number {
-  inline-size: 84px;
+.order-items-table col:nth-child(3),
+.order-items-table col:nth-child(5) {
+  width: 164px !important;
 }
 .order-item-caption {
   display: block;

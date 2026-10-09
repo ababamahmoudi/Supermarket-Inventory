@@ -44,6 +44,9 @@
   text-align: start;
   overflow-wrap: anywhere;
   vertical-align: top;
+  background: #fff !important;
+  color: #000 !important;
+  border-radius: 0;
 }
 .operational-print-document th {
   font-size: 9pt;
@@ -86,13 +89,16 @@
 }
 @media print {
   html:has(.operational-print-output) {
+    --page: #fff;
+    --surface: #fff;
+    --surface-soft: #fff;
     background: #fff !important;
-    color-scheme: light;
+    color-scheme: light !important;
   }
   body:has(.operational-print-output) {
     background: #fff !important;
     color: #000 !important;
-    color-scheme: light;
+    color-scheme: light !important;
   }
   body:has(.operational-print-output) #root {
     display: none !important;
@@ -117,6 +123,6 @@
     box-shadow: none !important;
   }
   .operational-print-document * {
-    color: #000;
+    color: #000 !important;
   }
 }

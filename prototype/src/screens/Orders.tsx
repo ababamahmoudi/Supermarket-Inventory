@@ -16,7 +16,7 @@ import {
   PageHeader,
   Select,
 } from "../ui";
-import { DateText, LtrText, Money } from "../presentation";
+import { DateText, LtrText, Money, ProductName } from "../presentation";
 import { branchLabel, configuredBranches } from "../settings";
 import { supplierRecords } from "../supplier-editor";
 import { packUnits, costPerCase } from "../supplier-items";
@@ -476,7 +476,7 @@ export default function Orders() {
                           return (
                             <tr key={item.id} data-item-id={item.id}>
                               <td>
-                                <strong>{name}</strong>
+                                <ProductName product={item} language={lang} />
                                 <span className="order-item-caption">
                                   <LtrText>
                                     {item.supplier_item_code ||

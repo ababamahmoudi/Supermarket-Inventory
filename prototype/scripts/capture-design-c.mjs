@@ -468,7 +468,9 @@ async function runC2SupplierScenes(page, variant) {
   await expect(
     history.locator(".supplier-item-price-history tbody tr").first(),
   ).toBeVisible();
-  await capture(page, "supplier-item-history", variant, true);
+  await capture(page, "supplier-item-history", variant, true, {
+    tablePosition: "end",
+  });
   await button(history, "Close", "بستن").click();
   await english(page);
   await switchRole(page, "Floor Worker");
@@ -505,6 +507,11 @@ async function printOperationalPDF(page, kind, variant) {
     bodyBackground: getComputedStyle(window.document.body).backgroundColor,
     htmlBackground: getComputedStyle(window.document.documentElement)
       .backgroundColor,
+    htmlColorScheme: getComputedStyle(window.document.documentElement)
+      .colorScheme,
+    tableBackgrounds: [...element.querySelectorAll("th, td")].map(
+      (cell) => getComputedStyle(cell).backgroundColor,
+    ),
   }));
   const file = `${kind}-${variant}.pdf`;
   const bytes = await page.pdf({
@@ -659,6 +666,10 @@ async function runC2InvoiceScenes(page, variant, reference) {
   const expiry = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10);
   await chooseDate(page, field(row(3), "Expiry date"), expiry);
   await captureInvoiceDecision(page, "invoice-short-dated", variant, row(3));
+  // Extra-item decisions invalidate outstanding-order answers so the user
+  // reviews the final accepted delivery, rather than retaining stale choices.
+  await button(chipRemainder, "Short").click();
+  await button(missing, "Back-ordered").click();
   if (await page.locator(".invoice-lower-price-card").count()) {
     await button(page, "Demo").click();
     await page
@@ -878,6 +889,12 @@ if (
       proof.bilingualEnglish < 1 ||
       proof.bilingualPersian < 1 ||
       proof.background !== "rgb(255, 255, 255)" ||
+      proof.bodyBackground !== "rgb(255, 255, 255)" ||
+      proof.htmlBackground !== "rgb(255, 255, 255)" ||
+      proof.htmlColorScheme !== "light" ||
+      proof.tableBackgrounds.some(
+        (background) => background !== "rgb(255, 255, 255)",
+      ) ||
       proof.mediaBoxes.length === 0 ||
       proof.mediaBoxes.some(
         (page) =>
