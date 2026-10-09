@@ -57,7 +57,28 @@ Use **supervisor** and password **demo1234**. The accounts and data are fictiona
 
 ## Verification and screenshots
 
-Executed results and the final screenshot index will be recorded here after the complete regression run. A planned check is not a passed check.
+Verified production source: `baf348b8c6c33cafc8139eb59177f5dfae3b43fc` (the later evidence commit adds documents and images only).
+
+- **579 unit tests across 49 files passed**, including all **21 shared pricing cases** and retained boundary/configuration checks.
+- **ESLint, formatting, TypeScript and the production build passed**. GitHub's complete foundation and prototype jobs both passed on this source: [CI run 38000795875](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38000795875).
+- The complete desktop/phone browser suite passed in that CI run. Final local rechecks passed **33 scenarios, one desktop-hover check skipped on phone**, plus **14/14** affected navigation/form/table checks. The desktop panel/text matrix passed at **1280, 1440 and 1920 pixels in English and Persian**.
+- **36/36 real-interface screenshots** were captured from one frozen production build, with **zero runtime errors and zero panel/table/text findings**. Every image was opened individually. The [capture record](redesign-screenshots/pr-c3/capture-results.json) and [individual visual audits](redesign-screenshots/pr-c3/visual-audits.json) retain source/build fingerprints and review notes. C4 also allows the first KPI caption to wrap, addressing the small caption ellipsis noted during review.
+
+The live checks on [PR #16](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/16) validate the final evidence commit separately.
+
+The screenshot set uses real browser actions against a frozen production build. Each screenshot is opened individually and checked against the owner’s 14 annotated references; the capture also measures table panels and text at desktop width. Phone tables may scroll inside their panels.
+
+| Screen              | English light                                                       | English dark                                                       | Persian                                                             | Phone                                                            |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Suppliers buttons   | [View](redesign-screenshots/pr-c3/suppliers-buttons-en-light.png)   | [View](redesign-screenshots/pr-c3/suppliers-buttons-en-dark.png)   | [View](redesign-screenshots/pr-c3/suppliers-buttons-fa-light.png)   | [View](redesign-screenshots/pr-c3/suppliers-buttons-phone.png)   |
+| Products buttons    | [View](redesign-screenshots/pr-c3/products-buttons-en-light.png)    | [View](redesign-screenshots/pr-c3/products-buttons-en-dark.png)    | [View](redesign-screenshots/pr-c3/products-buttons-fa-light.png)    | [View](redesign-screenshots/pr-c3/products-buttons-phone.png)    |
+| Products Columns    | [View](redesign-screenshots/pr-c3/products-columns-en-light.png)    | [View](redesign-screenshots/pr-c3/products-columns-en-dark.png)    | [View](redesign-screenshots/pr-c3/products-columns-fa-light.png)    | [View](redesign-screenshots/pr-c3/products-columns-phone.png)    |
+| Labels selection    | [View](redesign-screenshots/pr-c3/labels-selection-en-light.png)    | [View](redesign-screenshots/pr-c3/labels-selection-en-dark.png)    | [View](redesign-screenshots/pr-c3/labels-selection-fa-light.png)    | [View](redesign-screenshots/pr-c3/labels-selection-phone.png)    |
+| Create offer        | [View](redesign-screenshots/pr-c3/offers-dialog-en-light.png)       | [View](redesign-screenshots/pr-c3/offers-dialog-en-dark.png)       | [View](redesign-screenshots/pr-c3/offers-dialog-fa-light.png)       | [View](redesign-screenshots/pr-c3/offers-dialog-phone.png)       |
+| Add note            | [View](redesign-screenshots/pr-c3/notes-dialog-en-light.png)        | [View](redesign-screenshots/pr-c3/notes-dialog-en-dark.png)        | [View](redesign-screenshots/pr-c3/notes-dialog-fa-light.png)        | [View](redesign-screenshots/pr-c3/notes-dialog-phone.png)        |
+| Dashboard approvals | [View](redesign-screenshots/pr-c3/dashboard-approvals-en-light.png) | [View](redesign-screenshots/pr-c3/dashboard-approvals-en-dark.png) | [View](redesign-screenshots/pr-c3/dashboard-approvals-fa-light.png) | [View](redesign-screenshots/pr-c3/dashboard-approvals-phone.png) |
+| Review approval     | [View](redesign-screenshots/pr-c3/approval-dialog-en-light.png)     | [View](redesign-screenshots/pr-c3/approval-dialog-en-dark.png)     | [View](redesign-screenshots/pr-c3/approval-dialog-fa-light.png)     | [View](redesign-screenshots/pr-c3/approval-dialog-phone.png)     |
+| Undo                | [View](redesign-screenshots/pr-c3/undo-en-light.png)                | [View](redesign-screenshots/pr-c3/undo-en-dark.png)                | [View](redesign-screenshots/pr-c3/undo-fa-light.png)                | [View](redesign-screenshots/pr-c3/undo-phone.png)                |
 
 ## Remaining work
 

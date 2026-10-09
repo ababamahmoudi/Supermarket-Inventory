@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-09 — Pull request C3: presentation, navigation and Undo
+
+- Implemented four readable shared button styles, single search fields, proportioned table columns and user/table Columns preferences, available desktop form width and distinct sidebar icons.
+- Added stateful detail Back links and clickable breadcrumbs, immediate field-local errors, the approval summary/grouped location effects, bulk Labels selection and Offers/Notes creation dialogs. Non-selling Warehouse is excluded from customer price/offer scopes by default.
+- Extended safe scoped Undo to ten seconds, mirrored its corner, stacked independent timers and reserved phone dialog space so Undo cannot cover confirmation buttons. Posting, payments and legal corrections retain confirmation without Undo.
+- Verification: 579 units/49 files, all 21 shared pricing cases, lint/format/types/build and both complete GitHub CI jobs passed on baf348b8. Captured and individually opened 36 final screenshots; zero runtime/panel/table/text findings. Details, current checks, Ubuntu commands and the image matrix are in [PR_C3_REVIEW.md](PR_C3_REVIEW.md).
+
 ## 2026-10-09 — C3/C4 specification-first owner review fixes
 
 - Recorded approved history-preserving merge gate and two stacked C3/C4 PRs without an intermediate review pause; scope prototype/docs/seed. This entry records specifications, not completed implementation or test results.
