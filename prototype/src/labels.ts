@@ -5,23 +5,35 @@ export interface LabelLayout {
   rows: number;
   capacity: number;
 }
-export function labelLayout(template: LabelTemplate): LabelLayout {
-  const values = [
-    template.width,
-    template.height,
-    template.margin_top,
-    template.margin_bottom,
-    template.margin_left,
-    template.margin_right,
-    template.gap_x,
-    template.gap_y,
-  ];
-  if (
-    values.some((value) => !Number.isFinite(value) || value < 0) ||
-    template.width <= 0 ||
-    template.height <= 0
+export class LabelLayoutError extends Error {
+  constructor(
+    readonly code: "dimensions" | "fit" | "slot",
+    readonly field?: keyof LabelTemplate,
+    readonly capacity?: number,
   ) {
-    throw new Error("dimensions");
+    super(code);
+  }
+}
+export function labelLayout(template: LabelTemplate): LabelLayout {
+  const fields = [
+    "width",
+    "height",
+    "margin_top",
+    "margin_bottom",
+    "margin_left",
+    "margin_right",
+    "gap_x",
+    "gap_y",
+  ] as const;
+  for (const field of fields) {
+    const value = template[field];
+    if (
+      !Number.isFinite(value) ||
+      value < 0 ||
+      ((field === "width" || field === "height") && value === 0)
+    ) {
+      throw new LabelLayoutError("dimensions", field);
+    }
   }
   const columns = Math.floor(
     (210 - template.margin_left - template.margin_right + template.gap_x) /
@@ -31,7 +43,7 @@ export function labelLayout(template: LabelTemplate): LabelLayout {
     (297 - template.margin_top - template.margin_bottom + template.gap_y) /
       (template.height + template.gap_y),
   );
-  if (columns < 1 || rows < 1) throw new Error("fit");
+  if (columns < 1 || rows < 1) throw new LabelLayoutError("fit", undefined, 0);
   return { columns, rows, capacity: columns * rows };
 }
 
@@ -42,7 +54,7 @@ export function labelPages<T>(
 ): (T | null)[][] {
   const { capacity } = labelLayout(template);
   if (!Number.isInteger(startSlot) || startSlot < 1 || startSlot > capacity)
-    throw new Error("slot");
+    throw new LabelLayoutError("slot", undefined, capacity);
   if (items.length === 0) return [];
   const slots: (T | null)[] = [
     ...Array<T | null>(startSlot - 1).fill(null),
@@ -52,4 +64,20 @@ export function labelPages<T>(
   for (let offset = 0; offset < slots.length; offset += capacity)
     pages.push(slots.slice(offset, offset + capacity));
   return pages;
+}
+
+/** Fit the complete label hierarchy in the physical box, even on tiny stock. */
+export function labelContentGeometry(width: number, height: number) {
+  const widthPx = (width * 96) / 25.4;
+  const heightPx = (height * 96) / 25.4;
+  const padding = Math.min(5, widthPx * 0.03, heightPx * 0.03);
+  const scale = Math.min(
+    (widthPx - 2 * padding) / 220,
+    (heightPx - 2 * padding) / 136,
+  );
+  return {
+    scale,
+    left: (widthPx - 220 * scale) / 2,
+    top: (heightPx - 136 * scale) / 2,
+  };
 }

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { labelLayout, labelPages } from "./labels";
+import {
+  labelContentGeometry,
+  LabelLayoutError,
+  labelLayout,
+  labelPages,
+} from "./labels";
 import type { LabelTemplate } from "./types";
 const template: LabelTemplate = {
   id: "test",
@@ -49,5 +54,39 @@ describe("A4 labels", () => {
       products,
     );
     expect(pages[1]).toEqual(["0005", "0005", "0009", "0009"]);
+  });
+});
+
+describe("Label content bounds", () => {
+  it.each([
+    [60, 40],
+    [10, 6],
+    [200, 2],
+    [1, 200],
+    [0.001, 0.001],
+  ])("keeps the complete hierarchy inside %s × %s mm", (width, height) => {
+    const content = labelContentGeometry(width, height);
+    expect(content.scale).toBeGreaterThan(0);
+    expect(content.left).toBeGreaterThanOrEqual(0);
+    expect(content.top).toBeGreaterThanOrEqual(0);
+    expect(content.left + 220 * content.scale).toBeLessThanOrEqual(
+      (width * 96) / 25.4,
+    );
+    expect(content.top + 136 * content.scale).toBeLessThanOrEqual(
+      (height * 96) / 25.4,
+    );
+  });
+  it("identifies the field causing invalid dimensions", () => {
+    try {
+      labelLayout({ ...template, height: 0 });
+    } catch (error) {
+      expect(error).toBeInstanceOf(LabelLayoutError);
+      expect((error as LabelLayoutError).field).toBe("height");
+    }
+    try {
+      labelLayout({ ...template, margin_left: -1 });
+    } catch (error) {
+      expect((error as LabelLayoutError).field).toBe("margin_left");
+    }
   });
 });

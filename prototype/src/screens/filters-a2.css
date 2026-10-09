@@ -1,0 +1,16 @@
+.payables-filters .ui-checked-control {
+  margin-block: 0;
+  white-space: nowrap;
+}
+.payables-overview .ui-data-table table {
+  min-inline-size: 820px;
+}
+.payables-report .ui-data-table table {
+  min-inline-size: 820px;
+}
+.payables-report .card:has(th:nth-child(8)) table {
+  min-inline-size: 1180px;
+}
+.offers-filters + .card {
+  margin-block-start: 0;
+}

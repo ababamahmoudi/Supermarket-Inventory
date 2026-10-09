@@ -1,5 +1,24 @@
 # Project changelog
 
+## 2026-10-08 — Phase 0.2 pull request A2: implementation and review proof
+
+- Implemented shared centered dialogs, table alignment, compact filters, fitting custom selects, Persian isolation, source copy and formatting corrections across existing screens.
+- Added the shared Supervisor product editor and dedicated product page with scoped manual-price provenance and reversible records; compact invoice receiving requires an explicit date choice per line and creates source-linked approvals only when posting.
+- Added the Returns overview/detail and active Suppliers overview/tabbed pages, with financial fields removed from Floor Worker views. Offers/Payables filters and dashboard purchase, low-stock and price-change content use scoped recorded data.
+- Added twelve fictional historical invoices, matching invoice/payment ledger rows and believable branch stock in `prototype/src/fixtures/a2-demo-data.json`; kept owner seed files unchanged and verified additive browser-state backup/restore.
+- Fixed label saving without `crypto.randomUUID`, precise template errors and physical label containment. Fixed phone invoice label positioning so normal Save as draft clicks and page widths work.
+- Added a reproducible 156-image gallery (39 states in English light, English dark, Persian and phone), an Ubuntu click-by-click guide and executed validation in `docs/DESIGN_A2_REVIEW.md`.
+- Updated B's label designer, notebooks, Settings and five-second corner Undo plan only; B implementation waits for Ali's review.
+
+## 2026-10-07 — Phase 0.2 pull request A2: specification-first corrections
+
+- Defined the Supervisor-only shared product editor, manual-price scope/provenance and reversible audit records before implementation; History UI remains B.
+- Specified the Returns overview/page, active Suppliers moment 14, recorded-purchase charts, low-stock/recent-price lists, Offers/Payables filters, shared table alignment proof and centered accessible dialogs.
+- Required explicit date-tracking Yes/No on every invoice line, posting-only invoice approvals, two-decimal cost display with four-decimal computation, and coherent historical invoice/stock/payable fixtures with return creation metadata.
+- Authorized prototype-only fictional data files, superseding A's snapshot-only balances while preserving the owner seed files and existing operational/money rules.
+- Updated B planning only: live label-template A4 preview/search, Supervisor notebook create/edit/archive, exact Settings groups/working subset, five-second hover-paused stacked corner Undo toasts. No B feature implementation is authorized in A2.
+- Recorded navigation omissions and the implementation/review boundary in `docs/REVIEW_B_PLAN.md` and Decision 014. Executed implementation/test/screenshot results belong in the final A2 review report; this entry records specification changes only.
+
 ## 2026-10-07 — Phase 0.2 pull request A: design and language fixes
 
 - Integrated the owner's updated main-branch documents and seed into the earlier redesign branch; A is stacked on that branch and changes only prototype/docs.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Decimal from "decimal.js";
 import {
   ArrowRight,
@@ -25,6 +25,12 @@ import {
   supplierBalanceSummary,
 } from "../supplier-balances";
 import "./financial-polish.css";
+import "./dashboard-a2.css";
+import {
+  dashboardLowStock,
+  dashboardPriceChanges,
+  dashboardPurchases,
+} from "../dashboard-data";
 import {
   Badge,
   Button,
@@ -49,6 +55,29 @@ import type {
   DemoInvoice,
   NoteRecord,
 } from "../types";
+
+function DashboardListRow({
+  title,
+  secondary,
+  pill,
+  action,
+}: {
+  title: ReactNode;
+  secondary: ReactNode;
+  pill: ReactNode;
+  action: ReactNode;
+}) {
+  return (
+    <div className="dashboard-list-row">
+      <div className="dashboard-list-copy">
+        <strong>{title}</strong>
+        <div className="muted">{secondary}</div>
+      </div>
+      <div className="dashboard-list-pill">{pill}</div>
+      <div className="dashboard-list-action">{action}</div>
+    </div>
+  );
+}
 
 export function Dashboard() {
   const {
@@ -125,9 +154,6 @@ export function Dashboard() {
       item.status === "claim_pending" ||
       item.claims?.some((claim) => claim.status === "submitted"),
   );
-  const otherReturns = openReturns.filter(
-    (item) => !returnCredits.some((credit) => credit.id === item.id),
-  );
   const invoices = scopedRecords(state.invoices ?? [], context);
   const currentInvoiceVisible =
     state.invoice.company_id === context.company_id &&
@@ -196,6 +222,9 @@ export function Dashboard() {
     })
     .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
     .slice(0, 5);
+  const purchases = dashboardPurchases(state, context, today);
+  const lowStock = dashboardLowStock(state, context);
+  const weeklyChanges = dashboardPriceChanges(state, context, today);
   const productName = (code: string) => {
     const product = state.products.find(
       (item) => item.company_id === context.company_id && item.code === code,
@@ -551,7 +580,6 @@ export function Dashboard() {
                         <div className="dashboard-queue-product">
                           {productLabel(item.product_code)}
                           <span className="muted">
-                            {branchName(item.branch)} ·{" "}
                             <bdi>{item.product_code}</bdi>
                           </span>
                         </div>
@@ -572,30 +600,45 @@ export function Dashboard() {
                               <Money value={approved} />
                             ) : (
                               <span className="muted approval-missing-price">
-                                {t(
-                                  "No approved price yet",
-                                  "هنوز قیمت تأییدشده ندارد",
-                                )}
+                                <span
+                                  title={t(
+                                    "No approved price yet",
+                                    "هنوز قیمت تأییدشده ندارد",
+                                  )}
+                                >
+                                  —
+                                </span>
                               </span>
                             )}
                           </span>
                           <span>
                             {t("New", "جدید")}{" "}
-                            <Money value={item.proposed_price} />
+                            {item.proposed_price?.trim() ? (
+                              <Money value={item.proposed_price} />
+                            ) : (
+                              <span
+                                className="muted"
+                                title={t("Pending", "در انتظار")}
+                              >
+                                —
+                              </span>
+                            )}
                           </span>
+                        </span>
+                        <span className="dashboard-queue-branch muted">
+                          {branchName(item.branch)}
                         </span>
                         <div className="dashboard-inline-actions">
                           {inline ? (
                             <>
                               <Button
-                                variant="secondary"
                                 size="sm"
                                 onClick={() => openPreview(item, "approve")}
                               >
                                 {t("Approve", "تأیید")}
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() => openPreview(item, "reject")}
                               >
@@ -634,58 +677,64 @@ export function Dashboard() {
               ) : (
                 <div className="dashboard-alert-list">
                   {alerts.slice(0, 5).map((item) => (
-                    <div className="dashboard-alert-item" key={item.id}>
-                      <Badge
-                        tone={
-                          item.type === "lower_price" ||
-                          item.type === "other_supplier"
-                            ? "pending"
-                            : "danger"
-                        }
-                      >
-                        {item.type === "price_conflict"
-                          ? t("Conflict", "اختلاف")
-                          : alertType(item.type)}
-                      </Badge>
-                      {item.product_code ? (
-                        productLabel(item.product_code)
-                      ) : (
-                        <strong>{t("Invoice", "فاکتور")}</strong>
-                      )}
-                      <span className="muted">
-                        {item.supplier && (
-                          <>
-                            <LtrText>{item.supplier}</LtrText> ·{" "}
-                          </>
-                        )}
-                        {branchName(item.branch)}
-                      </span>
-                      {item.previous_cost && item.new_cost && (
-                        <span className="dashboard-price-change">
-                          <span>
-                            {t("Old cost", "هزینه قبلی")}{" "}
-                            <Money value={item.previous_cost} decimals={4} />
-                          </span>
-                          <span>
-                            {t("New cost", "هزینه جدید")}{" "}
-                            <Money value={item.new_cost} decimals={4} />
-                          </span>
-                        </span>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("alerts")}
-                      >
-                        {t("Review", "بررسی")}
-                        <ArrowRight
-                          size={16}
-                          strokeWidth={1.5}
-                          className="directional"
-                          aria-hidden="true"
-                        />
-                      </Button>
-                    </div>
+                    <DashboardListRow
+                      key={item.id}
+                      title={
+                        item.product_code ? (
+                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                            {productName(item.product_code)}
+                          </bdi>
+                        ) : (
+                          t("Invoice", "فاکتور")
+                        )
+                      }
+                      secondary={
+                        <>
+                          {item.supplier && (
+                            <>
+                              <LtrText>{item.supplier}</LtrText> ·{" "}
+                            </>
+                          )}
+                          {branchName(item.branch)}
+                          {item.previous_cost && item.new_cost && (
+                            <span className="dashboard-alert-cost">
+                              {t("Old cost", "هزینه قبلی")}{" "}
+                              <Money value={item.previous_cost} /> ·{" "}
+                              {t("New cost", "هزینه جدید")}{" "}
+                              <Money value={item.new_cost} />
+                            </span>
+                          )}
+                        </>
+                      }
+                      pill={
+                        <Badge
+                          tone={
+                            item.type === "lower_price" ||
+                            item.type === "other_supplier"
+                              ? "pending"
+                              : "danger"
+                          }
+                        >
+                          {item.type === "price_conflict"
+                            ? t("Conflict", "اختلاف")
+                            : alertType(item.type)}
+                        </Badge>
+                      }
+                      action={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate("alerts")}
+                        >
+                          {t("Review", "بررسی")}
+                          <ArrowRight
+                            size={16}
+                            className="directional"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      }
+                    />
                   ))}
                   {alerts.length > 5 && (
                     <Button variant="ghost" onClick={() => navigate("alerts")}>
@@ -718,7 +767,16 @@ export function Dashboard() {
                   )}
                 </EmptyState>
               ) : (
-                <DataTable>
+                <DataTable
+                  columns={[
+                    { width: "90px" },
+                    { width: "150px" },
+                    { width: "75px" },
+                    { width: "112px" },
+                    { width: "90px" },
+                    { actions: true, width: "70px" },
+                  ]}
+                >
                   <thead>
                     <tr>
                       <th>{t("Invoice", "فاکتور")}</th>
@@ -759,7 +817,11 @@ export function Dashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate("invoices")}
+                            onClick={() =>
+                              navigate(
+                                `invoices?id=${encodeURIComponent(invoice.id)}`,
+                              )
+                            }
                           >
                             {t("View", "مشاهده")}
                           </Button>
@@ -770,91 +832,82 @@ export function Dashboard() {
                 </DataTable>
               )}
             </Card>
-            <Card
-              title={t("Returns", "مرجوعی‌ها")}
-              className="dashboard-returns"
-            >
+            <Card className="dashboard-returns">
+              <div className="dashboard-card-header">
+                <h2>{t("Returns", "مرجوعی‌ها")}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("returns")}
+                >
+                  {t("View all returns", "مشاهده همه مرجوعی‌ها")}
+                  <ArrowRight
+                    size={16}
+                    className="directional"
+                    aria-hidden="true"
+                  />
+                </Button>
+              </div>
               {openReturns.length === 0 ? (
                 <EmptyState>
                   {t("No open returns.", "مرجوعی بازی نیست.")}
                 </EmptyState>
               ) : (
                 <div className="dashboard-return-list">
-                  {[
-                    {
-                      title: t("Open returns", "مرجوعی‌های باز"),
-                      items: otherReturns,
-                      credit: false,
-                    },
-                    {
-                      title: t("Waiting for credit", "در انتظار بستانکاری"),
-                      items: returnCredits,
-                      credit: true,
-                    },
-                  ].map(
-                    (group) =>
-                      group.items.length > 0 && (
-                        <div key={group.title}>
-                          <h3>
-                            {group.title}{" "}
-                            <span className="muted">
-                              ({group.items.length})
-                            </span>
-                          </h3>
-                          {group.items.slice(0, 3).map((item) => (
-                            <div
-                              className="dashboard-return-item"
-                              key={item.id}
-                            >
-                              <strong>
-                                <LtrText>{item.supplier}</LtrText>
-                              </strong>
-                              <span className="muted">
-                                {branchName(item.branch)} ·{" "}
-                                {item.lines.map((line, index) => (
-                                  <span key={`${line.product_code}:${index}`}>
-                                    <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                                      {productName(line.product_code)}
-                                    </bdi>
-                                    {index < item.lines.length - 1 ? "، " : ""}
-                                  </span>
-                                ))}
+                  {openReturns.slice(0, 5).map((item) => {
+                    const credit = returnCredits.some(
+                      (record) => record.id === item.id,
+                    );
+                    return (
+                      <DashboardListRow
+                        key={item.id}
+                        title={<LtrText>{item.supplier}</LtrText>}
+                        secondary={
+                          <>
+                            {branchName(item.branch)} ·{" "}
+                            {item.lines.map((line, index) => (
+                              <span key={`${line.product_code}:${index}`}>
+                                <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                                  {productName(line.product_code)}
+                                </bdi>
+                                {index < item.lines.length - 1 ? "، " : ""}
                               </span>
-                              <div className="row-between">
-                                <Badge
-                                  tone={
-                                    group.credit
-                                      ? "pending"
-                                      : item.status === "partially_resolved"
-                                        ? "progress"
-                                        : "info"
-                                  }
-                                >
-                                  {group.credit
-                                    ? t(
-                                        "Waiting for credit",
-                                        "در انتظار بستانکاری",
-                                      )
-                                    : item.status === "partially_resolved"
-                                      ? t("Partially resolved", "بخشی حل‌شده")
-                                      : t("Open", "باز")}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => navigate("returns")}
-                                >
-                                  {t("View", "مشاهده")}
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ),
-                  )}
-                  <Button variant="ghost" onClick={() => navigate("returns")}>
-                    {t("View all returns", "مشاهده همه مرجوعی‌ها")}
-                  </Button>
+                            ))}
+                          </>
+                        }
+                        pill={
+                          <Badge
+                            tone={
+                              credit
+                                ? "pending"
+                                : item.status === "partially_resolved"
+                                  ? "progress"
+                                  : "info"
+                            }
+                          >
+                            {credit
+                              ? t("Waiting for credit", "در انتظار بستانکاری")
+                              : item.status === "partially_resolved"
+                                ? t("Partially resolved", "بخشی حل‌شده")
+                                : t("Open", "باز")}
+                          </Badge>
+                        }
+                        action={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              navigate(
+                                `return?id=${encodeURIComponent(item.id)}`,
+                              )
+                            }
+                          >
+                            {t("View", "مشاهده")}
+                          </Button>
+                        }
+                      />
+                    );
+                  })}
                 </div>
               )}
             </Card>
@@ -871,7 +924,15 @@ export function Dashboard() {
                 )}
               </EmptyState>
             ) : (
-              <DataTable>
+              <DataTable
+                columns={[
+                  { width: "34%" },
+                  { width: "18%", align: "end" },
+                  { width: "15%", align: "end" },
+                  { width: "18%", align: "end" },
+                  { width: "15%", actions: true },
+                ]}
+              >
                 <thead>
                   <tr>
                     <th>{t("Supplier", "تأمین‌کننده")}</th>
@@ -913,6 +974,260 @@ export function Dashboard() {
               </DataTable>
             )}
           </Card>
+          <div className="dashboard-row dashboard-row-halves">
+            <Card
+              title={t(
+                "Purchases by supplier, this month",
+                "خرید از تأمین‌کنندگان، این ماه",
+              )}
+              className="dashboard-purchases"
+            >
+              {purchases.suppliers.length === 0 ? (
+                <EmptyState>
+                  {t("No purchases this month.", "این ماه خریدی ثبت نشده است.")}
+                </EmptyState>
+              ) : (
+                <div className="purchase-bars" role="list">
+                  {purchases.suppliers.map((item) => {
+                    const max = Decimal.max(
+                      ...purchases.suppliers.map((row) => row.amount),
+                      1,
+                    );
+                    const width = Decimal.max(
+                      0,
+                      new Decimal(item.amount).div(max).times(100),
+                    ).toNumber();
+                    return (
+                      <div
+                        className="purchase-bar-row"
+                        key={item.supplier}
+                        role="listitem"
+                      >
+                        <div className="row-between">
+                          <LtrText>{item.supplier}</LtrText>
+                          <Money value={item.amount} />
+                        </div>
+                        <div className="purchase-bar-track" aria-hidden="true">
+                          <span style={{ inlineSize: `${width}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="chart-axis-label muted">
+                {t("Net purchases", "خرید خالص")} ·{" "}
+                <LtrText>{state.config.company.currency}</LtrText>
+              </p>
+            </Card>
+            <Card
+              title={t("Purchases, last 8 weeks", "خرید، ۸ هفته گذشته")}
+              className="dashboard-purchases"
+            >
+              {purchases.weeks.every((week) => week.amount === "0.00") ? (
+                <EmptyState>
+                  {t(
+                    "No purchases in the last 8 weeks.",
+                    "در ۸ هفته گذشته خریدی ثبت نشده است.",
+                  )}
+                </EmptyState>
+              ) : (
+                (() => {
+                  const max = Decimal.max(
+                    ...purchases.weeks.map((week) => week.amount),
+                    1,
+                  );
+                  const min = Decimal.min(
+                    ...purchases.weeks.map((week) => week.amount),
+                    0,
+                  );
+                  const range = max.minus(min);
+                  const points = purchases.weeks
+                    .map(
+                      (week, index) =>
+                        `${30 + index * 52},${146 - new Decimal(week.amount).minus(min).div(range).times(126).toNumber()}`,
+                    )
+                    .join(" ");
+                  return (
+                    <>
+                      <div className="purchase-line-chart">
+                        <svg
+                          viewBox="0 0 424 172"
+                          role="img"
+                          aria-label={t(
+                            "Net purchases by week",
+                            "خرید خالص در هر هفته",
+                          )}
+                        >
+                          <line
+                            x1="30"
+                            y1="146"
+                            x2="394"
+                            y2="146"
+                            className="chart-baseline"
+                          />
+                          <polygon
+                            points={`30,146 ${points} 394,146`}
+                            className="purchase-area"
+                          />
+                          <polyline points={points} className="purchase-line" />
+                          {purchases.weeks.map((week, index) => (
+                            <circle
+                              key={week.start}
+                              cx={30 + index * 52}
+                              cy={
+                                146 -
+                                new Decimal(week.amount)
+                                  .minus(min)
+                                  .div(range)
+                                  .times(126)
+                                  .toNumber()
+                              }
+                              r="3"
+                              className="purchase-point"
+                            />
+                          ))}
+                        </svg>
+                      </div>
+                      <div className="purchase-week-labels">
+                        <DateText value={purchases.weeks[0].start} />
+                        <DateText value={purchases.weeks[7].end} />
+                      </div>
+                      <ul className="purchase-week-totals">
+                        {purchases.weeks.map((week) => (
+                          <li key={week.start}>
+                            <span>
+                              <DateText value={week.start} /> –{" "}
+                              <DateText value={week.end} />
+                            </span>
+                            <Money value={week.amount} />
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  );
+                })()
+              )}
+              <p className="chart-axis-label muted">
+                {t("Net purchases", "خرید خالص")} ·{" "}
+                <LtrText>{state.config.company.currency}</LtrText>
+              </p>
+            </Card>
+          </div>
+          <div className="dashboard-row dashboard-row-halves">
+            <Card title={t("Low stock", "موجودی کم")}>
+              {lowStock.length === 0 ? (
+                <EmptyState>
+                  {t(
+                    "No low stock or open To order reminders.",
+                    "موجودی کم یا یادآوری سفارش بازی نیست.",
+                  )}
+                </EmptyState>
+              ) : (
+                lowStock.slice(0, 6).map((item) => (
+                  <DashboardListRow
+                    key={`${item.branch}:${item.product.code}`}
+                    title={
+                      <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                        {lang === "fa"
+                          ? item.product.name_fa
+                          : item.product.name_en}
+                      </bdi>
+                    }
+                    secondary={
+                      <>
+                        {branchName(item.branch as Branch)} ·{" "}
+                        {t("Stock estimate", "برآورد موجودی")}{" "}
+                        <LtrText>{item.estimate}</LtrText>
+                      </>
+                    }
+                    pill={
+                      <Badge tone="pending">
+                        {t("To order", "برای سفارش")}
+                      </Badge>
+                    }
+                    action={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("notes")}
+                      >
+                        {t("View", "مشاهده")}
+                      </Button>
+                    }
+                  />
+                ))
+              )}
+            </Card>
+            <Card
+              title={t("Price changes this week", "تغییر قیمت‌های این هفته")}
+            >
+              {weeklyChanges.length === 0 ? (
+                <EmptyState>
+                  {t(
+                    "No price changes this week.",
+                    "این هفته تغییری در قیمت ثبت نشده است.",
+                  )}
+                </EmptyState>
+              ) : (
+                weeklyChanges.slice(0, 6).map((item) => {
+                  const product = state.products.find(
+                    (entry) =>
+                      entry.company_id === context.company_id &&
+                      entry.code === item.product_code,
+                  );
+                  const price = product
+                    ? effectivePrice(
+                        state,
+                        product,
+                        item.branch === "all" ? branch : item.branch,
+                      )
+                    : null;
+                  return (
+                    <DashboardListRow
+                      key={item.id}
+                      title={
+                        <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                          {productName(item.product_code!)}
+                        </bdi>
+                      }
+                      secondary={
+                        <>
+                          {demoUserLabel(item.by, lang)} ·{" "}
+                          {branchName(item.branch)} ·{" "}
+                          <DateText
+                            value={companyDate(state.config, new Date(item.at))}
+                          />
+                          {price && (
+                            <>
+                              {" "}
+                              · <Money value={price} />
+                            </>
+                          )}
+                        </>
+                      }
+                      pill={
+                        <Badge tone="approved">
+                          {t("Approved", "تأییدشده")}
+                        </Badge>
+                      }
+                      action={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`product?code=${item.product_code}`)
+                          }
+                        >
+                          {t("View", "مشاهده")}
+                        </Button>
+                      }
+                    />
+                  );
+                })
+              )}
+            </Card>
+          </div>
         </div>
         <aside
           className="dashboard-aside"
@@ -929,31 +1244,32 @@ export function Dashboard() {
             ) : (
               <div className="dashboard-note-list">
                 {notes.slice(0, 5).map((item) => (
-                  <div className="dashboard-note-item" key={item.id}>
-                    <div className="row">
-                      <span className="initials-avatar" aria-hidden="true">
-                        {initials(item.by)}
-                      </span>
-                      <span className="muted">
-                        {demoUserLabel(item.by, lang)}
-                      </span>
-                    </div>
-                    <p>{noteText(item)}</p>
-                    <span className="muted">
-                      {branchName(item.branch)} ·{" "}
-                      <time
-                        dateTime={item.created_at}
-                        title={companyTimestamp(state.config, item.created_at)}
-                      >
-                        {relativeTime(item.created_at)}
-                      </time>
-                    </span>
-                    <div className="row-between">
+                  <DashboardListRow
+                    key={item.id}
+                    title={noteText(item)}
+                    secondary={
+                      <>
+                        {demoUserLabel(item.by, lang)} ·{" "}
+                        {branchName(item.branch)} ·{" "}
+                        <time
+                          dateTime={item.created_at}
+                          title={companyTimestamp(
+                            state.config,
+                            item.created_at,
+                          )}
+                        >
+                          {relativeTime(item.created_at)}
+                        </time>
+                      </>
+                    }
+                    pill={
                       <Badge tone="info">
                         {item.status === "open"
                           ? t("Open", "باز")
                           : t("Seen", "دیده‌شده")}
                       </Badge>
+                    }
+                    action={
                       <Button
                         variant="ghost"
                         size="sm"
@@ -961,8 +1277,8 @@ export function Dashboard() {
                       >
                         {t("View", "مشاهده")}
                       </Button>
-                    </div>
-                  </div>
+                    }
+                  />
                 ))}
               </div>
             )}

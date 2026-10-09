@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Search } from "lucide-react";
+import "./returns-a2.css";
 import policySource from "../../../docs/return-policy.md?raw";
-import { demoUsers, useDemo } from "../store";
+import { branches, useDemo } from "../store";
 import { companyDate } from "../invoice";
 import {
   Badge,
   Button,
   Card,
   Checkbox,
+  Dialog,
   DataTable,
   DateField,
   Dropzone,
   EmptyState,
   Field,
+  FilterToolbar,
   NumberField,
   PageHeader,
   Select,
@@ -40,12 +44,27 @@ import {
 } from "../operations";
 
 export function Returns() {
-  const { state, update, role, branch, t, lang } = useDemo();
-  const context: OperationsContext = {
+  const { state, update, role, user, branch, t, lang } = useDemo();
+  const [hash, setHash] = useState(() => window.location.hash);
+  const detailId = hash.startsWith("#return?")
+    ? new URLSearchParams(hash.split("?")[1]).get("id")
+    : null;
+  const overviewContext: OperationsContext = {
     company_id: state.config.company.seed_key,
-    branch,
+    branch: role === "supervisor" ? "all" : (user?.branch ?? branch),
     role: role ?? "cashier",
-    actor: demoUsers.find((user) => user.role === role)?.name ?? "Demo user",
+    actor: user?.name ?? t("Floor Worker", "کارمند فروشگاه"),
+  };
+  const scopedReturns = scopedRecords(
+    state.returns,
+    overviewContext,
+  ) as OperationalReturn[];
+  const selected = detailId
+    ? scopedReturns.find((record) => record.id === detailId)
+    : undefined;
+  const context: OperationsContext = {
+    ...overviewContext,
+    branch: selected?.branch ?? overviewContext.branch,
   };
   const suppliers = [
     ...new Set([
@@ -57,10 +76,11 @@ export function Returns() {
         .map((item) => item.main_supplier),
     ]),
   ];
-  const [supplier, setSupplier] = useState(suppliers[0] ?? "");
-  const [history, setHistory] = useState(false);
+  const [supplier, setSupplier] = useState("all");
+  const [status, setStatus] = useState("pending");
+  const [returnBranch, setReturnBranch] = useState("all");
+  const [search, setSearch] = useState("");
   const [policyOpen, setPolicyOpen] = useState(false);
-  const [evidenceOpen, setEvidenceOpen] = useState<Record<string, boolean>>({});
   const [photoName, setPhotoName] = useState("");
   const [active, setActive] = useState<string | null>(null);
   const [panel, setPanel] = useState<"pickup" | "resolve" | "cancel">("pickup");
@@ -85,12 +105,57 @@ export function Returns() {
   const [feedback, setFeedback] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
-  const returns = scopedRecords(state.returns, context).filter(
-    (record) =>
-      record.supplier === supplier &&
-      (history ||
-        (record.status !== "cancelled" && record.status !== "resolved")),
-  ) as OperationalReturn[];
+  useEffect(() => {
+    const onHash = () => {
+      setHash(window.location.hash);
+      setActive(null);
+      setError("");
+      setFeedback("");
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const returnNumber = (record: OperationalReturn) =>
+    state.returns
+      .filter((item) => item.company_id === context.company_id)
+      .findIndex((item) => item.id === record.id) + 1;
+  const detailHref = (record: OperationalReturn) =>
+    `#return?id=${encodeURIComponent(record.id)}`;
+  const query = search.trim().toLocaleLowerCase();
+  const overviewReturns = scopedReturns.filter((record) => {
+    const matchesStatus =
+      status === "all" ||
+      (status === "pending"
+        ? record.status !== "cancelled" && record.status !== "resolved"
+        : record.status === status);
+    const productText = record.lines
+      .map((line) => {
+        const product = state.products.find(
+          (item) =>
+            item.company_id === context.company_id &&
+            item.code === line.product_code,
+        );
+        return [line.product_code, product?.name_en, product?.name_fa].join(
+          " ",
+        );
+      })
+      .join(" ");
+    const searchableText = [
+      returnNumber(record),
+      record.supplier,
+      record.branch,
+      productText,
+    ]
+      .join(" ")
+      .toLocaleLowerCase();
+    return (
+      matchesStatus &&
+      (supplier === "all" || record.supplier === supplier) &&
+      (returnBranch === "all" || record.branch === returnBranch) &&
+      (!query || searchableText.includes(query))
+    );
+  });
+  const returns = selected ? [selected] : [];
   const productName = (code: string) => {
     const product = state.products.find(
       (item) => item.company_id === context.company_id && item.code === code,
@@ -107,6 +172,24 @@ export function Returns() {
       cancellation_review: t("Needs review", "نیازمند بررسی"),
       claim_pending: t("Pending", "در انتظار"),
     })[status] ?? t("Open", "باز");
+  const returnStatus = (record: OperationalReturn) => (
+    <Badge
+      tone={
+        record.status === "cancelled"
+          ? "neutral"
+          : record.status === "resolved" || record.status === "picked_up"
+            ? "approved"
+            : record.status === "open"
+              ? "info"
+              : record.status === "partially_resolved" ||
+                  record.status === "cancellation_review"
+                ? "progress"
+                : "pending"
+      }
+    >
+      {statusLabel(record.status)}
+    </Badge>
+  );
   const run = (action: (draft: typeof state) => void, message: string) => {
     try {
       update(action);
@@ -157,8 +240,8 @@ export function Returns() {
   const eligibleInvoices = state.ledger.filter(
     (row) =>
       row.company_id === context.company_id &&
-      row.branch === branch &&
-      row.supplier === supplier &&
+      row.branch === context.branch &&
+      row.supplier === selected?.supplier &&
       row.type === "invoice",
   );
   if (!role || role === "cashier")
@@ -172,111 +255,255 @@ export function Returns() {
     );
   return (
     <>
-      <PageHeader
-        title={t("Returns", "مرجوعی‌ها")}
-        description={t(
-          "Supplier returns and credits. Record what actually happened; keep every receipt.",
-          "مرجوعی و بستانکاری تأمین‌کننده. رویداد واقعی را ثبت و همه رسیدها را نگهداری کنید.",
-        )}
-      />
-      {branch === "all" && (
-        <div className="banner info">
-          {t(
-            "All branches are visible. Choose one branch before recording a pickup or settlement.",
-            "همه شعب نمایش داده می‌شوند. برای ثبت جمع‌آوری یا تسویه یک شعبه انتخاب کنید.",
-          )}
-        </div>
-      )}
-      <Card>
-        <div className="table-toolbar">
-          <Field label={t("Supplier", "تأمین‌کننده")}>
-            <Select
-              value={supplier}
-              onChange={(value) => {
-                setSupplier(value);
-                setActive(null);
-              }}
-              searchable
-              options={suppliers.map((name) => ({ value: name, label: name }))}
-            />
-          </Field>
-          <Field label={t("View", "نمایش")}>
-            <Select
-              value={history ? "history" : "open"}
-              onChange={(value) => setHistory(value === "history")}
-              options={[
-                { value: "open", label: t("Open returns", "مرجوعی‌های باز") },
-                {
-                  value: "history",
-                  label: t("All returns and history", "همه مرجوعی‌ها و سوابق"),
-                },
+      {!detailId ? (
+        <>
+          <PageHeader
+            title={t("Returns", "مرجوعی‌ها")}
+            description={t(
+              "Supplier returns and credits",
+              "مرجوعی و بستانکاری تأمین‌کنندگان",
+            )}
+          />
+          <Card className="returns-overview">
+            <FilterToolbar
+              className="returns-toolbar"
+              aria-label={t("Filter returns", "فیلتر مرجوعی‌ها")}
+              count={
+                <span aria-live="polite">
+                  <LtrText>{overviewReturns.length}</LtrText>{" "}
+                  {t("results", "نتیجه")}
+                </span>
+              }
+            >
+              <label className="returns-search">
+                <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+                <input
+                  aria-label={t("Search returns", "جستجوی مرجوعی‌ها")}
+                  placeholder={t("Search returns", "جستجوی مرجوعی‌ها")}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+              <Select
+                aria-label={t("Supplier", "تأمین‌کننده")}
+                value={supplier}
+                onChange={setSupplier}
+                searchable
+                options={[
+                  {
+                    value: "all",
+                    label: t("All suppliers", "همه تأمین‌کنندگان"),
+                  },
+                  ...suppliers.map((name) => ({ value: name, label: name })),
+                ]}
+              />
+              <Select
+                aria-label={t("Status", "وضعیت")}
+                value={status}
+                onChange={setStatus}
+                options={[
+                  { value: "pending", label: t("Pending", "در انتظار") },
+                  { value: "all", label: t("All statuses", "همه وضعیت‌ها") },
+                  ...[
+                    "open",
+                    "picked_up",
+                    "partially_resolved",
+                    "cancellation_review",
+                    "resolved",
+                    "cancelled",
+                  ].map((value) => ({ value, label: statusLabel(value) })),
+                ]}
+              />
+              <Select
+                aria-label={t("Return branch", "شعبه مرجوعی")}
+                value={returnBranch}
+                onChange={setReturnBranch}
+                options={[
+                  {
+                    value: "all",
+                    label:
+                      role === "supervisor"
+                        ? t("All branches", "همه شعب")
+                        : branchLabel(overviewContext.branch, lang),
+                  },
+                  ...(role === "supervisor" ? branches : []).map((value) => ({
+                    value,
+                    label: branchLabel(value, lang),
+                  })),
+                ]}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSupplier("all");
+                  setStatus("pending");
+                  setReturnBranch("all");
+                  setSearch("");
+                }}
+              >
+                {t("Clear filters", "پاک کردن فیلترها")}
+              </Button>
+            </FilterToolbar>
+            <DataTable
+              className="returns-overview-table"
+              columns={[
+                { width: "100px" },
+                { width: "24%" },
+                { width: "120px" },
+                { width: "130px" },
+                { width: "76px", align: "end" },
+                { width: "150px" },
+                { width: "180px", align: "end", actions: true },
               ]}
-            />
-          </Field>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSupplier(suppliers[0] ?? "");
-              setHistory(false);
-              setActive(null);
-            }}
-          >
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
-        </div>
-      </Card>
-      <Card>
-        <Button
-          variant="ghost"
-          aria-expanded={policyOpen}
-          aria-controls="return-policy"
-          onClick={() => setPolicyOpen(!policyOpen)}
-        >
+            >
+              <thead>
+                <tr>
+                  <th>{t("Return #", "شماره مرجوعی")}</th>
+                  <th>{t("Supplier", "تأمین‌کننده")}</th>
+                  <th>{t("Branch", "شعبه")}</th>
+                  <th>{t("Created", "ایجادشده")}</th>
+                  <th className="number-cell">{t("Items", "اقلام")}</th>
+                  <th>{t("Status", "وضعیت")}</th>
+                  <th className="action-cell">
+                    {t("Next action", "اقدام بعدی")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {overviewReturns.map((record) => {
+                  const action =
+                    record.status === "open"
+                      ? t("Record pickup", "ثبت جمع‌آوری")
+                      : record.status === "cancellation_review"
+                        ? t("Review cancellation", "بررسی لغو")
+                        : record.status === "claim_pending"
+                          ? t("Review claim", "بررسی ادعا")
+                          : record.status === "cancelled" ||
+                              record.status === "resolved"
+                            ? t("View", "مشاهده")
+                            : t("Record resolution", "ثبت حل‌وفصل");
+                  return (
+                    <tr
+                      key={record.id}
+                      className="returns-clickable-row"
+                      tabIndex={0}
+                      aria-label={`${t("Return", "مرجوعی")} #${returnNumber(record)} · ${record.supplier}`}
+                      onClick={(event) => {
+                        if (!(event.target as HTMLElement).closest("a,button"))
+                          window.location.hash = detailHref(record);
+                      }}
+                      onKeyDown={(event) => {
+                        if (
+                          event.target === event.currentTarget &&
+                          (event.key === "Enter" || event.key === " ")
+                        ) {
+                          event.preventDefault();
+                          window.location.hash = detailHref(record);
+                        }
+                      }}
+                    >
+                      <td>
+                        <a
+                          href={detailHref(record)}
+                          className="returns-number-link"
+                        >
+                          <LtrText>#{returnNumber(record)}</LtrText>
+                        </a>
+                      </td>
+                      <td>
+                        <LtrText>{record.supplier}</LtrText>
+                      </td>
+                      <td>{branchLabel(record.branch, lang)}</td>
+                      <td>
+                        <DateText value={record.created_at} />
+                      </td>
+                      <td className="number-cell">
+                        <LtrText>
+                          {record.lines.reduce(
+                            (sum, line) => sum + line.qty,
+                            0,
+                          )}
+                        </LtrText>
+                      </td>
+                      <td>{returnStatus(record)}</td>
+                      <td className="action-cell">
+                        <Button asChild variant="secondary" size="sm">
+                          <a href={detailHref(record)}>{action}</a>
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </DataTable>
+            {overviewReturns.length === 0 && (
+              <EmptyState>
+                {t(
+                  "No returns match these filters.",
+                  "مرجوعی‌ای با این فیلترها وجود ندارد.",
+                )}
+              </EmptyState>
+            )}
+          </Card>
+        </>
+      ) : (
+        <a className="returns-back-link" href="#returns">
+          <ArrowLeft size={16} strokeWidth={1.5} />
+          {t("Back to Returns", "بازگشت به مرجوعی‌ها")}
+        </a>
+      )}
+      {detailId && !selected && (
+        <EmptyState>
           {t(
-            "Supplier return and shortage policy",
-            "سیاست مرجوعی و کسری تأمین‌کننده",
+            "This return is not available in your branch.",
+            "این مرجوعی در شعبه شما در دسترس نیست.",
           )}
-        </Button>
-        {policyOpen && (
-          <div id="return-policy">
-            <p>
+        </EmptyState>
+      )}
+      <Dialog
+        open={policyOpen}
+        onOpenChange={setPolicyOpen}
+        title={t("Return policy", "سیاست مرجوعی")}
+        description={t(
+          "Keep the signed pickup slip and record only what actually happened.",
+          "رسید جمع‌آوری امضاشده را نگهداری و فقط رویداد واقعی را ثبت کنید.",
+        )}
+      >
+        <div className="return-policy-content">
+          <ol>
+            <li>
               {t(
-                "Supplier terms have not been supplied for this demo. Ask the Supervisor to obtain written terms; do not assume pickup promises a credit.",
-                "شرایط تأمین‌کننده در این نمایش ارائه نشده است. از سرپرست شرایط کتبی بخواهید؛ جمع‌آوری به معنی وعده بستانکاری نیست.",
+                "Count originals, record condition and location, and keep damaged goods off the sales floor.",
+                "اصل کالاها را بشمارید، وضعیت و محل را ثبت و کالای آسیب‌دیده را از فروش خارج کنید.",
               )}
-            </p>
-            <ol>
-              <li>
-                {t(
-                  "Count originals, record condition and location, and keep damaged goods off the sales floor.",
-                  "اصل کالاها را بشمارید، وضعیت و محل را ثبت و کالای آسیب‌دیده را از فروش خارج کنید.",
-                )}
-              </li>
-              <li>
-                {t(
-                  "Check actual pickup quantities with the representative. Obtain a signed paper slip before handing over goods.",
-                  "تعداد واقعی را با نماینده بررسی کنید. پیش از تحویل، رسید کاغذی امضاشده بگیرید.",
-                )}
-              </li>
-              <li>
-                {t(
-                  "Retain the signed original and record its reference. A pickup does not require a new invoice.",
-                  "اصل امضاشده را نگهداری و مرجع آن را ثبت کنید. جمع‌آوری به فاکتور جدید نیاز ندارد.",
-                )}
-              </li>
-              <li>
-                {t(
-                  "Workers submit claims and evidence; Supervisors verify and post money. Replacements add only received stock.",
-                  "کارکنان ادعا و مدرک ارسال می‌کنند؛ سرپرست پول را تأیید و ثبت می‌کند. جایگزین فقط به موجودی دریافتی اضافه می‌شود.",
-                )}
-              </li>
-              <li>
-                {t(
-                  "Cancellation never restores supplier-held or unsafe goods, and never automatically reverses compensation.",
-                  "لغو هرگز کالای نزد تأمین‌کننده یا ناسالم را به موجودی بازنمی‌گرداند و جبران را خودکار معکوس نمی‌کند.",
-                )}
-              </li>
-            </ol>
+            </li>
+            <li>
+              {t(
+                "Check actual pickup quantities with the representative. Obtain a signed paper slip before handing over goods.",
+                "تعداد واقعی را با نماینده بررسی کنید. پیش از تحویل، رسید کاغذی امضاشده بگیرید.",
+              )}
+            </li>
+            <li>
+              {t(
+                "Retain the signed original and record its reference. A pickup does not require a new invoice.",
+                "اصل امضاشده را نگهداری و مرجع آن را ثبت کنید. جمع‌آوری به فاکتور جدید نیاز ندارد.",
+              )}
+            </li>
+            <li>
+              {t(
+                "Workers submit claims and evidence; Supervisors verify and post money. Replacements add only received stock.",
+                "کارکنان ادعا و مدرک ارسال می‌کنند؛ سرپرست پول را تأیید و ثبت می‌کند. جایگزین فقط به موجودی دریافتی اضافه می‌شود.",
+              )}
+            </li>
+            <li>
+              {t(
+                "Cancellation never restores supplier-held or unsafe goods, and never automatically reverses compensation.",
+                "لغو هرگز کالای نزد تأمین‌کننده یا ناسالم را به موجودی بازنمی‌گرداند و جبران را خودکار معکوس نمی‌کند.",
+              )}
+            </li>
+          </ol>
+          <div className="actions">
             <Button
               variant="secondary"
               onClick={() => {
@@ -294,9 +521,12 @@ export function Returns() {
             >
               {t("Download the full return policy", "دریافت سیاست کامل مرجوعی")}
             </Button>
+            <Button onClick={() => setPolicyOpen(false)}>
+              {t("Close", "بستن")}
+            </Button>
           </div>
-        )}
-      </Card>
+        </div>
+      </Dialog>
       {error && (
         <div className="banner danger" role="alert">
           {error}
@@ -306,14 +536,6 @@ export function Returns() {
         <div className="banner approved" role="status">
           {feedback}
         </div>
-      )}
-      {returns.length === 0 && (
-        <EmptyState>
-          {t(
-            "No open returns for this supplier in the selected branch. Choose another supplier or view history.",
-            "برای این تأمین‌کننده در شعبه انتخاب‌شده مرجوعی بازی وجود ندارد. تأمین‌کننده دیگری یا سوابق را انتخاب کنید.",
-          )}
-        </EmptyState>
       )}
       {returns.map((record) => {
         const creation = record as OperationalReturn & {
@@ -326,185 +548,234 @@ export function Returns() {
             .filter((item) => item.company_id === context.company_id)
             .findIndex((item) => item.id === record.id) + 1;
         return (
-          <Card key={record.id}>
-            <div className="row-between">
-              <div>
-                <h2>
-                  {t("Return", "مرجوعی")} <LtrText>#{number}</LtrText> ·{" "}
-                  {t("created", "ایجادشده در")}{" "}
-                  <DateText value={creation.created_at} /> {t("by", "توسط")}{" "}
-                  <bdi>
-                    {creation.created_by || creation.by
-                      ? demoUserLabel(
-                          creation.created_by ?? creation.by ?? "",
-                          lang,
-                        )
-                      : "—"}
-                  </bdi>
-                </h2>
-                <p className="muted">
-                  <LtrText>{record.supplier}</LtrText> ·{" "}
-                  {branchLabel(record.branch, lang)}
-                </p>
+          <div key={record.id} className="return-detail">
+            <Card className="return-header-card">
+              <div className="return-detail-header">
+                <div>
+                  <h1>
+                    {t("Return", "مرجوعی")} <LtrText>#{number}</LtrText> ·{" "}
+                    {t("created", "ایجادشده در")}{" "}
+                    <DateText value={creation.created_at} /> {t("by", "توسط")}{" "}
+                    <bdi>
+                      {creation.created_by || creation.by
+                        ? demoUserLabel(
+                            creation.created_by ?? creation.by ?? "",
+                            lang,
+                          )
+                        : "—"}
+                    </bdi>
+                  </h1>
+                  <p className="muted">
+                    <LtrText>{record.supplier}</LtrText> ·{" "}
+                    {branchLabel(record.branch, lang)}
+                  </p>
+                </div>
+                <div className="return-header-actions">
+                  {returnStatus(record)}
+                  <Button variant="ghost" onClick={() => setPolicyOpen(true)}>
+                    {t("Return policy", "سیاست مرجوعی")}
+                  </Button>
+                  {record.status !== "cancelled" &&
+                    record.status !== "cancellation_review" &&
+                    record.status !== "resolved" &&
+                    record.status !== "claim_pending" && (
+                      <Button
+                        onClick={() =>
+                          openPanel(
+                            record,
+                            record.status === "open" ? "pickup" : "resolve",
+                          )
+                        }
+                      >
+                        {record.status === "open"
+                          ? t("Record pickup", "ثبت جمع‌آوری")
+                          : t("Record resolution", "ثبت حل‌وفصل")}
+                      </Button>
+                    )}
+                  {record.status === "cancellation_review" &&
+                    role === "supervisor" && (
+                      <Button
+                        onClick={() =>
+                          document
+                            .getElementById("return-cancellation-review")
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            })
+                        }
+                      >
+                        {t("Review cancellation", "بررسی لغو")}
+                      </Button>
+                    )}
+                  {record.status === "claim_pending" &&
+                    role === "supervisor" && (
+                      <Button
+                        onClick={() =>
+                          document
+                            .getElementById("return-claims")
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            })
+                        }
+                      >
+                        {t("Review claim", "بررسی ادعا")}
+                      </Button>
+                    )}
+                </div>
               </div>
-              <Badge
-                tone={
-                  record.status === "cancelled"
-                    ? "neutral"
-                    : record.status === "resolved"
-                      ? "approved"
-                      : record.status === "open"
-                        ? "info"
-                        : record.status === "partially_resolved" ||
-                            record.status === "cancellation_review"
-                          ? "progress"
-                          : "pending"
-                }
+            </Card>
+            <Card title={t("Items", "اقلام")} className="return-lines-card">
+              <DataTable
+                className="return-lines-table"
+                columns={[
+                  { width: "28%" },
+                  { width: "100px", align: "end" },
+                  { width: "110px", align: "end" },
+                  { width: "110px", align: "end" },
+                  { width: "145px", align: "end" },
+                  { width: "23%" },
+                ]}
               >
-                {statusLabel(record.status)}
-              </Badge>
-            </div>
-            <DataTable>
-              <thead>
-                <tr>
-                  <th>{t("Product", "محصول")}</th>
-                  <th className="number-cell">{t("Quantity", "تعداد")}</th>
-                  <th className="number-cell">
-                    {t("Picked up", "جمع‌آوری‌شده")}
-                  </th>
-                  <th className="number-cell">{t("Resolved", "حل‌شده")}</th>
-                  <th className="number-cell">
-                    {t("Returned to stock", "بازگشته به موجودی")}
-                  </th>
-                  <th>{t("Reason / location", "دلیل / محل")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {record.lines.map((line) => {
-                  const product = state.products.find(
-                    (item) =>
-                      item.company_id === context.company_id &&
-                      item.code === line.product_code,
-                  );
-                  return (
-                    <tr key={line.product_code}>
-                      <td>
-                        {product ? (
-                          <ProductName product={product} language={lang} />
-                        ) : (
-                          <LtrText>{line.product_code}</LtrText>
-                        )}
-                      </td>
-                      <td className="number-cell">
-                        <LtrText>{line.qty}</LtrText>
-                      </td>
-                      <td className="number-cell">
-                        <LtrText>
-                          {line.picked_up ??
-                            (record.replacement_received ? line.qty : 0)}
-                        </LtrText>
-                      </td>
-                      <td className="number-cell">
-                        <LtrText>
-                          {line.settled ??
-                            line.replaced ??
-                            record.replacement_received?.covers_original_qty ??
-                            0}
-                        </LtrText>
-                      </td>
-                      <td className="number-cell">
-                        <LtrText>
-                          {record.recovered?.[line.product_code] ??
-                            record.original_units_recovered}
-                        </LtrText>
-                      </td>
-                      <td>
-                        {line.reason === "Leaking"
-                          ? t("Leaking", "نشتی")
-                          : line.reason === "Torn bag"
-                            ? t("Torn bag", "کیسه پاره")
-                            : line.reason}
-                        {line.location && (
-                          <div className="muted">
-                            {line.location === "Walk-in cooler"
-                              ? t("Walk-in cooler", "سردخانه")
-                              : line.location}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </DataTable>
-            {record.replacement_received && (
-              <div className="banner info">
-                {t("Replacement received", "جایگزین دریافت‌شده")}:{" "}
-                <bdi>
-                  {productName(record.replacement_received.product_code)}
-                </bdi>{" "}
-                <LtrText>× {record.replacement_received.qty}</LtrText>.{" "}
-                {t(
-                  "No amount was added to Payables.",
-                  "هیچ مبلغی به پرداختنی‌ها اضافه نشده است.",
-                )}
-              </div>
-            )}
-            {record.cancellation_demo_note && (
-              <p className="muted">
-                {t(
-                  "Two originals remain with the supplier; one replacement was received. Cancellation restores zero supplier-held units and needs Supervisor review.",
-                  "دو اصل کالا نزد تأمین‌کننده است؛ یک جایگزین دریافت شده است. لغو هیچ کالایی از نزد تأمین‌کننده به موجودی بازنمی‌گرداند و نیازمند بررسی سرپرست است.",
-                )}
-              </p>
-            )}
-            {record.signed_pickup_slip_reference && (
-              <p>
-                {t("Signed pickup slip", "رسید جمع‌آوری امضاشده")}:{" "}
-                <LtrText>{record.signed_pickup_slip_reference}</LtrText> ·{" "}
-                <bdi>{record.supplier_rep_name}</bdi>
-              </p>
-            )}
-            {record.status !== "cancelled" &&
-              record.status !== "cancellation_review" && (
-                <div className="actions">
-                  <Button
-                    variant={
-                      record.status === "open" && active !== record.id
-                        ? "primary"
-                        : "secondary"
-                    }
-                    onClick={() => openPanel(record, "pickup")}
-                  >
-                    {t("Record pickup", "ثبت جمع‌آوری")}
-                  </Button>
-                  <Button
-                    variant={
-                      record.status !== "open" && active !== record.id
-                        ? "primary"
-                        : "secondary"
-                    }
-                    onClick={() => openPanel(record, "resolve")}
-                  >
-                    {t("Record resolution", "ثبت حل‌وفصل")}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => openPanel(record, "cancel")}
-                  >
-                    {record.replacement_received ||
-                    record.lines.some(
-                      (line) => (line.settled ?? line.replaced ?? 0) > 0,
-                    )
-                      ? t("Request cancellation", "درخواست لغو")
-                      : t("Cancel return", "لغو مرجوعی")}
-                  </Button>
+                <thead>
+                  <tr>
+                    <th>{t("Product", "محصول")}</th>
+                    <th className="number-cell">{t("Quantity", "تعداد")}</th>
+                    <th className="number-cell">
+                      {t("Picked up", "جمع‌آوری‌شده")}
+                    </th>
+                    <th className="number-cell">{t("Resolved", "حل‌شده")}</th>
+                    <th className="number-cell">
+                      {t("Returned to stock", "بازگشته به موجودی")}
+                    </th>
+                    <th>{t("Reason / location", "دلیل / محل")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {record.lines.map((line) => {
+                    const product = state.products.find(
+                      (item) =>
+                        item.company_id === context.company_id &&
+                        item.code === line.product_code,
+                    );
+                    return (
+                      <tr key={line.product_code}>
+                        <td>
+                          {product ? (
+                            <ProductName product={product} language={lang} />
+                          ) : (
+                            <LtrText>{line.product_code}</LtrText>
+                          )}
+                        </td>
+                        <td className="number-cell">
+                          <LtrText>{line.qty}</LtrText>
+                        </td>
+                        <td className="number-cell">
+                          <LtrText>
+                            {line.picked_up ??
+                              (record.replacement_received ? line.qty : 0)}
+                          </LtrText>
+                        </td>
+                        <td className="number-cell">
+                          <LtrText>
+                            {line.settled ??
+                              line.replaced ??
+                              record.replacement_received
+                                ?.covers_original_qty ??
+                              0}
+                          </LtrText>
+                        </td>
+                        <td className="number-cell">
+                          <LtrText>
+                            {record.recovered?.[line.product_code] ??
+                              record.original_units_recovered}
+                          </LtrText>
+                        </td>
+                        <td>
+                          {line.reason === "Leaking"
+                            ? t("Leaking", "نشتی")
+                            : line.reason === "Torn bag"
+                              ? t("Torn bag", "کیسه پاره")
+                              : line.reason}
+                          {line.location && (
+                            <div className="muted">
+                              {line.location === "Walk-in cooler"
+                                ? t("Walk-in cooler", "سردخانه")
+                                : line.location}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+              {record.replacement_received && (
+                <div className="banner info">
+                  {t("Replacement received", "جایگزین دریافت‌شده")}:{" "}
+                  <bdi>
+                    {productName(record.replacement_received.product_code)}
+                  </bdi>{" "}
+                  <LtrText>× {record.replacement_received.qty}</LtrText>.{" "}
+                  {t(
+                    "No amount was added to Payables.",
+                    "هیچ مبلغی به پرداختنی‌ها اضافه نشده است.",
+                  )}
                 </div>
               )}
+              {record.cancellation_demo_note && (
+                <p className="muted">
+                  {t(
+                    "Two originals remain with the supplier; one replacement was received. Cancellation restores zero supplier-held units and needs Supervisor review.",
+                    "دو اصل کالا نزد تأمین‌کننده است؛ یک جایگزین دریافت شده است. لغو هیچ کالایی از نزد تأمین‌کننده به موجودی بازنمی‌گرداند و نیازمند بررسی سرپرست است.",
+                  )}
+                </p>
+              )}
+              {record.signed_pickup_slip_reference && (
+                <p>
+                  {t("Signed pickup slip", "رسید جمع‌آوری امضاشده")}:{" "}
+                  <LtrText>{record.signed_pickup_slip_reference}</LtrText> ·{" "}
+                  <bdi>{record.supplier_rep_name}</bdi>
+                </p>
+              )}
+              {record.status !== "cancelled" &&
+                record.status !== "cancellation_review" && (
+                  <div className="return-secondary-actions">
+                    {record.status !== "open" &&
+                      record.status !== "resolved" && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => openPanel(record, "pickup")}
+                        >
+                          {t("Record pickup", "ثبت جمع‌آوری")}
+                        </Button>
+                      )}
+                    {record.status === "open" && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => openPanel(record, "resolve")}
+                      >
+                        {t("Record resolution", "ثبت حل‌وفصل")}
+                      </Button>
+                    )}
+                    <Button
+                      variant="danger"
+                      onClick={() => openPanel(record, "cancel")}
+                    >
+                      {record.replacement_received ||
+                      record.lines.some(
+                        (line) => (line.settled ?? line.replaced ?? 0) > 0,
+                      )
+                        ? t("Request cancellation", "درخواست لغو")
+                        : t("Cancel return", "لغو مرجوعی")}
+                    </Button>
+                  </div>
+                )}
+            </Card>
             {active === record.id &&
               record.status !== "cancelled" &&
               record.status !== "cancellation_review" && (
-                <section className="form-section">
+                <Card className="return-action-card form-section">
                   <h3>
                     {panel === "pickup"
                       ? t("Record actual pickup", "ثبت جمع‌آوری واقعی")
@@ -842,11 +1113,11 @@ export function Returns() {
                   <p className="muted">
                     {t("Recorded by", "ثبت‌کننده")}:{" "}
                     {demoUserLabel(context.actor, lang)} ·{" "}
-                    {branchLabel(branch, lang)}
+                    {branchLabel(context.branch, lang)}
                   </p>
                   <div className="actions">
                     <Button
-                      disabled={branch === "all"}
+                      disabled={context.branch === "all"}
                       onClick={() => {
                         if (panel === "pickup")
                           run(
@@ -928,80 +1199,85 @@ export function Returns() {
                       {t("Close", "بستن")}
                     </Button>
                   </div>
-                </section>
+                </Card>
               )}
-            {(record.claims ?? []).map((claim) => (
-              <div key={claim.id} className="form-section">
-                <div className="row-between">
-                  <strong>
-                    {claim.type.startsWith("credit_")
-                      ? t("Credit claim", "ادعای بستانکاری")
-                      : claim.type === "cash_or_other"
-                        ? t("Compensation claim", "ادعای جبران")
-                        : t("No compensation claim", "ادعای بدون جبران")}
-                  </strong>
-                  <Badge
-                    tone={claim.status === "posted" ? "approved" : "pending"}
-                  >
-                    {claim.status === "posted"
-                      ? t("Posted", "ثبت‌شده")
-                      : t("Pending", "در انتظار")}
-                  </Badge>
-                </div>
-                <p>
-                  {t("Evidence", "مدرک")}:{" "}
-                  <bdi>{claim.document || claim.reason}</bdi> ·{" "}
-                  {t("Submitted by", "ارسال‌کننده")}:{" "}
-                  {demoUserLabel(claim.submitted_by, lang)}
-                </p>
-                {role === "supervisor" && claim.status === "submitted" && (
-                  <>
-                    <Field
-                      className="field-short"
-                      label={t(
-                        "Verified financial amount (Supervisor only)",
-                        "مبلغ مالی تأییدشده (فقط سرپرست)",
-                      )}
+            <div id="return-claims">
+              {(record.claims ?? []).map((claim) => (
+                <Card key={claim.id} className="form-section return-claim-card">
+                  <div className="row-between">
+                    <strong>
+                      {claim.type.startsWith("credit_")
+                        ? t("Credit claim", "ادعای بستانکاری")
+                        : claim.type === "cash_or_other"
+                          ? t("Compensation claim", "ادعای جبران")
+                          : t("No compensation claim", "ادعای بدون جبران")}
+                    </strong>
+                    <Badge
+                      tone={claim.status === "posted" ? "approved" : "pending"}
                     >
-                      <NumberField
-                        value={amount}
-                        onChange={setAmount}
-                        disabled={claim.type === "no_compensation"}
-                      />
-                    </Field>
-                    <Checkbox checked={verified} onChange={setVerified}>
-                      {t(
-                        "I verified the document, covered quantities, and invoice allocation.",
-                        "سند، تعداد پوشش‌داده‌شده و تخصیص فاکتور را تأیید کردم.",
-                      )}
-                    </Checkbox>
-                    <Button
-                      disabled={!verified || branch === "all"}
-                      onClick={() =>
-                        run(
-                          (draft) =>
-                            postReturnClaim(
-                              draft,
-                              context,
-                              record.id,
-                              claim.id,
-                              amount,
+                      {claim.status === "posted"
+                        ? t("Posted", "ثبت‌شده")
+                        : t("Pending", "در انتظار")}
+                    </Badge>
+                  </div>
+                  <p>
+                    {t("Evidence", "مدرک")}:{" "}
+                    <bdi>{claim.document || claim.reason}</bdi> ·{" "}
+                    {t("Submitted by", "ارسال‌کننده")}:{" "}
+                    {demoUserLabel(claim.submitted_by, lang)}
+                  </p>
+                  {role === "supervisor" && claim.status === "submitted" && (
+                    <>
+                      <Field
+                        className="field-short"
+                        label={t(
+                          "Verified financial amount (Supervisor only)",
+                          "مبلغ مالی تأییدشده (فقط سرپرست)",
+                        )}
+                      >
+                        <NumberField
+                          value={amount}
+                          onChange={setAmount}
+                          disabled={claim.type === "no_compensation"}
+                        />
+                      </Field>
+                      <Checkbox checked={verified} onChange={setVerified}>
+                        {t(
+                          "I verified the document, covered quantities, and invoice allocation.",
+                          "سند، تعداد پوشش‌داده‌شده و تخصیص فاکتور را تأیید کردم.",
+                        )}
+                      </Checkbox>
+                      <Button
+                        disabled={!verified || context.branch === "all"}
+                        onClick={() =>
+                          run(
+                            (draft) =>
+                              postReturnClaim(
+                                draft,
+                                context,
+                                record.id,
+                                claim.id,
+                                amount,
+                              ),
+                            t(
+                              "Verified and posted claim once.",
+                              "ادعا تأیید و یک‌بار ثبت شد.",
                             ),
-                          t(
-                            "Verified and posted claim once.",
-                            "ادعا تأیید و یک‌بار ثبت شد.",
-                          ),
-                        )
-                      }
-                    >
-                      {t("Verify and post claim", "تأیید و ثبت ادعا")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            ))}
+                          )
+                        }
+                      >
+                        {t("Verify and post claim", "تأیید و ثبت ادعا")}
+                      </Button>
+                    </>
+                  )}
+                </Card>
+              ))}
+            </div>
             {record.status === "cancellation_review" && (
-              <div className="form-section">
+              <Card
+                className="form-section return-review-card"
+                id="return-cancellation-review"
+              >
                 <div className="banner pending">
                   {t(
                     "Supervisor review required. Originals held by the supplier restore zero stock. Existing settlement has not been reversed.",
@@ -1032,7 +1308,7 @@ export function Returns() {
                     </Checkbox>
                     <div className="actions">
                       <Button
-                        disabled={branch === "all"}
+                        disabled={context.branch === "all"}
                         onClick={() =>
                           run(
                             (draft) =>
@@ -1052,7 +1328,7 @@ export function Returns() {
                       </Button>
                       <Button
                         variant="secondary"
-                        disabled={branch === "all"}
+                        disabled={context.branch === "all"}
                         onClick={() =>
                           run(
                             (draft) =>
@@ -1073,73 +1349,61 @@ export function Returns() {
                     </div>
                   </>
                 )}
-              </div>
+              </Card>
             )}
-            <div className="form-section">
-              <Button
-                variant="ghost"
-                aria-expanded={Boolean(evidenceOpen[record.id])}
-                aria-controls={`return-history-${record.id}`}
-                onClick={() =>
-                  setEvidenceOpen((current) => ({
-                    ...current,
-                    [record.id]: !current[record.id],
-                  }))
-                }
-              >
-                {t("Evidence and history", "مدارک و سوابق")}
-              </Button>
-              {evidenceOpen[record.id] && (
-                <div id={`return-history-${record.id}`}>
-                  {(record.evidence ?? []).length === 0 ? (
-                    <p className="muted">
-                      {t(
-                        "No additional events yet.",
-                        "رویداد دیگری ثبت نشده است.",
+            <Card
+              title={t("Evidence and history", "مدارک و سوابق")}
+              className="return-evidence-card"
+            >
+              <div id={`return-history-${record.id}`}>
+                {(record.evidence ?? []).length === 0 ? (
+                  <p className="muted">
+                    {t(
+                      "No additional events yet.",
+                      "رویداد دیگری ثبت نشده است.",
+                    )}
+                  </p>
+                ) : (
+                  (record.evidence ?? []).map((event) => (
+                    <div className="history-row" key={event.id}>
+                      <strong>
+                        {event.kind === "pickup"
+                          ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
+                          : event.kind === "replacement"
+                            ? t("Received replacement", "جایگزین دریافت‌شده")
+                            : event.kind === "original_recovery"
+                              ? t(
+                                  "Received safe original goods",
+                                  "اصل کالای سالم دریافت شد",
+                                )
+                              : event.kind.startsWith("cancellation")
+                                ? t("Cancellation review", "بررسی لغو")
+                                : t("Resolution claim", "ادعای حل‌وفصل")}
+                      </strong>
+                      <p>
+                        <LtrText>
+                          {companyTimestamp(state.config, event.at)}
+                        </LtrText>{" "}
+                        · {demoUserLabel(event.by, lang)} ·{" "}
+                        <LtrText>{event.document}</LtrText>
+                      </p>
+                      {event.note && <p>{event.note}</p>}
+                      {event.photo && (
+                        <img
+                          className="evidence-photo"
+                          src={event.photo}
+                          alt={t(
+                            "Retained local evidence photo",
+                            "عکس مدرک محلی حفظ‌شده",
+                          )}
+                        />
                       )}
-                    </p>
-                  ) : (
-                    (record.evidence ?? []).map((event) => (
-                      <div className="history-row" key={event.id}>
-                        <strong>
-                          {event.kind === "pickup"
-                            ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
-                            : event.kind === "replacement"
-                              ? t("Received replacement", "جایگزین دریافت‌شده")
-                              : event.kind === "original_recovery"
-                                ? t(
-                                    "Received safe original goods",
-                                    "اصل کالای سالم دریافت شد",
-                                  )
-                                : event.kind.startsWith("cancellation")
-                                  ? t("Cancellation review", "بررسی لغو")
-                                  : t("Resolution claim", "ادعای حل‌وفصل")}
-                        </strong>
-                        <p>
-                          <LtrText>
-                            {companyTimestamp(state.config, event.at)}
-                          </LtrText>{" "}
-                          · {demoUserLabel(event.by, lang)} ·{" "}
-                          <LtrText>{event.document}</LtrText>
-                        </p>
-                        {event.note && <p>{event.note}</p>}
-                        {event.photo && (
-                          <img
-                            className="evidence-photo"
-                            src={event.photo}
-                            alt={t(
-                              "Retained local evidence photo",
-                              "عکس مدرک محلی حفظ‌شده",
-                            )}
-                          />
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
         );
       })}
     </>

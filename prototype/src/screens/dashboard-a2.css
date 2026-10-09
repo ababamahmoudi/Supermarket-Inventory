@@ -1,0 +1,299 @@
+.dashboard-main {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.dashboard-main > * {
+  grid-column: 1 / -1;
+}
+.dashboard-row {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: stretch;
+}
+.dashboard-row > .card:first-child {
+  grid-column: span 8;
+}
+.dashboard-row > .card:last-child {
+  grid-column: span 4;
+}
+.dashboard-row-halves > .card:first-child,
+.dashboard-row-halves > .card:last-child {
+  grid-column: span 6;
+}
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 20px;
+}
+.dashboard-card-header h2 {
+  margin: 0;
+}
+.dashboard-queue-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(64px, auto) 90px 56px 128px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+}
+.dashboard-queue-product {
+  min-inline-size: 0;
+  display: grid;
+  gap: 4px;
+}
+.dashboard-queue-product .product-name {
+  min-inline-size: 0;
+}
+.dashboard-queue-product .product-name strong,
+.dashboard-queue-product .product-name small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-queue-row > .badge {
+  max-inline-size: 110px;
+}
+.dashboard-queue-row .dashboard-price-change {
+  display: grid;
+  gap: 4px;
+}
+.dashboard-queue-row .dashboard-price-change > span {
+  flex-wrap: nowrap;
+  font-size: 0.8125rem;
+}
+.dashboard-queue-branch {
+  font-size: 0.8125rem;
+}
+.dashboard-inline-actions {
+  inline-size: 128px;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.dashboard-inline-actions .button {
+  min-inline-size: 0;
+  padding-inline: 8px;
+  font-size: 0.8125rem;
+}
+.dashboard-inline-actions .button-primary {
+  background: var(--accent-fill);
+  color: white;
+  box-shadow: none;
+}
+.dashboard-invoices table {
+  min-inline-size: 587px;
+}
+.dashboard-invoices .button {
+  padding-inline: 8px;
+}
+.dashboard-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "copy action" "pill action";
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px;
+  border-radius: 12px;
+}
+.dashboard-list-row:nth-child(odd) {
+  background: var(--surface-soft);
+}
+.dashboard-list-copy {
+  grid-area: copy;
+  min-inline-size: 0;
+  display: grid;
+  gap: 6px;
+}
+.dashboard-list-copy > strong {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.dashboard-list-copy > .muted {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.dashboard-list-pill {
+  grid-area: pill;
+  min-inline-size: 0;
+}
+.dashboard-list-pill .badge {
+  max-inline-size: 100%;
+  inline-size: fit-content;
+}
+.dashboard-list-action {
+  grid-area: action;
+  align-self: center;
+}
+.dashboard-list-action .button {
+  padding-inline: 10px;
+}
+.dashboard-alert-cost {
+  display: block;
+  margin-block-start: 6px;
+}
+.dashboard-aside .dashboard-list-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.purchase-bars {
+  display: grid;
+  gap: 24px;
+  margin-block-start: 24px;
+}
+.purchase-bar-row {
+  min-inline-size: 0;
+}
+.purchase-bar-row .row-between {
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.8125rem;
+}
+.purchase-bar-row .row-between > bdi {
+  min-inline-size: 0;
+}
+.purchase-bar-track {
+  block-size: 14px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  margin-block-start: 8px;
+  overflow: hidden;
+}
+.purchase-bar-track > span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+.purchase-bar-row:nth-child(even) .purchase-bar-track > span {
+  background: var(--tile-lavender);
+}
+.chart-axis-label {
+  margin-block: 24px 0;
+  font-size: 0.8125rem;
+}
+.purchase-line-chart {
+  margin-block-start: 24px;
+  direction: ltr;
+}
+.purchase-line-chart svg {
+  inline-size: 100%;
+  block-size: auto;
+  max-block-size: 210px;
+  display: block;
+  overflow: visible;
+}
+.chart-baseline {
+  stroke: var(--divider);
+  stroke-width: 1;
+}
+.purchase-area {
+  fill: var(--accent-soft);
+}
+.purchase-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.purchase-point {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.purchase-week-labels {
+  display: flex;
+  justify-content: space-between;
+  direction: ltr;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.purchase-week-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  list-style: none;
+  padding: 0;
+  margin-block: 20px 0;
+}
+.purchase-week-totals li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+}
+.purchase-week-totals li > .money {
+  color: var(--text);
+}
+@media (min-width: 1440px) {
+  .dashboard-aside {
+    inline-size: 280px;
+  }
+}
+@media (max-width: 1250px) {
+  .dashboard-queue-row {
+    grid-template-columns: minmax(110px, 1fr) 104px 140px;
+  }
+  .dashboard-queue-row > .badge {
+    grid-column: 1;
+  }
+  .dashboard-queue-branch {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .dashboard-inline-actions {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .dashboard-price-change {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+@media (max-width: 1000px) {
+  .dashboard-row > .card:first-child,
+  .dashboard-row > .card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 760px) {
+  .dashboard-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .dashboard-queue-row {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 12px;
+  }
+  .dashboard-queue-product {
+    grid-column: 1;
+  }
+  .dashboard-queue-row .dashboard-price-change {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .dashboard-queue-row > .badge {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .dashboard-queue-branch {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .dashboard-inline-actions {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    inline-size: auto;
+    justify-content: flex-end;
+  }
+  .dashboard-card-header {
+    flex-wrap: wrap;
+  }
+  .purchase-week-totals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

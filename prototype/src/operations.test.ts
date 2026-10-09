@@ -36,7 +36,11 @@ const supervisor: OperationsContext = {
 };
 function invoiceState() {
   const state = initialState();
+  // Financial cases use one explicit invoice, independent of historical demo receipts.
   state.invoice.status = "posted";
+  state.invoices = [];
+  state.ledger = [];
+  state.returns[0].linked_invoice = state.invoice.id;
   state.ledger.push(
     {
       id: "invoice-1",
@@ -95,6 +99,8 @@ describe("return physical receipts and safe cancellation", () => {
   it("adds actual substitute units with explicit original coverage without Payables and prevents duplicate receipt", () => {
     const state = initialState();
     const record = state.returns[0];
+    const stockBefore = state.stock["Branch 1:0002"];
+    const ledgerBefore = structuredClone(state.ledger);
     const receipt = {
       product_code: "0002",
       qty: 2,
@@ -105,8 +111,8 @@ describe("return physical receipts and safe cancellation", () => {
     };
     receiveReplacement(state, worker, record.id, receipt);
     receiveReplacement(state, worker, record.id, receipt);
-    expect(state.stock["Branch 1:0002"]).toBe(2);
-    expect(state.ledger).toHaveLength(0);
+    expect(state.stock["Branch 1:0002"]).toBe(stockBefore + 2);
+    expect(state.ledger).toEqual(ledgerBefore);
     expect(record.lines[0].settled).toBe(1);
     expect(record.status).toBe("partially_resolved");
     expect(() =>
@@ -120,6 +126,8 @@ describe("return physical receipts and safe cancellation", () => {
   it("counts seeded replacement coverage and cannot settle the original quantity twice", () => {
     const state = initialState();
     const record = state.returns[1];
+    const stockBefore = state.stock["Branch 1:0001"];
+    const ledgerBefore = structuredClone(state.ledger);
     expect(() =>
       receiveReplacement(state, worker, record.id, {
         product_code: "0001",
@@ -130,13 +138,14 @@ describe("return physical receipts and safe cancellation", () => {
         receipt: "REPLACE-2",
       }),
     ).toThrow("coverage");
-    expect(state.stock["Branch 1:0001"]).toBe(1);
-    expect(state.ledger).toHaveLength(0);
+    expect(state.stock["Branch 1:0001"]).toBe(stockBefore);
+    expect(state.ledger).toEqual(ledgerBefore);
   });
   it("restores zero supplier-held originals and retains a partial replacement through Supervisor review", () => {
     const state = initialState();
     const record = state.returns[1];
     const originalStock = { ...state.stock };
+    const ledgerBefore = structuredClone(state.ledger);
     cancelReturn(state, worker, record.id, {
       reason: "Supplier disputed remaining claim",
       dispositions: { "0001": "supplier_held" },
@@ -146,7 +155,7 @@ describe("return physical receipts and safe cancellation", () => {
     expect(record.status).toBe("cancellation_review");
     expect(state.stock).toEqual(originalStock);
     expect(record.replacement_received?.qty).toBe(1);
-    expect(state.ledger).toHaveLength(0);
+    expect(state.ledger).toEqual(ledgerBefore);
     expect(() =>
       reviewCancellation(state, worker, record.id, {
         accept: true,
@@ -165,6 +174,7 @@ describe("return physical receipts and safe cancellation", () => {
   it("restores only explicitly recovered safe originals once; damaged goods stay excluded", () => {
     const state = initialState();
     const record = state.returns[0];
+    const stockBefore = state.stock["Branch 1:0003"];
     expect(() =>
       cancelReturn(state, worker, record.id, {
         reason: "Recovered two",
@@ -179,7 +189,7 @@ describe("return physical receipts and safe cancellation", () => {
       recovered: { "0003": 2 },
       safe: true,
     });
-    expect(state.stock["Branch 1:0003"]).toBe(2);
+    expect(state.stock["Branch 1:0003"]).toBe(stockBefore + 2);
     expect(record.original_units_recovered).toBe(2);
     expect(record.status).toBe("cancelled");
     expect(() =>
@@ -306,6 +316,7 @@ describe("financial return claims", () => {
 describe("notes and expiry are company and branch scoped", () => {
   it("records store-use stock once with author/time and no ledger change", () => {
     const state = initialState();
+    const ledgerBefore = structuredClone(state.ledger);
     state.stock["Branch 1:0006"] = 10;
     addNote(state, worker, {
       type: "store_use",
@@ -321,7 +332,7 @@ describe("notes and expiry are company and branch scoped", () => {
       qty: 2,
     });
     expect(state.notes[0].created_at).toBeTruthy();
-    expect(state.ledger).toHaveLength(0);
+    expect(state.ledger).toEqual(ledgerBefore);
     expect(() =>
       addNote(state, worker, { type: "store_use", text: "Missing product" }),
     ).toThrow("store_use");
@@ -539,6 +550,7 @@ describe("receipt retries, cancelled claims and historical summaries", () => {
   it("preserves actual replacement product, quantities, date and representative while rejecting changed duplicate receipt data", () => {
     const state = initialState();
     const record = state.returns[0] as OperationalReturn;
+    const stockBefore = state.stock["Branch 1:0002"];
     const receipt = {
       product_code: "0002",
       qty: 2,
@@ -558,7 +570,7 @@ describe("receipt retries, cancelled claims and historical summaries", () => {
     expect(() =>
       receiveReplacement(state, worker, record.id, { ...receipt, qty: 3 }),
     ).toThrow("duplicate_document");
-    expect(state.stock["Branch 1:0002"]).toBe(2);
+    expect(state.stock["Branch 1:0002"]).toBe(stockBefore + 2);
   });
   it("does not resurrect a cancelled return by posting its preserved unverified claim", () => {
     const state = invoiceState();

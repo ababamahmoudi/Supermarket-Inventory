@@ -1,0 +1,2092 @@
+{
+  "generatedAt": "2026-10-08T04:39:53.927820+00:00",
+  "unitTests": {
+    "command": "npm test",
+    "filesPassed": 15,
+    "passed": 250,
+    "failed": 0,
+    "log": "unit-test-results.txt"
+  },
+  "pricingTests": {
+    "command": "npm test -- src/pricing.test.ts --reporter=json",
+    "passed": 66,
+    "failed": 0,
+    "ownerSeedCases": 21,
+    "retainedBoundaryCases": 3,
+    "assertions": [
+      {
+        "name": "the shared pricing fixtures grocery band: below .23 goes to previou…",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery band: .23 to below .73 goes to …",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery band: .73 or above goes to .99",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery whole-dollar result becomes x.9…",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery lands on 2.49, corrected to 2.99",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery lands on 3.49, corrected to 3.99",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery boundary: raw exactly .23 count…",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery boundary: raw ends in .00",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery boundary: raw ends in .22",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery boundary: raw ends in .23",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery boundary: raw ends in .72",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery taxable follows the same rules …",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery taxable normal case",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures rice rounds up to the next .99",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures rice whole-dollar raw goes UP to x.99 o…",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures rice raw just under x.99 rounds up to t…",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures rice larger bag",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures kitchenware uses 0.60 divisor",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures kitchenware does NOT get the 2.49/3.49 …",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures kitchenware middle band",
+        "status": "passed"
+      },
+      {
+        "name": "the shared pricing fixtures grocery very small cost: floor at .49 (…",
+        "status": "passed"
+      },
+      {
+        "name": "the previously verified pricing boundaries grocery exact .73 boundary with four-de…",
+        "status": "passed"
+      },
+      {
+        "name": "the previously verified pricing boundaries rice exact .99 with four-decimal cost s…",
+        "status": "passed"
+      },
+      {
+        "name": "the previously verified pricing boundaries rice raw just above .99 must use next d…",
+        "status": "passed"
+      },
+      {
+        "name": "precision and boundaries rounds half-up only before selecting a band",
+        "status": "passed"
+      },
+      {
+        "name": "precision and boundaries keeps Rice exact and immediately-above endings distinct",
+        "status": "passed"
+      },
+      {
+        "name": "precision and boundaries uses the configured minimum for low and zero band costs",
+        "status": "passed"
+      },
+      {
+        "name": "precision and boundaries applies a correction once rather than chaining mappings",
+        "status": "passed"
+      },
+      {
+        "name": "precision and boundaries does not add sales tax into the selling price",
+        "status": "passed"
+      },
+      {
+        "name": "configuration changes need no code changes changes the selling price immediately after a divisor changes",
+        "status": "passed"
+      },
+      {
+        "name": "configuration changes need no code changes reads configured thresholds, endings, offsets, Rice endings, and corrections",
+        "status": "passed"
+      },
+      {
+        "name": "configuration changes need no code changes never mutates the supplied configuration",
+        "status": "passed"
+      },
+      {
+        "name": "configuration changes need no code changes accepts a company-defined category key rather than relying on seed category names",
+        "status": "passed"
+      },
+      {
+        "name": "minimum margin flags the unchanged-price 1.12 / 1.49 example without altering the price",
+        "status": "passed"
+      },
+      {
+        "name": "minimum margin compares the exact ratio at the threshold rather than a formatted percent",
+        "status": "passed"
+      },
+      {
+        "name": "minimum margin accepts an exact threshold and always flags an undefined zero-price margin",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"-1\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"-0.0001\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"NaN\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"Infinity\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"1e3\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"1.12345\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"1.00000\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects cost \"1,50\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices accepts positive signed decimal costs without float conversion",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects numeric money rather than accepting a floating-point value",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects an unknown category",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects divisor \"0\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects divisor \"-0.65\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects divisor \"NaN\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects divisor \"Infinity\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects divisor \"\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects gap bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects overlap bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects incomplete bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects reversed bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects offset bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects ending bands",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects correction amount \"-1.00\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects correction amount \"2.001\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects correction amount \"NaN\"",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects duplicate correction sources and invalid minimums",
+        "status": "passed"
+      },
+      {
+        "name": "invalid input cannot create prices rejects invalid Rice endings and invalid margins",
+        "status": "passed"
+      },
+      {
+        "name": "properties over a deterministic range of four-decimal costs default outputs are nonnegative cent prices with the seed endings",
+        "status": "passed"
+      },
+      {
+        "name": "properties over a deterministic range of four-decimal costs customized rules produce configured endings, including correction targets",
+        "status": "passed"
+      }
+    ]
+  },
+  "browserTests": {
+    "command": "npx playwright test --config a2-browser-final-playwright.config.mjs --workers=2",
+    "environment": "Final production build served as a fixed static bundle; same repository test files and desktop/phone Chromium projects. No retries.",
+    "stats": {
+      "startTime": "2026-10-08T04:35:07.751Z",
+      "duration": 236772.922,
+      "expected": 139,
+      "skipped": 3,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "every table header and body cell aligns within two pixels (en)",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4781,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "every table header and body cell aligns within two pixels (fa)",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4529,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "product editor is centered with focus trapped, Escape and backdrop restore focus",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5236,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "every table header and body cell aligns within two pixels (en)",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3081,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "every table header and body cell aligns within two pixels (fa)",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3186,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "name": "product editor is centered with focus trapped, Escape and backdrop restore focus",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2061,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "live role switches keep cashier approved price until branch approval; new product approves for all",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 9044,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "intentional tea conflicts stay quiet, and applying a selected price clears all branch overrides",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7061,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "approved Lavash suggests a worker-confirmed offer and joins juice and chips in the same pool",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7371,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "live role switches keep cashier approved price until branch approval; new product approves for all",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4559,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "intentional tea conflicts stay quiet, and applying a selected price clears all branch overrides",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3214,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "approvals.spec.ts",
+        "name": "approved Lavash suggests a worker-confirmed offer and joins juice and chips in the same pool",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2882,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Supervisor product page uses own route, Back link and shared editor",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5132,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Lookup price editor defaults to all branches and records the signed-in Supervisor",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4996,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "same editor changes this branch only, and validation stays inside the open dialog",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5500,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Floor Worker and Cashier never see product Edit, including direct product links",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3145,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Lookup columns mirror in Persian, with selected row distinct from offer pill",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2806,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "duplicate barcode reports one scoped conflict and allows a corrected save",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4325,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Supervisor product page uses own route, Back link and shared editor",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2315,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Lookup price editor defaults to all branches and records the signed-in Supervisor",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2057,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "same editor changes this branch only, and validation stays inside the open dialog",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2475,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Floor Worker and Cashier never see product Edit, including direct product links",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1722,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "Lookup columns mirror in Persian, with selected row distinct from offer pill",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1362,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog-a2.spec.ts",
+        "name": "duplicate barcode reports one scoped conflict and allows a corrected save",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2442,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "cashier finds English, Persian, code and barcode results with approved price, tax and pending tags",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2855,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "cashier direct navigation stays in lookup and exposes no operational or financial controls",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2418,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "branch switcher shows approved overrides and a new product requires Supervisor confirmation",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5424,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "Floor Worker filters Products and opens details without seeing catalog supplier cost",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3205,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "cashier finds English, Persian, code and barcode results with approved price, tax and pending tags",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1602,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "cashier direct navigation stays in lookup and exposes no operational or financial controls",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1528,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "branch switcher shows approved overrides and a new product requires Supervisor confirmation",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2929,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "catalog.spec.ts",
+        "name": "Floor Worker filters Products and opens details without seeing catalog supplier cost",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1382,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in light",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7503,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in dark",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7765,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in Persian",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 8635,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "Persian lookup preserves unit order and makes the Persian name primary",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2741,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "re-check dialog is centered and the top bar remains visible while Settings scrolls",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3641,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "invoice review retains styled controls after simulated extraction",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5190,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in light",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3251,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in dark",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3197,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "all existing screens use styled controls and bounded layout in Persian",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3394,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "Persian lookup preserves unit order and makes the Persian name primary",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1492,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "re-check dialog is centered and the top bar remains visible while Settings scrolls",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1539,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-polish.spec.ts",
+        "name": "invoice review retains styled controls after simulated extraction",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4749,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "keyboard sign-in explains a wrong password and opens the cashier's approved price lookup",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 1501,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "temporary-password users cannot bypass the new password form through routes or a reload",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2333,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "locking hides the app, and recent users fill a username without retaining a password",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2879,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "dark theme, comfortable text and Persian RTL persist when the page reloads",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2556,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "lookup supports keyboard results and a second barcode without adding it to the first",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2450,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the topbar product search opens an encoded English or Persian lookup query",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2250,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the four redesigned screens use styled controls and borderless cards without page overflow",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7024,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the 1080p sidebar stays within the screen and page, lookup and invoice forms keep their maximum widths",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5750,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "dashboard approvals and notes have actions that change the actual records and navigate to their lists",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2563,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "keyboard sign-in explains a wrong password and opens the cashier's approved price lookup",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1357,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "temporary-password users cannot bypass the new password form through routes or a reload",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1621,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "locking hides the app, and recent users fill a username without retaining a password",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1762,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "dark theme, comfortable text and Persian RTL persist when the page reloads",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2058,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "lookup supports keyboard results and a second barcode without adding it to the first",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2023,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the topbar product search opens an encoded English or Persian lookup query",
+        "project": "phone",
+        "status": "skipped",
+        "durationMs": 324,
+        "retries": 0,
+        "skipReasons": ["The phone uses the hero product search."]
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the four redesigned screens use styled controls and borderless cards without page overflow",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 6655,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "the 1080p sidebar stays within the screen and page, lookup and invoice forms keep their maximum widths",
+        "project": "phone",
+        "status": "skipped",
+        "durationMs": 180,
+        "retries": 0,
+        "skipReasons": ["Desktop layout is checked at 1920 by 1080."]
+      },
+      {
+        "file": "design-v2.spec.ts",
+        "name": "dashboard approvals and notes have actions that change the actual records and navigate to their lists",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2718,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Offers combines name/code/label search, category, supplier, type and status without changing prices",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3530,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Offers branch filtering never lets a Floor Worker read another branch offer",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3293,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Payables filters supplier totals and keeps selected report in the same branch",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4076,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Persian Offers and Payables keep complete custom-filter choices and isolated supplier names",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2216,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Offers combines name/code/label search, category, supplier, type and status without changing prices",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2088,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Offers branch filtering never lets a Floor Worker read another branch offer",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2428,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Payables filters supplier totals and keeps selected report in the same branch",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2886,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "filters-a2.spec.ts",
+        "name": "Persian Offers and Payables keep complete custom-filter choices and isolated supplier names",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1741,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "each invoice line requires one date answer, collapses when confirmed and opens from the row",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5248,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "Persian signed money, line numbers and deduction parentheses stay isolated",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4664,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "the document sticks beside the review and the action bar has a full surface",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4856,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "manual invoice drafts work when randomUUID is unavailable",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2373,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "fictional invoice answers are available only inside Demo and retain Persian copy",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4244,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "Supplier invoice links open the actual posted receipt and its original text in either language",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 1827,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "each invoice line requires one date answer, collapses when confirmed and opens from the row",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 5118,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "Persian signed money, line numbers and deduction parentheses stay isolated",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4561,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "the document sticks beside the review and the action bar has a full surface",
+        "project": "phone",
+        "status": "skipped",
+        "durationMs": 223,
+        "retries": 0,
+        "skipReasons": ["Phone review uses one stacked column."]
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "manual invoice drafts work when randomUUID is unavailable",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1854,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "fictional invoice answers are available only inside Demo and retain Persian copy",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4688,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoice-a2.spec.ts",
+        "name": "Supplier invoice links open the actual posted receipt and its original text in either language",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1319,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7341,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "manual draft survives a refresh and cannot post without its original",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2678,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "Persian invoice review mirrors the shell and keeps Western price digits",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4254,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 6627,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "manual draft survives a refresh and cannot post without its original",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1478,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "invoices.spec.ts",
+        "name": "Persian invoice review mirrors the shell and keeps Western price digits",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4331,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 60 × 40 mm labels fit their physical boxes in en without randomUUID",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2558,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 10 × 6 mm labels fit their physical boxes in en without randomUUID",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2416,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 60 × 40 mm labels fit their physical boxes in fa without randomUUID",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2484,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 10 × 6 mm labels fit their physical boxes in fa without randomUUID",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2712,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 60 × 40 mm labels fit their physical boxes in en without randomUUID",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2314,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 10 × 6 mm labels fit their physical boxes in en without randomUUID",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2873,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 60 × 40 mm labels fit their physical boxes in fa without randomUUID",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3862,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels-a2.spec.ts",
+        "name": "saved 10 × 6 mm labels fit their physical boxes in fa without randomUUID",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3628,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "creates a template, starts after four used slots, and prints bilingual labels",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2930,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "validates A4 dimensions and Persian labels without external requests",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2374,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "requires one branch and prints its approved price instead of a pending proposal",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4940,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "creates a template, starts after four used slots, and prints bilingual labels",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2451,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "validates A4 dimensions and Persian labels without external requests",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2042,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "labels.spec.ts",
+        "name": "requires one branch and prints its approved price instead of a pending proposal",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3315,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "offline.spec.ts",
+        "name": "all screens and both languages work offline with no console errors",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 7459,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "offline.spec.ts",
+        "name": "all screens and both languages work offline with no console errors",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 4060,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 5311,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "expiry clearing, notes store-use, and unread Supervisor actions survive refresh",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3844,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3031,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2683,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "invalid pickup evidence, excessive store use, and invalid financial amounts show errors without changing records or crashing the app",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 4415,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3742,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "expiry clearing, notes store-use, and unread Supervisor actions survive refresh",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3503,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2567,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2113,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "operations.spec.ts",
+        "name": "invalid pickup evidence, excessive store use, and invalid financial amounts show errors without changing records or crashing the app",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 3854,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Returns starts with all suppliers and pending records, and opens each return as its own page",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2191,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Return policy dialog centers, closes with Escape and backdrop, and restores trigger focus",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 1796,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Returns columns align within two pixels in English and Persian on overview and detail",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2740,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Overview and direct return links enforce company and worker branch scope",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3419,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Return detail pickup does not deduct stock twice and replacement increases actual stock without touching Payables",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2862,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3156,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Returns starts with all suppliers and pending records, and opens each return as its own page",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1952,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Return policy dialog centers, closes with Escape and backdrop, and restores trigger focus",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1699,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Returns columns align within two pixels in English and Persian on overview and detail",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1942,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Overview and direct return links enforce company and worker branch scope",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2293,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Return detail pickup does not deduct stock twice and replacement increases actual stock without touching Payables",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2109,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "name": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2898,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "divisors update live, survive refresh, and invalid money preserves valid rules",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2543,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "Rice uses unrounded raw and the same result renders in Persian RTL",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2356,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "Reset demo restores pricing rules, including an invalid field draft",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2123,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "divisors update live, survive refresh, and invalid money preserves valid rules",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2337,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "Rice uses unrounded raw and the same result renders in Persian RTL",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1868,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "settings.spec.ts",
+        "name": "Reset demo restores pricing rules, including an invalid field draft",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2132,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "shell.spec.ts",
+        "name": "username sign-in, correct role menu, RTL and offline operation",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 1750,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "shell.spec.ts",
+        "name": "username sign-in, correct role menu, RTL and offline operation",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2029,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Supervisor supplier overview reconciles balances and opens financial tabs",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2841,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Floor Worker supplier overview and every tab omit financial DOM in en",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 2634,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Floor Worker supplier overview and every tab omit financial DOM in fa",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 3200,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Cashier cannot open Suppliers through a direct address",
+        "project": "desktop",
+        "status": "passed",
+        "durationMs": 1338,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Supervisor supplier overview reconciles balances and opens financial tabs",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2491,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Floor Worker supplier overview and every tab omit financial DOM in en",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2198,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Floor Worker supplier overview and every tab omit financial DOM in fa",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 2566,
+        "retries": 0,
+        "skipReasons": []
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "name": "Cashier cannot open Suppliers through a direct address",
+        "project": "phone",
+        "status": "passed",
+        "durationMs": 1015,
+        "retries": 0,
+        "skipReasons": []
+      }
+    ]
+  },
+  "alignment": {
+    "command": "npx playwright test --config a2-alignment-final-playwright.config.mjs --workers=2",
+    "passed": 6,
+    "failed": 0,
+    "maxAllowedErrorPixels": 2,
+    "reports": [
+      {
+        "project": "desktop",
+        "language": "en",
+        "views": 18,
+        "tables": 18,
+        "cells": 446,
+        "maximumEdgeErrorPixels": 0,
+        "measurements": [
+          {
+            "route": "products",
+            "tables": 1,
+            "cells": 40,
+            "maxError": 0
+          },
+          {
+            "route": "alerts",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "product?code=0009",
+            "tables": 1,
+            "cells": 9,
+            "maxError": 0
+          },
+          {
+            "route": "returns",
+            "tables": 1,
+            "cells": 14,
+            "maxError": 0
+          },
+          {
+            "route": "return?id=demo-return-1",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers",
+            "tables": 1,
+            "cells": 60,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods",
+            "tables": 0,
+            "cells": 0,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Invoices|فاکتورها",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Products supplied|کالاهای تأمین‌شده",
+            "tables": 1,
+            "cells": 42,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Returns and credits|مرجوعی‌ها و اعتبارها",
+            "tables": 1,
+            "cells": 7,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Payments|پرداخت‌ها",
+            "tables": 1,
+            "cells": 10,
+            "maxError": 0
+          },
+          {
+            "route": "expiry",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "offers",
+            "tables": 1,
+            "cells": 25,
+            "maxError": 0
+          },
+          {
+            "route": "payables",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          },
+          {
+            "route": "settings",
+            "tables": 1,
+            "cells": 24,
+            "maxError": 0
+          },
+          {
+            "route": "dashboard",
+            "tables": 2,
+            "cells": 55,
+            "maxError": 0
+          },
+          {
+            "route": "labels",
+            "tables": 1,
+            "cells": 56,
+            "maxError": 0
+          },
+          {
+            "route": "invoices",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          }
+        ]
+      },
+      {
+        "project": "desktop",
+        "language": "fa",
+        "views": 18,
+        "tables": 18,
+        "cells": 446,
+        "maximumEdgeErrorPixels": 0,
+        "measurements": [
+          {
+            "route": "products",
+            "tables": 1,
+            "cells": 40,
+            "maxError": 0
+          },
+          {
+            "route": "alerts",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "product?code=0009",
+            "tables": 1,
+            "cells": 9,
+            "maxError": 0
+          },
+          {
+            "route": "returns",
+            "tables": 1,
+            "cells": 14,
+            "maxError": 0
+          },
+          {
+            "route": "return?id=demo-return-1",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers",
+            "tables": 1,
+            "cells": 60,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods",
+            "tables": 0,
+            "cells": 0,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Invoices|فاکتورها",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Products supplied|کالاهای تأمین‌شده",
+            "tables": 1,
+            "cells": 42,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Returns and credits|مرجوعی‌ها و اعتبارها",
+            "tables": 1,
+            "cells": 7,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Payments|پرداخت‌ها",
+            "tables": 1,
+            "cells": 10,
+            "maxError": 0
+          },
+          {
+            "route": "expiry",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "offers",
+            "tables": 1,
+            "cells": 25,
+            "maxError": 0
+          },
+          {
+            "route": "payables",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          },
+          {
+            "route": "settings",
+            "tables": 1,
+            "cells": 24,
+            "maxError": 0
+          },
+          {
+            "route": "dashboard",
+            "tables": 2,
+            "cells": 55,
+            "maxError": 0
+          },
+          {
+            "route": "labels",
+            "tables": 1,
+            "cells": 56,
+            "maxError": 0
+          },
+          {
+            "route": "invoices",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          }
+        ]
+      },
+      {
+        "project": "phone",
+        "language": "en",
+        "views": 18,
+        "tables": 18,
+        "cells": 446,
+        "maximumEdgeErrorPixels": 0,
+        "measurements": [
+          {
+            "route": "products",
+            "tables": 1,
+            "cells": 40,
+            "maxError": 0
+          },
+          {
+            "route": "alerts",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "product?code=0009",
+            "tables": 1,
+            "cells": 9,
+            "maxError": 0
+          },
+          {
+            "route": "returns",
+            "tables": 1,
+            "cells": 14,
+            "maxError": 0
+          },
+          {
+            "route": "return?id=demo-return-1",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers",
+            "tables": 1,
+            "cells": 60,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods",
+            "tables": 0,
+            "cells": 0,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Invoices|فاکتورها",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Products supplied|کالاهای تأمین‌شده",
+            "tables": 1,
+            "cells": 42,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Returns and credits|مرجوعی‌ها و اعتبارها",
+            "tables": 1,
+            "cells": 7,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Payments|پرداخت‌ها",
+            "tables": 1,
+            "cells": 10,
+            "maxError": 0
+          },
+          {
+            "route": "expiry",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "offers",
+            "tables": 1,
+            "cells": 25,
+            "maxError": 0
+          },
+          {
+            "route": "payables",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          },
+          {
+            "route": "settings",
+            "tables": 1,
+            "cells": 24,
+            "maxError": 0
+          },
+          {
+            "route": "dashboard",
+            "tables": 2,
+            "cells": 55,
+            "maxError": 0
+          },
+          {
+            "route": "labels",
+            "tables": 1,
+            "cells": 56,
+            "maxError": 0
+          },
+          {
+            "route": "invoices",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          }
+        ]
+      },
+      {
+        "project": "phone",
+        "language": "fa",
+        "views": 18,
+        "tables": 18,
+        "cells": 446,
+        "maximumEdgeErrorPixels": 0,
+        "measurements": [
+          {
+            "route": "products",
+            "tables": 1,
+            "cells": 40,
+            "maxError": 0
+          },
+          {
+            "route": "alerts",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "product?code=0009",
+            "tables": 1,
+            "cells": 9,
+            "maxError": 0
+          },
+          {
+            "route": "returns",
+            "tables": 1,
+            "cells": 14,
+            "maxError": 0
+          },
+          {
+            "route": "return?id=demo-return-1",
+            "tables": 1,
+            "cells": 6,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers",
+            "tables": 1,
+            "cells": 60,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods",
+            "tables": 0,
+            "cells": 0,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Invoices|فاکتورها",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Products supplied|کالاهای تأمین‌شده",
+            "tables": 1,
+            "cells": 42,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Returns and credits|مرجوعی‌ها و اعتبارها",
+            "tables": 1,
+            "cells": 7,
+            "maxError": 0
+          },
+          {
+            "route": "suppliers?name=Fresh%20Valley%20Foods|Payments|پرداخت‌ها",
+            "tables": 1,
+            "cells": 10,
+            "maxError": 0
+          },
+          {
+            "route": "expiry",
+            "tables": 1,
+            "cells": 16,
+            "maxError": 0
+          },
+          {
+            "route": "offers",
+            "tables": 1,
+            "cells": 25,
+            "maxError": 0
+          },
+          {
+            "route": "payables",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          },
+          {
+            "route": "settings",
+            "tables": 1,
+            "cells": 24,
+            "maxError": 0
+          },
+          {
+            "route": "dashboard",
+            "tables": 2,
+            "cells": 55,
+            "maxError": 0
+          },
+          {
+            "route": "labels",
+            "tables": 1,
+            "cells": 56,
+            "maxError": 0
+          },
+          {
+            "route": "invoices",
+            "tables": 1,
+            "cells": 30,
+            "maxError": 0
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "report": "capture-results.json",
+    "states": 39,
+    "images": 156,
+    "consoleOrPageErrors": [],
+    "geometryFailures": 0
+  },
+  "lint": {
+    "command": "npm run lint",
+    "result": "passed"
+  },
+  "build": {
+    "command": "npm run build",
+    "result": "passed",
+    "note": "Vite reports a nonfatal large-bundle warning."
+  },
+  "preCommit": {
+    "command": "pre-commit run",
+    "result": "passed",
+    "checks": [
+      "check-json",
+      "detect-private-key",
+      "trailing-whitespace",
+      "end-of-file-fixer"
+    ],
+    "skippedBecauseNoChangedApplicableFiles": ["check-yaml", "foundation-lint"]
+  },
+  "githubCI": {
+    "result": "failed before lint, tests and build",
+    "headSha": "fc6eb4037489c7054bb26cb60dba738c36103fbe",
+    "runUrl": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/37728803518",
+    "failedStep": "Prepare the environment",
+    "command": "make setup",
+    "exitCode": 2,
+    "detailedLogDownload": "Forbidden; underlying setup error unconfirmed",
+    "scopeNote": "Root setup/CI changes are outside the authorized prototype/docs scope. PR stays draft. Local prototype verification is separate."
+  }
+}

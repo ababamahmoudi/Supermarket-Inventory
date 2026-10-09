@@ -28,7 +28,7 @@ import logo from "../../assets/arzon-logo.png?inline";
 import { branchLabel, demoUserLabel, LtrText } from "./presentation";
 import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
-import { Lookup, Products } from "./screens/Catalog";
+import { Lookup, Products, ProductPage } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
 import Approvals from "./screens/Approvals";
 import Alerts from "./screens/Alerts";
@@ -39,6 +39,8 @@ import Expiry from "./screens/Expiry";
 import Notes from "./screens/Notes";
 import Payables from "./screens/Payables";
 import Dashboard from "./screens/Dashboard";
+import Suppliers from "./screens/Suppliers";
+import "./a2-shared.css";
 import { branches, demoUsers, useDemo } from "./store";
 import type { AuthError } from "./auth";
 import type { Branch, Role } from "./types";
@@ -46,6 +48,7 @@ import {
   Button,
   Card,
   ConfirmDialog,
+  Dialog,
   Field,
   IconButton,
   Menu,
@@ -133,7 +136,6 @@ export const pages: {
     icon: Store,
     group: "Catalog",
     roles: ["floor_worker", "supervisor"],
-    disabled: true,
   },
   {
     key: "dashboard",
@@ -548,27 +550,16 @@ function Reauthenticate() {
   const { reauthenticate, navigate, t } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    ref.current?.showModal();
-  }, []);
   return (
-    <dialog
-      ref={ref}
-      className="confirm-dialog"
-      aria-labelledby="reauth-title"
-      onCancel={(event) => {
-        event.preventDefault();
-        navigate("dashboard");
-      }}
+    <Dialog
+      open
+      onOpenChange={() => navigate("dashboard")}
+      title={t("Confirm your password", "تأیید گذرواژه")}
+      description={t(
+        "Enter your password to continue.",
+        "برای ادامه گذرواژهٔ خود را وارد کنید.",
+      )}
     >
-      <h2 id="reauth-title">{t("Confirm your password", "تأیید گذرواژه")}</h2>
-      <p className="muted">
-        {t(
-          "Enter your password to continue.",
-          "برای ادامه گذرواژهٔ خود را وارد کنید.",
-        )}
-      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -589,18 +580,21 @@ function Reauthenticate() {
           <Button type="submit">{t("Continue", "ادامه")}</Button>
         </div>
       </form>
-    </dialog>
+    </Dialog>
   );
 }
 const screenRegistry: Record<string, ReactNode> = {
+  suppliers: <Suppliers />,
   lookup: <Lookup />,
   products: <Products />,
+  product: <ProductPage />,
   invoices: <Invoices />,
   approvals: <Approvals />,
   alerts: <Alerts />,
   offers: <Offers />,
   labels: <Labels />,
   returns: <Returns />,
+  return: <Returns />,
   expiry: <Expiry />,
   notes: <Notes />,
   payables: <Payables />,
@@ -728,10 +722,38 @@ export default function App() {
       : role === "floor_worker"
         ? "invoices"
         : "lookup";
+  const routeKey = hash.split("?")[0];
+  const parentKey =
+    routeKey === "product"
+      ? "products"
+      : routeKey === "return"
+        ? "returns"
+        : routeKey;
+  const routeParams = new URLSearchParams(hash.split("?")[1]);
+  const currentProduct =
+    routeKey === "product"
+      ? state.products.find(
+          (item) =>
+            item.company_id === state.config.company.seed_key &&
+            item.code === routeParams.get("code"),
+        )
+      : undefined;
+  const currentReturn =
+    routeKey === "return"
+      ? state.returns.find(
+          (item) =>
+            item.company_id === state.config.company.seed_key &&
+            item.id === routeParams.get("id"),
+        )
+      : undefined;
+  const returnBreadcrumb = currentReturn
+    ? `${t("Return", "مرجوعی")} #${state.returns.filter((item) => item.company_id === state.config.company.seed_key).findIndex((item) => item.id === currentReturn.id) + 1}`
+    : undefined;
+  const supplierDetail =
+    routeKey === "suppliers" ? routeParams.get("name") : null;
   const page =
     allowed.find(
-      (candidate) =>
-        !candidate.disabled && candidate.key === hash.split("?")[0],
+      (candidate) => !candidate.disabled && candidate.key === parentKey,
     ) ?? allowed.find((candidate) => candidate.key === defaultKey)!;
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
@@ -909,7 +931,27 @@ export default function App() {
           >
             <span>{branchLabel(branch, lang)}</span>
             <ChevronRight size={14} aria-hidden="true" />
-            <span aria-current="page">{t(page.en, page.fa)}</span>
+            {currentProduct || currentReturn || supplierDetail ? (
+              <>
+                <a href={`#${page.key}`}>{t(page.en, page.fa)}</a>
+                <ChevronRight size={14} aria-hidden="true" />
+                <span aria-current="page">
+                  {currentProduct ? (
+                    <bdi dir="auto">
+                      {lang === "fa"
+                        ? currentProduct.name_fa
+                        : currentProduct.name_en}
+                    </bdi>
+                  ) : supplierDetail ? (
+                    <LtrText>{supplierDetail}</LtrText>
+                  ) : (
+                    <bdi dir="auto">{returnBreadcrumb}</bdi>
+                  )}
+                </span>
+              </>
+            ) : (
+              <span aria-current="page">{t(page.en, page.fa)}</span>
+            )}
             {page.key === "invoices" && state.invoice.status !== "empty" && (
               <>
                 <ChevronRight size={14} aria-hidden="true" />
@@ -1033,6 +1075,20 @@ export default function App() {
                 {demoUserLabel(candidate.name, lang)}
               </MenuItem>
             ))}
+            {page.key === "invoices" &&
+              state.invoice.status !== "empty" &&
+              state.invoice.status !== "posted" && (
+                <MenuItem
+                  onClick={() =>
+                    window.dispatchEvent(new Event("arzon:demo-invoice-answer"))
+                  }
+                >
+                  {t(
+                    "Use fictional demo answer",
+                    "استفاده از پاسخ نمونهٔ خیالی",
+                  )}
+                </MenuItem>
+              )}
             <MenuItem onClick={() => setResetOpen(true)}>
               <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
               {t("Reset demo", "بازنشانی دمو")}
@@ -1048,7 +1104,14 @@ export default function App() {
           {needsReauthentication(page.key) ? (
             <Reauthenticate />
           ) : (
-            screenRegistry[page.key]
+            (screenRegistry[
+              allowed.some(
+                (candidate) =>
+                  candidate.key === parentKey && !candidate.disabled,
+              )
+                ? routeKey
+                : page.key
+            ] ?? screenRegistry[page.key])
           )}
         </main>
       </div>

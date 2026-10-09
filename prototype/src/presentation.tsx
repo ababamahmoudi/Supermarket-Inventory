@@ -52,9 +52,17 @@ export function Money({
 }
 export function DateText({
   value,
+  className,
   ...props
 }: HTMLAttributes<HTMLElement> & { value: string | Date | null | undefined }) {
-  return <LtrText {...props}>{formatDate(value)}</LtrText>;
+  return (
+    <LtrText
+      {...props}
+      className={["date-text", className].filter(Boolean).join(" ")}
+    >
+      {formatDate(value)}
+    </LtrText>
+  );
 }
 export function UnitSize({
   value,

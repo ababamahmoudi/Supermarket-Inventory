@@ -43,8 +43,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("supplier figures from the owner's demo snapshot", () => {
-  it("loads all suppliers and the exact supplied branch totals without inventing records", () => {
+describe("supplier figures from explicit fictional posted invoices", () => {
+  it("reconciles the supplied totals, open invoices and overdue amounts to the same ledger", () => {
     const state = initialState();
     const before = structuredClone(state);
     const rows = supplierBalanceOverview(state, supervisor);
@@ -58,32 +58,52 @@ describe("supplier figures from the owner's demo snapshot", () => {
     expect(Decimal.sum(...rows.map((row) => row.overdue)).toFixed(2)).toBe(
       "306.40",
     );
+    expect(state.invoices).toHaveLength(12);
+    expect(state.ledger).toHaveLength(24);
+    expect(
+      rows.reduce(
+        (sum, row) =>
+          sum +
+          supplierBalanceSummary(
+            state,
+            supervisor,
+            row.supplier,
+          ).invoices.filter((invoice) => new Decimal(invoice.amount).gt(0))
+            .length,
+        0,
+      ),
+    ).toBe(5);
     expect(state).toEqual(before);
-    expect(state.ledger).toEqual([]);
   });
 
-  it("does not double the Fresh Valley figure after its actual invoice posts", () => {
+  it("adds the newly posted FV-20417 to the separate earlier FV-20390", () => {
     const state = initialState();
+    const baselineCount = state.ledger.length;
     expect(supplierBalanceSummary(state, supervisor, freshValley).balance).toBe(
       "169.79",
     );
     postDemoInvoice(state);
     const summary = supplierBalanceSummary(state, supervisor, freshValley);
-    expect(summary.balance).toBe("169.79");
+    expect(summary.balance).toBe("339.58");
     expect(summary.snapshot_balance).toBe("0.00");
-    expect(summary.rows).toHaveLength(2);
-    expect(state.ledger).toHaveLength(2);
+    expect(
+      summary.invoices.find((row) => row.reference === "FV-20390")?.amount,
+    ).toBe("169.79");
+    expect(
+      summary.invoices.find((row) => row.reference === "FV-20417")?.amount,
+    ).toBe("169.79");
+    expect(state.ledger).toHaveLength(baselineCount + 2);
   });
 
-  it("uses actual amounts when the original invoice is posted without shorts", () => {
+  it("uses actual amounts when the current invoice is posted without shorts", () => {
     const state = initialState();
     postDemoInvoice(state, 12);
     expect(supplierBalanceSummary(state, supervisor, freshValley).balance).toBe(
-      "177.02",
+      "346.81",
     );
   });
 
-  it("includes later short receipts and real payment allocations without recreating the seed balance", () => {
+  it("restores later receipts and allocates payments against the actual current invoice", () => {
     const state = initialState();
     postDemoInvoice(state);
     receiveShort(
@@ -95,23 +115,26 @@ describe("supplier figures from the owner's demo snapshot", () => {
       "Branch 1",
     );
     expect(supplierBalanceSummary(state, supervisor, freshValley).balance).toBe(
-      "173.41",
+      "343.20",
     );
     postPayment(state, supervisor, {
       supplier: freshValley,
       amount: "50.00",
-      date: state.supplier_balance_snapshot_date!,
+      date: state.demo_fixture_anchor_date!,
       cheque: "DEMO-1001",
       receipt: "ACTUAL-PAYMENT",
       allocations: [{ invoice_id: state.invoice.id, amount: "50.00" }],
     });
     const summary = supplierBalanceSummary(state, supervisor, freshValley);
-    expect(summary.balance).toBe("123.41");
-    expect(summary.invoices[0].amount).toBe("123.41");
+    expect(summary.balance).toBe("293.20");
+    expect(
+      summary.invoices.find((row) => row.invoice_id === state.invoice.id)
+        ?.amount,
+    ).toBe("123.41");
     expect(summary.snapshot_balance).toBe("0.00");
   });
 
-  it("adds other invoices to the supplied figure instead of discarding it", () => {
+  it("adds other invoice ledger rows and reports no separate demo balance", () => {
     const state = initialState();
     state.ledger.push({
       id: "new-receipt",
@@ -120,61 +143,63 @@ describe("supplier figures from the owner's demo snapshot", () => {
       supplier: freshValley,
       type: "invoice",
       amount: "20.00",
-      date: state.supplier_balance_snapshot_date!,
+      date: state.demo_fixture_anchor_date!,
       reference: "FV-NEW-DOCUMENT",
       invoice_id: "new-document",
       currency: state.config.company.currency,
     });
-    expect(supplierBalanceSummary(state, supervisor, freshValley).balance).toBe(
-      "189.79",
-    );
     expect(
-      supplierBalanceSummary(state, supervisor, freshValley).snapshot_balance,
-    ).toBe("169.79");
+      supplierBalanceSummary(state, supervisor, freshValley),
+    ).toMatchObject({ balance: "189.79", snapshot_balance: "0.00" });
   });
 
-  it("applies actual payments against seed figures and their overdue amounts", () => {
+  it("reduces overdue only when payment is allocated to an overdue invoice", () => {
     const state = initialState();
-    postPayment(state, supervisor, {
-      supplier: "Golden Grain Distributors",
-      amount: "50.00",
-      date: state.supplier_balance_snapshot_date!,
-      cheque: "DEMO-1002",
-      receipt: "SEED-BALANCE-PAYMENT",
-      allocations: [],
-    });
-    const summary = supplierBalanceSummary(
+    const supplier = "Golden Grain Distributors";
+    const overdueInvoice = supplierBalanceSummary(
       state,
       supervisor,
-      "Golden Grain Distributors",
-    );
-    expect(summary.balance).toBe("792.10");
-    expect(summary.overdue).toBe("160.00");
-    expect(summary.snapshot_balance).toBe("842.10");
-    expect(summary.rows).toHaveLength(1);
-    expect(state.ledger[0].type).toBe("payment");
+      supplier,
+    ).invoices.find((row) => row.reference === "GG-11842")!;
+    postPayment(state, supervisor, {
+      supplier,
+      amount: "50.00",
+      date: state.demo_fixture_anchor_date!,
+      cheque: "DEMO-1002",
+      receipt: "OVERDUE-PAYMENT",
+      allocations: [{ invoice_id: overdueInvoice.invoice_id, amount: "50.00" }],
+    });
+    expect(supplierBalanceSummary(state, supervisor, supplier)).toMatchObject({
+      balance: "792.10",
+      overdue: "160.00",
+      snapshot_balance: "0.00",
+    });
   });
 
-  it("removes the next due date when an aggregate demo balance has been paid", () => {
+  it("removes the next due date when the last outstanding invoice is paid", () => {
     const state = initialState();
+    const supplier = "Sunrise Beverages";
+    const overdueInvoice = supplierBalanceSummary(
+      state,
+      supervisor,
+      supplier,
+    ).invoices.find((row) => new Decimal(row.amount).gt(0))!;
     postPayment(state, supervisor, {
-      supplier: "Sunrise Beverages",
+      supplier,
       amount: "96.40",
-      date: state.supplier_balance_snapshot_date!,
+      date: state.demo_fixture_anchor_date!,
       cheque: "DEMO-1003",
       receipt: "PAID-SUNRISE",
-      allocations: [],
+      allocations: [{ invoice_id: overdueInvoice.invoice_id, amount: "96.40" }],
     });
-    expect(
-      supplierBalanceSummary(state, supervisor, "Sunrise Beverages"),
-    ).toMatchObject({
+    expect(supplierBalanceSummary(state, supervisor, supplier)).toMatchObject({
       balance: "0.00",
       overdue: "0.00",
       next_due_date: undefined,
     });
   });
 
-  it("anchors snapshot relative dates across refresh and later calendar days", () => {
+  it("keeps document dates after refresh while overdue follows the calendar", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-07T16:00:00Z"));
     const state = initialState();
@@ -191,14 +216,15 @@ describe("supplier figures from the owner's demo snapshot", () => {
       supervisor,
       "Golden Grain Distributors",
     );
-    expect(later.snapshot_date).toBe("2026-10-07");
-    expect(later.next_due_date).toBe(original.next_due_date);
+    expect(restored.demo_fixture_anchor_date).toBe("2026-10-07");
+    expect(later.overdue).toBe("842.10");
     expect(later.balance).toBe(original.balance);
   });
 
-  it("does not imply balances before the supplied snapshot existed", () => {
+  it("calculates month-end balances from the dated documents, not a snapshot", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-07T16:00:00Z"));
     const state = initialState();
-    state.supplier_balance_snapshot_date = "2026-10-07";
     expect(
       supplierBalanceSummary(state, supervisor, freshValley, "2026-09-30"),
     ).toMatchObject({
@@ -208,7 +234,7 @@ describe("supplier figures from the owner's demo snapshot", () => {
     });
   });
 
-  it("isolates branches and includes the selected company's figures in all-branch scope", () => {
+  it("isolates branches and includes their invoices in all-branch scope", () => {
     const state = initialState();
     for (const branch of ["Branch 2", "Branch 3"] as const) {
       const rows = supplierBalanceOverview(state, { ...supervisor, branch });
@@ -238,16 +264,13 @@ describe("supplier figures from the owner's demo snapshot", () => {
     expect(() =>
       supplierBalanceSummary(
         state,
-        {
-          ...supervisor,
-          company_id: "another-company",
-        },
+        { ...supervisor, company_id: "another-company" },
         freshValley,
       ),
     ).toThrow("scope");
   });
 
-  it("does not clear Branch 1 overdue amounts with an unallocated Branch 2 payment", () => {
+  it("keeps Branch 1 overdue unchanged after an unallocated Branch 2 payment", () => {
     const state = initialState();
     postPayment(
       state,
@@ -255,7 +278,7 @@ describe("supplier figures from the owner's demo snapshot", () => {
       {
         supplier: "Golden Grain Distributors",
         amount: "50.00",
-        date: state.supplier_balance_snapshot_date!,
+        date: state.demo_fixture_anchor_date!,
         cheque: "DEMO-B2",
         receipt: "BRANCH-TWO-PAYMENT",
         allocations: [],
@@ -273,7 +296,7 @@ describe("supplier figures from the owner's demo snapshot", () => {
     ).toMatchObject({ balance: "792.10", overdue: "210.00" });
   });
 
-  it("ignores foreign ledger records and never seeds another company or another currency", () => {
+  it("ignores foreign records and another currency", () => {
     const state = initialState();
     state.ledger.push({
       id: "foreign-ledger",
@@ -282,7 +305,7 @@ describe("supplier figures from the owner's demo snapshot", () => {
       supplier: "Private foreign supplier",
       type: "invoice",
       amount: "9999.00",
-      date: state.supplier_balance_snapshot_date!,
+      date: state.demo_fixture_anchor_date!,
       reference: "PRIVATE",
       currency: "CAD",
     });
@@ -293,20 +316,9 @@ describe("supplier figures from the owner's demo snapshot", () => {
     expect(supplierBalanceSummary(state, supervisor, freshValley).balance).toBe(
       "0.00",
     );
-    state.config.company.seed_key = "another-company";
-    expect(
-      supplierBalanceSummary(
-        state,
-        {
-          ...supervisor,
-          company_id: "another-company",
-        },
-        freshValley,
-      ).snapshot_balance,
-    ).toBe("0.00");
   });
 
-  it("exports the same final balance and explicitly separates the demo snapshot", () => {
+  it("exports invoice and payment records supporting the displayed balance", () => {
     const state = initialState();
     const summary = supplierBalanceSummary(
       state,
@@ -314,9 +326,9 @@ describe("supplier figures from the owner's demo snapshot", () => {
       "Golden Grain Distributors",
     );
     const csv = supplierBalanceCsv(summary, "Golden Grain Distributors");
-    expect(csv).toContain('"Demo balance","Golden Grain Distributors"');
+    expect(csv).not.toContain('"Demo balance"');
+    expect(csv).toContain('"GG-11842"');
     expect(csv).toContain('"Balance","","","","","","842.10"');
-    expect(state.ledger).toEqual([]);
   });
 });
 

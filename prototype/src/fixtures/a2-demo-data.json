@@ -1,0 +1,376 @@
+{
+  "schema": 2,
+  "description": "Fictional prototype-only purchase, receipt and payment history. Move into reviewed seed data later; these are not real supplier documents.",
+  "opening_stock": {
+    "Branch 1": {
+      "0001": 12,
+      "0002": 20,
+      "0003": 8,
+      "0004": 6,
+      "0005": 8,
+      "0006": 12,
+      "0007": 5,
+      "0008": 0,
+      "0009": 16,
+      "0010": 6,
+      "0011": 4,
+      "0012": 3,
+      "0013": 2,
+      "0014": 8,
+      "0015": 0
+    },
+    "Branch 2": {
+      "0001": 8,
+      "0002": 18,
+      "0003": 9,
+      "0004": 4,
+      "0005": 10,
+      "0006": 16,
+      "0007": 12,
+      "0008": 7,
+      "0009": 24,
+      "0010": 8,
+      "0011": 3,
+      "0012": 2,
+      "0013": 1,
+      "0014": 9,
+      "0015": 0
+    },
+    "Branch 3": {
+      "0001": 6,
+      "0002": 14,
+      "0003": 12,
+      "0004": 8,
+      "0005": 12,
+      "0006": 8,
+      "0007": 15,
+      "0008": 5,
+      "0009": 18,
+      "0010": 10,
+      "0011": 2,
+      "0012": 1,
+      "0013": 1,
+      "0014": 6,
+      "0015": 0
+    }
+  },
+  "invoices": [
+    {
+      "number": "GG-11794",
+      "supplier": "Golden Grain Distributors",
+      "branch": "Branch 1",
+      "relative_days": -52,
+      "due_relative_days": -22,
+      "payment_terms": "Net 30",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0007",
+          "qty": 12,
+          "unit_cost": "2.10"
+        }
+      ]
+    },
+    {
+      "number": "SB-7801",
+      "supplier": "Sunrise Beverages",
+      "branch": "Branch 2",
+      "relative_days": -45,
+      "due_relative_days": -38,
+      "payment_terms": "Net 7",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0004",
+          "qty": 12,
+          "unit_cost": "4.10"
+        },
+        {
+          "product_code": "0010",
+          "qty": 6,
+          "unit_cost": "3.20"
+        }
+      ]
+    },
+    {
+      "number": "FV-20241",
+      "supplier": "Fresh Valley Foods",
+      "branch": "Branch 3",
+      "relative_days": -38,
+      "due_relative_days": -24,
+      "payment_terms": "Net 14",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0002",
+          "qty": 24,
+          "unit_cost": "0.98"
+        },
+        {
+          "product_code": "0003",
+          "qty": 18,
+          "unit_cost": "1.95"
+        }
+      ]
+    },
+    {
+      "number": "GG-11810",
+      "supplier": "Golden Grain Distributors",
+      "branch": "Branch 2",
+      "relative_days": -31,
+      "due_relative_days": -1,
+      "payment_terms": "Net 30",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0001",
+          "qty": 10,
+          "unit_cost": "18.40"
+        },
+        {
+          "product_code": "0008",
+          "qty": 12,
+          "unit_cost": "6.05"
+        }
+      ]
+    },
+    {
+      "number": "FV-20296",
+      "supplier": "Fresh Valley Foods",
+      "branch": "Branch 1",
+      "relative_days": -24,
+      "due_relative_days": -10,
+      "payment_terms": "Net 14",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0003",
+          "qty": 12,
+          "unit_cost": "1.95"
+        },
+        {
+          "product_code": "0005",
+          "qty": 12,
+          "unit_cost": "1.20"
+        }
+      ]
+    },
+    {
+      "number": "HW-4910",
+      "supplier": "HomeWare Imports",
+      "branch": "Branch 3",
+      "relative_days": -17,
+      "due_relative_days": 13,
+      "payment_terms": "Net 30",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0011",
+          "qty": 6,
+          "unit_cost": "5.40"
+        },
+        {
+          "product_code": "0014",
+          "qty": 12,
+          "unit_cost": "1.50"
+        }
+      ]
+    },
+    {
+      "number": "SB-7848",
+      "supplier": "Sunrise Beverages",
+      "branch": "Branch 1",
+      "relative_days": -10,
+      "due_relative_days": -3,
+      "payment_terms": "Net 7",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "0.00",
+      "lines": [
+        {
+          "product_code": "0004",
+          "qty": 6,
+          "unit_cost": "4.10"
+        }
+      ]
+    },
+    {
+      "number": "GG-11842",
+      "supplier": "Golden Grain Distributors",
+      "branch": "Branch 1",
+      "relative_days": -35,
+      "due_relative_days": -5,
+      "payment_terms": "Net 30",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "210.00",
+      "lines": [
+        {
+          "product_code": "0001",
+          "qty": 20,
+          "unit_cost": "18.40"
+        }
+      ]
+    },
+    {
+      "number": "HW-4936",
+      "supplier": "HomeWare Imports",
+      "branch": "Branch 1",
+      "relative_days": -21,
+      "due_relative_days": 9,
+      "payment_terms": "Net 30",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "1260.00",
+      "lines": [
+        {
+          "product_code": "0011",
+          "qty": 20,
+          "unit_cost": "5.40"
+        },
+        {
+          "product_code": "0012",
+          "qty": 30,
+          "unit_cost": "12.60"
+        },
+        {
+          "product_code": "0013",
+          "qty": 20,
+          "unit_cost": "31.50"
+        },
+        {
+          "product_code": "0014",
+          "qty": 20,
+          "unit_cost": "1.50"
+        }
+      ]
+    },
+    {
+      "number": "SB-7862",
+      "supplier": "Sunrise Beverages",
+      "branch": "Branch 1",
+      "relative_days": -9,
+      "due_relative_days": -2,
+      "payment_terms": "Net 7",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "96.40",
+      "lines": [
+        {
+          "product_code": "0004",
+          "qty": 16,
+          "unit_cost": "4.10"
+        },
+        {
+          "product_code": "0010",
+          "qty": 12,
+          "unit_cost": "3.20"
+        }
+      ]
+    },
+    {
+      "number": "GG-11879",
+      "supplier": "Golden Grain Distributors",
+      "branch": "Branch 1",
+      "relative_days": -5,
+      "due_relative_days": 3,
+      "payment_terms": "Net 8",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "632.10",
+      "lines": [
+        {
+          "product_code": "0001",
+          "qty": 30,
+          "unit_cost": "18.40"
+        },
+        {
+          "product_code": "0007",
+          "qty": 40,
+          "unit_cost": "2.10"
+        }
+      ]
+    },
+    {
+      "number": "FV-20390",
+      "supplier": "Fresh Valley Foods",
+      "branch": "Branch 1",
+      "relative_days": -1,
+      "due_relative_days": 13,
+      "payment_terms": "Net 14",
+      "posted_by": "Demo Floor Worker",
+      "outstanding": "169.79",
+      "lines": [
+        {
+          "product_code": "0002",
+          "qty": 24,
+          "unit_cost": "0.98"
+        },
+        {
+          "product_code": "0005",
+          "qty": 12,
+          "unit_cost": "1.20"
+        },
+        {
+          "product_code": "0006",
+          "qty": 20,
+          "unit_cost": "1.55"
+        },
+        {
+          "product_code": "0003",
+          "qty": 36,
+          "unit_cost": "1.95"
+        },
+        {
+          "product_code": "0015",
+          "qty": 6,
+          "unit_cost": "3.40"
+        },
+        {
+          "product_code": "0009",
+          "qty": 12,
+          "unit_cost": "1.60"
+        }
+      ]
+    }
+  ],
+  "returns": [
+    {
+      "id": "demo-return-1",
+      "created_relative_days": -1,
+      "created_by": "Demo Floor Worker",
+      "invoice_number": "FV-20390"
+    },
+    {
+      "id": "demo-return-2",
+      "created_relative_days": -4,
+      "created_by": "Demo Floor Worker",
+      "invoice_number": "GG-11842"
+    }
+  ],
+  "expiry": [
+    {
+      "id": "demo-expiry-1",
+      "invoice_number": "FV-20390"
+    },
+    {
+      "id": "demo-expiry-2",
+      "invoice_number": "FV-20390"
+    }
+  ],
+  "price_changes": [
+    {
+      "product_code": "0004",
+      "relative_days": -1,
+      "by": "Demo Supervisor",
+      "branch": "Branch 1"
+    },
+    {
+      "product_code": "0007",
+      "relative_days": -2,
+      "by": "Demo Supervisor",
+      "branch": "Branch 1"
+    }
+  ]
+}

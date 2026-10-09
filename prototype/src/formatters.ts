@@ -102,6 +102,10 @@ export function categoryLabel(value: string, language: Language): string {
 }
 
 const activityCopy: Record<string, [string, string]> = {
+  "Save product": ["Save product", "ذخیره محصول"],
+  "Report barcode conflict": ["Report barcode conflict", "گزارش تداخل بارکد"],
+  "Keep barcode mappings": ["Keep barcode mappings", "حفظ اتصال بارکدها"],
+  "Reject barcode change": ["Reject barcode change", "رد تغییر بارکد"],
   "Approve product": ["Approve product", "تأیید محصول"],
   "Approve price": ["Approve price", "تأیید قیمت"],
   "Reject proposal": ["Reject proposal", "رد پیشنهاد"],

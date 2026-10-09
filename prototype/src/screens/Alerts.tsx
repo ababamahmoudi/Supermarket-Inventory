@@ -165,11 +165,17 @@ export function Alerts() {
                     ? t("Intentional", "عمدی")
                     : t("Resolved", "حل‌شده")}
               </Badge>
-              <span>{branchName(alert.branch)}</span>
             </div>
+            <p className="muted alert-branch">{branchName(alert.branch)}</p>
             {alert.type === "price_conflict" ? (
               <>
-                <DataTable>
+                <DataTable
+                  columns={[
+                    { width: "40%" },
+                    { width: 180, align: "end" },
+                    { width: 260, actions: true, align: "end" },
+                  ]}
+                >
                   <thead>
                     <tr>
                       <th>{t("Branch", "شعبه")}</th>
@@ -250,11 +256,11 @@ export function Alerts() {
                   <div className="price-change-values alert-costs">
                     <span>
                       {t("Old cost", "هزینه قبلی")}{" "}
-                      <Money value={alert.previous_cost} decimals={4} />
+                      <Money value={alert.previous_cost} />
                     </span>
                     <span>
                       {t("New cost", "هزینه جدید")}{" "}
-                      <Money value={alert.new_cost} decimals={4} />
+                      <Money value={alert.new_cost} />
                     </span>
                   </div>
                 )}

@@ -25,6 +25,7 @@ import {
   Badge,
   Checkbox,
   ConfirmDialog,
+  DataTable,
   DateField,
   Dropzone,
   Field,
@@ -712,4 +713,49 @@ describe("shared language and number presentation", () => {
       "tab-count",
     );
   });
+});
+
+it("keeps header and financial body fragments in the same shared table columns", () => {
+  const warn = vi.spyOn(console, "error");
+  show(
+    <DataTable
+      columns={[
+        { width: 180 },
+        { width: 100, align: "end" },
+        { width: 100, align: "end" },
+        { width: 80, actions: true },
+      ]}
+    >
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <>
+            <th>Balance</th>
+            <th>Overdue</th>
+          </>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fictional supplier</td>
+          <>
+            <td>$10.00</td>
+            <td>$2.00</td>
+          </>
+          <td>View</td>
+        </tr>
+      </tbody>
+    </DataTable>,
+  );
+  const rows = screen.getAllByRole("row");
+  expect(rows[0].children).toHaveLength(4);
+  expect(rows[1].children).toHaveLength(4);
+  for (let index = 0; index < 4; index++) {
+    const header = rows[0].children[index] as HTMLElement;
+    const cell = rows[1].children[index] as HTMLElement;
+    expect(header.style.textAlign).toBe(index === 0 ? "start" : "end");
+    expect(cell.style.textAlign).toBe(header.style.textAlign);
+  }
+  expect(warn).not.toHaveBeenCalled();
 });

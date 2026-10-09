@@ -13,16 +13,19 @@ import {
   isOfferScheduledNow,
   lookupBranch,
 } from "../catalog";
-import { useDemo } from "../store";
+import { branches, useDemo } from "../store";
 import {
   branchLabel,
+  categoryLabel,
   DateText,
+  formatOffer,
   LtrText,
   Money,
   OfferLabel,
   ProductName,
 } from "../presentation";
 import type { Branch, Offer } from "../types";
+import "./filters-a2.css";
 import {
   Badge,
   Button,
@@ -31,6 +34,7 @@ import {
   DataTable,
   EmptyState,
   Field,
+  FilterToolbar,
   PageHeader,
   Checkbox,
   DateField,
@@ -39,9 +43,13 @@ import {
 } from "../ui";
 
 export function Offers() {
-  const { state, update, role, branch, lang, t } = useDemo();
+  const { state, update, role, branch, setBranch, lang, t } = useDemo();
   const [tab, setTab] = useState<"offers" | "pools">("offers");
-  const [showStopped, setShowStopped] = useState(false);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [category, setCategory] = useState("");
+  const [supplier, setSupplier] = useState("");
+  const [type, setType] = useState("");
   const [code, setCode] = useState("");
   const [scope, setScope] = useState<"all" | "branch">("branch");
   const [mix, setMix] = useState(true);
@@ -62,11 +70,47 @@ export function Offers() {
       offer.company_id === company &&
       (offer.scope === "all" || branch === "all" || offer.branch === branch),
   );
-  const suggestions = ownOffers.filter((offer) => offer.status === "suggested");
-  const rows = ownOffers.filter(
-    (offer) =>
-      offer.status === "active" || (showStopped && offer.status === "stopped"),
+  const needle = search.trim().toLocaleLowerCase();
+  const filteredOffers = ownOffers.filter((offer) => {
+    const product = products.find((item) => item.code === offer.product_code);
+    return (
+      (!needle ||
+        [
+          product?.name_en,
+          product?.name_fa,
+          offer.product_code,
+          offer.label,
+        ].some((value) => value?.toLocaleLowerCase().includes(needle))) &&
+      (!status || offer.status === status) &&
+      (!category || product?.ai_category === category) &&
+      (!supplier || product?.main_supplier === supplier) &&
+      (!type || offer.label === type)
+    );
+  });
+  const suggestions = filteredOffers.filter(
+    (offer) => offer.status === "suggested",
   );
+  const rows = filteredOffers.filter((offer) => offer.status !== "suggested");
+  const categories = [
+    ...new Set(products.map((product) => product.ai_category)),
+  ].sort();
+  const suppliers = [
+    ...new Set(products.map((product) => product.main_supplier)),
+  ].sort();
+  const offerTypes = [
+    ...new Set([
+      ...state.config.promotions.price_to_offer.map((mapping) => mapping.offer),
+      ...ownOffers.map((offer) => offer.label),
+    ]),
+  ];
+  const clearFilters = () => {
+    setSearch("");
+    setStatus("");
+    setCategory("");
+    setSupplier("");
+    setType("");
+    if (role === "supervisor") setBranch("all");
+  };
   if (role === "cashier")
     return (
       <EmptyState>
@@ -199,6 +243,95 @@ export function Offers() {
       )}
       {tab === "offers" ? (
         <>
+          <FilterToolbar
+            className="offers-filters"
+            aria-label={t("Offer filters", "فیلترهای پیشنهادها")}
+            search={
+              <input
+                className="ui-input"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label={t("Search offers", "جستجوی پیشنهادها")}
+                placeholder={t("Search offers", "جستجوی پیشنهادها")}
+              />
+            }
+            count={t(
+              `${filteredOffers.length} ${filteredOffers.length === 1 ? "offer" : "offers"}`,
+              `${filteredOffers.length} پیشنهاد`,
+            )}
+          >
+            <Select
+              aria-label={t("Offer status", "وضعیت پیشنهاد")}
+              value={status}
+              onChange={setStatus}
+              options={[
+                { value: "", label: t("All statuses", "همه وضعیت‌ها") },
+                { value: "suggested", label: t("Pending", "در انتظار") },
+                { value: "active", label: t("Active", "فعال") },
+                { value: "stopped", label: t("Stopped", "متوقف‌شده") },
+              ]}
+            />
+            <Select
+              aria-label={t("Offer category", "دسته پیشنهاد")}
+              value={category}
+              onChange={setCategory}
+              options={[
+                { value: "", label: t("All categories", "همه دسته‌ها") },
+                ...categories.map((value) => ({
+                  value,
+                  label: categoryLabel(value, lang),
+                })),
+              ]}
+            />
+            <Select
+              aria-label={t("Offer supplier", "تأمین‌کننده پیشنهاد")}
+              value={supplier}
+              onChange={setSupplier}
+              options={[
+                { value: "", label: t("All suppliers", "همه تأمین‌کنندگان") },
+                ...suppliers.map((value) => ({
+                  value,
+                  label: value,
+                })),
+              ]}
+            />
+            <Select
+              aria-label={t("Offer branch", "شعبه پیشنهاد")}
+              value={branch}
+              onChange={(value) => setBranch(value as Branch)}
+              disabled={role !== "supervisor"}
+              options={
+                role === "supervisor"
+                  ? [
+                      { value: "all", label: t("All branches", "همه شعبه‌ها") },
+                      ...branches.map((value) => ({
+                        value,
+                        label: branchName(value),
+                      })),
+                    ]
+                  : [{ value: branch, label: branchName(branch) }]
+              }
+            />
+            <Select
+              aria-label={t("Offer type", "نوع پیشنهاد")}
+              value={type}
+              onChange={setType}
+              options={[
+                { value: "", label: t("All offer types", "همه انواع پیشنهاد") },
+                ...offerTypes.map((value) => ({
+                  value,
+                  label: formatOffer(
+                    value,
+                    lang,
+                    state.config.company.currency,
+                  ),
+                })),
+              ]}
+            />
+            <Button variant="ghost" onClick={clearFilters}>
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          </FilterToolbar>
           <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
             <p className="muted">
               {t(
@@ -312,18 +445,23 @@ export function Offers() {
             )}
           </Card>
           <Card title={t("Current offers", "پیشنهادهای فعلی")}>
-            <Checkbox checked={showStopped} onChange={setShowStopped}>
-              {t("Show stopped offers", "نمایش پیشنهادهای متوقف‌شده")}
-            </Checkbox>
             {rows.length === 0 ? (
               <EmptyState>
                 {t(
-                  "No active offers. Confirm a suggestion or create an offer below.",
-                  "پیشنهاد فعالی نیست. یک پیشنهاد را تأیید یا در پایین ایجاد کنید.",
+                  "No offers match these filters. Clear filters or create an offer below.",
+                  "هیچ پیشنهادی با این فیلترها مطابقت ندارد. فیلترها را پاک کنید یا در پایین پیشنهاد ایجاد کنید.",
                 )}
               </EmptyState>
             ) : (
-              <DataTable>
+              <DataTable
+                columns={[
+                  { width: "35%" },
+                  { width: "20%" },
+                  { width: "15%" },
+                  { width: "20%" },
+                  { width: 128, actions: true },
+                ]}
+              >
                 <thead>
                   <tr>
                     <th>{t("Product", "کالا")}</th>
@@ -418,6 +556,7 @@ export function Offers() {
                           {offer.status === "active" && (
                             <Button
                               variant="secondary"
+                              size="sm"
                               onClick={() => setStopId(offer.id)}
                             >
                               {t("Stop offer", "توقف پیشنهاد")}
@@ -560,7 +699,14 @@ export function Offers() {
                     )}
                   </EmptyState>
                 ) : (
-                  <DataTable>
+                  <DataTable
+                    columns={[
+                      { width: "38%" },
+                      { width: "18%" },
+                      { width: "18%", align: "end" },
+                      { width: "26%" },
+                    ]}
+                  >
                     <thead>
                       <tr>
                         <th>{t("Product", "کالا")}</th>
