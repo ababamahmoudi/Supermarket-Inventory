@@ -1,0 +1,4307 @@
+{
+  "generatedAt": "2026-10-09T17:34:20.245Z",
+  "phase": "c2",
+  "baseURL": "http://127.0.0.1:5233",
+  "method": "Real UI interactions in fresh profiles, no injected business state or edited images. Fictional supplier-item metadata, orders, invoice decisions and branch requests are entered through authorized forms. A controlled browser clock clears expired toasts. Headless window.print is suppressed while page.pdf exports the actual operational print portals; this does not validate a physical printer.",
+  "requestedScenes": [
+    "orders-list",
+    "new-order",
+    "order-print",
+    "supplier-items-supervisor",
+    "supplier-items-worker",
+    "supplier-item-history",
+    "invoice-as-ordered",
+    "invoice-short",
+    "invoice-not-delivered",
+    "invoice-extra-kept",
+    "invoice-extra-refused",
+    "invoice-cost-change",
+    "invoice-short-dated",
+    "requests-outgoing",
+    "requests-incoming",
+    "requests-receiving"
+  ],
+  "requestedVariants": [
+    "en-light",
+    "en-dark",
+    "fa-light",
+    "phone"
+  ],
+  "expectedCapturesThisRun": 64,
+  "productionBuilds": [
+    {
+      "variant": "en-light",
+      "htmlSHA256": "e734aa40e3004c9f76cb8ecd06a905659b43566dcc4b472f42a886c2398b4bee",
+      "entry": "./assets/index-DjtF_8Ma.js",
+      "entrySHA256": "d5990323c35a02c4c57b5c7f8ce4e4d04300bbc57ae564d606f450d4e39edbac"
+    },
+    {
+      "variant": "en-dark",
+      "htmlSHA256": "e734aa40e3004c9f76cb8ecd06a905659b43566dcc4b472f42a886c2398b4bee",
+      "entry": "./assets/index-DjtF_8Ma.js",
+      "entrySHA256": "d5990323c35a02c4c57b5c7f8ce4e4d04300bbc57ae564d606f450d4e39edbac"
+    },
+    {
+      "variant": "fa-light",
+      "htmlSHA256": "e734aa40e3004c9f76cb8ecd06a905659b43566dcc4b472f42a886c2398b4bee",
+      "entry": "./assets/index-DjtF_8Ma.js",
+      "entrySHA256": "d5990323c35a02c4c57b5c7f8ce4e4d04300bbc57ae564d606f450d4e39edbac"
+    },
+    {
+      "variant": "phone",
+      "htmlSHA256": "e734aa40e3004c9f76cb8ecd06a905659b43566dcc4b472f42a886c2398b4bee",
+      "entry": "./assets/index-DjtF_8Ma.js",
+      "entrySHA256": "d5990323c35a02c4c57b5c7f8ce4e4d04300bbc57ae564d606f450d4e39edbac"
+    }
+  ],
+  "browserErrors": [],
+  "printProof": [],
+  "documentProof": [
+    {
+      "kind": "order",
+      "variant": "en-light",
+      "file": "order-en-light.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 18,
+      "bilingualPersian": 18,
+      "text": "Super ArzonOrderسفارشORD-0001Supplierتأمین‌کنندهFresh Valley FoodsLocationمکانNorth Yorkنورث یورکDateتاریخ2026-10-09Product / supplier codeکالا / کد تأمین‌کنندهUnits per caseواحد در کارتنCasesکارتنUnitsواحدUnit costهزینهٔ واحدCase costهزینهٔ کارتنBefore-tax totalجمع پیش از مالیاتBlack Tea 450 gچای سیاه ۴۵۰ گرمیC2-TEA12112$3.55$42.60$42.60Canned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی000212224$0.98$11.76$23.52Ground Sumac 100 gسماق ۱۰۰ گرمی000512112$1.20$14.40$14.40Potato Chips 150 gچیپس سیب‌زمینی ۱۵۰ گرمی000912112$1.60$19.20$19.20Sour Cherry Juice 1 Lآب آلبالو ۱ لیتری000312336$1.95$23.40$70.20Expected total before taxجمع مورد انتظار پیش از مالیات$169.92",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "picking-list",
+      "variant": "en-light",
+      "file": "picking-list-en-light.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 15,
+      "bilingualPersian": 15,
+      "text": "Super ArzonPicking listفهرست آماده‌سازیREQ-0001Requesting locationمحل درخواست‌کنندهNorth Yorkنورث یورکSending locationمحل ارسال‌کنندهWarehouseانبارRequested byدرخواست‌کنندهDemo SupervisorDateتاریخ2026-10-09SentارسالItemموردQuantityتعدادNoteیادداشتCanned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g2 Casesکارتن12 units per case12 واحد در کارتنReceiving handoverbread3 Unitsواحد",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "order",
+      "variant": "en-dark",
+      "file": "order-en-dark.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 18,
+      "bilingualPersian": 18,
+      "text": "Super ArzonOrderسفارشORD-0001Supplierتأمین‌کنندهFresh Valley FoodsLocationمکانNorth Yorkنورث یورکDateتاریخ2026-10-09Product / supplier codeکالا / کد تأمین‌کنندهUnits per caseواحد در کارتنCasesکارتنUnitsواحدUnit costهزینهٔ واحدCase costهزینهٔ کارتنBefore-tax totalجمع پیش از مالیاتBlack Tea 450 gچای سیاه ۴۵۰ گرمیC2-TEA12112$3.55$42.60$42.60Canned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی000212224$0.98$11.76$23.52Ground Sumac 100 gسماق ۱۰۰ گرمی000512112$1.20$14.40$14.40Potato Chips 150 gچیپس سیب‌زمینی ۱۵۰ گرمی000912112$1.60$19.20$19.20Sour Cherry Juice 1 Lآب آلبالو ۱ لیتری000312336$1.95$23.40$70.20Expected total before taxجمع مورد انتظار پیش از مالیات$169.92",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "picking-list",
+      "variant": "en-dark",
+      "file": "picking-list-en-dark.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 15,
+      "bilingualPersian": 15,
+      "text": "Super ArzonPicking listفهرست آماده‌سازیREQ-0001Requesting locationمحل درخواست‌کنندهNorth Yorkنورث یورکSending locationمحل ارسال‌کنندهWarehouseانبارRequested byدرخواست‌کنندهDemo SupervisorDateتاریخ2026-10-09SentارسالItemموردQuantityتعدادNoteیادداشتCanned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g2 Casesکارتن12 units per case12 واحد در کارتنReceiving handoverbread3 Unitsواحد",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "order",
+      "variant": "fa-light",
+      "file": "order-fa-light.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "fa",
+      "direction": "rtl",
+      "bilingualEnglish": 18,
+      "bilingualPersian": 18,
+      "text": "Super ArzonOrderسفارشORD-0001Supplierتأمین‌کنندهFresh Valley FoodsLocationمکانNorth Yorkنورث یورکDateتاریخ2026-10-09Product / supplier codeکالا / کد تأمین‌کنندهUnits per caseواحد در کارتنCasesکارتنUnitsواحدUnit costهزینهٔ واحدCase costهزینهٔ کارتنBefore-tax totalجمع پیش از مالیاتچای سیاه ۴۵۰ گرمیBlack Tea 450 gC2-TEA12112$3.55$42.60$42.60باقالا کنسرو شده ۴۰۰ گرمیCanned Fava Beans 400 g000212224$0.98$11.76$23.52سماق ۱۰۰ گرمیGround Sumac 100 g000512112$1.20$14.40$14.40چیپس سیب‌زمینی ۱۵۰ گرمیPotato Chips 150 g000912112$1.60$19.20$19.20آب آلبالو ۱ لیتریSour Cherry Juice 1 L000312336$1.95$23.40$70.20Expected total before taxجمع مورد انتظار پیش از مالیات$169.92",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "picking-list",
+      "variant": "fa-light",
+      "file": "picking-list-fa-light.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "fa",
+      "direction": "rtl",
+      "bilingualEnglish": 15,
+      "bilingualPersian": 15,
+      "text": "سوپر ارزانPicking listفهرست آماده‌سازیREQ-0001Requesting locationمحل درخواست‌کنندهNorth Yorkنورث یورکSending locationمحل ارسال‌کنندهWarehouseانبارRequested byدرخواست‌کنندهDemo SupervisorDateتاریخ2026-10-09SentارسالItemموردQuantityتعدادNoteیادداشتCanned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g2 Casesکارتن12 units per case12 واحد در کارتنReceiving handoverbread3 Unitsواحد",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "order",
+      "variant": "phone",
+      "file": "order-phone.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 18,
+      "bilingualPersian": 18,
+      "text": "Super ArzonOrderسفارشORD-0001Supplierتأمین‌کنندهFresh Valley FoodsLocationمکانNorth Yorkنورث یورکDateتاریخ2026-10-09Product / supplier codeکالا / کد تأمین‌کنندهUnits per caseواحد در کارتنCasesکارتنUnitsواحدUnit costهزینهٔ واحدCase costهزینهٔ کارتنBefore-tax totalجمع پیش از مالیاتBlack Tea 450 gچای سیاه ۴۵۰ گرمیC2-TEA12112$3.55$42.60$42.60Canned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی000212224$0.98$11.76$23.52Ground Sumac 100 gسماق ۱۰۰ گرمی000512112$1.20$14.40$14.40Potato Chips 150 gچیپس سیب‌زمینی ۱۵۰ گرمی000912112$1.60$19.20$19.20Sour Cherry Juice 1 Lآب آلبالو ۱ لیتری000312336$1.95$23.40$70.20Expected total before taxجمع مورد انتظار پیش از مالیات$169.92",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    },
+    {
+      "kind": "picking-list",
+      "variant": "phone",
+      "file": "picking-list-phone.pdf",
+      "mediaBoxes": [
+        {
+          "widthMM": 209.88865255555555,
+          "heightMM": 297.0106596111111
+        }
+      ],
+      "language": "en",
+      "direction": "ltr",
+      "bilingualEnglish": 15,
+      "bilingualPersian": 15,
+      "text": "Super ArzonPicking listفهرست آماده‌سازیREQ-0001Requesting locationمحل درخواست‌کنندهNorth Yorkنورث یورکSending locationمحل ارسال‌کنندهWarehouseانبارRequested byدرخواست‌کنندهDemo SupervisorDateتاریخ2026-10-09SentارسالItemموردQuantityتعدادNoteیادداشتCanned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g2 Casesکارتن12 units per case12 واحد در کارتنReceiving handoverbread3 Unitsواحد",
+      "background": "rgb(255, 255, 255)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "htmlBackground": "rgb(255, 255, 255)",
+      "htmlColorScheme": "light",
+      "tableBackgrounds": [
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)",
+        "rgb(255, 255, 255)"
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "screen": "supplier-items-supervisor",
+      "variant": "en-light",
+      "file": "supplier-items-supervisor-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-item-history",
+      "variant": "en-light",
+      "file": "supplier-item-history-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-worker",
+      "variant": "en-light",
+      "file": "supplier-items-worker-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "new-order",
+      "variant": "en-light",
+      "file": "new-order-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units per case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Expected unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "orders-list",
+      "variant": "en-light",
+      "file": "orders-list-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Reference",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax expected total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "order-print",
+      "variant": "en-light",
+      "file": "order-print-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cancelled units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Remaining units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-as-ordered",
+      "variant": "en-light",
+      "file": "invoice-as-ordered-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short",
+      "variant": "en-light",
+      "file": "invoice-short-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-not-delivered",
+      "variant": "en-light",
+      "file": "invoice-not-delivered-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-kept",
+      "variant": "en-light",
+      "file": "invoice-extra-kept-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-refused",
+      "variant": "en-light",
+      "file": "invoice-extra-refused-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-cost-change",
+      "variant": "en-light",
+      "file": "invoice-cost-change-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short-dated",
+      "variant": "en-light",
+      "file": "invoice-short-dated-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-outgoing",
+      "variant": "en-light",
+      "file": "requests-outgoing-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Request",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Requesting location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Sending location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-incoming",
+      "variant": "en-light",
+      "file": "requests-incoming-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-receiving",
+      "variant": "en-light",
+      "file": "requests-receiving-en-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-supervisor",
+      "variant": "en-dark",
+      "file": "supplier-items-supervisor-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-item-history",
+      "variant": "en-dark",
+      "file": "supplier-item-history-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-worker",
+      "variant": "en-dark",
+      "file": "supplier-items-worker-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "new-order",
+      "variant": "en-dark",
+      "file": "new-order-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units per case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Expected unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "orders-list",
+      "variant": "en-dark",
+      "file": "orders-list-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Reference",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax expected total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "order-print",
+      "variant": "en-dark",
+      "file": "order-print-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cancelled units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Remaining units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-as-ordered",
+      "variant": "en-dark",
+      "file": "invoice-as-ordered-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short",
+      "variant": "en-dark",
+      "file": "invoice-short-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-not-delivered",
+      "variant": "en-dark",
+      "file": "invoice-not-delivered-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-kept",
+      "variant": "en-dark",
+      "file": "invoice-extra-kept-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-refused",
+      "variant": "en-dark",
+      "file": "invoice-extra-refused-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-cost-change",
+      "variant": "en-dark",
+      "file": "invoice-cost-change-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short-dated",
+      "variant": "en-dark",
+      "file": "invoice-short-dated-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-outgoing",
+      "variant": "en-dark",
+      "file": "requests-outgoing-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Request",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Requesting location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Sending location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-incoming",
+      "variant": "en-dark",
+      "file": "requests-incoming-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-receiving",
+      "variant": "en-dark",
+      "file": "requests-receiving-en-dark.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "dark",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-supervisor",
+      "variant": "fa-light",
+      "file": "supplier-items-supervisor-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کد تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "بسته",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین خرید / کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین خرید / واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ آخرین خرید",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "عملیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-item-history",
+      "variant": "fa-light",
+      "file": "supplier-item-history-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کد تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "بسته",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین خرید / کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین خرید / واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ آخرین خرید",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "عملیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "تاریخ",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "مکان",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "بسته",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-worker",
+      "variant": "fa-light",
+      "file": "supplier-items-worker-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کد تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "بسته",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ آخرین خرید",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "آخرین فاکتور",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "عملیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "new-order",
+      "variant": "fa-light",
+      "file": "new-order-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا / کد تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد در کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینهٔ مورد انتظار واحد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینهٔ کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "orders-list",
+      "variant": "fa-light",
+      "file": "orders-list-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "شماره",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "مکان",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع مورد انتظار پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "وضعیت",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "order-print",
+      "variant": "fa-light",
+      "file": "order-print-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#orders",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا / کد تأمین‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "کارتن",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد سفارش‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد دریافت‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد لغوشده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحد باقی‌مانده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-as-ordered",
+      "variant": "fa-light",
+      "file": "invoice-as-ordered-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short",
+      "variant": "fa-light",
+      "file": "invoice-short-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-not-delivered",
+      "variant": "fa-light",
+      "file": "invoice-not-delivered-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-kept",
+      "variant": "fa-light",
+      "file": "invoice-extra-kept-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-refused",
+      "variant": "fa-light",
+      "file": "invoice-extra-refused-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-cost-change",
+      "variant": "fa-light",
+      "file": "invoice-cost-change-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short-dated",
+      "variant": "fa-light",
+      "file": "invoice-short-dated-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#invoices",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای باقی‌مانده سفارش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "واحدهای تحویل‌شده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تصمیم",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "کالا",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تعداد",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "هزینه هر واحد پیش از مالیات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "جمع ردیف",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "قیمت فروش",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-outgoing",
+      "variant": "fa-light",
+      "file": "requests-outgoing-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "درخواست",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "محل درخواست‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "محل ارسال‌کننده",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "وضعیت",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "تاریخ",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "اقدامات",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-incoming",
+      "variant": "fa-light",
+      "file": "requests-incoming-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-receiving",
+      "variant": "fa-light",
+      "file": "requests-receiving-fa-light.png",
+      "width": 1600,
+      "height": 1080,
+      "scrollWidth": 1600,
+      "route": "#requests",
+      "language": "fa",
+      "direction": "rtl",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-supervisor",
+      "variant": "phone",
+      "file": "supplier-items-supervisor-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-item-history",
+      "variant": "phone",
+      "file": "supplier-item-history-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last bought / unit",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "supplier-items-worker",
+      "variant": "phone",
+      "file": "supplier-items-worker-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Pack",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date last bought",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Last invoice",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "new-order",
+      "variant": "phone",
+      "file": "new-order-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units per case",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Expected unit cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Case cost",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "orders-list",
+      "variant": "phone",
+      "file": "orders-list-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Reference",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Supplier",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax expected total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "order-print",
+      "variant": "phone",
+      "file": "order-print-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#orders",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product / supplier code",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cases",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Received units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Cancelled units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Remaining units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Before-tax total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-as-ordered",
+      "variant": "phone",
+      "file": "invoice-as-ordered-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short",
+      "variant": "phone",
+      "file": "invoice-short-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-not-delivered",
+      "variant": "phone",
+      "file": "invoice-not-delivered-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-kept",
+      "variant": "phone",
+      "file": "invoice-extra-kept-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-extra-refused",
+      "variant": "phone",
+      "file": "invoice-extra-refused-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-cost-change",
+      "variant": "phone",
+      "file": "invoice-cost-change-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "invoice-short-dated",
+      "variant": "phone",
+      "file": "invoice-short-dated-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#invoices",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Ordered units remaining",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Delivered units",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Decision",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ],
+        [
+          {
+            "column": "Product",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Quantity",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Unit cost before tax",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Line total",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Selling price",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-outgoing",
+      "variant": "phone",
+      "file": "requests-outgoing-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [
+        [
+          {
+            "column": "Request",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Requesting location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Sending location",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Status",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Date",
+            "leftDifference": 0,
+            "rightDifference": 0
+          },
+          {
+            "column": "Actions",
+            "leftDifference": 0,
+            "rightDifference": 0
+          }
+        ]
+      ],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-incoming",
+      "variant": "phone",
+      "file": "requests-incoming-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    },
+    {
+      "screen": "requests-receiving",
+      "variant": "phone",
+      "file": "requests-receiving-phone.png",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "route": "#requests",
+      "language": "en",
+      "direction": "ltr",
+      "theme": "light",
+      "kpis": 0,
+      "visibleNativeControls": [],
+      "resizeHandles": 0,
+      "sidebarScrolls": false,
+      "tableColumns": [],
+      "labelSheets": [],
+      "labels": [],
+      "grayscaleFilters": []
+    }
+  ]
+}

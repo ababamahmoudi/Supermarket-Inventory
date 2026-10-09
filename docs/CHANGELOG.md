@@ -7,7 +7,7 @@
 - Added linked invoice comparison for matching, Short, absent, kept/refused extras, accepted cost changes and short-dated expiry. Normal pricing/manual provenance remains protected; posting retains exact pack/quantity/cost evidence and creates one differences alert without duplicate receipts or payable deductions.
 - Added endpoint-scoped outgoing/incoming Branch requests, sending/arrival checklists, bilingual A4 picking lists and safe residual-copy drafts. They preserve physical transfer evidence without visible inventory estimates or supplier-money effects.
 - Corrected short-window non-scrolling navigation and bilingual A4 print presentation, including full column headings, isolated names/units, white paper and two-decimal read-only cost display while retaining four-decimal stored computation.
-- Final compiled review source is `e13b1d2cbcbe213188bc698aeccc16fd4e0b44be`. Passed 525 unit tests across 42 files, lint and typed production build. Final browser and four-variant screenshot/PDF proof will be recorded in the [C review guide](PR_C_REVIEW.md) after completion.
+- Final compiled review source is `098c6c8d65b83976d92815e30d43778d0fac4f9e`. Passed 525 unit tests across 42 files, lint and typed production build. Captured 64 fresh real-interface screenshots and eight actual A4 print-portal PDFs in English light/dark, Persian and phone variants with zero runtime/layout/geometry errors. The full final browser suite passed 273 scenarios with seven desktop-only checks skipped in the phone project, zero failures/flaky cases/retries (280 total). The [C review guide](PR_C_REVIEW.md) records exact Ubuntu commands, click paths, screenshots and the separate live GitHub checks link.
 
 ## 2026-10-09 — Pull request C1: receiving, locations and review proof
 
