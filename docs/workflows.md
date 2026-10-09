@@ -25,13 +25,13 @@ stateDiagram-v2
 - **needs_review**: AI lines wait for a person. The reviewer must confirm each line, including the explicit **Track date: Yes / No** decision for every line in A2.
 - **ready_to_post**: header complete, original file attached, every line confirmed.
 - **Posting rules** (all must hold): mandatory header fields present; original file attached; supplier is **confirmed** (a proposed supplier blocks posting with the reason shown as "Waiting for Supervisor to confirm supplier"); every unmatched line resolved (matched or created as a pending new product); worker has answered the same-supplier lower-price questions where they apply.
-- **On posting:** create `received` stock movements for actually delivered quantities (exclude missing short quantities); create price proposals with this invoice/line's exact four-decimal cost, invoice number, posting employee and timestamp; create alerts; create the invoice entry in this branch's supplier ledger (net of open shorts); lock the invoice. Drafts/Ready to post previews create no active approvals. Posting stays blocked until every line has answered **Track date: Yes / No** and all category-specific required dates/decisions are valid.
-- A posted invoice can be corrected only by the Supervisor (void and re-enter, or adjustment), always with an audit entry.
+- **On posting:** create `received` physical movements and Received log entries for actually delivered quantities (exclude missing short quantities); create price proposals with this invoice/line's exact four-decimal cost, invoice number, posting employee and timestamp; create alerts; create the invoice entry in this branch's supplier ledger (net of open shorts); lock the invoice. Drafts/Ready to post previews create no active approvals. Posting stays blocked until every line has answered **Track date: Yes / No** and all category-specific required dates/decisions are valid.
+- A posted invoice can be corrected only by the Supervisor (void/re-entry, adjustment or **Move invoice** correction), always preserving the original with an audit entry.
 - Invoice number missing → assign next sequential number for that supplier and mark `number_is_system_assigned`.
 
 ## 2. New supplier and manual supplier management
 
-- **Supervisor Add supplier (B, item 44):** open from Suppliers or the invoice Supplier field's + Add supplier. The max-720px shared form captures name, phone, email, sales rep/phone, payment terms, optional address/notes, and optional balance per allowed branch with an as-of date. A similar-name warning links to existing suppliers before save; it never silently merges. Save creates `confirmed` immediately and records actor/time/company in History.
+- **Supervisor Add supplier (B, item 44):** open from Suppliers or the invoice Supplier field's + Add supplier. The max-720 px shared form captures name, phone, email, sales rep/phone, payment terms, optional address/notes, and optional balance per allowed branch with an as-of date. A similar-name warning links to existing suppliers before save; it never silently merges. Save creates `confirmed` immediately and records actor/time/company in History.
 - Each entered branch opening balance appends an `opening_balance` ledger entry labeled **Opening balance**, dated as of the entered date and attributed to the Supervisor. It appears in Payables; it is not an invoice, delivery or purchase-chart contribution. Existing ledger entries are never replaced.
 - **Floor Worker invoice quick-add:** the same form has no opening-balance controls and creates `proposed`. Invoice entry continues but posting is blocked with **Waiting for Supervisor to confirm supplier** until the Supervisor confirms (`confirmed`) or explicitly merges it into an existing supplier. Dashboard shows Supplier waiting for confirmation. The transaction rejects unauthorized opening balances, including values supplied outside the UI.
 - Only Supervisors can edit or deactivate suppliers. Deactivate excludes a supplier from new-invoice choices without deleting its invoices, returns, products, balances or history; existing records retain their links. Record every edit, confirmation and deactivation. Cashiers cannot add suppliers; Floor Workers have no standalone Suppliers Add supplier action.
@@ -39,11 +39,11 @@ stateDiagram-v2
 
 ## 2A. Supervisor Add product and invoice product proposals
 
-- **Supervisor Add product (B, item 45):** open the shared product editor in new mode from Products or an invoice's + Add new product. Capture English/Persian names, unit size, category, pricing category, barcode, supplier, date tracking, last unit cost before tax, selling price and optional starting count per allowed branch.
+- **Supervisor Add product (B, item 45):** open the shared product editor in new mode from Products or an invoice's + Add new product. Capture English/Persian names, unit size, category, pricing category, barcode, supplier, date tracking, last unit cost before tax and selling price. No starting/opening counts in Phase 1.
 - Compute selling price through the unchanged Decimal pricing engine using the entered cost/category. If the Supervisor changes the calculated selling price, record a manual override; if the saved price falls below the configured minimum margin, require the Supervisor's explicit confirmation. Do not invent invoice-number provenance for a manual cost.
-- Allocate the next company-wide Product Code, beyond all previously assigned codes including archived records; a failed validation does not create a product or stock. Block conflicting barcodes with the existing conflict flow and warn/link when a name is close to an existing product. Never silently merge products or recycle a code.
-- Supervisor save creates an **Active** product immediately and records the creation/price decision in History; no separate pending-product approval is needed. Each entered branch starting count appends an **Opening count** stock movement with actor/time/company/product/branch. It does not overwrite the stock ledger or become a fabricated receipt. Posted opening stock and money use correction entries, never simple Undo/Revert.
-- **Floor Worker invoice-only + Add new product:** use the shared new form as a proposal, with no opening-stock controls. Save a **Pending approval** product, retain normal invoice/posting-derived approval behavior and the last-approved-price rules. Floor Workers and Cashiers do not get a standalone Products Add product action; Cashiers cannot create invoice proposals. All state changes enforce role and company/branch scope.
+- Allocate the next company-wide Product Code, beyond all previously assigned codes including archived records; a failed validation creates no product or movement. Block conflicting barcodes with the existing conflict flow and warn/link when a name is close to an existing product. Never silently merge products or recycle a code.
+- Supervisor save creates an **Active** product immediately and records the creation/price decision in History; no separate pending-product approval is needed. C removes the starting-count fields/transactions. Preserve historical movement records and money corrections, never simple destructive Undo/Revert.
+- **Floor Worker invoice-only + Add new product:** use the shared new form as a proposal, with no opening-count controls. Save a **Pending approval** product, retain normal invoice/posting-derived approval behavior and the last-approved-price rules. Floor Workers and Cashiers do not get a standalone Products Add product action; Cashiers cannot create invoice proposals. All state changes enforce role and company/branch scope.
 
 ## 3. Price proposal and approval
 
@@ -90,8 +90,8 @@ stateDiagram-v2
   open --> closed_not_delivered: Supervisor closes
 ```
 
-- **open**: the short amount (line amount plus proportional tax **(assumed)**) is deducted from the invoice's payable total in that branch's supplier ledger; no stock is added.
-- **resolved_delivered**: add a stock movement, restore the amount to the payable total, record date and employee. If the delivered cost differs, run the normal price check.
+- **open**: the short amount (line amount plus proportional tax **(assumed)**) is deducted from the invoice's payable total in that branch's supplier ledger; no Received quantity is recorded.
+- **resolved_delivered**: record an actual received movement, restore the amount to the payable total, record date and employee. If the delivered cost differs, run the normal price check.
 - **closed_not_delivered**: the deduction stands as a credit; the Supervisor sees the invoice and the deducted amount.
 - The Supervisor dashboard lists open shorts with age.
 
@@ -120,11 +120,11 @@ stateDiagram-v2
 - **A2 landing:** overview of all visible returns, default **Pending** (not resolved/cancelled), supplier default **All suppliers**, plus search/status/branch filters. A row opens its own return page, with creation employee/date, status and primary next action at the top. **Return policy** opens a centered dialog; lines and evidence/history use separate cards.
 - While **open**, the only header actions are **Record pickup** (primary) and **Cancel return**. **Record resolution** appears after pickup when the state allows it; the header uses the normal page-title size.
 - When a supplier arrives and is selected, show that supplier's **open returns** at once so the worker can pick them up.
-- Creating a return lines moves the damaged quantity out of sellable stock (`return_pending`). Cancelling puts it back (`return_cancelled`).
+- Creating a return records actual set-aside (`return_pending`). Cancellation records only actually recovered safe originals, following `return-policy.md`; never restore supplier-held/unsafe goods or duplicate replacements. No stock level is displayed.
 - Pickup requires the **supplier representative's typed name**. The paper copy carries the signature. Photo optional. Pickup does not require an invoice.
 - Resolution types: credit on current invoice, credit on a later invoice, replacement product received (fully/partially), cash or other compensation, no compensation, cancelled.
 - A return is credited on **one** invoice only. Linking the credit adds a `credit` entry to that branch's supplier ledger.
-- **Replacement received** adds stock, records product/qty/date/employee/rep/photo/note, and **never** touches Payables.
+- **Replacement received** records actual incoming goods and evidence, records product/qty/date/employee/rep/photo/note, and **never** touches Payables.
 - Completed and cancelled returns stay in history and are searchable.
 
 ## 9. Date tracking and expiry
@@ -138,7 +138,7 @@ stateDiagram-v2
 
 1. **Find products** in the label product list: search, or filter by Arrived today, Price changed recently, On offer, pricing category, AI category, supplier.
 2. **Add to waitlist** (per product, with copies; or "Add all filtered"). The waitlist is shared per branch and survives sign-out and refresh. Optional setting: auto-add when a price is approved (off by default).
-3. **Open the waitlist:** adjust copies, remove items, choose a saved **template** or create one (name, width, height, margins, gaps, calibration offsets).
+3. **Open the waitlist:** adjust copies, remove items, choose a saved **template** or duplicate/edit a built-in **Regular / Promo** template, or create one (name, width, height, margins, gaps, calibration offsets). Archive/restore rather than delete; built-ins are inserted once without resetting existing templates.
 4. The app calculates how many labels fit on an A4 sheet: `columns = floor((210 − left − right + gap_x) / (width + gap_x))`, `rows` likewise with 297; slots are numbered left-to-right, top-to-bottom (right-to-left setting for Persian layouts).
 5. Choose the **starting slot** on the A4 preview (used slots shown grayed).
 6. **Preview**, then **Print** (browser print dialog at exact size; "Save as PDF" works the same). Multiple pages are created when needed.
@@ -152,9 +152,9 @@ stateDiagram-v2
 - A month-end summary per supplier (printable, CSV) lists open invoices, credits, payments, and the balance.
 - No QuickBooks integration now. Keep the export format simple and stable.
 
-## 12. Stock counts
+## 12. Deferred inventory
 
-A worker selects a product, enters the counted quantity; the app shows expected vs counted, creates an `adjustment` movement for the difference, and logs it. Large variances appear in the Supervisor activity view **(threshold is a setting; default off)**.
+Phase 1 has **no inventory system**: no Stock page, on-hand estimate, opening count, stock-count form or variance dashboard. Retain physical receiving/return/transfer events for a separately paid later inventory phase after register sales. Do not change historical movements merely because their stock projection is hidden.
 
 ## 13. Accounts and sessions
 
@@ -180,7 +180,7 @@ stateDiagram-v2
 
 - Built-in notebooks (To order, Store use, For Supervisor) behave as in `requirements.md` §15.
 - **Create/edit/archive notebook definition (Supervisor only):** name EN/FA, branch scope, read roles, add roles, optional fields, status on/off, notify Supervisor on/off → notebook appears in the Notes tabs for the allowed roles.
-- **Add entry:** the fields the notebook enables; author, branch, and time are automatic.
+- **Add entry:** the fields the notebook enables; author and time are automatic, and the entry always has a concrete allowed location. In All branches, Supervisor sees a styled location picker and can add. New custom notebooks allow Supervisor/Floor Worker read/add by default. Explain archived/read-only/no-allowed-location/outside-scope blockers; never silently hide the form.
 - **Edit entry:** author within the undo window, Supervisor anytime (recorded in History).
 - **Archive notebook:** hidden from tabs, entries stay searchable; can be restored.
 
@@ -191,3 +191,31 @@ stateDiagram-v2
 - **Revert from History (Supervisor):** available on reversible entries; shows the before/after and asks for confirmation; creates a new entry "Reverted [action]". If the record changed again since then, show the conflict and do not overwrite silently.
 - **Not reversible by undo/revert:** posted invoices, stock movements, payables entries, prints. These use corrections (`workflows.md` §1, §11) so the original stays visible.
 - Examples: offer stopped by mistake → Undo, or Supervisor reverts → the offer is active again. Wrong product name → revert to the previous name. Price approved by mistake → revert restores the previous approved price (and creates a new price proposal history entry).
+
+## 1A. Invoice receiving location and posted relocation (C1)
+
+- New invoice defaults to user's own concrete allowed location; Supervisor uses the current concrete location when their account spans all locations, otherwise first active allowed location. Ship-to evidence suggests a matching active location but requires reviewer confirmation. Retain reviewer origin location/assignment on a draft. An authorized handling reviewer can change its receiving location to any active same-company Store/Warehouse and still finish that draft; this does not grant access to unrelated records at the destination.
+- Posted invoice remains immutable. Supervisor chooses **Move invoice**, destination and required reason; preview received entries, pending approvals and current outstanding financial liability. Recheck the original effective location/record version and allocation snapshot before saving; same-location, foreign-company, inactive-target, stale and repeated correction attempts add nothing.
+- Append `invoice_location_correction` with original invoice, from/to locations, actor/time/device/reason and affected references. Effective-location queries resolve correction chains for invoice display, Received, product Last received, supplier tabs, short/date entries and source-linked approval location. Preserve original posted header and receipt references. Record paired movement-location corrections; never fabricate a second delivery.
+- Transfer **current outstanding liability**, after existing shorts/adjustments and allocated payments/credits, with paired source/destination supplier-ledger corrections. Keep historical payments/credits and their original allocations where recorded, with the impact shown in preview; never replay money. Source outstanding becomes zero and destination outstanding becomes the exact prior remainder. Company total, currency, supplier, actual invoice totals and payment evidence are conserved, even for fully paid invoices whose receipts still move. Future short deliveries and invoice corrections use the effective destination.
+- Append non-reversible History for the correction; another move is another correction, never edit/delete/Undo of the original. Pending approval effective origin follows its **latest monetary cost-basis source invoice** (`source_invoice_id`, with retained invoice number/posted timestamp compatibility). Merged approval `invoice_ids` are historical evidence: moving an older linked invoice cannot redirect the latest proposal or split/replay money. Approved global/branch price decisions are not silently reapplied to a different branch.
+
+## 16. Manual-price receipt decisions (C1)
+
+An effective manual price stays approved when a new invoice changes cost. Show rule/manual prices and require **Keep manual price / Use rule price** before line confirmation. Keep updates regular cost provenance but retains manual selling price; evaluate configured minimum margin using that actual manual price/new cost and keep a deduplicated below-margin review when needed (current price remains, manual flag stays). Use records review intent and creates normal posting-time Supervisor approval even if rule price equals manual price, so explicit approval can clear manual provenance; approved manual price remains until that proposal is approved. Reject preserves it. Supervisor-only margins follow existing visibility. A short-dated lot bypasses repricing and retains both regular basis and manual flag.
+
+## 17. Orders and receipt reconciliation (C2)
+
+1. Supervisor (or explicitly enabled Floor Worker) selects allowed location and active confirmed supplier; add supplier items with pack/last-price snapshots and positive cases. Save draft or Place order with expected before-tax Decimal total. `orders.allow_floor_worker` defaults false; opt-in grants order cost snapshots/expected amounts only inside Orders, not Supplier cost-history/catalog access. Units must be positive whole; fractional Cases require an integer retained pack with exact positive whole converted units (0.5 × 12 = 6), using Decimal without float rounding. A manually added supplier item without purchase evidence displays no bought cost/date/invoice; require explicit Expected unit cost before placement unless an actual purchase or separately marked Supervisor quote supplies it. No hidden catalog-cost fallback. A source To order note is linked and becomes ordered only when the order is placed. Print order is a bilingual A4 operational sheet; no Payables entry.
+2. Ordered/Partially received orders can be suggested only on invoices with the same company, supplier and effective receiving location. Explicitly link; changing invoice supplier/location invalidates incompatible links/decisions and returns their blockers.
+3. Normalize case/unit quantities using each retained pack. As ordered is OK; partial invoiced delivery uses existing Short flow. Order line absent from invoice requires **Short / Back-ordered / Cancelled**, without inventing an invoice payable/deduction. If an order expects 4 cases but the invoice bills/delivers 3, classify the retained remaining 1 case as Short/Back-ordered/Cancelled without deducting an uninvoiced amount. Retain line comparison snapshots. Extra line requires **Keep it (we pay for it) / Refused / sent back with the driver**; refused quantities are removed from payable and Received using original proportional tax conservation and cannot create regular-cost/price approvals. Cost differences show old/new and require decision.
+4. Lower cost offers **Short-dated (expiry discount)** plus existing same-supplier explanations. Short-dated requires expiry date; on posting create Date tracking and actual discounted receipt/payable but no regular-cost update, selling-price change or price-change approval. Supervisor may separately create clearance offer/Promo print.
+5. Every difference needs its decision before Post; original/supplier/date/matching/line gates remain. Posting once updates order cumulative actually received quantities and remaining decisions, records invoice link, and creates one Supervisor alert summarizing all differences. Retry cannot create duplicate order receipts, delivery entries, approvals, money or alerts.
+6. Draft → Ordered → Partially received → Received, or Cancelled. Complete actual deliveries or explicitly cancelled residual quantities close an order; unresolved Short/Back-ordered remains partial/open. Preserve all previous partial deliveries and receipt links. Order itself never changes supplier balance or stock.
+
+## 18. Branch request lifecycle (C2)
+
+- Requester (Supervisor/Floor Worker) at a concrete allowed location creates Draft to another active same-company Store/Warehouse (request destination may differ from the requester's assigned location; this grants no unrelated destination records) with catalog/free-text items, Units/Cases, positive quantity and optional notes; send → Requested. Cashier cannot read or act.
+- Sending-location actor sees Incoming checklist, ticks quantities sent or records Short; **Mark as sent** → Sent. Printing a bilingual picking list changes no state. Requester sees Outgoing; actor at requesting location records actual arrivals or Missing, then **Mark as received** → Received; retain missing annotations, then **Close request** → Closed. Cancel is allowed only for Draft/Requested and retains original/reason/evidence. Once Sent, record actual receiving/missing and close; do not cancel away physical transfer evidence.
+- Endpoint role/location permissions are checked on every transition, not only menu visibility. Supervisor explicitly selects the acting endpoint. Stale/repeated/out-of-order transitions fail atomically. Requests at one endpoint do not expose unrelated records from another company/location.
+- Actual sent/received quantities produce linked physical transfer events for later inventory only, with distinct from/to locations and request references; no stock balance or Payables mutation. Received quantity never exceeds sent; short/missing partial quantities remain documented. **Copy short or missing items** creates a new linked Draft containing just residual quantities; preserve original, never silently send the new draft.
