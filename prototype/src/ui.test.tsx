@@ -11,6 +11,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "./i18n";
 import { DemoProvider } from "./store";
 import {
+  Money,
+  UnitSize,
+  DateText,
+  ProductName,
+  OfferLabel,
+  branchLabel,
+  demoUserLabel,
+  formatMoney,
+  formatDate,
+} from "./presentation";
+import {
   Badge,
   Checkbox,
   ConfirmDialog,
@@ -447,25 +458,23 @@ describe("styled DateField", () => {
     expect(trigger).toHaveTextContent("2026-10-15");
     await user.click(trigger);
     const beforeMinimum = screen.getByRole("button", {
-      name: "October 13, 2026",
+      name: "2026-10-13",
     });
     const afterMaximum = screen.getByRole("button", {
-      name: "October 18, 2026",
+      name: "2026-10-18",
     });
     expect(beforeMinimum).toBeDisabled();
     expect(afterMaximum).toBeDisabled();
-    const selected = screen.getByRole("button", { name: "October 15, 2026" });
+    const selected = screen.getByRole("button", { name: "2026-10-15" });
     await waitFor(() => expect(selected).toHaveFocus());
     await user.keyboard("{ArrowRight}");
     await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "October 16, 2026" }),
-      ).toHaveFocus(),
+      expect(screen.getByRole("button", { name: "2026-10-16" })).toHaveFocus(),
     );
     await user.keyboard("{Enter}");
     expect(screen.getByTestId("invoice-date")).toHaveTextContent("2026-10-16");
     expect(
-      screen.queryByRole("button", { name: "October 16, 2026" }),
+      screen.queryByRole("button", { name: "2026-10-16" }),
     ).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
@@ -476,14 +485,12 @@ describe("styled DateField", () => {
     const trigger = screen.getByRole("button", { name: "Invoice date" });
     await user.click(trigger);
     await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "October 15, 2026" }),
-      ).toHaveFocus(),
+      expect(screen.getByRole("button", { name: "2026-10-15" })).toHaveFocus(),
     );
     await user.keyboard("{ArrowRight}{Escape}");
     expect(screen.getByTestId("invoice-date")).toHaveTextContent("2026-10-15");
     expect(
-      screen.queryByRole("button", { name: "October 16, 2026" }),
+      screen.queryByRole("button", { name: "2026-10-16" }),
     ).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
@@ -603,5 +610,106 @@ describe("styled Menu", () => {
     expect(onLock).toHaveBeenCalledOnce();
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it("can omit its decorative chevron while keeping keyboard menu behavior", async () => {
+    const user = userEvent.setup();
+    show(
+      <Menu label="Notifications" showChevron={false}>
+        <MenuItem onClick={vi.fn()}>Review alert</MenuItem>
+      </Menu>,
+    );
+    const trigger = screen.getByRole("button", { name: "Notifications" });
+    expect(trigger.querySelector("svg")).toBeNull();
+    await user.click(trigger);
+    expect(
+      screen.getByRole("menuitem", { name: "Review alert" }),
+    ).toBeVisible();
+  });
+});
+
+describe("shared language and number presentation", () => {
+  it("formats money without losing Decimal precision, with Western digits and the symbol first", () => {
+    expect(formatMoney("2.99", { currency: "CAD" })).toBe("$2.99");
+    expect(formatMoney("1260", { currency: "CAD" })).toBe("$1,260.00");
+    expect(formatMoney("-2.99", { currency: "CAD" })).toBe("-$2.99");
+    expect(formatMoney("9007199254740993.005", { currency: "CAD" })).toBe(
+      "$9,007,199,254,740,993.01",
+    );
+    expect(formatMoney("1.2345", { currency: "CAD", decimals: 4 })).toBe(
+      "$1.2345",
+    );
+    expect(formatMoney("5", { currency: "CAD", compact: true })).toBe("$5");
+    expect(formatMoney("5.49", { currency: "CAD", compact: true })).toBe(
+      "$5.49",
+    );
+    expect(() => formatMoney("NaN", { currency: "CAD" })).toThrow(
+      "Money must be finite",
+    );
+    expect(() => formatMoney("Infinity", { currency: "CAD" })).toThrow(
+      "Money must be finite",
+    );
+  });
+
+  it("keeps recorded date-only values in YYYY-MM-DD when timestamps or languages change", () => {
+    expect(formatDate("2026-10-07")).toBe("2026-10-07");
+    expect(formatDate("2026-10-07T23:50:00-04:00")).toBe("2026-10-07");
+    expect(formatDate(undefined)).toBe("—");
+  });
+
+  it("isolates mixed Latin prices, dates and unit sizes inside Persian text", () => {
+    const view = show(
+      <div dir="rtl">
+        <Money value="2.99" currency="CAD" />
+        <UnitSize value="1 L" />
+        <DateText value="2026-10-07" />
+        <OfferLabel label="2 for $5" language="fa" currency="CAD" />
+      </div>,
+    );
+    expect(screen.getByText("$2.99").closest("bdi")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(screen.getByText("1 L").closest("bdi")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(screen.getByText("2026-10-07").closest("bdi")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(screen.getByText("$5").closest("bdi")).toHaveAttribute("dir", "ltr");
+    expect(view.container).toHaveTextContent("۲ عدد $5");
+  });
+
+  it("uses the current language name first and translates branch and demo-user names", () => {
+    const view = show(
+      <ProductName
+        product={{ name_en: "Milk", name_fa: "شیر" }}
+        language="fa"
+      />,
+    );
+    expect(view.container.querySelector("strong")).toHaveTextContent("شیر");
+    expect(view.container.querySelector("small")).toHaveTextContent("Milk");
+    expect(branchLabel("Branch 1", "fa")).toBe("شعبه 1");
+    expect(branchLabel("all", "fa")).toBe("همه شعبه‌ها");
+    expect(demoUserLabel("Demo Supervisor", "fa")).toBe("سرپرست نمایشی");
+    expect(demoUserLabel("floorworker", "fa")).toBe("کارمند سالن نمایشی");
+  });
+
+  it("puts a notebook count in its own pill beside the translated tab name", () => {
+    show(
+      <Tabs
+        aria-label="Notebooks"
+        value="supervisor"
+        onChange={vi.fn()}
+        options={[{ value: "supervisor", label: "For Supervisor", count: 1 }]}
+      />,
+    );
+    const tab = screen.getByRole("tab", { name: "For Supervisor 1" });
+    expect(within(tab).getByText("1")).toHaveClass("tab-count");
+    expect(within(tab).getByText("For Supervisor")).not.toHaveClass(
+      "tab-count",
+    );
   });
 });

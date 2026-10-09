@@ -408,7 +408,7 @@ test("dashboard approvals and notes have actions that change the actual records 
     page,
     dialog.getByLabel("Apply price to", { exact: true }),
     "all",
-    "All branches (default)",
+    "All branches",
   );
   await dialog
     .getByRole("button", { name: "Approve price", exact: true })

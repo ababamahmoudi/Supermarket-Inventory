@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { demoUsers, useDemo } from "../store";
-import { Badge, Button, Card, EmptyState, Field, PageHeader } from "../ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  EmptyState,
+  Field,
+  NumberField,
+  PageHeader,
+  Select,
+  Tabs,
+} from "../ui";
+import {
+  branchLabel,
+  demoUserLabel,
+  LtrText,
+  ProductName,
+} from "../presentation";
 import {
   addNote,
   operationError,
@@ -74,29 +91,26 @@ export function Notes() {
           "سفارش، مصرف فروشگاه و پیام برای سرپرست — ثبت‌شده با نویسنده، شعبه و زمان.",
         )}
       />
-      <div className="tabs" role="tablist">
-        {tabs.map((item) => (
-          <button
-            key={item.key}
-            role="tab"
-            aria-selected={tab === item.key}
-            className={tab === item.key ? "active" : ""}
-            onClick={() => {
-              setTab(item.key);
-              setMessage("");
-              setError("");
-            }}
-          >
-            {item.label}
-            {item.key === "note_to_supervisor" &&
+      <Tabs
+        value={tab}
+        aria-label={t("Notebooks", "دفترچه‌ها")}
+        onChange={(value) => {
+          setTab(value as NoteRecord["type"]);
+          setMessage("");
+          setError("");
+        }}
+        options={tabs.map((item) => ({
+          value: item.key,
+          label: item.label,
+          count:
+            item.key === "note_to_supervisor" &&
             role === "supervisor" &&
-            unread > 0 ? (
-              <span className="count">{unread}</span>
-            ) : null}
-          </button>
-        ))}
-      </div>
-      <Card title={t("Add note", "افزودن یادداشت")}>
+            unread > 0
+              ? unread
+              : undefined,
+        }))}
+      />
+      <Card title={t("Add note", "افزودن یادداشت")} className="form-card">
         <div className="form-grid">
           <Field label={t("Note", "یادداشت")}>
             <textarea
@@ -115,25 +129,26 @@ export function Notes() {
                 : t("Product (optional)", "محصول (اختیاری)")
             }
           >
-            <select
+            <Select
               value={product}
-              onChange={(event) => setProduct(event.target.value)}
-            >
-              <option value="">{t("Choose product", "انتخاب محصول")}</option>
-              {state.products
-                .filter(
-                  (item) =>
-                    item.company_id === context.company_id &&
-                    item.status === "active",
-                )
-                .map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {lang === "fa" ? item.name_fa : item.name_en}
-                  </option>
-                ))}
-            </select>
+              onChange={setProduct}
+              options={[
+                { value: "", label: t("Choose product", "انتخاب محصول") },
+                ...state.products
+                  .filter(
+                    (item) =>
+                      item.company_id === context.company_id &&
+                      item.status === "active",
+                  )
+                  .map((item) => ({
+                    value: item.code,
+                    label: lang === "fa" ? item.name_fa : item.name_en,
+                  })),
+              ]}
+            />
           </Field>
           <Field
+            className="field-short"
             label={
               tab === "store_use"
                 ? t(
@@ -143,13 +158,7 @@ export function Notes() {
                 : t("Quantity (optional)", "تعداد (اختیاری)")
             }
           >
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={qty}
-              onChange={(event) => setQty(event.target.value)}
-            />
+            <NumberField min="1" step="1" value={qty} onChange={setQty} />
           </Field>
         </div>
         {tab === "store_use" && (
@@ -160,35 +169,37 @@ export function Notes() {
             )}
           </p>
         )}
-        <Button
-          disabled={branch === "all"}
-          onClick={() => {
-            try {
-              update((draft) =>
-                addNote(draft, context, {
-                  type: tab,
-                  text,
-                  product_code: product || undefined,
-                  qty: qty ? Number(qty) : undefined,
-                }),
-              );
-              setText("");
-              setQty("");
-              setProduct("");
-              setMessage(t("Saved note.", "یادداشت ذخیره شد."));
-              setError("");
-            } catch (caught) {
-              setError(
-                operationError(
-                  caught instanceof Error ? caught.message : "",
-                  t,
-                ),
-              );
-            }
-          }}
-        >
-          {t("Save note", "ذخیره یادداشت")}
-        </Button>
+        <div className="actions">
+          <Button
+            disabled={branch === "all"}
+            onClick={() => {
+              try {
+                update((draft) =>
+                  addNote(draft, context, {
+                    type: tab,
+                    text,
+                    product_code: product || undefined,
+                    qty: qty ? Number(qty) : undefined,
+                  }),
+                );
+                setText("");
+                setQty("");
+                setProduct("");
+                setMessage(t("Saved note.", "یادداشت ذخیره شد."));
+                setError("");
+              } catch (caught) {
+                setError(
+                  operationError(
+                    caught instanceof Error ? caught.message : "",
+                    t,
+                  ),
+                );
+              }
+            }}
+          >
+            {t("Save note", "ذخیره یادداشت")}
+          </Button>
+        </div>
         {branch === "all" && (
           <p>
             {t(
@@ -209,24 +220,28 @@ export function Notes() {
         </div>
       )}
       <Card>
-        <div className="form-grid">
+        <div className="table-toolbar">
           <Field label={t("Search notes", "جستجوی یادداشت‌ها")}>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
           </Field>
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={showDone}
-              onChange={(event) => setShowDone(event.target.checked)}
-            />
+          <Checkbox checked={showDone} onChange={setShowDone}>
             {t(
               "Include done and ordered notes",
               "نمایش موارد انجام‌شده و سفارش‌داده‌شده",
             )}
-          </label>
+          </Checkbox>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSearch("");
+              setShowDone(false);
+            }}
+          >
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
         </div>
       </Card>
       {notes.length === 0 && (
@@ -241,23 +256,25 @@ export function Notes() {
         <Card key={item.id}>
           <div className="row-between">
             <strong>
-              {item.text === "Sunflower oil 1.8 L is out of stock"
-                ? t(
-                    "Sunflower oil 1.8 L is out of stock",
-                    "روغن آفتابگردان ۱٫۸ لیتری موجود نیست",
-                  )
-                : item.text === "2 Lavash Bread taken for staff lunch"
+              <bdi dir="auto">
+                {item.text === "Sunflower oil 1.8 L is out of stock"
                   ? t(
-                      "2 Lavash Bread taken for staff lunch",
-                      "۲ نان لواش برای ناهار کارکنان برداشته شد",
+                      "Sunflower oil 1.8 L is out of stock",
+                      "روغن آفتابگردان ۱٫۸ لیتری موجود نیست",
                     )
-                  : item.text ===
-                      "Customer asked about the tea glass set price; please confirm."
+                  : item.text === "2 Lavash Bread taken for staff lunch"
                     ? t(
-                        "Customer asked about the tea glass set price; please confirm.",
-                        "مشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.",
+                        "2 Lavash Bread taken for staff lunch",
+                        "۲ نان لواش برای ناهار کارکنان برداشته شد",
                       )
-                    : item.text}
+                    : item.text ===
+                        "Customer asked about the tea glass set price; please confirm."
+                      ? t(
+                          "Customer asked about the tea glass set price; please confirm.",
+                          "مشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.",
+                        )
+                      : item.text}
+              </bdi>
             </strong>
             <Badge
               tone={
@@ -278,25 +295,24 @@ export function Notes() {
             </Badge>
           </div>
           <p className="muted">
-            {item.by} · {item.branch} ·{" "}
-            <span dir="ltr">
-              {companyTimestamp(state.config, item.created_at)}
-            </span>
+            {demoUserLabel(item.by, lang)} · {branchLabel(item.branch, lang)} ·{" "}
+            <LtrText>{companyTimestamp(state.config, item.created_at)}</LtrText>
           </p>
           {item.product_code && (
             <p>
-              {lang === "fa"
-                ? state.products.find(
-                    (productItem) =>
-                      productItem.code === item.product_code &&
-                      productItem.company_id === context.company_id,
-                  )?.name_fa
-                : state.products.find(
-                    (productItem) =>
-                      productItem.code === item.product_code &&
-                      productItem.company_id === context.company_id,
-                  )?.name_en}{" "}
-              {item.qty ? <span dir="ltr">× {item.qty}</span> : null}
+              {(() => {
+                const linkedProduct = state.products.find(
+                  (productItem) =>
+                    productItem.code === item.product_code &&
+                    productItem.company_id === context.company_id,
+                );
+                return linkedProduct ? (
+                  <ProductName product={linkedProduct} language={lang} />
+                ) : (
+                  <LtrText>{item.product_code}</LtrText>
+                );
+              })()}
+              {item.qty ? <LtrText>× {item.qty}</LtrText> : null}
             </p>
           )}
           <div className="actions">

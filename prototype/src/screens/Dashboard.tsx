@@ -12,6 +12,20 @@ import { companyDate } from "../invoice";
 import { approvalSnapshot, demoBranches, resolveApproval } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import {
+  branchLabel,
+  demoUserLabel,
+  DateText,
+  LtrText,
+  Money,
+  OfferLabel,
+  ProductName,
+} from "../presentation";
+import {
+  supplierBalanceOverview,
+  supplierBalanceSummary,
+} from "../supplier-balances";
+import "./financial-polish.css";
+import {
   Badge,
   Button,
   Card,
@@ -23,7 +37,6 @@ import {
   Select,
 } from "../ui";
 import {
-  ledgerSummary,
   companyTimestamp,
   scopedRecords,
   type OperationalReturn,
@@ -45,7 +58,6 @@ export function Dashboard() {
     branch,
     t,
     lang,
-    money,
     navigate,
     user,
     needsReauthentication,
@@ -174,27 +186,15 @@ export function Dashboard() {
         (branch === "all" || item.branch === branch || item.branch === "all"),
     )
     .sort((left, right) => right.at.localeCompare(left.at));
-  const suppliers = [
-    ...new Set(
-      scopedRecords(state.ledger, context).map((item) => item.supplier),
-    ),
-  ];
-  const balances = suppliers
-    .map((supplier) => {
-      const summary = ledgerSummary(state, context, supplier);
-      const outstanding = summary.invoices.filter((item) =>
-        new Decimal(item.amount).gt(0),
+  const balances = supplierBalanceOverview(state, context)
+    .map((item) => {
+      const summary = supplierBalanceSummary(state, context, item.supplier);
+      const outstanding = summary.invoices.filter((invoice) =>
+        new Decimal(invoice.amount).gt(0),
       );
-      const overdue = outstanding
-        .filter((item) => item.due_date && item.due_date < today)
-        .reduce((sum, item) => sum.plus(item.amount), new Decimal(0))
-        .toFixed(2);
-      return { supplier, summary, outstanding, overdue };
+      return { ...item, summary, outstanding };
     })
-    .filter((item) => item.summary.rows.length > 0)
-    .sort((left, right) =>
-      new Decimal(right.summary.balance).cmp(left.summary.balance),
-    )
+    .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
     .slice(0, 5);
   const productName = (code: string) => {
     const product = state.products.find(
@@ -202,10 +202,17 @@ export function Dashboard() {
     );
     return (lang === "fa" ? product?.name_fa : product?.name_en) ?? code;
   };
-  const branchName = (value: Branch) =>
-    value === "all"
-      ? t("All branches", "همه شعبه‌ها")
-      : t(value, `شعبه ${demoBranches.indexOf(value) + 1}`);
+  const productLabel = (code: string) => {
+    const product = state.products.find(
+      (item) => item.company_id === context.company_id && item.code === code,
+    );
+    return product ? (
+      <ProductName product={product} language={lang} />
+    ) : (
+      <LtrText>{code}</LtrText>
+    );
+  };
+  const branchName = (value: Branch) => branchLabel(value, lang);
   const approvalType = (item: Approval) =>
     item.manual_override
       ? t("Manual price override", "تغییر دستی قیمت")
@@ -542,7 +549,7 @@ export function Dashboard() {
                     return (
                       <div className="dashboard-queue-row" key={item.id}>
                         <div className="dashboard-queue-product">
-                          <strong>{productName(item.product_code)}</strong>
+                          {productLabel(item.product_code)}
                           <span className="muted">
                             {branchName(item.branch)} ·{" "}
                             <bdi>{item.product_code}</bdi>
@@ -559,19 +566,23 @@ export function Dashboard() {
                           {approvalType(item)}
                         </Badge>
                         <span className="dashboard-price-change">
-                          <bdi>
-                            {approved ? (
-                              money(approved)
+                          <span>
+                            {t("Old", "قبلی")}{" "}
+                            {approved !== null && approved !== undefined ? (
+                              <Money value={approved} />
                             ) : (
-                              <span className="muted">
+                              <span className="muted approval-missing-price">
                                 {t(
                                   "No approved price yet",
                                   "هنوز قیمت تأییدشده ندارد",
                                 )}
                               </span>
-                            )}{" "}
-                            → {money(item.proposed_price)}
-                          </bdi>
+                            )}
+                          </span>
+                          <span>
+                            {t("New", "جدید")}{" "}
+                            <Money value={item.proposed_price} />
+                          </span>
                         </span>
                         <div className="dashboard-inline-actions">
                           {inline ? (
@@ -632,21 +643,33 @@ export function Dashboard() {
                             : "danger"
                         }
                       >
-                        {alertType(item.type)}
+                        {item.type === "price_conflict"
+                          ? t("Conflict", "اختلاف")
+                          : alertType(item.type)}
                       </Badge>
-                      <strong>
-                        {productName(item.product_code) ||
-                          t("Invoice", "فاکتور")}
-                      </strong>
+                      {item.product_code ? (
+                        productLabel(item.product_code)
+                      ) : (
+                        <strong>{t("Invoice", "فاکتور")}</strong>
+                      )}
                       <span className="muted">
-                        {item.supplier ? `${item.supplier} · ` : ""}
+                        {item.supplier && (
+                          <>
+                            <LtrText>{item.supplier}</LtrText> ·{" "}
+                          </>
+                        )}
                         {branchName(item.branch)}
                       </span>
                       {item.previous_cost && item.new_cost && (
                         <span className="dashboard-price-change">
-                          <bdi>
-                            {money(item.previous_cost)} → {money(item.new_cost)}
-                          </bdi>
+                          <span>
+                            {t("Old cost", "هزینه قبلی")}{" "}
+                            <Money value={item.previous_cost} decimals={4} />
+                          </span>
+                          <span>
+                            {t("New cost", "هزینه جدید")}{" "}
+                            <Money value={item.new_cost} decimals={4} />
+                          </span>
                         </span>
                       )}
                       <Button
@@ -712,10 +735,12 @@ export function Dashboard() {
                         <td>
                           <bdi>{invoice.supplier_invoice_number || "—"}</bdi>
                         </td>
-                        <td>{invoice.supplier}</td>
+                        <td>
+                          <LtrText>{invoice.supplier}</LtrText>
+                        </td>
                         <td>{branchName(invoice.branch)}</td>
                         <td>
-                          <bdi>{invoice.invoice_date || "—"}</bdi>
+                          <DateText value={invoice.invoice_date} />
                         </td>
                         <td>
                           <Badge
@@ -781,12 +806,19 @@ export function Dashboard() {
                               className="dashboard-return-item"
                               key={item.id}
                             >
-                              <strong>{item.supplier}</strong>
+                              <strong>
+                                <LtrText>{item.supplier}</LtrText>
+                              </strong>
                               <span className="muted">
                                 {branchName(item.branch)} ·{" "}
-                                {item.lines
-                                  .map((line) => productName(line.product_code))
-                                  .join(", ")}
+                                {item.lines.map((line, index) => (
+                                  <span key={`${line.product_code}:${index}`}>
+                                    <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                                      {productName(line.product_code)}
+                                    </bdi>
+                                    {index < item.lines.length - 1 ? "، " : ""}
+                                  </span>
+                                ))}
                               </span>
                               <div className="row-between">
                                 <Badge
@@ -854,15 +886,17 @@ export function Dashboard() {
                 <tbody>
                   {balances.map((item) => (
                     <tr key={item.supplier}>
-                      <td>{item.supplier}</td>
+                      <td>
+                        <LtrText>{item.supplier}</LtrText>
+                      </td>
                       <td className="numeric">
-                        <bdi>{money(item.summary.balance)}</bdi>
+                        <Money value={item.balance} />
                       </td>
                       <td className="numeric">
                         <bdi>{item.outstanding.length}</bdi>
                       </td>
                       <td className="numeric">
-                        <bdi>{money(item.overdue)}</bdi>
+                        <Money value={item.overdue} />
                       </td>
                       <td>
                         <Button
@@ -900,7 +934,9 @@ export function Dashboard() {
                       <span className="initials-avatar" aria-hidden="true">
                         {initials(item.by)}
                       </span>
-                      <span className="muted">{item.by}</span>
+                      <span className="muted">
+                        {demoUserLabel(item.by, lang)}
+                      </span>
                     </div>
                     <p>{noteText(item)}</p>
                     <span className="muted">
@@ -949,10 +985,15 @@ export function Dashboard() {
                     <div>
                       <strong>{actionLabel(item.action)}</strong>
                       {item.product_code && (
-                        <span>{productName(item.product_code)}</span>
+                        <span>
+                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                            {productName(item.product_code)}
+                          </bdi>
+                        </span>
                       )}
                       <span className="muted">
-                        {item.by} · {branchName(item.branch)}
+                        {demoUserLabel(item.by, lang)} ·{" "}
+                        {branchName(item.branch)}
                       </span>
                       <time
                         className="muted"
@@ -1000,9 +1041,7 @@ export function Dashboard() {
           }
           onConfirm={confirm}
         >
-          <p>
-            <strong>{productName(preview.approval.product_code)}</strong>
-          </p>
+          <p>{productLabel(preview.approval.product_code)}</p>
           {preview.decision === "approve" && (
             <>
               <Field label={t("Apply price to", "اعمال قیمت به")}>
@@ -1012,14 +1051,11 @@ export function Dashboard() {
                   options={[
                     {
                       value: "all",
-                      label: t(
-                        "All branches (default)",
-                        "همه شعبه‌ها (پیش‌فرض)",
-                      ),
+                      label: t("All branches", "همه شعبه‌ها"),
                     },
                     {
                       value: "branch",
-                      label: `${t("This branch only", "فقط این شعبه")} — ${branchName(preview.target)}`,
+                      label: t("This branch only", "فقط این شعبه"),
                     },
                   ]}
                 />
@@ -1039,7 +1075,7 @@ export function Dashboard() {
                 <thead>
                   <tr>
                     <th>{t("Branch", "شعبه")}</th>
-                    <th>{t("Current → approved", "فعلی ← تأییدشده")}</th>
+                    <th>{t("Price change", "تغییر قیمت")}</th>
                     <th>{t("Affected offer", "پیشنهاد مرتبط")}</th>
                     <th>{t("Override removed", "حذف قیمت ویژه")}</th>
                   </tr>
@@ -1059,18 +1095,25 @@ export function Dashboard() {
                         <tr key={value}>
                           <td>{branchName(value)}</td>
                           <td>
-                            <bdi>
-                              {price ? money(price) : "—"} →{" "}
-                              {money(preview.approval.proposed_price)}
-                            </bdi>
+                            <div className="price-change-values">
+                              <span>
+                                {t("Old", "قبلی")}{" "}
+                                {price ? <Money value={price} /> : "—"}
+                              </span>
+                              <span>
+                                {t("New", "جدید")}{" "}
+                                <Money
+                                  value={preview.approval.proposed_price}
+                                />
+                              </span>
+                            </div>
                           </td>
                           <td>
-                            {offer
-                              ? t(
-                                  offer.label,
-                                  offer.label.replace("for", "برای"),
-                                )
-                              : t("None", "ندارد")}
+                            {offer ? (
+                              <OfferLabel label={offer.label} language={lang} />
+                            ) : (
+                              t("None", "ندارد")
+                            )}
                             {offer &&
                               !new Decimal(offer.price).eq(
                                 preview.approval.proposed_price,

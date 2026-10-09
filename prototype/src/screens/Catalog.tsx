@@ -14,6 +14,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   DataTable,
   EmptyState,
   Field,
@@ -21,10 +22,21 @@ import {
   Select,
 } from "../ui";
 
+import {
+  activityLabel,
+  branchLabel,
+  categoryLabel,
+  demoUserLabel,
+  LtrText,
+  Money,
+  OfferLabel,
+  UnitSize,
+} from "../presentation";
+
 const PAGE_SIZE = 8;
 
 function ProductPrice({ product }: { product: Product }) {
-  const { state, branch, t, money } = useDemo();
+  const { state, branch, t, lang } = useDemo();
   const approved = effectivePrice(state, product, branch);
   const pending = pendingPrice(state, product, branch);
   const offer = effectiveOffer(state, product, branch);
@@ -41,7 +53,7 @@ function ProductPrice({ product }: { product: Product }) {
         </p>
         <div className="actions">
           <strong className="price" dir="ltr">
-            {approved ? money(approved) : pending ? money(pending) : "—"}
+            {approved || pending ? <Money value={approved || pending!} /> : "—"}
           </strong>
           {profile?.taxable && (
             <Badge tone="info">
@@ -51,7 +63,11 @@ function ProductPrice({ product }: { product: Product }) {
               )}
             </Badge>
           )}
-          {offer && <Badge tone="approved">{offer.label}</Badge>}
+          {offer && (
+            <Badge tone="info" className="offer-pill">
+              <OfferLabel label={offer.label} language={lang} />
+            </Badge>
+          )}
         </div>
       </div>
       {pending && (
@@ -64,7 +80,10 @@ function ProductPrice({ product }: { product: Product }) {
           {approved ? (
             <span>
               {t("Proposed price", "قیمت پیشنهادی")}:{" "}
-              <strong dir="ltr">{money(pending)}</strong>.{" "}
+              <strong>
+                <Money value={pending} />
+              </strong>
+              .{" "}
               {t(
                 "Keep charging the approved price shown above.",
                 "تا زمان تأیید، قیمت تأییدشدهٔ بالا را دریافت کنید.",
@@ -99,7 +118,7 @@ function ProductDetail({
   product: Product;
   operational?: boolean;
 }) {
-  const { state, branch, role, lang, t, money } = useDemo();
+  const { state, branch, role, lang, t } = useDemo();
   const category = state.config.pricing_categories.find(
     (item) => item.key === product.pricing_category,
   );
@@ -110,16 +129,21 @@ function ProductDetail({
   const visibleBranches =
     role === "supervisor" ? branches : [lookupBranch(branch)];
   return (
-    <Card title={lang === "fa" ? product.name_fa : product.name_en}>
+    <Card
+      title={lang === "fa" ? product.name_fa : product.name_en}
+      className="product-detail-card"
+    >
       <div className="stack">
         <p
           lang={lang === "fa" ? "en" : "fa"}
           dir={lang === "fa" ? "ltr" : "rtl"}
         >
-          {lang === "fa" ? product.name_en : product.name_fa}
+          <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+            {lang === "fa" ? product.name_en : product.name_fa}
+          </bdi>
         </p>
         <div className="actions">
-          <span dir="ltr">{product.unit_size}</span>
+          <UnitSize value={product.unit_size} />
           <Badge
             tone={
               product.status === "pending_approval"
@@ -142,15 +166,23 @@ function ProductDetail({
             <dt className="muted">
               {t(state.config.terminology.product_code, "کد محصول")}
             </dt>
-            <dd dir="ltr">{product.code}</dd>
+            <dd>
+              <LtrText>{product.code}</LtrText>
+            </dd>
           </div>
           <div>
             <dt className="muted">{t("Barcode", "بارکد")}</dt>
-            <dd dir="ltr">{product.barcode || t("Not added", "اضافه نشده")}</dd>
+            <dd>
+              {product.barcode ? (
+                <LtrText>{product.barcode}</LtrText>
+              ) : (
+                t("Not added", "اضافه نشده")
+              )}
+            </dd>
           </div>
           <div>
             <dt className="muted">{t("AI category", "دستهٔ هوش مصنوعی")}</dt>
-            <dd>{product.ai_category}</dd>
+            <dd>{categoryLabel(product.ai_category, lang)}</dd>
           </div>
           <div>
             <dt className="muted">
@@ -187,11 +219,18 @@ function ProductDetail({
                 <dt className="muted">
                   {t("Pricing category", "دستهٔ قیمت‌گذاری")}
                 </dt>
-                <dd>{category?.label || product.pricing_category}</dd>
+                <dd>
+                  {categoryLabel(
+                    category?.label || product.pricing_category,
+                    lang,
+                  )}
+                </dd>
               </div>
               <div>
                 <dt className="muted">{t("Supplier", "تأمین‌کننده")}</dt>
-                <dd>{product.main_supplier}</dd>
+                <dd>
+                  <LtrText>{product.main_supplier}</LtrText>
+                </dd>
               </div>
             </dl>
             {role === "supervisor" && (
@@ -206,7 +245,9 @@ function ProductDetail({
                   <thead>
                     <tr>
                       <th>{t("Branch", "شعبه")}</th>
-                      <th>{t("Approved price", "قیمت تأییدشده")}</th>
+                      <th className="numeric">
+                        {t("Approved price", "قیمت تأییدشده")}
+                      </th>
                       <th>{t("Price scope", "محدودهٔ قیمت")}</th>
                     </tr>
                   </thead>
@@ -215,8 +256,10 @@ function ProductDetail({
                       const price = effectivePrice(state, product, item);
                       return (
                         <tr key={item}>
-                          <td>{item}</td>
-                          <td dir="ltr">{price ? money(price) : "—"}</td>
+                          <td>{branchLabel(item, lang)}</td>
+                          <td className="numeric">
+                            {price ? <Money value={price} /> : "—"}
+                          </td>
                           <td>
                             {product.branch_prices?.[item]
                               ? t("This branch only", "فقط این شعبه")
@@ -233,8 +276,8 @@ function ProductDetail({
                     "آخرین هزینهٔ واحد از تأمین‌کننده پیش از مالیات",
                   )}
                   :{" "}
-                  <strong dir="ltr">
-                    {money(product.last_cost_before_tax)}
+                  <strong>
+                    <Money value={product.last_cost_before_tax} />
                   </strong>
                 </p>
                 <p className="muted">
@@ -256,9 +299,11 @@ function ProductDetail({
               <dl className="form-grid">
                 {visibleBranches.map((item) => (
                   <div key={item}>
-                    <dt className="muted">{item}</dt>
-                    <dd dir="ltr">
-                      {state.stock[`${item}:${product.code}`] ?? 0}
+                    <dt className="muted">{branchLabel(item, lang)}</dt>
+                    <dd>
+                      <LtrText>
+                        {state.stock[`${item}:${product.code}`] ?? 0}
+                      </LtrText>
                     </dd>
                   </div>
                 ))}
@@ -286,7 +331,8 @@ function ProductDetail({
                     )
                     .map((item) => (
                       <li key={item.id}>
-                        {item.action} · {item.by}
+                        {activityLabel(item.action, lang)} ·{" "}
+                        {demoUserLabel(item.by, lang)}
                       </li>
                     ))}
                 </ul>
@@ -307,7 +353,7 @@ function ProductDetail({
 }
 
 function LookupProductDetail({ product }: { product: Product }) {
-  const { state, branch, t, money, lang } = useDemo();
+  const { state, branch, t, lang } = useDemo();
   const approved = effectivePrice(state, product, branch);
   const pending = pendingPrice(state, product, branch);
   const offer = effectiveOffer(state, product, branch);
@@ -319,23 +365,27 @@ function LookupProductDetail({ product }: { product: Product }) {
       <div className="lookup-detail-header">
         <div>
           <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
-            {lang === "fa" ? product.name_fa : product.name_en}
+            <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+              {lang === "fa" ? product.name_fa : product.name_en}
+            </bdi>
           </h2>
           <p
             className="muted"
             lang={lang === "fa" ? "en" : "fa"}
             dir={lang === "fa" ? "ltr" : "rtl"}
           >
-            {lang === "fa" ? product.name_en : product.name_fa}
+            <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+              {lang === "fa" ? product.name_en : product.name_fa}
+            </bdi>
+          </p>
+          <p className="lookup-product-meta muted">
+            <span>
+              {t(state.config.terminology.product_code, "کد محصول")}{" "}
+              <LtrText>{product.code}</LtrText>
+            </span>
+            <UnitSize value={product.unit_size} />
           </p>
         </div>
-        <p className="lookup-product-meta muted">
-          <span>
-            {t(state.config.terminology.product_code, "کد محصول")}{" "}
-            <span dir="ltr">{product.code}</span>
-          </span>
-          <span dir="ltr">{product.unit_size}</span>
-        </p>
       </div>
       <div className="lookup-price-block">
         <div className="lookup-approved-price">
@@ -344,7 +394,7 @@ function LookupProductDetail({ product }: { product: Product }) {
           </p>
           {approved ? (
             <strong className="price" dir="ltr">
-              {money(approved)}
+              <Money value={approved} />
             </strong>
           ) : (
             <p className="muted lookup-missing-price">
@@ -360,7 +410,7 @@ function LookupProductDetail({ product }: { product: Product }) {
                 ? t("New price pending", "قیمت جدید در انتظار تأیید")
                 : t("Pending", "در انتظار تأیید")}
             </Badge>
-            <span dir="ltr">{money(pending)}</span>
+            <Money value={pending} />
           </div>
         )}
       </div>
@@ -376,7 +426,7 @@ function LookupProductDetail({ product }: { product: Product }) {
           )}
           {offer && (
             <Badge tone="info" className="offer-pill">
-              {offer.label}
+              <OfferLabel label={offer.label} language={lang} />
             </Badge>
           )}
         </div>
@@ -414,7 +464,7 @@ function searchFromLookupHash() {
 }
 
 export function Lookup() {
-  const { state, branch, t, money } = useDemo();
+  const { state, branch, t, lang } = useDemo();
   const [search, setSearch] = useState(searchFromLookupHash);
   const [category, setCategory] = useState("");
   const [selectedCode, setSelectedCode] = useState("");
@@ -525,7 +575,18 @@ export function Lookup() {
             spellCheck={false}
             autoFocus
           />
-          <ScanLine size={20} strokeWidth={1.5} aria-hidden="true" />
+          <button
+            type="button"
+            className="lookup-scan-button"
+            aria-label={t("Scan barcode", "اسکن بارکد")}
+            title={t("Scan barcode", "اسکن بارکد")}
+            onClick={() => {
+              searchRef.current?.focus();
+              searchRef.current?.select();
+            }}
+          >
+            <ScanLine size={20} strokeWidth={1.5} aria-hidden="true" />
+          </button>
         </div>
         <div className="lookup-filterbar">
           <Field
@@ -544,7 +605,10 @@ export function Lookup() {
                   value: "",
                   label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
                 },
-                ...categories.map((value) => ({ value, label: value })),
+                ...categories.map((value) => ({
+                  value,
+                  label: categoryLabel(value, lang),
+                })),
               ]}
             />
           </Field>
@@ -564,8 +628,8 @@ export function Lookup() {
       {branch === "all" && (
         <p className="muted">
           {t(
-            `Showing the price to charge in ${lookupBranch(branch)}. Choose a branch above to compare.`,
-            `قیمت فروش ${lookupBranch(branch)} نمایش داده می‌شود. برای مقایسه، شعبه را در بالا انتخاب کنید.`,
+            `Showing the price to charge in ${branchLabel(lookupBranch(branch), "en")}. Choose a branch above to compare.`,
+            `قیمت فروش ${branchLabel(lookupBranch(branch), "fa")} نمایش داده می‌شود. برای مقایسه، شعبه را در بالا انتخاب کنید.`,
           )}
         </p>
       )}
@@ -625,21 +689,32 @@ export function Lookup() {
                           ?.focus();
                     }}
                   >
-                    <span className="lookup-result-name">
-                      <span lang="en" dir="ltr">
-                        {product.name_en}
-                      </span>
-                      <span className="muted" lang="fa" dir="rtl">
-                        {product.name_fa}
-                      </span>
-                      <span className="lookup-result-meta muted">
-                        {t(state.config.terminology.product_code, "کد محصول")}{" "}
-                        <span dir="ltr">{product.code}</span>
+                    <span
+                      className="lookup-result-name"
+                      dir={lang === "fa" ? "rtl" : "ltr"}
+                    >
+                      <strong lang={lang}>
+                        <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                          {lang === "fa" ? product.name_fa : product.name_en}
+                        </bdi>
+                      </strong>
+                      <span className="lookup-result-secondary muted">
+                        <bdi
+                          className="lookup-secondary-name"
+                          lang={lang === "fa" ? "en" : "fa"}
+                          dir={lang === "fa" ? "ltr" : "rtl"}
+                        >
+                          {lang === "fa" ? product.name_en : product.name_fa}
+                        </bdi>
+                        <span className="lookup-result-meta">
+                          {t(state.config.terminology.product_code, "کد محصول")}{" "}
+                          <LtrText>{product.code}</LtrText>
+                        </span>
                       </span>
                     </span>
                     <span className="lookup-result-price">
                       {price ? (
-                        <span dir="ltr">{money(price)}</span>
+                        <Money value={price} />
                       ) : (
                         <span className="muted">
                           {t(
@@ -664,7 +739,7 @@ export function Lookup() {
                         )}
                         {offer && (
                           <Badge tone="info" className="offer-pill">
-                            {offer.label}
+                            <OfferLabel label={offer.label} language={lang} />
                           </Badge>
                         )}
                       </span>
@@ -683,7 +758,7 @@ export function Lookup() {
 type SortColumn = "name" | "code" | "price";
 
 export function Products() {
-  const { state, role, branch, t, money, lang } = useDemo();
+  const { state, role, branch, t, lang } = useDemo();
   const [search, setSearch] = useState("");
   const [pricingCategory, setPricingCategory] = useState("");
   const [aiCategory, setAiCategory] = useState("");
@@ -764,14 +839,14 @@ export function Products() {
       {branch === "all" && (
         <p className="muted">
           {t(
-            `Prices and offers below preview ${lookupBranch(branch)}. Open product details to compare branch prices, or choose one branch above.`,
-            `قیمت‌ها و پیشنهادهای زیر مربوط به ${lookupBranch(branch)} هستند. برای مقایسهٔ قیمت شعبه‌ها، جزئیات محصول را باز کنید یا یک شعبه را در بالا انتخاب کنید.`,
+            `Prices and offers below preview ${branchLabel(lookupBranch(branch), "en")}. Open product details to compare branch prices, or choose one branch above.`,
+            `قیمت‌ها و پیشنهادهای زیر مربوط به ${branchLabel(lookupBranch(branch), "fa")} هستند. برای مقایسهٔ قیمت شعبه‌ها، جزئیات محصول را باز کنید یا یک شعبه را در بالا انتخاب کنید.`,
           )}
         </p>
       )}
       <Card>
         <div className="stack">
-          <div className="form-grid">
+          <div className="catalog-filter-toolbar">
             <Field label={t("Search products", "جست‌وجوی محصولات")}>
               <input
                 type="search"
@@ -787,103 +862,115 @@ export function Products() {
               />
             </Field>
             <Field label={t("Pricing category", "دستهٔ قیمت‌گذاری")}>
-              <select
+              <Select
                 value={pricingCategory}
-                onChange={(event) => {
-                  setPricingCategory(event.target.value);
+                onChange={(value) => {
+                  setPricingCategory(value);
                   setPage(0);
                 }}
-              >
-                <option value="">
-                  {t("All pricing categories", "همهٔ دسته‌های قیمت‌گذاری")}
-                </option>
-                {state.config.pricing_categories.map((item) => (
-                  <option key={item.key} value={item.key}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  {
+                    value: "",
+                    label: t(
+                      "All pricing categories",
+                      "همهٔ دسته‌های قیمت‌گذاری",
+                    ),
+                  },
+                  ...state.config.pricing_categories.map((item) => ({
+                    value: item.key,
+                    label: categoryLabel(item.label, lang),
+                  })),
+                ]}
+              />
             </Field>
             <Field label={t("AI category", "دستهٔ هوش مصنوعی")}>
-              <select
+              <Select
                 value={aiCategory}
-                onChange={(event) => {
-                  setAiCategory(event.target.value);
+                onChange={(value) => {
+                  setAiCategory(value);
                   setPage(0);
                 }}
-              >
-                <option value="">
-                  {t("All AI categories", "همهٔ دسته‌های هوش مصنوعی")}
-                </option>
-                {[...new Set(products.map((product) => product.ai_category))]
-                  .sort()
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-              </select>
+                options={[
+                  {
+                    value: "",
+                    label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
+                  },
+                  ...[
+                    ...new Set(products.map((product) => product.ai_category)),
+                  ]
+                    .sort()
+                    .map((value) => ({
+                      value,
+                      label: categoryLabel(value, lang),
+                    })),
+                ]}
+              />
             </Field>
             <Field label={t("Status", "وضعیت")}>
-              <select
+              <Select
                 value={status}
-                onChange={(event) => {
-                  setStatus(event.target.value);
+                onChange={(value) => {
+                  setStatus(value);
                   setPage(0);
                 }}
-              >
-                <option value="">{t("All statuses", "همهٔ وضعیت‌ها")}</option>
-                <option value="active">{t("Approved", "تأییدشده")}</option>
-                <option value="pending_approval">
-                  {t("Pending", "در انتظار تأیید")}
-                </option>
-                <option value="archived">{t("Archived", "بایگانی‌شده")}</option>
-              </select>
+                options={[
+                  { value: "", label: t("All statuses", "همهٔ وضعیت‌ها") },
+                  { value: "active", label: t("Approved", "تأییدشده") },
+                  {
+                    value: "pending_approval",
+                    label: t("Pending", "در انتظار تأیید"),
+                  },
+                  { value: "archived", label: t("Archived", "بایگانی‌شده") },
+                ]}
+              />
             </Field>
             <Field label={t("Supplier", "تأمین‌کننده")}>
-              <select
+              <Select
                 value={supplier}
-                onChange={(event) => {
-                  setSupplier(event.target.value);
+                onChange={(value) => {
+                  setSupplier(value);
                   setPage(0);
                 }}
-              >
-                <option value="">
-                  {t("All suppliers", "همهٔ تأمین‌کنندگان")}
-                </option>
-                {[...new Set(products.map((product) => product.main_supplier))]
-                  .sort()
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-              </select>
+                options={[
+                  {
+                    value: "",
+                    label: t("All suppliers", "همهٔ تأمین‌کنندگان"),
+                  },
+                  ...[
+                    ...new Set(
+                      products.map((product) => product.main_supplier),
+                    ),
+                  ]
+                    .sort()
+                    .map((value) => ({
+                      value,
+                      label: value,
+                    })),
+                ]}
+              />
             </Field>
           </div>
           <div className="actions">
-            <label>
-              <input
-                type="checkbox"
-                checked={onlyPending}
-                onChange={(event) => {
-                  setOnlyPending(event.target.checked);
-                  setPage(0);
-                }}
-              />{" "}
+            <Checkbox
+              checked={onlyPending}
+              onChange={(value) => {
+                setOnlyPending(value);
+                setPage(0);
+              }}
+              aria-label={t("Has pending price", "دارای قیمت در انتظار تأیید")}
+            >
               {t("Has pending price", "دارای قیمت در انتظار تأیید")}
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={onlyOffers}
-                onChange={(event) => {
-                  setOnlyOffers(event.target.checked);
-                  setPage(0);
-                }}
-              />{" "}
+            </Checkbox>
+            <Checkbox
+              checked={onlyOffers}
+              onChange={(value) => {
+                setOnlyOffers(value);
+                setPage(0);
+              }}
+              aria-label={t("Has offer", "دارای پیشنهاد")}
+            >
               {t("Has offer", "دارای پیشنهاد")}
-            </label>
+            </Checkbox>
             <Button variant="ghost" onClick={clear}>
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
@@ -924,6 +1011,7 @@ export function Products() {
                     </Button>
                   </th>
                   <th
+                    className="numeric"
                     aria-sort={
                       sort === "code"
                         ? ascending
@@ -938,6 +1026,7 @@ export function Products() {
                     </Button>
                   </th>
                   <th
+                    className="numeric"
                     aria-sort={
                       sort === "price"
                         ? ascending
@@ -963,19 +1052,32 @@ export function Products() {
                   return (
                     <tr key={product.code}>
                       <td>
-                        <span>
-                          {lang === "fa" ? product.name_fa : product.name_en}
-                        </span>
-                        <p className="muted">{product.unit_size}</p>
+                        <strong className="catalog-product-name">
+                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                            {lang === "fa" ? product.name_fa : product.name_en}
+                          </bdi>
+                        </strong>
+                        <p className="muted catalog-product-secondary">
+                          <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+                            {lang === "fa" ? product.name_en : product.name_fa}
+                          </bdi>
+                        </p>
+                        <p className="muted">
+                          <UnitSize value={product.unit_size} />
+                        </p>
                       </td>
-                      <td dir="ltr">{product.code}</td>
-                      <td dir="ltr">{price ? money(price) : "—"}</td>
+                      <td className="numeric">
+                        <LtrText>{product.code}</LtrText>
+                      </td>
+                      <td className="numeric">
+                        {price ? <Money value={price} /> : "—"}
+                      </td>
                       <td>
                         <div className="actions">
                           {pending && (
                             <Badge tone="pending">
                               {t("Pending", "در انتظار تأیید")}{" "}
-                              <span dir="ltr">{money(pending)}</span>
+                              <Money value={pending} />
                             </Badge>
                           )}
                           {!pending && (
@@ -992,7 +1094,9 @@ export function Products() {
                             </Badge>
                           )}
                           {offer && (
-                            <Badge tone="approved">{offer.label}</Badge>
+                            <Badge tone="info" className="offer-pill">
+                              <OfferLabel label={offer.label} language={lang} />
+                            </Badge>
                           )}
                         </div>
                       </td>

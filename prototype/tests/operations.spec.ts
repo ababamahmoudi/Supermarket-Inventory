@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, visitPage } from "./helpers";
+import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import { chooseOption, signIn, visitPage } from "./helpers";
 
 async function visit(page: Page, label: string) {
   await visitPage(page, label);
@@ -90,9 +91,12 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByLabel("Actual replacement quantity", { exact: true })
     .fill("2");
-  await page
-    .getByLabel("Replacement product actually received", { exact: true })
-    .selectOption("0002");
+  await chooseOption(
+    page,
+    page.getByLabel("Replacement product actually received", { exact: true }),
+    "0002",
+    demoSeed.products.find((product) => product.code === "0002")!.name_en,
+  );
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
@@ -108,18 +112,23 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   const after = await stored(page);
   expect(after.ledger).toEqual(before.ledger);
   expect(after.stock["Branch 1:0002"]).toBe(before.stock["Branch 1:0002"] + 2);
-  await page
-    .getByLabel("Supplier", { exact: true })
-    .selectOption("Golden Grain Distributors");
+  await chooseOption(
+    page,
+    page.getByLabel("Supplier", { exact: true }),
+    "Golden Grain Distributors",
+  );
   await expect(
-    page.getByText("Basmati Rice 4.5 kg", { exact: true }),
+    page.getByRole("table").getByText("Basmati Rice 4.5 kg", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Request cancellation", exact: true })
     .click();
-  await page
-    .getByLabel("Actual disposition", { exact: true })
-    .selectOption("supplier_held");
+  await chooseOption(
+    page,
+    page.getByLabel("Actual disposition", { exact: true }),
+    "supplier_held",
+    "Supplier still holds originals — restore zero",
+  );
   await page
     .getByLabel("Cancellation reason (required)", { exact: true })
     .fill("Fictional supplier retains originals; keep received replacement");
@@ -135,9 +144,11 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   expect(cancelled.returns[1].status).toBe("cancellation_review");
   await signIn(page, "Supervisor");
   await visit(page, "Returns");
-  await page
-    .getByLabel("Supplier", { exact: true })
-    .selectOption("Golden Grain Distributors");
+  await chooseOption(
+    page,
+    page.getByLabel("Supplier", { exact: true }),
+    "Golden Grain Distributors",
+  );
   await page
     .getByLabel("Settlement review and reason", { exact: true })
     .fill(
@@ -147,7 +158,12 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Approve cancellation", exact: true })
     .click();
-  await page.getByLabel("View", { exact: true }).selectOption("history");
+  await chooseOption(
+    page,
+    page.getByLabel("View", { exact: true }),
+    "history",
+    "All returns and history",
+  );
   await expect(page.getByText("Cancelled", { exact: true })).toBeVisible();
   expect((await stored(page)).stock["Branch 1:0001"]).toBe(1);
   expect(errors).toEqual([]);
@@ -160,25 +176,28 @@ test("expiry clearing, notes store-use, and unread Supervisor actions survive re
   await seedPostedInvoice(page);
   await visit(page, "Date tracking");
   await expect(
-    page.getByRole("button", { name: "Cleared", exact: true }),
+    page.getByRole("button", { name: "Mark as cleared", exact: true }),
   ).toHaveCount(2);
   await page
-    .getByRole("button", { name: "Cleared", exact: true })
+    .getByRole("button", { name: "Mark as cleared", exact: true })
     .first()
     .click();
   await expect(
-    page.getByRole("button", { name: "Cleared", exact: true }),
+    page.getByRole("button", { name: "Mark as cleared", exact: true }),
   ).toHaveCount(1);
   await page.reload();
   await expect(
-    page.getByRole("button", { name: "Cleared", exact: true }),
+    page.getByRole("button", { name: "Mark as cleared", exact: true }),
   ).toHaveCount(1);
   await visit(page, "Notes");
   await page.getByRole("tab", { name: "Store use", exact: true }).click();
   await page.getByLabel("Note", { exact: true }).fill("Demo staff lunch");
-  await page
-    .getByLabel("Product (required for stock)", { exact: true })
-    .selectOption("0006");
+  await chooseOption(
+    page,
+    page.getByLabel("Product (required for stock)", { exact: true }),
+    "0006",
+    "Lavash Bread 500 g",
+  );
   await page
     .getByLabel("Actual quantity used (required)", { exact: true })
     .fill("2");
@@ -254,7 +273,9 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
     page.getByText("$119.79", { exact: true }).first(),
   ).toBeVisible();
   await expect(page.getByRole("cell", { name: /DEMO-1001/ })).toBeVisible();
-  await page.getByLabel("View", { exact: true }).selectOption("month");
+  await page
+    .getByRole("tab", { name: "Month-end summary", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", {
       name: "Month-end ledger summary",
@@ -399,9 +420,12 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
   await page
     .getByLabel("Note", { exact: true })
     .fill("Fictional quantity exceeds available stock");
-  await page
-    .getByLabel("Product (required for stock)", { exact: true })
-    .selectOption("0006");
+  await chooseOption(
+    page,
+    page.getByLabel("Product (required for stock)", { exact: true }),
+    "0006",
+    "Lavash Bread 500 g",
+  );
   const beforeStoreUse = await stored(page);
   await page
     .getByLabel("Actual quantity used (required)", { exact: true })
@@ -420,6 +444,11 @@ test("invalid pickup evidence, excessive store use, and invalid financial amount
 
   await signIn(page, "Supervisor");
   await visit(page, "Payables");
+  await page
+    .getByRole("row")
+    .filter({ hasText: "Fresh Valley Foods" })
+    .getByRole("button", { name: "View", exact: true })
+    .click();
   await page
     .getByRole("button", {
       name: "Record opening balance, credit, or adjustment",

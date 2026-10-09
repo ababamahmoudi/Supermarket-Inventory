@@ -5,7 +5,26 @@ import { effectiveOffer, effectivePrice } from "../catalog";
 import { labelLayout, labelPages } from "../labels";
 import { useDemo } from "../store";
 import type { LabelTemplate, Product } from "../types";
-import { Badge, Button, Card, EmptyState, Field, PageHeader } from "../ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  DataTable,
+  EmptyState,
+  Field,
+  NumberField,
+  PageHeader,
+  Select,
+} from "../ui";
+import {
+  LtrText,
+  Money,
+  OfferLabel,
+  ProductName,
+  UnitSize,
+} from "../presentation";
+import "./invoice-settings-labels.css";
 
 const geometry = {
   width: 60,
@@ -19,7 +38,7 @@ const geometry = {
 };
 
 export function Labels() {
-  const { state, update, branch, t, money } = useDemo();
+  const { state, update, branch, lang, t } = useDemo();
   const [selected, setSelected] = useState<string[]>(
     demoSeed.label_demo.product_codes,
   );
@@ -28,6 +47,9 @@ export function Labels() {
   const [draft, setDraft] = useState({ name: "Template 1", ...geometry });
   const [startSlot, setStartSlot] = useState(5);
   const [error, setError] = useState("");
+  const [templateFormOpen, setTemplateFormOpen] = useState(
+    state.templates.length === 0,
+  );
   const templates = state.templates.filter(
     (item) => item.company_id === state.config.company.seed_key,
   );
@@ -92,36 +114,61 @@ export function Labels() {
       )}
       <div className="labels-controls">
         <Card title={t("Choose products", "انتخاب کالاها")}>
-          <div className="form-grid">
-            {products.map((product) => (
-              <label key={product.code}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(product.code)}
-                  onChange={(event) =>
-                    setSelected(
-                      event.target.checked
-                        ? [...selected, product.code]
-                        : selected.filter((code) => code !== product.code),
-                    )
-                  }
-                />{" "}
-                {product.name_en} · {product.name_fa}
-              </label>
-            ))}
-          </div>
-          <Field label={t("Copies per product", "تعداد هر کالا")}>
-            <input
-              type="number"
+          <DataTable className="labels-product-table">
+            <thead>
+              <tr>
+                <th>{t("Product", "کالا")}</th>
+                <th>{t("Product Code", "کد کالا")}</th>
+                <th>{t("Unit size", "اندازه واحد")}</th>
+                <th className="numeric">{t("Selling Price", "قیمت فروش")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.code}>
+                  <td>
+                    <Checkbox
+                      checked={selected.includes(product.code)}
+                      onChange={(checked) =>
+                        setSelected(
+                          checked
+                            ? [...selected, product.code]
+                            : selected.filter((code) => code !== product.code),
+                        )
+                      }
+                    >
+                      <ProductName product={product} language={lang} />
+                    </Checkbox>
+                  </td>
+                  <td>
+                    <LtrText>{product.code}</LtrText>
+                  </td>
+                  <td>
+                    <UnitSize value={product.unit_size} />
+                  </td>
+                  <td className="numeric">
+                    <Money
+                      value={effectivePrice(state, product, branch)!}
+                      currency={state.config.company.currency}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+          <Field
+            label={t("Copies per product", "تعداد هر کالا")}
+            className="labels-copies-field"
+          >
+            <NumberField
+              dir="ltr"
               min="1"
               max="100"
+              step="1"
               value={copies}
-              onChange={(event) =>
+              onChange={(value) =>
                 setCopies(
-                  Math.max(
-                    1,
-                    Math.min(100, Math.floor(Number(event.target.value) || 1)),
-                  ),
+                  Math.max(1, Math.min(100, Math.floor(Number(value) || 1))),
                 )
               }
             />
@@ -137,64 +184,81 @@ export function Labels() {
             </EmptyState>
           )}
           <Field label={t("Saved template", "قالب ذخیره‌شده")}>
-            <select
+            <Select
               value={templateId}
-              onChange={(event) => {
-                setTemplateId(event.target.value);
+              onChange={(value) => {
+                setTemplateId(value);
                 setStartSlot(1);
               }}
-            >
-              <option value="">
-                {t("Choose a template", "یک قالب انتخاب کنید")}
-              </option>
-              {templates.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                {
+                  value: "",
+                  label: t("Choose a template", "یک قالب انتخاب کنید"),
+                },
+                ...templates.map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                })),
+              ]}
+            />
           </Field>
-          <details open={templates.length === 0}>
-            <summary>{t("New template", "قالب جدید")}</summary>
-            <Field label={t("Template name", "نام قالب")}>
-              <input
-                value={draft.name}
-                onChange={(event) =>
-                  setDraft({ ...draft, name: event.target.value })
-                }
-              />
-            </Field>
-            <div className="form-grid">
-              {(
-                [
-                  ["width", "Width", "عرض"],
-                  ["height", "Height", "ارتفاع"],
-                  ["margin_top", "Top margin", "حاشیه بالا"],
-                  ["margin_bottom", "Bottom margin", "حاشیه پایین"],
-                  ["margin_left", "Left margin", "حاشیه چپ"],
-                  ["margin_right", "Right margin", "حاشیه راست"],
-                  ["gap_x", "Horizontal gap", "فاصله افقی"],
-                  ["gap_y", "Vertical gap", "فاصله عمودی"],
-                ] as const
-              ).map(([key, en, fa]) => (
-                <Field key={key} label={`${t(en, fa)} (mm)`}>
+          <div className="labels-template-section">
+            <Button
+              variant="secondary"
+              aria-expanded={templateFormOpen}
+              aria-controls="labels-template-form"
+              onClick={() => setTemplateFormOpen((open) => !open)}
+            >
+              {t("New template", "قالب جدید")}
+            </Button>
+            {templateFormOpen && (
+              <div id="labels-template-form" className="labels-template-form">
+                <Field label={t("Template name", "نام قالب")}>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={draft[key]}
+                    value={draft.name}
                     onChange={(event) =>
-                      setDraft({ ...draft, [key]: Number(event.target.value) })
+                      setDraft({ ...draft, name: event.target.value })
                     }
                   />
                 </Field>
-              ))}
-            </div>
-            {error && <p role="alert">{error}</p>}
-            <Button onClick={saveTemplate}>
-              {t("Save template", "ذخیره قالب")}
-            </Button>
-          </details>
+                <div className="form-grid labels-dimensions">
+                  {(
+                    [
+                      ["width", "Width", "عرض"],
+                      ["height", "Height", "ارتفاع"],
+                      ["margin_top", "Top margin", "حاشیه بالا"],
+                      ["margin_bottom", "Bottom margin", "حاشیه پایین"],
+                      ["margin_left", "Left margin", "حاشیه چپ"],
+                      ["margin_right", "Right margin", "حاشیه راست"],
+                      ["gap_x", "Horizontal gap", "فاصله افقی"],
+                      ["gap_y", "Vertical gap", "فاصله عمودی"],
+                    ] as const
+                  ).map(([key, en, fa]) => (
+                    <Field
+                      key={key}
+                      label={`${t(en, fa)} (${t("mm", "میلی‌متر")})`}
+                    >
+                      <NumberField
+                        dir="ltr"
+                        min="0"
+                        step="0.5"
+                        value={draft[key]}
+                        onChange={(value) =>
+                          setDraft({ ...draft, [key]: Number(value) })
+                        }
+                      />
+                    </Field>
+                  ))}
+                </div>
+                {error && <p role="alert">{error}</p>}
+                <div className="labels-template-actions">
+                  <Button variant="secondary" onClick={saveTemplate}>
+                    {t("Save template", "ذخیره قالب")}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
           {template && (
             <Field
               label={t("Starting slot", "خانه شروع")}
@@ -207,15 +271,14 @@ export function Labels() {
                   : undefined
               }
             >
-              <input
-                type="number"
+              <NumberField
+                dir="ltr"
                 min="1"
                 max={capacity}
+                step="1"
                 value={startSlot}
-                onChange={(event) =>
-                  setStartSlot(
-                    Math.max(1, Math.floor(Number(event.target.value) || 1)),
-                  )
+                onChange={(value) =>
+                  setStartSlot(Math.max(1, Math.floor(Number(value) || 1)))
                 }
               />
             </Field>
@@ -226,9 +289,14 @@ export function Labels() {
               "اگر چهار خانه اول استفاده شده، از خانه 5 شروع کنید.",
             )}
           </p>
-          <Button disabled={pages.length === 0} onClick={() => window.print()}>
-            {t("Print labels", "چاپ برچسب‌ها")}
-          </Button>
+          <div className="labels-print-actions">
+            <Button
+              disabled={pages.length === 0}
+              onClick={() => window.print()}
+            >
+              {t("Print labels", "چاپ برچسب‌ها")}
+            </Button>
+          </div>
         </Card>
       </div>
       {template && pages.length > 0 && (
@@ -275,22 +343,34 @@ export function Labels() {
                 return (
                   <div key={index} className="shelf-label" style={style}>
                     <img src={logo} alt={state.config.company.name} />
-                    <strong>{product.name_en}</strong>
-                    <strong lang="fa" dir="rtl">
-                      {product.name_fa}
-                    </strong>
+                    <ProductName product={product} language={lang} />
                     {(product.description_en || product.description_fa) && (
                       <small>
-                        {product.description_en} · {product.description_fa}
+                        <LtrText>{product.description_en}</LtrText> ·{" "}
+                        <bdi dir="rtl">{product.description_fa}</bdi>
                       </small>
                     )}
                     <span className="price" dir="ltr">
-                      {price ? money(price) : t("Pending", "در انتظار")}
+                      {price ? (
+                        <Money
+                          value={price}
+                          currency={state.config.company.currency}
+                        />
+                      ) : (
+                        t("Pending", "در انتظار")
+                      )}
                     </span>
-                    {offer && <span>{offer.label}</span>}
+                    {offer && (
+                      <OfferLabel
+                        label={offer.label}
+                        language={lang}
+                        currency={state.config.company.currency}
+                      />
+                    )}
                     <small>
-                      {t("Product Code", "کد کالا")}: {product.code} ·{" "}
-                      {product.unit_size}
+                      {t("Product Code", "کد کالا")}:{" "}
+                      <LtrText>{product.code}</LtrText> ·{" "}
+                      <UnitSize value={product.unit_size} />
                     </small>
                     {taxProfile?.taxable && (
                       <Badge tone="info">

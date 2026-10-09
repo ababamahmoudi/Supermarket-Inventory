@@ -1,5 +1,15 @@
 # Project changelog
 
+## 2026-10-07 — Phase 0.2 pull request A: design and language fixes
+
+- Integrated the owner's updated main-branch documents and seed into the earlier redesign branch; A is stacked on that branch and changes only prototype/docs.
+- Applied styled controls, shared segmented tabs/spacing, bounded fields, visible striped-row actions, dark-theme button contrast, sticky top bar, and centered dialogs across every existing screen.
+- Refined sidebar/top-bar details, compact lookup, invoice tabs/drafts layout, return numbering/actions, approval context/scope, dashboard balances, Payables overview, and adjacent Settings tester values.
+- Centralized symbol-first money, YYYY-MM-DD dates, offers, translated branch/demo-user labels, current-language product names, and isolated mixed-direction fragments.
+- Loaded Supervisor-only supplier-balance demo snapshots separately from the ledger, reconciled the original Fresh Valley invoice to avoid double counting, and restored the configured 25% minimum-margin defaults while preserving explicit saved custom edits.
+- Added balance/migration and all-screen presentation regressions, a reproducible 23-state/four-variant screenshot capture, and current Ubuntu instructions in `docs/DESIGN_POLISH_REVIEW.md`. Final executed results are recorded there.
+- Paused B's new labels, notebooks, grouped Settings, History/Undo, and simulated-reading enhancements pending A approval. Suppliers/History page destinations remain unbuilt. Missing source return dates/authors are displayed as missing rather than invented.
+
 ## 2026-10-07 — Phase 0.2 redesign PR1: shell and four screens
 
 - Applied design language v2 to shared shell/controls, sign-in, Supervisor dashboard, Cashier lookup, and invoice review, with light/dark themes, comfortable text, responsive layouts, and Persian RTL.

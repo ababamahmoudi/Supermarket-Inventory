@@ -13,6 +13,7 @@
   --accent: var(--company-primary, #2b59c3);
   --accent-hover: var(--company-primary-hover, #234aa8);
   --accent-soft: var(--company-primary-soft, #e6edfa);
+  --accent-fill: var(--company-primary-fill, var(--company-primary, #2b59c3));
   --kpi-accent: linear-gradient(
     135deg,
     var(--company-primary-hover, #234aa8),
@@ -61,6 +62,7 @@
   --accent: var(--company-dark-primary, #5b86e5);
   --accent-hover: var(--company-dark-primary-hover, #7398ea);
   --accent-soft: var(--company-dark-primary-soft, rgba(91, 134, 229, 0.18));
+  --accent-fill: var(--company-dark-primary-fill, #3d68d4);
   --kpi-charcoal: linear-gradient(135deg, #4a4a4a, #5e5e5e);
   --tile-lavender: rgba(149, 164, 252, 0.14);
   --tile-sky: rgba(0, 122, 255, 0.14);
@@ -349,7 +351,7 @@ label:has(input[type="radio"]) {
 }
 textarea {
   min-block-size: 96px;
-  resize: vertical;
+  resize: none;
 }
 fieldset {
   min-inline-size: 0;
@@ -1086,7 +1088,10 @@ button.stat-card:hover {
   background: var(--card);
 }
 .tabs {
-  display: flex;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  margin-block-end: 24px;
   flex-wrap: wrap;
   gap: 4px;
   padding: 4px;
@@ -1281,10 +1286,11 @@ textarea:focus {
 }
 .button-primary {
   color: #fff;
-  background: var(--accent);
+  background: var(--accent-fill);
 }
 .button-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--accent-fill);
+  filter: brightness(0.95);
 }
 .button-secondary {
   background: var(--surface-soft);
@@ -1791,7 +1797,7 @@ html[data-theme="dark"] .signin-logo {
 .dashboard-alert-item,
 .dashboard-return-item,
 .dashboard-note-item {
-  padding: 12px 0;
+  padding: 12px;
 }
 .dashboard-queue-row {
   display: flex;
@@ -2353,5 +2359,237 @@ html[data-theme="dark"] .signin-logo {
   }
   .invoice-action-footer {
     display: none;
+  }
+}
+
+/* Shared presentation rules apply to every screen, including the original flows. */
+.topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 40;
+}
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-block-size: calc(100dvh - 2rem);
+}
+.confirm-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+.dialog-backdrop {
+  z-index: 70;
+  place-items: center;
+  background: rgb(0 0 0 / 0.45);
+}
+.ltr-fragment {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+.product-name,
+.bilingual-name {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  text-align: start;
+}
+.product-name strong,
+.bilingual-name strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.product-name small,
+.bilingual-name small {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.badge {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  align-self: start;
+  justify-self: start;
+}
+th,
+td {
+  text-align: start;
+}
+tbody th[scope="row"] {
+  position: static;
+  padding: 12px;
+  background: transparent;
+  font-size: 0.875rem;
+}
+tbody tr:nth-child(odd) th[scope="row"] {
+  background: var(--surface-soft);
+}
+tbody tr:hover th[scope="row"] {
+  background: var(--nav-active);
+}
+tbody th[scope="row"]:first-child {
+  border-start-start-radius: 12px;
+  border-end-start-radius: 12px;
+}
+tbody th[scope="row"]:last-child {
+  border-start-end-radius: 12px;
+  border-end-end-radius: 12px;
+}
+th.numeric,
+td.numeric,
+th.number-cell,
+td.number-cell {
+  direction: inherit;
+  unicode-bidi: normal;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+td .button-secondary,
+td .button-ghost,
+.dashboard-inline-actions .button,
+.dashboard-alert-item .button-secondary,
+.dashboard-return-item .button-secondary {
+  outline: 1px solid var(--text-muted);
+  outline-offset: -1px;
+  background: var(--search-fill);
+  color: var(--text);
+}
+td .ui-input,
+td input:not([type="file"]),
+td textarea {
+  outline: 1px solid var(--text-muted);
+  outline-offset: -1px;
+  background: var(--surface);
+}
+td .ui-input:focus-visible,
+td input:focus-visible,
+td .button:focus-visible,
+.dashboard-inline-actions .button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.table-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-block-end: 24px;
+  max-inline-size: 960px;
+}
+.table-toolbar > .field {
+  inline-size: 220px;
+  max-inline-size: 100%;
+}
+.table-toolbar > input {
+  inline-size: 280px;
+  max-inline-size: 100%;
+}
+.table-toolbar > .ui-segments {
+  margin: 0;
+}
+.form-card {
+  inline-size: 100%;
+  max-inline-size: 720px;
+}
+.form-section {
+  max-inline-size: 960px;
+  padding-block: 24px;
+}
+.form-grid,
+.invoice-details-form,
+.invoice-line-form {
+  gap: 20px;
+  max-inline-size: 960px;
+}
+.form-card form {
+  display: grid;
+  gap: 20px;
+}
+.field-short {
+  inline-size: 144px;
+  max-inline-size: 100%;
+  flex: 0 0 auto;
+}
+.field-short .ui-input {
+  inline-size: 100%;
+}
+.form-grid + .actions,
+.field + .actions,
+.form-section > .actions,
+.card > .actions:not(:first-child) {
+  margin-block-start: 24px;
+}
+.stack {
+  gap: 24px;
+}
+.pills,
+.tabs {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  align-self: start;
+  justify-self: start;
+}
+.pills button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.05);
+}
+.language-toggle button {
+  color: var(--text);
+}
+.return-line,
+.offer-task {
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.offer-task {
+  display: grid;
+  gap: 20px;
+}
+.offer-task .actions {
+  margin-block-start: 4px;
+}
+.offer-task .button-secondary {
+  background: var(--surface);
+  outline: 1px solid var(--border);
+  outline-offset: -1px;
+}
+.form-section {
+  display: grid;
+  gap: 20px;
+}
+.form-section > .actions {
+  margin-block-start: 4px;
+}
+.form-section .return-line,
+.return-quantity-fields {
+  display: grid;
+  gap: 20px;
+}
+.main-content > .banner {
+  margin-block: 24px;
+}
+.detail-list {
+  grid-template-columns: max-content minmax(0, 1fr);
+  max-inline-size: 720px;
+  gap: 12px 24px;
+}
+.invoice-document-pane {
+  inset-block-start: 88px;
+}
+@media (max-width: 760px) {
+  .table-toolbar {
+    gap: 16px;
+  }
+  .stack {
+    gap: 16px;
+  }
+  .detail-list {
+    gap: 12px 16px;
+  }
+}
+@media print {
+  .topbar {
+    position: static;
   }
 }

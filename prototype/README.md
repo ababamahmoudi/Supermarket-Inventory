@@ -2,7 +2,7 @@
 
 This Phase 0.2 demo runs entirely in the browser. People, suppliers, files, and activity are fictional; invoice reading is simulated. There is no backend, database, production authentication, or AI connection. Uploaded files and saved changes stay in this browser.
 
-The current branch, `feat/prototype-08-visual-redesign`, is **redesign PR1**: the shared shell and controls, sign-in, Supervisor dashboard, Cashier lookup, and invoice review. It follows [design language v2](../docs/design-language.md). Suppliers and the other page redesigns belong to PR2 after Ali approves PR1. Existing operational pages keep their workflows and earlier page layouts.
+The current review branch, `fix/prototype-09-design-language-polish`, is **pull request A**: design and language fixes across all existing screens, plus the requested supplier-balance and configured-margin corrections. It follows [design language v2](../docs/design-language.md) and builds on the earlier unmerged `feat/prototype-08-visual-redesign` branch. The [A review guide](../docs/DESIGN_POLISH_REVIEW.md) contains current click paths, validation results, and the all-screen screenshot matrix. New features in B wait for Ali's approval; Suppliers and History pages remain pending.
 
 ## Run on Ubuntu
 
@@ -10,16 +10,16 @@ First get the review branch. If you already tested the project, open Ubuntu **Fi
 
 ```bash
 git fetch origin
-git switch feat/prototype-08-visual-redesign
-git pull --ff-only
+git switch fix/prototype-09-design-language-polish
+git pull --ff-only origin fix/prototype-09-design-language-polish
 ```
 
-Expect Git to say it switched to `feat/prototype-08-visual-redesign`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
+Expect Git to say it switched to `fix/prototype-09-design-language-polish`, followed by `Already up to date` or a list of downloaded changes. If Git reports local changes would be overwritten, stop and share that message; preserve those files.
 
 For a fresh copy instead, open a terminal in the folder where you keep projects and run:
 
 ```bash
-git clone --branch feat/prototype-08-visual-redesign https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch fix/prototype-09-design-language-polish https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory
 ```
 
@@ -64,7 +64,7 @@ Expect Node `v22.22.2`, a successful TypeScript/Vite build, and Vite serving on 
 5. Open the user menu at the bottom of the sidebar for **Lock** or **Sign out**. Recent-user chips fill the username without retaining a typed password. On a phone, open the sidebar first.
 6. Choose **Demo → Reset demo → Reset demo** in the confirmation dialog to restore fictional business data. Refresh preserves changes. Reset preserves the account, language, preferences, and changed passwords; use a fresh browser profile to repeat the first-sign-in example.
 
-[REVIEW_GUIDE.md](REVIEW_GUIDE.md) gives click-by-click PR1 and operational checks. [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) contains the screenshot matrix and visual acceptance guide.
+[DESIGN_POLISH_REVIEW.md](../docs/DESIGN_POLISH_REVIEW.md) is the current A review guide, with click-by-click checks and screenshots for every existing screen. [REVIEW_GUIDE.md](REVIEW_GUIDE.md) and [REDESIGN_REVIEW.md](../docs/REDESIGN_REVIEW.md) record the earlier four-screen PR1 review.
 
 ## Meaningful checks
 
@@ -78,13 +78,13 @@ npx playwright install --with-deps chromium
 npm run e2e
 ```
 
-Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving, returns, and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including PR1 layouts, Persian RTL, theme/text persistence, invoice blockers, approved-price lookup, and operational regressions. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/design-v2.spec.ts` targets PR1; the full command also checks retained workflows.
+Expect unit suites to exercise pricing fixtures, configuration, account/password/session behavior, control keyboard behavior, company/branch scope, receiving, returns, and ledger rules. Lint checks code/formatting; build checks types and produces `dist/`. Playwright exercises desktop and phone flows, including A's all-screen controls and layouts, Persian RTL, theme/text persistence, invoice blockers, approved-price lookup, supplier balances, and operational regressions. It previews built `dist/`, so build first and stop any stale server on 5174. `npm run e2e -- tests/design-polish.spec.ts` targets A; the full command also checks the earlier sign-in/layout work and retained workflows.
 
 These are commands and expected results; the PR validation report records actual run results. A check with no executed tests is not a pass.
 
 ## Configuration and retained operational data
 
-The owner's current `seed/arzon-config.json` and `seed/demo-data.json` remain unchanged. [src/config.ts](src/config.ts) adapts their updated schema using [configuration.json](src/compat/configuration.json) and [operational-data.json](src/compat/operational-data.json). Current seed values take precedence; fields absent from the updated files retain earlier confirmed metadata: CAD, `America/Toronto`, 13% HST and tax profiles, actual received quantities, return evidence/settlements, and ledger rules. This preserves receiving and returns without fabricating stock or dropping history. Compatibility data belongs to the prototype and remains configurable.
+The owner's current `seed/arzon-config.json` and `seed/demo-data.json` remain unchanged. [src/config.ts](src/config.ts) adapts their updated schema using [configuration.json](src/compat/configuration.json) and [operational-data.json](src/compat/operational-data.json). Current seed values take precedence; fields absent from the updated files retain earlier confirmed metadata: CAD, `America/Toronto`, 13% HST and tax profiles, actual received quantities, return evidence/settlements, and ledger rules. This preserves receiving and returns without fabricating stock or dropping history. Compatibility data belongs to the prototype and remains configurable. The current seed's supplier-balance snapshots are displayed separately from operational ledger entries; posting the original Fresh Valley invoice replaces its snapshot contribution to avoid double counting. The configured minimum-margin value is now 25% for every default category; saved custom edits are preserved.
 
 ## Static build
 

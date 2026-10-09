@@ -1,7 +1,16 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
-import { Badge, Card, DataTable, Field, PageHeader } from "../ui";
+import {
+  Badge,
+  Card,
+  DataTable,
+  Field,
+  NumberField,
+  PageHeader,
+  Select,
+} from "../ui";
+import "./invoice-settings-labels.css";
 import {
   calculatePrice,
   type PricingErrorCode,
@@ -162,18 +171,14 @@ export default function Settings() {
                     {t("Cost divisor for", "ضریب تقسیم برای")}{" "}
                     {categoryLabel(category.key, category.label, t)}
                   </label>
-                  <input
+                  <NumberField
                     id={`divisor-${category.key}`}
-                    type="text"
-                    inputMode="decimal"
                     dir="ltr"
-                    className="numeric"
+                    className="numeric control-narrow"
                     value={
                       invalidDivisors[category.key] ?? category.cost_divisor
                     }
-                    onChange={(event) =>
-                      editDivisor(category.key, event.target.value)
-                    }
+                    onChange={(value) => editDivisor(category.key, value)}
                     aria-invalid={Boolean(divisorErrors[category.key])}
                     aria-describedby={
                       divisorErrors[category.key]
@@ -212,11 +217,11 @@ export default function Settings() {
                     : t("No", "خیر")}
                 </td>
                 <td>
-                  <span dir="ltr">
+                  <bdi dir="ltr">
                     {category.minimum_margin === null
                       ? t("Inactive", "غیرفعال")
                       : `${new Decimal(category.minimum_margin).times("100").toFixed(0)}%`}
-                  </span>
+                  </bdi>
                 </td>
               </tr>
             ))}
@@ -224,36 +229,35 @@ export default function Settings() {
         </DataTable>
       </Card>
 
-      <Card title={t("Price sandbox", "آزمایش قیمت")}>
+      <Card
+        title={t("Price tester", "آزمایش قیمت")}
+        className="settings-price-tester"
+      >
         <p className="muted">
           {t(
             "Use a cost before tax. This preview uses the current rules and does not change an approved price.",
             "هزینه پیش از مالیات را وارد کنید. این پیش‌نمایش از قواعد فعلی استفاده می‌کند و قیمت تأییدشده را تغییر نمی‌دهد.",
           )}
         </p>
-        <div className="form-grid">
+        <div className="form-grid settings-tester-fields">
           <Field label={t("Pricing category", "دسته قیمت‌گذاری")}>
-            <select
+            <Select
               value={categoryKey}
-              onChange={(event) => setCategoryKey(event.target.value)}
-            >
-              {state.config.pricing_categories.map((category) => (
-                <option key={category.key} value={category.key}>
-                  {categoryLabel(category.key, category.label, t)}
-                </option>
-              ))}
-            </select>
+              onChange={setCategoryKey}
+              options={state.config.pricing_categories.map((category) => ({
+                value: category.key,
+                label: categoryLabel(category.key, category.label, t),
+              }))}
+            />
           </Field>
           <Field
             label={t("Unit cost before tax", "هزینه هر واحد پیش از مالیات")}
             error={costError}
           >
-            <input
-              type="text"
-              inputMode="decimal"
+            <NumberField
               dir="ltr"
               value={cost}
-              onChange={(event) => setCost(event.target.value)}
+              onChange={setCost}
               aria-invalid={Boolean(costError)}
             />
           </Field>
@@ -261,9 +265,9 @@ export default function Settings() {
         {result && (
           <div aria-live="polite">
             <div className="price-display">
-              <span dir="ltr" className="numeric">
+              <bdi dir="ltr" className="numeric">
                 {money(result.selling_price)}
-              </span>
+              </bdi>
             </div>
             <p className="muted">
               {t(
@@ -271,7 +275,7 @@ export default function Settings() {
                 "قیمت فروش محاسبه‌شده پیش از مالیات",
               )}
             </p>
-            <dl className="detail-list">
+            <dl className="detail-list settings-calculation-steps">
               <dt>{t("Raw cost ÷ divisor", "هزینه ÷ ضریب تقسیم")}</dt>
               <dd dir="ltr" className="numeric">
                 {new Decimal(result.raw_price).toFixed(6)}

@@ -8,6 +8,8 @@ import {
   resolveApproval,
 } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { branchLabel, demoUserLabel, Money, OfferLabel } from "../presentation";
+import "./financial-polish.css";
 import { useDemo } from "../store";
 import type { Approval, Branch } from "../types";
 import {
@@ -19,10 +21,13 @@ import {
   EmptyState,
   Field,
   PageHeader,
+  Select,
+  Tabs,
+  NumberField,
 } from "../ui";
 
 export function Approvals() {
-  const { state, update, role, branch, lang, t, money } = useDemo();
+  const { state, update, role, branch, lang, t } = useDemo();
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
     "pending",
   );
@@ -62,10 +67,7 @@ export function Approvals() {
           barcode_conflict: t("Barcode conflict", "تداخل بارکد"),
           tax_profile: t("Tax profile change", "تغییر وضعیت مالیات"),
         }[item.type];
-  const branchName = (value: Branch) =>
-    value === "all"
-      ? t("All branches", "همه شعبه‌ها")
-      : t(value, `شعبه ${demoBranches.indexOf(value) + 1}`);
+  const branchName = (value: Branch) => branchLabel(value, lang);
   const openPreview = (item: Approval, decision: "approve" | "reject") => {
     setMessage("");
     const target =
@@ -167,26 +169,19 @@ export function Approvals() {
           "کالاها و قیمت‌های جدید را بررسی کنید. قیمت در انتظار، جایگزین قیمت تأییدشده نمی‌شود.",
         )}
       />
-      <div className="tabs" aria-label={t("Approval status", "وضعیت تأیید")}>
-        {(["pending", "approved", "rejected"] as const).map((status) => (
-          <Button
-            key={status}
-            variant={filter === status ? "primary" : "secondary"}
-            onClick={() => {
-              setFilter(status);
-              setMessage("");
-            }}
-          >
-            {
-              {
-                pending: t("Pending", "در انتظار"),
-                approved: t("Approved", "تأییدشده"),
-                rejected: t("Rejected", "ردشده"),
-              }[status]
-            }
-          </Button>
-        ))}
-      </div>
+      <Tabs
+        value={filter}
+        aria-label={t("Approval status", "وضعیت تأیید")}
+        onChange={(value) => {
+          setFilter(value as typeof filter);
+          setMessage("");
+        }}
+        options={[
+          { value: "pending", label: t("Pending", "در انتظار") },
+          { value: "approved", label: t("Approved", "تأییدشده") },
+          { value: "rejected", label: t("Rejected", "ردشده") },
+        ]}
+      />
       {message && (
         <div className="banner" role="status">
           {message}
@@ -206,12 +201,47 @@ export function Approvals() {
             value.company_id === company && value.code === item.product_code,
         );
         if (!product) return null;
-        const approved = effectivePrice(state, product, item.branch);
+        const approved =
+          "current_price" in item
+            ? item.current_price
+            : effectivePrice(state, product, item.branch);
+        const relatedInvoice = [state.invoice, ...(state.invoices ?? [])].find(
+          (invoice) =>
+            invoice.company_id === company &&
+            item.invoice_ids?.includes(invoice.id),
+        );
+        const unitCost = item.unit_cost ?? product.last_cost_before_tax;
+        const margin =
+          item.margin ??
+          (new Decimal(item.proposed_price).gt(0)
+            ? new Decimal(item.proposed_price)
+                .minus(unitCost)
+                .div(item.proposed_price)
+                .toFixed(4)
+            : null);
+        const triggeredBy = item.manual_override
+          ? [...state.activity]
+              .reverse()
+              .find(
+                (entry) =>
+                  entry.company_id === company &&
+                  entry.product_code === item.product_code &&
+                  entry.branch === item.branch &&
+                  entry.action === "Propose manual override",
+              )?.by
+          : relatedInvoice?.receiving_employee;
+
         return (
           <Card
             key={item.id}
+            className="approval-card"
             title={lang === "fa" ? product.name_fa : product.name_en}
           >
+            <p className="muted approval-secondary-name">
+              <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+                {lang === "fa" ? product.name_en : product.name_fa}
+              </bdi>
+            </p>
             <div className="row">
               <Badge
                 tone={
@@ -219,7 +249,7 @@ export function Approvals() {
                     ? "pending"
                     : item.status === "approved"
                       ? "approved"
-                      : "danger"
+                      : "neutral"
                 }
               >
                 {item.status === "pending"
@@ -234,59 +264,72 @@ export function Approvals() {
                 <bdi>{item.product_code}</bdi>
               </span>
             </div>
-            <div className="grid-2">
-              <div>
-                <p className="muted">
-                  {t("Approved selling price", "قیمت فروش تأییدشده")}
-                </p>
+            <div className="approval-values">
+              <div className="approval-value">
+                <span className="muted">{t("Old price", "قیمت قبلی")}</span>
+                {approved !== null && approved !== undefined ? (
+                  <strong className="price">
+                    <Money value={approved} />
+                  </strong>
+                ) : (
+                  <span className="muted approval-missing-price">
+                    {t("No approved price yet", "هنوز قیمت تأییدشده ندارد")}
+                  </span>
+                )}
+              </div>
+              <div className="approval-value">
+                <span className="muted">{t("New price", "قیمت جدید")}</span>
                 <strong className="price">
-                  {approved
-                    ? money(approved)
-                    : t("No approved price", "قیمت تأییدشده ندارد")}
+                  <Money value={item.proposed_price} />
                 </strong>
               </div>
-              <div>
-                <p className="muted">
-                  {item.type === "margin_review"
-                    ? t("Price kept during review", "قیمت حفظ‌شده هنگام بررسی")
-                    : t("Proposed selling price", "قیمت فروش پیشنهادی")}
-                </p>
-                <strong className="price">{money(item.proposed_price)}</strong>
+              <div className="approval-value">
+                <span className="muted">{t("Unit cost", "هزینه واحد")}</span>
+                <strong>
+                  <Money value={unitCost} decimals={4} />
+                </strong>
+              </div>
+              <div className="approval-value">
+                <span className="muted">{t("Margin", "حاشیه سود")}</span>
+                <strong>
+                  <bdi dir="ltr">
+                    {margin !== null
+                      ? `${new Decimal(margin).times(100).toFixed(2)}%`
+                      : "—"}
+                  </bdi>
+                </strong>
               </div>
             </div>
-            {item.unit_cost && (
-              <p>
-                {t("Received unit cost", "هزینه واحد دریافتی")}:{" "}
-                {money(item.unit_cost)}
-                {item.margin && (
-                  <>
-                    {" "}
-                    · {t("Margin", "حاشیه سود")}:{" "}
-                    <bdi>{new Decimal(item.margin).times(100).toFixed(2)}%</bdi>
-                  </>
-                )}
-                {item.threshold && (
-                  <>
-                    {" "}
-                    · {t("Minimum", "حداقل")}:{" "}
-                    <bdi>
-                      {new Decimal(item.threshold).times(100).toFixed(2)}%
-                    </bdi>
-                  </>
-                )}
-              </p>
-            )}
+            <div className="approval-meta">
+              <span>
+                {t("Branch", "شعبه")}: {branchName(item.branch)}
+              </span>
+              <span>
+                {t("Triggered by", "ایجادشده توسط")}:{" "}
+                {triggeredBy
+                  ? demoUserLabel(triggeredBy, lang)
+                  : t("Not recorded", "ثبت نشده")}
+              </span>
+              {item.threshold && (
+                <span>
+                  {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
+                  <bdi dir="ltr">
+                    {new Decimal(item.threshold).times(100).toFixed(2)}%
+                  </bdi>
+                </span>
+              )}
+            </div>
             {item.manual_override && (
               <p>
                 {t("Reason", "دلیل")}: {item.reason}
               </p>
             )}
-            {item.invoice_ids?.length ? (
+            {relatedInvoice && (
               <p className="muted">
-                {t("Linked invoices", "فاکتورهای مرتبط")}:{" "}
-                {item.invoice_ids.join(", ")}
+                {t("Invoice", "فاکتور")}:{" "}
+                <bdi dir="ltr">{relatedInvoice.supplier_invoice_number}</bdi>
               </p>
-            ) : null}
+            )}
             {item.status === "pending" && item.type === "margin_review" && (
               <>
                 <p className="muted">
@@ -295,7 +338,7 @@ export function Approvals() {
                     "دریافت کالا ادامه دارد. قیمت را با دلیل حفظ کنید، تغییر دستی پیشنهاد دهید یا بررسی را در انتظار بگذارید.",
                   )}
                 </p>
-                <div className="grid-2">
+                <div className="form-grid approval-form">
                   <Field label={t("Reason", "دلیل")}>
                     <input
                       value={reasons[item.id] ?? ""}
@@ -308,19 +351,15 @@ export function Approvals() {
                     />
                   </Field>
                   <Field label={t("Manual override price", "قیمت دستی")}>
-                    <input
-                      inputMode="decimal"
+                    <NumberField
                       value={overrides[item.id] ?? ""}
-                      onChange={(event) =>
-                        setOverrides({
-                          ...overrides,
-                          [item.id]: event.target.value,
-                        })
+                      onChange={(value) =>
+                        setOverrides({ ...overrides, [item.id]: value })
                       }
                     />
                   </Field>
                 </div>
-                <div className="row">
+                <div className="actions">
                   <Button onClick={() => marginAction(item, "keep")}>
                     {t("Keep approved price", "حفظ قیمت تأییدشده")}
                   </Button>
@@ -334,7 +373,7 @@ export function Approvals() {
               </>
             )}
             {item.status === "pending" && item.type !== "margin_review" && (
-              <div className="row">
+              <div className="actions">
                 <Button
                   onClick={() => {
                     setScope("all");
@@ -395,20 +434,20 @@ export function Approvals() {
           {preview.decision === "approve" ? (
             <>
               <Field label={t("Apply price to", "اعمال قیمت به")}>
-                <select
+                <Select
                   value={scope}
-                  onChange={(event) =>
-                    setScope(event.target.value as "all" | "branch")
-                  }
-                >
-                  <option value="all">
-                    {t("All branches (default)", "همه شعبه‌ها (پیش‌فرض)")}
-                  </option>
-                  <option value="branch">
-                    {t("This branch only", "فقط این شعبه")} —{" "}
-                    {branchName(preview.target)}
-                  </option>
-                </select>
+                  onChange={(value) => setScope(value as "all" | "branch")}
+                  options={[
+                    {
+                      value: "all",
+                      label: t("All branches", "همه شعبه‌ها"),
+                    },
+                    {
+                      value: "branch",
+                      label: t("This branch only", "فقط این شعبه"),
+                    },
+                  ]}
+                />
               </Field>
               <p>
                 {scope === "all"
@@ -425,7 +464,7 @@ export function Approvals() {
                 <thead>
                   <tr>
                     <th>{t("Branch", "شعبه")}</th>
-                    <th>{t("Current → approved", "فعلی ← تأییدشده")}</th>
+                    <th>{t("Price change", "تغییر قیمت")}</th>
                     <th>{t("Affected offer", "پیشنهاد مرتبط")}</th>
                     <th>{t("Override removed", "حذف قیمت ویژه")}</th>
                   </tr>
@@ -444,18 +483,29 @@ export function Approvals() {
                         <tr key={value}>
                           <td>{branchName(value)}</td>
                           <td>
-                            <bdi>
-                              {price ? money(price) : "—"} →{" "}
-                              {money(preview.approval.proposed_price)}
-                            </bdi>
+                            <div className="price-change-values">
+                              <span>
+                                {t("Old", "قبلی")}{" "}
+                                {price !== null && price !== undefined ? (
+                                  <Money value={price} />
+                                ) : (
+                                  "—"
+                                )}
+                              </span>
+                              <span>
+                                {t("New", "جدید")}{" "}
+                                <Money
+                                  value={preview.approval.proposed_price}
+                                />
+                              </span>
+                            </div>
                           </td>
                           <td>
-                            {offer
-                              ? t(
-                                  offer.label,
-                                  offer.label.replace("for", "برای"),
-                                )
-                              : t("None", "ندارد")}
+                            {offer ? (
+                              <OfferLabel label={offer.label} language={lang} />
+                            ) : (
+                              t("None", "ندارد")
+                            )}
                             {offer &&
                               offer.price !==
                                 preview.approval.proposed_price && (

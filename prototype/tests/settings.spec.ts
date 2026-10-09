@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, visitPage, resetDemo } from "./helpers";
+import { chooseOption, signIn, visitPage, resetDemo } from "./helpers";
 
 async function openSettings(page: Page) {
   await signIn(page, "Supervisor");
@@ -8,7 +8,7 @@ async function openSettings(page: Page) {
     page.getByRole("heading", { name: "Pricing categories", exact: true }),
   ).toBeVisible();
   return page.locator(".card").filter({
-    has: page.getByRole("heading", { name: "Price sandbox", exact: true }),
+    has: page.getByRole("heading", { name: "Price tester", exact: true }),
   });
 }
 
@@ -23,7 +23,7 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
 
   await page.reload();
   sandbox = page.locator(".card").filter({
-    has: page.getByRole("heading", { name: "Price sandbox", exact: true }),
+    has: page.getByRole("heading", { name: "Price tester", exact: true }),
   });
   await expect(
     page.getByLabel("Cost divisor for Grocery", { exact: true }),
@@ -60,9 +60,12 @@ test("Rice uses unrounded raw and the same result renders in Persian RTL", async
   page,
 }) => {
   const sandbox = await openSettings(page);
-  await page
-    .getByLabel("Pricing category", { exact: true })
-    .selectOption("rice");
+  await chooseOption(
+    page,
+    page.getByLabel("Pricing category", { exact: true }),
+    "rice",
+    "Rice",
+  );
   const cost = page.getByLabel("Unit cost before tax", { exact: true });
   await cost.fill("3.1920");
   await expect(sandbox.getByText("$3.99", { exact: true })).toBeVisible();

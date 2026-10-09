@@ -223,6 +223,10 @@ export interface Activity extends ScopedRecord {
 }
 export interface DemoState {
   version: 1;
+  /** The supplied balance figures are a dated demo snapshot, not ledger entries. */
+  supplier_balance_snapshot_date?: string;
+  supplier_balance_snapshot_currency?: string;
+  pricing_minimum_margin_schema?: 2;
   config: CompanyConfig;
   products: Product[];
   approvals: Approval[];

@@ -1,0 +1,102 @@
+.approval-card .row + .approval-values {
+  margin-block-start: 24px;
+}
+.approval-values {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  max-inline-size: 960px;
+}
+.approval-value {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.approval-value > .price {
+  font-size: 1.375rem;
+}
+.approval-missing-price {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.approval-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-block: 20px 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.approval-form {
+  margin-block-start: 20px;
+}
+.price-change-values,
+.dashboard-price-change {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: baseline;
+}
+.price-change-values > span,
+.dashboard-price-change > span {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+.alert-costs {
+  margin-block: 20px;
+}
+.alert-card > .row {
+  align-items: center;
+}
+.dashboard-queue-row,
+.dashboard-queue-row:nth-child(odd) {
+  padding-inline: 12px;
+}
+.dashboard-alert-item > .badge,
+.alert-card .badge {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.dashboard-alert-item > .button {
+  justify-self: start;
+}
+.dashboard-queue-row .button-secondary,
+.dashboard-queue-row .button-ghost {
+  background: var(--search-fill);
+  box-shadow: inset 0 0 0 1px var(--divider);
+}
+.payables-overview + .payables-toolbar {
+  margin-block-start: 24px;
+}
+.payables-toolbar .form-grid {
+  margin-block-end: 24px;
+}
+.payables-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-block: 24px;
+}
+.payables-report-heading {
+  margin-block-start: 24px;
+}
+.payables-snapshot {
+  margin-block: 0 24px;
+}
+@media (max-width: 760px) {
+  .approval-values,
+  .payables-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .approval-meta {
+    display: grid;
+    gap: 8px;
+  }
+}
+@media print {
+  .payables-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
