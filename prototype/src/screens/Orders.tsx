@@ -454,6 +454,22 @@ export default function Orders() {
                           const row = rowAmounts.find(
                             (amount) => amount.id === item.id,
                           )!;
+                          let costSource = item.expected_cost_source;
+                          const enteredCost = form.costs[item.id];
+                          if (enteredCost !== undefined) {
+                            try {
+                              if (
+                                !/^\d+(\.\d{1,4})?$/.test(enteredCost.trim()) ||
+                                item.expected_unit_cost === null ||
+                                !new Decimal(enteredCost).eq(
+                                  item.expected_unit_cost,
+                                )
+                              )
+                                costSource = null;
+                            } catch {
+                              costSource = null;
+                            }
+                          }
                           const name =
                             lang === "fa"
                               ? item.name_fa || item.name_en
@@ -502,9 +518,9 @@ export default function Orders() {
                                   min="0"
                                 />
                                 <span className="order-item-caption">
-                                  {item.expected_cost_source === "last_bought"
+                                  {costSource === "last_bought"
                                     ? t("Last bought", "آخرین خرید")
-                                    : item.expected_cost_source === "quoted"
+                                    : costSource === "quoted"
                                       ? t(
                                           "Supplier quote",
                                           "قیمت اعلامی تأمین‌کننده",
