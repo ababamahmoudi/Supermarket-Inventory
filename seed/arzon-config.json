@@ -13,15 +13,31 @@
   "branches": [
     {
       "code": "B1",
-      "name": "Branch 1 (PLACEHOLDER - rename in Settings)"
+      "name": "North York",
+      "name_fa": "نورث یورک",
+      "id": "Branch 1",
+      "type": "store"
     },
     {
       "code": "B2",
-      "name": "Branch 2 (PLACEHOLDER - rename in Settings)"
+      "name": "Richmond Hill",
+      "name_fa": "ریچموند هیل",
+      "id": "Branch 2",
+      "type": "store"
     },
     {
       "code": "B3",
-      "name": "Branch 3 (PLACEHOLDER - rename in Settings)"
+      "name": "Newmarket",
+      "name_fa": "نیومارکت",
+      "id": "Branch 3",
+      "type": "store"
+    },
+    {
+      "code": "W1",
+      "id": "Warehouse",
+      "name": "Warehouse",
+      "name_fa": "انبار",
+      "type": "warehouse"
     }
   ],
   "roles": [

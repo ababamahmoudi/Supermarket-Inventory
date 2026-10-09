@@ -53,7 +53,7 @@ test("Supervisor supplier overview reconciles balances and opens financial tabs"
   await page
     .getByRole("button", { name: "Back to Suppliers", exact: true })
     .click();
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await expect(
     page.locator(".suppliers-overview .money").filter({ hasText: "$169.79" }),
   ).toHaveCount(0);
@@ -93,7 +93,7 @@ for (const language of ["en", "fa"] as const) {
     ).toHaveCount(0);
     const tabs = page.locator(".supplier-tabs").getByRole("tab");
     const count = await tabs.count();
-    expect(count).toBe(7);
+    expect(count).toBe(8);
     for (let index = 0; index < count; index += 1) {
       await tabs.nth(index).click();
       const content = page.locator(".supplier-tab-card");
@@ -104,7 +104,7 @@ for (const language of ["en", "fa"] as const) {
         }),
       ).toHaveCount(0);
       const branchCells = content.getByRole("cell", {
-        name: /^(Branch [23]|شعبه [۲۳])$/,
+        name: /^(Richmond Hill|Newmarket|Warehouse|ریچموند هیل|نیومارکت|انبار)$/,
       });
       await expect(branchCells).toHaveCount(0);
     }

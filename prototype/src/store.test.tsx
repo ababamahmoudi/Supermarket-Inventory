@@ -2,6 +2,7 @@ import { StrictMode, useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
+import { SESSION_KEY } from "./auth";
 
 beforeEach(() => {
   localStorage.clear();
@@ -55,7 +56,17 @@ describe("fictional data and storage", () => {
     expect(
       state.products.find((product) => product.code === "0006")?.pending_price,
     ).toBe("2.99");
-    expect(state.templates).toEqual([]);
+    expect(
+      state.templates.map(({ name, built_in, width, height }) => ({
+        name,
+        built_in,
+        width,
+        height,
+      })),
+    ).toEqual([
+      { name: "Regular", built_in: "regular", width: 60, height: 40 },
+      { name: "Promo", built_in: "promo", width: 210, height: 148.5 },
+    ]);
     expect(state.ledger).toHaveLength(24);
     expect(state.stock["Branch 1:0001"]).toBe(61);
     expect(state.stock["Branch 2:0001"]).toBe(18);
@@ -181,6 +192,37 @@ function showTransactions() {
   );
 }
 describe("atomic synchronous demo actions", () => {
+  it("rejects a retained Cashier session after its assigned store becomes a warehouse, before any mutation", () => {
+    const original = initialState();
+    original.config.branches[0].type = "warehouse";
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(original));
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        username: "cashier",
+        branch: "Branch 1",
+        lang: "en",
+        locked: false,
+        authenticatedAt: Date.now(),
+      }),
+    );
+    showTransactions();
+    fireEvent.click(screen.getByText("Attempt invalid action"));
+    expect(screen.getByTestId("caught-error")).toHaveTextContent(
+      "This location is unavailable for your role",
+    );
+    expect(screen.getByTestId("transaction-name")).toHaveTextContent(
+      original.products[0].name_en,
+    );
+    expect(screen.getByTestId("transaction-stock")).toHaveTextContent(
+      String(original.stock["Branch 1:0001"]),
+    );
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(saved.products).toEqual(original.products);
+    expect(saved.stock).toEqual(original.stock);
+    expect(saved.stock_movements).toEqual(original.stock_movements);
+    expect(saved.activity).toEqual(original.activity);
+  });
   it("allows the caller to catch a rejected mutation without publishing partial changes", () => {
     showTransactions();
     const original = initialState();

@@ -12,12 +12,13 @@ import {
   Field,
   Select,
 } from "../ui";
-import { branchLabel, demoUserLabel, LtrText } from "../presentation";
+import { demoUserLabel, LtrText } from "../presentation";
 import { companyTimestamp } from "../operations";
 import {
   archiveNotebook,
   createNotebook,
   editNotebook,
+  newNotebookInput,
   notebookError,
   visibleNotebooks,
   type NotebookDefinition,
@@ -25,25 +26,9 @@ import {
   type NotebookContext,
 } from "../notebooks";
 import type { Role } from "../types";
-import { branchId } from "../settings";
+import { branchId, branchLabel } from "../settings";
 import "./notebooks-b.css";
 
-const blankNotebook = (): NotebookInput => ({
-  name_en: "",
-  name_fa: "",
-  branch: "all",
-  read_roles: ["supervisor", "floor_worker"],
-  add_roles: ["supervisor", "floor_worker"],
-  fields: {
-    product: false,
-    quantity: false,
-    date: false,
-    measurement: false,
-    measurement_unit: "",
-  },
-  status_enabled: true,
-  notify_supervisor: false,
-});
 export function NotebookEditor({
   notebook,
   onOpenChange,
@@ -55,7 +40,7 @@ export function NotebookEditor({
 }) {
   const { state, update, role, user, branch, lang, t } = useDemo();
   const [form, setForm] = useState<NotebookInput>(() =>
-    notebook ? structuredClone(notebook) : blankNotebook(),
+    notebook ? structuredClone(notebook) : newNotebookInput(),
   );
   const [error, setError] = useState("");
   const context: NotebookContext = {
@@ -321,7 +306,7 @@ export function NotebookSettings() {
                 <p className="muted">
                   {item.branch === "all"
                     ? t("All branches", "همه شعبه‌ها")
-                    : branchLabel(item.branch, lang)}{" "}
+                    : branchLabel(state.config, item.branch, lang)}{" "}
                   ·{" "}
                   {item.read_roles
                     .map((value) =>

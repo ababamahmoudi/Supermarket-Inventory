@@ -26,6 +26,10 @@ const actions: Record<string, [string, string]> = {
   "Change copies": ["Change copies", "تغییر تعداد نسخه"],
   "Clear waitlist": ["Clear waitlist", "پاک کردن صف چاپ"],
   "Save template": ["Save template", "ذخیره قالب"],
+  "Duplicate template": ["Duplicate template", "کپی قالب"],
+  "Archive template": ["Archive template", "بایگانی قالب"],
+  "Restore template": ["Restore template", "بازیابی قالب"],
+  "Move invoice": ["Move invoice", "انتقال فاکتور"],
   "Create template": ["Create template", "ایجاد قالب"],
   "Save label settings": ["Save label settings", "ذخیره تنظیمات برچسب"],
   "Print labels": ["Print labels", "چاپ برچسب‌ها"],
@@ -68,6 +72,10 @@ export function historyActionLabel(action: string, lang: Language): string {
   return copy ? translate(...copy, lang) : activityLabel(action, lang);
 }
 const fields: Record<string, [string, string]> = {
+  branch: ["Location", "مکان"],
+  location: ["Location", "مکان"],
+  outstanding_amount: ["Outstanding amount", "مبلغ پرداخت‌نشده"],
+  reason: ["Reason", "دلیل"],
   name: ["Name", "نام"],
   name_en: ["English name", "نام انگلیسی"],
   name_fa: ["Persian name", "نام فارسی"],

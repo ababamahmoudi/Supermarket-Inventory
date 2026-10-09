@@ -11,6 +11,8 @@ import {
   filterLabelProducts,
   prepareLabelPrint,
   saveLabelTemplate,
+  duplicateLabelTemplate,
+  setLabelTemplateArchived,
   type LabelActor,
 } from "./label-workflow";
 import { labelLayout, labelSlotGeometry } from "./labels";
@@ -136,8 +138,10 @@ describe("label designer and filters", () => {
       { ...template, offset_x: 2, name: "Calibrated" },
       worker,
     );
-    expect(state.templates).toHaveLength(1);
-    expect(state.templates[0]).toMatchObject({
+    expect(state.templates).toHaveLength(3);
+    expect(
+      state.templates.find((item) => item.id === template.id),
+    ).toMatchObject({
       name: "Calibrated",
       offset_x: 2,
     });
@@ -223,5 +227,91 @@ describe("label designer and filters", () => {
     expect(branchLabelWaitlist(next, "Branch 1")).toHaveLength(0);
     autoAddApprovedLabelChanges(before, next, supervisor.name);
     expect(branchLabelWaitlist(next, "Branch 2")).toHaveLength(1);
+  });
+});
+
+describe("built-in label library", () => {
+  it("duplicates a ready Promo preset, edits it and archives/restores without deleting or reusing its ID", () => {
+    const state = initialState();
+    const promo = state.templates.find((item) => item.built_in === "promo")!;
+    const copy = duplicateLabelTemplate(
+      state,
+      promo.id,
+      worker,
+      "Weekend Promo",
+    );
+    expect(copy.id).not.toBe(promo.id);
+    expect(copy).toMatchObject({
+      name: "Weekend Promo",
+      style: "promo",
+      width: 210,
+      height: 148.5,
+    });
+    expect(copy.built_in).toBeUndefined();
+    saveLabelTemplate(state, { ...copy, name: "Clearance Promo" }, worker);
+    setLabelTemplateArchived(state, promo.id, true, worker);
+    expect(state.templates).toHaveLength(3);
+    expect(state.templates.find((item) => item.id === promo.id)?.archived).toBe(
+      true,
+    );
+    expect(() =>
+      saveLabelTemplate(state, { ...promo, archived: false }, worker),
+    ).toThrow("template");
+    expect(() =>
+      prepareLabelPrint(state, "Branch 1", promo, 1, worker),
+    ).toThrow("template");
+    setLabelTemplateArchived(state, promo.id, false, worker);
+    expect(state.templates.find((item) => item.id === promo.id)?.archived).toBe(
+      false,
+    );
+    expect(state.templates.find((item) => item.id === copy.id)?.name).toBe(
+      "Clearance Promo",
+    );
+    expect(state.activity.slice(-4).map((item) => item.action)).toEqual([
+      "Duplicate template",
+      "Save template",
+      "Archive template",
+      "Restore template",
+    ]);
+    expect(state.activity.slice(-4).every((item) => item.reversible)).toBe(
+      true,
+    );
+  });
+  it("rejects Cashier and foreign-company template management without mutations", () => {
+    const state = initialState();
+    const regular = state.templates.find(
+      (item) => item.built_in === "regular",
+    )!;
+    state.templates.push({
+      ...regular,
+      id: "foreign",
+      company_id: "foreign-company",
+    });
+    const before = structuredClone(state);
+    expect(() =>
+      duplicateLabelTemplate(
+        state,
+        regular.id,
+        { ...worker, role: "cashier" },
+        "Copy",
+      ),
+    ).toThrow("permission");
+    expect(() =>
+      setLabelTemplateArchived(state, "foreign", true, supervisor),
+    ).toThrow("template");
+    expect(() =>
+      duplicateLabelTemplate(state, "foreign", supervisor, "Copy"),
+    ).toThrow("template");
+    expect(state).toEqual(before);
+  });
+  it("prints every Promo copy over exactly two slots per A4 sheet, retaining queue until Yes", () => {
+    const state = initialState();
+    const promo = state.templates.find((item) => item.built_in === "promo")!;
+    addLabelsToWaitlist(state, ["0003"], 5, "Branch 1", worker);
+    const snapshot = prepareLabelPrint(state, "Branch 1", promo, 1, worker);
+    expect(snapshot.pages.map((page) => page.length)).toEqual([2, 2, 1]);
+    expect(branchLabelWaitlist(state, "Branch 1")[0].copies).toBe(5);
+    confirmLabelsPrinted(state, snapshot, worker);
+    expect(branchLabelWaitlist(state, "Branch 1")).toHaveLength(0);
   });
 });

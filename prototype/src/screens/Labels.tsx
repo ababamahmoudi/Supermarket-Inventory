@@ -15,23 +15,28 @@ import {
   LabelLayoutError,
   labelLayout,
   labelSlotGeometry,
+  promoContentGeometry,
+  regularLabelGeometry,
 } from "../labels";
 import {
   addLabelsToWaitlist,
   branchLabelWaitlist,
   clearLabelWaitlist,
   confirmLabelsPrinted,
+  duplicateLabelTemplate,
   editLabelWaitlist,
   emptyLabelFilters,
   filterLabelProducts,
   LabelWorkflowError,
   prepareLabelPrint,
   saveLabelTemplate,
+  setLabelTemplateArchived,
   validateLabelTemplate,
   type LabelActor,
   type LabelPrintSnapshot,
 } from "../label-workflow";
 import { createId } from "../ids";
+import { ManualPricePill } from "../manual-price-presentation";
 import { categoryLabel } from "../formatters";
 import { useDemo } from "../store";
 import type { Branch, DemoState, LabelTemplate, Product } from "../types";
@@ -59,19 +64,7 @@ import {
 import "./invoice-settings-labels.css";
 import "./labels-a2.css";
 import "./labels-b.css";
-
-const geometry = {
-  width: 60,
-  height: 40,
-  margin_top: 10,
-  margin_bottom: 10,
-  margin_left: 10,
-  margin_right: 10,
-  gap_x: 4,
-  gap_y: 4,
-  offset_x: 0,
-  offset_y: 0,
-};
+import "./labels-c1.css";
 const defaultFields = {
   name: true,
   description: true,
@@ -106,6 +99,16 @@ function actorFor(
     role: user?.role ?? "cashier",
     branch: user?.role === "supervisor" ? branch : (user?.branch as Branch),
   };
+}
+function templateName(
+  template: LabelTemplate,
+  t: ReturnType<typeof useDemo>["t"],
+) {
+  if (template.built_in === "regular" && template.name === "Regular")
+    return t("Regular", "عادی");
+  if (template.built_in === "promo" && template.name === "Promo")
+    return t("Promo", "ویژه");
+  return template.name;
 }
 function errorText(error: unknown, t: ReturnType<typeof useDemo>["t"]) {
   if (error instanceof LabelLayoutError) {
@@ -201,6 +204,106 @@ function ShelfLabel({
   const taxable = state.config.tax.profiles.find(
     (profile) => profile.key === product.tax_profile,
   )?.taxable;
+  if (template.style === "promo") {
+    const promo = promoContentGeometry(
+      template.width,
+      template.height,
+      showLogo,
+    );
+    return (
+      <>
+        <svg
+          className="promo-label-frame"
+          aria-hidden="true"
+          viewBox={`0 0 ${promo.frameWidth} ${promo.frameHeight}`}
+          style={{
+            left: `${promo.inset}mm`,
+            top: `${promo.inset}mm`,
+            width: `${promo.frameWidth}mm`,
+            height: `${promo.frameHeight}mm`,
+          }}
+        >
+          <rect
+            x={promo.border / 2}
+            y={promo.border / 2}
+            width={promo.frameWidth - promo.border}
+            height={promo.frameHeight - promo.border}
+            fill="none"
+            stroke="#000"
+            strokeWidth={promo.border}
+          />
+        </svg>
+        <div
+          className={`promo-label-content${offer ? " has-offer" : ""}`}
+          dir={lang === "fa" ? "rtl" : "ltr"}
+          style={{
+            left: promo.left,
+            top: promo.top,
+            transform: `scale(${promo.scale})`,
+          }}
+        >
+          <div className="promo-label-special">
+            {offer && t("SPECIAL", "ویژه")}
+          </div>
+          <div className="price promo-label-price">
+            {offer ? (
+              <OfferLabel
+                label={offer.label}
+                language={lang}
+                currency={state.config.company.currency}
+              />
+            ) : (
+              <Money
+                value={effectivePrice(state, product, branch)!}
+                currency={state.config.company.currency}
+              />
+            )}
+          </div>
+          <div className="promo-label-regular-price">
+            {offer && (
+              <>
+                {t("Regular", "عادی")}{" "}
+                <Money
+                  value={effectivePrice(state, product, branch)!}
+                  currency={state.config.company.currency}
+                />
+              </>
+            )}
+          </div>
+          <ProductName product={product} language={lang} />
+          <small className="promo-label-code">
+            {fields.code && (
+              <>
+                {t("Product Code", "کد کالا")}:{" "}
+                <LtrText>{product.code}</LtrText>
+              </>
+            )}
+            {fields.code && fields.unit && " · "}
+            {fields.unit && <UnitSize value={product.unit_size} />}
+          </small>
+          <div className="promo-label-footer">
+            {fields.tax && taxable && (
+              <span>
+                {t(
+                  state.config.tax.label_text_en,
+                  state.config.tax.label_text_fa,
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+        {showLogo && (
+          <span className="shelf-label-logo">
+            <img
+              className={state.config.company.logo_data ? "" : "arzon-logo-art"}
+              src={state.config.company.logo_data || logo}
+              alt={state.config.company.name}
+            />
+          </span>
+        )}
+      </>
+    );
+  }
   return (
     <>
       <div
@@ -221,6 +324,11 @@ function ShelfLabel({
           )}
         </span>
         <div className="shelf-label-offer">
+          {offer && (
+            <span className="regular-label-special">
+              {t("SPECIAL", "ویژه")}
+            </span>
+          )}
           {fields.offer && offer && (
             <OfferLabel
               className="label-offer-badge"
@@ -328,7 +436,11 @@ function PhysicalSheet({
             );
           const product = products[index];
           return product ? (
-            <div className="shelf-label" key={index} style={style}>
+            <div
+              className={`shelf-label${template.style === "promo" ? " promo-shelf-label" : ""}`}
+              key={index}
+              style={style}
+            >
               <ShelfLabel
                 product={product}
                 state={state}
@@ -509,40 +621,91 @@ function TemplateDesigner({
   onSaved?: (template: LabelTemplate) => void;
 }) {
   const { state, update, branch, user, t } = useDemo();
-  const [id, setId] = useState("");
-  const [draft, setDraft] = useState<LabelTemplate>({
-    id: "",
-    company_id: state.config.company.seed_key,
-    name: "Template 1",
-    ...geometry,
-  });
-  const [startSlot, setStartSlot] = useState(5);
+  const initialTemplate = state.templates.find(
+    (item) =>
+      item.company_id === state.config.company.seed_key && !item.archived,
+  );
+  const [id, setId] = useState(initialTemplate?.id ?? "");
+  const [draft, setDraft] = useState<LabelTemplate>(() =>
+    structuredClone(
+      initialTemplate ?? {
+        id: "",
+        company_id: state.config.company.seed_key,
+        name: "Template 1",
+        style: "regular",
+        ...regularLabelGeometry,
+      },
+    ),
+  );
+  const [startSlot, setStartSlot] = useState(initialTemplate ? 1 : 5);
+  const [showArchived, setShowArchived] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [alignmentTemplate, setAlignmentTemplate] =
     useState<LabelTemplate | null>(null);
   const templates = state.templates.filter(
     (item) =>
-      item.company_id === state.config.company.seed_key && !item.archived,
+      item.company_id === state.config.company.seed_key &&
+      (showArchived || !item.archived),
   );
   const choose = (value: string) => {
     setId(value);
     setError("");
     setSaved(false);
     const template = templates.find((item) => item.id === value);
-    if (template)
+    if (template) {
       setDraft({
         ...template,
         offset_x: template.offset_x ?? 0,
         offset_y: template.offset_y ?? 0,
       });
-    else
+      setStartSlot(1);
+    } else {
       setDraft({
         id: "",
         company_id: state.config.company.seed_key,
-        name: `Template ${templates.length + 1}`,
-        ...geometry,
+        name: `Template ${state.templates.filter((item) => item.company_id === state.config.company.seed_key && !item.built_in).length + 1}`,
+        style: "regular",
+        ...regularLabelGeometry,
       });
+      setStartSlot(5);
+    }
+  };
+  const duplicate = () => {
+    try {
+      let copy: LabelTemplate | undefined;
+      update((current) => {
+        copy = duplicateLabelTemplate(
+          current,
+          id,
+          actorFor(user, branch),
+          `${templateName(draft, t)} ${t("copy", "کپی")}`,
+        );
+      });
+      if (copy) {
+        setId(copy.id);
+        setDraft(copy);
+        setStartSlot(1);
+        setSaved(false);
+        setError("");
+        onSaved?.(copy);
+      }
+    } catch (cause) {
+      setError(errorText(cause, t));
+    }
+  };
+  const setArchived = (archived: boolean) => {
+    try {
+      update((current) =>
+        setLabelTemplateArchived(current, id, archived, actorFor(user, branch)),
+      );
+      setDraft({ ...draft, archived });
+      setShowArchived(archived || showArchived);
+      setError("");
+      setSaved(false);
+    } catch (cause) {
+      setError(errorText(cause, t));
+    }
   };
   const save = () => {
     try {
@@ -606,7 +769,7 @@ function TemplateDesigner({
               },
               ...templates.map((item) => ({
                 value: item.id,
-                label: item.name,
+                label: `${templateName(item, t)}${item.archived ? ` · ${t("Archived", "بایگانی‌شده")}` : ""}`,
               })),
             ]}
           />
@@ -614,16 +777,47 @@ function TemplateDesigner({
         <Button variant="secondary" onClick={() => choose("")}>
           {t("New template", "قالب جدید")}
         </Button>
+        <Checkbox checked={showArchived} onChange={setShowArchived}>
+          {t("Show archived", "نمایش بایگانی‌شده‌ها")}
+        </Checkbox>
       </div>
+      {draft.built_in && (
+        <p className="muted label-template-kind">
+          {t("Built-in template", "قالب آماده")}
+        </p>
+      )}
+      {draft.archived && (
+        <p className="banner info" role="status">
+          {t(
+            "This template is archived. Restore it before editing or printing.",
+            "این قالب بایگانی شده است. پیش از ویرایش یا چاپ آن را بازیابی کنید.",
+          )}
+        </p>
+      )}
       <div className="label-designer-grid">
         <div className="labels-template-form" id="labels-template-form">
           <Field label={t("Template name", "نام قالب")}>
             <input
               value={draft.name}
+              disabled={draft.archived}
               onChange={(event) => {
                 setDraft({ ...draft, name: event.target.value });
                 setSaved(false);
               }}
+            />
+          </Field>
+          <Field label={t("Label style", "سبک برچسب")}>
+            <Select
+              value={draft.style ?? "regular"}
+              disabled={draft.archived}
+              onChange={(value) => {
+                setDraft({ ...draft, style: value as "regular" | "promo" });
+                setSaved(false);
+              }}
+              options={[
+                { value: "regular", label: t("Regular", "عادی") },
+                { value: "promo", label: t("Promo", "ویژه") },
+              ]}
             />
           </Field>
           <div className="form-grid labels-dimensions">
@@ -643,6 +837,7 @@ function TemplateDesigner({
             ).map(([key, en, fa]) => (
               <Field key={key} label={`${t(en, fa)} (${t("mm", "میلی‌متر")})`}>
                 <NumberField
+                  disabled={draft.archived}
                   dir="ltr"
                   min={key.startsWith("offset") ? undefined : "0"}
                   step="0.5"
@@ -676,10 +871,35 @@ function TemplateDesigner({
             </p>
           )}
           <div className="label-designer-actions">
-            <Button onClick={save}>{t("Save template", "ذخیره قالب")}</Button>
-            <Button variant="secondary" onClick={printAlignment}>
+            <Button onClick={save} disabled={draft.archived}>
+              {t("Save template", "ذخیره قالب")}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={printAlignment}
+              disabled={draft.archived}
+            >
               {t("Print test alignment page", "چاپ برگه تنظیم آزمایشی")}
             </Button>
+            {id && (
+              <Button
+                variant="secondary"
+                onClick={duplicate}
+                disabled={draft.archived}
+              >
+                {t("Duplicate template", "کپی قالب")}
+              </Button>
+            )}
+            {id && (
+              <Button
+                variant="ghost"
+                onClick={() => setArchived(!draft.archived)}
+              >
+                {draft.archived
+                  ? t("Restore template", "بازیابی قالب")
+                  : t("Archive template", "بایگانی قالب")}
+              </Button>
+            )}
           </div>
         </div>
         <SheetPreview
@@ -854,8 +1074,14 @@ export function Labels() {
   const [filters, setFilters] = useState(emptyLabelFilters);
   const [copyCounts, setCopyCounts] = useState<Record<string, number>>({});
   const [allCopies, setAllCopies] = useState(1);
-  const [templateId, setTemplateId] = useState("");
-  const [startSlot, setStartSlot] = useState(5);
+  const [templateId, setTemplateId] = useState(
+    () =>
+      state.templates.find(
+        (item) =>
+          item.company_id === state.config.company.seed_key && !item.archived,
+      )?.id ?? "",
+  );
+  const [startSlot, setStartSlot] = useState(1);
   const [error, setError] = useState("");
   const [pendingPrint, setPendingPrint] = useState<LabelPrintSnapshot | null>(
     null,
@@ -1171,10 +1397,13 @@ export function Labels() {
                     </td>
                     <td>
                       {effectivePrice(state, product, branch) ? (
-                        <Money
-                          value={effectivePrice(state, product, branch)!}
-                          currency={state.config.company.currency}
-                        />
+                        <div className="label-price-display">
+                          <Money
+                            value={effectivePrice(state, product, branch)!}
+                            currency={state.config.company.currency}
+                          />
+                          <ManualPricePill product={product} branch={branch} />
+                        </div>
                       ) : (
                         <span className="muted">
                           {t(
@@ -1250,7 +1479,12 @@ export function Labels() {
           </Card>
         )}
         {tab === "templates" && (
-          <TemplateDesigner onSaved={(item) => setTemplateId(item.id)} />
+          <TemplateDesigner
+            onSaved={(item) => {
+              setTemplateId(item.id);
+              setStartSlot(Math.min(5, labelLayout(item).capacity));
+            }}
+          />
         )}
         {tab === "waitlist" && (
           <>
@@ -1334,10 +1568,20 @@ export function Labels() {
                           </td>
                           <td>
                             {product && allowed(product) ? (
-                              <Money
-                                value={effectivePrice(state, product, branch)!}
-                                currency={state.config.company.currency}
-                              />
+                              <div className="label-price-display">
+                                <Money
+                                  value={effectivePrice(
+                                    state,
+                                    product,
+                                    branch,
+                                  )!}
+                                  currency={state.config.company.currency}
+                                />
+                                <ManualPricePill
+                                  product={product}
+                                  branch={branch}
+                                />
+                              </div>
                             ) : (
                               <span className="muted">
                                 {t(
@@ -1416,7 +1660,7 @@ export function Labels() {
                       },
                       ...templates.map((item) => ({
                         value: item.id,
-                        label: item.name,
+                        label: templateName(item, t),
                       })),
                     ]}
                   />
@@ -1456,6 +1700,9 @@ export function Labels() {
                   />
                   {previewPages.length > 0 && (
                     <div className="label-bilingual-preview">
+                      <h3 className="label-grayscale-caption">
+                        {t("Grayscale preview", "پیش‌نمایش خاکستری")}
+                      </h3>
                       <p className="muted">
                         {countText(
                           previewPages.length,
@@ -1471,14 +1718,16 @@ export function Labels() {
                         )}
                       </p>
                       {previewPages.map((page, index) => (
-                        <ScaledSheet key={index}>
-                          <PhysicalSheet
-                            template={template}
-                            products={page}
-                            state={state}
-                            branch={branch}
-                          />
-                        </ScaledSheet>
+                        <div className="label-grayscale-preview" key={index}>
+                          <ScaledSheet>
+                            <PhysicalSheet
+                              template={template}
+                              products={page}
+                              state={state}
+                              branch={branch}
+                            />
+                          </ScaledSheet>
+                        </div>
                       ))}
                     </div>
                   )}

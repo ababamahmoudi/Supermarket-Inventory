@@ -123,3 +123,11 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 2. Property tests: the result always ends in .49 or .99; the result is never negative; rice results are never below the raw price.
 3. Configuration tests: change a divisor or band in the database and prove the output changes without code edits.
 4. The prototype's TypeScript engine must run the same JSON test file in its test suite.
+
+## C manual provenance and exceptional receipts (2026-10-09)
+
+The Decimal algorithm, configured divisors/rounding and all seed cases above are unchanged. Selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again.
+
+For an already manual-priced product, regular new invoices retain the approved manual price and expose new rule price beside it. Reviewer must choose **Keep manual price / Use rule price**. Keep preserves manual provenance and evaluates any configured minimum-margin review using actual manual price/new regular cost; Use creates normal posting-time Supervisor approval even if rule/manual amounts equal so explicit approval can clear provenance. Before approval and after rejection, Cashier still charges the manual approved price. Source-linked proposals retain exact new costs/latest invoice basis and company/location scope.
+
+A **Short-dated (expiry discount)** lot requires actual expiry/Date tracking and records its real discounted receipt/payable, but never updates regular cost or selling price and creates no price-change proposal. Regular pricing basis is distinct from latest actual bought cost/history. Refused extras enter neither payable/receipt nor pricing approvals. Order expected totals are Decimal before-tax estimates, never supplier liabilities.

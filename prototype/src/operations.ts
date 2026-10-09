@@ -1,5 +1,7 @@
 import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
+import { configuredBranches } from "./settings";
+import { projectExpiryLocation } from "./received";
 import type {
   Branch,
   CompanyConfig,
@@ -190,7 +192,8 @@ function stock(
     fail("product");
   const key = `${context.branch}:${product}`;
   const next = (state.stock[key] ?? 0) + delta;
-  if (!Number.isSafeInteger(next) || next < 0) fail("stock");
+  // An incomplete sales ledger cannot establish available stock in Phase 1.
+  if (!Number.isSafeInteger(next)) fail("quantity");
   state.stock[key] = next;
   const physicalState = state as DemoState & {
     stock_movements?: PhysicalStockMovement[];
@@ -661,6 +664,11 @@ export function addNote(
   },
 ) {
   canOperate(context);
+  if (
+    context.company_id !== state.config.company.seed_key ||
+    !configuredBranches(state.config).includes(context.branch)
+  )
+    fail("scope");
   if (!input.text.trim()) fail("text");
   if (
     input.product_code &&
@@ -742,7 +750,9 @@ export function clearExpiry(
 ) {
   canOperate(context);
   const entry = state.expiry.find(
-    (item) => item.id === expiryId && belongs(item, context),
+    (item) =>
+      item.id === expiryId &&
+      belongs(projectExpiryLocation(state, item), context),
   );
   if (!entry) fail("scope");
   entry.status = "cleared";
@@ -792,9 +802,17 @@ export function ledgerSummary(
   let unallocated = new Decimal(0);
   let unallocatedDebits = new Decimal(0);
   for (const row of rows) {
-    if (row.type === "invoice") {
+    if (
+      row.type === "invoice" ||
+      (row.type === "adjustment" && row.invoice_id)
+    ) {
       const invoiceId = row.invoice_id ?? row.id;
-      if (!invoices.some((invoice) => invoice.invoice_id === invoiceId)) {
+      if (
+        !invoices.some(
+          (invoice) =>
+            invoice.invoice_id === invoiceId && invoice.branch === row.branch,
+        )
+      ) {
         const invoice =
           state.invoices?.find(
             (item) =>
@@ -1114,8 +1132,8 @@ export function operationError(
       "یک محصول از همین شرکت انتخاب کنید.",
     ],
     stock: [
-      "The quantity exceeds estimated sellable stock. Check the stock first.",
-      "تعداد از موجودی قابل‌فروش بیشتر است. ابتدا موجودی را بررسی کنید.",
+      "Check the actual quantity before recording this movement.",
+      "پیش از ثبت این جابه‌جایی، تعداد واقعی را بررسی کنید.",
     ],
     pickup_evidence: [
       "Add the representative name and signed slip reference before handing over goods.",
@@ -1186,8 +1204,8 @@ export function operationError(
       "پیش از ذخیره، یک یادداشت کوتاه وارد کنید.",
     ],
     store_use: [
-      "Store use needs a product and actual quantity to deduct stock.",
-      "مصرف فروشگاه برای کاهش موجودی به محصول و تعداد واقعی نیاز دارد.",
+      "Store use needs a product and actual quantity.",
+      "مصرف فروشگاه به محصول و تعداد واقعی نیاز دارد.",
     ],
     allocation: [
       "Allocated amounts must fit each open invoice and the payment total.",

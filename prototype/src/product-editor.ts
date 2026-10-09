@@ -4,6 +4,7 @@ import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
+import { setManualPriceMarker } from "./manual-prices";
 import type { Branch, DemoState, Product, Role } from "./types";
 
 export interface ProductEditorContext {
@@ -195,6 +196,14 @@ export function saveProductEdits(
         [context.branch]: price,
       };
     product.status = "active";
+    setManualPriceMarker(
+      state,
+      product,
+      targetBranch,
+      price,
+      context.actor,
+      now,
+    );
     const provenance =
       product.price_provenance?.[context.branch] ??
       product.price_provenance?.all;

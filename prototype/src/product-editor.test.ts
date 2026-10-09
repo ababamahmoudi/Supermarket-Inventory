@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import { effectiveOffer, effectivePrice } from "./catalog";
+import { configuredBranches } from "./settings";
 import { resolveApproval } from "./approvals";
 import {
   saveProductEdits,
@@ -21,6 +22,7 @@ const context: ProductEditorContext = {
 beforeEach(() => {
   state = initialState();
   context.company_id = state.config.company.seed_key;
+  context.allowed_branches = configuredBranches(state.config);
 });
 function edits(code = "0009"): ProductEdits {
   const product = state.products.find((item) => item.code === code)!;

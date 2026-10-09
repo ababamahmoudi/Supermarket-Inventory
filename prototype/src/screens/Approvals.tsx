@@ -11,6 +11,7 @@ import {
   resolveApproval,
 } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { ManualPricePill } from "../manual-price-presentation";
 import {
   demoUserLabel,
   LtrText,
@@ -20,6 +21,7 @@ import {
 } from "../presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
+import { effectiveApprovalLocation } from "../received";
 import { SupplierApproval } from "./SupplierApproval";
 import type { Approval, Branch } from "../types";
 import {
@@ -53,12 +55,17 @@ export function Approvals() {
   } | null>(null);
   const company = state.config.company.seed_key;
   const branches = configuredBranches(state.config, true);
-  const items = state.approvals.filter(
-    (item) =>
-      item.company_id === company &&
-      item.status === filter &&
-      (branch === "all" || item.branch === branch || item.branch === "all"),
-  );
+  const items = state.approvals
+    .map((item) => ({
+      ...item,
+      branch: effectiveApprovalLocation(state, item),
+    }))
+    .filter(
+      (item) =>
+        item.company_id === company &&
+        item.status === filter &&
+        (branch === "all" || item.branch === branch || item.branch === "all"),
+    );
   if (role !== "supervisor")
     return (
       <EmptyState>
@@ -317,6 +324,7 @@ export function Approvals() {
                   {approved !== null && approved !== undefined ? (
                     <strong className="price">
                       <Money value={approved} />
+                      <ManualPricePill product={product} branch={item.branch} />
                     </strong>
                   ) : (
                     <span className="muted approval-missing-price">
@@ -542,6 +550,10 @@ export function Approvals() {
                           <td>{branchName(value)}</td>
                           <td>
                             <div className="price-change-values">
+                              <ManualPricePill
+                                product={product}
+                                branch={value}
+                              />
                               <span>
                                 {t("Old", "قبلی")}{" "}
                                 {price !== null && price !== undefined ? (

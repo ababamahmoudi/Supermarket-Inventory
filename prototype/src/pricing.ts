@@ -4,7 +4,10 @@ import { configSeed as seedConfig } from "./config";
 // A local constructor keeps other modules from changing the engine's precision.
 const Money = Decimal.clone({ precision: 80, rounding: Decimal.ROUND_HALF_UP });
 type SeedCategory = (typeof seedConfig.pricing_categories)[number];
-export type PricingConfig = Omit<typeof seedConfig, "pricing_categories"> & {
+export type PricingConfig = Pick<
+  typeof seedConfig,
+  "rounding_bands" | "special_corrections"
+> & {
   pricing_categories: (Omit<SeedCategory, "minimum_margin"> & {
     minimum_margin: string | null;
   })[];

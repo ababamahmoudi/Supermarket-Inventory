@@ -12,6 +12,7 @@ import {
   deactivateSupplier,
 } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
+import Received from "./Received";
 import { translateCount } from "../i18n";
 import {
   supplierPage,
@@ -46,6 +47,7 @@ type Tab =
   | "overview"
   | "invoices"
   | "products"
+  | "received"
   | "returns"
   | "shorts"
   | "alerts"
@@ -456,6 +458,7 @@ export default function Suppliers() {
     ["overview", "Overview", "نمای کلی"],
     ["invoices", "Invoices", "فاکتورها"],
     ["products", "Products supplied", "کالاهای تأمین‌شده"],
+    ["received", "Received", "دریافت‌شده‌ها"],
     ["returns", "Returns and credits", "مرجوعی‌ها و اعتبارها"],
     ["shorts", "Shorts", "کسری‌ها"],
     ["alerts", "Price alerts", "هشدارهای قیمت"],
@@ -655,6 +658,9 @@ export default function Suppliers() {
               </>
             )}
           </dl>
+        )}
+        {effectiveTab === "received" && (
+          <Received supplier={current.name} embedded />
         )}
         {effectiveTab === "invoices" && (
           <DataTable

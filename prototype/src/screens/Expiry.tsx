@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useDemo } from "../store";
 import type { Branch } from "../types";
 import { companyDate } from "../invoice";
+import { projectExpiryLocation } from "../received";
 import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
 import {
   Badge,
@@ -43,7 +44,10 @@ export function Expiry() {
   const today = companyDate(state.config);
   const daysLeft = (date: string) =>
     Math.ceil((Date.parse(date) - Date.parse(today)) / 86_400_000);
-  const entries = scopedRecords(state.expiry, context)
+  const entries = scopedRecords(
+    state.expiry.map((entry) => projectExpiryLocation(state, entry)),
+    context,
+  )
     .filter((entry) => {
       const product = state.products.find(
         (item) =>

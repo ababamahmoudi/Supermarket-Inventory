@@ -6,6 +6,8 @@ import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { nextProductCode } from "./manual-product";
+import { manualPrice } from "./manual-prices";
+import { effectiveInvoiceLocation } from "./received";
 import type {
   Branch,
   CompanyConfig,
@@ -29,6 +31,8 @@ export interface InvoiceStockMovement {
   reference: string;
   by: string;
   at: string;
+  invoice_id?: string;
+  line_index?: number;
 }
 
 /** Physical receipts append history; retrying the same event never changes stock twice. */
@@ -76,6 +80,7 @@ export function createInvoice(
     id: createId("invoice"),
     company_id: company,
     branch,
+    handling_branch: branch,
     status: "draft",
     entry_mode: manual ? "manual" : "upload",
     supplier_confirmed: true,
@@ -286,7 +291,7 @@ export function previousReceiptCost(
       (receipt) =>
         receipt.id !== invoice.id &&
         receipt.company_id === invoice.company_id &&
-        receipt.branch === invoice.branch &&
+        effectiveInvoiceLocation(state, receipt) === invoice.branch &&
         receipt.supplier === invoice.supplier &&
         receipt.status === "posted" &&
         receipt.lines.some(
@@ -340,7 +345,8 @@ export type InvoiceBlocker =
   | "cost"
   | "review"
   | "date"
-  | "lower_price";
+  | "lower_price"
+  | "manual_price";
 
 export function invoiceBlockers(
   state: DemoState,
@@ -352,7 +358,8 @@ export function invoiceBlockers(
   if (role === "cashier") blockers.push("permission");
   if (
     !configuredBranches(state.config).includes(invoice.branch) ||
-    (branch !== invoice.branch && !(role === "supervisor" && branch === "all"))
+    (role !== "supervisor" &&
+      branch !== (invoice.handling_branch ?? invoice.branch))
   )
     blockers.push("branch");
   if (invoice.company_id !== state.config.company.seed_key)
@@ -419,6 +426,13 @@ export function invoiceBlockers(
     }
     if (!line.date_confirmed || (line.date_tracking && !line.date_value))
       blockers.push("date");
+    if (
+      product &&
+      !line.short_dated &&
+      manualPrice(state, product, invoice.branch) &&
+      !line.manual_price_decision
+    )
+      blockers.push("manual_price");
   }
   if (lowerPriceLines(state).length) {
     const answer = invoice.lower_price_answers;
@@ -507,28 +521,47 @@ export function postInvoice(
       line.pricing_category ?? product.pricing_category,
       state.config,
     );
-    const price = calculation.selling_price;
+    const rulePrice = calculation.selling_price;
     const prior = effectivePrice(state, product, invoice.branch);
+    const manual = manualPrice(state, product, invoice.branch);
+    const keepsManual = !!manual && line.manual_price_decision === "keep";
+    const usesRule = !!manual && line.manual_price_decision === "rule";
+    const price = keepsManual ? prior! : rulePrice;
     const category = state.config.pricing_categories.find(
       (item) =>
         item.key === (line.pricing_category ?? product.pricing_category),
     )!;
+    const actualMargin =
+      keepsManual && new Decimal(price).gt(0)
+        ? new Decimal(price)
+            .minus(line.unit_cost_before_tax)
+            .div(price)
+            .toFixed(8)
+        : calculation.margin;
     const margin = {
-      margin: calculation.margin,
-      below_minimum: calculation.below_minimum_margin,
+      margin: actualMargin,
+      below_minimum: keepsManual
+        ? category.minimum_margin !== null &&
+          category.minimum_margin !== "" &&
+          actualMargin !== null &&
+          new Decimal(actualMargin).lt(category.minimum_margin)
+        : calculation.below_minimum_margin,
     };
-    line.calculated_selling_price = price;
+    line.calculated_selling_price = rulePrice;
     line.current_selling_price = prior;
     product.price_provenance ??= {};
     const previousProvenance = product.price_provenance[invoice.branch];
     product.price_provenance[invoice.branch] = {
       ...(previousProvenance ?? {}),
       invoice_number: invoice.supplier_invoice_number,
-      calculated_price: price,
+      calculated_price: rulePrice,
       invoice_date: invoice.invoice_date ?? companyDate(state.config),
     };
-    if (prior !== price || margin.below_minimum) {
-      const context = `${invoice.company_id}:${invoice.branch}:${product.code}:${prior ?? "new"}:${line.unit_cost_before_tax}:${JSON.stringify(
+    if (
+      !line.short_dated &&
+      (usesRule || prior !== price || margin.below_minimum)
+    ) {
+      const context = `${invoice.company_id}:${invoice.branch}:${product.code}:${prior ?? "new"}:${line.unit_cost_before_tax}:${line.manual_price_decision ?? "standard"}:${JSON.stringify(
         {
           categories: state.config.pricing_categories,
           bands: state.config.rounding_bands,
@@ -541,7 +574,7 @@ export function postInvoice(
           item.branch === invoice.branch &&
           item.product_code === product.code &&
           item.proposed_price === price &&
-          (prior === price
+          (prior === price && !usesRule
             ? item.type === "margin_review" && item.config_version === context
             : item.type !== "margin_review" && item.status === "pending"),
       );
@@ -555,6 +588,8 @@ export function postInvoice(
         existing.invoice_number = invoice.supplier_invoice_number;
         existing.triggered_by = actor ?? invoice.receiving_employee;
         existing.posted_at = now;
+        existing.source_invoice_id = invoice.id;
+        existing.clear_manual_price = usesRule;
       } else if (
         !state.approvals.some((item) => item.config_version === context)
       ) {
@@ -569,7 +604,7 @@ export function postInvoice(
           type:
             prior === null
               ? "new_product"
-              : prior === price
+              : prior === price && !usesRule
                 ? "margin_review"
                 : "price_change",
           unit_cost: line.unit_cost_before_tax,
@@ -582,6 +617,8 @@ export function postInvoice(
           invoice_number: invoice.supplier_invoice_number,
           triggered_by: actor ?? invoice.receiving_employee,
           posted_at: now,
+          source_invoice_id: invoice.id,
+          clear_manual_price: usesRule,
         });
       }
       if (prior !== price) {
@@ -599,7 +636,11 @@ export function postInvoice(
       reference: `${invoice.supplier_invoice_number}:line:${lineIndex + 1}`,
       by: invoice.receiving_employee!,
       at: now,
+      invoice_id: invoice.id,
+      line_index: lineIndex,
     });
+    if (!line.short_dated && line.qty_received_at_posting > 0)
+      product.last_cost_before_tax = line.unit_cost_before_tax;
     const short = lineShort(line);
     line.short_before_tax = short.beforeTax;
     line.short_tax = short.tax;
@@ -609,6 +650,13 @@ export function postInvoice(
         company_id: invoice.company_id,
         branch: invoice.branch,
         product_code: product.code,
+        invoice_id: invoice.id,
+        invoice_number: invoice.supplier_invoice_number,
+        received_date: (
+          invoice.received_at ??
+          invoice.invoice_date ??
+          now
+        ).slice(0, 10),
         date: line.date_value,
         status: "active",
         expires_in_days: Math.round(
@@ -727,9 +775,10 @@ export function receiveShort(
   branch: Branch,
 ): string {
   const invoice = state.invoice;
+  const effectiveBranch = effectiveInvoiceLocation(state, invoice);
   if (
     role === "cashier" ||
-    branch !== invoice.branch ||
+    branch !== effectiveBranch ||
     invoice.company_id !== state.config.company.seed_key
   )
     throw new Error("Select your permitted invoice branch.");
@@ -767,6 +816,8 @@ export function receiveShort(
     reference: receiptReference,
     by: invoice.receiving_employee!,
     at: new Date().toISOString(),
+    invoice_id: invoice.id,
+    line_index: invoice.lines.indexOf(line),
   });
   state.ledger.push({
     id: `${invoice.id}:delivery:${receiptReference}`,

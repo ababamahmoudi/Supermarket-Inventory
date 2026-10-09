@@ -8,7 +8,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page
@@ -44,7 +44,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   ).toEqual(original);
 
   await signIn(page, "Supervisor");
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "Resume draft", exact: true }).click();
   await expect(
@@ -61,7 +61,7 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));

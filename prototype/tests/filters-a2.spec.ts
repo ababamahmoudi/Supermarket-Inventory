@@ -76,7 +76,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   await chooseOption(
     page,
     filters.getByLabel("Offer branch", { exact: true }),
-    "Branch 2",
+    "Richmond Hill",
   );
   const create = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "Create offer", exact: true }),
@@ -91,7 +91,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     page,
     create.getByLabel("Offer scope", { exact: true }),
     "branch",
-    "This branch only — Branch 2",
+    "This branch only — Richmond Hill",
   );
   await create
     .getByRole("button", { name: "Create offer", exact: true })
@@ -101,7 +101,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   });
   await expect(current.locator("tbody tr")).toHaveCount(6);
   await expect(
-    current.getByRole("cell", { name: "Branch 2", exact: true }),
+    current.getByRole("cell", { name: "Richmond Hill", exact: true }),
   ).toBeVisible();
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
@@ -109,17 +109,17 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     filters.getByLabel("Offer branch", { exact: true }),
   ).toBeDisabled();
   await expect(filters.getByLabel("Offer branch", { exact: true })).toHaveText(
-    "Branch 1",
+    "North York",
   );
   await expect(current.locator("tbody tr")).toHaveCount(5);
   await expect(
-    current.getByRole("cell", { name: "Branch 2", exact: true }),
+    current.getByRole("cell", { name: "Richmond Hill", exact: true }),
   ).toHaveCount(0);
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
   await expect(filters.getByLabel("Offer branch", { exact: true })).toHaveText(
-    "Branch 1",
+    "North York",
   );
 });
 
@@ -133,7 +133,7 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await chooseOption(
     page,
     filters.getByLabel("Payables branch", { exact: true }),
-    "Branch 1",
+    "North York",
   );
   await filters.getByLabel("Search suppliers", { exact: true }).fill("fresh");
   await expect(overview.locator("tbody tr")).toHaveCount(1);
@@ -146,10 +146,10 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await chooseOption(
     page,
     filters.getByLabel("Payables branch", { exact: true }),
-    "Branch 2",
+    "Richmond Hill",
   );
   await expect(
-    overview.getByRole("cell", { name: "Branch 2", exact: true }),
+    overview.getByRole("cell", { name: "Richmond Hill", exact: true }),
   ).toBeVisible();
   await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
   await filters
@@ -163,7 +163,7 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await chooseOption(
     page,
     filters.getByLabel("Payables branch", { exact: true }),
-    "Branch 1",
+    "North York",
   );
   await filters
     .getByRole("checkbox", { name: "Overdue only", exact: true })

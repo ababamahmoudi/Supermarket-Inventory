@@ -4,15 +4,12 @@ import { calculatePrice } from "./pricing";
 import { configuredBranches, activePricingCategories } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
 import { reconcileOffers } from "./approvals";
+import { setManualPriceMarker } from "./manual-prices";
 import type { DemoState, Product } from "./types";
 import type { ProductEditorContext, ProductEdits } from "./product-editor";
 
 export interface NewProductEdits extends ProductEdits {
   last_cost_before_tax: string;
-  opening_counts?: {
-    branch: ProductEditorContext["branch"];
-    quantity: number;
-  }[];
   similar_name_confirmed?: boolean;
   minimum_margin_confirmed?: boolean;
 }
@@ -33,7 +30,7 @@ export class NewProductError extends Error {
       | "price"
       | "margin"
       | "similar"
-      | "stock",
+      | "inventory_disabled",
   ) {
     super(code);
   }
@@ -89,6 +86,7 @@ export function addProduct(
     throw new NewProductError(code);
   };
   if (context.company_id !== state.config.company.seed_key) fail("company");
+  if ("opening_counts" in edits) fail("inventory_disabled");
   if (
     context.role !== "supervisor" &&
     !(
@@ -143,11 +141,7 @@ export function addProduct(
     fail("price");
   const overridden =
     new Decimal(price).toFixed(2) !== calculation.selling_price;
-  if (
-    context.role !== "supervisor" &&
-    (overridden || (edits.opening_counts ?? []).length)
-  )
-    fail("permission");
+  if (context.role !== "supervisor" && overridden) fail("permission");
   const below =
     category!.minimum_margin !== null &&
     new Decimal(price)
@@ -155,18 +149,6 @@ export function addProduct(
       .lt(new Decimal(price).times(category!.minimum_margin));
   if (context.role === "supervisor" && below && !edits.minimum_margin_confirmed)
     fail("margin");
-  const counts = edits.opening_counts ?? [];
-  for (const row of counts)
-    if (
-      row.branch === "all" ||
-      !allowed.includes(row.branch) ||
-      !context.allowed_branches.includes(row.branch) ||
-      !Number.isSafeInteger(row.quantity) ||
-      row.quantity < 0
-    )
-      fail("stock");
-  if (new Set(counts.map((row) => row.branch)).size !== counts.length)
-    fail("stock");
   const code = nextProductCode(state);
   state.product_code_high_water = Number(code);
   const product: Product = {
@@ -197,6 +179,8 @@ export function addProduct(
     status: context.role === "supervisor" ? "active" : "pending_approval",
   };
   state.products.push(product);
+  if (context.role === "supervisor")
+    setManualPriceMarker(state, product, "all", price, context.actor, now);
   if (context.role === "floor_worker")
     state.approvals.push({
       id: `${code}:manual-new-product`,
@@ -232,22 +216,6 @@ export function addProduct(
       created_at: now.toISOString(),
       triggered_by: context.actor,
     });
-  for (const row of counts) {
-    state.stock_movements ??= [];
-    state.stock_movements.push({
-      id: `${code}:opening:${row.branch}`,
-      company_id: context.company_id,
-      branch: row.branch,
-      product_code: code,
-      qty: row.quantity,
-      type: "opening_count",
-      reference: "Opening count",
-      by: context.actor,
-      at: now.toISOString(),
-    });
-    state.stock[`${row.branch}:${code}`] =
-      (state.stock[`${row.branch}:${code}`] ?? 0) + row.quantity;
-  }
   if (context.role === "supervisor")
     reconcileOffers(state, code, context.company_id);
   state.activity.push({

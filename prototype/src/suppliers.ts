@@ -2,6 +2,7 @@ import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate } from "./invoice";
 import { OperationError, type OperationsContext } from "./operations";
 import { supplierBalanceSummary } from "./supplier-balances";
+import { projectInvoiceLocation } from "./received";
 import type {
   Alert,
   Branch,
@@ -127,9 +128,11 @@ function postedInvoices(state: DemoState, context: OperationsContext) {
       invoice,
     ]),
   );
-  return [...invoices.values()].filter(
-    (invoice) => inScope(invoice, context) && invoice.status === "posted",
-  );
+  return [...invoices.values()]
+    .map((invoice) => projectInvoiceLocation(state, invoice))
+    .filter(
+      (invoice) => inScope(invoice, context) && invoice.status === "posted",
+    );
 }
 function receivedDate(invoice: DemoInvoice) {
   return (

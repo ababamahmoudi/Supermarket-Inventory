@@ -514,8 +514,9 @@ function BranchSettings() {
         </div>
         <DataTable
           columns={[
-            { width: "23%" },
-            { width: "28%" },
+            { width: "20%" },
+            { width: "13%" },
+            { width: "22%" },
             { width: "15%" },
             { width: "12%" },
             { width: 176, actions: true },
@@ -524,6 +525,7 @@ function BranchSettings() {
           <thead>
             <tr>
               <th>{t("Name", "نام")}</th>
+              <th>{t("Location type", "نوع مکان")}</th>
               <th>{t("Address", "نشانی")}</th>
               <th>{t("Phone", "تلفن")}</th>
               <th>{t("Status", "وضعیت")}</th>
@@ -536,6 +538,11 @@ function BranchSettings() {
                 <th scope="row">
                   {branchLabel(state.config, branchId(branch, index), lang)}
                 </th>
+                <td>
+                  {branch.type === "warehouse"
+                    ? t("Warehouse", "انبار")
+                    : t("Store", "فروشگاه")}
+                </td>
                 <td>{branch.address || "—"}</td>
                 <td>
                   <bdi dir="ltr">{branch.phone || "—"}</bdi>
@@ -628,6 +635,21 @@ function BranchSettings() {
                   onChange={(event) =>
                     setEditing({ ...editing, address: event.target.value })
                   }
+                />
+              </Field>
+              <Field label={t("Location type", "نوع مکان")}>
+                <Select
+                  value={editing.type ?? "store"}
+                  onChange={(value) =>
+                    setEditing({
+                      ...editing,
+                      type: value as "store" | "warehouse",
+                    })
+                  }
+                  options={[
+                    { value: "store", label: t("Store", "فروشگاه") },
+                    { value: "warehouse", label: t("Warehouse", "انبار") },
+                  ]}
                 />
               </Field>
               <Field label={t("Phone", "تلفن")}>

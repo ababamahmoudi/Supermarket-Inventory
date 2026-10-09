@@ -57,6 +57,7 @@ describe("company-scoped, reversible Settings", () => {
       "Branch 1",
       "Branch 2",
       "Branch 3",
+      "Warehouse",
     ]);
     const original = state.config.branches[0];
     saveBranchSettings(
@@ -112,6 +113,7 @@ describe("company-scoped, reversible Settings", () => {
     ).toThrow("branch");
     setBranchActive(state, "B2", false, actor);
     setBranchActive(state, "B3", false, actor);
+    setBranchActive(state, "W1", false, actor);
     expect(() => setBranchActive(state, "B1", false, actor)).toThrow(
       "last_branch",
     );

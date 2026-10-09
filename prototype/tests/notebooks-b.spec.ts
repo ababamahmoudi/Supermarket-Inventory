@@ -23,7 +23,7 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
   await chooseOption(
     page,
     dialog.getByLabel("Branch", { exact: true }),
-    "Branch 1",
+    "North York",
   );
   await dialog
     .getByRole("group", { name: "Who can read", exact: true })
@@ -77,7 +77,7 @@ test("Supervisor configures a custom notebook and entries persist with author, b
     .locator(".notebook-entry-card")
     .filter({ hasText: "Deli counter cleaned" });
   await expect(entry).toContainText("Demo Supervisor");
-  await expect(entry).toContainText("Branch 1");
+  await expect(entry).toContainText("North York");
   await expect(entry).toContainText("3.5 °C");
   await page.reload();
   await notebookTab(page, "Cleaning log");
@@ -154,7 +154,7 @@ test("archive retains authorized search results, restore keeps entries, and work
       .filter({ hasText: "Floor Worker cleaning check" }),
   ).toContainText("Demo Floor Worker");
   await signIn(page, "Supervisor");
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await expect(page.getByRole("tab", { name: /^Cleaning log/ })).toHaveCount(0);
 });
 

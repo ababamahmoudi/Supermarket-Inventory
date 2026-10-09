@@ -2,6 +2,12 @@ import Decimal from "decimal.js";
 import { demoSeed } from "./config";
 import { effectiveOffer, effectivePrice } from "./catalog";
 import { configuredBranches } from "./settings";
+import {
+  clearManualPriceMarker,
+  hydrateProductManualPriceMarkers,
+  setManualPriceMarker,
+} from "./manual-prices";
+import { effectiveApprovalLocation } from "./received";
 export { isOfferScheduledNow } from "./catalog";
 import type {
   Approval,
@@ -73,6 +79,7 @@ export function approvalSnapshot(
   return JSON.stringify({
     price: product.selling_price,
     overrides: product.branch_prices ?? {},
+    manual_prices: product.manual_prices,
     proposals: state.approvals
       .filter(
         (approval) =>
@@ -80,7 +87,26 @@ export function approvalSnapshot(
           approval.product_code === productCode &&
           approval.status === "pending",
       )
-      .map((approval) => [approval.id, approval.proposed_price, approval.type]),
+      .map((approval) => [
+        approval.id,
+        approval.proposed_price,
+        approval.type,
+        effectiveApprovalLocation(state, approval),
+        approval.source_invoice_id,
+        approval.invoice_ids,
+        (state.invoice_location_corrections ?? [])
+          .filter(
+            (correction) =>
+              correction.company_id === product.company_id &&
+              (correction.invoice_id === approval.source_invoice_id ||
+                approval.invoice_ids?.includes(correction.invoice_id)),
+          )
+          .map((correction) => [
+            correction.id,
+            correction.from_branch,
+            correction.to_branch,
+          ]),
+      ]),
     offers: state.offers
       .filter(
         (offer) =>
@@ -224,6 +250,7 @@ export function applyApprovedPrice(
 ): void {
   const product = currentProduct(state, productCode);
   const amount = priceAmount(price);
+  hydrateProductManualPriceMarkers(state, product);
   if (scope === "all") {
     product.selling_price = amount;
     product.branch_prices = {};
@@ -232,6 +259,7 @@ export function applyApprovedPrice(
       throw new Error("Choose one branch");
     product.branch_prices = { ...product.branch_prices, [branch]: amount };
   }
+  clearManualPriceMarker(product, scope === "all" ? "all" : branch);
   product.status = "active";
   reconcileOffers(state, productCode);
   syncPriceConflicts(state, productCode);
@@ -258,6 +286,9 @@ export function resolveApproval(
   );
   if (!approval || approval.status !== "pending")
     throw new Error("Approval is no longer pending");
+  const origin = effectiveApprovalLocation(state, approval);
+  const targetBranch =
+    scope === "all" ? "all" : origin === "all" ? branch : origin;
   if (approval.type === "new_supplier")
     throw new Error("Review this supplier with supplier confirmation");
   const product = currentProduct(state, approval.product_code);
@@ -279,7 +310,7 @@ export function resolveApproval(
         ? "Keep barcode mappings"
         : "Reject barcode change",
       product.code,
-      approval.branch,
+      origin,
     );
     return;
   }
@@ -289,13 +320,23 @@ export function resolveApproval(
       product.code,
       approval.proposed_price,
       scope,
-      branch,
+      targetBranch,
       approval.type === "new_product" ? "Approve product" : "Approve price",
+    );
+  if (decision === "approve" && approval.manual_override)
+    setManualPriceMarker(
+      state,
+      product,
+      targetBranch,
+      approval.proposed_price,
+      demoSeed.demo_users.find((user) => user.role === "supervisor")!.name,
+      new Date(),
+      approval.unit_cost,
     );
   approval.status = decision === "approve" ? "approved" : "rejected";
   approval.scope = scope;
   if (decision === "reject")
-    recordDemoActivity(state, "Reject proposal", product.code, approval.branch);
+    recordDemoActivity(state, "Reject proposal", product.code, origin);
   if (reason?.trim()) approval.acknowledgment_reason = reason.trim();
   const pending = state.approvals.find(
     (item) =>
@@ -305,7 +346,9 @@ export function resolveApproval(
       item.type !== "margin_review",
   );
   product.pending_price = pending?.proposed_price ?? null;
-  product.pending_branch = pending?.branch;
+  product.pending_branch = pending
+    ? effectiveApprovalLocation(state, pending)
+    : undefined;
   if (
     decision === "reject" &&
     approval.type === "new_product" &&
@@ -329,14 +372,10 @@ export function keepApprovedPrice(
       item.status === "pending",
   );
   if (!review) throw new Error("Margin review is no longer pending");
+  const origin = effectiveApprovalLocation(state, review);
   review.status = "approved";
   review.acknowledgment_reason = reason.trim();
-  recordDemoActivity(
-    state,
-    "Keep approved price",
-    review.product_code,
-    review.branch,
-  );
+  recordDemoActivity(state, "Keep approved price", review.product_code, origin);
 }
 
 export function proposeManualOverride(
@@ -353,29 +392,31 @@ export function proposeManualOverride(
       item.status === "pending",
   );
   if (!review) throw new Error("Margin review is no longer pending");
+  const origin = effectiveApprovalLocation(state, review);
   const product = currentProduct(state, review.product_code);
   const amount = priceAmount(price);
   if (!reason.trim()) throw new Error("Add a reason for the manual override");
   const approval: Approval = {
     ...review,
+    branch: origin,
     id: `override:${review.company_id}:${state.approvals.length}`,
     type: "price_change",
     proposed_price: amount,
-    current_price: effectivePrice(state, product, review.branch),
+    current_price: effectivePrice(state, product, origin),
     reason: reason.trim(),
     manual_override: true,
     status: "pending",
   };
   state.approvals.push(approval);
   product.pending_price = amount;
-  product.pending_branch = review.branch;
+  product.pending_branch = origin;
   review.status = "approved";
   review.acknowledgment_reason = reason.trim();
   recordDemoActivity(
     state,
     "Propose manual override",
     review.product_code,
-    review.branch,
+    origin,
   );
   return approval;
 }

@@ -26,6 +26,8 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Labels", exact: true }),
   ).toBeVisible();
@@ -38,7 +40,7 @@ test("creates a template, starts after four used slots, and prints bilingual lab
         JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).templates
           .length,
     ),
-  ).toBe(0);
+  ).toBe(2);
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
@@ -94,7 +96,7 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   await page.reload();
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByLabel("Saved template").click();
-  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(page.getByRole("option")).toHaveCount(4);
 });
 
 test("validates A4 dimensions and Persian labels without external requests", async ({
@@ -102,6 +104,8 @@ test("validates A4 dimensions and Persian labels without external requests", asy
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await page.getByLabel("Width (mm)", { exact: true }).fill("220");
   await page
     .getByRole("button", { name: "Save template", exact: true })
@@ -128,6 +132,8 @@ test("requires one branch and prints its approved price instead of a pending pro
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
+  await page.getByRole("tab", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "New template", exact: true }).click();
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();

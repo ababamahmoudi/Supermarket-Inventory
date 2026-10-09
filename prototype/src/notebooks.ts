@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { branchId, configuredBranches } from "./settings";
 import { UNDO_DURATION } from "./undo-queue";
+import { en as notesEn, fa as notesFa } from "./c-notes-i18n";
 import type { DemoState, Role, Branch } from "./types";
 import type { OperationsContext } from "./operations";
 
@@ -63,7 +64,26 @@ export type NotebookInput = Pick<
 export type NotebookEntryInput = Pick<
   NotebookEntry,
   "text" | "product_code" | "qty" | "date" | "measurement"
->;
+> & { branch?: Branch };
+
+export function newNotebookInput(): NotebookInput {
+  return {
+    name_en: "",
+    name_fa: "",
+    branch: "all",
+    read_roles: ["supervisor", "floor_worker"],
+    add_roles: ["supervisor", "floor_worker"],
+    fields: {
+      product: false,
+      quantity: false,
+      date: false,
+      measurement: false,
+      measurement_unit: "",
+    },
+    status_enabled: true,
+    notify_supervisor: false,
+  };
+}
 export class NotebookError extends Error {
   constructor(public key: string) {
     super(key);
@@ -121,15 +141,33 @@ export function canAccessNotebooks(state: DemoState, context: NotebookContext) {
 export function canAddNotebookEntry(
   record: NotebookDefinition,
   context: NotebookContext,
+  location = context.branch,
 ) {
+  const scopedContext = { ...context, branch: location };
   return (
     !record.archived &&
     record.company_id === context.company_id &&
-    inBranch(record.branch, context) &&
-    context.branch !== "all" &&
+    location !== "all" &&
+    (context.branch === location ||
+      (context.branch === "all" && context.role === "supervisor")) &&
+    (!context.allowed_branches ||
+      context.allowed_branches.includes(location)) &&
+    inBranch(record.branch, scopedContext) &&
     (context.role === "supervisor" ||
       (record.read_roles.includes(context.role) &&
         record.add_roles.includes(context.role)))
+  );
+}
+
+/** Concrete, active entry locations; All branches is a view, never an entry. */
+export function notebookEntryLocations(
+  state: DemoState,
+  record: NotebookDefinition,
+  context: NotebookContext,
+): Branch[] {
+  if (state.config.company.seed_key !== context.company_id) return [];
+  return configuredBranches(state.config).filter((location) =>
+    canAddNotebookEntry(record, context, location),
   );
 }
 export function readableNotebookEntries(
@@ -363,13 +401,28 @@ export function addNotebookEntry(
   input: NotebookEntryInput,
 ) {
   const notebook = definition(state, context, notebookId);
-  const values = entryValues(state, context, notebook, input);
+  if (notebook.archived) fail("archived");
+  const location = input.branch ?? context.branch;
+  if (!location || location === "all") fail("branch");
+  if (
+    (context.branch !== "all" && context.branch !== location) ||
+    (context.allowed_branches &&
+      !context.allowed_branches.includes(location)) ||
+    (notebook.branch !== "all" && notebook.branch !== location)
+  )
+    fail("scope");
+  if (context.branch === "all" && context.role !== "supervisor")
+    fail("add_permission");
+  if (!configuredBranches(state.config).includes(location))
+    fail("location_unavailable");
+  const scopedContext = { ...context, branch: location };
+  const values = entryValues(state, scopedContext, notebook, input);
   const at = new Date().toISOString();
   const record: NotebookEntry = {
     ...values,
     id: createId("notebook-entry"),
     company_id: context.company_id,
-    branch: context.branch,
+    branch: location,
     notebook_id: notebook.id,
     by: context.actor,
     created_at: at,
@@ -452,6 +505,8 @@ export function editNotebookEntry(
     entryId,
     now,
   );
+  if (input.branch !== undefined && input.branch !== record.branch)
+    fail("scope");
   if (
     expectedSnapshot !== undefined &&
     expectedSnapshot !== JSON.stringify(record)
@@ -573,17 +628,15 @@ export function notebookError(
 ) {
   const key = error instanceof NotebookError ? error.key : "scope";
   const messages: Record<string, [string, string]> = {
-    scope: [
-      "This notebook is not available for this company or branch.",
-      "این دفترچه برای این شرکت یا شعبه در دسترس نیست.",
-    ],
+    scope: [notesEn.scope, notesFa.scope],
     supervisor: [
       "Only the Supervisor can change notebook settings.",
       "فقط سرپرست می‌تواند تنظیمات دفترچه را تغییر دهد.",
     ],
-    branch: [
-      "Choose one branch before adding a note.",
-      "پیش از افزودن یادداشت، یک شعبه انتخاب کنید.",
+    branch: [notesEn.chooseLocation, notesFa.chooseLocation],
+    location_unavailable: [
+      notesEn.unavailableLocation,
+      notesFa.unavailableLocation,
     ],
     name: [
       "Enter the notebook name in English and Persian.",

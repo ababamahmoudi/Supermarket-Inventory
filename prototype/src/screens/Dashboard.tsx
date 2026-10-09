@@ -16,8 +16,15 @@ import {
 } from "lucide-react";
 import { demoUsers, useDemo } from "../store";
 import { companyDate } from "../invoice";
+import {
+  effectiveInvoiceLocation,
+  effectiveApprovalLocation,
+  projectInvoiceLocation,
+  projectExpiryLocation,
+} from "../received";
 import { approvalSnapshot, resolveApproval } from "../approvals";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { ManualPricePill } from "../manual-price-presentation";
 import { SupplierApproval } from "./SupplierApproval";
 import {
   demoUserLabel,
@@ -34,7 +41,7 @@ import {
 import "./financial-polish.css";
 import "./dashboard-a2.css";
 import {
-  dashboardLowStock,
+  dashboardArrivals,
   dashboardPriceChanges,
   dashboardPurchases,
 } from "../dashboard-data";
@@ -136,9 +143,13 @@ export function Dashboard() {
 
   const branches = configuredBranches(state.config, true);
   const today = companyDate(state.config);
-  const approvals = scopedRecords(state.approvals, context).filter(
-    (item) => item.status === "pending",
-  );
+  const approvals = scopedRecords(
+    state.approvals.map((row) => ({
+      ...row,
+      branch: effectiveApprovalLocation(state, row),
+    })),
+    context,
+  ).filter((item) => item.status === "pending");
   const alertPriority: Record<Alert["type"], number> = {
     lower_price: 0,
     price_conflict: 1,
@@ -165,16 +176,21 @@ export function Dashboard() {
       item.status === "claim_pending" ||
       item.claims?.some((claim) => claim.status === "submitted"),
   );
-  const invoices = scopedRecords(state.invoices ?? [], context);
+  const invoices = scopedRecords(
+    (state.invoices ?? []).map((row) => projectInvoiceLocation(state, row)),
+    context,
+  );
   const currentInvoiceVisible =
     state.invoice.company_id === context.company_id &&
-    (branch === "all" || state.invoice.branch === branch);
+    (branch === "all" ||
+      effectiveInvoiceLocation(state, state.invoice) === branch);
   if (currentInvoiceVisible && state.invoice.status !== "empty") {
     const currentIndex = invoices.findIndex(
       (item) => item.id === state.invoice.id,
     );
-    if (currentIndex === -1) invoices.push(state.invoice);
-    else invoices[currentIndex] = state.invoice;
+    if (currentIndex === -1)
+      invoices.push(projectInvoiceLocation(state, state.invoice));
+    else invoices[currentIndex] = projectInvoiceLocation(state, state.invoice);
   }
   const posted = invoices.filter((item) => item.status === "posted");
   const recentInvoices = invoices
@@ -199,7 +215,10 @@ export function Dashboard() {
         0,
     ),
   );
-  const expiry = scopedRecords(state.expiry, context).filter(
+  const expiry = scopedRecords(
+    state.expiry.map((entry) => projectExpiryLocation(state, entry)),
+    context,
+  ).filter(
     (item) =>
       item.status === "active" &&
       item.date >= today &&
@@ -234,7 +253,7 @@ export function Dashboard() {
     .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
     .slice(0, 5);
   const purchases = dashboardPurchases(state, context, today);
-  const lowStock = dashboardLowStock(state, context);
+  const arrivals = dashboardArrivals(state, context, today);
   const weeklyChanges = dashboardPriceChanges(state, context, today);
   const productName = (code: string) => {
     const product = state.products.find(
@@ -613,6 +632,10 @@ export function Dashboard() {
                           {approvalType(item)}
                         </Badge>
                         <span className="dashboard-price-change">
+                          <ManualPricePill
+                            product={product}
+                            branch={item.branch}
+                          />
                           <span>
                             {t("Old", "قبلی")}{" "}
                             {approved !== null && approved !== undefined ? (
@@ -1154,48 +1177,66 @@ export function Dashboard() {
             </Card>
           </div>
           <div className="dashboard-row dashboard-row-halves">
-            <Card title={t("Low stock", "موجودی کم")}>
-              {lowStock.length === 0 ? (
+            <Card title={t("Arrived this week", "دریافتی‌های این هفته")}>
+              {arrivals.length === 0 ? (
                 <EmptyState>
                   {t(
-                    "No low stock or open To order reminders.",
-                    "موجودی کم یا یادآوری سفارش بازی نیست.",
+                    "No deliveries this week.",
+                    "این هفته تحویلی ثبت نشده است.",
                   )}
                 </EmptyState>
               ) : (
-                lowStock.slice(0, 6).map((item) => (
-                  <DashboardListRow
-                    key={`${item.branch}:${item.product.code}`}
-                    title={
-                      <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                        {lang === "fa"
-                          ? item.product.name_fa
-                          : item.product.name_en}
-                      </bdi>
-                    }
-                    secondary={
-                      <>
-                        {branchName(item.branch as Branch)} ·{" "}
-                        {t("Stock estimate", "برآورد موجودی")}{" "}
-                        <LtrText>{item.estimate}</LtrText>
-                      </>
-                    }
-                    pill={
-                      <Badge tone="pending">
-                        {t("To order", "برای سفارش")}
-                      </Badge>
-                    }
-                    action={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("notes")}
-                      >
-                        {t("View", "مشاهده")}
-                      </Button>
-                    }
-                  />
-                ))
+                arrivals.slice(0, 6).map((item) => {
+                  const product = state.products.find(
+                    (row) =>
+                      row.company_id === context.company_id &&
+                      row.code === item.product_code,
+                  );
+                  return (
+                    <DashboardListRow
+                      key={item.id}
+                      title={
+                        product ? (
+                          <ProductName product={product} />
+                        ) : (
+                          <LtrText>{item.product_code}</LtrText>
+                        )
+                      }
+                      secondary={
+                        <>
+                          {branchName(item.branch)} ·{" "}
+                          <DateText value={item.date} /> ·{" "}
+                          <LtrText>{item.invoice_number}</LtrText>
+                        </>
+                      }
+                      pill={
+                        <Badge tone="info">
+                          {translateCount(
+                            "{{count}} unit",
+                            "{{count}} units",
+                            "{{count}} واحد",
+                            "{{count}} واحد",
+                            item.units,
+                            lang,
+                          )}
+                        </Badge>
+                      }
+                      action={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            navigate(
+                              `received?product=${encodeURIComponent(item.product_code)}`,
+                            )
+                          }
+                        >
+                          {t("View", "مشاهده")}
+                        </Button>
+                      }
+                    />
+                  );
+                })
               )}
             </Card>
             <Card
@@ -1241,6 +1282,14 @@ export function Dashboard() {
                             <>
                               {" "}
                               · <Money value={price} />
+                              {product && (
+                                <ManualPricePill
+                                  product={product}
+                                  branch={
+                                    item.branch === "all" ? branch : item.branch
+                                  }
+                                />
+                              )}
                             </>
                           )}
                         </>
@@ -1451,6 +1500,10 @@ export function Dashboard() {
                           <td>{branchName(value)}</td>
                           <td>
                             <div className="price-change-values">
+                              <ManualPricePill
+                                product={product}
+                                branch={value}
+                              />
                               <span>
                                 {t("Old", "قبلی")}{" "}
                                 {price ? <Money value={price} /> : "—"}

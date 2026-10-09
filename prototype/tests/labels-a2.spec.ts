@@ -18,6 +18,10 @@ for (const language of ["en", "fa"] as const) {
       });
       await signIn(page, "Floor Worker");
       await page.goto("/#labels");
+      await page.getByRole("tab", { name: "Templates", exact: true }).click();
+      await page
+        .getByRole("button", { name: "New template", exact: true })
+        .click();
       await page
         .getByLabel("Width (mm)", { exact: true })
         .fill(String(dimensions[0]));
@@ -53,7 +57,7 @@ for (const language of ["en", "fa"] as const) {
             .querySelector(".shelf-label-content")!
             .getBoundingClientRect();
           const image = box
-            .querySelector(".shelf-label-logo")
+            .querySelector(".shelf-label-logo img")
             ?.getBoundingClientRect();
           return {
             width: outer.width,

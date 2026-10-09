@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { DemoProvider, STORAGE_KEY } from "./store";
+import { DemoProvider, initialState, STORAGE_KEY } from "./store";
 import { AUTH_STORAGE_KEY, SESSION_KEY } from "./auth";
 import i18n from "./i18n";
 
@@ -31,6 +31,35 @@ async function openUserMenu(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "User menu" }));
 }
 describe("V2 authentication and role-aware shell", () => {
+  it("hides lookup and navigation for a retained Cashier session whose store has become a warehouse", () => {
+    const state = initialState();
+    state.config.branches[0].type = "warehouse";
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        username: "cashier",
+        branch: "Branch 1",
+        lang: "en",
+        locked: false,
+        authenticatedAt: Date.now(),
+      }),
+    );
+    window.location.hash = "lookup";
+    show();
+    expect(
+      screen.getByText(
+        "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("navigation", { name: "Pages" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Cashier lookup" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeVisible();
+  });
   it("uses username and password, explains a failed attempt, and has a show/hide control", async () => {
     show();
     expect(screen.queryByLabelText("Demo PIN")).not.toBeInTheDocument();
@@ -75,9 +104,9 @@ describe("V2 authentication and role-aware shell", () => {
     show();
     const user = await signIn("supervisor");
     await user.click(screen.getByRole("combobox", { name: "Branch" }));
-    await user.click(screen.getByRole("option", { name: "Branch 2" }));
+    await user.click(screen.getByRole("option", { name: "Richmond Hill" }));
     expect(screen.getByRole("combobox", { name: "Branch" })).toHaveTextContent(
-      "Branch 2",
+      "Richmond Hill",
     );
     expect(document.querySelector("select")).toBeNull();
     await user.click(screen.getByRole("button", { name: "فارسی" }));

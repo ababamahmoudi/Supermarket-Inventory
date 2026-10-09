@@ -42,6 +42,20 @@ export function branchLabel(
 export function branchIsActive(config: CompanyConfig, id: Branch): boolean {
   return id === "all" || configuredBranches(config).includes(id);
 }
+export function branchAllowsRole(
+  config: CompanyConfig,
+  id: Branch,
+  role: Role,
+): boolean {
+  if (!branchIsActive(config, id) || id === "all")
+    return role === "supervisor" && id === "all";
+  const target = config.branches.find(
+    (entry, index) => branchId(entry, index) === id,
+  );
+  return (
+    Boolean(target) && !(role === "cashier" && target?.type === "warehouse")
+  );
+}
 export function activePricingCategories(
   config: CompanyConfig,
 ): PricingCategory[] {
@@ -148,6 +162,11 @@ export function saveBranchSettings(
   guard(state, actor);
   if (!branch.name_en.trim() || !branch.name_fa.trim())
     throw new SettingsError("name");
+  if (
+    branch.type !== undefined &&
+    !["store", "warehouse"].includes(branch.type)
+  )
+    throw new SettingsError("branch");
   const before = structuredClone(state.config.branches);
   const index = state.config.branches.findIndex(
     (entry) => entry.code === branch.code,
@@ -169,6 +188,7 @@ export function saveBranchSettings(
     name_en: branch.name_en.trim(),
     name_fa: branch.name_fa.trim(),
     active: branch.active !== false,
+    type: branch.type ?? ("store" as const),
   };
   if (index < 0) state.config.branches.push(value);
   else state.config.branches[index] = value;
@@ -189,6 +209,7 @@ export function newBranch(config: CompanyConfig): ConfigBranch {
     name_en: "",
     name_fa: "",
     active: true,
+    type: "store",
     address: "",
     phone: "",
     opening_hours: "",

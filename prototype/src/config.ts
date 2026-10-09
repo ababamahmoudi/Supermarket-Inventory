@@ -36,7 +36,15 @@ export const configSeed = {
       ...previous,
       ...branch,
       name_en: branch.name,
-      name_fa: previous?.name_fa ?? branch.name,
+      name_fa: branch.name_fa ?? previous?.name_fa ?? branch.name,
+      id:
+        branch.id ??
+        previous?.name_en.replace(/\s*\(PLACEHOLDER.*$/i, "") ??
+        branch.code,
+      type:
+        branch.type === "warehouse"
+          ? ("warehouse" as const)
+          : ("store" as const),
     };
   }),
   pricing_categories: sourceConfig.pricing_categories.map((category) => {

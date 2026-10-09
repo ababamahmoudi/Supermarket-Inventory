@@ -53,7 +53,7 @@ test("live role switches keep cashier approved price until branch approval; new 
     page.getByText("New price pending", { exact: true }),
   ).toHaveCount(0);
   await signIn(page, "supervisor");
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await lookup(page, "0006", "$1.99");
   await setBranch(page, "all");
   await page.goto("/#approvals");
@@ -73,7 +73,7 @@ test("live role switches keep cashier approved price until branch approval; new 
   await dialog
     .getByRole("button", { name: "Approve product", exact: true })
     .click();
-  await setBranch(page, "Branch 2");
+  await setBranch(page, "Richmond Hill");
   await lookup(page, "0015", "$5.49");
   await expect(
     page.getByText("Pending: confirm with a Supervisor before selling", {
@@ -104,9 +104,9 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     .check();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
   await resetDemo(page);
-  const row = page
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: "Branch 2", exact: true }) });
+  const row = page.getByRole("row").filter({
+    has: page.getByRole("cell", { name: "Richmond Hill", exact: true }),
+  });
   await row
     .getByRole("button", { name: "Apply this price to all", exact: true })
     .click();
@@ -117,7 +117,7 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
   await expect(
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
-  for (const branch of ["Branch 1", "Branch 2", "Branch 3"]) {
+  for (const branch of ["North York", "Richmond Hill", "Newmarket"]) {
     await setBranch(page, branch);
     await lookup(page, "0004", "$6.99");
   }

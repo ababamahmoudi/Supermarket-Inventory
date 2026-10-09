@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 
 export type DemoRole =
   | "Cashier"
@@ -57,7 +58,10 @@ export async function setBranch(page: Page, branch: string) {
     page,
     page.locator(".topbar").getByLabel("Branch", { exact: true }),
     branch,
-    branch === "all" ? "All branches" : branch,
+    branch === "all"
+      ? "All branches"
+      : (configuration.branches.find((location) => location.id === branch)
+          ?.name ?? branch),
   );
 }
 
@@ -82,10 +86,18 @@ export async function resetDemo(page: Page) {
 export async function visitPage(page: Page, label: string) {
   if (await page.evaluate(() => window.innerWidth <= 760))
     await page.locator("#menu-toggle").click();
-  await page
+  const link = page
     .getByRole("navigation", { name: "Pages", exact: true })
-    .getByRole("link", { name: label, exact: true })
-    .click();
+    .getByRole("link", { name: label, exact: true, includeHidden: true });
+  if (!(await link.isVisible())) {
+    const section = link.locator(
+      'xpath=ancestor::div[contains(@class, "nav-section")][1]',
+    );
+    const groupToggle = section.getByRole("button");
+    if (await groupToggle.count()) await groupToggle.first().click();
+  }
+  await expect(link).toBeVisible();
+  await link.click();
 }
 
 export const invoiceImage = {
