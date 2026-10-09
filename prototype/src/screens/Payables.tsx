@@ -5,7 +5,11 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
-import { useListState } from "../navigation";
+import {
+  useListState,
+  navigationKey,
+  saveNavigationValue,
+} from "../navigation";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
@@ -183,7 +187,26 @@ export function Payables() {
     setErrorKey("");
     setConfirmMoney(null);
   };
-  const changeBranch = (value: string) => {
+  const changeBranch = (value: string, clear = false) => {
+    // This explicit filter change keeps the other filters and selected report.
+    // A top-bar/session switch still reads its separately scoped preferences.
+    for (const [field, retained] of Object.entries({
+      "payables.supplier": supplier,
+      "payables.search": clear ? "" : search,
+      "payables.overdue": clear ? false : overdueOnly,
+      "payables.balance": clear ? false : withBalance,
+      "payables.mode": mode,
+      "payables.month": month,
+    }))
+      saveNavigationValue(
+        navigationKey(
+          state.config.company.seed_key,
+          user?.username ?? "signed-out",
+          value,
+          field,
+        ),
+        retained,
+      );
     setBranch(value as Branch);
     resetEntryForms();
   };
@@ -191,7 +214,7 @@ export function Payables() {
     setSearch("");
     setOverdueOnly(false);
     setWithBalance(false);
-    changeBranch("all");
+    changeBranch("all", true);
   };
   const summary = supplierBalanceSummary(
     state,

@@ -226,6 +226,33 @@ try {
           ),
         );
       });
+
+      if (
+        variant === "phone" &&
+        ["dashboard-approvals", "labels-selection"].includes(scene)
+      ) {
+        const target = page.locator(
+          scene === "dashboard-approvals"
+            ? ".dashboard-approvals"
+            : ".labels-product-table",
+        );
+        await target.evaluate((element) => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+          window.scrollTo(
+            0,
+            window.scrollY + element.getBoundingClientRect().top - 200,
+          );
+        });
+        await page.evaluate(
+          () =>
+            new Promise((resolve) =>
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(resolve),
+              ),
+            ),
+        );
+      }
       await page.mouse.move(0, 0);
       const findings = await geometry(page);
       const filename = `${scene}-${variant}.png`;

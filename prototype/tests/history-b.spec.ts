@@ -170,7 +170,9 @@ test("an intervening edit displays a conflict and cannot be silently overwritten
     name: "Revert change",
     exact: true,
   });
-  await expect(dialog.getByRole("alert")).toContainText("changed again");
+  await expect(
+    dialog.getByRole("alert").filter({ hasText: "changed again" }),
+  ).toContainText("changed again");
   await expect(
     dialog.getByRole("button", { name: "Revert change", exact: true }),
   ).toBeDisabled();
