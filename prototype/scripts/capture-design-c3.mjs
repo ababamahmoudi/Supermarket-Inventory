@@ -221,7 +221,9 @@ try {
         await document.fonts.ready;
         window.scrollTo(0, 0);
         await new Promise((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          window.requestAnimationFrame(() =>
+            window.requestAnimationFrame(resolve),
+          ),
         );
       });
       await page.mouse.move(0, 0);
