@@ -51,7 +51,7 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   });
   await expect(history).toContainText("No purchase history yet.");
   await expect(history).toContainText("Expected unit cost");
-  await expect(history).toContainText("$3.5500");
+  await expect(history).toContainText("$3.55");
   await page.keyboard.press("Escape");
   await expect(history).not.toBeVisible();
   const saved = await page.evaluate(

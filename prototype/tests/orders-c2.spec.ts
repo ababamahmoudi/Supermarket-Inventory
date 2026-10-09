@@ -167,12 +167,40 @@ test("free-text To order note saves unresolved selection but needs explicit item
   page,
 }) => {
   await signIn(page, "Supervisor");
+  await setBranch(page, "North York");
+  await page.goto("/#notes");
+  await page.getByRole("tab", { name: "To order", exact: true }).click();
+  const noteText = "Order cooking oil for the next delivery.";
+  const noteForm = page.getByRole("form", { name: "Add note", exact: true });
+  await noteForm.getByLabel("Note", { exact: true }).fill(noteText);
+  await expect(
+    noteForm.getByLabel("Product (optional)", { exact: true }),
+  ).toContainText("Choose product");
+  await expect(
+    noteForm.getByLabel("Quantity (optional)", { exact: true }),
+  ).toHaveValue("");
+  await noteForm
+    .getByRole("button", { name: "Save note", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("Saved note.");
+  const freeTextNote = await page.evaluate(
+    ({ key, text }) =>
+      JSON.parse(localStorage.getItem(key)!).notes.find(
+        (item: { text: string }) => item.text === text,
+      ),
+    { key: storage, text: noteText },
+  );
+  expect(freeTextNote).toMatchObject({
+    type: "to_order",
+    status: "open",
+    branch: "Branch 1",
+  });
+  expect(freeTextNote.product_code).toBeUndefined();
+  expect(freeTextNote.qty).toBeUndefined();
   await setBranch(page, "all");
   await addOilItem(page, "");
   const form = await newOrder(page);
-  const note = page
-    .locator(".order-source-note")
-    .filter({ hasText: "Sunflower oil 1.8 L is out of stock" });
+  const note = page.locator(".order-source-note").filter({ hasText: noteText });
   await note.getByRole("button", { name: "Add to order", exact: true }).click();
   await expect(note.getByLabel("Supplier item", { exact: true })).toContainText(
     "Choose item",
@@ -192,7 +220,7 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await expect.poll(async () => await savedOrders(page)).toHaveLength(1);
   const draft = (await savedOrders(page))[0];
   expect(draft.lines).toHaveLength(0);
-  expect(draft.source_note_ids).toHaveLength(1);
+  expect(draft.source_note_ids).toEqual([freeTextNote.id]);
   await page.getByRole("button", { name: "Edit draft", exact: true }).click();
   const editing = page.getByRole("form", { name: "New order", exact: true });
   await editing
@@ -243,9 +271,7 @@ test("free-text To order note saves unresolved selection but needs explicit item
   });
   await page.goto("/#notes");
   await expect(
-    page
-      .locator(".notebook-entry-card")
-      .filter({ hasText: "Sunflower oil 1.8 L is out of stock" }),
+    page.locator(".notebook-entry-card").filter({ hasText: noteText }),
   ).toHaveCount(0);
 });
 

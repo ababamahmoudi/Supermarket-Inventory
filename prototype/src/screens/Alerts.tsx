@@ -336,13 +336,13 @@ export function Alerts() {
                                       value={
                                         difference.previous_unit_cost ?? "0"
                                       }
-                                      decimals={4}
+                                      decimals={2}
                                       currency={state.config.company.currency}
                                     />{" "}
                                     →{" "}
                                     <Money
                                       value={difference.new_unit_cost}
-                                      decimals={4}
+                                      decimals={2}
                                       currency={state.config.company.currency}
                                     />
                                   </>

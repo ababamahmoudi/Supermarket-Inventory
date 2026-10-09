@@ -1,5 +1,6 @@
 /* global process, console, document, window, innerWidth, innerHeight, getComputedStyle */
-import { chromium, expect } from "@playwright/test";
+import { chromium, expect as playwrightExpect } from "@playwright/test";
+const expect = playwrightExpect.configure({ timeout: 30000 });
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
@@ -109,6 +110,7 @@ const documentProof = (previous.documentProof ?? []).filter(
   (item) => !variants.includes(item.variant),
 );
 const builds = [];
+let activePage;
 const exact = (en, fa = en) =>
   new RegExp(
     `^(?:${en.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|${fa.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})$`,
@@ -500,6 +502,9 @@ async function printOperationalPDF(page, kind, variant) {
     bilingualPersian: element.querySelectorAll('[lang="fa"]').length,
     text: element.textContent.trim(),
     background: getComputedStyle(element).backgroundColor,
+    bodyBackground: getComputedStyle(window.document.body).backgroundColor,
+    htmlBackground: getComputedStyle(window.document.documentElement)
+      .backgroundColor,
   }));
   const file = `${kind}-${variant}.pdf`;
   const bytes = await page.pdf({
@@ -598,7 +603,7 @@ async function chooseDate(page, control, value) {
 async function captureInvoiceDecision(page, screen, variant, row) {
   await capture(page, screen, variant, false, {
     target: row,
-    tablePosition: variant === "phone" ? "end" : "start",
+    tablePosition: "end",
   });
 }
 async function runC2InvoiceScenes(page, variant, reference) {
@@ -606,6 +611,7 @@ async function runC2InvoiceScenes(page, variant, reference) {
   await field(page, "Upload a PDF or photo").setInputFiles(
     resolve(root, "docs/redesign-screenshots/pr1/fictional-fv-20417.png"),
   );
+  await expect(page.locator(".invoice-reading-state")).toBeVisible();
   await page.clock.runFor(3000);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
   // The original six-line fictional invoice is unchanged. Pack presentation
@@ -629,6 +635,10 @@ async function runC2InvoiceScenes(page, variant, reference) {
   await expect(row(0)).toContainText("OK");
   await captureInvoiceDecision(page, "invoice-as-ordered", variant, row(0));
   await expect(row(5)).toContainText("Short");
+  const chipRemainder = page
+    .locator(".invoice-order-table tr[data-order-line]")
+    .filter({ hasText: "Potato Chips" });
+  await button(chipRemainder, "Short").click();
   await captureInvoiceDecision(page, "invoice-short", variant, row(5));
   const missingID = await page
     .locator(".invoice-order-table tr[data-order-line]")
@@ -757,6 +767,7 @@ try {
       window.print = () => {};
     });
     const page = await context.newPage();
+    activePage = page;
     page.setDefaultTimeout(30000);
     page.on("pageerror", (error) =>
       errors.push({ variant, message: error.message }),
@@ -796,6 +807,13 @@ try {
     await context.close();
   }
 } catch (error) {
+  if (activePage) {
+    await activePage.screenshot({
+      path: resolve(root, "../scratch/c2-capture-failure.png"),
+      fullPage: true,
+    });
+    console.error(await activePage.locator("body").innerText());
+  }
   errors.push({ stage: "capture", message: error.stack ?? error.message });
 } finally {
   const expected = variants.length * (selectedScreens?.length ?? scenes.length);

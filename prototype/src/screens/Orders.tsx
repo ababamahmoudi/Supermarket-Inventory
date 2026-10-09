@@ -141,12 +141,11 @@ export default function Orders() {
   const money = (
     value: string | null,
     currency = state.config.company.currency,
-    decimals = 2,
   ) =>
     value === null ? (
       <span className="muted">—</span>
     ) : (
-      <Money value={value} currency={currency} decimals={decimals} />
+      <Money value={value} currency={currency} decimals={2} />
     );
   const run = (mutator: (draft: typeof state) => void, success: string) => {
     try {
@@ -531,9 +530,7 @@ export default function Orders() {
                                         )}
                                 </span>
                               </td>
-                              <td className="numeric">
-                                {money(row.caseCost, undefined, 4)}
-                              </td>
+                              <td className="numeric">{money(row.caseCost)}</td>
                               <td className="numeric">{money(row.total)}</td>
                             </tr>
                           );

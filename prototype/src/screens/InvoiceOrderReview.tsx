@@ -238,13 +238,13 @@ export function InvoiceOrderReview() {
                             <Money
                               value={row.previous_unit_cost ?? "0"}
                               currency={state.config.company.currency}
-                              decimals={4}
+                              decimals={2}
                             />{" "}
                             →{" "}
                             <Money
                               value={row.new_unit_cost}
                               currency={state.config.company.currency}
-                              decimals={4}
+                              decimals={2}
                             />
                           </p>
                           <p className="invoice-order-costs">
@@ -256,13 +256,13 @@ export function InvoiceOrderReview() {
                             <Money
                               value={row.previous_case_cost ?? "0"}
                               currency={state.config.company.currency}
-                              decimals={4}
+                              decimals={2}
                             />{" "}
                             →{" "}
                             <Money
                               value={row.new_case_cost}
                               currency={state.config.company.currency}
-                              decimals={4}
+                              decimals={2}
                             />
                           </p>
                           {row.accepted_units > 0 && (
@@ -361,10 +361,7 @@ export function InvoiceOrderReview() {
                       <Badge tone="danger">
                         {row.absent
                           ? t("Not delivered", "تحویل نشده")
-                          : t(
-                              "Ordered units not invoiced",
-                              "واحدهای سفارش که فاکتور نشده‌اند",
-                            )}
+                          : t("Short", "کسری")}
                       </Badge>
                       <SegmentedControl
                         aria-label={t(

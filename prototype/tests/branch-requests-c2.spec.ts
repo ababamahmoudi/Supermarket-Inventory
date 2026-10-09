@@ -264,6 +264,8 @@ for (const language of ["en", "fa"] as const) {
       background: getComputedStyle(element).backgroundColor,
       paperBackground: getComputedStyle(element.ownerDocument.body)
         .backgroundColor,
+      canvasBackground: getComputedStyle(element.ownerDocument.documentElement)
+        .backgroundColor,
       thead: getComputedStyle(element.querySelector("thead")!).display,
       rowBreak: getComputedStyle(element.querySelector("tr")!).breakInside,
       pages: Array.from(element.ownerDocument.styleSheets)
@@ -280,10 +282,12 @@ for (const language of ["en", "fa"] as const) {
     expect(styles.color).toBe("rgb(0, 0, 0)");
     expect(styles.background).toBe("rgb(255, 255, 255)");
     expect(styles.paperBackground).toBe("rgb(255, 255, 255)");
+    expect(styles.canvasBackground).toBe("rgb(255, 255, 255)");
     expect(styles.thead).toBe("table-header-group");
     expect(styles.rowBreak).toBe("avoid");
     expect(styles.pages.join(" ")).toContain("15mm");
-    expect(styles.pages.join(" ")).toContain("a4 portrait");
+    expect(styles.pages.join(" ")).toMatch(/size:\s*a4(?:\s+portrait)?\s*;/i);
+    expect(styles.pages.join(" ")).not.toMatch(/\blandscape\b/i);
     const pdf = await page.pdf({
       preferCSSPageSize: true,
       printBackground: true,

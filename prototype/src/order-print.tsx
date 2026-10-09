@@ -3,6 +3,7 @@ import {
   OperationalPrintDocument,
 } from "./operational-print";
 import { formatMoney } from "./formatters";
+import { ProductName, UnitSize } from "./presentation";
 import { branchLabel } from "./settings";
 import type { Order } from "./orders";
 import type { CompanyConfig, Language } from "./types";
@@ -16,10 +17,10 @@ export function OrderPrintDocument({
   config: CompanyConfig;
   language: Language;
 }) {
-  const amount = (value: string | null, decimals = 2) =>
+  const amount = (value: string | null) =>
     value === null
       ? "—"
-      : formatMoney(value, { currency: order.currency, decimals });
+      : formatMoney(value, { currency: order.currency, decimals: 2 });
   return (
     <div className="order-print-output">
       <OperationalPrintDocument
@@ -92,10 +93,22 @@ export function OrderPrintDocument({
             {order.lines.map((line) => (
               <tr key={line.id}>
                 <td>
-                  <BilingualPrintText
-                    en={`${line.name_en} ${line.unit_size}`}
-                    fa={`${line.name_fa || line.name_en} ${line.unit_size}`}
+                  <ProductName
+                    product={line}
+                    language={line.name_fa ? language : "en"}
                   />
+                  {line.unit_size &&
+                    !line.name_en
+                      .replace(/\s/g, "")
+                      .toLocaleLowerCase()
+                      .includes(
+                        line.unit_size.replace(/\s/g, "").toLocaleLowerCase(),
+                      ) && (
+                      <UnitSize
+                        className="order-print-unit-size"
+                        value={line.unit_size}
+                      />
+                    )}
                   <bdi dir="ltr">
                     {line.supplier_item_code || line.product_code}
                   </bdi>
@@ -110,10 +123,10 @@ export function OrderPrintDocument({
                   <bdi dir="ltr">{line.ordered_units}</bdi>
                 </td>
                 <td>
-                  <bdi dir="ltr">{amount(line.expected_unit_cost, 4)}</bdi>
+                  <bdi dir="ltr">{amount(line.expected_unit_cost)}</bdi>
                 </td>
                 <td>
-                  <bdi dir="ltr">{amount(line.expected_case_cost, 4)}</bdi>
+                  <bdi dir="ltr">{amount(line.expected_case_cost)}</bdi>
                 </td>
                 <td>
                   <bdi dir="ltr">{amount(line.expected_line_total)}</bdi>

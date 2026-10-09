@@ -138,6 +138,10 @@
   display: block;
   margin-block-start: 6px;
 }
+.order-print-table .order-print-unit-size {
+  display: block;
+  margin-block-start: 4px;
+}
 .order-print-total {
   display: flex;
   justify-content: flex-end;

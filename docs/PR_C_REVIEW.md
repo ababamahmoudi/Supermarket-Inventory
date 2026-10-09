@@ -1,8 +1,8 @@
 # Pull requests C1 and C2 — store workflow review
 
-C1 branch: **`feat/prototype-c1-receiving-locations`**. Combined C1 + C2 working branch: **`feat/prototype-c2-orders-requests`**. C1 is [pull request #14](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/14), final C1 tip `95f4fe4`. C2 is stacked on C1 and includes approved B plus C1; its new implementation and evidence are still being verified. Ali approved building both without a review pause; neither pull request authorizes a merge to main.
+C1 branch: **`feat/prototype-c1-receiving-locations`**. Combined C1 + C2 working branch: **`feat/prototype-c2-orders-requests`**. C1 is [pull request #14](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/14), final C1 tip `95f4fe4`. C2 is [draft pull request #15](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/15), stacked on C1 and includes approved B plus C1; its new implementation and evidence are still being verified. Ali approved building both without a review pause; neither pull request authorizes a merge to main.
 
-C1 unit, lint and build checks have run; its final four-variant screenshot capture passed. Focused browser checks passed. The earlier frozen complete browser run recorded 246 passed, four skipped and two deactivation failures; the corrected desktop/phone deactivation checks both passed. The full corrected C1 [CI run 37958175378](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/37958175378) passed both jobs. C2 implementation is in progress; its final results and gallery will be recorded after verification. Screenshots are captured through real interface actions; no business state or images are fabricated to make a screen pass.
+C1 unit, lint and build checks have run; its final four-variant screenshot capture passed. Focused browser checks passed. The earlier frozen complete browser run recorded 246 passed, four skipped and two deactivation failures; the corrected desktop/phone deactivation checks both passed. The full corrected C1 [CI run 37958175378](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/37958175378) passed both jobs. C2 unit/lint/build checks passed; final browser and screenshot results will be recorded after the corrected frozen build completes. Screenshots are captured through real interface actions; no business state or images are fabricated to make a screen pass.
 
 The app remains a browser prototype with fictional data. Saved records stay in this browser on this computer. Docker, a backend, real AI and a physical printer are unnecessary for the browser review. Inventory is now a separate later paid phase: these changes record receiving and transfers, but show no stock levels or opening counts.
 
@@ -22,7 +22,7 @@ node --version
 
 The branch command must print `feat/prototype-c2-orders-requests`. `Already up to date` is normal. Node must be **22.22.2 or newer in the 22.x series, below 23**. If Git says local changes would be overwritten or branches have diverged, stop and share the exact message; keep your files. Do not use `git reset --hard`.
 
-These C2 commands are for its published review branch once its validation is complete. You do not need to merge pending pull requests: C2 includes C1 and approved B. To inspect only C1, substitute `feat/prototype-c1-receiving-locations` in the three Git commands.
+The C2 review branch is published; its final browser/gallery verification is still running. You do not need to merge pending pull requests: C2 includes C1 and approved B. To inspect only C1, substitute `feat/prototype-c1-receiving-locations` in the three Git commands.
 
 If you already used a supported Node 22 for B, keep using it. Otherwise, the following installs **Node 22.23.3 in your own home folder**, without replacing Ubuntu's system Node. Run it from the project folder:
 
@@ -157,7 +157,7 @@ These match the implemented C2 interface; the final screenshots and results will
 Use the [unchanged fictional FV-20417 invoice image](redesign-screenshots/pr1/fictional-fv-20417.png): open the link and save the image on your Ubuntu computer. After placing the order above, open **Invoices**, browse to that image from the dropzone and wait for simulated reading. Click a product name if its review fields are collapsed. In each Fava/Sumac/Juice/Chips line, check **Units per case 12** and choose **Quantity unit → Cases**. The respective invoiced Cases are **2 / 1 / 3 / 1**; **Delivered quantity** always remains units, so enter **8** for Chips. In **Compare with order → Order (optional)**, select the reference of the order you just placed. Then review these differences:
 
 - **As ordered:** quantity/product match is OK.
-- **Fewer delivered:** use the existing **Short** flow for invoiced goods that did not arrive; only delivered units enter Received and only missing invoiced amounts/tax are withheld.
+- **Fewer delivered:** Chips has 12 invoiced units and 8 delivered, so four units use the existing **Short** deduction. Also choose **Short** in its separate remaining-order row, recording how the four outstanding ordered units will be handled. This order decision adds no second invoice deduction; only delivered units enter Received.
 - **Ordered but absent from invoice:** Black Tea was ordered but is absent; choose **Back-ordered** (the other allowed decisions are **Short** or **Cancelled**). This does not deduct an amount that was never invoiced.
 - **Extra kept:** Lavash Bread was not in this order; choose **Keep it (we pay for it)**; the actual delivery/payable is included.
 - **Extra refused:** Dried Barberries were not in this order; choose **Refused / sent back with the driver**; it is excluded from payable and Received, with original evidence retained.
@@ -198,6 +198,8 @@ The real Regular/Promo print portals are also exported as A4 PDFs in each varian
 | Promo          | [PDF](redesign-screenshots/pr-c1/promo-labels-en-light.pdf)   | [PDF](redesign-screenshots/pr-c1/promo-labels-en-dark.pdf)   | [PDF](redesign-screenshots/pr-c1/promo-labels-fa-light.pdf)   | [PDF](redesign-screenshots/pr-c1/promo-labels-phone.pdf)   |
 
 [Capture metadata](redesign-screenshots/pr-c1/capture-results.json) records production HTML/compiled-entry hashes, browser errors, widths, native-control visibility, KPI count, sidebar scrolling, table column geometry and print-portal millimetres. The final capture from the corrected immutable production build passed **24 states/eight PDFs with zero runtime/layout/geometry failures**. All four variants used the same compiled entry and HTML, with hashes in the report. Representative light/dark/Persian/phone images and the actual exported Promo PDF were visually inspected. Wide phone tables remain inside their scroll container; swipe sideways inside them to see the remaining columns.
+
+C2 checks so far: **525 unit tests passed across 42 files**, with all seed pricing cases retained; lint and typed production build passed. The final corrected full browser suite and clean 64-image/eight-PDF capture are still pending. The corrected C2 sidebar uses collapsible groups up to 1020px high, with all destinations reachable without sidebar scrolling; standard and comfortable 1080p layouts were checked.
 
 ## Remaining scope and input from Ali
 

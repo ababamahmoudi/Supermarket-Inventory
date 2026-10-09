@@ -47,6 +47,8 @@
 }
 .operational-print-document th {
   font-size: 9pt;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .operational-print-document thead {
   display: table-header-group;
@@ -83,6 +85,10 @@
   margin: 15mm;
 }
 @media print {
+  html:has(.operational-print-output) {
+    background: #fff !important;
+    color-scheme: light;
+  }
   body:has(.operational-print-output) {
     background: #fff !important;
     color: #000 !important;

@@ -57,14 +57,13 @@ export default function SupplierItems({
   const history = supervisor
     ? rows.find((row) => row.id === historyId)
     : undefined;
-  const money = (value: string | null, decimals = 2) =>
+  const money = (value: string | null) =>
     value === null ? (
       <span className="muted">—</span>
     ) : (
       <Money
         className="money"
         value={value}
-        decimals={decimals}
         currency={state.config.company.currency}
       />
     );
@@ -301,7 +300,7 @@ export default function SupplierItems({
               <div className="supplier-item-quote">
                 <span>
                   {t("Expected unit cost", "هزینه مورد انتظار واحد")}:{" "}
-                  {money(history.financial.quoted_unit_cost_before_tax, 4)}
+                  {money(history.financial.quoted_unit_cost_before_tax)}
                 </span>
                 <small className="muted">
                   {t("Quoted", "قیمت اعلام‌شده")} ·{" "}
@@ -363,10 +362,10 @@ export default function SupplierItems({
                       </td>
                       <td>{pack(purchase.units_per_case)}</td>
                       <td className="numeric">
-                        {money(purchase.case_cost_before_tax, 4)}
+                        {money(purchase.case_cost_before_tax)}
                       </td>
                       <td className="numeric">
-                        {money(purchase.unit_cost_before_tax, 4)}
+                        {money(purchase.unit_cost_before_tax)}
                       </td>
                     </tr>
                   ))}
