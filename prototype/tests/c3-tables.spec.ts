@@ -289,7 +289,7 @@ test("browser Back restores the Products search and Orders status without mutati
   await page
     .locator(".catalog-products-table tbody tr")
     .first()
-    .getByRole("button", { name: "View", exact: true })
+    .getByRole("button", { name: /^View / })
     .click();
   await expect(page).toHaveURL(/#product\?code=/);
   await page.goBack();
@@ -350,7 +350,7 @@ test("external payment is unchanged until explicit money confirmation, and cance
   await page
     .locator(".payables-overview tbody tr")
     .filter({ hasText: "Fresh Valley Foods" })
-    .getByRole("button", { name: "View", exact: true })
+    .getByRole("button", { name: /^View / })
     .click();
   await page
     .getByRole("button", { name: "Record external payment", exact: true })

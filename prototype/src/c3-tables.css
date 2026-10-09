@@ -61,6 +61,14 @@
   overflow: visible;
 }
 @media screen and (min-width: 761px) {
+  :root
+    .payables-report
+    .payables-ledger-table.ui-data-table
+    table.has-defined-columns {
+    inline-size: 100%;
+    min-inline-size: 0;
+    table-layout: fixed;
+  }
   :root .order-form-card,
   :root .order-notes-card,
   :root .product-page,
