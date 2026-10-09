@@ -185,7 +185,10 @@ export function RequestPickingList({
           {request.items.map((item) => (
             <tr key={item.id}>
               <td>
-                <span className="operational-print-check" aria-hidden="true" />
+                <span
+                  className={`operational-print-check${item.sent_quantity && new Decimal(item.sent_quantity).gt(0) ? " is-checked" : ""}`}
+                  aria-hidden="true"
+                />
               </td>
               <td>
                 {item.kind === "catalog" ? (
@@ -200,11 +203,19 @@ export function RequestPickingList({
                 )}
               </td>
               <td>
-                <bdi dir="ltr">{item.quantity}</bdi>{" "}
+                <bdi dir="ltr">{item.sent_quantity ?? item.quantity}</bdi>{" "}
                 <BilingualPrintText
                   en={item.quantity_unit === "cases" ? "Cases" : "Units"}
                   fa={item.quantity_unit === "cases" ? "کارتن" : "واحد"}
                 />
+                {item.sent_quantity !== undefined && (
+                  <small>
+                    <BilingualPrintText
+                      en={`Requested: ${item.quantity}`}
+                      fa={`درخواست‌شده: ${item.quantity}`}
+                    />
+                  </small>
+                )}
                 {item.units_per_case && (
                   <small>
                     <BilingualPrintText

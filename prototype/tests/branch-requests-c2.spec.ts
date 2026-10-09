@@ -93,6 +93,25 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await expect(printable).not.toContainText("Short: 1");
   await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await expect(page.locator(".operational-print-output")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Print picking list", exact: true })
+    .click();
+  await expect(
+    page
+      .locator(".operational-print-document tbody tr")
+      .first()
+      .locator("td")
+      .nth(2)
+      .locator("bdi")
+      .first(),
+  ).toHaveText("1");
+  await expect(page.locator(".operational-print-check.is-checked")).toHaveCount(
+    2,
+  );
+  await expect(page.locator(".operational-print-document")).toContainText(
+    "Requested: 2",
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await signIn(page, "Floor Worker");
   await page.goto("/#requests");
   await page

@@ -1,7 +1,9 @@
-import Decimal from "decimal.js";
+import DecimalLibrary from "decimal.js";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import type { Branch, DemoState, Role } from "./types";
+// Keep quantity arithmetic independent of the pricing engine's Decimal settings.
+const Decimal = DecimalLibrary.clone({ precision: 80 });
 
 export interface BranchRequestContext {
   company_id: string;
@@ -210,7 +212,10 @@ export function requestQuantityUnits(
     if (!qty.isInteger() || qty.gt(Number.MAX_SAFE_INTEGER)) fail("quantity");
     return null;
   }
-  const units = unit === "cases" ? qty.times(pack!) : qty;
+  const ExactDecimal = Decimal.clone({
+    precision: Math.max(80, qty.sd() + String(pack ?? 1).length + 8),
+  });
+  const units = unit === "cases" ? new ExactDecimal(qty).times(pack!) : qty;
   if (!units.isInteger() || units.gt(Number.MAX_SAFE_INTEGER)) fail("quantity");
   return units.toNumber();
 }
@@ -253,14 +258,28 @@ function items(
       line.units_per_case,
     );
     const previous = existing?.items.find((item) => item.id === id);
+    const sourceItem = previous?.source_item_id
+      ? state.branch_requests
+          ?.find(
+            (request) =>
+              request.company_id === state.config.company.seed_key &&
+              request.id === existing?.source_request_id,
+          )
+          ?.items.find((item) => item.id === previous.source_item_id)
+      : undefined;
+    const sameDimension =
+      (sourceItem?.normalized_units !== null &&
+        sourceItem !== undefined &&
+        normalized_units !== null) ||
+      (previous?.quantity_unit === line.quantity_unit &&
+        previous?.units_per_case === line.units_per_case);
     const retainedSource =
       previous &&
       previous.kind === line.kind &&
       previous.product_code === product?.code &&
       previous.free_text ===
         (line.kind === "free_text" ? line.free_text!.trim() : undefined) &&
-      previous.quantity_unit === line.quantity_unit &&
-      previous.units_per_case === line.units_per_case
+      sameDimension
         ? previous.source_item_id
         : undefined;
     return {
@@ -754,7 +773,7 @@ export function availableBranchRequestResidual(
   request: BranchRequest,
 ) {
   return branchRequestResidual(request).flatMap((item) => {
-    const copied = (state.branch_requests ?? [])
+    const copies = (state.branch_requests ?? [])
       .filter(
         (entry) =>
           entry.company_id === request.company_id &&
@@ -762,8 +781,55 @@ export function availableBranchRequestResidual(
           entry.status !== "cancelled",
       )
       .flatMap((entry) => entry.items)
-      .filter((entry) => entry.source_item_id === item.id)
-      .reduce((sum, entry) => sum.plus(entry.quantity), new Decimal(0));
+      .filter((entry) => entry.source_item_id === item.id);
+    if (item.normalized_units !== null) {
+      const copiedUnits = copies.reduce(
+        (sum, entry) =>
+          sum.plus(
+            requestQuantityUnits(
+              entry.quantity,
+              entry.quantity_unit,
+              entry.units_per_case,
+            ) ?? 0,
+          ),
+        new Decimal(0),
+      );
+      const remainingUnits = new Decimal(item.normalized_units).minus(
+        copiedUnits,
+      );
+      if (!remainingUnits.gt(0)) return [];
+      const cases =
+        item.quantity_unit === "cases"
+          ? remainingUnits.div(item.units_per_case!)
+          : remainingUnits;
+      // Some packs (e.g. three) cannot express a residual unit as an exact
+      // finite decimal case fraction. Keep the truthful whole-unit remainder.
+      let asCases = false;
+      if (item.quantity_unit === "cases") {
+        try {
+          asCases =
+            requestQuantityUnits(
+              cases.toFixed(),
+              "cases",
+              item.units_per_case,
+            ) === remainingUnits.toNumber();
+        } catch {
+          /* A recurring case fraction stays in whole Units. */
+        }
+      }
+      return [
+        {
+          ...item,
+          quantity: (asCases ? cases : remainingUnits).toFixed(),
+          quantity_unit: asCases ? ("cases" as const) : ("units" as const),
+          normalized_units: remainingUnits.toNumber(),
+        },
+      ];
+    }
+    const copied = copies.reduce(
+      (sum, entry) => sum.plus(entry.quantity),
+      new Decimal(0),
+    );
     const remaining = new Decimal(item.quantity).minus(copied);
     return remaining.gt(0)
       ? [

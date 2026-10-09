@@ -65,6 +65,18 @@
   width: 4mm;
   height: 4mm;
   border: 0.3mm solid #000;
+  position: relative;
+}
+.operational-print-check.is-checked::after {
+  content: "";
+  position: absolute;
+  left: 1mm;
+  top: 0.3mm;
+  width: 1mm;
+  height: 2mm;
+  border: solid #000;
+  border-width: 0 0.4mm 0.4mm 0;
+  transform: rotate(45deg);
 }
 @page operational-document {
   size: A4 portrait;

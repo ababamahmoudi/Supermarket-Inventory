@@ -294,7 +294,7 @@ test("worker ordering is opt-in and location scoped; switching location discards
       name: "Allow Floor Workers to use Orders",
       exact: true,
     })
-    .check();
+    .click();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await signIn(page, "Floor Worker");
   await page.goto("/#orders");

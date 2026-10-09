@@ -59,6 +59,9 @@ describe("Branch request quantities", () => {
     expect(requestQuantityUnits("1.5", "cases", 12)).toBe(18);
     expect(requestQuantityUnits("3", "cases")).toBeNull();
     expect(requestQuantityUnits("18", "units")).toBe(18);
+    expect(() =>
+      requestQuantityUnits(`0.${"9".repeat(120)}`, "cases", 12),
+    ).toThrow("quantity");
   });
   it.each([
     ["0", "units", undefined],
@@ -75,6 +78,58 @@ describe("Branch request quantities", () => {
   });
 });
 describe("retained, endpoint-scoped Branch requests", () => {
+  it.each([
+    [12, "3", "0.75", "cases", 9],
+    [3, "1", "2", "units", 2],
+  ] as const)(
+    "normalizes edited copied Units against source Cases with pack %s without copying twice",
+    (pack, units, remaining, remainingUnit, remainingUnits) => {
+      const { state, source, target, input } = fixture();
+      input.items = [{ ...input.items[0], units_per_case: pack }];
+      const original = saveBranchRequestDraft(state, source, input);
+      sendBranchRequest(state, source, original.id, 1);
+      markBranchRequestSent(state, target, original.id, 2, [
+        {
+          item_id: original.items[0].id,
+          decision: "short",
+          sent_quantity: "1",
+        },
+      ]);
+      const copy = copyBranchRequestResidual(state, source, original.id, 3);
+      saveBranchRequestDraft(state, source, {
+        id: copy.id,
+        expected_revision: 1,
+        from_branch: copy.from_branch,
+        to_branch: copy.to_branch,
+        items: [
+          {
+            id: copy.items[0].id,
+            kind: "catalog",
+            product_code: copy.items[0].product_code,
+            quantity: units,
+            quantity_unit: "units",
+            units_per_case: pack,
+          },
+        ],
+      });
+      expect(copy.items[0].source_item_id).toBe(original.items[0].id);
+      const available = availableBranchRequestResidual(state, original);
+      expect(available[0]).toMatchObject({
+        quantity: remaining,
+        quantity_unit: remainingUnit,
+        normalized_units: remainingUnits,
+      });
+      const second = copyBranchRequestResidual(state, source, original.id, 3);
+      expect(second.items[0]).toMatchObject({
+        quantity: remaining,
+        quantity_unit: remainingUnit,
+      });
+      markBranchRequestReceived(state, source, original.id, 3, [
+        { item_id: original.items[0].id, decision: "received" },
+      ]);
+      expect(availableBranchRequestResidual(state, original)).toEqual([]);
+    },
+  );
   it("retains residual allocation through draft edits and copies only the unallocated remainder", () => {
     const { state, source, target, input } = fixture();
     input.items = input.items.slice(0, 1);

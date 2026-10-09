@@ -79,7 +79,12 @@ export function currentInvoiceOrderComparison(
   if (state.invoice.status === "posted")
     return state.invoice.order_comparison ?? null;
   const order = linkedInvoiceOrder(state);
-  return order ? compareInvoiceOrder(order, state.invoice) : null;
+  if (!order) return null;
+  try {
+    return compareInvoiceOrder(order, state.invoice);
+  } catch {
+    return null;
+  }
 }
 
 export function setInvoiceOrder(
@@ -106,8 +111,8 @@ export function setInvoiceOrder(
   if (order) {
     state.invoice.order_id = order.id;
     state.invoice.order_review_version = order.version;
-    const comparison = compareInvoiceOrder(order, state.invoice);
-    for (const row of comparison.lines)
+    const comparison = currentInvoiceOrderComparison(state);
+    for (const row of comparison?.lines ?? [])
       state.invoice.lines[row.invoice_line_index].order_item_id =
         row.order_line_id;
   }

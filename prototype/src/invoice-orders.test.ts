@@ -7,6 +7,7 @@ import {
   invoiceBlockers,
   postInvoice,
   recalculateInvoice,
+  rememberInvoiceSupplierItem,
   receiveShort,
   refusedTotals,
   setInvoiceLineQuantity,
@@ -20,7 +21,7 @@ import {
   setInvoiceOrder,
 } from "./invoice-orders";
 import { supplierRecords } from "./supplier-editor";
-import { costPerUnit } from "./supplier-items";
+import { costPerUnit, saveSupplierItem } from "./supplier-items";
 import { receivedLog, setInvoiceLocation } from "./received";
 import { setManualPriceMarker } from "./manual-prices";
 import type { DemoState, InvoiceLine } from "./types";
@@ -126,6 +127,109 @@ const receipts = (state: DemoState) =>
   }).filter((row) => row.invoice_id === state.invoice.id);
 
 describe("invoice pack snapshots and payable precision", () => {
+  it("remembers a unique uploaded supplier item's pack without changing parsed quantities, costs or explicit metadata", () => {
+    const state = initialState();
+    state.invoice.status = "empty";
+    state.invoices = [];
+    state.supplier_items = [];
+    const original = createInvoice(state, "Branch 1");
+    const parsed = original.lines.find((line) => line.product_code === "0002")!;
+    const item = saveSupplierItem(
+      state,
+      {
+        company_id: original.company_id,
+        role: "supervisor",
+        branch: "all",
+        actor: "Ali",
+      },
+      original.supplier,
+      {
+        product_code: "0002",
+        supplier_item_code: "UPLOAD-PACK-12",
+        units_per_case: 12,
+      },
+    );
+    const uploaded = createInvoice(state, "Branch 1");
+    const remembered = uploaded.lines.find(
+      (line) => line.product_code === "0002",
+    )!;
+    expect(remembered).toEqual({
+      ...parsed,
+      supplier_item_id: item.id,
+      supplier_item_code: "UPLOAD-PACK-12",
+      units_per_case: 12,
+    });
+    const explicit = {
+      ...parsed,
+      supplier_item_code: "UPLOAD-PACK-12",
+      units_per_case: 6,
+    };
+    expect(rememberInvoiceSupplierItem(state, uploaded, explicit)).toEqual({
+      ...explicit,
+      supplier_item_id: item.id,
+    });
+    const differentSku = {
+      ...parsed,
+      supplier_item_code: "PARSED-DIFFERENT-SKU",
+      units_per_case: 24,
+    };
+    expect(rememberInvoiceSupplierItem(state, uploaded, differentSku)).toEqual(
+      differentSku,
+    );
+  });
+  it("declines ambiguous uploaded SKU packs and never borrows another company or supplier's pack", () => {
+    const state = initialState();
+    state.invoice.status = "empty";
+    state.invoices = [];
+    state.supplier_items = [];
+    const original = createInvoice(state, "Branch 1");
+    const parsed = original.lines.find((line) => line.product_code === "0002")!;
+    const context = {
+      company_id: original.company_id,
+      role: "supervisor" as const,
+      branch: "all",
+      actor: "Ali",
+    };
+    const first = saveSupplierItem(state, context, original.supplier, {
+      product_code: "0002",
+      supplier_item_code: "UPLOAD-6",
+      units_per_case: 6,
+    });
+    saveSupplierItem(state, context, original.supplier, {
+      product_code: "0002",
+      supplier_item_code: "UPLOAD-12",
+      units_per_case: 12,
+    });
+    expect(
+      createInvoice(state, "Branch 1").lines.find(
+        (line) => line.product_code === "0002",
+      ),
+    ).toEqual(parsed);
+    state.supplier_items = [
+      { ...first, company_id: "another-company", units_per_case: 48 },
+    ];
+    expect(
+      createInvoice(state, "Branch 1").lines.find(
+        (line) => line.product_code === "0002",
+      ),
+    ).toEqual(parsed);
+    const otherSupplier = supplierRecords(state).find(
+      (supplier) => supplier.name !== original.supplier,
+    )!;
+    state.supplier_items = [
+      {
+        ...first,
+        supplier_id: otherSupplier.id,
+        supplier_name: otherSupplier.name,
+        units_per_case: 48,
+      },
+    ];
+    expect(
+      createInvoice(state, "Branch 1").lines.find(
+        (line) => line.product_code === "0002",
+      ),
+    ).toEqual(parsed);
+  });
   it("bills the retained $19.99 case quote exactly across 500 cases rather than reconstructing rounded unit cost", () => {
     const state = draft();
     const line = state.invoice.lines[0];
@@ -175,6 +279,22 @@ describe("invoice pack snapshots and payable precision", () => {
 });
 
 describe("invoice compared with its order", () => {
+  it("keeps an unfinished cost or pack edit reviewable instead of throwing while the form is typed", () => {
+    const state = draft();
+    addOrder(state);
+    link(state);
+    state.invoice.lines[0].unit_cost_before_tax = "";
+    expect(() => currentInvoiceOrderComparison(state)).not.toThrow();
+    expect(currentInvoiceOrderComparison(state)).toBeNull();
+    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain("cost");
+    expect(() =>
+      setInvoiceOrder(state, "supervisor", "Branch 1", "order-1"),
+    ).not.toThrow();
+    state.invoice.lines[0].unit_cost_before_tax = "0.9800";
+    expect(currentInvoiceOrderComparison(state)?.order_id).toBe("order-1");
+    state.invoice.lines[0].units_per_case = 0;
+    expect(currentInvoiceOrderComparison(state)).toBeNull();
+  });
   it("records an as-ordered invoice once with an immutable comparison, no invented alert, and Received status", () => {
     const state = draft();
     const order = addOrder(state);

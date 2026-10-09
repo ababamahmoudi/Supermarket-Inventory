@@ -612,6 +612,7 @@ export default function Invoices() {
       role!,
       branch,
       index,
+      user?.name ?? "",
     );
     if (preview.ledger.every((entry) => oldLedgerIds.has(entry.id))) {
       setMessage(
@@ -623,7 +624,16 @@ export default function Invoices() {
       return;
     }
     updateInvoice((draft) => {
-      receiveShort(draft, code, quantity, receipt, role!, branch, index);
+      receiveShort(
+        draft,
+        code,
+        quantity,
+        receipt,
+        role!,
+        branch,
+        index,
+        user?.name ?? "",
+      );
     });
     setMessage(
       `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} \u2066${money(restored)}\u2069`,
@@ -2227,6 +2237,7 @@ export default function Invoices() {
                                     const previous = previousReceiptCost(
                                       state,
                                       line.product_code,
+                                      line,
                                     );
                                     const lower =
                                       previous &&
@@ -2600,8 +2611,8 @@ export default function Invoices() {
                           {t("Old", "قبلی")}{" "}
                           <Money
                             value={
-                              previousReceiptCost(state, product.code)?.cost ??
-                              product.last_cost_before_tax
+                              previousReceiptCost(state, product.code, line)
+                                ?.cost ?? product.last_cost_before_tax
                             }
                             currency={state.config.company.currency}
                           />{" "}

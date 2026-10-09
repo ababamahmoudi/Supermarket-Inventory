@@ -132,7 +132,11 @@ export function InvoiceOrderReview() {
                   item.company_id === invoice.company_id &&
                   item.code === line.product_code,
               );
-              const previous = previousReceiptCost(state, line.product_code);
+              const previous = previousReceiptCost(
+                state,
+                line.product_code,
+                line,
+              );
               const lower =
                 previous &&
                 /^\d+(?:\.\d{1,4})?$/.test(line.unit_cost_before_tax) &&

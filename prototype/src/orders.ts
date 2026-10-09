@@ -43,6 +43,7 @@ export interface OrderReceiptInput {
   residual: { order_line_id: string; decision: OrderDecision }[];
 }
 export interface OrderReceiptEvent extends OrderReceiptInput {
+  receiving_branch: Branch;
   at: string;
   by: string;
   lines: (OrderReceiptInput["lines"][number] & {
@@ -403,11 +404,12 @@ function audit(
   action: string,
   order: Order,
   before?: Order,
+  actingBranch = order.branch,
 ): void {
   state.activity.unshift({
     id: createId("order-activity"),
     company_id: order.company_id,
-    branch: order.branch,
+    branch: actingBranch,
     action,
     by: context.actor,
     actor_username: context.username,
@@ -712,7 +714,7 @@ function receiptOrder(
 ): { order: Order; invoice: DemoInvoice } {
   if (
     context.company_id !== state.config.company.seed_key ||
-    context.role === "cashier"
+    (context.role !== "supervisor" && context.role !== "floor_worker")
   )
     fail("permission");
   const order =
@@ -729,7 +731,9 @@ function receiptOrder(
   if (
     invoice.order_id !== id ||
     invoice.order_comparison?.order_id !== id ||
-    effectiveInvoiceLocation(state, invoice) !== order.branch ||
+    (input.kind === "invoice"
+      ? effectiveInvoiceLocation(state, invoice) !== order.branch
+      : invoice.branch !== order.branch) ||
     !supplierRecords(state).some(
       (supplier) =>
         supplier.id === order.supplier_id &&
@@ -738,10 +742,21 @@ function receiptOrder(
     )
   )
     fail("scope");
+  const receivingBranch = effectiveInvoiceLocation(state, invoice);
+  if (!configuredBranches(state.config).includes(receivingBranch))
+    fail("scope");
+  if (
+    input.kind === "short_delivery" &&
+    (!order.linked_invoice_ids.includes(invoice.id) ||
+      !order.receipts.some(
+        (event) => event.kind === "invoice" && event.invoice_id === invoice.id,
+      ))
+  )
+    fail("receipt");
   const actingBranch =
     input.kind === "invoice"
       ? (invoice.handling_branch ?? invoice.branch)
-      : order.branch;
+      : receivingBranch;
   if (
     context.role !== "supervisor" &&
     (context.branch === "all" ||
@@ -752,7 +767,12 @@ function receiptOrder(
     fail("scope");
   if (
     context.role === "supervisor" &&
-    !locationAllowed(state, { ...context, branch: "all" }, order.branch)
+    !locationAllowed(
+      state,
+      { ...context, branch: "all" },
+      receivingBranch,
+      true,
+    )
   )
     fail("scope");
   return { order, invoice };
@@ -905,7 +925,7 @@ export function applyInvoiceToOrder(
   input: OrderReceiptInput,
 ): Order {
   validateOrderReceipt(state, context, id, input);
-  const { order } = receiptOrder(state, context, id, input);
+  const { order, invoice } = receiptOrder(state, context, id, input);
   if (
     order.receipts.some(
       (event) =>
@@ -941,6 +961,7 @@ export function applyInvoiceToOrder(
   order.receipts.push({
     ...structuredClone(input),
     lines,
+    receiving_branch: effectiveInvoiceLocation(state, invoice),
     at: now(),
     by: context.actor,
   });
@@ -958,6 +979,7 @@ export function applyInvoiceToOrder(
       : "Receive order Short delivery",
     order,
     before,
+    effectiveInvoiceLocation(state, invoice),
   );
   return order;
 }

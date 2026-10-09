@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { demoSeed as demo } from "./config";
+import { configSeed, demoSeed as demo } from "./config";
 import { calculatePrice } from "./pricing";
 import { effectivePrice } from "./catalog";
 import { createId } from "./ids";
@@ -13,6 +13,7 @@ import {
   costPerUnit,
   packUnits,
   resolveSupplierItem,
+  supplierItemFacts,
 } from "./supplier-items";
 import {
   invoiceOrderIssues,
@@ -82,6 +83,46 @@ export function companyDate(config: CompanyConfig, now = new Date()): string {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+/** Remember entry metadata without replacing facts read from the original invoice. */
+export function rememberInvoiceSupplierItem(
+  state: DemoState,
+  invoice: Pick<DemoInvoice, "company_id" | "supplier" | "branch">,
+  line: InvoiceLine,
+): InvoiceLine {
+  if (
+    invoice.company_id !== state.config.company.seed_key ||
+    line.company_id !== invoice.company_id
+  )
+    return line;
+  const item = resolveSupplierItem(
+    state,
+    invoice.company_id,
+    invoice.supplier,
+    invoice.branch,
+    line.supplier_item_id
+      ? { id: line.supplier_item_id }
+      : {
+          product_code: line.product_code,
+          ...(line.supplier_item_code === undefined
+            ? {}
+            : { supplier_item_code: line.supplier_item_code }),
+        },
+  );
+  if (
+    !item ||
+    item.product_code !== line.product_code ||
+    !Number.isSafeInteger(item.units_per_case) ||
+    item.units_per_case <= 0
+  )
+    return line;
+  return {
+    ...line,
+    supplier_item_id: line.supplier_item_id ?? item.id,
+    supplier_item_code: line.supplier_item_code ?? item.supplier_item_code,
+    units_per_case: line.units_per_case ?? item.units_per_case,
+  };
+}
+
 export function createInvoice(
   state: DemoState,
   branch: Branch,
@@ -106,26 +147,39 @@ export function createInvoice(
     short_receipt_keys: [],
     lines: manual
       ? []
-      : seed.lines.map((line) => ({
-          ...line,
-          company_id: company,
-          // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
-          qty_received_at_posting: line.qty_invoiced,
-          qty_later_received: 0,
-          pricing_category:
-            state.products.find((product) => product.code === line.product_code)
-              ?.pricing_category ?? "grocery",
-          review_confirmed: false,
-          date_tracking: false,
-          date_confirmed: false,
-          new_name_en:
-            line.product_code === "NEW" ? line.description : undefined,
-          new_name_fa:
-            line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
-          line_tax: line.taxable
-            ? cents(new Decimal(line.line_total).times(state.config.tax.rate))
-            : "0.00",
-        })),
+      : seed.lines.map((line) =>
+          rememberInvoiceSupplierItem(
+            state,
+            {
+              company_id: company,
+              supplier: seed.supplier,
+              branch,
+            },
+            {
+              ...line,
+              company_id: company,
+              // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
+              qty_received_at_posting: line.qty_invoiced,
+              qty_later_received: 0,
+              pricing_category:
+                state.products.find(
+                  (product) => product.code === line.product_code,
+                )?.pricing_category ?? "grocery",
+              review_confirmed: false,
+              date_tracking: false,
+              date_confirmed: false,
+              new_name_en:
+                line.product_code === "NEW" ? line.description : undefined,
+              new_name_fa:
+                line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
+              line_tax: line.taxable
+                ? cents(
+                    new Decimal(line.line_total).times(state.config.tax.rate),
+                  )
+                : "0.00",
+            },
+          ),
+        ),
     ...(manual
       ? {
           supplier: "",
@@ -204,7 +258,7 @@ export function setInvoiceLineQuantity(
   line.quantity_entered = quantity;
   line.units_per_case = pack;
   try {
-    line.qty_invoiced = packUnits(quantity, unit, pack);
+    line.qty_invoiced = packUnits(quantity, unit, unit === "units" ? 1 : pack);
   } catch {
     line.qty_invoiced = 0;
   }
@@ -426,34 +480,82 @@ export function cumulativeAllocation(
 export function previousReceiptCost(
   state: DemoState,
   code: string,
+  currentLine?: InvoiceLine,
 ): { cost: string; reference: string } | null {
   const invoice = state.invoice;
-  const previous = [...(state.invoices ?? [])]
-    .reverse()
-    .find(
-      (receipt) =>
-        receipt.id !== invoice.id &&
-        receipt.company_id === invoice.company_id &&
-        effectiveInvoiceLocation(state, receipt) === invoice.branch &&
-        receipt.supplier === invoice.supplier &&
-        receipt.status === "posted" &&
-        receipt.lines.some(
-          (line) =>
-            line.product_code === code &&
-            acceptedInvoiceUnits(line) + (line.qty_later_received ?? 0) > 0,
-        ),
-    );
+  if (
+    invoice.company_id !== state.config.company.seed_key ||
+    !configuredBranches(state.config, true).includes(invoice.branch)
+  )
+    return null;
+  const current =
+    currentLine ??
+    (() => {
+      const candidates = invoice.lines.filter(
+        (line) =>
+          line.company_id === invoice.company_id && line.product_code === code,
+      );
+      return candidates.length === 1 ? candidates[0] : undefined;
+    })();
+  if (
+    !current ||
+    current.company_id !== invoice.company_id ||
+    current.product_code !== code
+  )
+    return null;
+  const facts = supplierItemFacts(
+    state,
+    invoice.company_id,
+    invoice.supplier,
+    invoice.branch,
+  );
+  const matches = current.supplier_item_id
+    ? facts.filter((item) => item.id === current.supplier_item_id)
+    : facts.filter(
+        (item) =>
+          item.product_code === code &&
+          item.supplier_item_code ===
+            (current.supplier_item_code?.trim() ?? ""),
+      );
+  const previous =
+    matches.length === 1
+      ? matches[0].history.find(
+          (purchase) =>
+            purchase.invoice_id !== invoice.id &&
+            purchase.product_code === code &&
+            purchase.received_units > 0,
+        )
+      : undefined;
   if (previous)
     return {
-      cost: previous.lines.find((line) => line.product_code === code)!
-        .unit_cost_before_tax,
-      reference: previous.supplier_invoice_number,
+      cost: previous.unit_cost_before_tax,
+      reference: previous.invoice_number,
     };
-  // Only the original demo catalog supplies historical Branch 1 receipt costs.
-  const product = demo.products.find(
-    (item) => item.code === code && item.main_supplier === invoice.supplier,
+  // The original no-SKU demo catalog supplies historical Branch 1 receipts only.
+  // A newly introduced SKU or ambiguous prior purchase never borrows this basis.
+  if (
+    current.supplier_item_code?.trim() ||
+    facts.some(
+      (item) =>
+        item.product_code === code &&
+        item.history.some((purchase) => purchase.invoice_id !== invoice.id),
+    )
+  )
+    return null;
+  const supplier = supplierRecords(state).find(
+    (item) =>
+      item.company_id === invoice.company_id &&
+      supplierMatches(item, invoice.supplier),
   );
-  return invoice.branch === demo.same_supplier_lower_price_alert.branch &&
+  const product = demo.products.find(
+    (item) =>
+      item.code === code &&
+      (supplier
+        ? supplierMatches(supplier, item.main_supplier)
+        : item.main_supplier === invoice.supplier),
+  );
+  return invoice.company_id === configSeed.company.seed_key &&
+    invoice.branch === demo.same_supplier_lower_price_alert.branch &&
     product
     ? {
         cost: product.last_cost_before_tax,
@@ -464,7 +566,7 @@ export function previousReceiptCost(
 
 export function lowerPriceLines(state: DemoState): InvoiceLine[] {
   return state.invoice.lines.filter((line) => {
-    const previous = previousReceiptCost(state, line.product_code);
+    const previous = previousReceiptCost(state, line.product_code, line);
     return (
       !line.short_dated &&
       acceptedInvoiceUnits(line) > 0 &&
@@ -606,9 +708,9 @@ export function invoiceBlockers(
     if (
       line.short_dated &&
       (!product ||
-        !previousReceiptCost(state, line.product_code) ||
+        !previousReceiptCost(state, line.product_code, line) ||
         !new Decimal(line.unit_cost_before_tax).lt(
-          previousReceiptCost(state, line.product_code)!.cost,
+          previousReceiptCost(state, line.product_code, line)!.cost,
         ) ||
         !line.date_tracking ||
         !line.date_confirmed ||
@@ -896,7 +998,7 @@ export function postInvoice(
       status: "pending",
       product_code: product.code,
       supplier: invoice.supplier,
-      previous_cost: previousReceiptCost(state, product.code)!.cost,
+      previous_cost: previousReceiptCost(state, product.code, line)!.cost,
       new_cost: line.unit_cost_before_tax,
       same_expiry: answer.same_expiry,
       old_expiry: answer.old_expiry,
@@ -905,7 +1007,7 @@ export function postInvoice(
         answer.same_expiry === "no_previous_stock" ? 0 : answer.units_left,
       note: [
         answer.note,
-        `Previous receipt: ${previousReceiptCost(state, product.code)?.reference}; invoice: ${invoice.supplier_invoice_number}`,
+        `Previous receipt: ${previousReceiptCost(state, product.code, line)?.reference}; invoice: ${invoice.supplier_invoice_number}`,
       ]
         .filter(Boolean)
         .join(" · "),
@@ -1038,6 +1140,7 @@ export function receiveShort(
   role: Role,
   branch: Branch,
   invoiceLineIndex?: number,
+  actor?: string,
 ): string {
   const invoice = state.invoice;
   const effectiveBranch = effectiveInvoiceLocation(state, invoice);
@@ -1097,7 +1200,7 @@ export function receiveShort(
     company_id: invoice.company_id,
     role,
     branch: effectiveBranch,
-    actor: invoice.receiving_employee ?? "",
+    actor: actor ?? invoice.receiving_employee ?? "",
   };
   if (orderReceipt) {
     const preview = structuredClone(state);
@@ -1119,7 +1222,7 @@ export function receiveShort(
     qty: quantity,
     type: "short_resolved_received",
     reference: receiptReference,
-    by: invoice.receiving_employee!,
+    by: orderContext.actor,
     at: new Date().toISOString(),
     invoice_id: invoice.id,
     line_index: invoice.lines.indexOf(line),
@@ -1151,7 +1254,7 @@ export function receiveShort(
     company_id: invoice.company_id,
     branch,
     action: "Received short delivery",
-    by: invoice.receiving_employee!,
+    by: orderContext.actor,
     at: new Date().toISOString(),
     product_code: code,
   });
