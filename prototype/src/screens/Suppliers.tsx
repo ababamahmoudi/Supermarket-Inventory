@@ -286,16 +286,19 @@ export default function Suppliers() {
             className="suppliers-toolbar"
             aria-label={t("Supplier filters", "فیلتر تأمین‌کنندگان")}
             count={
-              <>
-                {translateCount(
-                  "{{count}} supplier",
-                  "{{count}} suppliers",
-                  "{{count}} تأمین‌کننده",
-                  "{{count}} تأمین‌کننده",
-                  rows.length,
-                  lang,
-                )}
-              </>
+              <span className="filter-toolbar-end">
+                <span>
+                  {translateCount(
+                    "{{count}} supplier",
+                    "{{count}} suppliers",
+                    "{{count}} تأمین‌کننده",
+                    "{{count}} تأمین‌کننده",
+                    rows.length,
+                    lang,
+                  )}
+                </span>
+                {tableColumns.chooser}
+              </span>
             }
             search={
               <input
@@ -354,7 +357,6 @@ export default function Suppliers() {
             >
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
-            {tableColumns.chooser}
           </FilterToolbar>
           <DataTable
             className={

@@ -33,6 +33,15 @@ export type C5Inspection = {
     visualWidth: number | null;
   };
   buttons: C5Button[];
+  toolbarGroups: {
+    count: string;
+    columns: string;
+    direction: string;
+    gap: number;
+    centerDifference: number;
+    countBounds: { left: number; right: number; top: number; height: number };
+    controlBounds: { left: number; right: number; top: number; height: number };
+  }[];
   topbar: {
     label: string;
     height: number;

@@ -11,7 +11,13 @@ import {
   refusedTotals,
 } from "../invoice";
 import { effectiveInvoiceLocation } from "../received";
-import { DateText, LtrText, Money, ProductName } from "../presentation";
+import {
+  DateText,
+  demoUserLabel,
+  LtrText,
+  Money,
+  ProductName,
+} from "../presentation";
 import { Badge, Button, Card, DataTable } from "../ui";
 import type { DemoInvoice, InvoiceLine } from "../types";
 import "./invoice-document-c4.css";
@@ -155,7 +161,11 @@ export function PostedInvoice({
           </div>
           <div>
             <dt>{t("Received by", "دریافت‌کننده")}</dt>
-            <dd>{invoice.receiving_employee ?? "—"}</dd>
+            <dd>
+              {invoice.receiving_employee
+                ? demoUserLabel(invoice.receiving_employee, lang)
+                : "—"}
+            </dd>
           </div>
           <div>
             <dt>{t("Payment terms", "شرایط پرداخت")}</dt>

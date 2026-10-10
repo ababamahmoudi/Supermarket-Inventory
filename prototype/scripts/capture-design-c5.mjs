@@ -1,4 +1,4 @@
-/* global process, console */
+/* global process, console, document, window, HTMLElement, getComputedStyle */
 import { chromium, expect } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -119,6 +119,28 @@ async function visit(page, route) {
   await expect(button(page, "Demo", "دمو")).toBeVisible();
 }
 
+async function normalizeFraming(page) {
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+    for (const element of document.querySelectorAll(".table-wrap"))
+      element.scrollTo({ left: 0, top: 0, behavior: "instant" });
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" });
+  });
+  await settled(page);
+  return page.evaluate(() => ({
+    documentScroll: { x: window.scrollX, y: window.scrollY },
+    tables: Array.from(document.querySelectorAll(".table-wrap")).map(
+      (element) => ({
+        className: element.className,
+        direction: getComputedStyle(element).direction,
+        scrollLeft: element.scrollLeft,
+        scrollTop: element.scrollTop,
+      }),
+    ),
+  }));
+}
+
 async function pickup(page) {
   await visit(page, "return?id=demo-return-1");
   await button(page.locator(".return-header-card"), "Record pickup").click();
@@ -160,7 +182,7 @@ async function setup(page, scene, variant) {
       capture = "viewport";
     } else if (scene === "original-whole-page") {
       selector = ".invoice-original-card";
-      capture = "element";
+      capture = variant === "phone" ? "page" : "element";
     }
   } else if (scene === "topbar") {
     await visit(page, "dashboard");
@@ -294,6 +316,7 @@ try {
           "North York",
         );
         const fixture = await setup(page, scene, variant);
+        const framing = await normalizeFraming(page);
         const proof = await inspect(page, scene, variant);
         audits.push(proof);
         const after = await assets(page);
@@ -325,6 +348,7 @@ try {
           filename,
           role: "supervisor",
           captureMode: fixture.capture,
+          framing,
           viewport: page.viewportSize(),
           route: new URL(page.url()).hash,
           fixtureEvidence: fixture.evidence,

@@ -363,14 +363,21 @@ export function Payables() {
             placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
           />
         }
-        count={translateCount(
-          "{{count}} supplier",
-          "{{count}} suppliers",
-          "{{count}} تأمین‌کننده",
-          "{{count}} تأمین‌کننده",
-          overview.length,
-          lang,
-        )}
+        count={
+          <span className="filter-toolbar-end">
+            <span>
+              {translateCount(
+                "{{count}} supplier",
+                "{{count}} suppliers",
+                "{{count}} تأمین‌کننده",
+                "{{count}} تأمین‌کننده",
+                overview.length,
+                lang,
+              )}
+            </span>
+            {tableColumns.chooser}
+          </span>
+        }
       >
         <Select
           aria-label={t("Payables branch", "شعبه پرداختنی‌ها")}
@@ -393,7 +400,6 @@ export function Payables() {
         <Button variant="ghost" onClick={clearFilters}>
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
-        {tableColumns.chooser}
       </FilterToolbar>
       <Card
         title={t("Suppliers", "تأمین‌کنندگان")}

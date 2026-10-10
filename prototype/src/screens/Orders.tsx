@@ -1463,13 +1463,20 @@ export default function Orders() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             }
-            count={tCount(
-              "{{count}} order",
-              "{{count}} orders",
-              "{{count}} سفارش",
-              "{{count}} سفارش",
-              visible.length,
-            )}
+            count={
+              <span className="filter-toolbar-end">
+                <span>
+                  {tCount(
+                    "{{count}} order",
+                    "{{count}} orders",
+                    "{{count}} سفارش",
+                    "{{count}} سفارش",
+                    visible.length,
+                  )}
+                </span>
+                {tableColumns.chooser}
+              </span>
+            }
           >
             <Field label={t("Status", "وضعیت")}>
               <Select
@@ -1536,7 +1543,6 @@ export default function Orders() {
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
           </FilterToolbar>
-          <div className="table-column-actions">{tableColumns.chooser}</div>
           {!visible.length ? (
             <EmptyState>
               {t(

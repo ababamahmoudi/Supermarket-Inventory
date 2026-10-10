@@ -14,8 +14,14 @@ beforeEach(async () => {
 });
 
 function Harness({ lookup = false }: { lookup?: boolean }) {
-  const { state, switchDemoUser, undoToasts, undoActivity, setBranch } =
-    useDemo();
+  const {
+    state,
+    switchDemoUser,
+    undoToasts,
+    undoActivity,
+    setBranch,
+    setLang,
+  } = useDemo();
   return (
     <>
       <button onClick={() => switchDemoUser("supervisor")}>
@@ -26,6 +32,8 @@ function Harness({ lookup = false }: { lookup?: boolean }) {
       </button>
       <button onClick={() => switchDemoUser("cashier")}>Use Cashier</button>
       <button onClick={() => setBranch("Branch 1")}>Use North York</button>
+      <button onClick={() => setLang("fa")}>Use Persian</button>
+      <button onClick={() => setLang("en")}>Use English</button>
       {lookup ? (
         <ProductDatesSection product={state.products[0]} />
       ) : (
@@ -177,6 +185,10 @@ it("the Products quick-add route validates the preselected product and preserves
   const form = screen.getByRole("form", { name: "Add date" });
   const product = within(form).getByRole("combobox", { name: "Product" });
   expect(product).toHaveValue("Basmati Rice 4.5 kg");
+  await user.click(screen.getByRole("button", { name: "Use Persian" }));
+  expect(product).toHaveValue("برنج باسماتی ۴٫۵ کیلوگرمی");
+  await user.click(screen.getByRole("button", { name: "Use English" }));
+  expect(product).toHaveValue("Basmati Rice 4.5 kg");
   await chooseToday(user, form);
   await user.click(within(form).getByRole("button", { name: "Add" }));
   expect(screen.getByTestId("date-preference")).toHaveTextContent("true");
@@ -188,6 +200,22 @@ it("the Products quick-add route validates the preselected product and preserves
   expect(screen.getByTestId("manual-dates")).toHaveTextContent(
     '"removal_action":"undo"',
   );
+});
+
+it("selected product labels follow language changes while typed scanner text stays literal", async () => {
+  const user = await show();
+  const product = screen.getByRole("combobox", { name: "Product" });
+  await user.type(product, "0001");
+  await user.click(screen.getByRole("option", { name: /Basmati Rice 4.5 kg/ }));
+  expect(product).toHaveValue("Basmati Rice 4.5 kg");
+  await user.click(screen.getByRole("button", { name: "Use Persian" }));
+  expect(product).toHaveValue("برنج باسماتی ۴٫۵ کیلوگرمی");
+  await user.click(screen.getByRole("button", { name: "Use English" }));
+  expect(product).toHaveValue("Basmati Rice 4.5 kg");
+  await user.clear(product);
+  await user.type(product, "DEMO-600000");
+  await user.click(screen.getByRole("button", { name: "Use Persian" }));
+  expect(product).toHaveValue("DEMO-600000");
 });
 
 it("Lookup permits worker On/Off and inline Add, preserves existing dates when Off and denies Cashier mutations", async () => {

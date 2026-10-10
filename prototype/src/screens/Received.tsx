@@ -19,9 +19,9 @@ import {
 } from "../ui";
 import "./received-c.css";
 
-export function ReceivedTable({ rows }: { rows: DeliveryReceipt[] }) {
-  const { state, lang, t, tCount, navigate } = useDemo();
-  const tableColumns = useTableColumns("received", [
+function useReceivedColumns() {
+  const { t } = useDemo();
+  return useTableColumns("received", [
     {
       key: "product",
       label: t("Product", "کالا"),
@@ -44,6 +44,16 @@ export function ReceivedTable({ rows }: { rows: DeliveryReceipt[] }) {
     { key: "date", label: t("Date", "تاریخ"), width: "12%" },
     { key: "actor", label: t("Received by", "دریافت‌کننده"), width: "12%" },
   ]);
+}
+
+export function ReceivedTable({
+  rows,
+  columns,
+}: {
+  rows: DeliveryReceipt[];
+  columns: ReturnType<typeof useTableColumns>["columns"];
+}) {
+  const { state, lang, t, tCount, navigate } = useDemo();
   if (!rows.length)
     return (
       <EmptyState>
@@ -55,8 +65,7 @@ export function ReceivedTable({ rows }: { rows: DeliveryReceipt[] }) {
     );
   return (
     <>
-      <div className="table-column-actions">{tableColumns.chooser}</div>
-      <DataTable className="received-table" columns={tableColumns.columns}>
+      <DataTable className="received-table" columns={columns}>
         <thead>
           <tr>
             <th>{t("Product", "کالا")}</th>
@@ -194,6 +203,7 @@ export default function Received({
       ) ?? "all",
   );
   const [search, setSearch] = useListState("received.search", "");
+  const tableColumns = useReceivedColumns();
   if (role !== "supervisor" && role !== "floor_worker")
     return (
       <EmptyState>
@@ -229,13 +239,20 @@ export default function Received({
             aria-label={t("Search Received", "جستجوی دریافت‌شده‌ها")}
           />
         }
-        count={tCount(
-          "{{count}} delivery",
-          "{{count}} deliveries",
-          "{{count}} تحویل",
-          "{{count}} تحویل",
-          rows.length,
-        )}
+        count={
+          <span className="filter-toolbar-end">
+            <span>
+              {tCount(
+                "{{count}} delivery",
+                "{{count}} deliveries",
+                "{{count}} تحویل",
+                "{{count}} تحویل",
+                rows.length,
+              )}
+            </span>
+            {tableColumns.chooser}
+          </span>
+        }
       >
         <Field label={t("From", "از")}>
           <DateField value={from} onChange={setFrom} />
@@ -313,7 +330,7 @@ export default function Received({
           )}
         </p>
       ) : (
-        <ReceivedTable rows={rows} />
+        <ReceivedTable rows={rows} columns={tableColumns.columns} />
       )}
     </>
   );

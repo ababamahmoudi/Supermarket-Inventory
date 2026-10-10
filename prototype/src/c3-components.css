@@ -120,6 +120,16 @@
   gap: 8px 20px;
   margin-block-start: 20px;
 }
+
+.filter-toolbar-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  max-inline-size: 100%;
+}
+:root .filter-toolbar > .filter-count:has(.filter-toolbar-end) {
+  margin-inline-start: auto;
+}
 .c3-column-options .ui-checked-control {
   min-inline-size: 0;
   align-items: center;

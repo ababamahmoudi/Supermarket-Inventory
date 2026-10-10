@@ -86,6 +86,14 @@ export function DateQuickAdd({
   const results = query.trim()
     ? searchProducts(products, query).slice(0, 8)
     : [];
+  const selectedProduct = products.find(
+    (product) => product.code === selectedCode,
+  );
+  const displayedQuery = selectedProduct
+    ? lang === "fa"
+      ? selectedProduct.name_fa || selectedProduct.name_en
+      : selectedProduct.name_en
+    : query;
   const active = results.find((item) => item.code === activeCode) ?? results[0];
   const showSuggestions = !inline && searchOpen && Boolean(query.trim());
   const setField = <K extends keyof typeof draft>(
@@ -225,7 +233,7 @@ export function DateQuickAdd({
                     ? `${suggestionsId}-${active.code}`
                     : undefined
                 }
-                value={query}
+                value={displayedQuery}
                 onChange={(event) => {
                   setQuery(event.target.value);
                   setSelectedCode("");

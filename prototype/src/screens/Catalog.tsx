@@ -1983,6 +1983,21 @@ export function Products() {
             )}
           />
         }
+        count={
+          <span className="filter-toolbar-end">
+            <span>
+              {translateCount(
+                "{{count}} product",
+                "{{count}} products",
+                "{{count}} محصول",
+                "{{count}} محصول",
+                results.length,
+                lang,
+              )}
+            </span>
+            {tableColumns.chooser}
+          </span>
+        }
       >
         <Select
           aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
@@ -2093,17 +2108,6 @@ export function Products() {
         <Button variant="ghost" onClick={clear}>
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
-        {tableColumns.chooser}
-        <span className="filter-count muted">
-          {translateCount(
-            "{{count}} product",
-            "{{count}} products",
-            "{{count}} محصول",
-            "{{count}} محصول",
-            results.length,
-            lang,
-          )}
-        </span>
       </FilterToolbar>
       {!results.length ? (
         <EmptyState

@@ -291,6 +291,60 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           }
         }
       }
+      const toolbarGroups = [];
+      for (const wrapper of document.querySelectorAll(".filter-count")) {
+        if (!visible(wrapper)) continue;
+        const columns = [...wrapper.querySelectorAll("button")].find(
+          (element) =>
+            visible(element) &&
+            /^(Columns|ستون‌ها)$/.test(tidy(element.textContent)),
+        );
+        if (!columns) continue;
+        const group = columns.closest(
+          ".filter-toolbar-end, .returns-toolbar-end, .date-filter-result-actions",
+        );
+        const count = group?.querySelector(":scope > span");
+        if (!group || !count) {
+          failures.push("Columns and result count have no shared end group");
+          continue;
+        }
+        const range = document.createRange();
+        range.selectNodeContents(count);
+        const text = range.getBoundingClientRect();
+        const countBox = count.getBoundingClientRect();
+        const control = columns.getBoundingClientRect();
+        const direction = getComputedStyle(group).direction;
+        const gap =
+          direction === "rtl"
+            ? text.left - control.right
+            : control.left - text.right;
+        const centerDifference = Math.abs(
+          countBox.top + countBox.height / 2 - control.top - control.height / 2,
+        );
+        toolbarGroups.push({
+          count: tidy(count.textContent),
+          columns: tidy(columns.textContent),
+          direction,
+          gap: round(gap),
+          centerDifference: round(centerDifference),
+          countBounds: {
+            left: round(text.left),
+            right: round(text.right),
+            top: round(text.top),
+            height: round(text.height),
+          },
+          controlBounds: {
+            left: round(control.left),
+            right: round(control.right),
+            top: round(control.top),
+            height: round(control.height),
+          },
+        });
+        if (gap < -0.5 || gap > 16.5 || centerDifference > 1)
+          failures.push(
+            `Columns separated from result count: ${tidy(count.textContent)} (${round(gap)}px gap; ${round(centerDifference)}px center difference)`,
+          );
+      }
       const topbar = [];
       const header = document.querySelector(".topbar");
       if (header) {
@@ -412,6 +466,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           visualWidth: window.visualViewport?.width ?? null,
         },
         buttons,
+        toolbarGroups,
         topbar,
         statuses,
         failures,

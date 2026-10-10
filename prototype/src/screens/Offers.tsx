@@ -72,7 +72,9 @@ export function Offers() {
   const [taskOptions, setTaskOptions] = useState<
     Record<string, { mix: boolean; start: string; end: string }>
   >({});
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<readonly [string, string] | null>(
+    null,
+  );
   const [stopId, setStopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const company = state.config.company.seed_key;
@@ -159,37 +161,41 @@ export function Offers() {
   );
   const branchName = (value: Branch) =>
     configuredBranchLabel(state.config, value, lang);
+  const readinessCopy = (reason: ReturnType<typeof offerReadiness>) =>
+    (
+      ({
+        ready: [
+          "Ready to confirm. Only the matching approved price can use this offer.",
+          "آماده تأیید. فقط قیمت تأییدشده سازگار می‌تواند از این پیشنهاد استفاده کند.",
+        ],
+        price_changed: [
+          "The approved price changed. Refresh this suggestion before confirming.",
+          "قیمت تأییدشده تغییر کرده است. پیش از تأیید، پیشنهاد را تازه‌سازی کنید.",
+        ],
+        mapping_missing: [
+          "No matching offer is configured for this price. Check Settings.",
+          "برای این قیمت پیشنهاد سازگار تنظیم نشده است. تنظیمات را بررسی کنید.",
+        ],
+        dates_invalid: [
+          "Use valid dates and put the end date on or after the start date.",
+          "تاریخ‌های معتبر وارد کنید و پایان را برابر یا پس از شروع قرار دهید.",
+        ],
+        company_mismatch: [
+          "Choose an active product in this company.",
+          "یک کالای فعال از همین شرکت انتخاب کنید.",
+        ],
+        location_not_selling: [
+          "Choose a location that sells to customers.",
+          "مکانی را انتخاب کنید که به مشتریان فروش دارد.",
+        ],
+      }) as const
+    )[reason];
   const readyMessage = (reason: ReturnType<typeof offerReadiness>) =>
-    ({
-      ready: t(
-        "Ready to confirm. Only the matching approved price can use this offer.",
-        "آماده تأیید. فقط قیمت تأییدشده سازگار می‌تواند از این پیشنهاد استفاده کند.",
-      ),
-      price_changed: t(
-        "The approved price changed. Refresh this suggestion before confirming.",
-        "قیمت تأییدشده تغییر کرده است. پیش از تأیید، پیشنهاد را تازه‌سازی کنید.",
-      ),
-      mapping_missing: t(
-        "No matching offer is configured for this price. Check Settings.",
-        "برای این قیمت پیشنهاد سازگار تنظیم نشده است. تنظیمات را بررسی کنید.",
-      ),
-      dates_invalid: t(
-        "Use valid dates and put the end date on or after the start date.",
-        "تاریخ‌های معتبر وارد کنید و پایان را برابر یا پس از شروع قرار دهید.",
-      ),
-      company_mismatch: t(
-        "Choose an active product in this company.",
-        "یک کالای فعال از همین شرکت انتخاب کنید.",
-      ),
-      location_not_selling: t(
-        "Choose a location that sells to customers.",
-        "مکانی را انتخاب کنید که به مشتریان فروش دارد.",
-      ),
-    })[reason];
+    t(...readinessCopy(reason));
   const activate = (offer: Offer) => {
     const readiness = offerReadiness(state, offer);
     if (readiness !== "ready") {
-      setMessage(readyMessage(readiness));
+      setMessage(readinessCopy(readiness));
       return;
     }
     const activation = { result: "created" as "created" | "unchanged" };
@@ -198,32 +204,33 @@ export function Offers() {
     });
     setCreateOpen(false);
     if (activation.result === "unchanged") {
-      setMessage(
-        t("This offer already exists.", "این پیشنهاد از قبل وجود دارد."),
-      );
+      setMessage([
+        "This offer already exists.",
+        "این پیشنهاد از قبل وجود دارد.",
+      ]);
       return;
     }
     const manual = offer.status !== "suggested";
     setMessage(
       isOfferScheduledNow(offer, state.config.company.timezone)
         ? manual
-          ? t(
+          ? [
               "Created offer. Cashier lookup and labels now use the effective offer.",
               "پیشنهاد ایجاد شد. جستجوی صندوق‌دار و برچسب‌ها اکنون پیشنهاد مؤثر را نمایش می‌دهند.",
-            )
-          : t(
+            ]
+          : [
               "Confirmed offer. Cashier lookup and labels now use the effective offer.",
               "پیشنهاد تأیید شد. جستجوی صندوق‌دار و برچسب‌ها اکنون پیشنهاد مؤثر را نمایش می‌دهند.",
-            )
+            ]
         : manual
-          ? t(
+          ? [
               "Created offer with dates. It appears only during its scheduled dates.",
               "پیشنهاد با تاریخ ایجاد شد. فقط در تاریخ‌های برنامه‌ریزی‌شده نمایش داده می‌شود.",
-            )
-          : t(
+            ]
+          : [
               "Confirmed offer with dates. It appears only during its scheduled dates.",
               "پیشنهاد با تاریخ تأیید شد. فقط در تاریخ‌های برنامه‌ریزی‌شده نمایش داده می‌شود.",
-            ),
+            ],
     );
   };
   const stop = (id: string, dismissed = false) => {
@@ -231,8 +238,8 @@ export function Offers() {
     setStopId(null);
     setMessage(
       dismissed
-        ? t("Dismissed offer suggestion.", "پیشنهاد پیشنهادی کنار گذاشته شد.")
-        : t("Stopped offer.", "پیشنهاد متوقف شد."),
+        ? ["Dismissed offer suggestion.", "پیشنهاد پیشنهادی کنار گذاشته شد."]
+        : ["Stopped offer.", "پیشنهاد متوقف شد."],
     );
   };
   const selected = products.find((product) => product.code === code);
@@ -283,7 +290,7 @@ export function Offers() {
           <Button
             onClick={() => {
               setCreateOpen(true);
-              setMessage("");
+              setMessage(null);
             }}
           >
             {t("Create offer", "ایجاد پیشنهاد")}
@@ -308,7 +315,7 @@ export function Offers() {
       />
       {message && (
         <div className="banner" role="status">
-          {message}
+          {t(...message)}
         </div>
       )}
       {tab !== "pools" ? (
@@ -820,7 +827,7 @@ export function Offers() {
         open={createOpen}
         onOpenChange={(open) => {
           setCreateOpen(open);
-          if (!open) setMessage("");
+          if (!open) setMessage(null);
         }}
         title={t("Create offer", "ایجاد پیشنهاد")}
         className="c3-operation-dialog offers-create-dialog"
@@ -839,7 +846,7 @@ export function Offers() {
                 value={code}
                 onChange={(value) => {
                   setCode(value);
-                  setMessage("");
+                  setMessage(null);
                   const product = products.find((item) => item.code === value);
                   setScope(
                     product?.branch_prices?.[viewBranch] ? "branch" : "all",
@@ -862,7 +869,7 @@ export function Offers() {
                 value={scope}
                 onChange={(value) => {
                   setScope(value as "all" | "branch");
-                  setMessage("");
+                  setMessage(null);
                 }}
                 options={[
                   {
@@ -881,7 +888,7 @@ export function Offers() {
                 value={start}
                 onChange={(value) => {
                   setStart(value);
-                  setMessage("");
+                  setMessage(null);
                 }}
               />
             </Field>
@@ -893,7 +900,7 @@ export function Offers() {
                 value={end}
                 onChange={(value) => {
                   setEnd(value);
-                  setMessage("");
+                  setMessage(null);
                 }}
               />
             </Field>
