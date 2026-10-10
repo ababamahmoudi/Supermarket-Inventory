@@ -25,7 +25,7 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
           <>
             <LtrText>{line.quantity_entered}</LtrText>{" "}
             {t(
-              new Decimal(line.quantity_entered ?? 0).eq(1) ? "case" : "cases",
+              new Decimal(line.quantity_entered || 0).eq(1) ? "case" : "cases",
               "کارتن",
             )}{" "}
             ·{" "}
