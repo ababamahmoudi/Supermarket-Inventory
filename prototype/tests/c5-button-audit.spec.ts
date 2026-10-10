@@ -447,14 +447,12 @@ test("C5 button contract covers primary product, date, approval and invoice dial
     await closeDialog(page);
 
     await page.goto("/#approvals");
-    const approval = page
-      .locator("section.card")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Lavash Bread 500 g",
-          exact: true,
-        }),
-      });
+    const approval = page.locator("section.card").filter({
+      has: page.getByRole("heading", {
+        name: "Lavash Bread 500 g",
+        exact: true,
+      }),
+    });
     await approval
       .getByRole("button", { name: "Approve price", exact: true })
       .click();

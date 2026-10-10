@@ -8,7 +8,7 @@ The prototype runs on your Ubuntu computer and saves fictional demo changes in t
 
 - Text action buttons use the C2 rounded rectangle: 12 px corners, 40 px height, width that fits their text. Secondary has a thin blue border/glow; Danger a red border/glow; Primary remains solid blue. Row actions sit together at the end, with rare actions in ⋯. Click names/references to open detail; redundant View buttons are removed.
 - Top-bar controls share 40 px height/border/glow. The single round language button shows **فا** in English and **EN** in Persian. Fields/dropdowns are visible in both themes. Returns use consistent visible-label colors; Columns sits beside the count or Invoices card title.
-- Posted invoices have an aligned header, paired totals and whole-page original preview with 25–400% zoom. Returns have a clearer header and 640 px numbered policy dialog. Products stacks weight prices and says Sold by weight.
+- Posted invoices have an aligned header, paired totals and whole-page original preview with 25–400% zoom. Returns have a clearer header and 640 px numbered policy dialog. Products stacks the weighed price on two lines and says Sold by weight.
 - Date tracking has quick-add instead of an Add date dialog. Lookup has Dates, authorized On/Off and inline Add. Adding when Off enables tracking in the same reversible action. Current offers excludes stopped history and groups one row per product; Past keeps earlier versions. Repeating identical terms does not add a new version.
 - The approved dashboard, Approvals tabs, round choices, invoice/return settlements, exact label printing and other C3/C4 workflows remain.
 
@@ -24,7 +24,7 @@ git pull --ff-only origin feat/prototype-c5-design-fixes
 git branch --show-current
 ```
 
-Expect the branch name `feat/prototype-c5-design-fixes`, then `Already up to date` or downloaded changes. If switch says the branch is unknown after a successful fetch, run:
+The final command should print `feat/prototype-c5-design-fixes`. The pull command above it prints `Already up to date` or downloads the branch changes. If switch says the branch is unknown after a successful fetch, run:
 
 ```bash
 git switch -c feat/prototype-c5-design-fixes origin/feat/prototype-c5-design-fixes
@@ -69,11 +69,11 @@ If 5174 is in use, stop the earlier demo in its own terminal with Ctrl+C and rep
 
 ## Click-by-click checks
 
-Use **Demo → Reset demo → Reset demo** only if you want to discard saved fictional business edits. It restores the starting examples and uploaded demo files; changed account passwords/display preferences remain. Your existing data need not be reset to use C5.
+Use **Demo → Reset demo → Reset demo** only if you want to discard saved fictional business edits. It discards saved demo business changes, including files you attached, and restores the starting fictional examples. Changed account passwords and display preferences remain. Your existing data need not be reset to use C5.
 
 1. **Top bar:** click فا; the page switches to Persian/RTL and the button becomes EN. Click EN to return. Toggle the sun/moon. Search, location, notifications, text size and Demo should share the same height/glow. The user menu stays at the sidebar bottom.
 2. **Products:** click the product name to open detail; use Back to Products. Supervisor Edit is compact; ⋯ contains Add date. Search the weighed item and check a price like `$7.49/lb` above smaller `$16.51/kg`, with Sold by weight.
-3. **Invoices:** open Posted. Columns is beside the card title. Click **GG-11794** to open its posted document. Number/status share a line; Correct invoice and Move invoice match. Totals sit below the lines with adjacent amounts and bold Payable.
+3. **Invoices:** open Posted. Columns is beside the card title. Click **FV-20390** to open its posted document. Number/status share a line; Correct invoice and Move invoice match. Totals sit below the lines with adjacent amounts and bold Payable.
 4. **Original:** scroll to Original invoice; the whole page is visible. Click Fit width, − until 25%, + to zoom in, then Fit page. Download keeps the actual original. Open Correct invoice and check visible product/quantity/date dropdowns; Cancel to leave the invoice unchanged.
 5. **Returns:** Open shows pickup blue and credit amber. Open a numbered return: status follows its title, creation information is below, policy/next action line up. Return policy has five numbered titled rules; Download full policy downloads existing policy, Close dismisses it. History retains closed/cancelled evidence.
 6. **Date tracking:** scan/type a product name, Product Code or barcode in the top bar. Choose a date and current location; click Add. The new highlighted row is first, product clears and keeps focus; date/location remain. Type the next code and press Enter to add it. More exposes optional Type/Quantity/Lot/Note. Undo reverses the specific add, retaining later unrelated edits. Remove asks a reason; ⋯ contains Supervisor Stop tracking and its explicit keep/remove-existing choice.

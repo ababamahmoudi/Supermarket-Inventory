@@ -120,6 +120,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (element.matches('tr[role="button"]')) return "entity-row";
         if (kind === "action")
           return element.closest(".topbar") ? "topbar" : "action";
+        if (
+          element.matches(
+            '.invoice-details-toggle[aria-expanded][aria-controls="invoice-details-fields"]',
+          )
+        )
+          return "disclosure";
         if (element.closest(semanticSelectors)) return "widget";
         if (element.closest(".topbar")) return "topbar";
         return "action";
@@ -137,7 +143,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         const variantClass = ["primary", "secondary", "danger", "quiet"].find(
           (value) => element.classList.contains(`button-${value}`),
         );
-        const row = element.closest("tbody tr");
+        const nearestRow = element.closest("tbody tr");
+        const dialog = element.closest("dialog");
+        const row =
+          nearestRow && (!dialog || !nearestRow.contains(dialog))
+            ? nearestRow
+            : null;
         let textWidth = 0;
         const textWalker = document.createTreeWalker(
           element,
@@ -231,6 +242,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         for (const cell of row.querySelectorAll("td")) {
           const controls = [...cell.querySelectorAll("button, a.ui-button")]
             .filter(visible)
+            .filter((element) => {
+              const dialog = element.closest("dialog");
+              return (
+                element.closest("td") === cell &&
+                (!dialog || !row.contains(dialog)) &&
+                element.closest("tbody tr") === row
+              );
+            })
             .filter((element) => ["action", "icon"].includes(kindOf(element)));
           if (controls.length > 2)
             failures.push(

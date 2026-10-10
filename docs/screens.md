@@ -88,9 +88,9 @@ Same-supplier lower price: item, supplier, old/new cost, worker's answers (same 
 
 ### Offers
 
-Top-right Primary **Create offer** opens the dialog. Round **Current offers / Past offers** tabs: Current active/scheduled only, one row per product grouping permitted scopes; Past stopped/ended newest first. Repeated identical submissions reuse the current offer. Stop offer is compact Danger12 px/40 px; rare scope actions use ⋯. Suggestions and mix-and-match remain.
+Top-right Primary **Create offer** opens the dialog. Round **Current offers / Past offers** tabs: Current active/scheduled only, one row per product grouping permitted scopes; Past stopped/ended newest first. Repeated identical submissions reuse the current offer. Stop offer is compact Danger, 12 px/40 px; rare scope actions use ⋯. Suggestions and mix-and-match remain.
 
-List of active offers with product, price, offer, mix-and-match pool, start/end (optional), created by; **Stop**. "To confirm" tab with AI suggestions: **Confirm** (toggle: join mix-and-match) / **Dismiss**. Pool view: all products in "2 for $5", etc. Toolbar: search pill and compact filters for status, category, supplier, branch, offer type, **Clear filters**, result count; all combine within role scope.
+Current offers contains active/scheduled product rows with product, price, offer, mix-and-match pool, start/end (optional), created by; **Stop**. A **To confirm** section retains simulated suggestions: **Confirm** (toggle: join mix-and-match) / **Dismiss**. **Mix-and-match pools** remains a separate tab, showing all products in "2 for $5", etc. **Past offers** retains stopped/ended versions. Toolbar: search pill and compact filters for status, category, supplier, branch, offer type, **Clear filters**, result count; all combine within role scope.
 
 ### Labels
 

@@ -101,7 +101,12 @@ for (const path of await sources(sourceRoot)) {
               .trim()
           : "";
         const labelNode = attributeNodes["aria-label"] ?? attributeNodes.label;
-        const labels = labelNode ? copy(labelNode, source) : copy(node, source);
+        // Handler success/error copy is not the control's visible label.
+        const labels = labelNode
+          ? copy(labelNode, source)
+          : ts.isJsxElement(node)
+            ? node.children.flatMap((child) => copy(child, source))
+            : [];
         const variant =
           attributes.variant?.replace(/^"|"$/g, "") ??
           (component === "Button" ? "primary" : "secondary");
@@ -147,7 +152,8 @@ for (const path of await sources(sourceRoot)) {
                         : "custom control (see callsite)"
                       : "action"));
         }
-        const widget = !["action", "icon"].includes(kind);
+        if (kind === '{iconOnly ? "icon" : "action"}') kind = "action or icon";
+        const widget = !["action", "icon", "action or icon"].includes(kind);
         inventory.push({
           screen: file
             .replace(/^src\/screens\//, "")
@@ -166,18 +172,22 @@ for (const path of await sources(sourceRoot)) {
               "Accessible label supplied by props",
           style: widget ? kind : variant === "ghost" ? "quiet" : variant,
           radius:
-            kind === "icon"
-              ? "Circle"
-              : widget
-                ? "Component-specific"
-                : "12 px",
+            kind === "action or icon"
+              ? "12 px text / circle icon"
+              : kind === "icon"
+                ? "Circle"
+                : widget
+                  ? "Component-specific"
+                  : "12 px",
           height: widget ? "Component-specific" : "40 px",
           width:
-            kind === "icon"
-              ? "40 px"
-              : widget
-                ? "Component-specific"
-                : "Intrinsic text + padding; table actions ≤200 px",
+            kind === "action or icon"
+              ? "Intrinsic text + padding / 40 px icon"
+              : kind === "icon"
+                ? "40 px"
+                : widget
+                  ? "Component-specific"
+                  : "Intrinsic text + padding; table actions ≤200 px",
           attributes,
         });
       }
@@ -250,12 +260,111 @@ const crossScreenStatusConflicts = [...statusObservations.entries()]
     label: key.split("\0")[2],
     observations,
   }));
+const totals = {};
+const countBy = (values, key) => {
+  for (const value of values)
+    totals[key(value)] = (totals[key(value)] ?? 0) + 1;
+  const result = { ...totals };
+  for (const key of Object.keys(totals)) delete totals[key];
+  return result;
+};
+const renderedControls = measurements.flatMap((scene) => scene.buttons);
+const summary = {
+  sourceModules: new Set(inventory.map((entry) => entry.file)).size,
+  sourceCallsByKind: countBy(inventory, (entry) => entry.kind),
+  observedScreens: new Set(measurements.map((scene) => scene.screen)).size,
+  renderedStates: measurements.length,
+  renderedControlInstances: renderedControls.length,
+  renderedControlsByKind: countBy(renderedControls, (control) => control.kind),
+  renderedStatesByRole: countBy(measurements, (scene) => scene.role),
+  renderedStatesByAppearance: countBy(measurements, (scene) => scene.variant),
+  statesWithViolations: measurements.filter((scene) => scene.failures.length)
+    .length,
+  reportedViolations: measurements.reduce(
+    (total, scene) => total + scene.failures.length,
+    0,
+  ),
+  observedStatusGroups: statusObservations.size,
+  conflictingStatusGroups: crossScreenStatusConflicts.length,
+};
+const conditionalCoverage = [
+  {
+    component: "App",
+    state: "Confirm your password reauthentication dialog",
+    reason:
+      "Requires an expired authentication session; sign-in, first password change, and lock are measured separately.",
+  },
+  {
+    component: "BranchRequests",
+    state:
+      "Short/Missing decisions; Mark as sent; Mark as received; Close request; Copy short or missing items",
+    reason:
+      "The presentation run measures the incoming/outgoing lists, request draft, saved draft detail, and cancellation reason. These controls require later request lifecycle states.",
+  },
+  {
+    component: "Labels",
+    state:
+      "Selection action; archived template restore; final print confirmation Yes/No",
+    reason:
+      "The presentation run measures Products, Waitlist, Templates, and editing a template. Selection, archiving, and completion of a print operation expose additional conditional actions.",
+  },
+  {
+    component: "Notes",
+    state: "Note detail, Edit note, Mark seen, and Mark open/Mark done",
+    reason:
+      "The presentation run measures the list and Add note dialog; these controls depend on opening an existing note and its author/status.",
+  },
+  {
+    component: "Orders",
+    state:
+      "Saved order print preview, cancellation confirmation, linked receipt reference, and note removal",
+    reason:
+      "The presentation run measures the list and a new order with supplier items. Saved order lifecycle and linked-note conditions expose these actions.",
+  },
+  {
+    component: "InvoiceCorrectionDialog / InvoiceOrderReview / Invoices",
+    state:
+      "Correction preview/confirmation, order comparison refresh, short-delivery receiving, manual new-product line, and successful move state",
+    reason:
+      "The presentation run measures posted invoices, original viewer, correction entry, move dialog, upload entry, and simulated upload review. These actions require further workflow progression or a linked order.",
+  },
+  {
+    component: "History / PostedInvoice",
+    state:
+      "Revert confirmation and corrected/original/previous-version popup destinations",
+    reason:
+      "The list and invoice views are measured; changes eligible for reverting and multiple retained correction versions require additional history records.",
+  },
+  {
+    component: "Returns / SupplierApproval",
+    state:
+      "Supplier/product approval rejection; Supervisor claim verification; cancellation approval/decline; final recorded settlement messages",
+    reason:
+      "The presentation run measures return pickup, memo, cancellation request, policy, and settlement forms for both roles. Approval and post-submission actions require specific subsequent states.",
+  },
+  {
+    component: "Shared Menu / Select / Columns / DateField",
+    state:
+      "Every popup option, optional-column reset, and calendar month/day selection",
+    reason:
+      "Shared implementations and their visible triggers are inventoried. A closed popup's options are not claimed as measured; the raw reports identify the options actually open in each scene.",
+  },
+];
 const result = {
+  provenance: {
+    sourceRef: destination("--source-ref"),
+    proofInputs: flags.flatMap((flag, index) =>
+      flag === "--proof" ? [flags[index + 1]] : [],
+    ),
+    checksumScope: "All non-test src/**/*.tsx file paths and contents",
+  },
   sourceChecksum: checksum.digest("hex"),
   note: "Complete source callsite census and required shared-control contract. This is not browser measurement evidence. Rendered states and their actual dimensions are recorded separately by c5-button-audit.spec.ts and capture-design-c5.mjs; conditional states not opened remain source-only.",
   count: inventory.length,
   inventory,
   measuredStates: measurements.length,
+  summary,
+  conditionalCoverage,
   crossScreenStatusConflicts,
   measurements,
 };
@@ -271,11 +380,19 @@ if (markdown) {
       .replace(/</g, "&lt;")
       .trim();
   const rows = [
-    "# C5 complete button source census",
+    "# C5 complete button audit",
     "",
     result.note,
     "",
-    `Source checksum: \`${result.sourceChecksum}\`. ${result.count} callsites.`,
+    `Source: \`${result.provenance.sourceRef ?? "Not specified"}\`. TSX source checksum: \`${result.sourceChecksum}\`. ${result.count} callsites across ${summary.sourceModules} source modules.`,
+    "",
+    measurements.length
+      ? `Browser evidence: ${summary.renderedStates} observed states across ${summary.observedScreens} named screens/forms, ${summary.renderedControlInstances} rendered control instances, ${summary.statesWithViolations} states with violations, ${summary.reportedViolations} reported violations, and ${summary.conflictingStatusGroups} conflicting status groups. These counts cover the rendered states below; they do not claim that every conditional source callsite was opened.`
+      : "No browser measurements were supplied. All rows below are source contracts only.",
+    "",
+    "## Complete source callsite contracts",
+    "",
+    "Every source row is a required contract, not a runtime PASS. Generic labels such as Save and Cancel are never used to infer coverage of a particular callsite. Shared component implementations may generate many rendered instances.",
     "",
     "| Screen/component | Label (English / Persian) | Style or semantic kind | Radius | Height | Width contract | Callsite |",
     "| --- | --- | --- | --- | --- | --- | --- |",
@@ -297,7 +414,10 @@ if (markdown) {
     ...[
       ...new Set(
         inventory
-          .filter((entry) => !["action", "icon"].includes(entry.kind))
+          .filter(
+            (entry) =>
+              !["action", "icon", "action or icon"].includes(entry.kind),
+          )
           .map((entry) => entry.kind),
       ),
     ]
@@ -331,16 +451,23 @@ if (markdown) {
           control.radius,
           control.height,
           control.width,
-          scene.variant,
           scene.role,
         ].join("\0");
-        if (!controls.has(key)) controls.set(key, { scene, control, count: 0 });
-        controls.get(key).count++;
+        if (!controls.has(key))
+          controls.set(key, {
+            scene,
+            control,
+            count: 0,
+            appearances: new Set(),
+          });
+        const group = controls.get(key);
+        group.count++;
+        group.appearances.add(scene.variant);
       }
     }
-    for (const { scene, control, count } of controls.values()) {
+    for (const { scene, control, count, appearances } of controls.values()) {
       rows.push(
-        `| ${safe(scene.screen)} | ${safe(control.label)} | ${safe(control.style)} / ${safe(control.kind)} | ${safe(control.radius)} | ${control.height} | ${control.width} | ${safe(scene.variant)} / ${safe(scene.role)} | ${count} |`,
+        `| ${safe(scene.screen)} | ${safe(control.label)} | ${safe(control.style)} / ${safe(control.kind)} | ${safe(control.radius)} | ${control.height} | ${control.width} | ${safe([...appearances].join(", "))} / ${safe(scene.role)} | ${count} |`,
       );
     }
     rows.push(
@@ -363,5 +490,18 @@ if (markdown) {
         `| ${safe(scene.screen)} | ${safe(scene.variant)} | ${safe(scene.role)} | ${scene.buttons.length} | ${safe(scene.failures.length ? scene.failures.join("; ") : "None")} |`,
       );
   }
+  rows.push(
+    "",
+    "## Conditional states and coverage limits",
+    "",
+    "The source census is complete; runtime observations cover the states listed above. The following conditions are not exhaustively opened in this presentation run. Some controls can appear in another recorded scene, but shared text alone does not prove that a specific source callsite was exercised. Their geometry remains a source contract until that state has an explicit browser observation. Additional operational tests verify behavior separately and are not substituted for computed geometry.",
+    "",
+    "| Component | Additional conditional controls | Coverage limit |",
+    "| --- | --- | --- |",
+    ...conditionalCoverage.map(
+      (entry) =>
+        `| ${safe(entry.component)} | ${safe(entry.state)} | ${safe(entry.reason)} |`,
+    ),
+  );
   await writeFile(markdown, rows.join("\n") + "\n");
 }
