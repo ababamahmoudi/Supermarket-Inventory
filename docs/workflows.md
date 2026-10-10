@@ -102,6 +102,7 @@ stateDiagram-v2
 - A product has at most one active offer per scope. Changing the price to one that maps to a different offer ends the old offer and creates a suggestion for the new one.
 - Mix-and-match pools are per offer definition and global across categories and suppliers.
 - Workers and Supervisors can also create and stop offers manually; start/end dates are optional.
+- **C5:** identical current active/scheduled product/company/scope submissions are idempotent. Changed terms retain their stopped predecessor and normal Undo. Current groups permitted scopes into one product row; Past retains stopped/ended versions newest first.
 
 ## 8. Supplier return (C4 presentation and claim lifecycle)
 
@@ -123,6 +124,8 @@ Open tab: **Waiting for pickup → Waiting for credit**. History: **Closed** (Cr
 3. The next active scoped date appears on Lookup/Products. Expiring soon uses default 30-day setting; expired is a problem pill.
 4. **Remove** requires Sold out/Thrown away/Returned to supplier/Entered by mistake; append removed state/reason/actor/time with Undo. Removed filter exposes retained evidence. No automatic stock movement or return credit.
 5. Supervisor **Stop tracking this product** sets preference No and explicitly chooses whether to remove its open dates. If kept, existing dates stay active. Enabling preference in Edit product offers Add a date now. Undo/Revert is scoped and conflict-aware.
+6. **C5 quick-add:** scan/type product → date/current concrete location → Enter/Add; pin/highlight entry, clear/refocus product for the next shelf item, retain date/location and clear optional evidence. More exposes Expiry/Best before, Quantity/Lot/Note. Products ⋯ Add date opens this bar preselected, not a dialog.
+7. **Lookup Dates:** authorized Supervisor/Worker On/Off changes preference only and retains open dates. Inline Add while Off/unset records preference Yes and entry together with one Add date audit/Undo and auto-enable message. Worker switch audit uses their concrete allowed location; no other catalog editing privilege is granted.
 
 ## 10. Labels: waitlist and printing
 
