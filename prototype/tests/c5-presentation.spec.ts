@@ -204,7 +204,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     const totalRows = await totals.evaluateAll((rows) =>
       rows.map((row) => {
         const textBounds = (element: Element) => {
-          const range = document.createRange();
+          const range = window.document.createRange();
           range.selectNodeContents(element);
           return range.getBoundingClientRect();
         };
