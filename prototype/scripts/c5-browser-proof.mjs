@@ -178,6 +178,33 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
           })
           .reduce((sum, icon) => sum + icon.getBoundingClientRect().width, 0);
+        let flexItems = 0;
+        let anonymousText = "";
+        const finishTextRun = () => {
+          if (tidy(anonymousText)) flexItems += 1;
+          anonymousText = "";
+        };
+        for (const node of element.childNodes) {
+          if (node.nodeType === 3) {
+            anonymousText += node.textContent;
+            continue;
+          }
+          if (node.nodeType !== 1) continue;
+          finishTextRun();
+          const bounds = node.getBoundingClientRect();
+          const childStyle = getComputedStyle(node);
+          if (
+            bounds.width > 2 &&
+            bounds.height > 2 &&
+            childStyle.visibility !== "hidden" &&
+            !["absolute", "fixed"].includes(childStyle.position)
+          )
+            flexItems += 1;
+        }
+        finishTextRun();
+        const gaps = style.display.includes("flex")
+          ? Math.max(0, flexItems - 1) * (parseFloat(style.columnGap) || 0)
+          : 0;
         const intrinsicWidth =
           textWidth +
           icons +
@@ -185,7 +212,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           parseFloat(style.paddingRight) +
           parseFloat(style.borderLeftWidth) +
           parseFloat(style.borderRightWidth) +
-          (icons && textWidth ? parseFloat(style.columnGap) || 0 : 0);
+          gaps;
         const entry = {
           screen,
           variant,
@@ -331,12 +358,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           failures.push(
             `Visible native control: ${control.tagName}/${control.getAttribute("type")}`,
           );
-      if (document.documentElement.scrollWidth > window.innerWidth + 2)
+      const clientWidth = document.documentElement.clientWidth;
+      if (document.documentElement.scrollWidth > clientWidth + 2)
         failures.push("Document horizontal overflow");
       const area =
         document.querySelector("dialog[open]") ??
         document.querySelector("#main-content");
-      if (window.innerWidth > 760 && area) {
+      if (clientWidth > 760 && area) {
         for (const panel of [
           area,
           ...area.querySelectorAll(
@@ -376,7 +404,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         variant,
         role,
         route: window.location.hash,
-        viewport: { width: window.innerWidth, height: window.innerHeight },
+        viewport: {
+          width: clientWidth,
+          height: document.documentElement.clientHeight,
+          innerWidth: window.innerWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          visualWidth: window.visualViewport?.width ?? null,
+        },
         buttons,
         topbar,
         statuses,

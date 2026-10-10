@@ -604,22 +604,35 @@ describe("styled Dropzone", () => {
 });
 
 describe("styled Menu", () => {
-  it("keeps a named icon-only More menu keyboard operable and restores focus after its action", async () => {
+  it("keeps icon-menu text accessible, preserves rich badges and restores keyboard focus", async () => {
     const user = userEvent.setup();
     const action = vi.fn();
     show(
-      <Menu
-        iconOnly
-        label={null}
-        icon={<span aria-hidden="true">⋯</span>}
-        showChevron={false}
-        aria-label="More actions"
-      >
-        <MenuItem onClick={action}>Stop tracking this product</MenuItem>
-      </Menu>,
+      <>
+        <Menu
+          iconOnly
+          label="More actions"
+          icon={<span aria-hidden="true">⋯</span>}
+        >
+          <MenuItem onClick={action}>Stop tracking this product</MenuItem>
+        </Menu>
+        <Menu
+          iconOnly
+          aria-label="Notifications, 3 unread"
+          label={<span className="notification-count">3</span>}
+        >
+          <MenuItem onClick={vi.fn()}>Approvals</MenuItem>
+        </Menu>
+      </>,
     );
     const trigger = screen.getByRole("button", { name: "More actions" });
     expect(trigger).toHaveClass("ui-icon-button", "button-secondary");
+    expect(within(trigger).getByText("More actions")).toHaveClass("sr-only");
+    const notifications = screen.getByRole("button", {
+      name: "Notifications, 3 unread",
+    });
+    expect(within(notifications).getByText("3")).toBeVisible();
+    expect(notifications.querySelector(".lucide-chevron-down")).toBeNull();
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const item = screen.getByRole("menuitem", {

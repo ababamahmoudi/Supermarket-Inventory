@@ -175,10 +175,14 @@ async function setup(page, scene, variant) {
   } else if (scene === "products-weight") {
     await visit(page, "products");
     await field(page, "Search products").fill("0016");
-    await expect(page.locator(".catalog-table")).toContainText("$7.49/lb");
-    await expect(page.locator(".catalog-table")).toContainText("$16.51/kg");
+    await expect(page.locator(".catalog-products-table")).toContainText(
+      "$7.49/lb",
+    );
+    await expect(page.locator(".catalog-products-table")).toContainText(
+      "$16.51/kg",
+    );
     await appearance(page, variant);
-    selector = ".catalog-table";
+    selector = ".catalog-products-table";
   } else if (scene === "alerts") {
     await visit(page, "alerts");
     await appearance(page, variant);

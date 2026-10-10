@@ -1886,8 +1886,12 @@ export function Menu({
         }}
       >
         {icon ?? null}
-        {label}
-        {showChevron && !icon && (
+        {iconOnly && typeof label === "string" ? (
+          <span className="sr-only">{label}</span>
+        ) : (
+          label
+        )}
+        {showChevron && !icon && !iconOnly && (
           <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
         )}
       </button>

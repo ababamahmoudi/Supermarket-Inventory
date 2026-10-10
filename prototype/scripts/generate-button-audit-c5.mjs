@@ -289,58 +289,37 @@ const summary = {
 };
 const conditionalCoverage = [
   {
-    component: "App",
-    state: "Confirm your password reauthentication dialog",
-    reason:
-      "Requires an expired authentication session; sign-in, first password change, and lock are measured separately.",
-  },
-  {
-    component: "BranchRequests",
-    state:
-      "Short/Missing decisions; Mark as sent; Mark as received; Close request; Copy short or missing items",
-    reason:
-      "The presentation run measures the incoming/outgoing lists, request draft, saved draft detail, and cancellation reason. These controls require later request lifecycle states.",
-  },
-  {
-    component: "Labels",
-    state:
-      "Selection action; archived template restore; final print confirmation Yes/No",
-    reason:
-      "The presentation run measures Products, Waitlist, Templates, and editing a template. Selection, archiving, and completion of a print operation expose additional conditional actions.",
-  },
-  {
     component: "Notes",
-    state: "Note detail, Edit note, Mark seen, and Mark open/Mark done",
+    state: "Custom notebook definition edit/archive/restore confirmations",
     reason:
-      "The presentation run measures the list and Add note dialog; these controls depend on opening an existing note and its author/status.",
+      "Notebook entry editing and seen/done/open actions are measured. Definition lifecycle confirmations are not exhaustively opened; they use the inventoried shared Dialog and Button contracts.",
   },
   {
     component: "Orders",
-    state:
-      "Saved order print preview, cancellation confirmation, linked receipt reference, and note removal",
+    state: "Linked receipt references and removal of an attached notebook note",
     reason:
-      "The presentation run measures the list and a new order with supplier items. Saved order lifecycle and linked-note conditions expose these actions.",
+      "The presentation run includes saved-order print/cancel dialogs. These additional controls require a linked receiving record or an attached ordering note.",
   },
   {
-    component: "InvoiceCorrectionDialog / InvoiceOrderReview / Invoices",
+    component: "InvoiceOrderReview / Invoices",
     state:
-      "Correction preview/confirmation, order comparison refresh, short-delivery receiving, manual new-product line, and successful move state",
+      "Order comparison refresh, short-delivery receiving, manual new-product line, and successful move state",
     reason:
-      "The presentation run measures posted invoices, original viewer, correction entry, move dialog, upload entry, and simulated upload review. These actions require further workflow progression or a linked order.",
-  },
-  {
-    component: "History / PostedInvoice",
-    state:
-      "Revert confirmation and corrected/original/previous-version popup destinations",
-    reason:
-      "The list and invoice views are measured; changes eligible for reverting and multiple retained correction versions require additional history records.",
+      "Posted invoices, original viewer, correction preview/confirmation/version links, move dialog, upload entry, and simulated upload review are measured. These additional actions require a linked order or further manual-entry/move progression.",
   },
   {
     component: "Returns / SupplierApproval",
     state:
-      "Supplier/product approval rejection; Supervisor claim verification; cancellation approval/decline; final recorded settlement messages",
+      "Supplier/product approval rejection and Supervisor claim verification",
     reason:
-      "The presentation run measures return pickup, memo, cancellation request, policy, and settlement forms for both roles. Approval and post-submission actions require specific subsequent states.",
+      "Pickup, memo, cancellation request/disposition, Supervisor cancellation approval/decline, policy, and settlement forms are measured. These additional approval/verification actions require specific supplier or submitted-claim states.",
+  },
+  {
+    component: "All additional conditional forms",
+    state:
+      "All combinations of language, theme, role, field values, and popup options",
+    reason:
+      "The supplemental lifecycle observations use English light on desktop and phone. Main screens have additional English dark and Persian coverage; extra dialogs are English light unless their recorded appearance says otherwise. The audit does not claim the full Cartesian product of application states.",
   },
   {
     component: "Shared Menu / Select / Columns / DateField",

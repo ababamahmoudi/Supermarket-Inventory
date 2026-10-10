@@ -25,7 +25,13 @@ export type C5Inspection = {
   variant: string;
   role: string;
   route: string;
-  viewport: { width: number; height: number };
+  viewport: {
+    width: number;
+    height: number;
+    innerWidth: number;
+    scrollWidth: number;
+    visualWidth: number | null;
+  };
   buttons: C5Button[];
   topbar: {
     label: string;

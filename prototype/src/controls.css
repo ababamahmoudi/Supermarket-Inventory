@@ -534,6 +534,7 @@ input[type="file"].ui-file-input {
   display: none;
 }
 .ui-menu-trigger {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;

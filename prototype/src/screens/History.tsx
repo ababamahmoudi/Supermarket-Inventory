@@ -43,7 +43,7 @@ function InvoiceVersionLinks({ entry }: { entry: Activity }) {
   if (!after?.version_id) return null;
   const route = `#invoices?id=${encodeURIComponent(entry.entity_id)}&version=`;
   return (
-    <div className="history-invoice-version-links">
+    <div className="actions history-invoice-version-links">
       <Button asChild variant="secondary" size="sm">
         <a href={`${route}${encodeURIComponent(after.version_id)}`}>
           {t("View corrected", "نمایش اصلاح‌شده")}
@@ -348,7 +348,7 @@ export default function History() {
           <DataTable
             className="history-table"
             columns={[
-              { width: 145 },
+              { width: 170 },
               { width: 160 },
               { width: 110 },
               { width: 190 },
