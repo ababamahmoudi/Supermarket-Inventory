@@ -178,6 +178,7 @@
 }
 .posted-invoice-totals dt {
   margin: 0;
+  text-align: end;
 }
 .posted-invoice-totals .posted-invoice-payable dt,
 .posted-invoice-totals .posted-invoice-payable dd {

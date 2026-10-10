@@ -203,8 +203,13 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await expect(totals).toHaveCount(5);
     const totalRows = await totals.evaluateAll((rows) =>
       rows.map((row) => {
-        const term = row.querySelector("dt")!.getBoundingClientRect();
-        const amount = row.querySelector("dd")!.getBoundingClientRect();
+        const textBounds = (element: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return range.getBoundingClientRect();
+        };
+        const term = textBounds(row.querySelector("dt")!);
+        const amount = textBounds(row.querySelector("dd")!);
         return {
           sameLine: Math.abs(term.top - amount.top) <= 2,
           gap: Math.min(
