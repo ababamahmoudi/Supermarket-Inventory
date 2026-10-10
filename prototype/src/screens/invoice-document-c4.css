@@ -28,6 +28,7 @@
   inline-size: 100%;
   overflow: auto;
   background: white;
+  block-size: clamp(260px, 60vh, 720px);
 }
 .invoice-original-media img,
 .invoice-original-media canvas {
@@ -142,5 +143,61 @@
 @media (max-width: 600px) {
   .posted-invoice-lines {
     --table-min-width: 640px;
+  }
+}
+
+/* C5: a document header and one clearly paired amount per total row. */
+.posted-invoice-title-row,
+.posted-invoice-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.posted-invoice-title-row {
+  justify-content: space-between;
+  gap: 20px;
+}
+.posted-invoice-title h2 {
+  margin: 0;
+}
+.posted-invoice-title-row > .actions {
+  margin: 0;
+}
+.posted-invoice-document .posted-invoice-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  inline-size: min(360px, 100%);
+}
+.posted-invoice-totals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 24px;
+}
+.posted-invoice-totals dt {
+  margin: 0;
+}
+.posted-invoice-totals .posted-invoice-payable dt,
+.posted-invoice-totals .posted-invoice-payable dd {
+  color: var(--text);
+  font-weight: 700;
+}
+.invoice-original-zoom {
+  min-inline-size: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.invoice-original-media > img,
+.invoice-original-media > canvas {
+  margin-inline: auto;
+}
+.invoice-original-controls .button {
+  flex: 0 0 auto;
+}
+@media (max-width: 600px) {
+  .posted-invoice-title-row > .actions {
+    justify-content: flex-start;
   }
 }

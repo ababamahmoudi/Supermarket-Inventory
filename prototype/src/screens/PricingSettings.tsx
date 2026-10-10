@@ -443,7 +443,7 @@ export default function PricingSettings() {
                     {t("Edit", "ویرایش")}
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={category.archived ? "secondary" : "danger"}
                     size="sm"
                     onClick={() =>
                       setDraft((previous) => ({

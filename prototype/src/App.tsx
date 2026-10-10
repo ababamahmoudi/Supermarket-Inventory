@@ -80,6 +80,7 @@ import {
   MenuItem,
   Select,
 } from "./ui";
+import "./c5-shell-controls.css";
 
 export const pages: {
   key: string;
@@ -246,30 +247,21 @@ export function RoleName({ role }: { role: Role }) {
 }
 function LanguageToggle() {
   const { lang, setLang, t, state } = useDemo();
+  const nextLanguage = lang === "en" ? "fa" : "en";
+  if (!state.config.company.ui_languages.includes(nextLanguage)) return null;
   return (
-    <div className="pills language-toggle" aria-label={t("Language", "زبان")}>
-      {state.config.company.ui_languages.includes("en") && (
-        <button
-          type="button"
-          aria-label="English"
-          aria-pressed={lang === "en"}
-          onClick={() => setLang("en")}
-        >
-          EN
-        </button>
-      )}
-      {state.config.company.ui_languages.includes("fa") && (
-        <button
-          type="button"
-          lang="fa"
-          aria-label="فارسی"
-          aria-pressed={lang === "fa"}
-          onClick={() => setLang("fa")}
-        >
-          فا
-        </button>
-      )}
-    </div>
+    <IconButton
+      className="language-toggle"
+      lang={nextLanguage}
+      aria-label={
+        nextLanguage === "fa"
+          ? t("Switch to Persian", "تغییر به فارسی")
+          : t("Switch to English", "تغییر به انگلیسی")
+      }
+      onClick={() => setLang(nextLanguage)}
+    >
+      {nextLanguage === "fa" ? "فا" : "EN"}
+    </IconButton>
   );
 }
 function Initials({ name }: { name: string }) {
@@ -317,8 +309,7 @@ function PasswordField({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
         />
-        <button
-          type="button"
+        <IconButton
           className="password-toggle"
           aria-label={
             visible
@@ -333,7 +324,7 @@ function PasswordField({
           ) : (
             <Eye size={20} aria-hidden="true" />
           )}
-        </button>
+        </IconButton>
       </div>
       {error && (
         <p id={`${id}-error`} className="form-error" role="alert">
@@ -399,8 +390,8 @@ function SignIn() {
             </p>
             <div className="recent-user-list">
               {recentUsers.map((user) => (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   className="recent-user"
                   key={user.username}
                   onClick={() => {
@@ -419,7 +410,7 @@ function SignIn() {
                       .replace(/^Demo /, "")
                       .replace(/ نمایشی$/, "")}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -565,7 +556,7 @@ function ChoosePassword() {
           {t("Save password", "ذخیرهٔ گذرواژه")}
         </Button>
       </form>
-      <Button variant="ghost" onClick={signOut}>
+      <Button variant="secondary" onClick={signOut}>
         {t("Sign out", "خروج")}
       </Button>
     </AuthLayout>
@@ -597,7 +588,7 @@ function LockScreen() {
           {t("Unlock", "باز کردن قفل")}
         </Button>
       </form>
-      <Button variant="ghost" onClick={signOut}>
+      <Button variant="secondary" onClick={signOut}>
         {t("Sign in as someone else", "ورود به‌عنوان کاربر دیگر")}
       </Button>
     </AuthLayout>
@@ -1004,6 +995,7 @@ export default function App() {
                 {compactGroups ? (
                   <Button
                     variant="ghost"
+                    data-control-kind="widget"
                     className="nav-group-toggle"
                     aria-expanded={open}
                     aria-controls={`nav-group-${group}`}
@@ -1210,6 +1202,7 @@ export default function App() {
           </IconButton>
           <Menu
             className="notifications-menu"
+            iconOnly
             showChevron={false}
             aria-label={t(
               `Notifications, ${notifications} unread`,

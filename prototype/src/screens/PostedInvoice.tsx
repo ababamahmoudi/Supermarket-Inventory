@@ -91,16 +91,18 @@ export function PostedInvoice({
   const refused = refusedTotals(invoice);
   return (
     <>
-      <Card
-        title={invoice.supplier_invoice_number}
-        className="posted-invoice-document"
-      >
-        <div className="inline-actions">
-          <Badge tone="approved">
-            {versions.length > 1
-              ? t("Corrected", "اصلاح‌شده")
-              : t("Posted", "ثبت‌شده")}
-          </Badge>
+      <Card className="posted-invoice-document">
+        <div className="posted-invoice-title-row">
+          <div className="posted-invoice-title">
+            <h2>
+              <LtrText>{invoice.supplier_invoice_number}</LtrText>
+            </h2>
+            <Badge tone="approved">
+              {versions.length > 1
+                ? t("Corrected", "اصلاح‌شده")
+                : t("Posted", "ثبت‌شده")}
+            </Badge>
+          </div>
           {role === "supervisor" && current && (
             <div className="actions">
               <Button onClick={onCorrect}>
@@ -354,7 +356,7 @@ export function PostedInvoice({
               />
             </dd>
           </div>
-          <div>
+          <div className="posted-invoice-payable">
             <dt>{t("Payable", "قابل پرداخت")}</dt>
             <dd>
               <Money
@@ -387,16 +389,16 @@ export function PostedInvoice({
         {versions.length > 1 && (
           <div className="posted-invoice-versions">
             {versions.map((version, index) => (
-              <a
-                key={version.version_id}
-                className="button button-secondary"
-                href={`#invoices?id=${encodeURIComponent(original.id)}&version=${encodeURIComponent(version.version_id)}`}
-              >
-                {index === 0
-                  ? t("Original invoice", "اصل فاکتور")
-                  : t("Correction", "اصلاح")}{" "}
-                {index > 0 && <LtrText>{index}</LtrText>}
-              </a>
+              <Button key={version.version_id} asChild variant="secondary">
+                <a
+                  href={`#invoices?id=${encodeURIComponent(original.id)}&version=${encodeURIComponent(version.version_id)}`}
+                >
+                  {index === 0
+                    ? t("Original invoice", "اصل فاکتور")
+                    : t("Correction", "اصلاح")}{" "}
+                  {index > 0 && <LtrText>{index}</LtrText>}
+                </a>
+              </Button>
             ))}
           </div>
         )}

@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
+import { createId } from "./ids";
 import { effectiveOffer, effectivePrice } from "./catalog";
 import { branchSellsToCustomers, sellingBranches } from "./settings";
 import {
@@ -206,8 +207,10 @@ export function reconcileOffers(
       (!samePrice(offer.price, price) ||
         !mapping ||
         mapping.offer !== offer.label)
-    )
+    ) {
       offer.status = "stopped";
+      offer.stopped_at = new Date().toISOString();
+    }
   }
   const scopes: { scope: PriceScope; branch: Branch; price: string | null }[] =
     [
@@ -604,29 +607,78 @@ export function activateOffer(
   state: DemoState,
   candidate: Offer,
   role: Role = "floor_worker",
-): void {
+): "created" | "unchanged" {
   const action =
     candidate.status === "suggested" ? "Confirm offer" : "Create offer";
   if (offerReadiness(state, candidate) !== "ready")
     throw new Error("Offer is not ready to activate");
   if (candidate.scope === "branch" && candidate.branch === "all")
     throw new Error("Choose one branch");
+  const existing = state.offers.find(
+    (offer) =>
+      offer.id === candidate.id && offer.company_id === candidate.company_id,
+  );
+  // Repeating the same Create action must not manufacture another historical
+  // version. Different terms still replace only this exact price scope.
+  const duplicate = state.offers.find(
+    (offer) =>
+      offer.status === "active" &&
+      offer.company_id === candidate.company_id &&
+      offer.product_code === candidate.product_code &&
+      offer.scope === candidate.scope &&
+      offer.branch === candidate.branch &&
+      samePrice(offer.price, candidate.price) &&
+      offer.label === candidate.label &&
+      offer.pool === candidate.pool &&
+      offer.currency === candidate.currency &&
+      offer.mix_and_match === candidate.mix_and_match &&
+      (offer.start_date || undefined) === (candidate.start_date || undefined) &&
+      (offer.end_date || undefined) === (candidate.end_date || undefined),
+  );
+  const now = new Date().toISOString();
+  if (duplicate) {
+    // A redundant retained suggestion still needs its own confirmation to leave
+    // the queue. Preserve the active version and the dismissed task as evidence.
+    if (candidate.status === "suggested" && existing?.status === "suggested") {
+      existing.status = "stopped";
+      existing.stopped_at = now;
+      recordDemoActivity(
+        state,
+        action,
+        candidate.product_code,
+        candidate.branch,
+        role,
+      );
+      return "created";
+    }
+    return "unchanged";
+  }
   for (const offer of state.offers)
     if (
-      offer.id !== candidate.id &&
+      (offer.id !== candidate.id || offer.status === "active") &&
       offer.company_id === candidate.company_id &&
       offer.product_code === candidate.product_code &&
       offer.scope === candidate.scope &&
       offer.branch === candidate.branch &&
       offer.status !== "stopped"
-    )
+    ) {
       offer.status = "stopped";
-  const existing = state.offers.find(
-    (offer) =>
-      offer.id === candidate.id && offer.company_id === candidate.company_id,
-  );
-  if (existing) Object.assign(existing, candidate, { status: "active" });
-  else state.offers.push({ ...candidate, status: "active" });
+      offer.stopped_at = now;
+    }
+  if (existing?.status === "suggested")
+    Object.assign(existing, candidate, {
+      status: "active",
+      created_at: existing.created_at ?? now,
+      stopped_at: undefined,
+    });
+  else
+    state.offers.push({
+      ...candidate,
+      id: existing ? createId("offer") : candidate.id,
+      status: "active",
+      created_at: now,
+      stopped_at: undefined,
+    });
   recordDemoActivity(
     state,
     action,
@@ -634,6 +686,7 @@ export function activateOffer(
     candidate.branch,
     role,
   );
+  return "created";
 }
 
 export function stopOffer(
@@ -648,6 +701,7 @@ export function stopOffer(
   );
   if (!offer || offer.status === "stopped") return;
   offer.status = "stopped";
+  offer.stopped_at = new Date().toISOString();
   recordDemoActivity(
     state,
     dismissed ? "Dismiss" : "Stop offer",

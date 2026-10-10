@@ -48,6 +48,33 @@ function show(children: ReactNode) {
   return render(<DemoProvider>{children}</DemoProvider>);
 }
 
+it.each([
+  ["Waiting for pickup", "info"],
+  ["در انتظار جمع‌آوری", "info"],
+  ["Waiting for credit", "pending"],
+  ["در انتظار اعتبار", "pending"],
+  ["در انتظار بستانکاری", "pending"],
+  ["Pending credit", "pending"],
+  ["اعتبار در انتظار", "pending"],
+  ["Closed", "approved"],
+  ["بسته‌شده", "approved"],
+  ["Credited", "approved"],
+  ["اعتبار دریافت‌شده", "approved"],
+  ["Replaced", "approved"],
+  ["جایگزین‌شده", "approved"],
+  ["Written off", "neutral"],
+  ["سوخت‌شده", "neutral"],
+  ["Cancelled", "neutral"],
+  ["لغوشده", "neutral"],
+])(
+  "gives %s its canonical tone despite a conflicting legacy tone",
+  (label, tone) => {
+    show(<Badge tone="danger">{label}</Badge>);
+    expect(screen.getByText(label)).toHaveClass(tone);
+    expect(screen.getByText(label)).not.toHaveClass("danger");
+  },
+);
+
 const statuses = [
   { value: "draft", label: "Draft" },
   { value: "blocked", label: "Blocked", disabled: true },
@@ -575,6 +602,33 @@ describe("styled Dropzone", () => {
 });
 
 describe("styled Menu", () => {
+  it("keeps a named icon-only More menu keyboard operable and restores focus after its action", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn();
+    show(
+      <Menu
+        iconOnly
+        label={null}
+        icon={<span aria-hidden="true">⋯</span>}
+        showChevron={false}
+        aria-label="More actions"
+      >
+        <MenuItem onClick={action}>Stop tracking this product</MenuItem>
+      </Menu>,
+    );
+    const trigger = screen.getByRole("button", { name: "More actions" });
+    expect(trigger).toHaveClass("ui-icon-button", "button-secondary");
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+    const item = screen.getByRole("menuitem", {
+      name: "Stop tracking this product",
+    });
+    await waitFor(() => expect(item).toHaveFocus());
+    await user.keyboard("{Enter}");
+    expect(action).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
   it("moves among enabled actions and restores trigger focus after Escape", async () => {
     const user = userEvent.setup();
     const onLock = vi.fn();

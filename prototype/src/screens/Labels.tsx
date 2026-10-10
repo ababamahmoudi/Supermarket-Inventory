@@ -925,7 +925,7 @@ function TemplateDesigner({
             )}
             {id && (
               <Button
-                variant="ghost"
+                variant={draft.archived ? "secondary" : "danger"}
                 onClick={() => setArchived(!draft.archived)}
               >
                 {draft.archived
@@ -1582,7 +1582,7 @@ export function Labels() {
                   )}
                 </span>
                 <Button
-                  variant="ghost"
+                  variant="danger"
                   disabled={waiting.length === 0}
                   onClick={() =>
                     run((next) => clearLabelWaitlist(next, branch, actor))
@@ -1689,7 +1689,7 @@ export function Labels() {
                           </td>
                           <td>
                             <Button
-                              variant="ghost"
+                              variant="danger"
                               size="sm"
                               onClick={() =>
                                 run((next) =>

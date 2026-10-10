@@ -283,21 +283,11 @@ for (const width of [1280, 1440, 1920]) {
       );
 
       await page.goto("/#expiry");
-      await page
-        .getByRole("button", {
-          name: copy(language, "Add date", "افزودن تاریخ"),
-          exact: true,
-        })
-        .click();
-      const dateDialog = page.getByRole("dialog", {
-        name: copy(language, "Add date", "افزودن تاریخ"),
-        exact: true,
-      });
-      await dateDialog
+      const quickAdd = page.locator(".date-quick-card");
+      await quickAdd
         .getByLabel(copy(language, "Product", "محصول"), { exact: true })
-        .click();
-      await page.getByRole("option", { name: /0001$/ }).click();
-      await dateDialog
+        .fill("0001");
+      await quickAdd
         .getByLabel(copy(language, "Date", "تاریخ"), { exact: true })
         .click();
       await page
@@ -307,19 +297,25 @@ for (const width of [1280, 1440, 1920]) {
           exact: true,
         })
         .click();
-      await dateDialog
+      await quickAdd
+        .getByRole("button", {
+          name: copy(language, "More", "بیشتر"),
+          exact: true,
+        })
+        .click();
+      await quickAdd
         .getByLabel(copy(language, "Quantity (optional)", "مقدار (اختیاری)"), {
           exact: true,
         })
         .fill("2");
-      await dateDialog
+      await quickAdd
         .getByLabel(copy(language, "Lot (optional)", "سری ساخت (اختیاری)"), {
           exact: true,
         })
         .fill("C4-LAYOUT-LOT");
       await check(
-        "Manual Add date dialog with product and location",
-        ".date-operation-dialog",
+        "Manual quick-add bar with product, location and optional date evidence",
+        ".date-quick-card",
       );
 
       // Pickup has evidence and leaves the ledger alone. The pending-claim

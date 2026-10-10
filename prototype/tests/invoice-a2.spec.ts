@@ -88,7 +88,9 @@ test("Persian signed money, line numbers and deduction parentheses stay isolated
     .nth(5)
     .getByRole("checkbox", { name: "Mark as short", exact: true })
     .check();
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   const deduction = page
     .locator(".invoice-summary-grid .ui-summary-tile")
     .nth(2);
@@ -198,7 +200,9 @@ test("fictional invoice answers are available only inside Demo and retain Persia
   await expect(
     page.getByText("Use fictional demo answer", { exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(
     page.getByLabel("آیا تاریخ انقضا با کالاهای موجود در فروشگاه یکسان است؟", {
       exact: true,
@@ -226,7 +230,7 @@ test("Supplier invoice links open the actual posted document and retained origin
   const row = page
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: "FV-20390", exact: true }) });
-  await row.getByRole("button", { name: "View", exact: true }).click();
+  await row.getByRole("link", { name: "FV-20390", exact: true }).click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   const original = page.locator(".invoice-original-media img");
   await expect(original).toBeVisible();
@@ -281,7 +285,9 @@ test("Supplier invoice links open the actual posted document and retained origin
   await expect(document).toContainText("FV-20390");
   await expect(document.locator("input,select,textarea")).toHaveCount(0);
   await expect(page.locator(".invoice-preview-text")).toHaveCount(0);
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(original).toHaveAttribute("src", source.data);
   await expect(document).toContainText("FV-20390");

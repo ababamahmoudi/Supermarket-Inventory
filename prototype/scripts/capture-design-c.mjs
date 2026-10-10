@@ -134,7 +134,7 @@ async function appearance(page, variant) {
       page,
       dark ? "Switch to dark theme" : "Switch to light theme",
     ).click();
-  if (variant === "fa-light") await button(page, "فارسی").click();
+  if (variant === "fa-light") await button(page, "Switch to Persian").click();
 }
 async function visit(page, route, title) {
   await english(page);

@@ -185,7 +185,7 @@ for (const width of [1280, 1440, 1920]) {
             .click();
           await expect(page.locator(".suppliers-table")).toHaveAttribute(
             "data-visible-column-count",
-            "12",
+            "11",
           );
           await check("suppliers with every optional column enabled");
         }
@@ -196,8 +196,8 @@ for (const width of [1280, 1440, 1920]) {
       await page
         .locator(".payables-overview tbody tr")
         .filter({ hasText: "Fresh Valley Foods" })
-        .getByRole("button", {
-          name: language === "en" ? "View" : "مشاهده",
+        .getByRole("link", {
+          name: "Fresh Valley Foods",
           exact: true,
         })
         .click();
@@ -350,7 +350,7 @@ test("external payment is unchanged until explicit money confirmation, and cance
   await page
     .locator(".payables-overview tbody tr")
     .filter({ hasText: "Fresh Valley Foods" })
-    .getByRole("button", { name: "View", exact: true })
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Record external payment", exact: true })

@@ -5,20 +5,23 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
-import { useListState } from "../navigation";
+import { MoreHorizontal } from "lucide-react";
+import {
+  navigationKey,
+  saveNavigationValue,
+  useListState,
+  useRouteParam,
+} from "../navigation";
 import { useDemo } from "../store";
 import type { Branch } from "../types";
 import { companyDate } from "../invoice";
-import {
-  AddDateDialog,
-  RemoveDateDialog,
-  StopTrackingDialog,
-} from "../AddDateDialog";
+import { RemoveDateDialog, StopTrackingDialog } from "../AddDateDialog";
 import {
   dateRemovalReasonLabel,
   scopedTrackedDates,
   trackedDateDaysLeft,
 } from "../date-tracking";
+import { DateQuickAdd } from "../DateQuickAdd";
 import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
 import {
   Badge,
@@ -27,19 +30,23 @@ import {
   DataTable,
   EmptyState,
   FilterToolbar,
+  Menu,
+  MenuItem,
   PageHeader,
   Select,
   useTableColumns,
 } from "../ui";
 export function Expiry() {
-  const { state, branch, setBranch, role, historyContext, lang, t } = useDemo();
+  const { state, branch, setBranch, role, user, historyContext, lang, t } =
+    useDemo();
   const branches = configuredBranches(state.config);
   const [window, setWindow] = useListState("expiry.window", "soon");
   const [category, setCategory] = useListState("expiry.category", "all");
   const [search, setSearch] = useListState("expiry.search", "");
   const [sort, setSort] = useListState<"date" | "name">("expiry.sort", "date");
   const [message, setMessage] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [newDateId, setNewDateId] = useState("");
+  const requestedProduct = useRouteParam("product");
   const [removing, setRemoving] = useState<string | null>(null);
   const [stopping, setStopping] = useState<string | null>(null);
   const tableColumns = useTableColumns("expiry", [
@@ -99,21 +106,25 @@ export function Expiry() {
       );
     })
     .sort((a, b) =>
-      sort === "date"
-        ? a.date.localeCompare(b.date)
-        : (
-            state.products.find(
-              (item) =>
-                item.company_id === state.config.company.seed_key &&
-                item.code === a.product_code,
-            )?.name_en ?? ""
-          ).localeCompare(
-            state.products.find(
-              (item) =>
-                item.company_id === state.config.company.seed_key &&
-                item.code === b.product_code,
-            )?.name_en ?? "",
-          ),
+      a.id === newDateId
+        ? -1
+        : b.id === newDateId
+          ? 1
+          : sort === "date"
+            ? a.date.localeCompare(b.date)
+            : (
+                state.products.find(
+                  (item) =>
+                    item.company_id === state.config.company.seed_key &&
+                    item.code === a.product_code,
+                )?.name_en ?? ""
+              ).localeCompare(
+                state.products.find(
+                  (item) =>
+                    item.company_id === state.config.company.seed_key &&
+                    item.code === b.product_code,
+                )?.name_en ?? "",
+              ),
     );
   if (!role || role === "cashier")
     return (
@@ -132,28 +143,63 @@ export function Expiry() {
           "Check expiry and best-before dates.",
           "تاریخ انقضا و بهترین زمان مصرف را بررسی کنید.",
         )}
-        actions={
-          <Button
-            onClick={() => {
-              setAdding(true);
-              setMessage("");
-            }}
-          >
-            {t("Add date", "افزودن تاریخ")}
-          </Button>
-        }
       />
+      <Card className="date-quick-card">
+        <DateQuickAdd
+          key={requestedProduct ?? ""}
+          productCode={requestedProduct ?? undefined}
+          defaultLocation={branch}
+          onAdded={(id, location) => {
+            setNewDateId(id);
+            setWindow("active");
+            setSearch("");
+            setCategory("all");
+            if (
+              role === "supervisor" &&
+              branch !== "all" &&
+              branch !== location
+            ) {
+              // The destination can have its own saved filters. Make the date
+              // just added visible there without resetting the quick-add form.
+              for (const [field, value] of [
+                ["expiry.window", "active"],
+                ["expiry.search", ""],
+                ["expiry.category", "all"],
+              ]) {
+                saveNavigationValue(
+                  navigationKey(
+                    state.config.company.seed_key,
+                    user?.username ?? "signed-out",
+                    location,
+                    field,
+                  ),
+                  value,
+                );
+              }
+              setBranch(location);
+            }
+            setMessage("");
+          }}
+        />
+      </Card>
       <FilterToolbar
         className="expiry-filters"
         aria-label={t("Date tracking filters", "فیلترهای پیگیری تاریخ")}
-        count={translateCount(
-          "{{count}} entry",
-          "{{count}} entries",
-          "{{count}} مورد",
-          "{{count}} مورد",
-          entries.length,
-          lang,
-        )}
+        count={
+          <span className="date-filter-result-actions">
+            <span>
+              {translateCount(
+                "{{count}} entry",
+                "{{count}} entries",
+                "{{count}} مورد",
+                "{{count}} مورد",
+                entries.length,
+                lang,
+              )}
+            </span>
+            {tableColumns.chooser}
+          </span>
+        }
         search={
           <input
             className="ui-input"
@@ -255,7 +301,6 @@ export function Expiry() {
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
       </FilterToolbar>
-      <div className="table-column-actions">{tableColumns.chooser}</div>
       {message && (
         <div className="banner approved" role="status">
           {message}
@@ -302,7 +347,10 @@ export function Expiry() {
                 ).supplier;
                 const days = daysLeft(entry.date);
                 return (
-                  <tr key={entry.id}>
+                  <tr
+                    key={entry.id}
+                    data-new-date={entry.id === newDateId || undefined}
+                  >
                     <td>
                       {product && (
                         <ProductName product={product} language={lang} />
@@ -441,19 +489,31 @@ export function Expiry() {
                             {t("Remove", "حذف")}
                           </Button>
                           {role === "supervisor" && (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => {
-                                setStopping(entry.product_code);
-                                setMessage("");
-                              }}
+                            <Menu
+                              iconOnly
+                              showChevron={false}
+                              label={
+                                <MoreHorizontal
+                                  size={20}
+                                  strokeWidth={1.5}
+                                  aria-hidden="true"
+                                />
+                              }
+                              aria-label={t("More", "بیشتر")}
                             >
-                              {t(
-                                "Stop tracking this product",
-                                "توقف پیگیری این محصول",
-                              )}
-                            </Button>
+                              <MenuItem
+                                className="date-stop-menu-item"
+                                onClick={() => {
+                                  setStopping(entry.product_code);
+                                  setMessage("");
+                                }}
+                              >
+                                {t(
+                                  "Stop tracking this product",
+                                  "توقف پیگیری این محصول",
+                                )}
+                              </MenuItem>
+                            </Menu>
                           )}
                         </div>
                       )}
@@ -471,17 +531,6 @@ export function Expiry() {
           "تاریخ‌ها ثابت نمی‌کنند که کالا هنوز در قفسه است. افزودن یا حذف تاریخ موجودی یا مانده تأمین‌کننده را تغییر نمی‌دهد.",
         )}
       </p>
-      <AddDateDialog
-        open={adding}
-        onOpenChange={setAdding}
-        onAdded={(_id, location) => {
-          setWindow("active");
-          setSearch("");
-          setCategory("all");
-          if (role === "supervisor" && branch !== "all") setBranch(location);
-          setMessage(t("Date added.", "تاریخ اضافه شد."));
-        }}
-      />
       {removing && (
         <RemoveDateDialog
           open

@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Download, Minus, Plus } from "lucide-react";
 import type { PDFDocumentProxy, PDFDocumentLoadingTask } from "pdfjs-dist";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useDemo } from "../store";
-import { Button, Card } from "../ui";
+import { Button, Card, IconButton } from "../ui";
 import { LtrText } from "../presentation";
 import type { DemoInvoice } from "../types";
 import "./invoice-document-c4.css";
@@ -53,7 +53,20 @@ function OriginalInvoiceContent({
   const media = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(400);
-  const [zoom, setZoom] = useState(1);
+  const [height, setHeight] = useState(420);
+  const [pageRatio, setPageRatio] = useState(1);
+  const [fit, setFit] = useState<"page" | "width" | "custom">("page");
+  const [customZoom, setCustomZoom] = useState(1);
+  const zoom =
+    fit === "page"
+      ? Math.max(0.25, Math.min(1, height / (width * pageRatio)))
+      : fit === "width"
+        ? 1
+        : customZoom;
+  const changeZoom = (next: number) => {
+    setCustomZoom(Math.max(0.25, Math.min(4, next)));
+    setFit("custom");
+  };
   const [document, setDocument] = useState<PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(1);
   const [error, setError] = useState(false);
@@ -63,9 +76,10 @@ function OriginalInvoiceContent({
   useEffect(() => {
     const node = media.current;
     if (!node) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setWidth(Math.max(1, entry.contentRect.width)),
-    );
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(Math.max(1, entry.contentRect.width));
+      setHeight(Math.max(1, entry.contentRect.height));
+    });
     observer.observe(node);
     return () => observer.disconnect();
   }, [invoice.file_data]);
@@ -111,6 +125,8 @@ function OriginalInvoiceContent({
       .getPage(page)
       .then((pdfPage) => {
         if (cancelled || !canvas.current) return;
+        const natural = pdfPage.getViewport({ scale: 1 });
+        setPageRatio(natural.height / natural.width);
         const viewport = pdfPage.getViewport({
           scale: (width / pdfPage.getViewport({ scale: 1 }).width) * zoom,
         });
@@ -169,59 +185,61 @@ function OriginalInvoiceContent({
           <p className="invoice-original-name">
             <LtrText>{invoice.file_name}</LtrText>
           </p>
-          <div className="invoice-original-controls">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
-              disabled={zoom <= 0.5}
+          <div
+            className="invoice-original-controls"
+            role="group"
+            aria-label={t("Original invoice", "اصل فاکتور")}
+          >
+            <IconButton
+              onClick={() => changeZoom(zoom - 0.25)}
+              disabled={zoom <= 0.25}
               aria-label={t("Zoom out", "کوچک‌نمایی")}
             >
               <Minus size={16} />
-            </Button>
-            <Button variant="quiet" size="sm" onClick={() => setZoom(1)}>
-              {t("Fit to width", "اندازه عرض")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setZoom((value) => Math.min(3, value + 0.25))}
-              disabled={zoom >= 3}
+            </IconButton>
+            <LtrText className="invoice-original-zoom" aria-live="polite">
+              {Math.round(zoom * 100)}%
+            </LtrText>
+            <IconButton
+              onClick={() => changeZoom(zoom + 0.25)}
+              disabled={zoom >= 4}
               aria-label={t("Zoom in", "بزرگ‌نمایی")}
             >
               <Plus size={16} />
+            </IconButton>
+            <Button variant="secondary" onClick={() => setFit("width")}>
+              {t("Fit width", "اندازه عرض")}
             </Button>
-            <Button variant="secondary" size="sm" onClick={download}>
+            <Button variant="secondary" onClick={() => setFit("page")}>
+              {t("Fit page", "اندازه صفحه")}
+            </Button>
+            <Button variant="secondary" onClick={download}>
               <Download size={16} />
               {t("Download", "دانلود")}
             </Button>
           </div>
           {document && (
             <div className="invoice-pdf-pages">
-              <Button
-                variant="secondary"
-                size="sm"
+              <IconButton
                 disabled={page <= 1}
                 onClick={() => setPage((value) => value - 1)}
                 aria-label={t("Previous page", "صفحه قبل")}
               >
                 <ChevronLeft size={16} />
-              </Button>
+              </IconButton>
               <span>
                 {t("Page", "صفحه")}{" "}
                 <LtrText>
                   {page} / {document.numPages}
                 </LtrText>
               </span>
-              <Button
-                variant="secondary"
-                size="sm"
+              <IconButton
                 disabled={page >= document.numPages}
                 onClick={() => setPage((value) => value + 1)}
                 aria-label={t("Next page", "صفحه بعد")}
               >
                 <ChevronRight size={16} />
-              </Button>
+              </IconButton>
             </div>
           )}
           {loading && (
@@ -237,7 +255,12 @@ function OriginalInvoiceContent({
               )}
             </p>
           )}
-          <div className="invoice-original-media" ref={media} data-zoom={zoom}>
+          <div
+            className="invoice-original-media"
+            ref={media}
+            data-zoom={zoom}
+            data-fit={fit}
+          >
             {invoice.file_type === "application/pdf" ? (
               <canvas
                 ref={canvas}
@@ -249,6 +272,11 @@ function OriginalInvoiceContent({
                 src={invoice.file_data}
                 alt={t("Original invoice image", "تصویر اصل فاکتور")}
                 style={{ width: `${zoom * 100}%` }}
+                onLoad={(event) => {
+                  const image = event.currentTarget;
+                  if (image.naturalWidth > 0)
+                    setPageRatio(image.naturalHeight / image.naturalWidth);
+                }}
               />
             ) : (
               <p>

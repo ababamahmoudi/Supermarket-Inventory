@@ -34,9 +34,13 @@ test("username sign-in, correct role menu, RTL and offline operation", async ({
   if (testInfo.project.name === "phone") await page.keyboard.press("Escape");
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page
+    .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
   await expect(page.locator("body")).toHaveJSProperty(
     "scrollWidth",

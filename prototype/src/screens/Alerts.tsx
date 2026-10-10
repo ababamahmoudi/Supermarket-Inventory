@@ -206,7 +206,7 @@ export function Alerts() {
                   columns={[
                     { width: "40%" },
                     { width: 180, align: "end" },
-                    { width: 260, actions: true, align: "end" },
+                    { width: 200, actions: true, align: "end" },
                   ]}
                 >
                   <thead>
@@ -294,18 +294,20 @@ export function Alerts() {
                 {alert.type === "order_differences" && (
                   <>
                     <div className="actions">
-                      <a
-                        className="text-link"
-                        href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
-                      >
-                        {t("View invoice", "مشاهده فاکتور")}
-                      </a>
-                      <a
-                        className="text-link"
-                        href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
-                      >
-                        {t("View order", "مشاهده سفارش")}
-                      </a>
+                      <Button asChild variant="secondary">
+                        <a
+                          href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
+                        >
+                          {t("View invoice", "مشاهده فاکتور")}
+                        </a>
+                      </Button>
+                      <Button asChild variant="secondary">
+                        <a
+                          href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
+                        >
+                          {t("View order", "مشاهده سفارش")}
+                        </a>
+                      </Button>
                     </div>
                     <DataTable
                       columns={[

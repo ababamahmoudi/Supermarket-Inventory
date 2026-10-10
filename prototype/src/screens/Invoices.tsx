@@ -15,6 +15,7 @@ import {
 import { SupplierEditor } from "./SupplierEditor";
 import { ProductEditor } from "./Catalog";
 import "./manual-entry.css";
+import "./c5-catalog-offers.css";
 import {
   Badge,
   Button,
@@ -257,11 +258,10 @@ export default function Invoices() {
       required: true,
       width: "18%",
     },
-    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "23%" },
-    { key: "branch", label: t("Branch", "شعبه"), width: "16%" },
-    { key: "date", label: t("Date", "تاریخ"), width: "15%" },
-    { key: "status", label: t("Status", "وضعیت"), width: "13%" },
-    { key: "review", label: t("Review", "بررسی"), width: "15%", actions: true },
+    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "30%" },
+    { key: "branch", label: t("Branch", "شعبه"), width: "20%" },
+    { key: "date", label: t("Date", "تاریخ"), width: "17%" },
+    { key: "status", label: t("Status", "وضعیت"), width: "15%" },
   ]);
   const branches = configuredBranches(state.config);
   const invoiceLocation = effectiveInvoiceLocation(state, state.invoice);
@@ -1131,11 +1131,11 @@ export default function Invoices() {
       )}
       {!routeId && tab !== "posted" && draftList}
       {tab === "posted" && !showPostedDetail ? (
-        <Card
-          title={t("Posted invoices", "فاکتورهای ثبت‌شده")}
-          className="invoice-posted-list"
-        >
-          <div className="table-column-actions">{postedColumns.chooser}</div>
+        <Card className="invoice-posted-list">
+          <div className="c5-card-title-row">
+            <h2>{t("Posted invoices", "فاکتورهای ثبت‌شده")}</h2>
+            {postedColumns.chooser}
+          </div>
           {!branchInvoices.length ? (
             <EmptyState>
               {t(
@@ -1155,14 +1155,31 @@ export default function Invoices() {
                   <th scope="col">{t("Branch", "شعبه")}</th>
                   <th scope="col">{t("Date", "تاریخ")}</th>
                   <th scope="col">{t("Status", "وضعیت")}</th>
-                  <th scope="col">{t("Review", "بررسی")}</th>
                 </tr>
               </thead>
               <tbody>
                 {branchInvoices.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <LtrText>{item.supplier_invoice_number}</LtrText>
+                      <Button variant="secondary" asChild>
+                        <a
+                          href={`#invoices?id=${encodeURIComponent(item.id)}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            updateInvoice((draft) => {
+                              retainInvoiceWorkspace(draft);
+                              draft.invoice = structuredClone(item);
+                            });
+                            chooseTab("posted", true);
+                            setDetailsOpen(false);
+                            navigate(
+                              `invoices?id=${encodeURIComponent(item.id)}`,
+                            );
+                          }}
+                        >
+                          <LtrText>{item.supplier_invoice_number}</LtrText>
+                        </a>
+                      </Button>
                     </td>
                     <td>
                       <LtrText>{item.supplier}</LtrText>
@@ -1175,25 +1192,6 @@ export default function Invoices() {
                     </td>
                     <td>
                       <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
-                    </td>
-                    <td>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          updateInvoice((draft) => {
-                            retainInvoiceWorkspace(draft);
-                            draft.invoice = structuredClone(item);
-                          });
-                          chooseTab("posted", true);
-                          setDetailsOpen(false);
-                          navigate(
-                            `invoices?id=${encodeURIComponent(item.id)}`,
-                          );
-                        }}
-                      >
-                        {t("View invoice", "مشاهده فاکتور")}
-                      </Button>
                     </td>
                   </tr>
                 ))}

@@ -6,6 +6,7 @@ import {
   nextTrackedDate,
   removeTrackedDate,
   scopedTrackedDates,
+  setProductDateTracking,
   stopProductDateTracking,
   trackingChoiceForProduct,
   validTrackedDate,
@@ -54,14 +55,13 @@ describe("manual date evidence and preference", () => {
     expect(trackingChoiceForProduct({})).toBeUndefined();
     expect(trackingChoiceForProduct(null)).toBeUndefined();
   });
-  it("adds past Best before evidence without changing preference, money or stock", () => {
+  it("adds past Best before evidence and enables tracking without money or stock changes", () => {
     const state = initialState();
     const actor = context(state);
     const physical = structuredClone({
       stock: state.stock,
       movements: state.stock_movements,
       ledger: state.ledger,
-      products: state.products,
       invoice: state.invoice,
     });
     const entry = addTrackedDate(
@@ -99,9 +99,9 @@ describe("manual date evidence and preference", () => {
       stock: state.stock,
       movements: state.stock_movements,
       ledger: state.ledger,
-      products: state.products,
       invoice: state.invoice,
     }).toEqual(physical);
+    expect(state.products[0].date_tracking).toBe(true);
   });
   it.each([
     "2026-02-29",
@@ -179,6 +179,224 @@ describe("manual date evidence and preference", () => {
     expect(() =>
       removeTrackedDate(state, cashier, entry.id, "sold_out"),
     ).toThrow(new DateTrackingError("permission"));
+  });
+});
+
+describe("inline tracking preference and atomic auto-enable", () => {
+  it.each([false, undefined])(
+    "Add enables %s and one Undo restores the preference and retains Removed evidence",
+    (preference) => {
+      const state = initialState();
+      state.products[0].date_tracking = preference;
+      const actor = context(state);
+      const before = structuredClone(state);
+      const entry = addTrackedDate(state, actor, input(state));
+      expect(state.products[0].date_tracking).toBe(true);
+      const actions = attachReversals(before, state, actor);
+      expect(actions).toHaveLength(1);
+      expect(actions[0].action).toBe("Add date");
+      reverseActivity(state, actor, actions[0].id, "undo");
+      expect(state.products[0].date_tracking).toBe(preference);
+      expect(
+        state.expiry.find((record) => record.id === entry.id),
+      ).toMatchObject({ status: "removed", removal_action: "undo" });
+      expect(state.ledger).toEqual(before.ledger);
+      expect(state.stock_movements).toEqual(before.stock_movements);
+    },
+  );
+  it("a worker can toggle the preference in their location without removing dates, and Undo preserves unrelated edits", () => {
+    const state = initialState();
+    const worker = context(state, {
+      role: "floor_worker",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+      username: "floorworker",
+      actor: "Demo Floor Worker",
+    });
+    const entry = addTrackedDate(state, worker, input(state));
+    const dates = structuredClone(state.expiry);
+    const before = structuredClone(state);
+    setProductDateTracking(
+      state,
+      worker,
+      entry.product_code,
+      false,
+      "Branch 1",
+    );
+    expect(state.products[0].date_tracking).toBe(false);
+    expect(state.expiry).toEqual(dates);
+    const action = attachReversals(before, state, worker)[0];
+    expect(action).toMatchObject({
+      action: "Turn off date tracking",
+      branch: "Branch 1",
+      entity_type: "product",
+      reversible: true,
+    });
+    state.products[1].name_en = "Unrelated later name";
+    reverseActivity(state, worker, action.id, "undo");
+    expect(state.products[0].date_tracking).toBe(true);
+    expect(state.products[1].name_en).toBe("Unrelated later name");
+    expect(state.expiry).toEqual(dates);
+  });
+  it("rejects foreign companies, forbidden locations, archived products and Cashier toggles atomically", () => {
+    const state = initialState();
+    const worker = context(state, {
+      role: "floor_worker",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+    });
+    state.products.push({
+      ...state.products[0],
+      code: "foreign",
+      company_id: "other-company",
+    });
+    const before = structuredClone(state);
+    for (const [actor, code, location] of [
+      [
+        { ...worker, role: "cashier" as const },
+        state.products[0].code,
+        "Branch 1",
+      ],
+      [
+        { ...worker, company_id: "other-company" },
+        state.products[0].code,
+        "Branch 1",
+      ],
+      [worker, state.products[0].code, "Branch 2"],
+      [worker, "foreign", "Branch 1"],
+    ] as const) {
+      expect(() =>
+        setProductDateTracking(state, actor, code, true, location),
+      ).toThrow(DateTrackingError);
+      expect(state).toEqual(before);
+    }
+    state.products[0].status = "archived";
+    const archived = structuredClone(state);
+    expect(() =>
+      setProductDateTracking(
+        state,
+        worker,
+        state.products[0].code,
+        true,
+        "Branch 1",
+      ),
+    ).toThrow(new DateTrackingError("product"));
+    expect(state).toEqual(archived);
+  });
+  it("repeating an unchanged preference adds no duplicate history", () => {
+    const state = initialState();
+    const actor = context(state);
+    setProductDateTracking(
+      state,
+      actor,
+      state.products[0].code,
+      true,
+      "Branch 1",
+    );
+    const before = structuredClone(state);
+    setProductDateTracking(
+      state,
+      actor,
+      state.products[0].code,
+      true,
+      "Branch 1",
+    );
+    expect(state).toEqual(before);
+  });
+  it("worker Add Undo restores an Off preference but cannot overwrite an intervening switch or field edit", () => {
+    const state = initialState();
+    const worker = context(state, {
+      role: "floor_worker",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+      username: "floorworker",
+      actor: "Demo Floor Worker",
+    });
+    state.products[0].date_tracking = false;
+    let before = structuredClone(state);
+    const entry = addTrackedDate(state, worker, input(state));
+    const action = attachReversals(before, state, worker)[0];
+    reverseActivity(state, worker, action.id, "undo");
+    expect(state.products[0].date_tracking).toBe(false);
+    expect(state.expiry.find((date) => date.id === entry.id)?.status).toBe(
+      "removed",
+    );
+    before = structuredClone(state);
+    const later = addTrackedDate(state, worker, input(state));
+    const laterAction = attachReversals(before, state, worker)[0];
+    state.products[0].date_tracking = false;
+    const changed = structuredClone(state);
+    expect(() =>
+      reverseActivity(state, worker, laterAction.id, "undo"),
+    ).toThrow("conflict");
+    expect(state).toEqual(changed);
+    expect(state.expiry.find((date) => date.id === later.id)?.status).toBe(
+      "active",
+    );
+  });
+  it("worker tracking reversals reject a tampered extra catalog patch atomically", () => {
+    const state = initialState();
+    const worker = context(state, {
+      role: "floor_worker",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+      username: "floorworker",
+      actor: "Demo Floor Worker",
+    });
+    const before = structuredClone(state);
+    setProductDateTracking(
+      state,
+      worker,
+      state.products[0].code,
+      true,
+      "Branch 1",
+    );
+    const action = attachReversals(before, state, worker)[0];
+    action.reversal!.push({
+      path: [
+        "products",
+        { key: "code", value: state.products[0].code },
+        "name_en",
+      ],
+      before: "Unauthorized restored name",
+      after: state.products[0].name_en,
+      before_exists: true,
+      after_exists: true,
+    });
+    const tampered = structuredClone(state);
+    expect(() => reverseActivity(state, worker, action.id, "undo")).toThrow(
+      "permission",
+    );
+    expect(state).toEqual(tampered);
+  });
+  it("a worker's tracking Undo requires the same current concrete location", () => {
+    const state = initialState();
+    const worker = context(state, {
+      role: "floor_worker",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1", "Branch 2"],
+      username: "floorworker",
+      actor: "Demo Floor Worker",
+    });
+    const before = structuredClone(state);
+    setProductDateTracking(
+      state,
+      worker,
+      state.products[0].code,
+      true,
+      "Branch 1",
+    );
+    const action = attachReversals(before, state, worker)[0];
+    const saved = structuredClone(state);
+    expect(() =>
+      reverseActivity(
+        state,
+        { ...worker, branch: "Branch 2" },
+        action.id,
+        "undo",
+      ),
+    ).toThrow("permission");
+    expect(state).toEqual(saved);
   });
 });
 
