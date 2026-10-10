@@ -23,7 +23,11 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
       <>
         {line.quantity_unit === "cases" && (
           <>
-            <LtrText>{line.quantity_entered}</LtrText> {t("cases", "کارتن")}{" "}
+            <LtrText>{line.quantity_entered}</LtrText>{" "}
+            {t(
+              new Decimal(line.quantity_entered ?? 0).eq(1) ? "case" : "cases",
+              "کارتن",
+            )}{" "}
             ·{" "}
           </>
         )}
@@ -40,21 +44,20 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
         )}
       </>
     );
-  if ((line.units_per_case ?? 1) > 1)
+  if ((line.units_per_case ?? 1) > 1) {
+    const cases = new Decimal(line.qty_invoiced)
+      .div(line.units_per_case!)
+      .toDecimalPlaces(4);
     return (
       <>
-        <LtrText>
-          {new Decimal(line.qty_invoiced)
-            .div(line.units_per_case!)
-            .toDecimalPlaces(4)
-            .toString()}
-        </LtrText>{" "}
-        {t("cases", "کارتن")}{" "}
+        <LtrText>{cases.toString()}</LtrText>{" "}
+        {t(cases.eq(1) ? "case" : "cases", "کارتن")}{" "}
         <span className="muted">
           (<LtrText>{line.qty_invoiced}</LtrText> {t("units", "واحد")})
         </span>
       </>
     );
+  }
   return (
     <LtrText>
       {tCount(
@@ -284,18 +287,19 @@ export function PostedInvoice({
                     </p>
                   </td>
                   <td className="numeric">
-                    <Money
-                      value={
-                        line.sold_by === "weight"
-                          ? (line.source_cost_before_tax ??
-                            line.unit_cost_before_tax)
-                          : line.unit_cost_before_tax
-                      }
-                      decimals={4}
-                    />
-                    {line.sold_by === "weight" && (
-                      <LtrText>/{line.source_cost_unit ?? "lb"}</LtrText>
-                    )}
+                    <LtrText>
+                      <Money
+                        value={
+                          line.sold_by === "weight"
+                            ? (line.source_cost_before_tax ??
+                              line.unit_cost_before_tax)
+                            : line.unit_cost_before_tax
+                        }
+                        decimals={2}
+                      />
+                      {line.sold_by === "weight" &&
+                        `/${line.source_cost_unit ?? "lb"}`}
+                    </LtrText>
                   </td>
                   <td className="numeric">
                     <Money value={line.line_total} />

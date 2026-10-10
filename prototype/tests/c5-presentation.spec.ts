@@ -183,6 +183,12 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await page.goto("/#invoices?id=a2-fixture%3AFV-20390");
     const document = page.locator(".posted-invoice-document");
     await expect(document).toContainText("FV-20390");
+    const displayedCosts = page.locator(
+      ".posted-invoice-lines tbody tr > td:nth-child(3)",
+    );
+    await expect(displayedCosts.first()).toHaveText("$0.98");
+    for (const cost of await displayedCosts.all())
+      await expect(cost).toHaveText(/^\$[\d,]+\.\d{2}$/);
     const title = page.locator(".posted-invoice-title");
     expect(
       await title.evaluate((element) => {

@@ -2189,7 +2189,7 @@ export default function Invoices() {
                             </td>
                             <td className="numeric">
                               {!expanded && (
-                                <>
+                                <LtrText>
                                   <Money
                                     value={
                                       line.sold_by === "weight"
@@ -2197,13 +2197,12 @@ export default function Invoices() {
                                           line.unit_cost_before_tax)
                                         : line.unit_cost_before_tax
                                     }
-                                    decimals={line.sold_by === "weight" ? 4 : 2}
+                                    decimals={2}
                                     currency={state.config.company.currency}
                                   />
-                                  {line.sold_by === "weight" && (
-                                    <LtrText>/{line.source_cost_unit}</LtrText>
-                                  )}
-                                </>
+                                  {line.sold_by === "weight" &&
+                                    `/${line.source_cost_unit}`}
+                                </LtrText>
                               )}
                               {expanded && (
                                 <Field
