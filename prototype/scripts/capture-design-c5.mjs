@@ -88,7 +88,17 @@ async function assets(page) {
         )
         .sort(),
     );
-  if (!paths.length || paths.some((path) => !path.startsWith("/assets/")))
+  const baseOrigin = new URL(base).origin;
+  if (
+    !paths.length ||
+    paths.some((path) => {
+      const resolved = new URL(path, base);
+      return (
+        resolved.origin !== baseOrigin ||
+        !resolved.pathname.startsWith("/assets/")
+      );
+    })
+  )
     throw new Error("The preview does not expose a frozen production bundle.");
   const entries = [];
   for (const path of paths) {

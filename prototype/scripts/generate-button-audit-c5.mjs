@@ -112,6 +112,7 @@ for (const path of await sources(sourceRoot)) {
           const widgetKind = [
             ["label-preview-slot", "physical sheet position"],
             ["sidebar-backdrop", "sidebar dismissal surface"],
+            ["user-menu", "sidebar account menu"],
             ["supplier-sort", "column sorting"],
             ["ui-sort-button", "column sorting"],
             ["supplier-filter-chip", "filter choice"],

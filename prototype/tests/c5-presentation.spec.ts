@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { writeFile } from "node:fs/promises";
 import { setBranch, signIn } from "./helpers";
 import {
   appearance,
@@ -13,9 +14,34 @@ import {
 
 test.setTimeout(180000);
 test.use({ actionTimeout: 10000 });
+const measurements = new WeakMap<Page, C5Inspection[]>();
 
-async function assertContract(page: Page, scene: string, variant: string) {
-  const proof = await inspect(page, scene, variant);
+test.afterEach(async ({ page }, info) => {
+  const reports = measurements.get(page);
+  if (!reports?.length) return;
+  const path = info.outputPath("button-audit.json");
+  await writeFile(path, JSON.stringify(reports, null, 2) + "\n");
+  await info.attach("Rendered primary-screen button audit", {
+    path,
+    contentType: "application/json",
+  });
+});
+
+async function assertContract(
+  page: Page,
+  scene: string,
+  variant: string,
+  role = "supervisor",
+) {
+  const proof = await inspect(
+    page,
+    scene,
+    `${test.info().project.name}-${variant}`,
+    role,
+  );
+  const reports = measurements.get(page) ?? [];
+  reports.push(proof);
+  measurements.set(page, reports);
   expect(
     proof.buttons.length,
     `${scene}: real controls measured`,
@@ -37,6 +63,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await page.goto("/#return?id=demo-return-1");
     await button(page.locator(".return-header-card"), "Record pickup").click();
     const pickup = page.locator(".return-action-card");
+    await assertContract(page, "Record return pickup form", "en-light");
     await pickup.getByLabel(/Actual pickup units$/).fill("3");
     await field(pickup, "Supplier representative name").fill("Demo Driver");
     await field(pickup, "Signed paper pickup slip reference").fill(
@@ -180,6 +207,9 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await expect(media).toHaveAttribute("data-fit", "page");
     await expect.poll(fits).toBe(true);
     const posted = await assertContract(page, "Posted invoice", variant);
+    await button(page, "Move invoice", "انتقال فاکتور").click();
+    await assertContract(page, "Move invoice dialog", variant);
+    await page.keyboard.press("Escape");
     await button(page, "Correct invoice", "اصلاح فاکتور").click();
     const correction = page.locator(".invoice-correction-dialog");
     await expect(correction).toBeVisible();
@@ -230,6 +260,7 @@ test("C5 shelf quick-add accepts Enter, resets focus, pins new row and undoes wi
   await today(page, quick);
   await button(quick, "More").click();
   await field(quick, "Lot (optional)").fill("C5-SHELF-ENTER");
+  await assertContract(page, "Date quick-add with More", "en-light");
   const before = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
   );
@@ -240,6 +271,7 @@ test("C5 shelf quick-add accepts Enter, resets focus, pins new row and undoes wi
   const first = page.locator(".expiry-table tbody tr").first();
   await expect(first).toHaveAttribute("data-new-date", "true");
   await expect(first).toContainText("C5-SHELF-ENTER");
+  await assertContract(page, "New shelf date and Undo", "en-light");
   await expect(field(quick, "Lot (optional)")).toHaveValue("");
   const after = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
@@ -279,6 +311,12 @@ for (const role of ["Supervisor", "Floor Worker"] as const) {
       .locator(".product-open-dates")
       .allTextContents();
     const form = dates.locator(".date-quick-add-inline");
+    await assertContract(
+      page,
+      "Lookup date tracking Off and inline Add",
+      "en-light",
+      role === "Supervisor" ? "supervisor" : "floor_worker",
+    );
     await today(page, form);
     await button(form, "Add").click();
     await expect(tracking).toHaveAttribute("aria-checked", "true");
@@ -317,6 +355,7 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     exact: true,
   });
   await choose(page, field(dialog, "Product"), /Sour Cherry Juice 1 L.*0003/);
+  await assertContract(page, "Create offer dialog", "en-light");
   await button(dialog, "Create offer").click();
   await expect(dialog).not.toBeVisible();
   await expect(page.getByRole("status")).toContainText(
@@ -329,6 +368,7 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   expect(repeated.activity).toEqual(before.activity);
   await button(existing, "Stop offer").click();
   const stop = page.getByRole("dialog", { name: "Stop offer", exact: true });
+  await assertContract(page, "Stop offer confirmation", "en-light");
   await button(stop, "Stop offer").click();
   await expect(existing).toHaveCount(0);
   await page.getByRole("tab", { name: "Past offers", exact: true }).click();
@@ -344,4 +384,61 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   ).toHaveCount(0);
   await page.getByRole("tab", { name: "Current offers", exact: true }).click();
   await expect(existing).toHaveCount(1);
+});
+
+test("C5 return evidence, memo, cancellation and settlement forms retain compact actions for both roles", async ({
+  page,
+}) => {
+  await signIn(page, "Supervisor");
+  await setBranch(page, "Branch 1");
+  await page.goto("/#return?id=demo-return-1");
+  await button(page, "Cancel return").click();
+  await assertContract(
+    page,
+    "Return original-goods cancellation form",
+    "en-light",
+  );
+  await button(page.locator(".return-action-card"), "Close").click();
+  await button(page.locator(".return-header-card"), "Record pickup").click();
+  const pickup = page.locator(".return-action-card");
+  await pickup.getByLabel(/Actual pickup units$/).fill("3");
+  await field(pickup, "Supplier representative name").fill("Demo Driver");
+  await field(pickup, "Signed paper pickup slip reference").fill(
+    "SIGNED-C5-FORMS-001",
+  );
+  await button(pickup, "Record pickup").click();
+  await expect(page.locator(".return-detail-title")).toContainText(
+    "Waiting for credit",
+  );
+  await page.locator(".return-memos-card").getByRole("button").first().click();
+  await assertContract(page, "Retained return memo dialog", "en-light");
+  await page.keyboard.press("Escape");
+  for (const role of ["Supervisor", "Floor Worker"] as const) {
+    if (role === "Floor Worker") {
+      await signIn(page, role);
+      await page.goto("/#return?id=demo-return-1");
+    }
+    await button(
+      page.locator(".return-header-card"),
+      "Record resolution",
+    ).click();
+    const card = page.locator(".return-action-card");
+    for (const outcome of [
+      "Replaced",
+      "Credited",
+      "Cash or other compensation",
+      ...(role === "Supervisor" ? ["Written off"] : []),
+    ]) {
+      await choose(page, field(card, "Resolution type"), outcome);
+      await assertContract(
+        page,
+        `Return settlement form: ${outcome}`,
+        "en-light",
+        role === "Supervisor" ? "supervisor" : "floor_worker",
+      );
+      if (role === "Floor Worker")
+        await expect(field(card, "Actual credit amount")).toHaveCount(0);
+    }
+    await button(card, "Close").click();
+  }
 });

@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { chooseOption, setBranch, signIn } from "./helpers";
+import { chooseOption, setBranch, signIn, uploadInvoice } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import {
   appearance,
@@ -380,5 +380,105 @@ test("C5 button contract covers sign-in, first-sign-in password and lock actions
       path: output,
       contentType: "application/json",
     });
+  }
+});
+
+test("C5 button contract covers primary product, date, approval and invoice dialogs", async ({
+  page,
+}, info) => {
+  const proof = audit(page, info);
+  try {
+    await signIn(page, "Supervisor");
+    await setBranch(page, "Branch 1");
+    await page.goto("/#products");
+    await page
+      .getByRole("button", { name: "Add product", exact: true })
+      .click();
+    await proof.check("Add product dialog");
+    await closeDialog(page);
+    await page.getByLabel("Search products", { exact: true }).fill("0009");
+    await page
+      .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
+      .click();
+    await proof.check("Edit product dialog");
+    await closeDialog(page);
+
+    await page.goto("/#expiry");
+    const dateRow = page
+      .locator(".expiry-table tbody tr")
+      .filter({
+        has: page.getByRole("button", { name: "Remove", exact: true }),
+      })
+      .first();
+    await dateRow.getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Remove date", exact: true }),
+    ).toBeVisible();
+    await proof.check("Remove date reason dialog");
+    await closeDialog(page);
+    await dateRow.getByRole("button", { name: "More", exact: true }).click();
+    await page
+      .getByRole("menuitem", {
+        name: "Stop tracking this product",
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByRole("dialog", {
+        name: "Stop tracking this product",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await proof.check("Stop tracking this product dialog");
+    await closeDialog(page);
+
+    await page.goto("/#alerts");
+    await page
+      .getByRole("button", { name: "Apply this price to all", exact: true })
+      .first()
+      .click();
+    await expect(
+      page.getByRole("dialog", {
+        name: "Apply price to all branches",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await proof.check("Apply conflict price to all branches dialog");
+    await closeDialog(page);
+
+    await page.goto("/#approvals");
+    const approval = page
+      .locator("section.card")
+      .filter({
+        has: page.getByRole("heading", {
+          name: "Lavash Bread 500 g",
+          exact: true,
+        }),
+      });
+    await approval
+      .getByRole("button", { name: "Approve price", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Review approval", exact: true }),
+    ).toBeVisible();
+    await proof.check("Review approval confirmation");
+    await closeDialog(page);
+    await approval.getByRole("button", { name: "Reject", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Reject proposal", exact: true }),
+    ).toBeVisible();
+    await proof.check("Reject proposal confirmation");
+    await closeDialog(page);
+
+    await page.goto("/#invoices");
+    await page
+      .getByRole("button", { name: "New invoice", exact: true })
+      .click();
+    await proof.check("New invoice upload entry");
+    await uploadInvoice(page);
+    await expect(page.locator(".invoice-line")).toHaveCount(6);
+    await proof.check("Simulated invoice upload review");
+  } finally {
+    await proof.save();
   }
 });
