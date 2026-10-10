@@ -161,7 +161,9 @@ export function Offers() {
   );
   const branchName = (value: Branch) =>
     configuredBranchLabel(state.config, value, lang);
-  const readinessCopy = (reason: ReturnType<typeof offerReadiness>) =>
+  const readinessCopy = (
+    reason: ReturnType<typeof offerReadiness>,
+  ): readonly [string, string] =>
     (
       ({
         ready: [
