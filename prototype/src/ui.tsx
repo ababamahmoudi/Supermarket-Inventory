@@ -349,8 +349,10 @@ export function DataTable({
     hidden?: boolean;
   }[];
 }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
+  const [availableWidth, setAvailableWidth] = useState(0);
   const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
     Children.toArray(nodes).flatMap((node, index) =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment
@@ -430,15 +432,34 @@ export function DataTable({
     (total, column) => total + (column.actions ? 0 : columnWeight(column)),
     0,
   );
-  // Reserve only the real action controls, including translated labels. Remaining
-  // columns keep their declared proportions, without stretching action buttons.
+  // Reserve only the real action controls, including translated labels. Chromium
+  // ignores mixed percentage/pixel calc widths on table columns, so distribute
+  // the remaining measured space as plain pixel widths. Measure the wrapper,
+  // rather than the table's previous column widths, so shrinking can reflow.
   useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
     const table = tableRef.current;
-    if (!table || !visibleColumns.some((column) => column.actions)) return;
+    if (!wrapper || !table || !visibleColumns.length) return;
     let active = true;
     const measured = new Set<HTMLElement>();
     const measure = () => {
       if (!active) return;
+      const wrapperStyle = getComputedStyle(wrapper);
+      const wrapperInsets = [
+        wrapperStyle.borderInlineStartWidth,
+        wrapperStyle.borderInlineEndWidth,
+        wrapperStyle.paddingInlineStart,
+        wrapperStyle.paddingInlineEnd,
+      ].reduce((total, value) => total + (parseFloat(value) || 0), 0);
+      const minimumWidth = parseFloat(getComputedStyle(table).minWidth) || 0;
+      const width = Math.max(
+        0,
+        wrapper.getBoundingClientRect().width - wrapperInsets,
+        minimumWidth,
+      );
+      setAvailableWidth((previous) =>
+        Math.abs(previous - width) < 0.01 ? previous : width,
+      );
       const next: Record<string, number> = {};
       visibleColumns.forEach((column, index) => {
         if (!column.actions) return;
@@ -494,6 +515,7 @@ export function DataTable({
       typeof ResizeObserver === "undefined"
         ? null
         : new ResizeObserver(measure);
+    observer?.observe(wrapper);
     observer?.observe(table);
     for (const element of measured) observer?.observe(element);
     void document.fonts?.ready.then(measure);
@@ -558,6 +580,7 @@ export function DataTable({
     });
   return (
     <div
+      ref={wrapperRef}
       className={cn("table-wrap", "ui-data-table", className)}
       tabIndex={0}
       data-visible-column-count={visibleColumns.length}
@@ -582,7 +605,9 @@ export function DataTable({
                 width: column.actions
                   ? `${actionWidths[columnId(column, index)] ?? columnWeight(column)}px`
                   : flexibleWeight
-                    ? `calc(${(columnWeight(column) / flexibleWeight) * 100}% - ${(fixedActionWidth * columnWeight(column)) / flexibleWeight}px)`
+                    ? availableWidth
+                      ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
+                      : `${(columnWeight(column) / totalWeight) * 100}%`
                     : undefined,
               }}
             />

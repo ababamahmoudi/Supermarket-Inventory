@@ -114,6 +114,7 @@ export default function SupplierItems({
           columns={[
             { width: "240px" },
             { width: "130px" },
+            { width: "110px" },
             ...(supervisor
               ? [
                   { width: "145px", align: "end" as const },

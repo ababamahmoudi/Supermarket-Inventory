@@ -338,7 +338,15 @@ export default function PricingSettings() {
         </div>
         <DataTable
           className="settings-pricing-table"
-          columns={[{}, {}, {}, {}, {}, {}, { width: 180, actions: true }]}
+          columns={[
+            { width: 210 },
+            { width: 120 },
+            { width: 135 },
+            { width: 180 },
+            { width: 75 },
+            { width: 90 },
+            { width: 180, actions: true },
+          ]}
         >
           <thead>
             <tr>

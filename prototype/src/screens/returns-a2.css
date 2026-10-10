@@ -183,7 +183,7 @@
 .return-header-actions .button {
   margin: 0;
 }
-.returns-overview-table .returns-items-cell {
+:root .returns-overview-table .returns-items-cell {
   padding-inline-end: 24px;
 }
 .ui-dialog.confirm-dialog.return-policy-dialog {

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -31,6 +32,7 @@ import {
   Field,
   Menu,
   MenuItem,
+  Button,
   NumberField,
   Radio,
   Select,
@@ -812,4 +814,97 @@ it("keeps header and financial body fragments in the same shared table columns",
     expect(cell.style.textAlign).toBe(header.style.textAlign);
   }
   expect(warn).not.toHaveBeenCalled();
+});
+
+it("reflows weighted columns on resize and column changes while reserving intrinsic actions", () => {
+  let width = 900;
+  const observers = new Set<ResizeObserverCallback>();
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+        observers.add(callback);
+      }
+      callback: ResizeObserverCallback;
+      observe() {}
+      disconnect() {
+        observers.delete(this.callback);
+      }
+    },
+  );
+  const rectangle = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockImplementation(function (this: HTMLElement) {
+      const measuredWidth = this.classList.contains("ui-data-table")
+        ? width
+        : this.classList.contains("ui-button")
+          ? 80
+          : 0;
+      return { width: measuredWidth, height: 40 } as DOMRect;
+    });
+  const contents = (hideSupplier: boolean) => (
+    <DataTable
+      columns={[
+        { key: "reference", width: 108 },
+        { key: "supplier", width: 220, hidden: hideSupplier },
+        { key: "status", width: 172 },
+        { key: "actions", actions: true },
+      ]}
+    >
+      <thead>
+        <tr>
+          <th>Return #</th>
+          <th>Supplier</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Return #1</td>
+          <td>Fictional supplier</td>
+          <td>Waiting for pickup</td>
+          <td style={{ paddingInlineStart: 12, paddingInlineEnd: 12 }}>
+            <Button variant="secondary">Record pickup</Button>
+          </td>
+        </tr>
+      </tbody>
+    </DataTable>
+  );
+  try {
+    const rendered = show(contents(false));
+    const widths = () =>
+      Array.from(rendered.container.querySelectorAll("col")).map((column) => {
+        expect(column.style.width).toMatch(/^\d+(?:\.\d+)?px$/);
+        return parseFloat(column.style.width);
+      });
+    let measured = widths();
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(900);
+    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
+    expect(measured[2] / measured[0]).toBeCloseTo(172 / 108);
+    expect(measured[3]).toBe(104);
+
+    width = 640;
+    act(() => {
+      for (const callback of Array.from(observers))
+        callback([], {} as ResizeObserver);
+    });
+    measured = widths();
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
+    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
+    expect(measured[3]).toBe(104);
+    rendered.rerender(<DemoProvider>{contents(true)}</DemoProvider>);
+    measured = widths();
+    expect(measured).toHaveLength(3);
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
+    expect(measured[1] / measured[0]).toBeCloseTo(172 / 108);
+    expect(measured[2]).toBe(104);
+    expect(observers.size).toBe(1);
+    rendered.unmount();
+    expect(observers.size).toBe(0);
+  } finally {
+    rectangle.mockRestore();
+    vi.unstubAllGlobals();
+  }
 });
