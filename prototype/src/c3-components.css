@@ -4,6 +4,7 @@
   min-block-size: 40px;
   max-block-size: 40px;
   inline-size: fit-content;
+  min-inline-size: 0;
   border-radius: 12px;
 }
 :root .ui-button.button.button-primary {

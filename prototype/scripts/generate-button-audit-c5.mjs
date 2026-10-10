@@ -72,10 +72,17 @@ for (const path of await sources(sourceRoot)) {
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
       const opening = ts.isJsxElement(node) ? node.openingElement : node;
       const component = opening.tagName.getText(source);
+      const explicitButtonRole = opening.attributes.properties.some(
+        (attribute) =>
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.getText(source) === "role" &&
+          attribute.initializer?.getText(source) === '"button"',
+      );
       if (
         ["Button", "IconButton", "Menu", "MenuItem", "button"].includes(
           component,
-        )
+        ) ||
+        explicitButtonRole
       ) {
         const attributes = {};
         const attributeNodes = {};
@@ -101,8 +108,24 @@ for (const path of await sources(sourceRoot)) {
         const role = attributes.role?.replace(/^"|"$/g, "");
         let kind = attributes["data-control-kind"]?.replace(/^"|"$/g, "");
         if (!kind) {
+          const classes = attributes.className ?? "";
+          const widgetKind = [
+            ["label-preview-slot", "physical sheet position"],
+            ["sidebar-backdrop", "sidebar dismissal surface"],
+            ["supplier-sort", "column sorting"],
+            ["ui-sort-button", "column sorting"],
+            ["supplier-filter-chip", "filter choice"],
+            ["invoice-details-toggle", "section disclosure"],
+            ["invoice-line-toggle", "invoice line disclosure"],
+            ["ui-date", "date picker trigger"],
+            ["ui-calendar-day", "calendar day"],
+            ["kpi-card", "KPI navigation card"],
+            ["ui-kpi", "KPI navigation card"],
+          ].find(([className]) => classes.includes(className))?.[1];
           kind =
-            component === "IconButton" || attributes.iconOnly === "true"
+            component === "IconButton" ||
+            attributes.iconOnly === "true" ||
+            classes.includes("lookup-scan-button")
               ? "icon"
               : component === "MenuItem" || role === "menuitem"
                 ? "menu option"
@@ -116,9 +139,12 @@ for (const path of await sources(sourceRoot)) {
                       "option",
                     ].includes(role)
                   ? role
-                  : component === "button"
-                    ? "custom widget (see callsite)"
-                    : "action";
+                  : (widgetKind ??
+                    (component === "button"
+                      ? attributes.role?.includes('tabs ? "tab"')
+                        ? "tab or segmented choice"
+                        : "custom control (see callsite)"
+                      : "action"));
         }
         const widget = !["action", "icon"].includes(kind);
         inventory.push({
@@ -161,6 +187,7 @@ for (const path of await sources(sourceRoot)) {
 }
 
 const measurements = [];
+const measuredFingerprints = new Set();
 async function readProof(path) {
   if ((await stat(path)).isDirectory()) {
     for (const entry of await readdir(path, { withFileTypes: true })) {
@@ -177,7 +204,13 @@ async function readProof(path) {
       return;
     }
     if (Array.isArray(record.buttons) && record.screen && record.variant) {
-      measurements.push(record);
+      // Playwright attachments repeat their canonical per-test JSON. Retain a
+      // rendered state once when the entire observation is identical.
+      const fingerprint = JSON.stringify(record);
+      if (!measuredFingerprints.has(fingerprint)) {
+        measuredFingerprints.add(fingerprint);
+        measurements.push(record);
+      }
       return;
     }
     Object.values(record).forEach(collect);
@@ -187,12 +220,42 @@ async function readProof(path) {
 for (let index = 0; index < flags.length; index++) {
   if (flags[index] === "--proof") await readProof(flags[index + 1]);
 }
+const statusObservations = new Map();
+for (const scene of measurements) {
+  const language = scene.variant.includes("fa-") ? "fa" : "en";
+  const theme = scene.variant.includes("dark") ? "dark" : "light";
+  for (const status of scene.statuses ?? []) {
+    const key = `${language}\0${theme}\0${status.label}`;
+    const observations = statusObservations.get(key) ?? [];
+    observations.push({
+      screen: scene.screen,
+      variant: scene.variant,
+      role: scene.role,
+      ...status,
+    });
+    statusObservations.set(key, observations);
+  }
+}
+const crossScreenStatusConflicts = [...statusObservations.entries()]
+  .filter(
+    ([, observations]) =>
+      new Set(
+        observations.map((status) => `${status.color}/${status.background}`),
+      ).size > 1,
+  )
+  .map(([key, observations]) => ({
+    language: key.split("\0")[0],
+    theme: key.split("\0")[1],
+    label: key.split("\0")[2],
+    observations,
+  }));
 const result = {
   sourceChecksum: checksum.digest("hex"),
   note: "Complete source callsite census and required shared-control contract. This is not browser measurement evidence. Rendered states and their actual dimensions are recorded separately by c5-button-audit.spec.ts and capture-design-c5.mjs; conditional states not opened remain source-only.",
   count: inventory.length,
   inventory,
   measuredStates: measurements.length,
+  crossScreenStatusConflicts,
   measurements,
 };
 const output = destination("--output");
@@ -222,6 +285,30 @@ if (markdown) {
       return `| ${safe(entry.screen)} | ${safe(label)} | ${safe(entry.style)} | ${entry.radius} | ${entry.height} | ${entry.width} | ${entry.file}:${entry.line} |`;
     }),
   ];
+  rows.push(
+    "",
+    "## Semantic widgets (separate from ordinary text actions)",
+    "",
+    "These controls retain the layout required by their interaction: calendar cells select dates, sorting headers sort columns, result rows navigate/select records, physical sheet slots choose a print starting position, and segmented choices switch states. Each callsite above and measured instance below remains visible in the audit; this list does not exempt an ordinary action solely because it appears inside a widget.",
+    "",
+    "| Semantic kind | Callsites |",
+    "| --- | --- |",
+    ...[
+      ...new Set(
+        inventory
+          .filter((entry) => !["action", "icon"].includes(entry.kind))
+          .map((entry) => entry.kind),
+      ),
+    ]
+      .sort()
+      .map(
+        (kind) =>
+          `| ${safe(kind)} | ${inventory
+            .filter((entry) => entry.kind === kind)
+            .map((entry) => `${entry.file}:${entry.line}`)
+            .join("; ")} |`,
+      ),
+  );
   if (measurements.length) {
     rows.push(
       "",
@@ -255,6 +342,14 @@ if (markdown) {
         `| ${safe(scene.screen)} | ${safe(control.label)} | ${safe(control.style)} / ${safe(control.kind)} | ${safe(control.radius)} | ${control.height} | ${control.width} | ${safe(scene.variant)} / ${safe(scene.role)} | ${count} |`,
       );
     }
+    rows.push(
+      "",
+      "## Cross-screen status colors",
+      "",
+      crossScreenStatusConflicts.length
+        ? `Conflicts: ${crossScreenStatusConflicts.map((entry) => `${safe(entry.label)} (${entry.language}, ${entry.theme})`).join("; ")}. See the complete observations in the JSON.`
+        : `No conflicting colors for the same visible status label within a language and theme across ${statusObservations.size} measured status groups.`,
+    );
     rows.push(
       "",
       "## Measured state coverage",

@@ -358,10 +358,7 @@ for (const width of [1280, 1440, 1920]) {
         .locator(".payables-overview-table tbody tr")
         .filter({ hasText: "Fresh Valley Foods" });
       await supplier
-        .getByRole("button", {
-          name: copy(language, "View", "مشاهده"),
-          exact: true,
-        })
+        .getByRole("link", { name: "Fresh Valley Foods", exact: true })
         .click();
       await expect(page.locator(".pending-return-credits")).toContainText(
         copy(language, "Confirmed balance", "مانده تأییدشده"),

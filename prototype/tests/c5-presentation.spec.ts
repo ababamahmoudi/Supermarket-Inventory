@@ -33,7 +33,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     page,
   }) => {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await page.goto("/#return?id=demo-return-1");
     await button(page.locator(".return-header-card"), "Record pickup").click();
     const pickup = page.locator(".return-action-card");
@@ -67,7 +67,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     page,
   }, info) => {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await appearance(page, variant);
     const proofs: C5Inspection[] = [];
     for (const route of [
@@ -110,7 +110,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     page,
   }, info) => {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await appearance(page, variant);
     await page.goto("/#invoices?id=a2-fixture%3AFV-20390");
     const document = page.locator(".posted-invoice-document");
@@ -223,7 +223,7 @@ test("C5 shelf quick-add accepts Enter, resets focus, pins new row and undoes wi
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await setBranch(page, "north_york");
+  await setBranch(page, "Branch 1");
   await page.goto("/#expiry");
   const quick = page.locator(".date-quick-card");
   const product = field(quick, "Product");
@@ -263,7 +263,7 @@ for (const role of ["Supervisor", "Floor Worker"] as const) {
     page,
   }) => {
     await signIn(page, role);
-    if (role === "Supervisor") await setBranch(page, "north_york");
+    if (role === "Supervisor") await setBranch(page, "Branch 1");
     await page.goto("/#lookup");
     await field(page, "Search products").fill("0001");
     const dates = page.locator(".product-dates-section");

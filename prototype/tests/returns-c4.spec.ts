@@ -76,7 +76,9 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
   const row = page
     .locator(".payables-overview-table tbody tr")
     .filter({ hasText: "Fresh Valley Foods" });
-  await row.getByRole("button", { name: "View", exact: true }).click();
+  await row
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
+    .click();
   await expect(page.locator(".pending-return-credits")).toContainText(
     "Confirmed balance",
   );

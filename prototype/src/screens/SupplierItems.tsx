@@ -121,8 +121,8 @@ export default function SupplierItems({
                   { width: "145px", align: "end" as const },
                 ]
               : []),
-            { width: "130px" },
-            { width: "140px" },
+            { width: "160px" },
+            { width: "160px" },
             ...(supervisor ? [{ width: "150px", actions: true }] : []),
           ]}
         >

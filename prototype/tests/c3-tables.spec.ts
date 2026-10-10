@@ -289,7 +289,7 @@ test("browser Back restores the Products search and Orders status without mutati
   await page
     .locator(".catalog-products-table tbody tr")
     .first()
-    .getByRole("button", { name: /^View / })
+    .getByRole("link", { name: "Black Tea 450 g", exact: true })
     .click();
   await expect(page).toHaveURL(/#product\?code=/);
   await page.goBack();

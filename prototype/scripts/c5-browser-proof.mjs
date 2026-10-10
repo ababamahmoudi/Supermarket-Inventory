@@ -95,6 +95,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ".product-picker-result",
         ".kpi-card",
         ".ui-kpi",
+        ".label-preview-slot",
+        ".supplier-filter-chip",
+        ".supplier-sort",
+        ".ui-segments",
         ".ui-select-option",
         ".ui-menu-content",
         ".notebook-tabs",
@@ -104,10 +108,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (kind && kind !== "action") return kind;
         const controlRole = element.getAttribute("role");
         if (widgetRoles.includes(controlRole)) return controlRole;
-        if (element.matches(".ui-icon-button, .icon-button, .language-toggle"))
+        if (
+          element.matches(
+            ".ui-icon-button, .icon-button, .language-toggle, .lookup-scan-button",
+          )
+        )
           return "icon";
         if (element.matches(".ui-date, .ui-date-trigger, .date-picker-trigger"))
           return "date";
+        if (element.querySelector(".user-chip")) return "account";
         if (element.matches('tr[role="button"]')) return "entity-row";
         if (kind === "action")
           return element.closest(".topbar") ? "topbar" : "action";
@@ -129,12 +138,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           (value) => element.classList.contains(`button-${value}`),
         );
         const row = element.closest("tbody tr");
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        context.font = style.font;
-        const textWidth = context.measureText(tidy(element.textContent)).width;
+        let textWidth = 0;
+        const textWalker = document.createTreeWalker(
+          element,
+          NodeFilter.SHOW_TEXT,
+        );
+        let textNode;
+        while ((textNode = textWalker.nextNode())) {
+          if (
+            !tidy(textNode.textContent) ||
+            !textNode.parentElement ||
+            !visible(textNode.parentElement) ||
+            textNode.parentElement.closest(".sr-only, .visually-hidden")
+          )
+            continue;
+          const range = document.createRange();
+          range.selectNodeContents(textNode);
+          for (const bounds of range.getClientRects())
+            textWidth += bounds.width;
+        }
         const icons = [...element.querySelectorAll("svg")]
-          .filter(visible)
+          .filter((icon) => {
+            const bounds = icon.getBoundingClientRect();
+            return (
+              bounds.width > 2 &&
+              bounds.height > 2 &&
+              getComputedStyle(icon).visibility !== "hidden"
+            );
+          })
           .reduce((sum, icon) => sum + icon.getBoundingClientRect().width, 0);
         const intrinsicWidth =
           textWidth +
@@ -190,9 +221,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             failures.push(
               `Table action wider than 200px: ${label} (${round(rect.width)}px)`,
             );
-          if (row && rect.width > Math.max(40, intrinsicWidth) + 5)
+          if (rect.width > Math.max(40, intrinsicWidth) + 5)
             failures.push(
-              `Table action stretched: ${label} (${round(rect.width)} > ${round(intrinsicWidth)})`,
+              `${row ? "Table action" : "Text action"} stretched: ${label} (${round(rect.width)} > ${round(intrinsicWidth)})`,
             );
         }
       }

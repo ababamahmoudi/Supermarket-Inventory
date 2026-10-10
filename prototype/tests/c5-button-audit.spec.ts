@@ -9,6 +9,7 @@ import {
 } from "../scripts/c5-browser-proof.mjs";
 
 test.setTimeout(180000);
+test.use({ actionTimeout: 10000 });
 
 /** Source census covers conditional calls; this checks real rendered states. */
 function audit(page: Page, info: TestInfo) {
@@ -57,7 +58,7 @@ test("C5 button contract covers Suppliers, every supplier tab and item dialogs",
   const proof = audit(page, info);
   try {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await page.goto("/#suppliers");
     await proof.check("Suppliers overview");
     await page
@@ -127,7 +128,7 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
   const proof = audit(page, info);
   try {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await page.goto("/#settings");
     const navigation = page.getByRole("navigation", {
       name: "Settings groups",
@@ -193,7 +194,7 @@ test("C5 button contract covers Labels, Notes, History, Received and ledger form
   const proof = audit(page, info);
   try {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await page.goto("/#labels");
     await proof.check("Labels Products");
     for (const tab of [/^Waitlist/, /^Templates$/]) {
@@ -259,7 +260,7 @@ test("C5 button contract covers Orders and Branch request forms and retained det
   const proof = audit(page, info);
   try {
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await page.goto("/#orders");
     await proof.check("Orders list");
     await page.getByRole("button", { name: "New order", exact: true }).click();
@@ -309,11 +310,16 @@ test("C5 button contract covers sign-in, first-sign-in password and lock actions
   page,
 }, info) => {
   const reports: C5Inspection[] = [];
-  const measure = async (screen: string, variant: string) => {
+  const measure = async (
+    screen: string,
+    variant: string,
+    role = "anonymous",
+  ) => {
     const report = await inspect(
       page,
       screen,
       `${info.project.name}-${variant}`,
+      role,
     );
     reports.push(report);
     expect.soft(report.failures, `${screen}: ${variant}`).toEqual([]);
@@ -339,28 +345,34 @@ test("C5 button contract covers sign-in, first-sign-in password and lock actions
     await expect(
       page.getByRole("heading", { name: "Choose a new password", exact: true }),
     ).toBeVisible();
-    await measure("Choose a new password", "en-light");
+    await measure("Choose a new password", "en-light", employee.role);
     await page
       .getByRole("button", { name: "Switch to Persian", exact: true })
       .click();
-    await measure("Choose a new password", "fa-light");
+    await measure("Choose a new password", "fa-light", employee.role);
     await page
       .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
       .click();
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await signIn(page, "Supervisor");
-    await setBranch(page, "north_york");
+    await setBranch(page, "Branch 1");
     await appearance(page, "en-dark");
-    await page.getByRole("button", { name: "User menu", exact: true }).click();
+    const userMenu = page.getByRole("button", {
+      name: "User menu",
+      exact: true,
+    });
+    if (!(await userMenu.isVisible()))
+      await page.locator("#menu-toggle").click();
+    await userMenu.click();
     await page.getByRole("menuitem", { name: "Lock", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Screen locked", exact: true }),
     ).toBeVisible();
-    await measure("Screen locked", "en-dark");
+    await measure("Screen locked", "en-dark", "supervisor");
     await page
       .getByRole("button", { name: "Switch to Persian", exact: true })
       .click();
-    await measure("Screen locked", "fa-dark");
+    await measure("Screen locked", "fa-dark", "supervisor");
   } finally {
     const output = info.outputPath("button-audit.json");
     await writeFile(output, JSON.stringify(reports, null, 2));
