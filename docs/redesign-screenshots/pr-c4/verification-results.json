@@ -1,0 +1,116 @@
+{
+  "recordedAt": "2026-10-09T23:37:52.129181+00:00",
+  "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+  "evidenceOnlyCommit": "The final evidence commit does not change the frozen application or seed source.",
+  "nodeVersion": "22.23.3",
+  "unitTests": {
+    "passed": 719,
+    "filesPassed": 62,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "pricingCases": {
+    "passed": 23,
+    "source": "seed/pricing-test-cases.json",
+    "legacyBoundaryTestsRetained": true
+  },
+  "lint": {
+    "exitCode": 0
+  },
+  "typeCheckAndBuild": {
+    "exitCode": 0,
+    "advisory": "Informational Vite bundle-size advisory"
+  },
+  "newBrowserTests": {
+    "passed": 37,
+    "failed": 0,
+    "skipped": 9,
+    "skipReason": "Desktop-only checks are intentionally skipped in the phone project.",
+    "workers": 1,
+    "retries": 0,
+    "exitCode": 0,
+    "runs": [
+      {
+        "passed": 27,
+        "skipped": 3
+      },
+      {
+        "passed": 10,
+        "skipped": 6
+      }
+    ]
+  },
+  "updatedLegacyBrowserTests": {
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "workers": 1,
+    "retries": 0,
+    "exitCode": 0,
+    "changedExistingSpecifications": 11
+  },
+  "layoutMatrix": {
+    "languages": ["en", "fa"],
+    "widths": [1280, 1440, 1920],
+    "passed": 6,
+    "strictPanelTableTextBounds": true
+  },
+  "screenshots": {
+    "captured": 52,
+    "openedIndividually": 52,
+    "exactHashesVerified": 52,
+    "browserErrors": 0,
+    "layoutFindings": 0,
+    "nativeControlFindings": 0,
+    "productionAssetChecks": 104,
+    "productionAssetFingerprints": 1,
+    "phoneWidth": 390
+  },
+  "fictionalOriginals": {
+    "openedIndividually": 14,
+    "hashesAndArithmeticVerified": 14
+  },
+  "completeGitHubCI": {
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/17/checks",
+    "result": "See the live Checks result on the latest evidence commit; this record does not claim an unexecuted final CI outcome."
+  },
+  "previousDiagnostic": {
+    "passed": 310,
+    "failed": 18,
+    "skipped": 34,
+    "status": "failed diagnostic, not a passing final run",
+    "resolution": "Obsolete pre-C4 fixture/presentation expectations updated; all 38 affected desktop/phone checks passed on the frozen final source. Complete final coverage is reported by GitHub CI."
+  },
+  "completedLogs": [
+    {
+      "filename": "c4-release-unit.log",
+      "sha256": "313ad0217c81afe0a272349a303fbbe2310577888faf6ebe8e0b523b25b2bc51",
+      "completedExitCode": 0
+    },
+    {
+      "filename": "c4-release-lint.log",
+      "sha256": "6c9c937e9c56af83d5c2a3781b7c706b6ab4f5354e0cda6ea524858113f8d56c",
+      "completedExitCode": 0
+    },
+    {
+      "filename": "c4-release-build.log",
+      "sha256": "29c58fbcf025bd3741450411da6ffdc23ba2d0476749b663ccfa07072fa57829",
+      "completedExitCode": 0
+    },
+    {
+      "filename": "c4-release-new-browser.log",
+      "sha256": "2564450195032ff011f39003142c06f66079bbb238833daf1e32fd352abc439f",
+      "completedExitCode": 0
+    },
+    {
+      "filename": "c4-release-layout-settings-browser.log",
+      "sha256": "5fa4a3f75b98cd547b4f2f07a20b5f80714a8763ff5868bf2d57157e7495e474",
+      "completedExitCode": 0
+    },
+    {
+      "filename": "c4-release-legacy-fixed.log",
+      "sha256": "df59a245a414089bae18c89189ddcbcc740fe0c6d386d92b9b8ef4960701bad6",
+      "completedExitCode": 0
+    }
+  ]
+}

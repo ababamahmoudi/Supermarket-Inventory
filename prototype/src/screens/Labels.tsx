@@ -8,6 +8,7 @@ import {
 import { createPortal, flushSync } from "react-dom";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { ProductPrice } from "../weight-price-presentation";
 import { translateCount } from "../i18n";
 import {
   labelContentGeometry,
@@ -54,13 +55,7 @@ import {
   Select,
   Tabs,
 } from "../ui";
-import {
-  LtrText,
-  Money,
-  OfferLabel,
-  ProductName,
-  UnitSize,
-} from "../presentation";
+import { LtrText, OfferLabel, ProductName, UnitSize } from "../presentation";
 import "./invoice-settings-labels.css";
 import "./labels-a2.css";
 import "./labels-b.css";
@@ -254,9 +249,10 @@ function ShelfLabel({
                 currency={state.config.company.currency}
               />
             ) : (
-              <Money
+              <ProductPrice
                 value={effectivePrice(state, product, branch)!}
-                currency={state.config.company.currency}
+                product={product}
+                config={state.config}
               />
             )}
           </div>
@@ -264,9 +260,10 @@ function ShelfLabel({
             {offer && (
               <>
                 {t("Regular", "عادی")}{" "}
-                <Money
+                <ProductPrice
                   value={effectivePrice(state, product, branch)!}
-                  currency={state.config.company.currency}
+                  product={product}
+                  config={state.config}
                 />
               </>
             )}
@@ -318,9 +315,10 @@ function ShelfLabel({
       >
         <span className="price" dir="ltr">
           {fields.price && (
-            <Money
+            <ProductPrice
               value={effectivePrice(state, product, branch)!}
-              currency={state.config.company.currency}
+              product={product}
+              config={state.config}
             />
           )}
         </span>
@@ -1458,9 +1456,10 @@ export function Labels() {
                     <td>
                       {effectivePrice(state, product, branch) ? (
                         <div className="label-price-display">
-                          <Money
+                          <ProductPrice
                             value={effectivePrice(state, product, branch)!}
-                            currency={state.config.company.currency}
+                            product={product}
+                            config={state.config}
                           />
                           <ManualPricePill product={product} branch={branch} />
                         </div>
@@ -1641,13 +1640,14 @@ export function Labels() {
                           <td>
                             {product && allowed(product) ? (
                               <div className="label-price-display">
-                                <Money
+                                <ProductPrice
                                   value={effectivePrice(
                                     state,
                                     product,
                                     branch,
                                   )!}
-                                  currency={state.config.company.currency}
+                                  product={product}
+                                  config={state.config}
                                 />
                                 <ManualPricePill
                                   product={product}

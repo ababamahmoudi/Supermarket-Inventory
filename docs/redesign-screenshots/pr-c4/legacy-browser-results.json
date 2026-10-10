@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+  "preview": "http://127.0.0.1:5273",
+  "frozenSource": "/workspace/scratch/c4-release",
+  "configuration": "/workspace/scratch/c4-release-legacy-playwright.config.mjs",
+  "log": "/workspace/scratch/c4-release-legacy-fixed.log",
+  "workers": 1,
+  "retries": 0,
+  "timeoutMilliseconds": 60000,
+  "passed": 38,
+  "failed": 0,
+  "skipped": 0,
+  "status": "pass",
+  "coverage": "All meaningful changed legacy cases in eleven specs, desktop and phone; exact branch/privacy, retained drafts/originals, money, case packs, dates, stock, ledger, code allocation, role and supplier approval checks retained."
+}

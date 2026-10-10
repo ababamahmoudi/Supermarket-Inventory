@@ -12,6 +12,31 @@
 .history-table table {
   min-inline-size: 1150px;
 }
+.history-invoice-version-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.history-invoice-version-links .button {
+  inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 761px) {
+  :root .history-table.ui-data-table table.has-defined-columns {
+    min-inline-size: 0;
+    inline-size: 100%;
+    table-layout: fixed;
+  }
+  .history-table td,
+  .history-table th {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .history-table .history-branch {
+    white-space: normal;
+  }
+}
 .history-table td small {
   display: block;
   margin-block-start: 4px;

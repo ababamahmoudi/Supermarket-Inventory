@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import type {
   DemoState,
   InvoiceLine,
@@ -10,10 +11,13 @@ import {
   suggestOpenOrders,
   validateOrderReceipt,
   applyInvoiceToOrder,
+  invoiceNewItemFingerprint,
+  orderLineInvoiceQuantity,
   type Order,
   type OrderComparison,
   type OrderReceiptInput,
 } from "./orders";
+import { associatePostedSupplierItem } from "./supplier-items";
 import { effectiveInvoiceLocation } from "./received";
 import type { OperationsContext } from "./operations";
 
@@ -146,6 +150,76 @@ export function setInvoiceExtraDecision(
   state.invoice.order_missing_decisions = undefined;
 }
 
+/** Explicit reviewer choice; neither names nor product similarity select a temporary line. */
+export function setInvoiceNewItemMatch(
+  state: DemoState,
+  role: Role,
+  branch: Branch,
+  orderLineId: string,
+  invoiceLineIndex: number | null,
+): void {
+  const invoice = state.invoice;
+  const order = linkedInvoiceOrder(state);
+  if (
+    !invoiceReviewerAllowed(state, invoice, role, branch) ||
+    invoice.status === "posted" ||
+    !order ||
+    !compatibleInvoiceOrders(state, role, branch).some(
+      (item) => item.id === order.id,
+    ) ||
+    invoice.order_review_version !== order.version
+  )
+    throw new Error("match");
+  const temporary = order.lines.find(
+    (line) => line.id === orderLineId && line.new_item,
+  );
+  if (!temporary || temporary.new_item_association) throw new Error("match");
+  if (invoiceLineIndex === null) {
+    for (const line of invoice.lines)
+      if (line.order_new_item_match?.order_line_id === orderLineId)
+        clearInvoiceOrderLine(line);
+    invoice.order_missing_decisions = undefined;
+    return;
+  }
+  const line = invoice.lines[invoiceLineIndex];
+  if (
+    !line ||
+    line.company_id !== invoice.company_id ||
+    (line.order_item_id && line.order_item_id !== orderLineId)
+  )
+    throw new Error("match");
+  if (
+    line.product_code === "NEW"
+      ? !line.new_name_en?.trim()
+      : !state.products.some(
+          (product) =>
+            product.company_id === invoice.company_id &&
+            product.code === line.product_code &&
+            product.status !== "archived",
+        )
+  )
+    throw new Error("match");
+  orderLineInvoiceQuantity(temporary, line);
+  for (const item of invoice.lines)
+    if (
+      item !== line &&
+      item.order_new_item_match?.order_line_id === orderLineId
+    )
+      clearInvoiceOrderLine(item);
+  line.order_new_item_match = {
+    order_line_id: orderLineId,
+    order_version: order.version,
+    invoice_line_index: invoiceLineIndex,
+    product_code: line.product_code,
+    supplier_item_code: line.supplier_item_code ?? "",
+    units_per_case: line.units_per_case ?? 1,
+    fingerprint: invoiceNewItemFingerprint(line, invoiceLineIndex),
+  };
+  line.order_item_id = orderLineId;
+  line.review_confirmed = false;
+  invoice.order_missing_decisions = undefined;
+}
+
 export type InvoiceOrderIssue = "order" | "order_decisions";
 export function invoiceOrderIssues(
   state: DemoState,
@@ -164,6 +238,32 @@ export function invoiceOrderIssues(
     return ["order"];
   try {
     const comparison = compareInvoiceOrder(order, invoice);
+    const supplier = state.suppliers?.find(
+      (item) =>
+        item.id === order.supplier_id && item.company_id === invoice.company_id,
+    );
+    if (supplier && (!supplier.active || supplier.status !== "confirmed"))
+      return ["order_decisions"];
+    for (const row of comparison.lines) {
+      const line = invoice.lines[row.invoice_line_index];
+      const temporary = order.lines.find(
+        (item) => item.id === row.order_line_id && item.new_item,
+      );
+      if (!temporary || temporary.new_item_association) continue;
+      if (
+        line.supplier_item_id &&
+        state.supplier_items?.some(
+          (item) =>
+            item.id === line.supplier_item_id &&
+            (item.company_id !== invoice.company_id ||
+              item.supplier_id !== order.supplier_id ||
+              item.archived ||
+              item.product_code !== line.product_code ||
+              item.supplier_item_code !== (line.supplier_item_code ?? "")),
+        )
+      )
+        return ["order_decisions"];
+    }
     const unresolved =
       comparison.lines.some((row) => {
         const line = invoice.lines[row.invoice_line_index];
@@ -204,9 +304,11 @@ function initialReceipt(invoice: DemoInvoice): OrderReceiptInput {
       .map((row) => ({
         order_line_id: row.order_line_id!,
         invoice_line_index: row.invoice_line_index,
-        accepted_units:
-          invoice.lines[row.invoice_line_index].qty_received_at_posting -
-          (invoice.lines[row.invoice_line_index].refused_units ?? 0),
+        accepted_units: new Decimal(
+          invoice.lines[row.invoice_line_index].qty_received_at_posting,
+        )
+          .minus(invoice.lines[row.invoice_line_index].refused_units ?? 0)
+          .toNumber(),
       })),
     residual: (invoice.order_comparison?.residual ?? []).map((row) => ({
       order_line_id: row.order_line_id,
@@ -235,6 +337,31 @@ export function prepareInvoiceOrder(
       invoice.company_id !== preview.invoice.company_id,
   );
   preview.invoices.push(structuredClone(preview.invoice));
+  for (const row of comparison.lines) {
+    const temporary = linkedInvoiceOrder(preview)?.lines.find(
+      (line) =>
+        line.id === row.order_line_id &&
+        line.new_item &&
+        !line.new_item_association,
+    );
+    const line = preview.invoice.lines[row.invoice_line_index];
+    if (!temporary || row.accepted_units <= 0) continue;
+    if (line.product_code === "NEW") {
+      const existing = preview.products.find(
+        (product) =>
+          product.company_id === line.company_id &&
+          product.name_en === line.new_name_en,
+      );
+      if (existing) line.product_code = existing.code;
+      else continue;
+    }
+    associatePostedSupplierItem(
+      preview,
+      { company_id: preview.invoice.company_id, role, branch, actor },
+      preview.invoice,
+      row.invoice_line_index,
+    );
+  }
   validateOrderReceipt(
     preview,
     { company_id: preview.invoice.company_id, role, branch, actor },
@@ -250,13 +377,63 @@ export function applyPostedInvoiceOrder(
   branch: Branch,
   actor: string,
 ): void {
-  if (state.invoice.order_id)
+  if (state.invoice.order_id) {
+    const order = linkedInvoiceOrder(state)!;
+    const input = initialReceipt(state.invoice);
+    validateOrderReceipt(
+      state,
+      { company_id: state.invoice.company_id, role, branch, actor },
+      order.id,
+      input,
+    );
+    const already = order.receipts.some(
+      (event) =>
+        event.kind === "invoice" && event.invoice_id === state.invoice.id,
+    );
+    if (!already)
+      for (const row of state.invoice.order_comparison?.lines ?? []) {
+        const temporary = order.lines.find(
+          (item) => item.id === row.order_line_id && item.new_item,
+        );
+        const line = state.invoice.lines[row.invoice_line_index];
+        if (
+          !temporary ||
+          temporary.new_item_association ||
+          row.accepted_units <= 0
+        )
+          continue;
+        const item = associatePostedSupplierItem(
+          state,
+          { company_id: state.invoice.company_id, role, branch, actor },
+          state.invoice,
+          row.invoice_line_index,
+        );
+        temporary.new_item_association = {
+          invoice_id: state.invoice.id,
+          invoice_line_index: row.invoice_line_index,
+          product_code: line.product_code,
+          supplier_item_id: item.id,
+          supplier_item_code: item.supplier_item_code,
+          units_per_case: line.units_per_case ?? 1,
+          ordered_quantity: orderLineInvoiceQuantity(temporary, line),
+          quantity_unit: line.source_quantity_unit ? "lb" : "units",
+          ...(line.source_quantity_unit
+            ? {
+                case_weight: line.case_weight,
+                case_weight_unit: line.case_weight_unit,
+                weight_conversion_factor: line.weight_conversion_factor,
+              }
+            : {}),
+          fingerprint: line.order_new_item_match!.fingerprint,
+        };
+      }
     applyInvoiceToOrder(
       state,
       { company_id: state.invoice.company_id, role, branch, actor },
       state.invoice.order_id,
       initialReceipt(state.invoice),
     );
+  }
 }
 
 export function invoiceOrderDifferences(
@@ -326,7 +503,7 @@ export function invoiceOrderDifferences(
       product_code: line.product_code,
       name_en: line.name_en,
       name_fa: line.name_fa,
-      units: row.missing_units,
+      units: row.missing_units ?? undefined,
       decision: invoice.order_missing_decisions![row.order_line_id],
     });
   }
@@ -385,6 +562,7 @@ export function clearInvoiceOrder(invoice: DemoInvoice): void {
 
 export function clearInvoiceOrderLine(line: InvoiceLine): void {
   line.order_item_id = undefined;
+  line.order_new_item_match = undefined;
   line.extra_delivery_decision = undefined;
   line.order_price_decision = undefined;
   line.refused_units = 0;

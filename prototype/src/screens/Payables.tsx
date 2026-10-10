@@ -431,6 +431,12 @@ export function Payables() {
                 </td>
                 <td className="numeric">
                   <Money value={item.balance} />
+                  {item.pending_credit !== "0.00" && (
+                    <small className="muted payables-pending-note">
+                      {t("Pending credit", "اعتبار در انتظار")}:{" "}
+                      <Money value={item.pending_credit} />
+                    </small>
+                  )}
                 </td>
                 <td className="numeric">
                   <Money value={item.overdue} />
@@ -577,6 +583,62 @@ export function Payables() {
                 {error}
               </div>
             )}
+          {summary.pending_returns.length > 0 && (
+            <Card
+              title={t("Pending credit", "اعتبار در انتظار")}
+              className="pending-return-credits"
+            >
+              <p className="muted">
+                {t("Confirmed balance", "مانده تأییدشده")}:{" "}
+                <Money value={summary.confirmed_balance} /> ·{" "}
+                {t("Pending credit", "اعتبار در انتظار")}:{" "}
+                <Money value={summary.pending_credit} /> · {t("Owed", "بدهی")}:{" "}
+                <Money value={summary.balance} />
+              </p>
+              <DataTable
+                columns={[
+                  { width: "40%" },
+                  { width: "35%" },
+                  { width: "25%", align: "end" },
+                ]}
+              >
+                <thead>
+                  <tr>
+                    <th>{t("Return", "مرجوعی")}</th>
+                    <th>{t("Return memo", "یادداشت مرجوعی")}</th>
+                    <th>{t("Pending credit", "اعتبار در انتظار")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.pending_returns.map((claim) => (
+                    <tr key={claim.memo_id}>
+                      <td>
+                        <Button asChild variant="secondary" size="sm">
+                          <a
+                            href={`#return?id=${encodeURIComponent(claim.return_id)}`}
+                          >
+                            {t("View return", "نمایش مرجوعی")}
+                          </a>
+                        </Button>
+                      </td>
+                      <td>
+                        <Button asChild variant="secondary" size="sm">
+                          <a
+                            href={`#return?id=${encodeURIComponent(claim.return_id)}&memo=${encodeURIComponent(claim.reference)}`}
+                          >
+                            <LtrText>{claim.reference}</LtrText>
+                          </a>
+                        </Button>
+                      </td>
+                      <td>
+                        <Money value={claim.amount} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            </Card>
+          )}
           {paymentOpen && (
             <Card
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}

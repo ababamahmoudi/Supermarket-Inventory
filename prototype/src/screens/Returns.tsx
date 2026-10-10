@@ -7,6 +7,15 @@ import { translateCount } from "../i18n";
 import { useEffect, useState } from "react";
 import { useListState } from "../navigation";
 import { ArrowLeft } from "lucide-react";
+import { ReturnMemoDocument, ReturnMemoPreview } from "../return-memo";
+import { useOperationalPrint } from "../operational-print-hook";
+import {
+  returnUiStatus,
+  returnUiStatusLabel,
+  returnStatusLabel,
+  returnFinancialFingerprint,
+  type ReturnMemo,
+} from "../return-workflow";
 import "./returns-a2.css";
 import policySource from "../../../docs/return-policy.md?raw";
 import { useDemo } from "../store";
@@ -17,6 +26,8 @@ import {
   Card,
   Checkbox,
   Dialog,
+  ConfirmDialog,
+  Tabs,
   DataTable,
   DateField,
   Dropzone,
@@ -47,6 +58,14 @@ import {
 
 export function Returns() {
   const { state, update, role, user, branch, t, lang } = useDemo();
+  const usesPounds = (line: OperationalReturn["lines"][number]) =>
+    line.quantity_unit === "lb" ||
+    (!line.quantity_unit &&
+      state.products.find(
+        (item) =>
+          item.company_id === state.config.company.seed_key &&
+          item.code === line.product_code,
+      )?.sold_by === "weight");
   const branches = configuredBranches(state.config);
   const [hash, setHash] = useState(() => window.location.hash);
   const detailId = hash.startsWith("#return?")
@@ -80,7 +99,8 @@ export function Returns() {
     ]),
   ];
   const [supplier, setSupplier] = useListState("returns.supplier", "all");
-  const [status, setStatus] = useListState("returns.status", "pending");
+  const [returnTab, setReturnTab] = useListState("returns.tab", "open");
+  const [status, setStatus] = useListState("returns.status", "all");
   const [returnBranch, setReturnBranch] = useListState(
     "returns.location",
     "all",
@@ -112,6 +132,34 @@ export function Returns() {
   const [feedback, setFeedback] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
+  const [manualMemo, setMemo] = useState<ReturnMemo | null>(null);
+  const [dismissedMemoHash, setDismissedMemoHash] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    returnId: string;
+    claimId: string;
+    amount: string;
+    fingerprint: string;
+  } | null>(null);
+  const { printDocument, printOutput } = useOperationalPrint();
+  const memoReference = new URLSearchParams(hash.split("?")[1] ?? "").get(
+    "memo",
+  );
+  const visibleManualMemo =
+    manualMemo &&
+    scopedReturns.some(
+      (record) =>
+        record.id === manualMemo.return_id &&
+        record.pickup_memos?.some((item) => item.id === manualMemo.id),
+    )
+      ? manualMemo
+      : null;
+  const memo =
+    visibleManualMemo ??
+    (dismissedMemoHash !== hash
+      ? (selected?.pickup_memos?.find(
+          (item) => item.reference === memoReference,
+        ) ?? null)
+      : null);
   const tableColumns = useTableColumns("returns", [
     {
       key: "reference",
@@ -141,6 +189,7 @@ export function Returns() {
     const onHash = () => {
       setHash(window.location.hash);
       setActive(null);
+      setMemo(null);
       setError("");
       setErrorKey("");
       setFeedback("");
@@ -156,11 +205,13 @@ export function Returns() {
     `#return?id=${encodeURIComponent(record.id)}`;
   const query = search.trim().toLocaleLowerCase();
   const overviewReturns = scopedReturns.filter((record) => {
+    const displayedStatus = returnUiStatus(record);
     const matchesStatus =
-      status === "all" ||
-      (status === "pending"
-        ? record.status !== "cancelled" && record.status !== "resolved"
-        : record.status === status);
+      (returnTab === "open"
+        ? displayedStatus === "waiting_for_pickup" ||
+          displayedStatus === "waiting_for_credit"
+        : displayedStatus === "closed" || displayedStatus === "cancelled") &&
+      (status === "all" || status === "pending" || displayedStatus === status);
     const productText = record.lines
       .map((line) => {
         const product = state.products.find(
@@ -195,16 +246,7 @@ export function Returns() {
     );
     return product ? (lang === "fa" ? product.name_fa : product.name_en) : code;
   };
-  const statusLabel = (status: string) =>
-    ({
-      open: t("Open", "باز"),
-      picked_up: t("Picked up", "جمع‌آوری‌شده"),
-      partially_resolved: t("Partially resolved", "تا حدی حل‌شده"),
-      resolved: t("Resolved", "حل‌شده"),
-      cancelled: t("Cancelled", "لغوشده"),
-      cancellation_review: t("Needs review", "نیازمند بررسی"),
-      claim_pending: t("Pending", "در انتظار"),
-    })[status] ?? t("Open", "باز");
+  const statusLabel = (status: string) => returnUiStatusLabel(status, t);
   const returnStatus = (record: OperationalReturn) => (
     <Badge
       tone={
@@ -220,7 +262,7 @@ export function Returns() {
                 : "pending"
       }
     >
-      {statusLabel(record.status)}
+      {returnStatusLabel(record, t)}
     </Badge>
   );
   const run = (action: (draft: typeof state) => void, message: string) => {
@@ -308,6 +350,18 @@ export function Returns() {
             )}
           />
           <Card className="returns-overview">
+            <Tabs
+              value={returnTab}
+              onChange={(value) => {
+                setReturnTab(value);
+                setStatus("all");
+              }}
+              aria-label={t("Returns view", "نمایش مرجوعی‌ها")}
+              options={[
+                { value: "open", label: t("Open", "باز") },
+                { value: "history", label: t("History", "تاریخچه") },
+              ]}
+            />
             <FilterToolbar
               className="returns-toolbar"
               aria-label={t("Filter returns", "فیلتر مرجوعی‌ها")}
@@ -351,16 +405,11 @@ export function Returns() {
                 value={status}
                 onChange={setStatus}
                 options={[
-                  { value: "pending", label: t("Pending", "در انتظار") },
                   { value: "all", label: t("All statuses", "همه وضعیت‌ها") },
-                  ...[
-                    "open",
-                    "picked_up",
-                    "partially_resolved",
-                    "cancellation_review",
-                    "resolved",
-                    "cancelled",
-                  ].map((value) => ({ value, label: statusLabel(value) })),
+                  ...(returnTab === "open"
+                    ? ["waiting_for_pickup", "waiting_for_credit"]
+                    : ["closed", "cancelled"]
+                  ).map((value) => ({ value, label: statusLabel(value) })),
                 ]}
               />
               <Select
@@ -390,7 +439,7 @@ export function Returns() {
                 size="sm"
                 onClick={() => {
                   setSupplier("all");
-                  setStatus("pending");
+                  setStatus("all");
                   setReturnBranch("all");
                   setSearch("");
                 }}
@@ -514,6 +563,92 @@ export function Returns() {
         </EmptyState>
       )}
       <Dialog
+        open={memo !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMemo(null);
+            setDismissedMemoHash(hash);
+          }
+        }}
+        title={t("Return memo", "یادداشت مرجوعی")}
+        description={memo?.reference}
+      >
+        {memo && (
+          <>
+            <ReturnMemoPreview memo={memo} language={lang} />
+            <p className="muted">
+              {t(
+                "Choose Save as PDF in the print window to download a copy.",
+                "برای بارگیری نسخه، در پنجره چاپ گزینه ذخیره به صورت PDF را انتخاب کنید.",
+              )}
+            </p>
+            <Button
+              onClick={() => {
+                update((draft) => {
+                  draft.activity.unshift({
+                    id: `memo-print-${Date.now()}`,
+                    company_id: context.company_id,
+                    branch: memo.branch,
+                    action: "Return memo printed",
+                    by: context.actor,
+                    at: new Date().toISOString(),
+                    reversible: false,
+                  });
+                });
+                printDocument(
+                  <ReturnMemoDocument memo={memo} language={lang} />,
+                );
+              }}
+            >
+              {t("Print", "چاپ")}
+            </Button>
+          </>
+        )}
+      </Dialog>
+      {printOutput}
+      <ConfirmDialog
+        open={confirmation !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmation(null);
+        }}
+        title={t("Verify and post claim", "تأیید و ثبت ادعا")}
+        description={t(
+          "Confirm the credit note, actual amount and covered quantities. The financial record is kept in History.",
+          "یادداشت اعتبار، مبلغ واقعی و تعداد پوشش‌داده‌شده را تأیید کنید. سابقه مالی در تاریخچه نگهداری می‌شود.",
+        )}
+        confirmLabel={t("Verify and post claim", "تأیید و ثبت ادعا")}
+        onConfirm={() => {
+          if (!confirmation) return;
+          if (
+            returnFinancialFingerprint(state, confirmation.returnId) !==
+            confirmation.fingerprint
+          ) {
+            setErrorKey("return_changed");
+            setError(
+              t(
+                "This return or its payable changed. Review it again before posting.",
+                "این مرجوعی یا پرداختنی آن تغییر کرده است. پیش از ثبت دوباره بررسی کنید.",
+              ),
+            );
+            setConfirmation(null);
+            return;
+          }
+          run(
+            (draft) =>
+              postReturnClaim(
+                draft,
+                context,
+                confirmation.returnId,
+                confirmation.claimId,
+                confirmation.amount,
+              ),
+            t("Verified and posted claim once.", "ادعا تأیید و یک‌بار ثبت شد."),
+          );
+          setConfirmation(null);
+          setVerified(false);
+        }}
+      />
+      <Dialog
         open={policyOpen}
         onOpenChange={setPolicyOpen}
         title={t("Return policy", "سیاست مرجوعی")}
@@ -544,8 +679,8 @@ export function Returns() {
             </li>
             <li>
               {t(
-                "Workers submit claims and evidence; Supervisors verify and post money. Replacements add only received stock.",
-                "کارکنان ادعا و مدرک ارسال می‌کنند؛ سرپرست پول را تأیید و ثبت می‌کند. جایگزین فقط به موجودی دریافتی اضافه می‌شود.",
+                "Workers submit claims and evidence; Supervisors verify and post money. Replacements record actual receipts.",
+                "کارکنان ادعا و مدرک ارسال می‌کنند؛ سرپرست پول را تأیید و ثبت می‌کند. جایگزین دریافت واقعی را ثبت می‌کند.",
               )}
             </li>
             <li>
@@ -679,6 +814,24 @@ export function Returns() {
                 </div>
               </div>
             </Card>
+            {!!record.pickup_memos?.length && (
+              <Card
+                title={t("Return memo", "یادداشت مرجوعی")}
+                className="return-memos-card"
+              >
+                <div className="actions">
+                  {record.pickup_memos.map((item) => (
+                    <Button
+                      key={item.id}
+                      variant="secondary"
+                      onClick={() => setMemo(item)}
+                    >
+                      <LtrText>{item.reference}</LtrText>
+                    </Button>
+                  ))}
+                </div>
+              </Card>
+            )}
             <Card title={t("Items", "اقلام")} className="return-lines-card">
               <DataTable
                 className="return-lines-table"
@@ -687,7 +840,6 @@ export function Returns() {
                   { width: "100px", align: "end" },
                   { width: "110px", align: "end" },
                   { width: "110px", align: "end" },
-                  { width: "145px", align: "end" },
                   { width: "23%" },
                 ]}
               >
@@ -699,9 +851,6 @@ export function Returns() {
                       {t("Picked up", "جمع‌آوری‌شده")}
                     </th>
                     <th className="number-cell">{t("Resolved", "حل‌شده")}</th>
-                    <th className="number-cell">
-                      {t("Returned to stock", "بازگشته به موجودی")}
-                    </th>
                     <th>{t("Reason / location", "دلیل / محل")}</th>
                   </tr>
                 </thead>
@@ -722,12 +871,16 @@ export function Returns() {
                           )}
                         </td>
                         <td className="number-cell">
-                          <LtrText>{line.qty}</LtrText>
+                          <LtrText>
+                            {line.qty}
+                            {usesPounds(line) ? " lb" : ""}
+                          </LtrText>
                         </td>
                         <td className="number-cell">
                           <LtrText>
                             {line.picked_up ??
                               (record.replacement_received ? line.qty : 0)}
+                            {usesPounds(line) ? " lb" : ""}
                           </LtrText>
                         </td>
                         <td className="number-cell">
@@ -737,12 +890,7 @@ export function Returns() {
                               record.replacement_received
                                 ?.covers_original_qty ??
                               0}
-                          </LtrText>
-                        </td>
-                        <td className="number-cell">
-                          <LtrText>
-                            {record.recovered?.[line.product_code] ??
-                              record.original_units_recovered}
+                            {usesPounds(line) ? " lb" : ""}
                           </LtrText>
                         </td>
                         <td>
@@ -828,7 +976,7 @@ export function Returns() {
                       : panel === "resolve"
                         ? t("Record resolution", "ثبت حل‌وفصل")
                         : t(
-                            "Actual original-stock disposition",
+                            "Actual original-goods disposition",
                             "وضعیت واقعی اصل کالا",
                           )}
                   </h3>
@@ -844,24 +992,11 @@ export function Returns() {
                         options={[
                           {
                             value: "replacement_received",
-                            label: t(
-                              "Replacement product received",
-                              "کالای جایگزین دریافت‌شده",
-                            ),
+                            label: t("Replaced", "جایگزین‌شده"),
                           },
                           {
                             value: "credit_current_invoice",
-                            label: t(
-                              "Credit on current invoice",
-                              "بستانکاری فاکتور جاری",
-                            ),
-                          },
-                          {
-                            value: "credit_later_invoice",
-                            label: t(
-                              "Credit on a later invoice",
-                              "بستانکاری فاکتور بعدی",
-                            ),
+                            label: t("Credited", "اعتبار دریافت‌شده"),
                           },
                           {
                             value: "cash_or_other",
@@ -874,7 +1009,7 @@ export function Returns() {
                             ? [
                                 {
                                   value: "no_compensation",
-                                  label: t("No compensation", "بدون جبران"),
+                                  label: t("Written off", "سوخت‌شده"),
                                 },
                               ]
                             : []),
@@ -892,20 +1027,22 @@ export function Returns() {
                           className="field-short"
                           error={fieldError(
                             "quantity",
+                            "weight_quantity",
                             "pickup_cap",
                             "coverage",
                             "recovery_cap",
                           )}
-                          label={`${productName(line.product_code)} · ${panel === "pickup" ? t("Actual pickup units", "تعداد واقعی جمع‌آوری") : panel === "cancel" ? t("Actual safe originals recovered (zero is valid)", "اصل کالای سالم واقعاً بازیابی‌شده (صفر مجاز است)") : t("Original units this settlement covers", "تعداد اصلی تحت پوشش این تسویه")}`}
+                          label={`${productName(line.product_code)}${usesPounds(line) ? " (lb)" : ""} · ${panel === "pickup" ? t("Actual pickup units", "تعداد واقعی جمع‌آوری") : panel === "cancel" ? t("Actual safe originals recovered (zero is valid)", "اصل کالای سالم واقعاً بازیابی‌شده (صفر مجاز است)") : t("Original units this settlement covers", "تعداد اصلی تحت پوشش این تسویه")}`}
                         >
                           <NumberField
                             min="0"
                             max={line.qty}
-                            step="1"
+                            step={usesPounds(line) ? "0.001" : "1"}
                             value={quantities[line.product_code] ?? "0"}
                             onChange={(value) => {
                               clearFieldError(
                                 "quantity",
+                                "weight_quantity",
                                 "pickup_cap",
                                 "coverage",
                                 "recovery_cap",
@@ -1086,6 +1223,8 @@ export function Returns() {
                               clearFieldError(
                                 "replacement_evidence",
                                 "product",
+                                "quantity",
+                                "weight_quantity",
                               );
                             }}
                             options={state.products
@@ -1102,19 +1241,39 @@ export function Returns() {
                         </Field>
                         <Field
                           className="field-short"
-                          error={fieldError("quantity")}
-                          label={t(
+                          error={fieldError("quantity", "weight_quantity")}
+                          label={`${t(
                             "Actual replacement quantity",
                             "تعداد واقعی جایگزین",
-                          )}
+                          )}${usesPounds({ product_code: replacement, qty: 0, reason: "" }) ? " (lb)" : ""}`}
                         >
                           <NumberField
-                            min="1"
-                            step="1"
+                            min={
+                              usesPounds({
+                                product_code: replacement,
+                                qty: 0,
+                                reason: "",
+                              })
+                                ? "0.001"
+                                : "1"
+                            }
+                            step={
+                              usesPounds({
+                                product_code: replacement,
+                                qty: 0,
+                                reason: "",
+                              })
+                                ? "0.001"
+                                : "1"
+                            }
                             value={replacementQty}
                             onChange={(value) => {
                               setReplacementQty(value);
-                              clearFieldError("quantity", "coverage");
+                              clearFieldError(
+                                "quantity",
+                                "weight_quantity",
+                                "coverage",
+                              );
                             }}
                           />
                         </Field>
@@ -1151,6 +1310,25 @@ export function Returns() {
                             "کارکنان مدرک و تعداد پوشش‌داده‌شده ارسال می‌کنند. فقط سرپرست مبالغ مالی را تأیید و ثبت می‌کند.",
                           )}
                         </p>
+                        {role === "supervisor" &&
+                          resolution !== "no_compensation" && (
+                            <Field
+                              className="field-short"
+                              label={t(
+                                "Actual credit amount",
+                                "مبلغ واقعی اعتبار",
+                              )}
+                              error={fieldError("amount")}
+                            >
+                              <NumberField
+                                value={amount}
+                                onChange={(value) => {
+                                  setAmount(value);
+                                  clearFieldError("amount");
+                                }}
+                              />
+                            </Field>
+                          )}
                         {resolution !== "no_compensation" && (
                           <Field
                             error={fieldError(
@@ -1158,8 +1336,8 @@ export function Returns() {
                               "duplicate_document",
                             )}
                             label={t(
-                              "Supplier credit or compensation document reference",
-                              "مرجع سند بستانکاری یا جبران تأمین‌کننده",
+                              "Credit note number",
+                              "شماره یادداشت اعتبار",
                             )}
                           >
                             <input
@@ -1220,7 +1398,13 @@ export function Returns() {
                               "Reason for no compensation (required)",
                               "دلیل بدون جبران (ضروری)",
                             )
-                          : t("Optional note", "یادداشت اختیاری")
+                          : panel === "resolve" &&
+                              resolution === "no_compensation"
+                            ? t(
+                                "Write-off reason (required)",
+                                "دلیل سوخت‌کردن (ضروری)",
+                              )
+                            : t("Optional note", "یادداشت اختیاری")
                     }
                   >
                     <textarea
@@ -1279,8 +1463,8 @@ export function Returns() {
                                 note,
                               }),
                             t(
-                              "Recorded pickup. No stock was deducted again.",
-                              "جمع‌آوری ثبت شد. موجودی دوباره کاهش نیافت.",
+                              "Recorded pickup and retained Return memo.",
+                              "جمع‌آوری ثبت و یادداشت مرجوعی نگهداری شد.",
                             ),
                           );
                         else if (panel === "cancel")
@@ -1309,11 +1493,12 @@ export function Returns() {
                                 note,
                                 photo,
                                 receipt: slip,
+                                invoice_id: invoiceId || undefined,
                                 fully,
                               }),
                             t(
-                              "Replacement received. Payables did not change.",
-                              "جایگزین دریافت شد. پرداختنی‌ها تغییر نکرد.",
+                              "Replacement received. Pending credit was released for the covered quantities.",
+                              "جایگزین دریافت شد. اعتبار در انتظار تعداد پوشش‌داده‌شده آزاد شد.",
                             ),
                           );
                         else
@@ -1325,6 +1510,11 @@ export function Returns() {
                                 document: slip,
                                 invoice_id: invoiceId,
                                 reason: note,
+                                amount:
+                                  role === "supervisor" &&
+                                  resolution !== "no_compensation"
+                                    ? amount
+                                    : undefined,
                               }),
                             t(
                               "Submitted claim for Supervisor verification.",
@@ -1379,14 +1569,18 @@ export function Returns() {
                     <>
                       <Field
                         className="field-short"
+                        error={fieldError("amount")}
                         label={t(
                           "Verified financial amount (Supervisor only)",
                           "مبلغ مالی تأییدشده (فقط سرپرست)",
                         )}
                       >
                         <NumberField
-                          value={amount}
-                          onChange={setAmount}
+                          value={amount || claim.amount || ""}
+                          onChange={(value) => {
+                            setAmount(value);
+                            clearFieldError("amount");
+                          }}
                           disabled={claim.type === "no_compensation"}
                         />
                       </Field>
@@ -1399,20 +1593,15 @@ export function Returns() {
                       <Button
                         disabled={!verified || context.branch === "all"}
                         onClick={() =>
-                          run(
-                            (draft) =>
-                              postReturnClaim(
-                                draft,
-                                context,
-                                record.id,
-                                claim.id,
-                                amount,
-                              ),
-                            t(
-                              "Verified and posted claim once.",
-                              "ادعا تأیید و یک‌بار ثبت شد.",
+                          setConfirmation({
+                            returnId: record.id,
+                            claimId: claim.id,
+                            amount: amount || claim.amount || "",
+                            fingerprint: returnFinancialFingerprint(
+                              state,
+                              record.id,
                             ),
-                          )
+                          })
                         }
                       >
                         {t("Verify and post claim", "تأیید و ثبت ادعا")}
@@ -1429,8 +1618,8 @@ export function Returns() {
               >
                 <div className="banner pending">
                   {t(
-                    "Supervisor review required. Originals held by the supplier restore zero stock. Existing settlement has not been reversed.",
-                    "بررسی سرپرست ضروری است. اصل کالا نزد تأمین‌کننده هیچ موجودی بازنمی‌گرداند. تسویه قبلی معکوس نشده است.",
+                    "Supervisor review required. Supplier-held originals are not recorded as recovered. Existing settlement has not been reversed.",
+                    "بررسی سرپرست ضروری است. اصل کالای نزد تأمین‌کننده به عنوان بازیابی‌شده ثبت نمی‌شود. تسویه قبلی معکوس نشده است.",
                   )}
                 </div>
                 {role === "supervisor" && (

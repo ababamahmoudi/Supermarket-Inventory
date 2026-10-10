@@ -30,8 +30,10 @@ import {
 } from "../settings";
 import type { CompanyConfig } from "../types";
 import PricingSettings from "./PricingSettings";
+import WeighedItemsSettings from "./WeighedItemsSettings";
 import { NotebookSettings } from "./NotebookSettings";
 import { LabelsSettings } from "./Labels";
+import { ReturnsSettings } from "./ReturnsSettings";
 import "./settings-b.css";
 
 type Group =
@@ -152,8 +154,8 @@ const groups: {
     key: "returns",
     label: ["Returns/date tracking/labels", "مرجوعی/پیگیری تاریخ/برچسب"],
     description: [
-      "Label waitlist preferences and editable A4 templates.",
-      "تنظیمات فهرست انتظار برچسب و قالب‌های قابل ویرایش A4.",
+      "Pending return credits, reminders, label waitlist preferences and A4 templates.",
+      "اعتبار مرجوعی در انتظار، یادآوری‌ها، فهرست انتظار برچسب و قالب‌های A4.",
     ],
   },
   {
@@ -586,7 +588,7 @@ function BranchSettings() {
             }}
           >
             <Plus size={18} />
-            {t("Add branch", "افزودن شعبه")}
+            {t("Add location", "افزودن مکان")}
           </Button>
         </div>
         <DataTable
@@ -690,7 +692,7 @@ function BranchSettings() {
         title={
           state.config.branches.some((branch) => branch.code === editing?.code)
             ? t("Edit branch", "ویرایش شعبه")
-            : t("Add branch", "افزودن شعبه")
+            : t("Add location", "افزودن مکان")
         }
         className="settings-dialog"
       >
@@ -1176,12 +1178,20 @@ export default function Settings() {
                 state.config.special_corrections,
               ])}
             />
+          ) : selected === "pricing" ? (
+            <>
+              <WeighedItemsSettings />
+              <PlannedSettings group={group} />
+            </>
           ) : selected === "offers" ? (
             <OfferSettings key={JSON.stringify(state.config.promotions)} />
           ) : selected === "notes" ? (
             <NotebookSettings />
           ) : selected === "returns" ? (
-            <LabelsSettings />
+            <>
+              <ReturnsSettings />
+              <LabelsSettings />
+            </>
           ) : selected === "modules" ? (
             <ModuleSettings
               key={JSON.stringify({

@@ -256,6 +256,7 @@ test("a manual draft detail returns to its list without losing the saved line", 
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   await page.getByRole("button", { name: "Add line", exact: true }).click();
@@ -267,7 +268,11 @@ test("a manual draft detail returns to its list without losing the saved line", 
     .click();
   await expect(page.locator(".invoice-saved-drafts")).toBeVisible();
   await expect(page.locator(".invoice-lines-table")).toHaveCount(0);
-  await page.getByRole("button", { name: "Resume draft", exact: true }).click();
+  await page
+    .locator(".invoice-saved-drafts .dialog-actions")
+    .filter({ has: page.getByText("Draft", { exact: true }) })
+    .getByRole("button", { name: "Resume draft", exact: true })
+    .click();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await page.goBack();
   await expect(page.locator(".invoice-saved-drafts")).toBeVisible();

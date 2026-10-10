@@ -43,20 +43,36 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
     "Data",
   ]) {
     await group(page, label);
+    const planned = page.locator(".settings-form-card").filter({
+      has: page.getByText(
+        "These settings are planned. Changes are not available yet.",
+        { exact: true },
+      ),
+    });
     await expect(
-      page.getByText(
+      planned.getByText(
         "These settings are planned. Changes are not available yet.",
         { exact: true },
       ),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Save changes", exact: true }),
+      planned.getByRole("button", { name: "Save changes", exact: true }),
     ).toHaveCount(0);
-    await expect(
-      page.locator(
-        ".settings-group-content input, .settings-group-content [role=switch]",
-      ),
-    ).toHaveCount(0);
+    await expect(planned.locator("input, [role=switch]")).toHaveCount(0);
+    if (label === "Pricing and approvals") {
+      await expect(
+        page.getByRole("heading", { name: "Weighed items", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("combobox", { name: "Main display unit", exact: true }),
+      ).toHaveText("lb");
+      await expect(
+        page.getByRole("switch", { name: "Show second unit", exact: true }),
+      ).toBeChecked();
+      await expect(
+        page.getByRole("switch", { name: "Use rounding bands", exact: true }),
+      ).toBeChecked();
+    }
   }
 });
 test("company settings save deliberately, persist and record before/after History", async ({
@@ -114,8 +130,11 @@ test("new branch configuration works in the live branch switcher and retains his
 }) => {
   await open(page);
   await group(page, "Branches");
-  await page.getByRole("button", { name: "Add branch", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Add branch", exact: true });
+  await page.getByRole("button", { name: "Add location", exact: true }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Add location",
+    exact: true,
+  });
   await dialog
     .getByLabel("Name (English)", { exact: true })
     .fill("North Market");

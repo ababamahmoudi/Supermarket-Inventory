@@ -143,7 +143,12 @@ export function Alerts() {
                         "Invoice and order differences",
                         "اختلاف‌های فاکتور و سفارش",
                       )
-                    : t("Barcode conflict", "تداخل بارکد");
+                    : alert.type === "return_credit_overdue"
+                      ? t(
+                          "Return waiting for credit",
+                          "مرجوعی در انتظار اعتبار",
+                        )
+                      : t("Barcode conflict", "تداخل بارکد");
         return (
           <Card key={alert.id} title={title} className="alert-card">
             <div className="row">
@@ -178,7 +183,24 @@ export function Alerts() {
               </Badge>
             </div>
             <p className="muted alert-branch">{branchName(alert.branch)}</p>
-            {alert.type === "price_conflict" ? (
+            {alert.type === "return_credit_overdue" ? (
+              <>
+                <p>{alert.supplier}</p>
+                <p className="muted">
+                  {t(
+                    "Review the retained pickup evidence and record the supplier's resolution.",
+                    "مدرک جمع‌آوری نگهداری‌شده را بررسی و نتیجه تأمین‌کننده را ثبت کنید.",
+                  )}
+                </p>
+                <Button asChild variant="secondary">
+                  <a
+                    href={`#return?id=${encodeURIComponent(alert.return_id ?? "")}`}
+                  >
+                    {t("View return", "نمایش مرجوعی")}
+                  </a>
+                </Button>
+              </>
+            ) : alert.type === "price_conflict" ? (
               <>
                 <DataTable
                   columns={[

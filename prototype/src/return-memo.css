@@ -1,0 +1,42 @@
+.return-memo-table th:first-child {
+  width: 45%;
+}
+.return-memo-table :is(th, td):not(:first-child) {
+  text-align: end;
+}
+.return-memo-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 8mm;
+  margin-block: 6mm;
+}
+.return-memo-signature {
+  display: flex;
+  gap: 8mm;
+  align-items: end;
+  margin-block: 12mm;
+}
+.return-memo-signature > span {
+  flex: 1;
+  border-bottom: 0.25mm solid #000;
+  height: 10mm;
+}
+.return-memo-preview {
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  margin-block: 16px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-card);
+}
+.return-memo-frame {
+  position: relative;
+  margin-inline: auto;
+}
+.return-memo-scaled {
+  position: absolute;
+  inset-block-start: 0;
+  left: 0;
+  inline-size: 210mm;
+  transform-origin: top left;
+}

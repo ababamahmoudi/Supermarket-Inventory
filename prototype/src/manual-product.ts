@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { calculatePrice } from "./pricing";
+import { calculateWeighedPrice, weightCostPerLb } from "./weighed";
 import { configuredBranches, activePricingCategories } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
 import { reconcileOffers } from "./approvals";
@@ -10,6 +11,7 @@ import type { ProductEditorContext, ProductEdits } from "./product-editor";
 
 export interface NewProductEdits extends ProductEdits {
   last_cost_before_tax: string;
+  last_cost_unit?: "lb" | "kg";
   similar_name_confirmed?: boolean;
   minimum_margin_confirmed?: boolean;
 }
@@ -131,11 +133,32 @@ export function addProduct(
   )
     fail("similar");
   if (!/^\d+(\.\d{1,4})?$/.test(edits.last_cost_before_tax)) fail("cost");
-  const calculation = calculatePrice(
-    edits.last_cost_before_tax,
-    edits.pricing_category,
-    state.config,
-  );
+  if (
+    edits.sold_by !== undefined &&
+    edits.sold_by !== "each" &&
+    edits.sold_by !== "weight"
+  )
+    fail("unit_size");
+  const weighed = edits.sold_by === "weight";
+  const calculation = weighed
+    ? calculateWeighedPrice(
+        edits.last_cost_before_tax,
+        edits.last_cost_unit ?? "lb",
+        edits.pricing_category,
+        state.config,
+      )
+    : calculatePrice(
+        edits.last_cost_before_tax,
+        edits.pricing_category,
+        state.config,
+      );
+  const canonicalCost = weighed
+    ? weightCostPerLb(
+        edits.last_cost_before_tax,
+        edits.last_cost_unit ?? "lb",
+        state.config,
+      )
+    : edits.last_cost_before_tax;
   const price = edits.selling_price ?? calculation.selling_price;
   if (!/^\d+(\.\d{1,2})?$/.test(price) || new Decimal(price).lte(0))
     fail("price");
@@ -145,7 +168,7 @@ export function addProduct(
   const below =
     category!.minimum_margin !== null &&
     new Decimal(price)
-      .minus(edits.last_cost_before_tax)
+      .minus(canonicalCost)
       .lt(new Decimal(price).times(category!.minimum_margin));
   if (context.role === "supervisor" && below && !edits.minimum_margin_confirmed)
     fail("margin");
@@ -164,7 +187,8 @@ export function addProduct(
     barcode: edits.barcode.trim(),
     main_supplier: edits.main_supplier,
     date_tracking: edits.date_tracking,
-    last_cost_before_tax: new Decimal(edits.last_cost_before_tax).toFixed(4),
+    sold_by: edits.sold_by ?? "each",
+    last_cost_before_tax: new Decimal(canonicalCost).toFixed(4),
     selling_price:
       context.role === "supervisor" ? new Decimal(price).toFixed(2) : "",
     pending_price:

@@ -25,6 +25,7 @@
     "decimal.js": "10.6.0",
     "i18next": "26.4.2",
     "lucide-react": "1.52.0",
+    "pdfjs-dist": "5.4.624",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-i18next": "17.0.15",

@@ -1,6 +1,8 @@
 import Decimal from "decimal.js";
 import { effectivePrice, lookupBranch } from "./catalog";
 import { calculatePrice } from "./pricing";
+import { calculateWeighedPrice } from "./weighed";
+import { sellingBranches } from "./settings";
 import type { Branch, DemoState, Product } from "./types";
 
 export interface ManualPriceMarker {
@@ -18,8 +20,16 @@ export function rulePrice(
 ): string | null {
   if (product.company_id !== state.config.company.seed_key) return null;
   try {
-    return calculatePrice(cost, product.pricing_category, state.config)
-      .selling_price;
+    return (
+      product.sold_by === "weight"
+        ? calculateWeighedPrice(
+            cost,
+            "lb",
+            product.pricing_category,
+            state.config,
+          )
+        : calculatePrice(cost, product.pricing_category, state.config)
+    ).selling_price;
   } catch {
     return null;
   }
@@ -144,8 +154,15 @@ export function setManualPriceMarker(
           set_at: now.toISOString(),
         }
       : null;
-  if (branch === "all") product.manual_prices = marker ? { all: marker } : {};
-  else {
+  if (branch === "all") {
+    const selling = sellingBranches(state.config);
+    const retained = Object.fromEntries(
+      Object.entries(product.manual_prices ?? {}).filter(
+        ([location]) => location !== "all" && !selling.includes(location),
+      ),
+    );
+    product.manual_prices = marker ? { ...retained, all: marker } : retained;
+  } else {
     product.manual_prices ??= {};
     if (marker) product.manual_prices[branch] = marker;
     else delete product.manual_prices[branch];

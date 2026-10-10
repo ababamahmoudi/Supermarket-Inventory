@@ -2,7 +2,11 @@ import Decimal from "decimal.js";
 import { effectivePrice, lookupBranch } from "./catalog";
 import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import { createId } from "./ids";
-import { configuredBranches } from "./settings";
+import {
+  configuredBranches,
+  sellingBranches,
+  branchSellsToCustomers,
+} from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
 import { setManualPriceMarker } from "./manual-prices";
 import type { Branch, DemoState, Product, Role } from "./types";
@@ -24,7 +28,8 @@ export interface ProductEdits {
   pricing_category: string;
   barcode: string;
   main_supplier: string;
-  date_tracking: boolean;
+  date_tracking?: boolean;
+  sold_by?: "each" | "weight";
   selling_price?: string;
   scope: "all" | "branch";
 }
@@ -108,6 +113,12 @@ export function saveProductEdits(
 ): void {
   checkContext(state, context);
   const product = ownProduct(state, context.company_id, code);
+  if (
+    edits.sold_by !== undefined &&
+    edits.sold_by !== "each" &&
+    edits.sold_by !== "weight"
+  )
+    fail("unit_size");
   if (productEditSnapshot(state, code, context.company_id) !== expectedSnapshot)
     fail("stale");
   for (const key of ["name_en", "name_fa", "unit_size"] as const)
@@ -152,14 +163,16 @@ export function saveProductEdits(
     if (!amount.isFinite() || amount.lte(0)) fail("price");
     price = amount.toFixed(2);
     if (edits.scope === "all") {
+      if (!sellingBranches(state.config).length) fail("branch");
       if (
-        configuredBranches(state.config).some(
+        sellingBranches(state.config).some(
           (branch) => !context.allowed_branches.includes(branch),
         )
       )
         fail("branch");
     } else if (
       context.branch === "all" ||
+      !branchSellsToCustomers(state.config, context.branch) ||
       !context.allowed_branches.includes(context.branch)
     )
       fail("branch");
@@ -184,12 +197,18 @@ export function saveProductEdits(
     barcode: edits.barcode.trim(),
     main_supplier: edits.main_supplier,
     date_tracking: edits.date_tracking,
+    sold_by: edits.sold_by ?? product.sold_by ?? "each",
   });
   if (price !== undefined) {
     const targetBranch = edits.scope === "all" ? "all" : context.branch;
     if (edits.scope === "all") {
       product.selling_price = price;
-      product.branch_prices = {};
+      const selling = sellingBranches(state.config);
+      product.branch_prices = Object.fromEntries(
+        Object.entries(product.branch_prices ?? {}).filter(
+          ([location]) => !selling.includes(location),
+        ),
+      );
     } else
       product.branch_prices = {
         ...product.branch_prices,
@@ -214,12 +233,14 @@ export function saveProductEdits(
       product.price_provenance = Object.fromEntries(
         Object.entries(product.price_provenance).map(([key, source]) => [
           key,
-          {
-            ...source,
-            changed_price: price,
-            changed_by: context.actor,
-            changed_at: now.toISOString(),
-          },
+          key !== "all" && !sellingBranches(state.config).includes(key)
+            ? source
+            : {
+                ...source,
+                changed_price: price,
+                changed_by: context.actor,
+                changed_at: now.toISOString(),
+              },
         ]),
       );
     } else if (provenance) {

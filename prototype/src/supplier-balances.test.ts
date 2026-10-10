@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { render, screen } from "@testing-library/react";
 import Decimal from "decimal.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createInvoice, postInvoice, receiveShort } from "./invoice";
+import { createInvoice, dateAfter, postInvoice, receiveShort } from "./invoice";
 import { postPayment, type OperationsContext } from "./operations";
 import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
 import {
@@ -27,6 +27,10 @@ function postDemoInvoice(state: DemoState, quantityReceived = 8) {
   for (const line of state.invoice.lines) {
     line.review_confirmed = true;
     line.date_confirmed = true;
+    if (line.date_tracking) {
+      line.date_type = "best_before";
+      line.date_value = dateAfter(state.invoice.invoice_date!, 180);
+    }
     if (line.product_code === "0009")
       line.qty_received_at_posting = quantityReceived;
   }

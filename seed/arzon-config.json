@@ -3,10 +3,7 @@
   "company": {
     "name": "Super Arzon",
     "logo_file": "assets/arzon-logo.png",
-    "ui_languages": [
-      "en",
-      "fa"
-    ],
+    "ui_languages": ["en", "fa"],
     "currency": "CAD_OR_USD_PLACEHOLDER",
     "timezone": "PLACEHOLDER"
   },
@@ -127,9 +124,7 @@
       "price_below_minimum_margin",
       "calculated_price_change"
     ],
-    "no_approval": [
-      "supplier_cost_change_that_does_not_change_selling_price"
-    ],
+    "no_approval": ["supplier_cost_change_that_does_not_change_selling_price"],
     "minimum_margin": {
       "value": "0.25",
       "placeholder": true,
@@ -159,10 +154,7 @@
     ],
     "one_active_offer_per_product_scope": true,
     "start_end_dates_required": false,
-    "who_can_create": [
-      "floor_worker",
-      "supervisor"
-    ],
+    "who_can_create": ["floor_worker", "supervisor"],
     "ai_suggested_offers_need_floor_worker_confirmation": true
   },
   "expiry": {
@@ -192,11 +184,7 @@
       "final_total",
       "original_file_before_posting"
     ],
-    "optional_header": [
-      "supplier_invoice_number",
-      "due_date",
-      "payment_terms"
-    ],
+    "optional_header": ["supplier_invoice_number", "due_date", "payment_terms"],
     "auto_invoice_number": {
       "enabled": true,
       "scheme": "sequential_per_supplier_per_company",
@@ -215,14 +203,8 @@
       "unit_size",
       "tax_indicator"
     ],
-    "hide": [
-      "barcode",
-      "promotion_expiry_date"
-    ],
-    "languages": [
-      "en",
-      "fa"
-    ],
+    "hide": ["barcode", "promotion_expiry_date"],
+    "languages": ["en", "fa"],
     "templates": [],
     "templates_comment": "NO default template. Users create presets (Template 1, Template 2...) with their own dimensions. There is no label queue.",
     "waitlist": {
@@ -275,10 +257,7 @@
       "user_management"
     ],
     "pins": false,
-    "later_options": [
-      "invite_only_google_sign_in",
-      "supervisor_second_step"
-    ]
+    "later_options": ["invite_only_google_sign_in", "supervisor_second_step"]
   },
   "dashboard_order": [
     "approvals_waiting",
@@ -320,49 +299,29 @@
         "kind": "to_order",
         "name_en": "To order",
         "name_fa": "برای سفارش",
-        "read_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
-        "add_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
+        "read_roles": ["floor_worker", "supervisor"],
+        "add_roles": ["floor_worker", "supervisor"],
         "has_status": true
       },
       {
         "kind": "store_use",
         "name_en": "Store use",
         "name_fa": "مصرف فروشگاه",
-        "read_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
-        "add_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
+        "read_roles": ["floor_worker", "supervisor"],
+        "add_roles": ["floor_worker", "supervisor"],
         "creates_stock_movement": true
       },
       {
         "kind": "for_supervisor",
         "name_en": "For Supervisor",
         "name_fa": "برای سرپرست",
-        "read_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
-        "add_roles": [
-          "floor_worker",
-          "supervisor"
-        ],
+        "read_roles": ["floor_worker", "supervisor"],
+        "add_roles": ["floor_worker", "supervisor"],
         "has_status": true,
         "notify_supervisor": true
       }
     ],
-    "custom_created_by": [
-      "supervisor"
-    ]
+    "custom_created_by": ["supervisor"]
   },
   "history": {
     "undo_window_seconds": 10,
@@ -389,5 +348,15 @@
     "suppliers": true,
     "register": false,
     "online_orders": false
+  },
+  "weighed_items": {
+    "conversion_factor": "2.20462",
+    "main_display_unit": "lb",
+    "show_second_unit": true,
+    "use_rounding_bands": true
+  },
+  "returns": {
+    "deduct_expected_credit_at_pickup": true,
+    "waiting_credit_days": 14
   }
 }

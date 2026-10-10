@@ -80,6 +80,10 @@
 .payables-snapshot {
   margin-block: 0 24px;
 }
+.payables-pending-note {
+  display: block;
+  margin-block-start: 4px;
+}
 @media (max-width: 760px) {
   .approval-values,
   .payables-summary-grid {

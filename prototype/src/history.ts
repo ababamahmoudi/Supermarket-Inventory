@@ -1,5 +1,6 @@
 import { createId } from "./ids";
 import { configuredBranches, branchId } from "./settings";
+import { effectiveExpiryLocation } from "./received";
 import type { Activity, Branch, DemoState, Role } from "./types";
 import type { RequestTransferEvent } from "./branch-requests";
 import Decimal from "decimal.js";
@@ -640,11 +641,21 @@ function patchScope(
       value.company_id !== context.company_id
     )
       throw new HistoryError("scope");
+    const trackedDate =
+      patch.path[0] === "expiry" && typeof value.id === "string"
+        ? state.expiry.find(
+            (date) =>
+              date.id === value.id && date.company_id === value.company_id,
+          )
+        : undefined;
+    const location = trackedDate
+      ? effectiveExpiryLocation(state, trackedDate)
+      : value.branch;
     if (
-      typeof value.branch === "string" &&
-      value.branch !== "all" &&
+      typeof location === "string" &&
+      location !== "all" &&
       patch.path[0] !== "branch_requests" &&
-      !context.allowed_branches.includes(value.branch)
+      !context.allowed_branches.includes(location)
     )
       throw new HistoryError("scope");
     if (
@@ -853,7 +864,12 @@ export function reverseActivity(
         record.reason = "Reverted approved decision";
       }
       if (patch.creation === "cancel") record.status = "cancelled";
-      if (patch.creation === "clear") record.status = "cleared";
+      if (patch.creation === "clear") {
+        record.status = "removed";
+        record.removal_action = "undo";
+        record.removed_by = context.actor;
+        record.removed_at = now.toISOString();
+      }
       writePath(candidate, patch.path, record, true);
     } else writePath(candidate, patch.path, patch.before, patch.before_exists);
   }

@@ -3,7 +3,9 @@ import type { NotebookDefinition, NotebookEntry } from "./notebooks";
 import type { ReversalPatch } from "./history";
 import type { InvoiceLocationCorrection } from "./received";
 import type { SupplierItemDefinition } from "./supplier-items";
-import type { Order, OrderComparison } from "./orders";
+import type { Order, OrderComparison, InvoiceNewItemMatch } from "./orders";
+import type { InvoiceContentCorrection } from "./invoice-corrections";
+import type { ReturnMemo } from "./return-workflow";
 import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
 import type { InvoiceOrderDifference } from "./invoice-orders";
 
@@ -12,7 +14,12 @@ export type Language = "en" | "fa";
 export type Branch = string;
 export type CompanyConfig = Omit<
   typeof configSeed,
-  "company" | "branches" | "pricing_categories" | "promotions"
+  | "company"
+  | "branches"
+  | "pricing_categories"
+  | "promotions"
+  | "weighed_items"
+  | "returns"
 > & {
   company: typeof configSeed.company & {
     logo_data?: string;
@@ -40,6 +47,16 @@ export type CompanyConfig = Omit<
     ai_suggestions_enabled?: boolean;
   };
   orders?: { allow_floor_worker: boolean };
+  weighed_items?: {
+    conversion_factor: string;
+    main_display_unit: "lb" | "kg";
+    show_second_unit: boolean;
+    use_rounding_bands: boolean;
+  };
+  returns?: {
+    deduct_expected_credit_at_pickup: boolean;
+    waiting_credit_days: number;
+  };
 };
 export interface PriceProvenance {
   invoice_number: string;
@@ -56,7 +73,11 @@ export interface ScopedRecord {
 }
 export type Product = Omit<
   (typeof demoSeed.products)[number],
-  "status" | "last_received_relative_days" | "price_approved_relative_days"
+  | "status"
+  | "last_received_relative_days"
+  | "price_approved_relative_days"
+  | "date_tracking"
+  | "sold_by"
 > & {
   company_id: string;
   last_received_relative_days?: Partial<Record<string, number>>;
@@ -68,6 +89,7 @@ export type Product = Omit<
   description_en?: string;
   description_fa?: string;
   date_tracking?: boolean;
+  sold_by?: "each" | "weight";
   price_provenance?: Record<Branch, PriceProvenance>;
   manual_prices?: Record<
     Branch,
@@ -93,7 +115,8 @@ export interface Approval extends ScopedRecord {
     | "tax_profile"
     | "new_supplier";
   product_code: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "superseded";
+  correction_id?: string;
   proposed_price: string;
   current_price?: string | null;
   reason?: string;
@@ -120,7 +143,9 @@ export interface Alert extends ScopedRecord {
     | "tax_discrepancy"
     | "barcode_conflict"
     | "other_supplier"
-    | "order_differences";
+    | "order_differences"
+    | "return_credit_overdue";
+  return_id?: string;
   product_code: string;
   status: "pending" | "resolved" | "intentional";
   supplier?: string;
@@ -138,7 +163,23 @@ export interface Alert extends ScopedRecord {
 }
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
-  "confidence" | "low_confidence_fields"
+  | "confidence"
+  | "low_confidence_fields"
+  | "units_per_case"
+  | "quantity_unit"
+  | "quantity_entered"
+  | "case_cost_before_tax"
+  | "sold_by"
+  | "source_quantity"
+  | "source_quantity_unit"
+  | "source_received_quantity"
+  | "source_cost_before_tax"
+  | "source_cost_unit"
+  | "weight_conversion_factor"
+  | "case_weight"
+  | "case_weight_unit"
+  | "canonical_lb_quantity"
+  | "order_new_item_match"
 > & {
   company_id: string;
   confidence?: number;
@@ -161,17 +202,28 @@ export type InvoiceLine = Omit<
   short_dated?: boolean;
   supplier_item_id?: string;
   supplier_item_code?: string;
-  quantity_unit?: "cases" | "units";
+  quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;
   order_item_id?: string;
   refused_units?: number;
   extra_delivery_decision?: "keep" | "refuse";
   order_price_decision?: "accept" | "short_dated";
+  sold_by?: "each" | "weight";
+  source_quantity?: string;
+  source_quantity_unit?: "kg" | "lb";
+  source_received_quantity?: string;
+  source_cost_before_tax?: string;
+  source_cost_unit?: "kg" | "lb";
+  weight_conversion_factor?: string;
+  case_weight?: string;
+  case_weight_unit?: "kg" | "lb";
+  canonical_lb_quantity?: string;
+  order_new_item_match?: InvoiceNewItemMatch;
 };
 export type DemoInvoice = Omit<
   typeof demoSeed.demo_invoice,
-  "lines" | "branch"
+  "lines" | "branch" | "demo_original_snapshot" | "legacy_demo_original"
 > &
   ScopedRecord & {
     id: string;
@@ -180,6 +232,13 @@ export type DemoInvoice = Omit<
     file_name?: string;
     file_type?: string;
     file_data?: string;
+    original_file_invoice_id?: string;
+    demo_original_snapshot?: true;
+    legacy_demo_original?: {
+      file_name?: string;
+      file_type?: string;
+      file_data?: string;
+    };
     invoice_date?: string;
     received_at?: string;
     receiving_employee?: string;
@@ -246,6 +305,8 @@ export interface LabelWaitlistItem extends ScopedRecord {
   added_at: string;
 }
 export interface ReturnLine {
+  quantity_unit?: "units" | "lb";
+  unit_cost?: string;
   product_code: string;
   qty: number;
   reason: string;
@@ -284,13 +345,31 @@ export interface ReturnRecord extends ScopedRecord {
   note?: string;
   created_at?: string;
   created_by?: string;
+  pickup_memos?: ReturnMemo[];
+  picked_up_at?: string;
+  closure_subtype?: "credited" | "replaced" | "written_off";
 }
 export interface ExpiryRecord extends ScopedRecord {
   id: string;
   product_code: string;
   expires_in_days: number;
   date: string;
-  status: "active" | "cleared";
+  status: "active" | "cleared" | "removed";
+  created_by?: string;
+  created_at?: string;
+  source?: "invoice" | "manual" | "correction";
+  date_type?: "expiry" | "best_before";
+  quantity?: string;
+  lot_number?: string;
+  note?: string;
+  invoice_line_index?: number;
+  removed_reason?:
+    "sold_out" | "thrown_away" | "returned_to_supplier" | "entered_by_mistake";
+  removed_by?: string;
+  removed_at?: string;
+  removal_action?: "remove" | "stop_tracking" | "undo" | "correction";
+  correction_id?: string;
+  previous_entry_id?: string;
   invoice_id?: string;
   invoice_number?: string;
   received_date?: string;
@@ -372,6 +451,8 @@ export interface DemoState {
   prototype_b_schema?: 1;
   prototype_c1_schema?: 1;
   prototype_c2_schema?: 1;
+  prototype_c4_schema?: 1;
+  invoice_content_corrections?: InvoiceContentCorrection[];
   supplier_items?: SupplierItemDefinition[];
   orders?: Order[];
   branch_requests?: BranchRequest[];

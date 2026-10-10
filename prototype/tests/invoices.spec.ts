@@ -182,6 +182,7 @@ test("manual draft survives a refresh and cannot post without its original", asy
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await page

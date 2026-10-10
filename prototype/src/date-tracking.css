@@ -1,0 +1,59 @@
+.date-operation-dialog {
+  inline-size: min(760px, calc(100vw - 32px));
+  max-inline-size: calc(100vw - 32px);
+}
+.date-small-dialog {
+  inline-size: min(560px, calc(100vw - 32px));
+}
+.date-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin-block-start: 24px;
+}
+.date-form-grid .field {
+  min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: 320px;
+}
+.date-form-grid .date-form-wide {
+  grid-column: 1 / -1;
+  max-inline-size: 560px;
+}
+.date-form-grid .ui-input {
+  max-inline-size: 100%;
+}
+.date-action-summary {
+  margin-block: 24px;
+}
+.next-tracked-date {
+  margin-block-start: 8px;
+  font-size: var(--text-small, 12px);
+  min-inline-size: 0;
+}
+.next-tracked-date .badge {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.date-tracking-page .expiry-table .ltr-fragment {
+  white-space: normal;
+}
+.date-tracking-page .expiry-table th,
+.date-tracking-page .expiry-table td {
+  padding-inline: 8px;
+}
+.date-entry-evidence {
+  margin-block-start: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .date-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .date-form-grid .field {
+    max-inline-size: 100%;
+  }
+}

@@ -233,14 +233,14 @@ function validateDefinition(
     fail("branch");
   const name_en = input.name_en.trim(),
     name_fa = input.name_fa.trim();
-  if (!name_en || !name_fa) fail("name");
+  if (!name_en) fail("name");
   if (
     (state.notebooks ?? []).some(
       (item) =>
         item.id !== excludeId &&
         item.company_id === context.company_id &&
         (item.name_en.toLocaleLowerCase() === name_en.toLocaleLowerCase() ||
-          item.name_fa === name_fa),
+          (Boolean(name_fa) && item.name_fa === name_fa)),
     )
   )
     fail("duplicate");
@@ -639,8 +639,8 @@ export function notebookError(
       notesFa.unavailableLocation,
     ],
     name: [
-      "Enter the notebook name in English and Persian.",
-      "نام دفترچه را به انگلیسی و فارسی وارد کنید.",
+      "Enter the notebook name in English.",
+      "نام دفترچه را به انگلیسی وارد کنید.",
     ],
     duplicate: [
       "A notebook with this name already exists. Choose a different name.",

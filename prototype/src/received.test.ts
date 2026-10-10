@@ -61,6 +61,10 @@ function reviewed(): DemoState {
   recalculateInvoice(state.invoice, state.config);
   line.review_confirmed = true;
   line.date_confirmed = true;
+  if (line.date_tracking) {
+    line.date_value = "2027-01-01";
+    line.date_type = "expiry";
+  }
   return state;
 }
 

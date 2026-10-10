@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="726" viewBox="0 0 1000 726" role="img" aria-label="Fictional invoice SB-7862">
+    <rect width="1000" height="726" fill="#ffffff"/>
+    <g font-family="Arial, sans-serif" fill="#17202a">
+      <text x="52" y="78" font-size="30" font-weight="700">Sunrise Beverages</text>
+      <text x="52" y="112" font-size="14" fill="#586575">Fictional supplier invoice · Demo only</text>
+      <text x="948" y="74" font-size="29" font-weight="700" text-anchor="end">INVOICE</text>
+      <text x="948" y="108" font-size="18" font-weight="600" text-anchor="end">SB-7862</text>
+      <line x1="52" y1="140" x2="948" y2="140" stroke="#cdd4de"/>
+      <text x="52" y="178" font-size="12" font-weight="700" fill="#586575">BILL TO</text>
+      <text x="52" y="204" font-size="18" font-weight="600">Super Arzon</text>
+      <text x="52" y="230" font-size="16" >North York</text>
+      <text x="948" y="181" font-size="15" text-anchor="end">Invoice date: 2026-09-30</text>
+      <text x="948" y="207" font-size="15" text-anchor="end">Terms: Net 7</text>
+      <text x="948" y="233" font-size="15" text-anchor="end">Currency: CAD</text>
+      <rect x="52" y="268" width="896" height="36" fill="#e9edf3"/>
+      <text x="66" y="292" font-size="13" font-weight="700">Code</text>
+      <text x="142" y="292" font-size="13" font-weight="700">Description</text>
+      <text x="508" y="292" font-size="13" font-weight="700" text-anchor="end">Case pack</text>
+      <text x="636" y="292" font-size="13" font-weight="700" text-anchor="end">Quantity</text>
+      <text x="788" y="292" font-size="13" font-weight="700" text-anchor="end">Unit cost</text>
+      <text x="932" y="292" font-size="13" font-weight="700" text-anchor="end">Line total</text>
+      <rect x="52" y="304" width="896" height="76" fill="#f6f7f9"/>
+      <text x="66" y="332" font-size="14" >0004</text>
+      <text x="142" y="332" font-size="15" >Black Tea 450 g</text>
+      <text x="508" y="332" font-size="14" text-anchor="end">6</text>
+      <text x="636" y="332" font-size="14" text-anchor="end">16 units</text>
+      <text x="788" y="332" font-size="14" text-anchor="end">4.1000</text>
+      <text x="932" y="332" font-size="15" text-anchor="end">65.60</text><rect x="52" y="380" width="896" height="76" fill="#ffffff"/>
+      <text x="66" y="408" font-size="14" >0010</text>
+      <text x="142" y="408" font-size="15" >Fruit Soda 6-pack</text>
+      <text x="508" y="408" font-size="14" text-anchor="end">6</text>
+      <text x="636" y="408" font-size="14" text-anchor="end">2 cases</text><text x="636" y="430" font-size="12" text-anchor="end">(12 units)</text>
+      <text x="788" y="408" font-size="14" text-anchor="end">3.2000</text>
+      <text x="932" y="408" font-size="15" text-anchor="end">38.40</text>
+      <line x1="52" y1="456" x2="948" y2="456" stroke="#cdd4de"/>
+      <text x="738" y="500" font-size="16" >Subtotal</text>
+      <text x="932" y="500" font-size="17" text-anchor="end">104.00</text>
+      <text x="738" y="534" font-size="16" >Tax</text>
+      <text x="932" y="534" font-size="17" text-anchor="end">4.99</text>
+      <line x1="720" y1="552" x2="948" y2="552" stroke="#cdd4de"/>
+      <text x="738" y="588" font-size="20" font-weight="700">TOTAL</text>
+      <text x="932" y="588" font-size="23" font-weight="700" text-anchor="end">108.99</text>
+      <text x="52" y="662" font-size="13" fill="#586575">Fictional document for the supermarket prototype. No real payment or delivery is requested.</text>
+      <text x="52" y="688" font-size="11" fill="#586575">Retained snapshot: a2-fixture:SB-7862</text>
+    </g>
+  </svg>

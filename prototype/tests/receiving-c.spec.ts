@@ -24,6 +24,7 @@ async function saved(
 
 async function manualInvoice(page: import("@playwright/test").Page) {
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   const header = page.locator("#invoice-details-fields");
   await header.getByLabel("Supplier", { exact: true }).click();
@@ -194,7 +195,9 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
     name: "Edit product",
     exact: true,
   });
-  await editor.getByLabel("Selling price", { exact: true }).fill("2.79");
+  await editor
+    .getByLabel("Selling price (per unit)", { exact: true })
+    .fill("2.79");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();

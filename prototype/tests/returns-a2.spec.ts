@@ -45,7 +45,7 @@ async function checkAlignment(table: Locator) {
   }
 }
 
-test("Returns starts with all suppliers and pending records, and opens each return as its own page", async ({
+test("Returns starts with all suppliers and Open records, and opens each return as its own page", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -54,7 +54,7 @@ test("Returns starts with all suppliers and pending records, and opens each retu
     "All suppliers",
   );
   await expect(page.getByLabel("Status", { exact: true })).toHaveText(
-    "Pending",
+    "All statuses",
   );
   await expect(page.getByLabel("Return branch", { exact: true })).toHaveText(
     "All branches",
@@ -195,12 +195,7 @@ test("Overview and direct return links enforce company and worker branch scope",
   await expect(page.locator(".returns-overview-table")).not.toContainText(
     "Cancelled Return Supplier",
   );
-  await chooseOption(
-    page,
-    page.getByLabel("Status", { exact: true }),
-    "all",
-    "All statuses",
-  );
+  await page.getByRole("tab", { name: "History", exact: true }).click();
   await expect(page.locator(".returns-overview-table")).toContainText(
     "Cancelled Return Supplier",
   );
@@ -225,7 +220,7 @@ test("Overview and direct return links enforce company and worker branch scope",
   await expect(page.locator(".return-detail")).toHaveCount(0);
 });
 
-test("Return detail pickup does not deduct stock twice and replacement increases actual stock without touching Payables", async ({
+test("Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -284,7 +279,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByRole("button", { name: "Receive replacement", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Payables did not change",
+    "Replacement received. Pending credit was released for the covered quantities.",
   );
   const received = await snapshot(page);
   expect(received.ledger).toEqual(before.ledger);

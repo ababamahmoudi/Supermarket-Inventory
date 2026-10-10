@@ -4,11 +4,12 @@ import { approvalLocationEffects, type PriceScope } from "../approvals";
 import { effectivePrice } from "../catalog";
 import { branchLabel, branchSellsToCustomers } from "../settings";
 import { effectiveApprovalLocation } from "../received";
-import { Money, OfferLabel, ProductName } from "../presentation";
+import { OfferLabel, ProductName } from "../presentation";
 import { useDemo } from "../store";
 import type { Approval, Branch } from "../types";
 import { Badge, EmptyState, Field, Select } from "../ui";
 import "./approval-c3.css";
+import { ProductPrice, ProductCost } from "../weight-price-presentation";
 
 export function ApprovalReviewPanel({
   approval,
@@ -70,7 +71,11 @@ export function ApprovalReviewPanel({
               <small>{t("Old price", "قیمت قبلی")}</small>
               <strong>
                 {oldPrice ? (
-                  <Money value={oldPrice} />
+                  <ProductPrice
+                    value={oldPrice}
+                    product={product}
+                    config={state.config}
+                  />
                 ) : (
                   t("No approved price yet", "هنوز قیمت تأییدشده ندارد")
                 )}
@@ -80,14 +85,22 @@ export function ApprovalReviewPanel({
             <span>
               <small>{t("New price", "قیمت جدید")}</small>
               <strong>
-                <Money value={approval.proposed_price} />
+                <ProductPrice
+                  value={approval.proposed_price}
+                  product={product}
+                  config={state.config}
+                />
               </strong>
             </span>
           </div>
           <div>
             <small>{t("Unit cost", "هزینه واحد")}</small>
             <strong>
-              <Money value={cost} />
+              <ProductCost
+                value={cost}
+                product={product}
+                config={state.config}
+              />
             </strong>
           </div>
           <div>
@@ -139,7 +152,11 @@ export function ApprovalReviewPanel({
                     <div className="approval-effect-details">
                       <span className="approval-effect-price">
                         {effect.old_price ? (
-                          <Money value={effect.old_price} />
+                          <ProductPrice
+                            value={effect.old_price}
+                            product={product}
+                            config={state.config}
+                          />
                         ) : (
                           "—"
                         )}
@@ -148,7 +165,11 @@ export function ApprovalReviewPanel({
                           size={16}
                           aria-hidden="true"
                         />
-                        <Money value={effect.new_price} />
+                        <ProductPrice
+                          value={effect.new_price}
+                          product={product}
+                          config={state.config}
+                        />
                       </span>
                       {effect.offer_label && (
                         <span>

@@ -1,0 +1,738 @@
+{
+  "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+  "method": "Every exact final PNG was opened individually. All recorded SHA-256 hashes match the attached, unedited images.",
+  "reviewedCount": 52,
+  "blockingIssues": [],
+  "minorIssues": [],
+  "imagesEdited": false,
+  "entries": [
+    {
+      "filename": "add-date-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "140c49dfaa6ee10e3564997c6ef244d95173279b525aa823cf3bb50e88c9bf24",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The populated custom date form fits the centered dark dialog; product, date, quantity, lot, note and actions are visible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "add-date-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "d13a3c22c549d7a838fad8aa25e4438ee512ba695a05aa746c8489f054e76335",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The populated custom date form fits the centered light dialog; fields and actions do not overlap or clip."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "add-date-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "5939efd06645661c9b1d76eb932f1c02a1f28fa25cb629b6a24fefffbd2ffa9e",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The Persian dialog mirrors field order and action alignment; retained Latin product code, date, quantity and lot stay readable."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "add-date-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "5654aff55050d04fd7cfeaca1c668427dd2e9ab37d003f9fe5804f7d8f166f08",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "At 390px the complete custom form remains visible, including the full-width note and both actions; the dialog is inset from the viewport edges."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "correct-invoice-preview-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "aeb49f806d65434386a8b77053a1b2420178e37355da0aa5608afda7c063cbf1",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The dark preview clearly shows payable $181.22 → $181.94, delta $0.72 and allocations $11.43; it accurately states no pending approval changes."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "correct-invoice-preview-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "7940a20211c322c1dd77b0123bf0ed6294708b0047af8c486cd15f9c8cf210a6",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The light preview fits its centered dialog and accurately states no pending approval changes; all financial delta evidence and actions are visible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "correct-invoice-preview-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "25c43f1d0f8b9c6afc9d72cd4a5302ddac3a7f3abddb24ef01b9b8d4b7e5bafd",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "The Persian preview mirrors content and actions; money remains readable and the unchanged-price approval message is accurate."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "correct-invoice-preview-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "a8e9cc2016f20abdb4a4d56a861a8155e03bce11b73732d66dbf88f9b1257306",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "The 390px preview uses a compact two-column financial grid; all impact sections, accurate no-approval message, reason and Back/Continue actions are visible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "invoice-order-comparison-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "1adfc0cc4b1330e6e2680ea4d58ca035c558c8733dc7456e86d6b18ff3f72ac3",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 3708,
+      "observations": [
+        "The dark invoice/order comparison shows the linked actual order and all comparison rows; product names, quantities, costs and decisions fit their columns."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "invoice-order-comparison-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "215b32f06395a847f046cde4a2e601e9352ac91bc466ad56941349e6d7bfc8dc",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 3708,
+      "observations": [
+        "The light invoice/order comparison retains the actual order link and the 12 ordered/12 delivered OK row; table values and actions are aligned without clipping."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "invoice-order-comparison-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "6d8626ddbb540c5b246bc6fc07d66b921b99c897461af25a4395652daa76dbdd",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 3683,
+      "observations": [
+        "The Persian comparison mirrors the actual order controls and invoice table; bilingual names and LTR quantities/prices stay readable, with the matched row marked OK in Persian."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "invoice-order-comparison-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "dbd02d3a230640f6ca9b049ce61a76269ad35b03cbdfbf09f622a951ebddcf46",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "At 390px the actual linked order and product row are framed below the sticky topbar. The comparison table keeps its permitted internal horizontal pan; the document itself does not overflow."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "new-order-new-item-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "f02dd222798eb751c6b490220700acf9301d887c851905b5dc19f89e4434e896",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-capture.json",
+      "width": 1440,
+      "height": 1452,
+      "observations": [
+        "The dark New order screen shows the typed New item name and pill, pack 12, Cases 2, expected unit cost 1.25, case cost 15.00 and total 30.00; the table and bottom actions fit."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "new-order-new-item-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "0eeccf4915bf0e289f24d85b251ce67e08184a19765627e0be6bea50682eb28d",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 1452,
+      "observations": [
+        "Full-width order table exposes every product name, pack, Cases, Units, expected unit cost, Case cost and total; New item pill and editable temporary line visible, $30.00 total, no clipped right-hand columns."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "new-order-new-item-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "fa92f8fa902f2819ff85e5fda7ed0790a38d88c4196ff559f40aa35196c526ef",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 1440,
+      "observations": [
+        "Order columns and actions mirror correctly; product names, realistic packs and temporary New item are visible. Case cost and $30.00 before-tax total remain inside the table."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "new-order-new-item-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "7dd607fab8cbef83f88a85fb0efb04dd8f6f4405821d3bbe55995536e844bb1f",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Temporary item renders as a phone card with Cases, Expected unit cost, Case cost and before-tax total visible together; no sideways scrolling or cut-off controls."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "payables-pending-credit-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "f70584cf4e23c6882f5d0582d6bb7567e85d309414af6c4c74dfda93ea6c0069",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 2354,
+      "observations": [
+        "Confirmed $169.79 minus pending $5.85 equals owed $163.94; RM-0001, pending-credit table and retained ledger remain separate. The overview-row balance and pending-credit note now occupy separate readable lines. Four KPIs and dark controls are legible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "payables-pending-credit-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "a3700e244106b09c064d0a6f097c094ed9ea4a091a5c033445b70f8d7dad952f",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 2354,
+      "observations": [
+        "Confirmed $169.79 minus pending $5.85 equals owed $163.94; RM-0001 and retained ledger are visible. Overview-row balance and pending-credit note now occupy separate readable lines; headings and values fit."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "payables-pending-credit-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "0829e27bde3ddc283d9ccadf4f3490d51d8d9959caeb618df0a731f5abe7c9cd",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 2209,
+      "observations": [
+        "RTL pending credit, ledger and four KPIs mirror with readable retained references. $169.79 minus $5.85 equals $163.94; the overview balance and pending-credit text now occupy separate readable lines."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "payables-pending-credit-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "fd10de455f3496925777f9968f3adae6b1893c8d4cb14c41b61ae4967824333d",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Pending-credit summary shows confirmed $169.79, pending $5.85 and owed $163.94 together within the viewport. Four KPIs wrap two by two. The pending table uses permitted phone-only internal horizontal scrolling."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "posted-invoice-original-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "e5ec560577dbb62dbac4e26137a1ceee562d1b1aac7eed85e146fb4ad4140eb0",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 3075,
+      "observations": [
+        "Clean read-only document replaces disabled form; six complete product names and realistic cases/units, unit costs, totals and tracked-date values visible. Realistic retained original matches178.72 subtotal,2.50 tax,181.22 total; zoom/download are custom. No native file input or autosave sentence."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "posted-invoice-original-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "aa252c1b6d099fc47d9b2c4d5fa93d118cfd7caa53cb5c73ae8b1a2cab7c1c43",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 3075,
+      "observations": [
+        "Read-only header/lines/totals and full retained fictional original are visible, with the same packs and181.22 total; correction/move actions use new button styles. No clipped names, disabled form, native Choose File or autosave copy."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "posted-invoice-original-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "5cad5b9f9f2ad68d1bac4f1da1d51276f64c53e229bb2a6c6bbc1a28ce66496a",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 3068,
+      "observations": [
+        "Document mirrors in Persian while original evidence retains its original English content; six full bilingual product names, packs, totals and controls fit. No native file input or disabled form."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "posted-invoice-original-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "a190517a6c20e4a1201d5aa44c3dd3751293730af5908b3c273dc6bc3a6cef4b",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 390,
+      "height": 2711,
+      "observations": [
+        "Phone capture starts with the topbar and contains complete product names, document header/totals and the realistic retained original with custom zoom/download. No focused Skip link or blank strip. The line table uses permitted internal horizontal scrolling."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "remove-date-dialog-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "2a4daf088c5550e7dd8ca3bf7dfacd0108e6d6c25f8158c63057ec2cd8bd4994",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Remove date shows product, location/date and custom reason choice Sold out; explanatory copy and danger Remove are legible, with Undo above the page at bottom-right. No native dropdown or clipped dialog."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "remove-date-dialog-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "112a18b2923842474526c61a62ab7476ddf531be9a520b1f5b80652912f95696",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-layout.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Readable Remove date dialog with actual product/location/date and custom reason; Remove danger action, cancellation and Undo are clear, with all dialog content contained."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "remove-date-dialog-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "c5ad23acdd412d4778fe638152bf6ae3b1dfba8e80e80a99d506037a1cfbad05",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Persian RTL text/action placement and isolated English supplier/product data are readable. Custom controls, status/reason and full actions fit. No clipped text or overlap."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "remove-date-dialog-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "58265e20a16889292d0a2e0458b9a282c22334bbab735de0d21621463230ffa2",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Custom reason field, complete Cancel/Remove actions, product/date/location and meaningful helper text fit in the phone dialog. Genuine Undo remains below it without covering the actions."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "return-memo-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "a67253a2d29ac6e5e98fc7dba7cc5ec89b6f77ba67b9e9915f8560000b7062d7",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Bilingual A4 memo fits the dialog on white paper. Quantity3 × $1.9500 matches expected$5.85; RM-0001, source reference and driver/signature evidence are readable."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "return-memo-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "de177bb2150e90e1dcc9d284ce3fbeeff3f65276fcabad611b41a7fddd459dad",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Bilingual A4 memo fits the dialog on white paper. Quantity3 × $1.9500 matches expected$5.85; RM-0001, source reference and driver/signature evidence are readable."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "return-memo-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "b172061a43ccf9715fdd902f4033540c47bc05078d92ed4ce97fac6391fea261",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Persian dialog and A4 memo mirror correctly. Every English/Persian column pair stays aligned, all supplier/driver/reference and $5.85 expected-credit evidence is readable, Print action fits."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "return-memo-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "46fd7bf87e3d493e72f0c30c3edd3be433a359cd0b32a8f2d22f390052e82344",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Whole A4 memo scales inside the phone dialog, retaining physical page proportions, bilingual paired columns, $5.85 claim and source evidence; Print action and explanatory sentence fit."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-history-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "eaf178b29126bdec22aa539923061ad0aca90fc29fe38b6d57a08d544fb0dbd5",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "History retains the closed replacement record, supplier, location/date, quantity and View action without overlap or clipping."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-history-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "57fa00fc0df583bace061caa37baa629e588c8195e5ccbd6dc1796ef3b4df647",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "History retains the closed replacement record, supplier, location/date, quantity and View action without overlap or clipping."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-history-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "ec738f90307ebd8a6debaf334a5ad5f4eb45adf7d255ed5e08ec82bb85dc9e6d",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Persian RTL text/action placement and isolated English supplier/product data are readable. Custom controls, status/reason and full actions fit. No clipped text or overlap."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-history-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "7cba285774a820796b8a0d75a063a9cdfdf26f31e4859c3be8341213fe9f231f",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Real phone table shows mandatory return reference and supplier, complete History filters and Columns action; internal sideways table pan for remaining columns is explicitly allowed."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-open-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "d79a6b4f9d58f93941392e1e289a5012fcff778bd16561853df082648e1303f1",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Open retains two waiting-credit records; table headings align, supplier names and complete Record resolution actions fit."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-open-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "b2704558970088d68574e3b14c9fedf333dfa21d4f60c38410268e5b8429dac8",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Open retains two waiting-credit records; table headings align, supplier names and complete Record resolution actions fit."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-open-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "8e0c167b9211639e24f1afa788580a350219753c0bd181712e6cb79982da7dd1",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-root.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Persian RTL text/action placement and isolated English supplier/product data are readable. Custom controls, status/reason and full actions fit. No clipped text or overlap."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "returns-open-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "bbe70d6aa83e30909abbf08d38ac534eb80b2efd2575a83d32e78f1949f2e5ed",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Opened this exact final PNG individually. Open/History tabs, custom compact filters, two-result count and retained Fresh Valley Foods/Golden Grain Distributors names fit the phone viewport. No visible native browser controls."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "undo-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "d6bb461ade3f51cd34edec4dbd464570a5cf15450b92dc97023bcce0f13c1390",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. Dark surfaces and removed-date table remain readable. Basmati0001,quantity2,LOT-C4-001,date2026-10-09 and Sold out reason match the real capture actions. Both contextual Undo links appear at the bottom logical end as requested."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "undo-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "4768a5a9c26191e71bb68a1e470384010d7353eaf30bbae257973b3f7cd55042",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. Borderless table card, compact controls, retained manual-date evidence and two distinct Undo toasts are legible. No clipped desktop columns or native controls visible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "undo-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "b386dfbb595d771b87bc406cf0a633013652cb85ede38313c31a460660e164fb",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. RTL shell/table mirror logically; dates/codes remain isolated and legible. Translated removed-state,reason and both Undo actions correspond to the same retained manual entry."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "undo-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "9219612ea36038b3f7dac83b9e10300ad750d05952a67b4b66f773ce25435ad0",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Individually reopened the exact final recaptured PNG. Genuine real-page scrollY68 places the entire Add date button below the sticky topbar; prior capture framing issue resolved without image or application edits. Basmati0001,quantity2 andLOT-C4-001 remain readable, and both contextual Undo links are accessible at the bottom logical end. Unchanged frozen application assets/source verified by capture owner."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-label-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "21fffaee31b6c8edc9a38e0c2572ad88657ac6dffde13f41616c9496f56b7fd2",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1971,
+      "observations": [
+        "Opened this exact final PNG individually. Previously missing Waitlist units are fixed: canonical7.49/lb and secondary16.51/kg fit the monetary cell. Physical grayscale A4 label agrees with the approved price and bilingual Bulk Almonds0016 data. Dark theme does not recolor printed paper/ink."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-label-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "97327c6bcb70e620cd7877a1911dd3f6f1c999edaab30d4d4f7556be3fe9cbf9",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1971,
+      "observations": [
+        "Opened this exact final PNG individually. Labels Waitlist now shows7.49/lb with smaller16.51/kg; readable money cell and aligned product/code/copy/action columns. A4 slot/print previews retain the existing physical layout and approved price."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-label-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "1e9d132379eb4a704099122d5bcaa6ea56129c040ef6207b72d09835d6cfa83c",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1969,
+      "observations": [
+        "Opened this exact final PNG individually. RTL Waitlist and custom controls mirror correctly. Canonical and secondary weight-unit prices are present in both the table and bilingual printed label; no numerical or name clipping visible."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-label-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "6f2c2e213999938516cc9d4bdf5263e9196524f2113019ae14b1f274a5d58f06",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Opened this exact final PNG individually. Whole A4 grayscale preview fits within phone width, Print labels and Undo remain accessible. Whole-sheet scaling makes physical label text small; strict60x40mm geometry and price/unit text have separate executed browser proof, while physical printer alignment remains an owner check."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-lookup-en-dark.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "c8df45e53c173131b75239a32b7c001bb900fea418709127ea0c4cf9094d4414",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. Bulk Almonds0016, Selling price perlb,7.49/lb and16.51/kg before tax are readable in both detail and result row. Custom controls, correct approved prices and no visible clipping."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-lookup-en-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "b40b5c0b2dc487feee981881ff7e2730e380680b2138369d307dcf1650f57868",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. Centered spacious Lookup, borderless product/result cards, bounded pill controls and blue actions follow the reference style. Approved weight units and secondary converted price agree; no copied reference artwork/data."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-lookup-fa-light.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "533b6ca746158b8c043fd41cddfa5b5c9e6873af7eadcd9cf68b492bf363c2f1",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 1440,
+      "height": 1080,
+      "observations": [
+        "Opened this exact final PNG individually. Persian name/per-pound label and logical RTL layout are correct. Dollar numbers and lb/kg units remain readable LTR isolates in both card and result."
+      ],
+      "issues": []
+    },
+    {
+      "filename": "weighed-lookup-phone.png",
+      "sourceCommit": "cbdc2bf0afbc0b8f39d954d72efd32ef1892899a",
+      "sha256": "730822c38c3a81f804560d7aadb81e9e4bd51e575c9312beea28065b72743517",
+      "openedIndividually": true,
+      "status": "pass",
+      "reviewRecord": "c4-release-audit-orders.json",
+      "width": 390,
+      "height": 844,
+      "observations": [
+        "Opened this exact final PNG individually. Both7.49/lb and16.51/kg fit comfortably at390px; bilingual product names, code0016 and Before tax note remain readable. Supervisor Edit and Add date actions are unobscured."
+      ],
+      "issues": []
+    }
+  ]
+}

@@ -2,11 +2,7 @@
   "_comment": "Demo-only fictional data for the clickable prototype. Suppliers, products, barcodes and people are invented. All selling prices were computed with the verified pricing engine. Tax rate here is a DEMO PLACEHOLDER.",
   "demo_tax_rate": "0.13",
   "today_relative_dates": true,
-  "branches": [
-    "Branch 1",
-    "Branch 2",
-    "Branch 3"
-  ],
+  "branches": ["Branch 1", "Branch 2", "Branch 3"],
   "demo_users": [
     {
       "name": "Demo Supervisor",
@@ -407,6 +403,23 @@
       "last_received_relative_days": {
         "Branch 1": -21
       }
+    },
+    {
+      "code": "0016",
+      "name_en": "Bulk Almonds",
+      "name_fa": "بادام فله",
+      "pricing_category": "grocery",
+      "unit_size": "lb",
+      "last_cost_before_tax": "4.9895",
+      "selling_price": "7.49",
+      "offer": null,
+      "taxable": false,
+      "date_tracking": true,
+      "main_supplier": "Fresh Valley Foods",
+      "ai_category": "Nuts & dried fruit",
+      "barcode": "DEMO-WEIGHT-0016",
+      "status": "active",
+      "sold_by": "weight"
     }
   ],
   "demo_invoice": {
@@ -426,7 +439,12 @@
         "calculated_selling_price": "1.49",
         "current_selling_price": "1.49",
         "demo_note": "No price change: nothing to approve.",
-        "confidence": 0.97
+        "confidence": 0.97,
+        "units_per_case": 12,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "2",
+        "case_cost_before_tax": "11.7600"
       },
       {
         "product_code": "0005",
@@ -438,7 +456,12 @@
         "calculated_selling_price": "1.99",
         "current_selling_price": "1.99",
         "demo_note": "Cost went up from 1.20 but selling price stays the same: no approval needed.",
-        "confidence": 0.93
+        "confidence": 0.93,
+        "units_per_case": 12,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "1",
+        "case_cost_before_tax": "15.6000"
       },
       {
         "product_code": "0006",
@@ -450,7 +473,12 @@
         "calculated_selling_price": "2.99",
         "current_selling_price": "1.99",
         "demo_note": "Calculated price changes: goes to Pending approval.",
-        "confidence": 0.88
+        "confidence": 0.88,
+        "units_per_case": 10,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "2",
+        "case_cost_before_tax": "15.5000"
       },
       {
         "product_code": "0003",
@@ -463,9 +491,12 @@
         "current_selling_price": "2.99",
         "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted.",
         "confidence": 0.71,
-        "low_confidence_fields": [
-          "unit_cost_before_tax"
-        ]
+        "low_confidence_fields": ["unit_cost_before_tax"],
+        "units_per_case": 12,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "3",
+        "case_cost_before_tax": "21.6000"
       },
       {
         "product_code": "NEW",
@@ -478,10 +509,12 @@
         "current_selling_price": null,
         "demo_note": "New product: Pending approval; AI suggests the category 'Dried fruits & spices'.",
         "confidence": 0.62,
-        "low_confidence_fields": [
-          "description",
-          "qty_invoiced"
-        ]
+        "low_confidence_fields": ["description", "qty_invoiced"],
+        "units_per_case": 6,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "1",
+        "case_cost_before_tax": "20.4000"
       },
       {
         "product_code": "0009",
@@ -493,7 +526,12 @@
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
         "demo_note": "Only 8 of 12 delivered: 4 marked Short, deducted from the invoice total.",
-        "confidence": 0.95
+        "confidence": 0.95,
+        "units_per_case": 12,
+        "sold_by": "each",
+        "quantity_unit": "cases",
+        "quantity_entered": "1",
+        "case_cost_before_tax": "19.2000"
       }
     ],
     "subtotal": "174.52",
@@ -527,10 +565,7 @@
       "new_expiry_relative_days": 150,
       "units_left_at_old_cost": 9
     },
-    "supervisor_actions": [
-      "Mark as taken care of",
-      "Keep as pending"
-    ]
+    "supervisor_actions": ["Mark as taken care of", "Keep as pending"]
   },
   "cross_branch_price_conflict": {
     "product_code": "0004",
@@ -599,11 +634,7 @@
     }
   ],
   "label_demo": {
-    "product_codes": [
-      "0003",
-      "0005",
-      "0009"
-    ],
+    "product_codes": ["0003", "0005", "0009"],
     "a4_note": "Show a sheet preview with the first 4 slots already used and printing starting at slot 5."
   },
   "_demo_passwords_note": "Demo-only credentials for the browser prototype. Never reuse them in the real app.",
@@ -637,17 +668,9 @@
       "name_en": "Deli temperatures",
       "name_fa": "دمای یخچال دلی",
       "branch": "Branch 1",
-      "read_roles": [
-        "floor_worker",
-        "supervisor"
-      ],
-      "add_roles": [
-        "floor_worker",
-        "supervisor"
-      ],
-      "fields": [
-        "measurement"
-      ],
+      "read_roles": ["floor_worker", "supervisor"],
+      "add_roles": ["floor_worker", "supervisor"],
+      "fields": ["measurement"],
       "measurement_unit": "°C",
       "has_status": false,
       "notify_supervisor": false,
@@ -667,5 +690,42 @@
       ]
     }
   ],
-  "_demo_notes": "Arrived today = last_received_relative_days 0 for the branch. Price changed recently = price_approved_relative_days within labels.waitlist.price_changed_recently_days."
+  "_demo_notes": "Arrived today = last_received_relative_days 0 for the branch. Price changed recently = price_approved_relative_days within labels.waitlist.price_changed_recently_days.",
+  "demo_case_packs": {
+    "0001": 4,
+    "0002": 12,
+    "0003": 12,
+    "0004": 6,
+    "0005": 12,
+    "0006": 10,
+    "0007": 12,
+    "0008": 6,
+    "0009": 12,
+    "0010": 6,
+    "0011": 2,
+    "0012": 3,
+    "0013": 1,
+    "0014": 4,
+    "0015": 6,
+    "NEW": 6
+  },
+  "_demo_case_packs_note": "Fictional purchasing packs for a fresh/reset demo. Cases are a presentation of the retained whole-unit quantities; costs and invoice totals are unchanged. Saved user packs and posted lines are never overwritten.",
+  "weighed_invoice_example": {
+    "supplier": "Fresh Valley Foods",
+    "supplier_invoice_number": "FV-WEIGHT-DEMO",
+    "branch": "Branch 1",
+    "product_code": "0016",
+    "source_quantity": "2.000",
+    "source_quantity_unit": "kg",
+    "source_cost_before_tax": "11.00",
+    "source_cost_unit": "kg",
+    "weight_conversion_factor": "2.20462",
+    "canonical_lb_quantity": "4.40924",
+    "unit_cost_before_tax": "4.9895",
+    "calculated_selling_price": "7.49",
+    "subtotal": "22.00",
+    "tax": "0.00",
+    "final_total": "22.00",
+    "_note": "Separate fictional weighed example; not added to the existing invoice, payable, or historical purchases."
+  }
 }

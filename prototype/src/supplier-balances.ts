@@ -10,8 +10,15 @@ import {
   type OperationsContext,
 } from "./operations";
 import type { Branch, DemoState } from "./types";
+import {
+  pendingReturnCredits,
+  type PendingReturnCredit,
+} from "./return-workflow";
 
 export interface SupplierBalanceSummary extends LedgerSummary {
+  confirmed_balance: string;
+  pending_credit: string;
+  pending_returns: PendingReturnCredit[];
   overdue: string;
   next_due_date?: string;
   /** A separately displayed seed snapshot; never a fabricated ledger record. */
@@ -23,6 +30,8 @@ export interface SupplierBalanceSummary extends LedgerSummary {
 export interface SupplierBalanceRow {
   supplier: string;
   balance: string;
+  confirmed_balance: string;
+  pending_credit: string;
   overdue: string;
   next_due_date?: string;
 }
@@ -152,9 +161,26 @@ export function supplierBalanceSummary(
     if (invoice.due_date < asOf)
       actualOverdue = actualOverdue.plus(invoice.amount);
   }
+  const pendingReturns = pendingReturnCredits(
+    state,
+    context,
+    throughDate,
+  ).filter((claim) =>
+    identity
+      ? supplierMatches(identity, claim.supplier)
+      : claim.supplier === supplier,
+  );
+  const pendingCredit = pendingReturns.reduce(
+    (sum, claim) => sum.plus(claim.amount),
+    new Decimal(0),
+  );
+  const confirmedBalance = new Decimal(summary.balance).plus(snapshotBalance);
   return {
     ...summary,
-    balance: new Decimal(summary.balance).plus(snapshotBalance).toFixed(2),
+    balance: confirmedBalance.minus(pendingCredit).toFixed(2),
+    confirmed_balance: confirmedBalance.toFixed(2),
+    pending_credit: pendingCredit.toFixed(2),
+    pending_returns: pendingReturns,
     overdue: actualOverdue.plus(snapshotOverdue).toFixed(2),
     next_due_date:
       dueDates.filter((date) => date >= asOf).sort()[0] ?? dueDates.sort()[0],
@@ -186,12 +212,21 @@ export function supplierBalanceOverview(
     .filter((row) => row.company_id === context.company_id)
     .forEach((row) => addName(row.supplier));
   return [...suppliers].map((supplier) => {
-    const { balance, overdue, next_due_date } = supplierBalanceSummary(
-      state,
-      context,
+    const {
+      balance,
+      confirmed_balance,
+      pending_credit,
+      overdue,
+      next_due_date,
+    } = supplierBalanceSummary(state, context, supplier);
+    return {
       supplier,
-    );
-    return { supplier, balance, overdue, next_due_date };
+      balance,
+      confirmed_balance,
+      pending_credit,
+      overdue,
+      next_due_date,
+    };
   });
 }
 
@@ -200,7 +235,28 @@ export function supplierBalanceCsv(
   summary: SupplierBalanceSummary,
   supplier: string,
 ): string {
-  const csv = ledgerCsv(summary, supplier);
+  let csv = ledgerCsv(
+    { ...summary, balance: summary.confirmed_balance },
+    supplier,
+  );
+  if (summary.pending_returns.length) {
+    const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const pending = [
+      ["Confirmed balance", summary.confirmed_balance],
+      ["Pending credit", summary.pending_credit],
+      ["Projected owed", summary.balance],
+      ["Return", "Memo", "Location", "Pending credit"],
+      ...summary.pending_returns.map((claim) => [
+        claim.return_id,
+        claim.reference,
+        claim.branch,
+        claim.amount,
+      ]),
+    ]
+      .map((row) => row.map(cell).join(","))
+      .join("\r\n");
+    csv = `\uFEFF${pending}\r\n\r\n${csv.replace(/^\uFEFF/, "")}`;
+  }
   if (summary.snapshot_balance === "0.00") return csv;
   const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
   const snapshot = [

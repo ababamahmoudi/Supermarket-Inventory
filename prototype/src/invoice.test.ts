@@ -40,6 +40,13 @@ function reviewed(): DemoState {
   state.invoice.lines.forEach((line) => {
     line.review_confirmed = true;
     line.date_confirmed = true;
+    if (line.date_tracking) {
+      line.date_value = "2027-01-01";
+      line.date_type = "expiry";
+    }
+    line.quantity_unit = "units";
+    line.quantity_entered = String(line.qty_invoiced);
+    line.case_cost_before_tax = undefined;
   });
   state.invoice.lower_price_answers = {
     same_expiry: "unknown",
@@ -113,6 +120,7 @@ describe("invoice review and posting", () => {
     );
     rice.date_tracking = true;
     rice.date_confirmed = true;
+    rice.date_value = undefined;
     expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
       "date",
     );
