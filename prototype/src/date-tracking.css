@@ -84,7 +84,7 @@
   position: relative;
   min-inline-size: 0;
 }
-.date-product-input {
+.date-product-picker input.ui-input.date-product-input {
   padding-inline-start: 40px;
 }
 .date-product-search-icon {

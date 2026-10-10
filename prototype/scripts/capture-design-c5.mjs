@@ -207,6 +207,7 @@ async function setup(page, scene, variant) {
     await visit(page, "expiry");
     const quick = page.locator(".date-quick-card");
     await field(quick, "Product").fill("0001");
+    await quick.getByRole("option").first().click();
     await today(page, quick);
     await button(quick, "More").click();
     await field(quick, "Quantity (optional)").fill("2");

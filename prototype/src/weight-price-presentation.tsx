@@ -64,9 +64,9 @@ export function ProductCost({
   if (product.sold_by !== "weight")
     return <Money value={value} currency={config.company.currency} />;
   return (
-    <span className="weight-cost">
-      <Money value={value} currency={config.company.currency} decimals={4} />
-      <LtrText>/lb</LtrText>
-    </span>
+    <LtrText className="weight-cost">
+      <Money value={value} currency={config.company.currency} />
+      /lb
+    </LtrText>
   );
 }

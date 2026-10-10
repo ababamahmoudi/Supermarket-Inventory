@@ -193,6 +193,8 @@
 .return-policy-dialog .return-policy-content ol {
   padding-inline-start: 24px;
   margin: 0;
+  list-style-type: decimal;
+  list-style-position: outside;
 }
 .return-policy-content li::marker {
   font-weight: 600;

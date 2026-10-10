@@ -108,6 +108,47 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     ]) {
       await page.goto(`/#${route}`);
       proofs.push(await assertContract(page, route, variant));
+      if (route === "products") {
+        await field(page, "Search products", "جست‌وجوی محصولات").fill("0016");
+        const cost = page.locator(".catalog-products-table .weight-cost");
+        await expect(cost).toHaveText("$4.99/lb");
+        await expect(cost).toHaveAttribute("dir", "ltr");
+        const price = page.locator(".catalog-products-table .weight-price");
+        await expect(price.locator(".weight-price-main")).toHaveText(
+          "$7.49/lb",
+        );
+        await expect(price.locator(".weight-price-secondary")).toHaveText(
+          "$16.51/kg",
+        );
+        proofs.push(
+          await assertContract(page, "Products weighed item", variant),
+        );
+      }
+      if (route === "expiry") {
+        const product = field(
+          page.locator(".date-quick-card"),
+          "Product",
+          "محصول",
+        );
+        await product.fill("0001");
+        const iconClearance = await product.evaluate((element) => {
+          const style = getComputedStyle(element);
+          const bounds = element.getBoundingClientRect();
+          const icon = element
+            .closest(".date-product-picker")!
+            .querySelector(".date-product-search-icon")!
+            .getBoundingClientRect();
+          return style.direction === "rtl"
+            ? icon.left - (bounds.right - parseFloat(style.paddingRight))
+            : bounds.left + parseFloat(style.paddingLeft) - icon.right;
+        });
+        expect(
+          iconClearance,
+          "Product text clears the search icon",
+        ).toBeGreaterThanOrEqual(4);
+        await product.fill("");
+        await product.press("Escape");
+      }
     }
     await info.attach(`c5-controls-${variant}.json`, {
       body: JSON.stringify(proofs, null, 2),
@@ -230,6 +271,20 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     const policy = page.locator(".return-policy-dialog");
     await expect(policy).toBeVisible();
     await expect(policy.locator("ol > li")).toHaveCount(5);
+    expect(
+      await policy
+        .locator("ol")
+        .evaluate((element) => getComputedStyle(element).listStyleType),
+    ).toBe("decimal");
+    expect(
+      await policy
+        .locator("ol > li")
+        .evaluateAll((elements) =>
+          elements.every(
+            (element) => getComputedStyle(element).display === "list-item",
+          ),
+        ),
+    ).toBe(true);
     await expect(policy.locator(".card")).toHaveCount(0);
     if (info.project.name === "desktop")
       expect(
