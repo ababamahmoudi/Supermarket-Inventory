@@ -278,6 +278,8 @@ export interface Offer extends ScopedRecord {
   currency: string;
   start_date?: string;
   end_date?: string;
+  created_at?: string;
+  stopped_at?: string;
 }
 export interface LabelTemplate {
   id: string;

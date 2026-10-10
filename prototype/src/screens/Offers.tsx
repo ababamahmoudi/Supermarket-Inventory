@@ -5,6 +5,7 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 import {
   activateOffer,
   businessDate,
@@ -13,12 +14,7 @@ import {
   offerReadiness,
   stopOffer,
 } from "../approvals";
-import {
-  effectiveOffer,
-  effectivePrice,
-  isOfferScheduledNow,
-  lookupBranch,
-} from "../catalog";
+import { effectivePrice, isOfferScheduledNow, lookupBranch } from "../catalog";
 import { useDemo } from "../store";
 import { ManualPricePill } from "../manual-price-presentation";
 import {
@@ -31,8 +27,15 @@ import {
   ProductName,
 } from "../presentation";
 import type { Branch, Offer } from "../types";
+import {
+  currentOfferGroups,
+  isPastOffer,
+  pastOffers,
+  scopedOffers,
+} from "../offer-list";
 import "./filters-a2.css";
 import "./c3-labels-notes-offers.css";
+import "./c5-catalog-offers.css";
 import {
   Badge,
   Button,
@@ -48,12 +51,14 @@ import {
   DateField,
   Select,
   Tabs,
+  Menu,
+  MenuItem,
 } from "../ui";
 
 export function Offers() {
   const { state, update, role, branch, setBranch, lang, t } = useDemo();
   const branches = sellingBranches(state.config);
-  const [tab, setTab] = useState<"offers" | "pools">("offers");
+  const [tab, setTab] = useState<"offers" | "past" | "pools">("offers");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
@@ -80,16 +85,19 @@ export function Offers() {
   const products = state.products.filter(
     (product) => product.company_id === company && product.status === "active",
   );
-  const ownOffers = state.offers.filter(
-    (offer) =>
-      offer.company_id === company &&
-      (offer.scope === "all" ||
-        branchSellsToCustomers(state.config, offer.branch)) &&
-      (offer.scope === "all" || branch === "all" || offer.branch === branch),
-  );
+  const ownOffers = scopedOffers(state, branch);
   const needle = search.trim().toLocaleLowerCase();
   const filteredOffers = ownOffers.filter((offer) => {
-    const product = products.find((item) => item.code === offer.product_code);
+    const product = state.products.find(
+      (item) => item.company_id === company && item.code === offer.product_code,
+    );
+    const visibleStatus =
+      offer.status === "active" &&
+      !isOfferScheduledNow(offer, state.config.company.timezone)
+        ? isPastOffer(offer, state.config.company.timezone)
+          ? "expired"
+          : "scheduled"
+        : offer.status;
     return (
       (!needle ||
         [
@@ -98,7 +106,7 @@ export function Offers() {
           offer.product_code,
           offer.label,
         ].some((value) => value?.toLocaleLowerCase().includes(needle))) &&
-      (!status || offer.status === status) &&
+      (!status || visibleStatus === status) &&
       (!category || product?.ai_category === category) &&
       (!supplier || product?.main_supplier === supplier) &&
       (!type || offer.label === type)
@@ -107,7 +115,12 @@ export function Offers() {
   const suggestions = filteredOffers.filter(
     (offer) => offer.status === "suggested",
   );
-  const rows = filteredOffers.filter((offer) => offer.status !== "suggested");
+  const rows =
+    tab === "past"
+      ? pastOffers(filteredOffers, state.config.company.timezone).map(
+          (offer) => [offer],
+        )
+      : currentOfferGroups(filteredOffers, state.config.company.timezone);
   const categories = [
     ...new Set(products.map((product) => product.ai_category)),
   ].sort();
@@ -179,8 +192,17 @@ export function Offers() {
       setMessage(readyMessage(readiness));
       return;
     }
-    update((draft) => activateOffer(draft, offer, role ?? "floor_worker"));
+    const activation = { result: "created" as "created" | "unchanged" };
+    update((draft) => {
+      activation.result = activateOffer(draft, offer, role ?? "floor_worker");
+    });
     setCreateOpen(false);
+    if (activation.result === "unchanged") {
+      setMessage(
+        t("This offer already exists.", "این پیشنهاد از قبل وجود دارد."),
+      );
+      return;
+    }
     const manual = offer.status !== "suggested";
     setMessage(
       isOfferScheduledNow(offer, state.config.company.timezone)
@@ -270,10 +292,14 @@ export function Offers() {
       />
       <Tabs
         value={tab}
-        onChange={(value) => setTab(value as "offers" | "pools")}
+        onChange={(value) => {
+          setTab(value as "offers" | "past" | "pools");
+          setStatus("");
+        }}
         aria-label={t("Offers", "پیشنهادهای فروش")}
         options={[
-          { value: "offers", label: t("Offers", "پیشنهادهای فروش") },
+          { value: "offers", label: t("Current offers", "پیشنهادهای فعلی") },
+          { value: "past", label: t("Past offers", "پیشنهادهای قبلی") },
           {
             value: "pools",
             label: t("Mix-and-match pools", "گروه‌های ترکیبی"),
@@ -285,7 +311,7 @@ export function Offers() {
           {message}
         </div>
       )}
-      {tab === "offers" ? (
+      {tab !== "pools" ? (
         <>
           <FilterToolbar
             className="offers-filters"
@@ -304,7 +330,7 @@ export function Offers() {
               "{{count}} offers",
               "{{count}} پیشنهاد",
               "{{count}} پیشنهاد",
-              filteredOffers.length,
+              rows.length + (tab === "offers" ? suggestions.length : 0),
               lang,
             )}
           >
@@ -314,9 +340,19 @@ export function Offers() {
               onChange={setStatus}
               options={[
                 { value: "", label: t("All statuses", "همه وضعیت‌ها") },
-                { value: "suggested", label: t("Pending", "در انتظار") },
-                { value: "active", label: t("Active", "فعال") },
-                { value: "stopped", label: t("Stopped", "متوقف‌شده") },
+                ...(tab === "past"
+                  ? [
+                      { value: "stopped", label: t("Stopped", "متوقف‌شده") },
+                      { value: "expired", label: t("Expired", "منقضی‌شده") },
+                    ]
+                  : [
+                      { value: "suggested", label: t("Pending", "در انتظار") },
+                      { value: "active", label: t("Active", "فعال") },
+                      {
+                        value: "scheduled",
+                        label: t("Scheduled", "زمان‌بندی‌شده"),
+                      },
+                    ]),
               ]}
             />
             <Select
@@ -380,133 +416,146 @@ export function Offers() {
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
           </FilterToolbar>
-          <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
-            <p className="muted">
-              {t(
-                "Confirm an offer before it starts.",
-                "پیش از شروع، پیشنهاد را تأیید کنید.",
-              )}
-            </p>
-            {suggestions.length === 0 ? (
-              <EmptyState>
-                {state.config.promotions.ai_suggestions_enabled === false
-                  ? t(
-                      "Offer suggestions are turned off in Settings.",
-                      "پیشنهادهای خودکار فروش در تنظیمات غیرفعال هستند.",
-                    )
-                  : t(
-                      "No suggestions waiting. Approve a mapped price to create one.",
-                      "پیشنهادی منتظر نیست. یک قیمت دارای نگاشت را تأیید کنید تا پیشنهاد ایجاد شود.",
-                    )}
-              </EmptyState>
-            ) : (
-              suggestions.map((offer) => {
-                const product = products.find(
-                  (item) => item.code === offer.product_code,
-                );
-                const options = taskOptions[offer.id] ?? {
-                  mix: offer.mix_and_match,
-                  start: offer.start_date ?? "",
-                  end: offer.end_date ?? "",
-                };
-                const task: Offer = {
-                  ...offer,
-                  mix_and_match: options.mix,
-                  start_date: options.start || undefined,
-                  end_date: options.end || undefined,
-                };
-                const readiness = offerReadiness(state, task);
-                const change = (values: Partial<typeof options>) =>
-                  setTaskOptions({
-                    ...taskOptions,
-                    [offer.id]: { ...options, ...values },
-                  });
-                return (
-                  <section className="offer-task" key={offer.id}>
-                    <div className="row">
-                      <h3>
-                        {product ? (
-                          <ProductName product={product} language={lang} />
-                        ) : (
-                          <LtrText>{offer.product_code}</LtrText>
-                        )}
-                      </h3>
-                      <Badge tone="pending">{t("Pending", "در انتظار")}</Badge>
-                      <span className="branch-label">
-                        {branchName(offer.branch)}
-                      </span>
-                    </div>
-                    <p>
-                      <strong>
-                        {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
-                        {offerLabel(offer.label)}
-                      </strong>{" "}
-                      · {t("Approved price", "قیمت تأییدشده")}:{" "}
-                      <Money
-                        value={offer.price}
-                        currency={state.config.company.currency}
-                      />
-                      {product && (
-                        <ManualPricePill
-                          product={product}
-                          branch={offer.branch}
-                          companyDefault={offer.scope === "all"}
-                        />
+          {tab === "offers" && (
+            <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
+              <p className="muted">
+                {t(
+                  "Confirm an offer before it starts.",
+                  "پیش از شروع، پیشنهاد را تأیید کنید.",
+                )}
+              </p>
+              {suggestions.length === 0 ? (
+                <EmptyState>
+                  {state.config.promotions.ai_suggestions_enabled === false
+                    ? t(
+                        "Offer suggestions are turned off in Settings.",
+                        "پیشنهادهای خودکار فروش در تنظیمات غیرفعال هستند.",
+                      )
+                    : t(
+                        "No suggestions waiting. Approve a mapped price to create one.",
+                        "پیشنهادی منتظر نیست. یک قیمت دارای نگاشت را تأیید کنید تا پیشنهاد ایجاد شود.",
                       )}
-                    </p>
-                    <Checkbox
-                      checked={options.mix}
-                      onChange={(value) => change({ mix: value })}
-                    >
-                      {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
-                    </Checkbox>
-                    <div className="grid-2">
-                      <Field
-                        label={t(
-                          "Start date (optional)",
-                          "تاریخ شروع (اختیاری)",
-                        )}
-                      >
-                        <DateField
-                          value={options.start}
-                          onChange={(value) => change({ start: value })}
+                </EmptyState>
+              ) : (
+                suggestions.map((offer) => {
+                  const product = products.find(
+                    (item) => item.code === offer.product_code,
+                  );
+                  const options = taskOptions[offer.id] ?? {
+                    mix: offer.mix_and_match,
+                    start: offer.start_date ?? "",
+                    end: offer.end_date ?? "",
+                  };
+                  const task: Offer = {
+                    ...offer,
+                    mix_and_match: options.mix,
+                    start_date: options.start || undefined,
+                    end_date: options.end || undefined,
+                  };
+                  const readiness = offerReadiness(state, task);
+                  const change = (values: Partial<typeof options>) =>
+                    setTaskOptions({
+                      ...taskOptions,
+                      [offer.id]: { ...options, ...values },
+                    });
+                  return (
+                    <section className="offer-task" key={offer.id}>
+                      <div className="row">
+                        <h3>
+                          {product ? (
+                            <ProductName product={product} language={lang} />
+                          ) : (
+                            <LtrText>{offer.product_code}</LtrText>
+                          )}
+                        </h3>
+                        <Badge tone="pending">
+                          {t("Pending", "در انتظار")}
+                        </Badge>
+                        <span className="branch-label">
+                          {branchName(offer.branch)}
+                        </span>
+                      </div>
+                      <p>
+                        <strong>
+                          {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
+                          {offerLabel(offer.label)}
+                        </strong>{" "}
+                        · {t("Approved price", "قیمت تأییدشده")}:{" "}
+                        <Money
+                          value={offer.price}
+                          currency={state.config.company.currency}
                         />
-                      </Field>
-                      <Field
-                        label={t(
-                          "End date (optional)",
-                          "تاریخ پایان (اختیاری)",
+                        {product && (
+                          <ManualPricePill
+                            product={product}
+                            branch={offer.branch}
+                            companyDefault={offer.scope === "all"}
+                          />
                         )}
+                      </p>
+                      <Checkbox
+                        checked={options.mix}
+                        onChange={(value) => change({ mix: value })}
                       >
-                        <DateField
-                          value={options.end}
-                          onChange={(value) => change({ end: value })}
-                        />
-                      </Field>
-                    </div>
-                    <p className="muted">{readyMessage(readiness)}</p>
-                    <div className="actions">
-                      <Button
-                        variant="secondary"
-                        disabled={readiness !== "ready"}
-                        onClick={() => activate(task)}
-                      >
-                        {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
-                        {offerLabel(offer.label)}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={() => stop(offer.id, true)}
-                      >
-                        {t("Dismiss", "کنار گذاشتن")}
-                      </Button>
-                    </div>
-                  </section>
-                );
-              })
-            )}
-          </Card>
-          <Card title={t("Current offers", "پیشنهادهای فعلی")}>
+                        {t(
+                          "Join the mix-and-match pool",
+                          "عضویت در گروه ترکیبی",
+                        )}
+                      </Checkbox>
+                      <div className="grid-2">
+                        <Field
+                          label={t(
+                            "Start date (optional)",
+                            "تاریخ شروع (اختیاری)",
+                          )}
+                        >
+                          <DateField
+                            value={options.start}
+                            onChange={(value) => change({ start: value })}
+                          />
+                        </Field>
+                        <Field
+                          label={t(
+                            "End date (optional)",
+                            "تاریخ پایان (اختیاری)",
+                          )}
+                        >
+                          <DateField
+                            value={options.end}
+                            onChange={(value) => change({ end: value })}
+                          />
+                        </Field>
+                      </div>
+                      <p className="muted">{readyMessage(readiness)}</p>
+                      <div className="actions">
+                        <Button
+                          variant="secondary"
+                          disabled={readiness !== "ready"}
+                          onClick={() => activate(task)}
+                        >
+                          {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
+                          {offerLabel(offer.label)}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => stop(offer.id, true)}
+                        >
+                          {t("Dismiss", "کنار گذاشتن")}
+                        </Button>
+                      </div>
+                    </section>
+                  );
+                })
+              )}
+            </Card>
+          )}
+          <Card
+            title={
+              tab === "past"
+                ? t("Past offers", "پیشنهادهای قبلی")
+                : t("Current offers", "پیشنهادهای فعلی")
+            }
+          >
             {rows.length === 0 ? (
               <EmptyState>
                 {t(
@@ -516,13 +565,13 @@ export function Offers() {
               </EmptyState>
             ) : (
               <DataTable
-                className="current-offers-table"
+                className={`current-offers-table${tab === "past" ? " past-offers-table" : ""}`}
                 columns={[
                   {},
                   { width: 140 },
                   { width: 140 },
                   { width: 220 },
-                  { width: 124, actions: true },
+                  ...(tab === "offers" ? [{ width: 124, actions: true }] : []),
                 ]}
               >
                 <thead>
@@ -531,110 +580,148 @@ export function Offers() {
                     <th>{t("Offer", "پیشنهاد")}</th>
                     <th>{t("Scope", "دامنه")}</th>
                     <th>{t("Status", "وضعیت")}</th>
-                    <th>{t("Action", "اقدام")}</th>
+                    {tab === "offers" && <th>{t("Action", "اقدام")}</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((offer) => {
-                    const product = products.find(
-                      (item) => item.code === offer.product_code,
+                  {rows.map((group) => {
+                    const first = group[0];
+                    const product = state.products.find(
+                      (item) =>
+                        item.company_id === company &&
+                        item.code === first.product_code,
                     );
-                    const effective =
-                      product &&
-                      effectiveOffer(state, product, viewBranch)?.id ===
-                        offer.id;
-                    const scheduled = isOfferScheduledNow(
-                      offer,
-                      state.config.company.timezone,
-                    );
-                    const expired =
-                      offer.end_date &&
-                      offer.end_date <
-                        businessDate(state.config.company.timezone);
                     return (
-                      <tr key={offer.id}>
+                      <tr
+                        key={tab === "past" ? first.id : first.product_code}
+                        data-product-code={first.product_code}
+                      >
                         <td>
                           {product ? (
                             <ProductName product={product} language={lang} />
                           ) : (
-                            <LtrText>{offer.product_code}</LtrText>
+                            <LtrText>{first.product_code}</LtrText>
                           )}
-                          <br />
-                          <span className="muted">
-                            <Money
-                              value={offer.price}
-                              currency={state.config.company.currency}
-                            />
-                            {product && (
-                              <ManualPricePill
-                                product={product}
-                                branch={offer.branch}
-                                companyDefault={offer.scope === "all"}
-                              />
-                            )}
-                          </span>
                         </td>
                         <td>
-                          {offerLabel(offer.label)}
-                          {offer.mix_and_match && (
-                            <>
-                              <br />
-                              <span className="muted">
-                                {t("Mix-and-match", "ترکیبی")}
+                          {group.map((offer) => (
+                            <div className="offer-group-entry" key={offer.id}>
+                              {offerLabel(offer.label)}
+                              <span className="muted offer-entry-price">
+                                <Money
+                                  value={offer.price}
+                                  currency={state.config.company.currency}
+                                />
+                                {product && (
+                                  <ManualPricePill
+                                    product={product}
+                                    branch={offer.branch}
+                                    companyDefault={offer.scope === "all"}
+                                  />
+                                )}
                               </span>
-                            </>
-                          )}
+                              {offer.mix_and_match && (
+                                <>
+                                  <br />
+                                  <span className="muted">
+                                    {t("Mix-and-match", "ترکیبی")}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          ))}
                         </td>
                         <td className="branch-label offer-scope">
-                          {branchName(offer.branch)}
+                          {group.map((offer) => (
+                            <div className="offer-group-entry" key={offer.id}>
+                              {branchName(offer.branch)}
+                            </div>
+                          ))}
                         </td>
                         <td>
-                          <Badge
-                            tone={
-                              offer.status === "stopped"
-                                ? "neutral"
-                                : effective
-                                  ? "approved"
-                                  : "pending"
-                            }
-                          >
-                            {offer.status === "stopped"
-                              ? t("Stopped", "متوقف‌شده")
-                              : effective
-                                ? t("Active", "فعال")
-                                : !scheduled
-                                  ? expired
-                                    ? t("Expired", "منقضی‌شده")
-                                    : t("Scheduled", "زمان‌بندی‌شده")
-                                  : t(
-                                      "Not effective in this branch",
-                                      "در این شعبه مؤثر نیست",
-                                    )}
-                          </Badge>
-                          {offer.start_date && (
-                            <p className="muted">
-                              {t("Starts", "شروع")}:{" "}
-                              <DateText value={offer.start_date} />
-                            </p>
-                          )}
-                          {offer.end_date && (
-                            <p className="muted">
-                              {t("Ends", "پایان")}:{" "}
-                              <DateText value={offer.end_date} />
-                            </p>
-                          )}
+                          {group.map((offer) => {
+                            const scheduled = isOfferScheduledNow(
+                              offer,
+                              state.config.company.timezone,
+                            );
+                            const expired = Boolean(
+                              offer.end_date &&
+                              offer.end_date <
+                                businessDate(state.config.company.timezone),
+                            );
+                            return (
+                              <div className="offer-group-entry" key={offer.id}>
+                                <Badge
+                                  tone={
+                                    offer.status === "stopped"
+                                      ? "neutral"
+                                      : expired
+                                        ? "danger"
+                                        : scheduled
+                                          ? "approved"
+                                          : "info"
+                                  }
+                                >
+                                  {offer.status === "stopped"
+                                    ? t("Stopped", "متوقف‌شده")
+                                    : expired
+                                      ? t("Expired", "منقضی‌شده")
+                                      : scheduled
+                                        ? t("Active", "فعال")
+                                        : t("Scheduled", "زمان‌بندی‌شده")}
+                                </Badge>
+                                {offer.start_date && (
+                                  <p className="muted">
+                                    {t("Starts", "شروع")}:{" "}
+                                    <DateText value={offer.start_date} />
+                                  </p>
+                                )}
+                                {offer.end_date && (
+                                  <p className="muted">
+                                    {t("Ends", "پایان")}:{" "}
+                                    <DateText value={offer.end_date} />
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
                         </td>
-                        <td>
-                          {offer.status === "active" && (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => setStopId(offer.id)}
-                            >
-                              {t("Stop offer", "توقف پیشنهاد")}
-                            </Button>
-                          )}
-                        </td>
+                        {tab === "offers" && (
+                          <td>
+                            {group.length === 1 ? (
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => setStopId(first.id)}
+                              >
+                                {t("Stop offer", "توقف پیشنهاد")}
+                              </Button>
+                            ) : (
+                              <Menu
+                                iconOnly
+                                showChevron={false}
+                                aria-label={t("More", "بیشتر")}
+                                label={
+                                  <MoreHorizontal
+                                    size={20}
+                                    strokeWidth={1.5}
+                                    aria-hidden="true"
+                                  />
+                                }
+                              >
+                                {group.map((offer) => (
+                                  <MenuItem
+                                    key={offer.id}
+                                    onClick={() => setStopId(offer.id)}
+                                  >
+                                    {t("Stop offer", "توقف پیشنهاد")} ·{" "}
+                                    {branchName(offer.branch)}
+                                  </MenuItem>
+                                ))}
+                              </Menu>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

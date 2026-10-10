@@ -663,7 +663,7 @@ function BranchSettings() {
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant={branch.active === false ? "secondary" : "danger"}
                     onClick={() => active(branch.code, branch.active === false)}
                   >
                     {branch.active === false
@@ -1144,6 +1144,7 @@ export default function Settings() {
         >
           {groups.map((item) => (
             <button
+              data-control-kind="settings-navigation"
               type="button"
               key={item.key}
               className={selected === item.key ? "active" : ""}

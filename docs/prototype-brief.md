@@ -14,7 +14,7 @@
 
 ## Demo users (role switcher)
 
-A **username and password** sign-in screen (layout in `design-language.md`) with demo accounts from the data file: **supervisor, floorworker, cashier**, all with the demo password shown in a small hint under the form ("Demo accounts: … / password demo1234"). A fourth account, **newemployee**, signs in with a temporary password and must choose a new one, to show the first-sign-in flow. A "recent users on this computer" row appears after the first sign-in. No PIN pad. Inside the app, switching role and resetting the demo happen in a small **Demo** menu in the top bar (never as labeled form fields). The Supervisor uses the branch pill (North York/Richmond Hill/Newmarket/Warehouse; stable existing IDs retained). The language toggle (EN | فا) flips RTL; the theme toggle switches light/dark.
+A **username and password** sign-in screen (layout in `design-language.md`) with demo accounts from the data file: **supervisor, floorworker, cashier**, all with the demo password shown in a small hint under the form ("Demo accounts: … / password demo1234"). A fourth account, **newemployee**, signs in with a temporary password and must choose a new one, to show the first-sign-in flow. A "recent users on this computer" row appears after the first sign-in. No PIN pad. Inside the app, switching role and resetting the demo happen in a small **Demo** menu in the top bar (never as labeled form fields). The Supervisor uses the branch pill (North York/Richmond Hill/Newmarket/Warehouse; stable existing IDs retained). The single round target-language button (فا in English / EN in Persian) flips RTL; the theme toggle switches light/dark.
 
 ## The moments to build (in this order)
 
@@ -62,6 +62,8 @@ Capture each requested feature in English light, dark, Persian and phone: saved 
 - A short `prototype/README.md` explains how to run, reset, and deploy it.
 
 ## Demo script (8 to 10 minutes)
+
+**C5 presentation and fast entry (2026-10-10):** approved C3 and C4 were merged in order with retained commit history and passing CI before C5 was created from main. C5 changes only prototype/ and docs/; seed files stay unchanged. Read all nine new owner annotations and update design-language first. Preserve the approved dashboard/Approvals/round tabs and C3/C4 domain behavior. Apply 12 px/40 px intrinsic text actions, four consistent styles/glow, circular target-language button, uniform 40 px top-bar controls, visible fields, label-based status tones, Columns placement and the specified document/return/weight layouts. Replace date-entry dialogs on Date tracking/Lookup with quick-add/inline Dates, authorized Worker/Supervisor On/Off and atomic auto-enable/Undo. Current/Past offers separate history and identical submissions are idempotent. Supply the complete button audit, automated checks, requested four-variant screenshots individually compared against all nine notes, and exact Ubuntu/click instructions in the C5 review guide. C5 is a new review PR; no merge or next AI phase is authorized.
 
 1. **Open as Cashier (30 s).** "Anyone at the register can look up a price in a second, in English or Persian. The price shown is always the approved one; if a new price is waiting for a decision, they see a tag."
 2. **Switch to Floor Worker; receive an invoice (2 min).** "Drop in the supplier's PDF or a photo. The app reads it into lines. The system calculates every selling price with your own rules, so nobody does it by hand." Edit a cost to show the price update.

@@ -1,9 +1,10 @@
 import { useDemo } from "../store";
+import { ReturnStatusBadge } from "../ReturnStatusBadge";
+import "./returns-a2.css";
 import { useListState } from "../navigation";
 import { returnUiStatusLabel } from "../return-workflow";
 import type { SupplierReturnRow } from "../suppliers";
 import {
-  Badge,
   Button,
   DataTable,
   EmptyState,
@@ -52,13 +53,6 @@ export function SupplierReturnsPanel({
           },
         ]
       : []),
-    {
-      key: "actions",
-      label: t("Next action", "اقدام بعدی"),
-      width: 100,
-      align: "end",
-      actions: true,
-    },
   ]);
   const visible = rows.filter(
     (row) =>
@@ -96,7 +90,12 @@ export function SupplierReturnsPanel({
             placeholder={t("Search returns", "جستجوی مرجوعی‌ها")}
           />
         }
-        count={visible.length}
+        count={
+          <span className="returns-toolbar-end">
+            <span>{visible.length}</span>
+            {columns.chooser}
+          </span>
+        }
       >
         <Select
           aria-label={t("Status", "وضعیت")}
@@ -132,7 +131,6 @@ export function SupplierReturnsPanel({
         >
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
-        {columns.chooser}
       </FilterToolbar>
       {visible.length ? (
         <DataTable className="supplier-returns-table" columns={columns.columns}>
@@ -144,12 +142,29 @@ export function SupplierReturnsPanel({
               <th>{t("Items", "اقلام")}</th>
               <th>{t("Status", "وضعیت")}</th>
               {supervisor && <th>{t("Pending credit", "اعتبار در انتظار")}</th>}
-              <th>{t("Next action", "اقدام بعدی")}</th>
             </tr>
           </thead>
           <tbody>
             {visible.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className="returns-clickable-row"
+                tabIndex={0}
+                aria-label={`${t("Return", "مرجوعی")} #${row.number} · ${supplier}`}
+                onClick={(event) => {
+                  if (!(event.target as HTMLElement).closest("a,button"))
+                    window.location.hash = `#return?id=${encodeURIComponent(row.id)}`;
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    event.target === event.currentTarget &&
+                    (event.key === "Enter" || event.key === " ")
+                  ) {
+                    event.preventDefault();
+                    window.location.hash = `#return?id=${encodeURIComponent(row.id)}`;
+                  }
+                }}
+              >
                 <td>
                   <a
                     className="returns-number-link"
@@ -164,24 +179,16 @@ export function SupplierReturnsPanel({
                 </td>
                 <td>{row.items}</td>
                 <td>
-                  <Badge>
-                    {returnUiStatusLabel(row.ui_status, t)}
-                    {row.closure_subtype &&
-                      ` (${returnUiStatusLabel(row.closure_subtype, t)})`}
-                  </Badge>
+                  <ReturnStatusBadge
+                    status={row.ui_status}
+                    outcome={row.closure_subtype}
+                  />
                 </td>
                 {supervisor && (
                   <td>
                     <Money value={row.financial?.pending_credit ?? "0.00"} />
                   </td>
                 )}
-                <td>
-                  <Button asChild variant="secondary" size="sm">
-                    <a href={`#return?id=${encodeURIComponent(row.id)}`}>
-                      {t("View", "نمایش")}
-                    </a>
-                  </Button>
-                </td>
               </tr>
             ))}
           </tbody>

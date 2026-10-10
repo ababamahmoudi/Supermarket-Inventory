@@ -9,7 +9,7 @@ test("Supervisor product page uses own route, Back link and shared editor", asyn
   await page.goto("/#products");
   await page.getByLabel("Search products", { exact: true }).fill("0009");
   await page
-    .getByRole("button", { name: "View Potato Chips 150 g", exact: true })
+    .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();
   await expect(page).toHaveURL(/#product\?code=0009$/);
   await expect(

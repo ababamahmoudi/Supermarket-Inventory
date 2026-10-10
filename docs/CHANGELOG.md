@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-10 — C5 specification and approved merge gate
+
+- Merged approved C3 (#16) and C4 (#17) in order, retaining original commit history. Both PR checks passed; main integration run 38023516156 passed before C5 began from 0767844.
+- Read all nine new annotated references and updated design-language before code:12 px/40 px intrinsic text actions, horizontal compact table actions, four styles with glow, single target-language button, uniform top-bar controls, visible bordered fields and stable status tones.
+- Specified inline quick-add/Lookup Dates with atomic auto-enable/Undo, Current/Past idempotent offers and document/return/weight layouts. This entry records the specifications and completed merge gate; C5 implementation/test/screenshot results will be recorded after validation. C5 changes only prototype/docs; seed data stays unchanged.
+
 ## 2026-10-09 — Pull request C4: invoices, orders, weighed items, dates and returns
 
 - Built readable posted invoices with retained photo/PDF originals and Supervisor-only, reasoned correction previews. Appended versions preserve originals, payment allocations and linked receipt/approval/date evidence; only the exact correction delta changes money.

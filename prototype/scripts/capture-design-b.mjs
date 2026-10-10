@@ -70,7 +70,9 @@ const field = (scope, en, fa) => scope.getByLabel(exact(en, fa));
 
 async function english(page) {
   if ((await page.locator("html").getAttribute("lang")) === "fa")
-    await page.getByRole("button", { name: "English", exact: true }).click();
+    await page
+      .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
+      .click();
 }
 async function appearance(page, variant) {
   await english(page);
@@ -86,7 +88,9 @@ async function appearance(page, variant) {
       })
       .click();
   if (variant === "fa-light")
-    await page.getByRole("button", { name: "فارسی", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Switch to Persian", exact: true })
+      .click();
 }
 async function visit(page, route, heading) {
   await english(page);

@@ -2,7 +2,7 @@ import "../c3-tables.css";
 import { translateCount } from "../i18n";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import Decimal from "decimal.js";
-import { Search, ScanLine, ArrowLeft } from "lucide-react";
+import { Search, ScanLine, ArrowLeft, MoreHorizontal } from "lucide-react";
 import "../catalog-a2.css";
 import {
   effectiveOffer,
@@ -45,7 +45,8 @@ import {
   ProductPrice as SellingPrice,
   ProductCost,
 } from "../weight-price-presentation";
-import { AddDateDialog, NextTrackedDate } from "../AddDateDialog";
+import { AddDateDialog } from "../AddDateDialog";
+import { ProductDatesSection } from "../ProductDatesSection";
 import { manualPrice, sellingMargin } from "../manual-prices";
 import {
   ManualPriceDetails,
@@ -54,6 +55,7 @@ import {
 import { productCostHistory, productStoreCost } from "../product-costs";
 import { lastReceivedByLocation } from "../received";
 import "./manual-entry.css";
+import "./c5-catalog-offers.css";
 import type { Branch, Product } from "../types";
 import {
   productEditSnapshot,
@@ -76,6 +78,8 @@ import {
   FilterToolbar,
   Select,
   useTableColumns,
+  Menu,
+  MenuItem,
 } from "../ui";
 
 import {
@@ -709,7 +713,7 @@ export function ProductEditor({
             {similar.map((item) => (
               <Button
                 key={item.code}
-                variant="ghost"
+                variant="secondary"
                 onClick={() => {
                   onClose();
                   navigate(`product?code=${item.code}`);
@@ -971,26 +975,7 @@ function ProductPrice({ product }: { product: Product }) {
 }
 
 function ProductDates({ product }: { product: Product }) {
-  const { role, branch, t } = useDemo();
-  const [adding, setAdding] = useState(false);
-  return (
-    <div className="stack product-dates">
-      <NextTrackedDate productCode={product.code} />
-      {(role === "supervisor" || role === "floor_worker") && (
-        <div className="actions">
-          <Button variant="secondary" onClick={() => setAdding(true)}>
-            {t("Add date", "افزودن تاریخ")}
-          </Button>
-        </div>
-      )}
-      <AddDateDialog
-        open={adding}
-        onOpenChange={setAdding}
-        productCode={product.code}
-        defaultLocation={lookupBranch(branch)}
-      />
-    </div>
-  );
+  return <ProductDatesSection product={product} />;
 }
 
 function ProductDetail({
@@ -2151,7 +2136,11 @@ export function Products() {
                         : "none"
                     }
                   >
-                    <Button variant="ghost" onClick={() => sortBy("name")}>
+                    <Button
+                      variant="ghost"
+                      data-control-kind="widget"
+                      onClick={() => sortBy("name")}
+                    >
                       {t("Product", "محصول")}
                       {sort === "name" ? (ascending ? " ↑" : " ↓") : ""}
                     </Button>
@@ -2166,7 +2155,11 @@ export function Products() {
                         : "none"
                     }
                   >
-                    <Button variant="ghost" onClick={() => sortBy("code")}>
+                    <Button
+                      variant="ghost"
+                      data-control-kind="widget"
+                      onClick={() => sortBy("code")}
+                    >
                       {t("Product Code", "کد محصول")}
                       {sort === "code" ? (ascending ? " ↑" : " ↓") : ""}
                     </Button>
@@ -2187,7 +2180,11 @@ export function Products() {
                         : "none"
                     }
                   >
-                    <Button variant="ghost" onClick={() => sortBy("price")}>
+                    <Button
+                      variant="ghost"
+                      data-control-kind="widget"
+                      onClick={() => sortBy("price")}
+                    >
                       {t("Approved price", "قیمت تأییدشده")}
                       {sort === "price" ? (ascending ? " ↑" : " ↓") : ""}
                     </Button>
@@ -2215,18 +2212,35 @@ export function Products() {
                   return (
                     <tr key={product.code}>
                       <td>
-                        <strong className="catalog-product-name">
-                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                            {lang === "fa" ? product.name_fa : product.name_en}
-                          </bdi>
-                        </strong>
+                        <a
+                          className="catalog-product-link"
+                          href={`#product?code=${encodeURIComponent(product.code)}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            navigate(
+                              `product?code=${encodeURIComponent(product.code)}`,
+                            );
+                          }}
+                        >
+                          <strong className="catalog-product-name">
+                            <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                              {lang === "fa"
+                                ? product.name_fa
+                                : product.name_en}
+                            </bdi>
+                          </strong>
+                        </a>
                         <p className="muted catalog-product-secondary">
                           <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
                             {lang === "fa" ? product.name_en : product.name_fa}
                           </bdi>
                         </p>
                         <p className="muted">
-                          <UnitSize value={product.unit_size} />
+                          {product.sold_by === "weight" ? (
+                            t("Sold by weight", "فروش وزنی")
+                          ) : (
+                            <UnitSize value={product.unit_size} />
+                          )}
                         </p>
                       </td>
                       <td className="numeric">
@@ -2260,6 +2274,7 @@ export function Products() {
                             value={price}
                             product={product}
                             config={state.config}
+                            stacked
                           />
                         ) : (
                           "—"
@@ -2301,21 +2316,30 @@ export function Products() {
                       <td>
                         <div className="actions catalog-row-actions">
                           <ProductEditButton product={product} row />
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() =>
-                              navigate(
-                                `product?code=${encodeURIComponent(product.code)}`,
-                              )
-                            }
-                            aria-label={t(
-                              `View ${product.name_en}`,
-                              `نمایش ${product.name_fa}`,
-                            )}
-                          >
-                            {t("View", "نمایش")}
-                          </Button>
+                          {product.status === "active" && (
+                            <Menu
+                              iconOnly
+                              showChevron={false}
+                              aria-label={t("Product actions", "اقدامات کالا")}
+                              label={
+                                <MoreHorizontal
+                                  size={20}
+                                  strokeWidth={1.5}
+                                  aria-hidden="true"
+                                />
+                              }
+                            >
+                              <MenuItem
+                                onClick={() =>
+                                  navigate(
+                                    `expiry?product=${encodeURIComponent(product.code)}`,
+                                  )
+                                }
+                              >
+                                {t("Add date", "افزودن تاریخ")}
+                              </MenuItem>
+                            </Menu>
+                          )}
                         </div>
                       </td>
                     </tr>

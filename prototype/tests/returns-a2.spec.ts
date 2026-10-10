@@ -74,10 +74,14 @@ test("Returns starts with all suppliers and Open records, and opens each return 
   );
   await page.getByRole("link", { name: "#1", exact: true }).click();
   await expect(page).toHaveURL(/#return\?id=demo-return-1$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Return #1 · created",
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Return #1");
+  await expect(page.locator(".return-detail-subtitle")).toContainText(
+    "created",
   );
-  await expect(page.getByRole("heading", { level: 1 })).not.toContainText("—");
+  await expect(page.locator(".return-detail-subtitle")).toContainText(
+    "Demo Floor Worker",
+  );
+  await expect(page.locator(".return-detail-subtitle")).not.toContainText("—");
   await expect(
     page
       .locator(".return-header-card")

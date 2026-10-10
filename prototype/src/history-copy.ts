@@ -100,6 +100,11 @@ const actions: Record<string, [string, string]> = {
   "Reject supplier": ["Reject supplier", "رد تأمین‌کننده"],
   "Add product": ["Add product", "افزودن محصول"],
   "Add date": ["Add date", "افزودن تاریخ"],
+  "Turn on date tracking": ["Turn on date tracking", "روشن کردن پیگیری تاریخ"],
+  "Turn off date tracking": [
+    "Turn off date tracking",
+    "خاموش کردن پیگیری تاریخ",
+  ],
   "Remove date": ["Remove date", "حذف تاریخ"],
   "Stop tracking this product": [
     "Stop tracking this product",

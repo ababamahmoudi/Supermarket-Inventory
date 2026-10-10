@@ -1,13 +1,17 @@
 /* Shared controls use the company and theme tokens from the app shell. */
 .ui-button.button {
-  min-block-size: 2.5rem;
-  padding: 0.625rem 1rem;
+  block-size: 40px;
+  min-block-size: 40px;
+  inline-size: fit-content;
+  padding: 0 1rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.4;
   gap: 0.5rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
   transition: box-shadow 150ms ease;
 }
 .ui-button.button-primary {
@@ -38,8 +42,8 @@
   color: var(--text);
 }
 .ui-button.button-sm {
-  min-block-size: 2.5rem;
-  padding: 0.5rem 0.75rem;
+  min-block-size: 40px;
+  padding: 0 0.75rem;
   font-size: 0.8125rem;
 }
 .ui-button.button:disabled,
@@ -162,7 +166,7 @@ input.ui-input[type="text"] {
   min-inline-size: 0;
   min-block-size: 2.75rem;
   padding: 0.6875rem 0.875rem;
-  border: 0;
+  border: 1px solid var(--secondary-border);
   border-radius: 0.75rem;
   background: var(--surface-soft);
   color: var(--text);
@@ -171,6 +175,7 @@ input.ui-input[type="text"] {
   box-shadow: none;
 }
 .ui-input[aria-invalid="true"] {
+  border-color: var(--danger);
   outline: 2px solid var(--danger);
   outline-offset: 0;
 }
@@ -179,6 +184,12 @@ input.ui-input[type="text"] {
   justify-content: space-between;
   text-align: start;
   cursor: pointer;
+}
+.ui-select {
+  box-shadow: 0 2px 12px var(--secondary-glow);
+}
+.ui-input:focus-visible {
+  box-shadow: 0 2px 12px var(--secondary-glow-hover);
 }
 .ui-select > span,
 .ui-date > span {
@@ -350,9 +361,9 @@ input.ui-number[type="text"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
-  min-block-size: 2.25rem;
+  inline-size: 40px;
+  block-size: 40px;
+  min-block-size: 40px;
   padding: 0;
   flex: 0 0 auto;
   border-radius: 50%;
@@ -523,14 +534,16 @@ input[type="file"].ui-file-input {
   display: none;
 }
 .ui-menu-trigger {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-block-size: 2.5rem;
-  padding: 0.5rem 0.75rem;
+  block-size: 40px;
+  min-block-size: 40px;
+  padding: 0 0.75rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--search-fill);
   color: var(--text);
   font: inherit;

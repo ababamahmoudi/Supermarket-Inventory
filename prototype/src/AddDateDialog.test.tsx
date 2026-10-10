@@ -198,8 +198,9 @@ it("Stop asks whether to remove existing dates, defaults to keeping them and can
   );
   await user.click(screen.getByRole("button", { name: "Seed manual date" }));
   const row = screen.getByText("Checked shelf").closest("tr")!;
+  await user.click(within(row).getByRole("button", { name: "More" }));
   await user.click(
-    within(row).getByRole("button", { name: "Stop tracking this product" }),
+    screen.getByRole("menuitem", { name: "Stop tracking this product" }),
   );
   let dialog = screen.getByRole("dialog", {
     name: "Stop tracking this product",
@@ -217,8 +218,9 @@ it("Stop asks whether to remove existing dates, defaults to keeping them and can
   await user.click(
     screen.getByRole("button", { name: "Undo Stop tracking this product" }),
   );
+  await user.click(within(row).getByRole("button", { name: "More" }));
   await user.click(
-    within(row).getByRole("button", { name: "Stop tracking this product" }),
+    screen.getByRole("menuitem", { name: "Stop tracking this product" }),
   );
   dialog = screen.getByRole("dialog", { name: "Stop tracking this product" });
   await user.click(
@@ -239,7 +241,7 @@ it("workers can add and remove local dates while Cashiers only see their next sc
   const user = await show();
   await user.click(screen.getByRole("button", { name: "Seed manual date" }));
   await user.click(screen.getByRole("button", { name: "Use Floor Worker" }));
-  expect(screen.getByRole("button", { name: "Add date" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
   const row = screen.getByText("Checked shelf").closest("tr")!;
   expect(
     within(row).getByRole("button", { name: "Remove" }),
@@ -248,8 +250,6 @@ it("workers can add and remove local dates while Cashiers only see their next sc
     screen.queryByRole("button", { name: "Stop tracking this product" }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Use Cashier" }));
-  expect(
-    screen.queryByRole("button", { name: "Add date" }),
-  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
   expect(screen.getByText(/Expires/)).toHaveTextContent("North York");
 });

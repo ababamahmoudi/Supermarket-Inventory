@@ -1,4 +1,12 @@
-/* C3: these shared controls replace the legacy faint outlines on every surface. */
+/* Shared C5 actions retain the C2 geometry with the approved C3 glow. */
+:root .ui-button.button:not(.ui-icon-button) {
+  block-size: 40px;
+  min-block-size: 40px;
+  max-block-size: 40px;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  border-radius: 12px;
+}
 :root .ui-button.button.button-primary {
   border: 1px solid transparent;
   background: var(--accent-fill);
@@ -7,7 +15,7 @@
 }
 :root .ui-button.button.button-secondary {
   border: 1px solid var(--secondary-border);
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--secondary-fill);
   color: var(--secondary-text);
   outline: none;
@@ -32,14 +40,16 @@
 }
 :root .ui-button.button.button-danger {
   border: 1px solid var(--danger);
-  border-radius: 999px;
+  border-radius: 12px;
   background: transparent;
   color: var(--danger);
   outline: none;
-  box-shadow: none;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--danger) 14%, transparent);
+  transition: box-shadow 160ms ease;
 }
 :root .ui-button.button.button-danger:hover:not(:disabled) {
   background: var(--danger-bg);
+  box-shadow: 0 3px 18px color-mix(in srgb, var(--danger) 22%, transparent);
   filter: none;
 }
 :root .ui-button.button:focus-visible {
@@ -48,8 +58,6 @@
 }
 :root .ui-button.ui-icon-button.button {
   border-radius: 50%;
-  background: var(--search-fill);
-  border-color: transparent;
 }
 :root .ui-segments button,
 :root .pills button,
@@ -152,18 +160,22 @@
   }
   :root .ui-data-table .table-actions > .actions {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
     gap: 8px;
-    inline-size: 100%;
+    inline-size: fit-content;
+    margin-inline-start: auto;
   }
   :root .ui-data-table td.table-actions .button:not(.ui-icon-button) {
-    inline-size: 100%;
+    inline-size: max-content;
     min-inline-size: 0;
-    max-inline-size: none;
+    max-inline-size: 200px;
     justify-content: center;
     padding-inline: 10px;
     white-space: normal;
+    line-height: 1.1;
     text-wrap: balance;
   }
   :root .ui-data-table .ui-number {
@@ -194,7 +206,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root .ui-button.button.button-secondary {
+  :root .ui-button.button.button-secondary,
+  :root .ui-button.button.button-danger {
     transition: none;
   }
 }

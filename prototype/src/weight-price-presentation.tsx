@@ -8,12 +8,14 @@ export function ProductPrice({
   value,
   product,
   config,
+  stacked = false,
   className,
   ...props
 }: HTMLAttributes<HTMLElement> & {
   value: string;
   product: Pick<Product, "sold_by">;
   config: CompanyConfig;
+  stacked?: boolean;
 }) {
   if (product.sold_by !== "weight")
     return (
@@ -28,7 +30,9 @@ export function ProductPrice({
   return (
     <span
       {...props}
-      className={["weight-price", className].filter(Boolean).join(" ")}
+      className={["weight-price", stacked && "weight-price-stacked", className]
+        .filter(Boolean)
+        .join(" ")}
     >
       <LtrText className="weight-price-main">
         <Money value={display.main.amount} currency={config.company.currency} />
@@ -36,8 +40,7 @@ export function ProductPrice({
       </LtrText>
       {display.secondary && (
         <LtrText className="weight-price-secondary">
-          {" "}
-          ·{" "}
+          {!stacked && <> · </>}
           <Money
             value={display.secondary.amount}
             currency={config.company.currency}
@@ -61,9 +64,9 @@ export function ProductCost({
   if (product.sold_by !== "weight")
     return <Money value={value} currency={config.company.currency} />;
   return (
-    <span className="weight-cost">
-      <Money value={value} currency={config.company.currency} decimals={4} />
-      <LtrText>/lb</LtrText>
-    </span>
+    <LtrText className="weight-cost">
+      <Money value={value} currency={config.company.currency} />
+      /lb
+    </LtrText>
   );
 }

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useId,
   useRef,
   useState,
@@ -82,6 +83,7 @@ export function Button({
   return (
     <Component
       className={cn("ui-button", buttonVariants({ variant, size }), className)}
+      data-control-kind="action"
       type={type}
       {...props}
     />
@@ -126,10 +128,16 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
       [
         "pending",
         "waiting for supplier",
+        "waiting for credit",
+        "pending credit",
+        "back-ordered",
         "expiring soon",
         "still pending",
         "در انتظار",
         "در انتظار تأمین‌کننده",
+        "در انتظار اعتبار",
+        "در انتظار بستانکاری",
+        "اعتبار در انتظار",
         "نزدیک انقضا",
         "نزدیک به انقضا",
         "همچنان در انتظار",
@@ -144,6 +152,10 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "resolved",
         "taken care of",
         "picked up",
+        "received",
+        "closed",
+        "credited",
+        "replaced",
         "تأییدشده",
         "ثبت‌شده",
         "فعال",
@@ -151,21 +163,32 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "رسیدگی‌شده",
         "تحویل گرفته‌شده",
         "جمع‌آوری‌شده",
+        "دریافت‌شده",
+        "بسته‌شده",
+        "اعتبار دریافت‌شده",
+        "جایگزین‌شده",
       ],
     ],
     [
       "info",
       [
         "open",
+        "waiting for pickup",
         "new product",
         "price change",
         "taxable",
         "intentional",
+        "manual price",
+        "ordered",
+        "requested",
+        "sent",
         "باز",
+        "در انتظار جمع‌آوری",
         "کالای جدید",
         "تغییر قیمت",
         "مشمول مالیات",
         "عمدی",
+        "قیمت دستی",
       ],
     ],
     [
@@ -177,12 +200,14 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "archived",
         "cleared",
         "stopped",
+        "written off",
         "پیش‌نویس",
         "لغوشده",
         "ردشده",
         "بایگانی‌شده",
         "پاک‌شده",
         "متوقف‌شده",
+        "سوخت‌شده",
       ],
     ],
     [
@@ -324,6 +349,10 @@ export function DataTable({
     hidden?: boolean;
   }[];
 }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
+  const [availableWidth, setAvailableWidth] = useState(0);
   const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
     Children.toArray(nodes).flatMap((node, index) =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment
@@ -389,6 +418,112 @@ export function DataTable({
     (total, column) => total + columnWeight(column),
     0,
   );
+  const columnId = (column: (typeof resolvedColumns)[number], index: number) =>
+    column.key ?? String(index);
+  const fixedActionWidth = visibleColumns.reduce(
+    (total, column, index) =>
+      total +
+      (column.actions
+        ? (actionWidths[columnId(column, index)] ?? columnWeight(column))
+        : 0),
+    0,
+  );
+  const flexibleWeight = visibleColumns.reduce(
+    (total, column) => total + (column.actions ? 0 : columnWeight(column)),
+    0,
+  );
+  // Reserve only the real action controls, including translated labels. Chromium
+  // ignores mixed percentage/pixel calc widths on table columns, so distribute
+  // the remaining measured space as plain pixel widths. Measure the wrapper,
+  // rather than the table's previous column widths, so shrinking can reflow.
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    const table = tableRef.current;
+    if (!wrapper || !table || !visibleColumns.length) return;
+    let active = true;
+    const measured = new Set<HTMLElement>();
+    const measure = () => {
+      if (!active) return;
+      const wrapperStyle = getComputedStyle(wrapper);
+      const wrapperInsets = [
+        wrapperStyle.borderInlineStartWidth,
+        wrapperStyle.borderInlineEndWidth,
+        wrapperStyle.paddingInlineStart,
+        wrapperStyle.paddingInlineEnd,
+      ].reduce((total, value) => total + (parseFloat(value) || 0), 0);
+      const minimumWidth = parseFloat(getComputedStyle(table).minWidth) || 0;
+      const width = Math.max(
+        0,
+        wrapper.getBoundingClientRect().width - wrapperInsets,
+        minimumWidth,
+      );
+      setAvailableWidth((previous) =>
+        Math.abs(previous - width) < 0.01 ? previous : width,
+      );
+      const next: Record<string, number> = {};
+      visibleColumns.forEach((column, index) => {
+        if (!column.actions) return;
+        let width = 40;
+        for (const row of Array.from(table.rows)) {
+          const cell = row.cells[index];
+          if (!cell || cell.colSpan > 1) continue;
+          const cellStyle = getComputedStyle(cell);
+          const padding =
+            parseFloat(cellStyle.paddingInlineStart || "0") +
+            parseFloat(cellStyle.paddingInlineEnd || "0");
+          if (cell.tagName === "TH") {
+            const range = document.createRange();
+            range.selectNodeContents(cell);
+            width = Math.max(
+              width,
+              (typeof range.getBoundingClientRect === "function"
+                ? range.getBoundingClientRect().width
+                : 0) + padding,
+            );
+            continue;
+          }
+          const group =
+            cell.querySelector<HTMLElement>(":scope > .actions") ?? cell;
+          const controls = Array.from(
+            group.querySelectorAll<HTMLElement>(
+              ":scope > .ui-button, :scope > .ui-menu-trigger",
+            ),
+          );
+          if (!controls.length) continue;
+          const gap = parseFloat(getComputedStyle(group).columnGap || "0") || 0;
+          const controlsWidth = controls.reduce(
+            (total, control) => total + control.getBoundingClientRect().width,
+            0,
+          );
+          width = Math.max(
+            width,
+            controlsWidth + gap * (controls.length - 1) + padding,
+          );
+          for (const control of controls) measured.add(control);
+        }
+        next[columnId(column, index)] = Math.ceil(width);
+      });
+      setActionWidths((previous) =>
+        Object.keys(next).length === Object.keys(previous).length &&
+        Object.entries(next).every(([key, value]) => previous[key] === value)
+          ? previous
+          : next,
+      );
+    };
+    measure();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    observer?.observe(wrapper);
+    observer?.observe(table);
+    for (const element of measured) observer?.observe(element);
+    void document.fonts?.ready.then(measure);
+    return () => {
+      active = false;
+      observer?.disconnect();
+    };
+  });
   const decorate = (nodes: ReactNode): ReactNode =>
     Children.map(nodes, (node) => {
       if (
@@ -445,17 +580,19 @@ export function DataTable({
     });
   return (
     <div
+      ref={wrapperRef}
       className={cn("table-wrap", "ui-data-table", className)}
       tabIndex={0}
       data-visible-column-count={visibleColumns.length}
       {...props}
     >
       <table
+        ref={tableRef}
         className="has-defined-columns"
         data-visible-column-count={visibleColumns.length}
         style={
           {
-            "--table-min-width": `${Math.ceil(totalWeight)}px`,
+            "--table-min-width": `${Math.ceil(flexibleWeight + fixedActionWidth || totalWeight)}px`,
           } as CSSProperties
         }
       >
@@ -463,10 +600,15 @@ export function DataTable({
           {visibleColumns.map((column, index) => (
             <col
               key={column.key ?? index}
+              data-action-column={column.actions || undefined}
               style={{
-                width: totalWeight
-                  ? `${(columnWeight(column) / totalWeight) * 100}%`
-                  : undefined,
+                width: column.actions
+                  ? `${actionWidths[columnId(column, index)] ?? columnWeight(column)}px`
+                  : flexibleWeight
+                    ? availableWidth
+                      ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
+                      : `${(columnWeight(column) / totalWeight) * 100}%`
+                    : undefined,
               }}
             />
           ))}
@@ -571,7 +713,7 @@ export function ColumnChooser({
           ))}
         </div>
         <div className="actions c3-dialog-actions">
-          <Button variant="quiet" onClick={onReset}>
+          <Button variant="secondary" onClick={onReset}>
             {t("Reset columns", "بازنشانی ستون‌ها")}
           </Button>
           <Button variant="secondary" onClick={() => setOpen(false)}>
@@ -1483,7 +1625,7 @@ export function DateField({
             </div>
             <div className="ui-calendar-footer">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 disabled={Boolean(
                   (min && dateValue(new Date()) < min) ||
@@ -1494,7 +1636,11 @@ export function DateField({
                 {t("Today", "امروز")}
               </Button>
               {value && (
-                <Button variant="ghost" size="sm" onClick={() => choose("")}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => choose("")}
+                >
                   {t("Clear", "پاک کردن")}
                 </Button>
               )}
@@ -1671,6 +1817,7 @@ export function IconButton({
       {...props}
       variant={props.variant ?? "secondary"}
       className={cn("ui-icon-button", className)}
+      data-control-kind="icon"
       title={title ?? props["aria-label"]}
     />
   );
@@ -1681,6 +1828,7 @@ export function Menu({
   label,
   icon,
   showChevron = true,
+  iconOnly = false,
   children,
   className,
   ...props
@@ -1688,6 +1836,7 @@ export function Menu({
   label: ReactNode;
   icon?: ReactNode;
   showChevron?: boolean;
+  iconOnly?: boolean;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -1719,7 +1868,12 @@ export function Menu({
         {...props}
         ref={triggerRef}
         type="button"
-        className={cn("ui-menu-trigger", className)}
+        className={cn(
+          "ui-button button button-secondary ui-menu-trigger",
+          { "ui-icon-button": iconOnly },
+          className,
+        )}
+        data-control-kind={iconOnly ? "icon" : "action"}
         aria-haspopup="menu"
         aria-expanded={popupOpen}
         aria-controls={menuId}
@@ -1732,8 +1886,12 @@ export function Menu({
         }}
       >
         {icon ?? null}
-        {label}
-        {showChevron && !icon && (
+        {iconOnly && typeof label === "string" ? (
+          <span className="sr-only">{label}</span>
+        ) : (
+          label
+        )}
+        {showChevron && !icon && !iconOnly && (
           <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
         )}
       </button>

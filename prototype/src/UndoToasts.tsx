@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useDemo } from "./store";
 import { historyActionLabel, historyErrorMessage } from "./history-copy";
 import type { UndoToast } from "./undo-queue";
+import { Button } from "./ui";
 import "./undo-toasts.css";
 
 function UndoToastItem({
@@ -40,7 +41,8 @@ function UndoToastItem({
       }}
     >
       <span>{historyActionLabel(toast.action, lang)}</span>
-      <button
+      <Button
+        variant="secondary"
         className="undo-toast-link"
         type="button"
         onClick={() => {
@@ -52,7 +54,7 @@ function UndoToastItem({
         }}
       >
         {t("Undo", "واگرد")}
-      </button>
+      </Button>
       {error && (
         <span className="undo-toast-error" role="alert">
           {error}

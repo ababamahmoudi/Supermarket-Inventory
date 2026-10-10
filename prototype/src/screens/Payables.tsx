@@ -124,13 +124,6 @@ export function Payables() {
       align: "end",
     },
     { key: "due", label: t("Next due date", "سررسید بعدی"), width: "15%" },
-    {
-      key: "actions",
-      label: t("Action", "عملیات"),
-      width: "10%",
-      align: "end",
-      actions: true,
-    },
   ]);
   const ledgerColumns = useTableColumns("payables.ledger", [
     { key: "date", label: t("Date", "تاریخ"), width: 124 },
@@ -417,14 +410,25 @@ export function Payables() {
               <th className="numeric">{t("Balance", "مانده")}</th>
               <th className="numeric">{t("Overdue", "سررسید گذشته")}</th>
               <th>{t("Next due date", "سررسید بعدی")}</th>
-              <th>{t("Action", "عملیات")}</th>
             </tr>
           </thead>
           <tbody>
             {overview.map((item) => (
               <tr key={item.supplier}>
                 <td>
-                  <LtrText>{item.supplier}</LtrText>
+                  <a
+                    href="#payables"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setSupplier(item.supplier);
+                      setPaymentOpen(false);
+                      setEntryOpen(false);
+                      setAllocations(null);
+                      setDisputeId(null);
+                    }}
+                  >
+                    <LtrText>{item.supplier}</LtrText>
+                  </a>
                 </td>
                 <td className="branch-label">
                   {configuredBranchLabel(state.config, branch, lang)}
@@ -444,26 +448,11 @@ export function Payables() {
                 <td>
                   <DateText value={item.next_due_date} />
                 </td>
-                <td>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setSupplier(item.supplier);
-                      setPaymentOpen(false);
-                      setEntryOpen(false);
-                      setAllocations(null);
-                      setDisputeId(null);
-                    }}
-                  >
-                    {t("View", "مشاهده")}
-                  </Button>
-                </td>
               </tr>
             ))}
             {overview.length === 0 && (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={5}>
                   <EmptyState>
                     {t(
                       "No suppliers match these filters. Clear filters to see all suppliers.",
@@ -1105,7 +1094,7 @@ export function Payables() {
                         </td>
                         <td className="no-print">
                           <Button
-                            variant="ghost"
+                            variant="secondary"
                             disabled={branch === "all"}
                             onClick={() => {
                               setDisputeId(row.id);

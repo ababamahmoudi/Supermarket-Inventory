@@ -916,7 +916,7 @@ export default function Orders() {
                                   {t("New item", "کالای جدید")}
                                 </Badge>
                                 <Button
-                                  variant="quiet"
+                                  variant="danger"
                                   onClick={() => {
                                     clearFieldError(
                                       "item",
@@ -1083,7 +1083,7 @@ export default function Orders() {
                 <Button onClick={() => save(true)}>
                   {t("Place order", "ثبت سفارش")}
                 </Button>
-                <Button variant="ghost" onClick={back}>
+                <Button variant="secondary" onClick={back}>
                   {t("Cancel", "انصراف")}
                 </Button>
               </div>
@@ -1119,7 +1119,7 @@ export default function Orders() {
                           </span>
                           {added ? (
                             <Button
-                              variant="ghost"
+                              variant="danger"
                               aria-label={t(
                                 "Remove note from order",
                                 "حذف یادداشت از سفارش",
@@ -1258,7 +1258,7 @@ export default function Orders() {
                   selected.status,
                 ) && (
                   <Button
-                    variant="ghost"
+                    variant="danger"
                     onClick={() => {
                       setCancelId(selected.id);
                       setReason("");

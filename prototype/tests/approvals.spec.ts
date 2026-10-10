@@ -165,7 +165,9 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
         .getByRole("cell")
         .filter({ has: page.getByText(product, { exact: true }) }),
     ).toBeVisible();
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "گروه‌های ترکیبی", exact: true }),

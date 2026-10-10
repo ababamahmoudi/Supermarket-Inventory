@@ -118,11 +118,31 @@ describe("V2 authentication and role-aware shell", () => {
       "Richmond Hill",
     );
     expect(document.querySelector("select")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "فارسی" }));
+    const toPersian = screen.getByRole("button", { name: "Switch to Persian" });
+    expect(toPersian).toHaveTextContent("فا");
+    expect(
+      screen.queryByRole("button", { name: "English" }),
+    ).not.toBeInTheDocument();
+    await user.click(toPersian);
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
     expect(screen.getByRole("navigation", { name: "صفحه‌ها" })).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "English" }));
+    const toEnglish = screen.getByRole("button", { name: "تغییر به انگلیسی" });
+    expect(toEnglish).toHaveTextContent("EN");
+    expect(
+      screen.queryByRole("button", { name: "Switch to Persian" }),
+    ).not.toBeInTheDocument();
+    await user.click(toEnglish);
     expect(document.documentElement).toHaveAttribute("dir", "ltr");
+  });
+  it("only offers a language switch when that target language is configured", () => {
+    const state = initialState();
+    state.config.company.ui_languages = ["en"];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    show();
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Switch to Persian" }),
+    ).not.toBeInTheDocument();
   });
   it("blocks every hash until the new employee saves a valid new password and persists it", async () => {
     const view = show();

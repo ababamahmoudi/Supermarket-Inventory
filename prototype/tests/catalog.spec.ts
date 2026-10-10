@@ -115,9 +115,7 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
     page.getByText("Page 1 of 1 · 2 products", { exact: true }),
   ).toBeVisible();
   const lavash = demoSeed.products.find((product) => product.code === "0006")!;
-  await page
-    .getByRole("button", { name: `View ${lavash.name_en}`, exact: true })
-    .click();
+  await page.getByRole("link", { name: lavash.name_en, exact: true }).click();
   await expect(
     page.getByRole("heading", { name: lavash.name_en, exact: true }),
   ).toBeVisible();

@@ -66,7 +66,7 @@ List uses Columns/Reset columns and retained tab/filter/scroll state. Every deta
 
 ### Products
 
-One-line toolbar: search pill, compact filters (pricing category, AI category, status, supplier, has pending price, has offer, **Manual prices**), **Clear filters**, result count. Table headers share the body column widths, padding and logical alignment. **View** opens the product's own page with breadcrumb **Products / [name]** and a Back link; no detail panel below the list.
+One-line toolbar: search pill, compact filters (pricing category, AI category, status, supplier, has pending price, has offer, **Manual prices**), **Clear filters**, result count and Columns. Click product name/row to open its page and Back link; no duplicate View or detail panel below the list. Supervisor Edit remains; **⋯ → Add date** opens the quick-add page preselected. Weight Unit size reads **Sold by weight**, with approved price first and converted price smaller below without a leading dot.
 
 Product page: current-language name primary, other-language name directly below and muted; readable details using available page width, with related values grouped. Show names EN/FA, description, unit size, Product Code (read-only), category, tax profile, barcodes, approved/pending/branch prices, supplier products (SKU, pack size, last cost, role restrictions), offer, **Last received** per location and recorded changes. No stock estimate. Supervisor sees **Store cost**, **Margin %** in the list and cost history on the product page; staff prices retain the **Manual price** pill and rule/manual pair, with margin hidden from Worker/Cashier. New products created from invoices appear as **Pending approval**.
 
@@ -88,9 +88,9 @@ Same-supplier lower price: item, supplier, old/new cost, worker's answers (same 
 
 ### Offers
 
-Top-right Primary **Create offer** opens the create dialog; remove permanent bottom form. Current offers columns Offer/Scope/Action have compact shared alignment, end-aligned equal-width action buttons. Stop offer is Danger.
+Top-right Primary **Create offer** opens the dialog. Round **Current offers / Past offers** tabs: Current active/scheduled only, one row per product grouping permitted scopes; Past stopped/ended newest first. Repeated identical submissions reuse the current offer. Stop offer is compact Danger, 12 px/40 px; rare scope actions use ⋯. Suggestions and mix-and-match remain.
 
-List of active offers with product, price, offer, mix-and-match pool, start/end (optional), created by; **Stop**. "To confirm" tab with AI suggestions: **Confirm** (toggle: join mix-and-match) / **Dismiss**. Pool view: all products in "2 for $5", etc. Toolbar: search pill and compact filters for status, category, supplier, branch, offer type, **Clear filters**, result count; all combine within role scope.
+Current offers contains active/scheduled product rows with product, price, offer, mix-and-match pool, start/end (optional), created by; **Stop**. A **To confirm** section retains simulated suggestions: **Confirm** (toggle: join mix-and-match) / **Dismiss**. **Mix-and-match pools** remains a separate tab, showing all products in "2 for $5", etc. **Past offers** retains stopped/ended versions. Toolbar: search pill and compact filters for status, category, supplier, branch, offer type, **Clear filters**, result count; all combine within role scope.
 
 ### Labels
 
@@ -108,7 +108,7 @@ Detail: Back to Returns and clickable breadcrumb; created date/employee, status,
 
 ### Expiry (Date tracking)
 
-Table: product, location, date, type, days left, source/supplier/invoice and actions, with Columns/Reset columns. Search and expiring-soon/expired/AI-category/location/**Removed** filters. Dates use Inter/tabular numerals. **Add date** dialog searches product and chooses allowed location, type, date, optional quantity/lot/note. **Remove** dialog requires Sold out/Thrown away/Returned to supplier/Entered by mistake and offers Undo; removed records remain visible under Removed. Supervisor **Stop tracking this product** sets product No and asks whether to remove existing dates. Product Lookup/Products actions include Add date and next scoped date with warning pill. No stock estimate or implied physical/money event.
+Top quick-add bar: scan/name/code/barcode product, date, current allowed concrete location, Add; Enter submits, clears/refocuses product and pins/highlights new entry with Undo. More reveals Expiry(default)/Best before, Quantity/Lot/Note. Filter row holds search/status/category/location/sort/Clear filters/count/Columns. Row actions are compact Remove plus circular ⋯ with Supervisor Stop tracking. Keep Remove reason/history/Undo and explicit Stop tracking remove-existing choice. Lookup shows Dates with Supervisor/Worker On/Off, current-location open dates and inline date/Add; Add while Off enables with a message and one Undo. Products ⋯ Add date preselects quick entry. No stock or money inference.
 
 ### Notes
 
@@ -116,13 +116,13 @@ Tabs for each notebook the user can read: built-in (**To order · Store use · F
 
 ### Received
 
-Delivery-log table: **Product · Cases and units · Location · Supplier · Invoice number · Date · Received by**. Search pill plus date-range, location, supplier and product filters. Supervisor can see All branches; workers see assigned locations. Refused quantities, drafts and uninvoiced order-only shortages are excluded. Corrections show effective location with original invoice/history links. Invoice numbers use visible Secondary pill buttons. Retained packs display **2 cases (24 units)** when known. No stock total. Dashboard **Arrived this week** and product **Last received** use this same source.
+Delivery-log table: **Product · Cases and units · Location · Supplier · Invoice number · Date · Received by**. Search pill plus date-range, location, supplier and product filters. Supervisor can see All branches; workers see assigned locations. Refused quantities, drafts and uninvoiced order-only shortages are excluded. Corrections show effective location with original invoice/history links. Invoice numbers use visible Secondary rounded-rectangle actions. Retained packs display **2 cases (24 units)** when known. No stock total. Dashboard **Arrived this week** and product **Last received** use this same source.
 
 ### Suppliers
 
 Defined in `requirements.md` §21.
 
-- **Compact default table:** Supplier · Status · Last delivery · Deliveries · Open returns · Open shorts · Balance · Overdue · Actions (nine columns for Supervisor; worker excludes money). Payment terms, Sales rep/phone and Next due date start hidden but are available through permitted Columns choices/details; additional columns must wrap/group within desktop width, never horizontally clip.
+- **Compact default table:** Supplier · Status · Last delivery · Deliveries · Open returns · Open shorts · Balance · Overdue (eight columns for Supervisor; six for Worker; clickable names replace View). Payment terms, Sales rep/phone and Next due date start hidden but are available through permitted Columns choices/details; additional columns must wrap/group within desktop width, never horizontally clip.
 - **Available overview columns:** supplier · status pill (Confirmed / Proposed) · last delivery · **Deliveries** (this month) · open returns · open shorts · payment terms · sales rep and phone; **Supervisor only:** balance · overdue · next due date. Toolbar: search, branch pill, filter chips (Overdue, Open returns, Open shorts, Waiting for confirmation). Row click opens the supplier page.
 - **Supplier page:** header with name, status, contact, sales rep, payment terms, and four KPI cards (Last delivery · Deliveries this month · Open returns · **Balance** for Supervisor, Open shorts for Floor Worker). Tabs: Overview · Invoices · Supplier items · Received · Returns and credits · Shorts · Price alerts · Payments (Supervisor only) · Notes.
 - **Add supplier (B, item 44):** primary top-right action on the overview for Supervisor only; opens a max-720 px form with name, phone, email, sales rep and their phone, payment terms, optional address/notes, and optional opening balance per allowed branch plus an **as of** date. Before saving, warn about a similar existing name and link to that supplier. Supervisor save is Confirmed immediately; entered balances appear as **Opening balance** ledger rows in Payables.
@@ -173,7 +173,7 @@ Desktop/large store monitor is the primary target; short windows up to 1020px he
 
 ## C3 shared list and detail behavior
 
-Four button variants (Primary solid blue/white; Secondary reference glowing blue-border pill; Quiet text/icon; Danger stop/cancel) apply on every page/theme/role. Unselected segmented choices remain visible in dark. Labels/Notes/Suppliers/Returns use one icon-inside search pill, min320 px desktop/44 px height/full phone width. All listed tables align text/start, numbers/end and equal actions at inline end; no Products Edit overlap. Sidebar icons are unique: receipt Invoices/truck Received/cart Orders/check-badge Approvals.
+Four button variants (Primary solid blue/white; Secondary glowing blue-border rectangle; Quiet only Back/Clear filters; Danger red-border/red-glow stop/cancel) apply on every page/theme/role. Unselected segmented choices remain visible in dark. Labels/Notes/Suppliers/Returns use one icon-inside search pill, min320 px desktop/44 px height/full phone width. All listed tables align text/start, numbers/end and equal actions at inline end; no Products Edit overlap. Sidebar icons are unique: receipt Invoices/truck Received/cart Orders/check-badge Approvals.
 
 Products, Suppliers, Received, Invoices, Orders, Payables, Returns and Date tracking expose Columns/Reset columns. Name/reference column is mandatory, role-private columns excluded, per-company/user/table choices persist. All invoice/return/order/supplier/request details have Back links; every breadcrumb segment is actionable; browser Back restores list tab/filter/scroll. Every field's validation clears when that field changes and remains next to it, with unrelated errors retained.
 

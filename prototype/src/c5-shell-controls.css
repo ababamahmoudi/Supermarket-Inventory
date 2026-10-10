@@ -1,0 +1,141 @@
+/* One visible border per field; cards remain borderless. */
+:root .ui-input,
+:root input.ui-input[type="text"],
+:root .field input:not([type="file"]),
+:root .field textarea,
+:root .password-field input,
+:root .ui-select-search input {
+  border: 1px solid var(--secondary-border);
+}
+:root .ui-input:focus-visible,
+:root .field input:focus-visible,
+:root .field textarea:focus-visible,
+:root .password-field input:focus-visible,
+:root .ui-select-search input:focus-visible {
+  outline: 2px solid var(--secondary-border);
+  outline-offset: 2px;
+  box-shadow: 0 2px 12px var(--secondary-glow-hover);
+}
+:root .ui-select {
+  box-shadow: 0 2px 12px var(--secondary-glow);
+}
+:root .ui-input[aria-invalid="true"],
+:root .field input[aria-invalid="true"],
+:root .field textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+:root .filter-search-pill,
+:root .lookup-search-pill {
+  border: 1px solid var(--secondary-border);
+}
+:root .filter-toolbar .filter-search-pill input,
+:root .filter-toolbar .filter-search-pill input.ui-input,
+:root .lookup-page .lookup-search-pill input.lookup-search {
+  border: 0;
+  box-shadow: none;
+}
+
+/* Forty-pixel shell controls share the same resting blue border and glow. */
+:root .topbar > .ui-button,
+:root .topbar > .ui-menu-trigger,
+:root .topbar > .ui-select,
+:root .topbar > .branch-pill.static,
+:root .topbar > .topbar-search {
+  block-size: 40px;
+  min-block-size: 40px;
+  max-block-size: 40px;
+  border: 1px solid var(--secondary-border);
+  background: var(--secondary-fill);
+  color: var(--secondary-text);
+  box-shadow: 0 2px 12px var(--secondary-glow);
+}
+:root .topbar > .ui-icon-button,
+:root .topbar > .notifications-menu {
+  inline-size: 40px;
+  min-inline-size: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+:root .topbar > .branch-pill,
+:root .topbar > .topbar-search {
+  border-radius: 999px;
+}
+:root .topbar > .branch-pill.static {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+}
+:root .topbar > .ui-select.branch-pill {
+  padding-block: 0;
+}
+:root .topbar-search input:not([type="checkbox"]):not([type="radio"]) {
+  block-size: 38px;
+  min-block-size: 38px;
+  max-block-size: 38px;
+  padding-block: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+:root .topbar-search:focus-within {
+  outline: 2px solid var(--secondary-border);
+  outline-offset: 2px;
+  box-shadow: 0 3px 18px var(--secondary-glow-hover);
+}
+:root .language-toggle {
+  inline-size: 40px;
+  min-inline-size: 40px;
+  padding: 0;
+  font-family: Inter, Vazirmatn, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+:root .language-toggle[lang="fa"] {
+  font-family: Vazirmatn, Inter, sans-serif;
+  font-size: 1rem;
+}
+:root .sidebar .user-menu.ui-button.button {
+  inline-size: 100%;
+  block-size: 40px;
+  min-block-size: 40px;
+  border: 1px solid var(--secondary-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--secondary-glow);
+}
+:root .sidebar .user-chip {
+  padding: 0 8px;
+}
+:root .sidebar .user-chip-copy {
+  line-height: 1.2;
+}
+:root .sidebar .user-chip-copy small {
+  font-size: 0.6875rem;
+}
+
+/* Authentication uses the same actual actions as the operational screens. */
+:root .signin-card .signin-submit {
+  block-size: 40px;
+  min-block-size: 40px;
+  inline-size: fit-content;
+  justify-self: start;
+}
+:root .password-toggle.ui-icon-button {
+  inset-block-start: 2px;
+  inset-inline-end: 2px;
+  inline-size: 40px;
+  block-size: 40px;
+}
+:root .password-field input {
+  padding-inline-end: 52px;
+}
+:root .recent-user.ui-button {
+  border-radius: 12px;
+  padding-inline: 8px;
+}
+
+/* Disclosure and sorting widgets retain their deliberate understated style. */
+:root .nav-group-toggle.ui-button.button[data-control-kind="widget"] {
+  inline-size: 100%;
+}

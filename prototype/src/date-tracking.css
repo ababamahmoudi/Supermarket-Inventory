@@ -49,11 +49,205 @@
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+.date-quick-card {
+  margin-block: 24px;
+}
+.date-quick-add {
+  min-inline-size: 0;
+}
+.date-quick-main {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 360px) 168px minmax(160px, 200px)
+    max-content;
+  align-items: end;
+  gap: 20px;
+  max-inline-size: 980px;
+}
+.date-quick-main .field,
+.date-quick-more .field {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.date-quick-main .ui-input,
+.date-quick-more .ui-input {
+  max-inline-size: 100%;
+}
+.date-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-block-end: 2px;
+}
+.date-product-picker {
+  position: relative;
+  min-inline-size: 0;
+}
+.date-product-picker input.ui-input.date-product-input {
+  padding-inline-start: 40px;
+}
+.date-product-search-icon {
+  position: absolute;
+  inset-inline-start: 14px;
+  inset-block-start: 37px;
+  pointer-events: none;
+  color: var(--text-muted);
+}
+.date-product-options {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 100%;
+  z-index: 60;
+  inline-size: 100%;
+  max-block-size: 320px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--secondary-border);
+  border-radius: 12px;
+  padding: 8px;
+}
+.date-product-options p {
+  padding: 8px;
+}
+.date-product-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  inline-size: 100%;
+  min-block-size: 40px;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px;
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+}
+.date-product-option[aria-selected="true"],
+.date-product-option:hover {
+  background: var(--nav-active);
+}
+.date-quick-more {
+  display: grid;
+  grid-template-columns: 168px 160px minmax(160px, 240px);
+  align-items: start;
+  gap: 20px;
+  max-inline-size: 650px;
+  margin-block-start: 24px;
+}
+.date-quick-note {
+  grid-column: 1 / -1;
+  max-inline-size: 560px !important;
+}
+.date-quick-feedback {
+  margin-block-start: 16px;
+  font-size: 13px;
+  color: var(--text);
+}
+.date-filter-result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.date-tracking-page tr[data-new-date="true"] td,
+.product-open-dates li[data-new-date="true"] {
+  background: var(--accent-soft);
+}
+.date-stop-menu-item {
+  color: var(--danger);
+}
+.product-dates-section {
+  margin-block: 24px;
+  min-inline-size: 0;
+}
+.product-dates-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 16px;
+}
+.product-dates-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.product-dates-header p {
+  margin-block-start: 4px;
+  font-size: 13px;
+}
+.product-open-dates {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+.product-open-dates li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px;
+  border-radius: 12px;
+}
+.product-date-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+.product-no-dates {
+  margin-block-end: 16px;
+  font-size: 13px;
+}
+.date-quick-add-inline .date-quick-main {
+  grid-template-columns: 168px max-content;
+  justify-content: start;
+  max-inline-size: 360px;
+}
+@media (max-width: 1180px) {
+  .date-quick-main {
+    grid-template-columns: minmax(240px, 360px) 168px;
+    justify-content: start;
+  }
+  .date-quick-main > .field {
+    max-inline-size: 200px;
+  }
+}
 @media (max-width: 600px) {
   .date-form-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .date-form-grid .field {
     max-inline-size: 100%;
+  }
+  .date-quick-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px 12px;
+  }
+  .date-product-picker,
+  .date-quick-actions {
+    grid-column: 1 / -1;
+  }
+  .date-quick-main > .field {
+    max-inline-size: 100%;
+  }
+  .date-quick-main .date-quick-date .ui-date {
+    padding-inline: 10px;
+  }
+  .date-quick-more {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px 12px;
+  }
+  .date-quick-more > .field:nth-child(3) {
+    grid-column: 1 / -1;
+    max-inline-size: 240px;
+  }
+  .date-quick-add-inline .date-quick-main {
+    grid-template-columns: minmax(140px, 168px) max-content;
+    justify-content: start;
+  }
+  .date-quick-add-inline .date-quick-actions {
+    grid-column: auto;
   }
 }

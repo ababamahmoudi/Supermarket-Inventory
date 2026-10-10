@@ -226,7 +226,9 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
 }) => {
   await signInWorker(page);
   await upload(page);
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "بررسی ردیف‌های فاکتور", exact: true }),

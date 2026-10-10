@@ -123,6 +123,11 @@ const activityCopy: Record<string, [string, string]> = {
   "Create offer": ["Create offer", "ایجاد پیشنهاد ویژه"],
   Dismiss: ["Dismiss", "نادیده گرفتن"],
   "Stop offer": ["Stop offer", "توقف پیشنهاد ویژه"],
+  "Turn on date tracking": ["Turn on date tracking", "روشن کردن پیگیری تاریخ"],
+  "Turn off date tracking": [
+    "Turn off date tracking",
+    "خاموش کردن پیگیری تاریخ",
+  ],
   "Keep as pending": ["Keep as pending", "نگه داشتن در انتظار"],
   "Mark as taken care of": [
     "Mark as taken care of",

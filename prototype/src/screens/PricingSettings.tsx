@@ -338,7 +338,15 @@ export default function PricingSettings() {
         </div>
         <DataTable
           className="settings-pricing-table"
-          columns={[{}, {}, {}, {}, {}, {}, { width: 180, actions: true }]}
+          columns={[
+            { width: 210 },
+            { width: 120 },
+            { width: 135 },
+            { width: 180 },
+            { width: 75 },
+            { width: 90 },
+            { width: 180, actions: true },
+          ]}
         >
           <thead>
             <tr>
@@ -443,7 +451,7 @@ export default function PricingSettings() {
                     {t("Edit", "ویرایش")}
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={category.archived ? "secondary" : "danger"}
                     size="sm"
                     onClick={() =>
                       setDraft((previous) => ({
