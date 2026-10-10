@@ -1,0 +1,3760 @@
+{
+  "generatedAt": "2026-10-10T17:25:55.922Z",
+  "sourceCommit": "f96d36944bc72e16b09d8a7d25cc964d584dce23",
+  "method": "Fresh browser profiles, approved seed and real interface actions; no fabricated business records or screenshot editing. Production HTML/JavaScript/CSS SHA-256 checks before and after every image. Fonts and theme transitions settle before geometry. All real controls measured; semantic widgets identified separately.",
+  "baseURL": "http://127.0.0.1:5274",
+  "expectedCount": 60,
+  "productionBuilds": [
+    {
+      "scene": "topbar",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-dark",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-dark",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "fa-light",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "fa-light",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "topbar",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "products-weight",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "alerts",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "returns-list",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-detail",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "return-policy",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-current",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "offers-past",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "phone",
+      "phase": "before",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "phone",
+      "phase": "after",
+      "htmlSHA256": "3ec54e05f690f59b1dd4b806cfbd104ef2f7b721c4eb1d12564151f0673a67a3",
+      "assets": [
+        {
+          "path": "./assets/index-CBfkS_Jo.js",
+          "SHA256": "1f030c3a77fb7b1740970a58220480af7659ae80d88eff7948427bdf0000fdca"
+        },
+        {
+          "path": "./assets/index-DfyHYqHP.css",
+          "SHA256": "7a2181512747718a5154ae308ee140ef2c7b5b3297cdd468761d09130162d47e"
+        }
+      ],
+      "fingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9"
+    }
+  ],
+  "screens": [
+    {
+      "scene": "topbar",
+      "variant": "en-light",
+      "filename": "topbar-en-light.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          },
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#dashboard",
+      "fixtureEvidence": "North York\nDashboard\n/\nNorth York\nفا\nAa\n5\nDemo",
+      "layoutFindings": [],
+      "measuredButtons": 40
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-light",
+      "filename": "invoices-list-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table invoice-posted-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices",
+      "fixtureEvidence": "Posted invoices\nColumns\nInvoice\tSupplier\tBranch\tDate\tStatus\n\nGG-11794\n\tGolden Grain Distributors\tNorth York\t2026-08-19\t\nPosted\n\nFV-20296\n\tFresh Valley Foods\tNorth York\t2026-09-16\t\nPosted\n\nSB-7848\n\tSunrise Beverages\tNorth York\t2026-09-30\t\nPosted\n\nGG-11842\n\tGolden Grain Distributors\tNorth York\t2026-09-05\t\nPosted\n\nHW-4936\n\tHomeWare Imports\tNorth York\t2026-09-19\t\nPosted\n\nSB-7862\n\tSunrise Beverages\tNorth York\t2026-10-01\t\nPosted\n\nGG-11879\n\tGolden Grain Distributors\tNorth York\t2026-10-05\t\nPosted\n\nFV-20390\n\tFresh Valley Foods\tNorth York\t2026-10-09\t\nPosted",
+      "layoutFindings": [],
+      "measuredButtons": 24
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-light",
+      "filename": "products-weight-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table catalog-products-table with-store-cost",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#products",
+      "fixtureEvidence": "Product ↑\tProduct Code\tStore cost\tMargin %\tApproved price\tStatus and offer\tDetails\nBulk Almonds\n\nبادام فله\n\nSold by weight\n\n\t0016\t\n$4.99\n/lb\t33.38%\t\n$7.49/lb\n$16.51/kg\n\t\nApproved\n\t\nEdit",
+      "layoutFindings": [],
+      "measuredButtons": 25
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-light",
+      "filename": "alerts-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#alerts",
+      "fixtureEvidence": "Alerts\n\nLower supplier costs and branch price differences need a clear decision.\n\nShow resolved and intentional alerts\nCross-branch price conflict\nBlack Tea 450 g\nچای سیاه ۴۵۰ گرمی\nConflict\n\nAll branches\n\nBranch\tApproved selling price\tAction\nNorth York\t$6.49\tApply this price to all\nRichmond Hill\t$6.99\tApply this price to all\n\nIntentional differences stay quiet until an approved branch price changes.\n\nMark as intentional",
+      "layoutFindings": [],
+      "measuredButtons": 12
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-light",
+      "filename": "returns-list-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table returns-overview-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#returns",
+      "fixtureEvidence": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-09\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-06\t2\t\nWaiting for credit\tRecord resolution",
+      "layoutFindings": [],
+      "measuredButtons": 17
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-light",
+      "filename": "return-detail-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return #1\nWaiting for pickup\n\ncreated 2026-10-09 by Demo Floor Worker · Fresh Valley Foods · North York\n\nReturn policy\nRecord pickup",
+      "layoutFindings": [],
+      "measuredButtons": 11
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-light",
+      "filename": "return-policy-en-light.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return policy\nKeep the signed pickup slip and record only what actually happened.\nCount and separate\n\nCount originals, record their condition and location, and keep damaged goods off the sales floor.\n\nConfirm pickup\n\nConfirm actual quantities with the representative and obtain a signed paper slip before handing over goods.\n\nKeep signed evidence\n\nKeep the signed original and its reference; pickup does not require a new invoice.\n\nRecord the outcome\n\nWorkers submit claims and evidence, Supervisors verify and post money, and replacements record actual receipts.\n\nCancel safely\n\nCancellation never restores supplier-held or unsafe goods or automatically reverses compensation.\n\nDownload full policy\nClose",
+      "layoutFindings": [],
+      "measuredButtons": 13
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-light",
+      "filename": "date-quick-add-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table expiry-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#expiry",
+      "fixtureEvidence": "Product\nDate\n2026-10-10\nLocation\nNorth York\nMore\nAdd\nType\nExpiry\nQuantity (optional)\nLot (optional)\nNote (optional)",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-light",
+      "filename": "lookup-dates-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#lookup",
+      "fixtureEvidence": "Dates\n\nNorth York\n\nOff\n\nNo open dates in this location.\n\nDate\n2026-10-10\nAdd",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-light",
+      "filename": "offers-current-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\tAction\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nDried Red Kidney Beans 900 g\nلوبیا قرمز ۹۰۰ گرمی\n\t\n2 for $7\n$3.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-light",
+      "filename": "offers-past-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table past-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nStopped",
+      "layoutFindings": [],
+      "measuredButtons": 19
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-light",
+      "filename": "posted-invoice-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Back to Invoices\nInvoices\n\nDeliveries and supplier invoices\n\nNew invoice\nDrafts\nProcessing\nNeeds review\nReady to post\nPosted\nCancelled\nFV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-09\nReceived at\n2026-10-09 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-23\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.98\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.20\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.55\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.95\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 case (6 units)\n\nDelivered quantity: 6\n\n\t$3.40\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.60\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22\nOriginal invoice\n\nfictional-fv-20390.svg\n\n57%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-light",
+      "filename": "original-whole-page-en-light.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Original invoice\n\nfictional-fv-20390.svg\n\n57%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-light",
+      "filename": "correct-invoice-en-light.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\nLine 1 ·\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\nProduct\n0002 · Canned Fava Beans 400 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 2 ·\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\nProduct\n0005 · Ground Sumac 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 3 ·\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\nProduct\n0006 · Lavash Bread 500 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 4 ·\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\nProduct\n0003 · Sour Cherry Juice 1 L\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 5 ·\nDried Barberries 100 g\nزرشک خشک 100 گرمی\nProduct\n0015 · Dried Barberries 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 6 ·\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\nProduct\n0009 · Potato Chips 150 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nReason (required)\nCancel\nPreview correction",
+      "layoutFindings": [],
+      "measuredButtons": 60
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-light",
+      "filename": "approvals-tabs-en-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#approvals",
+      "fixtureEvidence": "Approvals\n\nReview new products and prices. Pending prices never replace approved prices.\n\nPending\nApproved\nRejected\nSuperseded\nLavash Bread 500 g\n\nنان لواش ۵۰۰ گرمی\n\nPending\nPrice change\nNorth York · Product Code 0006\nOld price\n$1.99\nNew price\n$2.99\nUnit cost\n$1.55\nMargin\n48.16%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove price\nReject\nDried Barberries 100 g\n\nزرشک خشک 100 گرمی\n\nPending\nNew product\nNorth York · Product Code 0015\nOld price\nNo approved price yet\nNew price\n$5.49\nUnit cost\n$3.40\nMargin\n38.07%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove product\nReject",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "topbar",
+      "variant": "en-dark",
+      "filename": "topbar-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          },
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#dashboard",
+      "fixtureEvidence": "North York\nDashboard\n/\nNorth York\nفا\nAa\n5\nDemo",
+      "layoutFindings": [],
+      "measuredButtons": 40
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "en-dark",
+      "filename": "invoices-list-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table invoice-posted-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices",
+      "fixtureEvidence": "Posted invoices\nColumns\nInvoice\tSupplier\tBranch\tDate\tStatus\n\nGG-11794\n\tGolden Grain Distributors\tNorth York\t2026-08-19\t\nPosted\n\nFV-20296\n\tFresh Valley Foods\tNorth York\t2026-09-16\t\nPosted\n\nSB-7848\n\tSunrise Beverages\tNorth York\t2026-09-30\t\nPosted\n\nGG-11842\n\tGolden Grain Distributors\tNorth York\t2026-09-05\t\nPosted\n\nHW-4936\n\tHomeWare Imports\tNorth York\t2026-09-19\t\nPosted\n\nSB-7862\n\tSunrise Beverages\tNorth York\t2026-10-01\t\nPosted\n\nGG-11879\n\tGolden Grain Distributors\tNorth York\t2026-10-05\t\nPosted\n\nFV-20390\n\tFresh Valley Foods\tNorth York\t2026-10-09\t\nPosted",
+      "layoutFindings": [],
+      "measuredButtons": 24
+    },
+    {
+      "scene": "products-weight",
+      "variant": "en-dark",
+      "filename": "products-weight-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table catalog-products-table with-store-cost",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#products",
+      "fixtureEvidence": "Product ↑\tProduct Code\tStore cost\tMargin %\tApproved price\tStatus and offer\tDetails\nBulk Almonds\n\nبادام فله\n\nSold by weight\n\n\t0016\t\n$4.99\n/lb\t33.38%\t\n$7.49/lb\n$16.51/kg\n\t\nApproved\n\t\nEdit",
+      "layoutFindings": [],
+      "measuredButtons": 25
+    },
+    {
+      "scene": "alerts",
+      "variant": "en-dark",
+      "filename": "alerts-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#alerts",
+      "fixtureEvidence": "Alerts\n\nLower supplier costs and branch price differences need a clear decision.\n\nShow resolved and intentional alerts\nCross-branch price conflict\nBlack Tea 450 g\nچای سیاه ۴۵۰ گرمی\nConflict\n\nAll branches\n\nBranch\tApproved selling price\tAction\nNorth York\t$6.49\tApply this price to all\nRichmond Hill\t$6.99\tApply this price to all\n\nIntentional differences stay quiet until an approved branch price changes.\n\nMark as intentional",
+      "layoutFindings": [],
+      "measuredButtons": 12
+    },
+    {
+      "scene": "returns-list",
+      "variant": "en-dark",
+      "filename": "returns-list-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table returns-overview-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#returns",
+      "fixtureEvidence": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-09\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-06\t2\t\nWaiting for credit\tRecord resolution",
+      "layoutFindings": [],
+      "measuredButtons": 17
+    },
+    {
+      "scene": "return-detail",
+      "variant": "en-dark",
+      "filename": "return-detail-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return #1\nWaiting for pickup\n\ncreated 2026-10-09 by Demo Floor Worker · Fresh Valley Foods · North York\n\nReturn policy\nRecord pickup",
+      "layoutFindings": [],
+      "measuredButtons": 11
+    },
+    {
+      "scene": "return-policy",
+      "variant": "en-dark",
+      "filename": "return-policy-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return policy\nKeep the signed pickup slip and record only what actually happened.\nCount and separate\n\nCount originals, record their condition and location, and keep damaged goods off the sales floor.\n\nConfirm pickup\n\nConfirm actual quantities with the representative and obtain a signed paper slip before handing over goods.\n\nKeep signed evidence\n\nKeep the signed original and its reference; pickup does not require a new invoice.\n\nRecord the outcome\n\nWorkers submit claims and evidence, Supervisors verify and post money, and replacements record actual receipts.\n\nCancel safely\n\nCancellation never restores supplier-held or unsafe goods or automatically reverses compensation.\n\nDownload full policy\nClose",
+      "layoutFindings": [],
+      "measuredButtons": 13
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "en-dark",
+      "filename": "date-quick-add-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table expiry-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#expiry",
+      "fixtureEvidence": "Product\nDate\n2026-10-10\nLocation\nNorth York\nMore\nAdd\nType\nExpiry\nQuantity (optional)\nLot (optional)\nNote (optional)",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "en-dark",
+      "filename": "lookup-dates-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#lookup",
+      "fixtureEvidence": "Dates\n\nNorth York\n\nOff\n\nNo open dates in this location.\n\nDate\n2026-10-10\nAdd",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "offers-current",
+      "variant": "en-dark",
+      "filename": "offers-current-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\tAction\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nDried Red Kidney Beans 900 g\nلوبیا قرمز ۹۰۰ گرمی\n\t\n2 for $7\n$3.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "offers-past",
+      "variant": "en-dark",
+      "filename": "offers-past-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table past-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nStopped",
+      "layoutFindings": [],
+      "measuredButtons": 19
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "en-dark",
+      "filename": "posted-invoice-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Back to Invoices\nInvoices\n\nDeliveries and supplier invoices\n\nNew invoice\nDrafts\nProcessing\nNeeds review\nReady to post\nPosted\nCancelled\nFV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-09\nReceived at\n2026-10-09 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-23\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.98\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.20\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.55\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.95\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 case (6 units)\n\nDelivered quantity: 6\n\n\t$3.40\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.60\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22\nOriginal invoice\n\nfictional-fv-20390.svg\n\n57%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "en-dark",
+      "filename": "original-whole-page-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Original invoice\n\nfictional-fv-20390.svg\n\n57%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "en-dark",
+      "filename": "correct-invoice-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\nLine 1 ·\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\nProduct\n0002 · Canned Fava Beans 400 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 2 ·\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\nProduct\n0005 · Ground Sumac 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 3 ·\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\nProduct\n0006 · Lavash Bread 500 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 4 ·\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\nProduct\n0003 · Sour Cherry Juice 1 L\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 5 ·\nDried Barberries 100 g\nزرشک خشک 100 گرمی\nProduct\n0015 · Dried Barberries 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 6 ·\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\nProduct\n0009 · Potato Chips 150 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nReason (required)\nCancel\nPreview correction",
+      "layoutFindings": [],
+      "measuredButtons": 60
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "en-dark",
+      "filename": "approvals-tabs-en-dark.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#approvals",
+      "fixtureEvidence": "Approvals\n\nReview new products and prices. Pending prices never replace approved prices.\n\nPending\nApproved\nRejected\nSuperseded\nLavash Bread 500 g\n\nنان لواش ۵۰۰ گرمی\n\nPending\nPrice change\nNorth York · Product Code 0006\nOld price\n$1.99\nNew price\n$2.99\nUnit cost\n$1.55\nMargin\n48.16%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove price\nReject\nDried Barberries 100 g\n\nزرشک خشک 100 گرمی\n\nPending\nNew product\nNorth York · Product Code 0015\nOld price\nNo approved price yet\nNew price\n$5.49\nUnit cost\n$3.40\nMargin\n38.07%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove product\nReject",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "topbar",
+      "variant": "fa-light",
+      "filename": "topbar-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          },
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#dashboard",
+      "fixtureEvidence": "نورث یورک\nداشبورد\n/\nنورث یورک\nEN\nAa\n5\nدمو",
+      "layoutFindings": [],
+      "measuredButtons": 40
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "fa-light",
+      "filename": "invoices-list-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table invoice-posted-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices",
+      "fixtureEvidence": "فاکتورهای ثبت‌شده\nستون‌ها\nفاکتور\tتأمین‌کننده\tشعبه\tتاریخ\tوضعیت\n\nGG-11794\n\tGolden Grain Distributors\tنورث یورک\t2026-08-19\t\nثبت‌شده\n\nFV-20296\n\tFresh Valley Foods\tنورث یورک\t2026-09-16\t\nثبت‌شده\n\nSB-7848\n\tSunrise Beverages\tنورث یورک\t2026-09-30\t\nثبت‌شده\n\nGG-11842\n\tGolden Grain Distributors\tنورث یورک\t2026-09-05\t\nثبت‌شده\n\nHW-4936\n\tHomeWare Imports\tنورث یورک\t2026-09-19\t\nثبت‌شده\n\nSB-7862\n\tSunrise Beverages\tنورث یورک\t2026-10-01\t\nثبت‌شده\n\nGG-11879\n\tGolden Grain Distributors\tنورث یورک\t2026-10-05\t\nثبت‌شده\n\nFV-20390\n\tFresh Valley Foods\tنورث یورک\t2026-10-09\t\nثبت‌شده",
+      "layoutFindings": [],
+      "measuredButtons": 24
+    },
+    {
+      "scene": "products-weight",
+      "variant": "fa-light",
+      "filename": "products-weight-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table catalog-products-table with-store-cost",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#products",
+      "fixtureEvidence": "محصول ↑\tکد محصول\tهزینهٔ فروشگاه\tحاشیه سود %\tقیمت تأییدشده\tوضعیت و پیشنهاد\tجزئیات\nبادام فله\n\nBulk Almonds\n\nفروش وزنی\n\n\t0016\t\n$4.99\n/lb\t33.38%\t\n$7.49/lb\n$16.51/kg\n\t\nتأییدشده\n\t\nویرایش",
+      "layoutFindings": [],
+      "measuredButtons": 25
+    },
+    {
+      "scene": "alerts",
+      "variant": "fa-light",
+      "filename": "alerts-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#alerts",
+      "fixtureEvidence": "هشدارها\n\nکاهش هزینه تأمین‌کننده و اختلاف قیمت شعبه‌ها به تصمیم روشن نیاز دارند.\n\nنمایش هشدارهای حل‌شده و عمدی\nاختلاف قیمت بین شعبه‌ها\nچای سیاه ۴۵۰ گرمی\nBlack Tea 450 g\nاختلاف\n\nهمه شعب\n\nشعبه\tقیمت فروش تأییدشده\tاقدام\nنورث یورک\t$6.49\tاعمال این قیمت به همه\nریچموند هیل\t$6.99\tاعمال این قیمت به همه\n\nاختلاف‌های عمدی تا تغییر قیمت تأییدشده یک شعبه، دوباره هشدار نمی‌دهند.\n\nثبت به عنوان عمدی",
+      "layoutFindings": [],
+      "measuredButtons": 12
+    },
+    {
+      "scene": "returns-list",
+      "variant": "fa-light",
+      "filename": "returns-list-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table returns-overview-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#returns",
+      "fixtureEvidence": "شماره مرجوعی\tتأمین‌کننده\tشعبه\tایجادشده\tاقلام\tوضعیت\tاقدام بعدی\n#1\tFresh Valley Foods\tنورث یورک\t2026-10-09\t3\t\nدر انتظار اعتبار\tثبت حل‌وفصل\n#2\tGolden Grain Distributors\tنورث یورک\t2026-10-06\t2\t\nدر انتظار اعتبار\tثبت حل‌وفصل",
+      "layoutFindings": [],
+      "measuredButtons": 17
+    },
+    {
+      "scene": "return-detail",
+      "variant": "fa-light",
+      "filename": "return-detail-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "مرجوعی #1\nدر انتظار جمع‌آوری\n\nایجادشده در 2026-10-09 توسط کارمند سالن نمایشی · Fresh Valley Foods · نورث یورک\n\nسیاست مرجوعی\nثبت جمع‌آوری",
+      "layoutFindings": [],
+      "measuredButtons": 11
+    },
+    {
+      "scene": "return-policy",
+      "variant": "fa-light",
+      "filename": "return-policy-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "سیاست مرجوعی\nرسید جمع‌آوری امضاشده را نگهداری و فقط رویداد واقعی را ثبت کنید.\nشمارش و جداسازی\n\nاصل کالاها را بشمارید، وضعیت و محل آن‌ها را ثبت و کالای آسیب‌دیده را از فروش خارج کنید.\n\nتأیید جمع‌آوری\n\nتعداد واقعی را با نماینده تأیید کنید و پیش از تحویل کالا رسید کاغذی امضاشده بگیرید.\n\nنگهداری مدرک امضاشده\n\nاصل امضاشده و مرجع آن را نگهداری کنید؛ جمع‌آوری به فاکتور جدید نیاز ندارد.\n\nثبت نتیجه\n\nکارکنان ادعا و مدرک ارسال می‌کنند، سرپرستان پول را تأیید و ثبت می‌کنند و برای جایگزین دریافت واقعی ثبت می‌شود.\n\nلغو ایمن\n\nلغو هرگز کالای نزد تأمین‌کننده یا ناسالم را به موجودی بازنمی‌گرداند یا جبران را خودکار معکوس نمی‌کند.\n\nدانلود سیاست کامل\nبستن",
+      "layoutFindings": [],
+      "measuredButtons": 13
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "fa-light",
+      "filename": "date-quick-add-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table expiry-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#expiry",
+      "fixtureEvidence": "محصول\nتاریخ\n2026-10-10\nمکان\nنورث یورک\nبیشتر\nافزودن\nنوع\nانقضا\nمقدار (اختیاری)\nسری ساخت (اختیاری)\nیادداشت (اختیاری)",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "fa-light",
+      "filename": "lookup-dates-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#lookup",
+      "fixtureEvidence": "تاریخ‌ها\n\nنورث یورک\n\nخاموش\n\nدر این مکان تاریخ بازی وجود ندارد.\n\nتاریخ\n2026-10-10\nافزودن",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "offers-current",
+      "variant": "fa-light",
+      "filename": "offers-current-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "کالا\tپیشنهاد\tدامنه\tوضعیت\tاقدام\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n\t\n۲ عدد $5\n$2.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nفعال\n\tتوقف پیشنهاد\n\nسماق ۱۰۰ گرمی\nGround Sumac 100 g\n\t\n۳ عدد $5\n$1.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nفعال\n\tتوقف پیشنهاد\n\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n\t\n۳ عدد $5\n$1.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nفعال\n\tتوقف پیشنهاد\n\nلوبیا قرمز ۹۰۰ گرمی\nDried Red Kidney Beans 900 g\n\t\n۲ عدد $7\n$3.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nفعال\n\tتوقف پیشنهاد\n\nچیپس سیب‌زمینی ۱۵۰ گرمی\nPotato Chips 150 g\n\t\n۲ عدد $5\n$2.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nفعال\n\tتوقف پیشنهاد",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "offers-past",
+      "variant": "fa-light",
+      "filename": "offers-past-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table past-offers-table",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#offers",
+      "fixtureEvidence": "کالا\tپیشنهاد\tدامنه\tوضعیت\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n\t\n۲ عدد $5\n$2.99\n\n\nترکیبی\n\t\nهمه شعب\n\t\nمتوقف‌شده",
+      "layoutFindings": [],
+      "measuredButtons": 19
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "fa-light",
+      "filename": "posted-invoice-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "بازگشت به فاکتورها\nفاکتورها\n\nتحویل‌ها و فاکتورهای تأمین‌کننده\n\nفاکتور جدید\nپیش‌نویس‌ها\nدر حال پردازش\nنیازمند بررسی\nآماده ثبت\nثبت‌شده\nلغوشده\nFV-20390\nثبت‌شده\nاصلاح فاکتور\nانتقال فاکتور\nتأمین‌کننده\nFresh Valley Foods\nشماره فاکتور\nFV-20390\nمکان\nنورث یورک\nتاریخ فاکتور\n2026-10-09\nزمان دریافت\n2026-10-09 16:00\nدریافت‌کننده\nکارمند سالن نمایشی\nشرایط پرداخت\nNet 14\nسررسید\n2026-10-23\nکالا\tتعداد\tهزینه هر واحد پیش از مالیات\tجمع ردیف\tتاریخ پیگیری‌شده\n\nباقالا کنسرو شده ۴۰۰ گرمی\nCanned Fava Beans 400 g\n\n0002\n\n\t2 کارتن (24 واحد)\n\nتعداد تحویل‌شده: 24\n\n\t$0.98\t$23.52\tخیر\n\nسماق ۱۰۰ گرمی\nGround Sumac 100 g\n\n0005\n\n\t1 کارتن (12 واحد)\n\nتعداد تحویل‌شده: 12\n\n\t$1.20\t$14.40\tخیر\n\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n\n0006\n\n\t2 کارتن (20 واحد)\n\nتعداد تحویل‌شده: 20\n\n\t$1.55\t$31.00\tخیر\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n\n0003\n\n\t3 کارتن (36 واحد)\n\nتعداد تحویل‌شده: 36\n\n\t$1.95\t$70.20\tخیر\n\nزرشک خشک 100 گرمی\nDried Barberries 100 g\n\n0015\n\n\t1 کارتن (6 واحد)\n\nتعداد تحویل‌شده: 6\n\n\t$3.40\t$20.40\tخیر\n\nچیپس سیب‌زمینی ۱۵۰ گرمی\nPotato Chips 150 g\n\n0009\n\n\t1 کارتن (12 واحد)\n\nتعداد تحویل‌شده: 12\n\n\t$1.60\t$19.20\tخیر\nجمع پیش از مالیات\n$178.72\nمالیات\n$2.50\nجمع فاکتور\n$181.22\nکسورات\n$0.00\nقابل پرداخت\n$181.22\nاصل فاکتور\n\nfictional-fv-20390.svg\n\n57%\nاندازه عرض\nاندازه صفحه\nدانلود",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "fa-light",
+      "filename": "original-whole-page-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "اصل فاکتور\n\nfictional-fv-20390.svg\n\n57%\nاندازه عرض\nاندازه صفحه\nدانلود",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "fa-light",
+      "filename": "correct-invoice-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "rtl",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "اصلاح فاکتور\nردیف 1 ·\nباقالا کنسرو شده ۴۰۰ گرمی\nCanned Fava Beans 400 g\nکالا\n0002 · باقالا کنسرو شده ۴۰۰ گرمی\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nردیف 2 ·\nسماق ۱۰۰ گرمی\nGround Sumac 100 g\nکالا\n0005 · سماق ۱۰۰ گرمی\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nردیف 3 ·\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\nکالا\n0006 · نان لواش ۵۰۰ گرمی\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nردیف 4 ·\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\nکالا\n0003 · آب آلبالو ۱ لیتری\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nردیف 5 ·\nزرشک خشک 100 گرمی\nDried Barberries 100 g\nکالا\n0015 · زرشک خشک 100 گرمی\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nردیف 6 ·\nچیپس سیب‌زمینی ۱۵۰ گرمی\nPotato Chips 150 g\nکالا\n0009 · چیپس سیب‌زمینی ۱۵۰ گرمی\nواحد تعداد\nکارتن\nتعداد فاکتور\nتعداد تحویل‌شده\nواحد در هر کارتن\nهزینه هر واحد پیش از مالیات\nپیگیری تاریخ؟\nبله\nخیر\nنوع تاریخ\nانقضا\nتاریخ پیگیری‌شده\nتاریخ را انتخاب کنید\nشماره سری ساخت (اختیاری)\nدلیل (الزامی)\nانصراف\nپیش‌نمایش اصلاح",
+      "layoutFindings": [],
+      "measuredButtons": 60
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "fa-light",
+      "filename": "approvals-tabs-fa-light.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "route": "#approvals",
+      "fixtureEvidence": "تأییدها\n\nکالاها و قیمت‌های جدید را بررسی کنید. قیمت در انتظار، جایگزین قیمت تأییدشده نمی‌شود.\n\nدر انتظار\nتأییدشده\nردشده\nجایگزین‌شده\nنان لواش ۵۰۰ گرمی\n\nLavash Bread 500 g\n\nدر انتظار\nتغییر قیمت\nنورث یورک · کد کالا 0006\nقیمت قبلی\n$1.99\nقیمت جدید\n$2.99\nهزینه واحد\n$1.55\nحاشیه سود\n48.16%\nشعبه: نورث یورک\nایجادشده توسط: کارمند سالن نمایشی\n\nفاکتور: FV-20390\n\nتأیید قیمت\nرد کردن\nزرشک خشک 100 گرمی\n\nDried Barberries 100 g\n\nدر انتظار\nکالای جدید\nنورث یورک · کد کالا 0015\nقیمت قبلی\nهنوز قیمت تأییدشده ندارد\nقیمت جدید\n$5.49\nهزینه واحد\n$3.40\nحاشیه سود\n38.07%\nشعبه: نورث یورک\nایجادشده توسط: کارمند سالن نمایشی\n\nفاکتور: FV-20390\n\nتأیید کالا\nرد کردن",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "topbar",
+      "variant": "phone",
+      "filename": "topbar-phone.png",
+      "role": "supervisor",
+      "captureMode": "element",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          },
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#dashboard",
+      "fixtureEvidence": "North York\nDashboard\n/\nNorth York\nفا\nAa\n5\nDemo",
+      "layoutFindings": [],
+      "measuredButtons": 39
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "phone",
+      "filename": "invoices-list-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table invoice-posted-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#invoices",
+      "fixtureEvidence": "Posted invoices\nColumns\nInvoice\tSupplier\tBranch\tDate\tStatus\n\nGG-11794\n\tGolden Grain Distributors\tNorth York\t2026-08-19\t\nPosted\n\nFV-20296\n\tFresh Valley Foods\tNorth York\t2026-09-16\t\nPosted\n\nSB-7848\n\tSunrise Beverages\tNorth York\t2026-09-30\t\nPosted\n\nGG-11842\n\tGolden Grain Distributors\tNorth York\t2026-09-05\t\nPosted\n\nHW-4936\n\tHomeWare Imports\tNorth York\t2026-09-19\t\nPosted\n\nSB-7862\n\tSunrise Beverages\tNorth York\t2026-10-01\t\nPosted\n\nGG-11879\n\tGolden Grain Distributors\tNorth York\t2026-10-05\t\nPosted\n\nFV-20390\n\tFresh Valley Foods\tNorth York\t2026-10-09\t\nPosted",
+      "layoutFindings": [],
+      "measuredButtons": 23
+    },
+    {
+      "scene": "products-weight",
+      "variant": "phone",
+      "filename": "products-weight-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table catalog-products-table with-store-cost",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#products",
+      "fixtureEvidence": "Product ↑\tProduct Code\tStore cost\tMargin %\tApproved price\tStatus and offer\tDetails\nBulk Almonds\n\nبادام فله\n\nSold by weight\n\n\t0016\t\n$4.99\n/lb\t33.38%\t\n$7.49/lb\n$16.51/kg\n\t\nApproved\n\t\nEdit",
+      "layoutFindings": [],
+      "measuredButtons": 24
+    },
+    {
+      "scene": "alerts",
+      "variant": "phone",
+      "filename": "alerts-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#alerts",
+      "fixtureEvidence": "Alerts\n\nLower supplier costs and branch price differences need a clear decision.\n\nShow resolved and intentional alerts\nCross-branch price conflict\nBlack Tea 450 g\nچای سیاه ۴۵۰ گرمی\nConflict\n\nAll branches\n\nBranch\tApproved selling price\tAction\nNorth York\t$6.49\tApply this price to all\nRichmond Hill\t$6.99\tApply this price to all\n\nIntentional differences stay quiet until an approved branch price changes.\n\nMark as intentional",
+      "layoutFindings": [],
+      "measuredButtons": 11
+    },
+    {
+      "scene": "returns-list",
+      "variant": "phone",
+      "filename": "returns-list-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table returns-overview-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#returns",
+      "fixtureEvidence": "Return #\tSupplier\tBranch\tCreated\tItems\tStatus\tNext action\n#1\tFresh Valley Foods\tNorth York\t2026-10-09\t3\t\nWaiting for credit\tRecord resolution\n#2\tGolden Grain Distributors\tNorth York\t2026-10-06\t2\t\nWaiting for credit\tRecord resolution",
+      "layoutFindings": [],
+      "measuredButtons": 16
+    },
+    {
+      "scene": "return-detail",
+      "variant": "phone",
+      "filename": "return-detail-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return #1\nWaiting for pickup\n\ncreated 2026-10-09 by Demo Floor Worker · Fresh Valley Foods · North York\n\nReturn policy\nRecord pickup",
+      "layoutFindings": [],
+      "measuredButtons": 10
+    },
+    {
+      "scene": "return-policy",
+      "variant": "phone",
+      "filename": "return-policy-phone.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table return-lines-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "Return policy\nKeep the signed pickup slip and record only what actually happened.\nCount and separate\n\nCount originals, record their condition and location, and keep damaged goods off the sales floor.\n\nConfirm pickup\n\nConfirm actual quantities with the representative and obtain a signed paper slip before handing over goods.\n\nKeep signed evidence\n\nKeep the signed original and its reference; pickup does not require a new invoice.\n\nRecord the outcome\n\nWorkers submit claims and evidence, Supervisors verify and post money, and replacements record actual receipts.\n\nCancel safely\n\nCancellation never restores supplier-held or unsafe goods or automatically reverses compensation.\n\nDownload full policy\nClose",
+      "layoutFindings": [],
+      "measuredButtons": 12
+    },
+    {
+      "scene": "date-quick-add",
+      "variant": "phone",
+      "filename": "date-quick-add-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table expiry-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#expiry",
+      "fixtureEvidence": "Product\nDate\n2026-10-10\nLocation\nNorth York\nMore\nAdd\nType\nExpiry\nQuantity (optional)\nLot (optional)\nNote (optional)",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "lookup-dates",
+      "variant": "phone",
+      "filename": "lookup-dates-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#lookup",
+      "fixtureEvidence": "Dates\n\nNorth York\n\nOff\n\nNo open dates in this location.\n\nDate\n2026-10-10\nAdd",
+      "layoutFindings": [],
+      "measuredButtons": 15
+    },
+    {
+      "scene": "offers-current",
+      "variant": "phone",
+      "filename": "offers-current-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\tAction\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\t\n3 for $5\n$1.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nDried Red Kidney Beans 900 g\nلوبیا قرمز ۹۰۰ گرمی\n\t\n2 for $7\n$3.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nActive\n\tStop offer",
+      "layoutFindings": [],
+      "measuredButtons": 22
+    },
+    {
+      "scene": "offers-past",
+      "variant": "phone",
+      "filename": "offers-past-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table current-offers-table past-offers-table",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#offers",
+      "fixtureEvidence": "Product\tOffer\tScope\tStatus\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\t\n2 for $5\n$2.99\n\n\nMix-and-match\n\t\nAll branches\n\t\nStopped",
+      "layoutFindings": [],
+      "measuredButtons": 18
+    },
+    {
+      "scene": "posted-invoice",
+      "variant": "phone",
+      "filename": "posted-invoice-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Back to Invoices\nInvoices\n\nDeliveries and supplier invoices\n\nNew invoice\nDrafts\nProcessing\nNeeds review\nReady to post\nPosted\nCancelled\nFV-20390\nPosted\nCorrect invoice\nMove invoice\nSupplier\nFresh Valley Foods\nInvoice number\nFV-20390\nLocation\nNorth York\nInvoice date\n2026-10-09\nReceived at\n2026-10-09 16:00\nReceived by\nDemo Floor Worker\nPayment terms\nNet 14\nDue date\n2026-10-23\nProduct\tQuantity\tUnit cost before tax\tLine total\tTracked date\n\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n\n0002\n\n\t2 cases (24 units)\n\nDelivered quantity: 24\n\n\t$0.98\t$23.52\tNo\n\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\n\n0005\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.20\t$14.40\tNo\n\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\n\n0006\n\n\t2 cases (20 units)\n\nDelivered quantity: 20\n\n\t$1.55\t$31.00\tNo\n\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\n\n0003\n\n\t3 cases (36 units)\n\nDelivered quantity: 36\n\n\t$1.95\t$70.20\tNo\n\nDried Barberries 100 g\nزرشک خشک 100 گرمی\n\n0015\n\n\t1 case (6 units)\n\nDelivered quantity: 6\n\n\t$3.40\t$20.40\tNo\n\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\n0009\n\n\t1 case (12 units)\n\nDelivered quantity: 12\n\n\t$1.60\t$19.20\tNo\nSubtotal\n$178.72\nTax\n$2.50\nInvoice total\n$181.22\nDeductions\n$0.00\nPayable\n$181.22\nOriginal invoice\n\nfictional-fv-20390.svg\n\n100%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 21
+    },
+    {
+      "scene": "original-whole-page",
+      "variant": "phone",
+      "filename": "original-whole-page-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Original invoice\n\nfictional-fv-20390.svg\n\n100%\nFit width\nFit page\nDownload",
+      "layoutFindings": [],
+      "measuredButtons": 21
+    },
+    {
+      "scene": "correct-invoice",
+      "variant": "phone",
+      "filename": "correct-invoice-phone.png",
+      "role": "supervisor",
+      "captureMode": "viewport",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table posted-invoice-lines",
+            "direction": "ltr",
+            "scrollLeft": 0,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#invoices?id=a2-fixture%3AFV-20390",
+      "fixtureEvidence": "Correct invoice\nLine 1 ·\nCanned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\nProduct\n0002 · Canned Fava Beans 400 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 2 ·\nGround Sumac 100 g\nسماق ۱۰۰ گرمی\nProduct\n0005 · Ground Sumac 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 3 ·\nLavash Bread 500 g\nنان لواش ۵۰۰ گرمی\nProduct\n0006 · Lavash Bread 500 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 4 ·\nSour Cherry Juice 1 L\nآب آلبالو ۱ لیتری\nProduct\n0003 · Sour Cherry Juice 1 L\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 5 ·\nDried Barberries 100 g\nزرشک خشک 100 گرمی\nProduct\n0015 · Dried Barberries 100 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nLine 6 ·\nPotato Chips 150 g\nچیپس سیب‌زمینی ۱۵۰ گرمی\nProduct\n0009 · Potato Chips 150 g\nQuantity unit\nCases\nInvoiced quantity\nDelivered quantity\nUnits per case\nUnit cost before tax\nTrack date?\nYes\nNo\nDate type\nExpiry\nTracked date\nChoose date\nLot number (optional)\nReason (required)\nCancel\nPreview correction",
+      "layoutFindings": [],
+      "measuredButtons": 59
+    },
+    {
+      "scene": "approvals-tabs",
+      "variant": "phone",
+      "filename": "approvals-tabs-phone.png",
+      "role": "supervisor",
+      "captureMode": "page",
+      "framing": {
+        "documentScroll": {
+          "x": 0,
+          "y": 0
+        },
+        "tables": []
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "route": "#approvals",
+      "fixtureEvidence": "Approvals\n\nReview new products and prices. Pending prices never replace approved prices.\n\nPending\nApproved\nRejected\nSuperseded\nLavash Bread 500 g\n\nنان لواش ۵۰۰ گرمی\n\nPending\nPrice change\nNorth York · Product Code 0006\nOld price\n$1.99\nNew price\n$2.99\nUnit cost\n$1.55\nMargin\n48.16%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove price\nReject\nDried Barberries 100 g\n\nزرشک خشک 100 گرمی\n\nPending\nNew product\nNorth York · Product Code 0015\nOld price\nNo approved price yet\nNew price\n$5.49\nUnit cost\n$3.40\nMargin\n38.07%\nBranch: North York\nTriggered by: Demo Floor Worker\n\nInvoice: FV-20390\n\nApprove product\nReject",
+      "layoutFindings": [],
+      "measuredButtons": 15
+    }
+  ],
+  "browserErrors": []
+}

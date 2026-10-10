@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-10 — C5 implementation and final review evidence
+
+- Restored 12 px/40 px intrinsic text actions, consistent blue/red glow, uniform top-bar controls and a single target-language circle. Integrated Columns with result counts; fixed posted invoice header/totals, whole-page original controls, return header/status/policy and two-line weighed prices while preserving approved dashboard/Approvals layouts.
+- Added fast inline date entry with Enter/refocus, pinned highlighting, optional fields and scoped Undo; authorized Lookup tracking switches retain dates and auto-enable atomically on Add. Products menus preselect quick-add. Separated Current/Past offers, preserved legitimate scopes/history, and made repeated exact terms idempotent.
+- Frozen production source `f96d36944bc72e16b09d8a7d25cc964d584dce23`: 771 unit tests/67 files and all 23 unchanged seed pricing cases passed, plus lint/typed build and 54 desktop/phone C5 browser checks. Captured and individually reviewed 60 final images against all nine owner annotations with zero errors/findings. Complete source/button audit records 313 callsites, 598 distinct states and 15,227 rendered controls with zero violations/status conflicts.
+- Added [exact Ubuntu commands, troubleshooting, click checks and all screenshots](PR_C5_REVIEW.md), source fingerprints, individual visual reviews and the [complete button audit](PR_C5_BUTTON_AUDIT.md). The final CI gate runs all 462 browser cases and both required jobs on the review head; [current checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/18/checks) must pass before PR #18 is ready. C5 changes only prototype/docs; seed files remain byte-identical. C5 is not merged automatically.
+
 ## 2026-10-10 — C5 specification and approved merge gate
 
 - Merged approved C3 (#16) and C4 (#17) in order, retaining original commit history. Both PR checks passed; main integration run 38023516156 passed before C5 began from 0767844.
