@@ -16,14 +16,15 @@
   cursor: pointer;
 }
 .supplier-item-pack {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .supplier-item-actions {
   flex-wrap: nowrap;
   gap: 8px;
 }
-.supplier-item-history-dialog {
-  inline-size: min(720px, calc(100vw - 32px));
+:root .ui-dialog.supplier-item-history-dialog {
+  inline-size: min(1000px, calc(100vw - 32px));
+  max-inline-size: min(1000px, calc(100vw - 32px));
 }
 .supplier-item-price-history table {
   min-inline-size: 780px;

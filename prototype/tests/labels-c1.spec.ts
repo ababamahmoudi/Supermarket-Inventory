@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
+import { addSelectedLabels } from "./label-selection";
 
 for (const language of ["en", "fa"] as const) {
   test(`ready Regular and Promo labels print exact millimetres and truthful monochrome offers in ${language}`, async ({
@@ -11,9 +12,7 @@ for (const language of ["en", "fa"] as const) {
     await signIn(page, "Floor Worker");
     await page.goto("/#labels");
     await page.getByLabel("Search products", { exact: true }).fill("0003");
-    await page
-      .getByRole("button", { name: "Add to waitlist", exact: true })
-      .click();
+    await addSelectedLabels(page, ["0003"]);
     await page.getByRole("tab", { name: /^Waitlist/ }).click();
     await expect(page.getByLabel("Saved template", { exact: true })).toHaveText(
       "Regular",
@@ -199,9 +198,7 @@ test("Promo without an active offer never invents SPECIAL or an offer", async ({
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
   await page.getByLabel("Search products", { exact: true }).fill("0004");
-  await page
-    .getByRole("button", { name: "Add to waitlist", exact: true })
-    .click();
+  await addSelectedLabels(page, ["0004"]);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await page.getByLabel("Saved template", { exact: true }).click();
   await page.getByRole("option", { name: "Promo", exact: true }).click();

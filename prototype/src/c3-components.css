@@ -1,0 +1,200 @@
+/* C3: these shared controls replace the legacy faint outlines on every surface. */
+:root .ui-button.button.button-primary {
+  border: 1px solid transparent;
+  background: var(--accent-fill);
+  color: #fff;
+  outline: none;
+}
+:root .ui-button.button.button-secondary {
+  border: 1px solid var(--secondary-border);
+  border-radius: 999px;
+  background: var(--secondary-fill);
+  color: var(--secondary-text);
+  outline: none;
+  box-shadow: 0 2px 12px var(--secondary-glow);
+  transition: box-shadow 160ms ease;
+}
+:root .ui-button.button.button-secondary:hover:not(:disabled) {
+  background: var(--secondary-fill);
+  box-shadow: 0 3px 18px var(--secondary-glow-hover);
+}
+:root .ui-button.button.button-quiet,
+:root .ui-button.button.button-ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  box-shadow: none;
+}
+:root .ui-button.button.button-quiet:hover:not(:disabled),
+:root .ui-button.button.button-ghost:hover:not(:disabled) {
+  background: var(--nav-active);
+}
+:root .ui-button.button.button-danger {
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--danger);
+  outline: none;
+  box-shadow: none;
+}
+:root .ui-button.button.button-danger:hover:not(:disabled) {
+  background: var(--danger-bg);
+  filter: none;
+}
+:root .ui-button.button:focus-visible {
+  outline: 2px solid var(--secondary-border);
+  outline-offset: 3px;
+}
+:root .ui-button.ui-icon-button.button {
+  border-radius: 50%;
+  background: var(--search-fill);
+  border-color: transparent;
+}
+:root .ui-segments button,
+:root .pills button,
+:root .tabs button {
+  color: var(--text);
+  border: 1px solid transparent;
+}
+:root .ui-segments button[aria-pressed="false"],
+:root .pills button[aria-pressed="false"] {
+  border-color: var(--text-muted);
+}
+:root .ui-segments button[aria-pressed="true"],
+:root .ui-segments button[aria-selected="true"],
+:root .pills button[aria-pressed="true"],
+:root .tabs button[aria-selected="true"] {
+  border-color: var(--secondary-border);
+  background: var(--surface);
+}
+:root .filter-toolbar .filter-search-pill {
+  display: flex;
+  flex: 0 1 360px;
+  inline-size: 360px;
+  min-inline-size: 320px;
+  max-inline-size: 100%;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding-inline: 14px;
+  gap: 10px;
+  border-radius: 999px;
+  background: var(--search-fill);
+}
+:root .filter-toolbar .filter-search-pill input,
+:root .filter-toolbar .filter-search-pill input.ui-input {
+  flex: 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: none;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+:root .filter-toolbar .filter-search-pill input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+:root .filter-toolbar .filter-search-pill:focus-within {
+  outline: 2px solid var(--secondary-border);
+  outline-offset: 2px;
+}
+.c3-column-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+  margin-block-start: 20px;
+}
+.c3-column-options .ui-checked-control {
+  min-inline-size: 0;
+  align-items: center;
+}
+.c3-column-options .ui-checked-control > span:last-child {
+  overflow-wrap: anywhere;
+}
+:root .ui-dialog .c3-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-start: 24px;
+}
+
+@media screen {
+  :root .ui-data-table {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root .ui-data-table table.has-defined-columns {
+    inline-size: 100%;
+    min-inline-size: 0;
+    table-layout: fixed;
+  }
+  :root .ui-data-table th,
+  :root .ui-data-table td {
+    padding-inline: 10px;
+    overflow-wrap: break-word;
+    vertical-align: middle;
+  }
+  :root .ui-data-table th {
+    white-space: normal;
+  }
+  :root .ui-data-table .table-actions {
+    text-align: end;
+    white-space: normal;
+  }
+  :root .ui-data-table .table-actions > .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    inline-size: 100%;
+  }
+  :root .ui-data-table td.table-actions .button:not(.ui-icon-button) {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: none;
+    justify-content: center;
+    padding-inline: 10px;
+    white-space: normal;
+    text-wrap: balance;
+  }
+  :root .ui-data-table .ui-number {
+    max-inline-size: 100%;
+  }
+}
+@media screen and (min-width: 761px) {
+  :root .ui-data-table {
+    overflow: visible;
+  }
+}
+@media (max-width: 760px) {
+  :root .filter-toolbar .filter-search-pill {
+    flex-basis: 100%;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .c3-column-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media screen and (max-width: 760px) {
+  :root .ui-data-table {
+    overflow-x: auto;
+  }
+  :root .ui-data-table table.has-defined-columns {
+    min-inline-size: var(--table-min-width, 560px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .ui-button.button.button-secondary {
+    transition: none;
+  }
+}

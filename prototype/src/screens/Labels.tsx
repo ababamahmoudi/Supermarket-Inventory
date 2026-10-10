@@ -6,7 +6,6 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { Search } from "lucide-react";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice } from "../catalog";
 import { translateCount } from "../i18n";
@@ -49,6 +48,7 @@ import {
   Dialog,
   EmptyState,
   Field,
+  FilterToolbar,
   NumberField,
   PageHeader,
   Select,
@@ -65,6 +65,7 @@ import "./invoice-settings-labels.css";
 import "./labels-a2.css";
 import "./labels-b.css";
 import "./labels-c1.css";
+import "./c3-labels-notes-offers.css";
 const defaultFields = {
   name: true,
   description: true,
@@ -640,6 +641,7 @@ function TemplateDesigner({
   const [startSlot, setStartSlot] = useState(initialTemplate ? 1 : 5);
   const [showArchived, setShowArchived] = useState(false);
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [alignmentTemplate, setAlignmentTemplate] =
     useState<LabelTemplate | null>(null);
@@ -648,6 +650,27 @@ function TemplateDesigner({
       item.company_id === state.config.company.seed_key &&
       (showArchived || !item.archived),
   );
+  const showError = (cause: unknown) => {
+    setError(errorText(cause, t));
+    setErrorField(
+      cause instanceof LabelLayoutError
+        ? (cause.field ?? "geometry")
+        : cause instanceof LabelWorkflowError && cause.code === "template"
+          ? "name"
+          : cause instanceof LabelWorkflowError && cause.code === "logo"
+            ? "geometry"
+            : null,
+    );
+  };
+  const clearErrorFor = (field: string) => {
+    if (
+      errorField === field ||
+      (errorField === "geometry" && field !== "name")
+    ) {
+      setError("");
+      setErrorField(null);
+    }
+  };
   const choose = (value: string) => {
     setId(value);
     setError("");
@@ -691,7 +714,7 @@ function TemplateDesigner({
         onSaved?.(copy);
       }
     } catch (cause) {
-      setError(errorText(cause, t));
+      showError(cause);
     }
   };
   const setArchived = (archived: boolean) => {
@@ -704,7 +727,7 @@ function TemplateDesigner({
       setError("");
       setSaved(false);
     } catch (cause) {
-      setError(errorText(cause, t));
+      showError(cause);
     }
   };
   const save = () => {
@@ -725,7 +748,7 @@ function TemplateDesigner({
       setSaved(true);
       onSaved?.(next);
     } catch (cause) {
-      setError(errorText(cause, t));
+      showError(cause);
     }
   };
   const printAlignment = () => {
@@ -749,7 +772,7 @@ function TemplateDesigner({
         }),
       );
     } catch (cause) {
-      setError(errorText(cause, t));
+      showError(cause);
     }
   };
   return (
@@ -796,13 +819,17 @@ function TemplateDesigner({
       )}
       <div className="label-designer-grid">
         <div className="labels-template-form" id="labels-template-form">
-          <Field label={t("Template name", "نام قالب")}>
+          <Field
+            label={t("Template name", "نام قالب")}
+            error={errorField === "name" ? error : undefined}
+          >
             <input
               value={draft.name}
               disabled={draft.archived}
               onChange={(event) => {
                 setDraft({ ...draft, name: event.target.value });
                 setSaved(false);
+                clearErrorFor("name");
               }}
             />
           </Field>
@@ -813,6 +840,7 @@ function TemplateDesigner({
               onChange={(value) => {
                 setDraft({ ...draft, style: value as "regular" | "promo" });
                 setSaved(false);
+                clearErrorFor("style");
               }}
               options={[
                 { value: "regular", label: t("Regular", "عادی") },
@@ -835,7 +863,11 @@ function TemplateDesigner({
                 ["offset_y", "Vertical offset", "جابه‌جایی عمودی"],
               ] as const
             ).map(([key, en, fa]) => (
-              <Field key={key} label={`${t(en, fa)} (${t("mm", "میلی‌متر")})`}>
+              <Field
+                key={key}
+                label={`${t(en, fa)} (${t("mm", "میلی‌متر")})`}
+                error={errorField === key ? error : undefined}
+              >
                 <NumberField
                   disabled={draft.archived}
                   dir="ltr"
@@ -845,6 +877,7 @@ function TemplateDesigner({
                   onChange={(value) => {
                     setDraft({ ...draft, [key]: Number(value) });
                     setSaved(false);
+                    clearErrorFor(key);
                   }}
                 />
               </Field>
@@ -864,7 +897,9 @@ function TemplateDesigner({
               }
             />
           </Field>
-          {error && <p role="alert">{error}</p>}
+          {error && (errorField === null || errorField === "geometry") && (
+            <p role="alert">{error}</p>
+          )}
           {saved && (
             <p className="muted" role="status">
               {t("Template saved.", "قالب ذخیره شد.")}
@@ -1072,7 +1107,13 @@ export function Labels() {
       : "templates",
   );
   const [filters, setFilters] = useState(emptyLabelFilters);
-  const [copyCounts, setCopyCounts] = useState<Record<string, number>>({});
+  const [selection, setSelection] = useState<{
+    branch: Branch;
+    codes: string[];
+  }>({
+    branch,
+    codes: [],
+  });
   const [allCopies, setAllCopies] = useState(1);
   const [templateId, setTemplateId] = useState(
     () =>
@@ -1108,14 +1149,40 @@ export function Labels() {
     try {
       update(action);
       setError("");
+      return true;
     } catch (cause) {
       setError(errorText(cause, t));
+      return false;
     }
   };
   const allowed = (product: Product) =>
     product.status === "active" &&
     branch !== "all" &&
     effectivePrice(state, product, branch) !== null;
+  const selectable = products.filter(allowed);
+  const selectedCodes =
+    selection.branch === branch
+      ? selection.codes.filter((code) =>
+          state.products.some(
+            (product) =>
+              product.company_id === state.config.company.seed_key &&
+              product.code === code &&
+              allowed(product),
+          ),
+        )
+      : [];
+  const allFilteredSelected =
+    selectable.length > 0 &&
+    selectable.every((product) => selectedCodes.includes(product.code));
+  const selectFiltered = (checked: boolean) => {
+    const filteredCodes = selectable.map((product) => product.code);
+    setSelection({
+      branch,
+      codes: checked
+        ? [...new Set([...selectedCodes, ...filteredCodes])]
+        : selectedCodes.filter((code) => !filteredCodes.includes(code)),
+    });
+  };
   const printable =
     waiting.length > 0 &&
     waiting.every((item) => {
@@ -1204,9 +1271,9 @@ export function Labels() {
         )}
         {tab === "products" && (
           <Card className="labels-products-card">
-            <div className="table-toolbar labels-filter-toolbar">
-              <label className="labels-search-pill">
-                <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+            <FilterToolbar
+              className="labels-filter-toolbar"
+              search={
                 <input
                   aria-label={t("Search products", "جستجوی کالاها")}
                   placeholder={t(
@@ -1218,7 +1285,15 @@ export function Labels() {
                     setFilters({ ...filters, query: event.target.value })
                   }
                 />
-              </label>
+              }
+              count={countText(
+                products.length,
+                "product",
+                "products",
+                "کالا",
+                lang,
+              )}
+            >
               <Checkbox
                 checked={filters.arrived}
                 onChange={(checked) =>
@@ -1317,78 +1392,63 @@ export function Labels() {
               >
                 {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
-              <span className="muted labels-result-count">
-                {countText(
-                  products.length,
-                  "product",
-                  "products",
-                  "کالا",
-                  lang,
-                )}
-              </span>
-            </div>
-            <div className="labels-add-all">
-              <Field
-                className="label-narrow-field"
-                label={t("Copies per product", "تعداد هر کالا")}
+            </FilterToolbar>
+            <div className="labels-selection-toolbar">
+              <Checkbox
+                checked={allFilteredSelected}
+                disabled={selectable.length === 0}
+                onChange={selectFiltered}
               >
-                <NumberField
-                  dir="ltr"
-                  min="1"
-                  max="1000"
-                  step="1"
-                  value={allCopies}
-                  onChange={(value) =>
-                    setAllCopies(
-                      Math.max(
-                        1,
-                        Math.min(1000, Math.floor(Number(value) || 1)),
-                      ),
-                    )
-                  }
-                />
-              </Field>
-              <Button
-                disabled={branch === "all" || !products.some(allowed)}
-                onClick={() =>
-                  run((next) =>
-                    addLabelsToWaitlist(
-                      next,
-                      products.filter(allowed).map((item) => item.code),
-                      allCopies,
-                      branch,
-                      actor,
-                    ),
-                  )
-                }
-              >
-                {t("Add all filtered", "افزودن همه نتایج فیلترشده")}
-              </Button>
+                {t("Select all filtered", "انتخاب همه نتایج فیلترشده")}
+              </Checkbox>
             </div>
             <DataTable
               className="labels-product-table"
               columns={[
-                { width: "34%" },
-                { width: "12%" },
-                { width: "13%", align: "end" },
-                { width: "15%" },
-                { width: "12%", align: "end" },
-                { width: "14%", align: "end", actions: true },
+                { width: 48 },
+                {},
+                { width: 104 },
+                { width: 132, align: "end" },
+                { width: 150 },
               ]}
             >
               <thead>
                 <tr>
+                  <th
+                    aria-label={t(
+                      "Select all filtered",
+                      "انتخاب همه نتایج فیلترشده",
+                    )}
+                  />
                   <th>{t("Product", "کالا")}</th>
                   <th>{t("Product Code", "کد کالا")}</th>
                   <th>{t("Selling price", "قیمت فروش")}</th>
                   <th>{t("Offer", "پیشنهاد")}</th>
-                  <th>{t("Copies", "تعداد")}</th>
-                  <th>{t("Actions", "عملیات")}</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
                   <tr key={product.code}>
+                    <td>
+                      <Checkbox
+                        aria-label={t(
+                          `Select product ${product.code}`,
+                          `انتخاب کالای ${product.code}`,
+                        )}
+                        checked={selectedCodes.includes(product.code)}
+                        disabled={!allowed(product)}
+                        onChange={(checked) =>
+                          setSelection({
+                            branch,
+                            codes: checked
+                              ? [...new Set([...selectedCodes, product.code])]
+                              : selectedCodes.filter(
+                                  (code) => code !== product.code,
+                                ),
+                          })
+                        }
+                      />
+                    </td>
                     <td>
                       <ProductName product={product} language={lang} />
                     </td>
@@ -1422,52 +1482,64 @@ export function Labels() {
                         />
                       )}
                     </td>
-                    <td>
-                      <NumberField
-                        aria-label={t(
-                          `Copies for ${product.code}`,
-                          `تعداد ${product.code}`,
-                        )}
-                        dir="ltr"
-                        min="1"
-                        max="1000"
-                        step="1"
-                        value={copyCounts[product.code] ?? 1}
-                        onChange={(value) =>
-                          setCopyCounts({
-                            ...copyCounts,
-                            [product.code]: Math.max(
-                              1,
-                              Math.min(1000, Math.floor(Number(value) || 1)),
-                            ),
-                          })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        disabled={!allowed(product)}
-                        onClick={() =>
-                          run((next) =>
-                            addLabelsToWaitlist(
-                              next,
-                              [product.code],
-                              copyCounts[product.code] ?? 1,
-                              branch,
-                              actor,
-                            ),
-                          )
-                        }
-                      >
-                        {t("Add to waitlist", "افزودن به فهرست انتظار")}
-                      </Button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </DataTable>
+            {selectedCodes.length > 0 && (
+              <div
+                className="labels-selection-bar"
+                role="region"
+                aria-label={t("Add to waitlist", "افزودن به فهرست انتظار")}
+              >
+                <Field
+                  className="label-narrow-field"
+                  label={t("Copies", "تعداد")}
+                >
+                  <NumberField
+                    dir="ltr"
+                    min="1"
+                    max="1000"
+                    step="1"
+                    value={allCopies}
+                    onChange={(value) => {
+                      setAllCopies(
+                        Math.max(
+                          1,
+                          Math.min(1000, Math.floor(Number(value) || 1)),
+                        ),
+                      );
+                      setError("");
+                    }}
+                  />
+                </Field>
+                <Button
+                  onClick={() => {
+                    if (
+                      run((next) =>
+                        addLabelsToWaitlist(
+                          next,
+                          selectedCodes,
+                          allCopies,
+                          branch,
+                          actor,
+                        ),
+                      )
+                    )
+                      setSelection({ branch, codes: [] });
+                  }}
+                >
+                  {translateCount(
+                    "Add {{count}} product to waitlist",
+                    "Add {{count}} products to waitlist",
+                    "افزودن {{count}} کالا به فهرست انتظار",
+                    "افزودن {{count}} کالا به فهرست انتظار",
+                    selectedCodes.length,
+                    lang,
+                  )}
+                </Button>
+              </div>
+            )}
             {products.length === 0 && (
               <EmptyState>
                 {t(
@@ -1531,11 +1603,11 @@ export function Labels() {
                 <DataTable
                   className="labels-waitlist-table"
                   columns={[
-                    { width: "44%" },
-                    { width: "14%" },
-                    { width: "15%", align: "end" },
-                    { width: "14%", align: "end" },
-                    { width: "13%", actions: true },
+                    {},
+                    { width: 104 },
+                    { width: 136, align: "end" },
+                    { width: 144, align: "end" },
+                    { width: 120, actions: true },
                   ]}
                 >
                   <thead>

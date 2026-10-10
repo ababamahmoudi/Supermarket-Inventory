@@ -28,59 +28,78 @@
 .dashboard-card-header h2 {
   margin: 0;
 }
+.dashboard-queue {
+  container: dashboard-queue / inline-size;
+}
 .dashboard-queue-row {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) minmax(64px, auto) 90px 56px 128px;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  grid-template-areas: "product price" "type location" "actions actions";
+  align-items: start;
+  gap: 12px 16px;
+  padding: 16px 12px;
+  min-inline-size: 0;
 }
 .dashboard-queue-product {
+  grid-area: product;
   min-inline-size: 0;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
-.dashboard-queue-product .product-name {
-  min-inline-size: 0;
-}
+.dashboard-queue-product .product-name,
 .dashboard-queue-product .product-name strong,
 .dashboard-queue-product .product-name small {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-inline-size: 0;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
 }
 .dashboard-queue-row > .badge {
-  max-inline-size: 110px;
+  grid-area: type;
+  justify-self: start;
+  inline-size: fit-content;
+  max-inline-size: 100%;
 }
 .dashboard-queue-row .dashboard-price-change {
+  grid-area: price;
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  min-inline-size: 0;
 }
 .dashboard-queue-row .dashboard-price-change > span {
   flex-wrap: nowrap;
   font-size: 0.8125rem;
 }
 .dashboard-queue-branch {
+  grid-area: location;
+  min-inline-size: 0;
   font-size: 0.8125rem;
+  line-height: 1.5;
 }
 .dashboard-inline-actions {
-  inline-size: 128px;
+  grid-area: actions;
+  display: flex;
+  inline-size: auto;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
 }
 .dashboard-inline-actions .button {
-  min-inline-size: 0;
-  padding-inline: 8px;
+  min-inline-size: 72px;
+  padding-inline: 10px;
   font-size: 0.8125rem;
 }
-.dashboard-inline-actions .button-primary {
-  background: var(--accent-fill);
-  color: white;
-  box-shadow: none;
+@container dashboard-queue (min-width: 800px) {
+  .dashboard-queue-row:not(.has-review-action) {
+    grid-template-columns: minmax(160px, 1fr) 116px 100px 110px 152px;
+    grid-template-areas: "product type price location actions";
+    gap: 12px;
+    align-items: center;
+  }
 }
 .dashboard-invoices table {
-  min-inline-size: 587px;
+  min-inline-size: 0;
 }
 .dashboard-invoices .button {
   padding-inline: 8px;
@@ -265,26 +284,6 @@
     inline-size: 280px;
   }
 }
-@media (max-width: 1250px) {
-  .dashboard-queue-row {
-    grid-template-columns: minmax(110px, 1fr) 104px 140px;
-  }
-  .dashboard-queue-row > .badge {
-    grid-column: 1;
-  }
-  .dashboard-queue-branch {
-    grid-column: 2;
-    grid-row: 2;
-  }
-  .dashboard-inline-actions {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-  .dashboard-price-change {
-    grid-column: 2;
-    grid-row: 1;
-  }
-}
 @media (max-width: 1000px) {
   .dashboard-row > .card:first-child,
   .dashboard-row > .card:last-child {
@@ -299,35 +298,19 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
-  .dashboard-queue-row {
-    grid-template-columns: minmax(0, 1fr) 112px;
-    gap: 12px;
-  }
-  .dashboard-queue-product {
-    grid-column: 1;
-  }
-  .dashboard-queue-row .dashboard-price-change {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .dashboard-queue-row > .badge {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  .dashboard-queue-branch {
-    grid-column: 2;
-    grid-row: 2;
-  }
-  .dashboard-inline-actions {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    inline-size: auto;
-    justify-content: flex-end;
-  }
   .dashboard-card-header {
     flex-wrap: wrap;
   }
   .purchase-week-totals {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dashboard-main {
+  container: dashboard-main / inline-size;
+}
+@container dashboard-main (max-width: 1050px) {
+  .dashboard-row:has(> .dashboard-invoices) > .card {
+    grid-column: 1 / -1;
   }
 }

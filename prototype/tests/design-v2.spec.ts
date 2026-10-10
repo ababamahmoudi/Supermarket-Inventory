@@ -303,7 +303,7 @@ test("the four redesigned screens use styled controls and borderless cards witho
   }
 });
 
-test("the 1080p sidebar stays within the screen and page, lookup and invoice forms keep their maximum widths", async ({
+test("the 1080p sidebar fits while compound invoice forms use the available width and individual fields stay bounded", async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -331,9 +331,10 @@ test("the 1080p sidebar stays within the screen and page, lookup and invoice for
   await expect(
     page.getByRole("button", { name: "User menu", exact: true }),
   ).toBeInViewport();
-  expect(
-    (await page.locator("#main-content").boundingBox())!.width,
-  ).toBeLessThanOrEqual(1440);
+  const main = (await page.locator("#main-content").boundingBox())!;
+  const sidebar = (await page.locator(".sidebar").boundingBox())!;
+  expect(main.width).toBe(1920 - sidebar.width);
+  expect(main.x + main.width).toBeLessThanOrEqual(1920);
   await page.goto("/#lookup");
   expect(
     (await page.locator(".lookup-page").boundingBox())!.width,
@@ -349,7 +350,23 @@ test("the 1080p sidebar stays within the screen and page, lookup and invoice for
   for (const form of await page
     .locator(".invoice-details-form, .invoice-line-form")
     .all())
-    expect((await form.boundingBox())!.width).toBeLessThanOrEqual(960);
+    expect(
+      await form.evaluate((element) => {
+        const pane = element
+          .closest(".invoice-review-pane")!
+          .getBoundingClientRect();
+        const rect = element.getBoundingClientRect();
+        return (
+          rect.left >= pane.left - 2 &&
+          rect.right <= pane.right + 2 &&
+          element.scrollWidth <= element.clientWidth + 2
+        );
+      }),
+    ).toBe(true);
+  for (const input of await page
+    .locator(".invoice-details-form input, .invoice-line-form input")
+    .all())
+    expect((await input.boundingBox())!.width).toBeLessThanOrEqual(640);
   const documentPane = (await page
     .locator(".invoice-document-pane")
     .boundingBox())!;

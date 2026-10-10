@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Pencil, Archive } from "lucide-react";
+import { Plus, Pencil, Archive } from "lucide-react";
 import { useDemo } from "../store";
 import {
   Badge,
@@ -8,6 +8,7 @@ import {
   Checkbox,
   ConfirmDialog,
   DateField,
+  Dialog,
   EmptyState,
   Field,
   FilterToolbar,
@@ -31,6 +32,7 @@ import {
   canEditNotebookEntry,
   editNotebookEntry,
   notebookError,
+  NotebookError,
   notebookEntryLocations,
   readableNotebookEntries,
   updateNotebookEntryStatus,
@@ -41,10 +43,15 @@ import {
 } from "../notebooks";
 import { branchLabel, configuredBranches } from "../settings";
 import { translateCount } from "../i18n";
+import { UNDO_DURATION } from "../undo-queue";
 import { notesText } from "../c-notes-i18n";
 import { NotebookEditor } from "./NotebookSettings";
 import type { NoteRecord } from "../types";
 import "./notebooks-b.css";
+import "./c3-labels-notes-offers.css";
+
+type NoteField =
+  "text" | "product" | "qty" | "date" | "measurement" | "location";
 
 export function Notes() {
   const { state, update, branch, role, user, lang, t } = useDemo();
@@ -76,6 +83,10 @@ export function Notes() {
   const [search, setSearch] = useState("");
   const [showDone, setShowDone] = useState(false);
   const [error, setError] = useState("");
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<NoteField, string>>
+  >({});
   const [message, setMessage] = useState<[string, string] | null>(null);
   const [editor, setEditor] = useState<NotebookDefinition | "new" | null>(null);
   const [archiving, setArchiving] = useState<NotebookDefinition | null>(null);
@@ -89,7 +100,7 @@ export function Notes() {
     const now = Date.now();
     const deadline = (state.notebook_entries ?? [])
       .filter((entry) => entry.by === context.actor && !entry.archived)
-      .map((entry) => Date.parse(entry.created_at) + 5000)
+      .map((entry) => Date.parse(entry.created_at) + UNDO_DURATION)
       .filter((time) => Number.isFinite(time) && time > now)
       .sort((left, right) => left - right)[0];
     if (deadline === undefined) return;
@@ -106,7 +117,14 @@ export function Notes() {
     setQty("");
     setDate("");
     setMeasurement("");
+    setFieldErrors({});
   };
+  const clearFieldError = (field: NoteField) =>
+    setFieldErrors((previous) => {
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
   const builtinTabs =
     role === "cashier"
       ? []
@@ -167,6 +185,7 @@ export function Notes() {
   };
   const notes = allNotes.filter(
     (item) =>
+      !("archived" in item && item.archived) &&
       (query || item.type === activeTab) &&
       (showDone || (item.status !== "resolved" && item.status !== "ordered")) &&
       (!query || searchText(item)),
@@ -187,13 +206,33 @@ export function Notes() {
       update(action);
       setMessage(feedback);
       setError("");
+      setFieldErrors({});
       return true;
     } catch (caught) {
-      setError(
-        custom
-          ? notebookError(caught, t)
-          : operationError(caught instanceof Error ? caught.message : "", t),
-      );
+      const message = custom
+        ? notebookError(caught, t)
+        : operationError(caught instanceof Error ? caught.message : "", t);
+      const key =
+        caught instanceof NotebookError
+          ? caught.key
+          : caught instanceof Error
+            ? caught.message
+            : "";
+      const field = (
+        {
+          text: "text",
+          product: "product",
+          quantity: "qty",
+          date: "date",
+          measurement: "measurement",
+          branch: "location",
+          location_unavailable: "location",
+          store_use: product ? "qty" : "product",
+        } as Record<string, NoteField>
+      )[key];
+      if (entryOpen && field)
+        setFieldErrors((previous) => ({ ...previous, [field]: message }));
+      else setError(message);
       return false;
     }
   };
@@ -226,12 +265,27 @@ export function Notes() {
           "ثبت‌شده با نویسنده، شعبه و زمان.",
         )}
         actions={
-          role === "supervisor" ? (
-            <Button onClick={() => setEditor("new")}>
-              <Plus size={16} aria-hidden="true" />
-              {t("New notebook", "دفترچه جدید")}
-            </Button>
-          ) : undefined
+          <>
+            {(isBuiltin || canAdd || canChooseLocation) && (
+              <Button
+                onClick={() => {
+                  clearEntryForm();
+                  setError("");
+                  setMessage(null);
+                  setEntryOpen(true);
+                }}
+              >
+                <Plus size={16} aria-hidden="true" />
+                {t("Add note", "افزودن یادداشت")}
+              </Button>
+            )}
+            {role === "supervisor" && (
+              <Button variant="secondary" onClick={() => setEditor("new")}>
+                <Plus size={16} aria-hidden="true" />
+                {t("New notebook", "دفترچه جدید")}
+              </Button>
+            )}
+          </>
         }
       />
       <Tabs
@@ -243,6 +297,7 @@ export function Notes() {
           setEntryLocation("");
           setError("");
           setMessage(null);
+          setEntryOpen(false);
         }}
         options={tabs.map((item) => ({
           value: item.key,
@@ -277,14 +332,22 @@ export function Notes() {
           </a>
         </div>
       )}
-      {(editing || isBuiltin || canAdd || canChooseLocation) && (
-        <Card
+      {entryOpen && (editing || isBuiltin || canAdd || canChooseLocation) && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            setEntryOpen(open);
+            if (!open) {
+              clearEntryForm();
+              setError("");
+            }
+          }}
           title={
             editing
               ? t("Edit note", "ویرایش یادداشت")
               : t("Add note", "افزودن یادداشت")
           }
-          className="form-card notebook-entry-form"
+          className="c3-operation-dialog notebook-entry-dialog"
         >
           <form
             aria-label={
@@ -334,15 +397,22 @@ export function Notes() {
               );
               if (saved) {
                 clearEntryForm();
+                setEntryOpen(false);
               }
             }}
           >
             <div className="form-grid">
               {!editing && canChooseLocation && (
-                <Field label={notesText(t, "location")}>
+                <Field
+                  label={notesText(t, "location")}
+                  error={fieldErrors.location}
+                >
                   <Select
                     value={entryLocation}
-                    onChange={setEntryLocation}
+                    onChange={(value) => {
+                      setEntryLocation(value);
+                      clearFieldError("location");
+                    }}
                     options={[
                       { value: "", label: notesText(t, "chooseLocation") },
                       ...locations.map((location) => ({
@@ -353,10 +423,17 @@ export function Notes() {
                   />
                 </Field>
               )}
-              <Field label={t("Note", "یادداشت")}>
+              <Field
+                className="notebook-note-field"
+                label={t("Note", "یادداشت")}
+                error={fieldErrors.text}
+              >
                 <textarea
                   value={text}
-                  onChange={(event) => setText(event.target.value)}
+                  onChange={(event) => {
+                    setText(event.target.value);
+                    clearFieldError("text");
+                  }}
                   placeholder={t(
                     "What should the team know?",
                     "تیم باید چه چیزی بداند؟",
@@ -365,6 +442,7 @@ export function Notes() {
               </Field>
               {(isBuiltin || notebook?.fields.product) && (
                 <Field
+                  error={fieldErrors.product}
                   label={
                     activeTab === "store_use"
                       ? notesText(t, "productRequired")
@@ -373,7 +451,10 @@ export function Notes() {
                 >
                   <Select
                     value={product}
-                    onChange={setProduct}
+                    onChange={(value) => {
+                      setProduct(value);
+                      clearFieldError("product");
+                    }}
                     options={[
                       { value: "", label: t("Choose product", "انتخاب محصول") },
                       ...state.products
@@ -394,6 +475,7 @@ export function Notes() {
               {(isBuiltin || notebook?.fields.quantity) && (
                 <Field
                   className="field-short"
+                  error={fieldErrors.qty}
                   label={
                     activeTab === "store_use"
                       ? t(
@@ -407,24 +489,40 @@ export function Notes() {
                     min="1"
                     step={isBuiltin ? "1" : "0.01"}
                     value={qty}
-                    onChange={setQty}
+                    onChange={(value) => {
+                      setQty(value);
+                      clearFieldError("qty");
+                    }}
                   />
                 </Field>
               )}
               {notebook?.fields.date && (
-                <Field label={t("Date (optional)", "تاریخ (اختیاری)")}>
-                  <DateField value={date} onChange={setDate} />
+                <Field
+                  label={t("Date (optional)", "تاریخ (اختیاری)")}
+                  error={fieldErrors.date}
+                >
+                  <DateField
+                    value={date}
+                    onChange={(value) => {
+                      setDate(value);
+                      clearFieldError("date");
+                    }}
+                  />
                 </Field>
               )}
               {notebook?.fields.measurement && (
                 <Field
                   className="field-short"
+                  error={fieldErrors.measurement}
                   label={`${t("Measurement", "اندازه‌گیری")} (${editing?.entry.measurement_unit ?? notebook.fields.measurement_unit})`}
                 >
                   <NumberField
                     step="0.1"
                     value={measurement}
-                    onChange={setMeasurement}
+                    onChange={(value) => {
+                      setMeasurement(value);
+                      clearFieldError("measurement");
+                    }}
                   />
                 </Field>
               )}
@@ -432,17 +530,27 @@ export function Notes() {
             {activeTab === "store_use" && (
               <p className="banner info">{notesText(t, "storeUse")}</p>
             )}
-            <div className="actions">
+            {error && (
+              <div className="banner danger" role="alert">
+                {error}
+              </div>
+            )}
+            <div className="dialog-actions">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setEntryOpen(false);
+                  clearEntryForm();
+                  setError("");
+                }}
+              >
+                {t("Cancel", "لغو")}
+              </Button>
               <Button type="submit" disabled={editing ? !canSaveEdit : !canAdd}>
                 {editing
                   ? t("Save changes", "ذخیره تغییرات")
                   : t("Save note", "ذخیره یادداشت")}
               </Button>
-              {editing && (
-                <Button variant="secondary" onClick={clearEntryForm}>
-                  {t("Cancel", "لغو")}
-                </Button>
-              )}
             </div>
             {editing && !canSaveEdit && (
               <p className="muted" role="status">
@@ -463,7 +571,7 @@ export function Notes() {
               </p>
             )}
           </form>
-        </Card>
+        </Dialog>
       )}
       {notebook && !canAdd && !canChooseLocation && !editing && (
         <p className="muted" role="status">
@@ -477,7 +585,7 @@ export function Notes() {
           )}
         </p>
       )}
-      {error && (
+      {error && !entryOpen && (
         <div className="banner danger" role="alert">
           {error}
         </div>
@@ -489,16 +597,15 @@ export function Notes() {
       )}
       <FilterToolbar
         count={`${count} ${translateCount("note", "notes", "یادداشت", "یادداشت", count, lang)}`}
-      >
-        <div className="notebook-search-pill">
-          <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+        search={
           <input
             aria-label={t("Search notes", "جستجوی یادداشت‌ها")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("Search all notebooks", "جستجو در همه دفترچه‌ها")}
           />
-        </div>
+        }
+      >
         <Checkbox checked={showDone} onChange={setShowDone}>
           {t(
             "Include done and ordered notes",
@@ -715,13 +822,8 @@ export function Notes() {
                       setMeasurement(item.measurement ?? "");
                       setError("");
                       setMessage(null);
-                      window.requestAnimationFrame(() =>
-                        document
-                          .querySelector<HTMLTextAreaElement>(
-                            ".notebook-entry-form textarea",
-                          )
-                          ?.focus(),
-                      );
+                      setFieldErrors({});
+                      setEntryOpen(true);
                     }}
                   >
                     <Pencil size={16} aria-hidden="true" />

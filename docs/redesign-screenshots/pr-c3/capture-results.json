@@ -1,0 +1,479 @@
+{
+  "generatedAt": "2026-10-09T22:48:01.063Z",
+  "sourceCommit": "baf348b8c6c33cafc8139eb59177f5dfae3b43fc",
+  "method": "Fresh browser profiles, real interface actions, immutable production assets; unedited PNG screenshots. Undo is paused by user-accessible keyboard focus. Desktop probes inspect panel/table scroll and individual visible table text bounds, not page overflow alone.",
+  "baseURL": "http://127.0.0.1:5270",
+  "productionBuilds": [
+    {
+      "variant": "en-light",
+      "scene": "suppliers-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "products-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "products-columns",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "labels-selection",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "offers-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "notes-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "dashboard-approvals",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "approval-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-light",
+      "scene": "undo",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "suppliers-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "products-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "products-columns",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "labels-selection",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "offers-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "notes-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "dashboard-approvals",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "approval-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "en-dark",
+      "scene": "undo",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "suppliers-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "products-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "products-columns",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "labels-selection",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "offers-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "notes-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "dashboard-approvals",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "approval-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "fa-light",
+      "scene": "undo",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "suppliers-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "products-buttons",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "products-columns",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "labels-selection",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "offers-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "notes-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "dashboard-approvals",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "approval-dialog",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    },
+    {
+      "variant": "phone",
+      "scene": "undo",
+      "htmlSHA256": "c9d6d68d728b33396ae3e1a228ca381bed1c686c87854f8c74e85932521bc5e0",
+      "entry": "./assets/index-CJDC3WEG.js",
+      "entrySHA256": "16fc2a3933a31ed9c879f233f4c2a14e151da928a250755d1a6fe0308af9ab9d"
+    }
+  ],
+  "screens": [
+    {
+      "scene": "suppliers-buttons",
+      "variant": "en-light",
+      "filename": "suppliers-buttons-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-buttons",
+      "variant": "en-light",
+      "filename": "products-buttons-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-columns",
+      "variant": "en-light",
+      "filename": "products-columns-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "labels-selection",
+      "variant": "en-light",
+      "filename": "labels-selection-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "offers-dialog",
+      "variant": "en-light",
+      "filename": "offers-dialog-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "notes-dialog",
+      "variant": "en-light",
+      "filename": "notes-dialog-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "dashboard-approvals",
+      "variant": "en-light",
+      "filename": "dashboard-approvals-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "approval-dialog",
+      "variant": "en-light",
+      "filename": "approval-dialog-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "en-light",
+      "filename": "undo-en-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "suppliers-buttons",
+      "variant": "en-dark",
+      "filename": "suppliers-buttons-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-buttons",
+      "variant": "en-dark",
+      "filename": "products-buttons-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-columns",
+      "variant": "en-dark",
+      "filename": "products-columns-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "labels-selection",
+      "variant": "en-dark",
+      "filename": "labels-selection-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "offers-dialog",
+      "variant": "en-dark",
+      "filename": "offers-dialog-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "notes-dialog",
+      "variant": "en-dark",
+      "filename": "notes-dialog-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "dashboard-approvals",
+      "variant": "en-dark",
+      "filename": "dashboard-approvals-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "approval-dialog",
+      "variant": "en-dark",
+      "filename": "approval-dialog-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "en-dark",
+      "filename": "undo-en-dark.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "suppliers-buttons",
+      "variant": "fa-light",
+      "filename": "suppliers-buttons-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-buttons",
+      "variant": "fa-light",
+      "filename": "products-buttons-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-columns",
+      "variant": "fa-light",
+      "filename": "products-columns-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "labels-selection",
+      "variant": "fa-light",
+      "filename": "labels-selection-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "offers-dialog",
+      "variant": "fa-light",
+      "filename": "offers-dialog-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "notes-dialog",
+      "variant": "fa-light",
+      "filename": "notes-dialog-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "dashboard-approvals",
+      "variant": "fa-light",
+      "filename": "dashboard-approvals-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "approval-dialog",
+      "variant": "fa-light",
+      "filename": "approval-dialog-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "fa-light",
+      "filename": "undo-fa-light.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "suppliers-buttons",
+      "variant": "phone",
+      "filename": "suppliers-buttons-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-buttons",
+      "variant": "phone",
+      "filename": "products-buttons-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "products-columns",
+      "variant": "phone",
+      "filename": "products-columns-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "labels-selection",
+      "variant": "phone",
+      "filename": "labels-selection-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "offers-dialog",
+      "variant": "phone",
+      "filename": "offers-dialog-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "notes-dialog",
+      "variant": "phone",
+      "filename": "notes-dialog-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "dashboard-approvals",
+      "variant": "phone",
+      "filename": "dashboard-approvals-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "approval-dialog",
+      "variant": "phone",
+      "filename": "approval-dialog-phone.png",
+      "layoutFindings": []
+    },
+    {
+      "scene": "undo",
+      "variant": "phone",
+      "filename": "undo-phone.png",
+      "layoutFindings": []
+    }
+  ],
+  "browserErrors": []
+}

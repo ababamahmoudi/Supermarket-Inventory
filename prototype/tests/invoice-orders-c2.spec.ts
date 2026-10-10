@@ -60,6 +60,10 @@ async function post(page: Page) {
   });
   await expect(button).toBeEnabled();
   await button.click();
+  await page
+    .getByRole("dialog", { name: "Post invoice", exact: true })
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click();
   await expect(button).toHaveCount(0);
   expect((await stored(page)).invoice.status).toBe("posted");
 }

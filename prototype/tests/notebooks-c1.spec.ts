@@ -48,6 +48,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
   await createNotebook(page);
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const form = page.getByRole("form", { name: "Add note", exact: true });
   await expect(form).toBeVisible();
   const location = form.getByLabel("Location", { exact: true });
@@ -93,6 +94,9 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
     "aria-selected",
     "true",
   );
+  await page
+    .getByRole("button", { name: "افزودن یادداشت", exact: true })
+    .click();
   await expect(page.getByLabel("مکان", { exact: true })).toHaveAttribute(
     "role",
     "combobox",
@@ -102,8 +106,10 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
       ".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]",
     ),
   ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await setLanguage(page, "en");
   await setBranch(page, "North York");
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await expect(page.getByLabel("Location", { exact: true })).toHaveCount(0);
   await form
     .getByLabel("Note", { exact: true })
@@ -117,6 +123,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await signIn(page, "Floor Worker");
   await page.goto("/#notes");
   await page.getByRole("tab", { name: /^Cleaning log/ }).click();
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   await form
     .getByLabel("Note", { exact: true })
     .fill("Floor Worker cleaning check");
@@ -159,6 +166,7 @@ test("All branches notebook add picker is restricted to its configured location"
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
   await createNotebook(page, { location: "North York" });
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const location = page.getByLabel("Location", { exact: true });
   await location.click();
   await expect(

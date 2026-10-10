@@ -136,9 +136,43 @@ test("remembered pack and supplier code edits preserve posted history and remain
   await expect(history.locator(".supplier-item-price-history")).toContainText(
     "Case of 1",
   );
-  expect(
-    await history.evaluate((element) => element.getBoundingClientRect().width),
-  ).toBeLessThanOrEqual(720);
+  await page.evaluate(async () => document.fonts.ready);
+  const geometry = await history.evaluate((element) => {
+    const findings: string[] = [];
+    let textFragments = 0;
+    const dialogBounds = element.getBoundingClientRect();
+    if (dialogBounds.left < -2 || dialogBounds.right > innerWidth + 2)
+      findings.push("Price history dialog outside viewport");
+    if (element.scrollWidth > element.clientWidth + 2)
+      findings.push("Price history dialog overflows horizontally");
+    const wrapper = element.querySelector(".supplier-item-price-history")!;
+    if (innerWidth > 760 && wrapper.scrollWidth > wrapper.clientWidth + 2)
+      findings.push("Price history table overflows its panel");
+    for (const cell of wrapper.querySelectorAll("th, td")) {
+      if (!cell.getClientRects().length) continue;
+      const bounds = cell.getBoundingClientRect();
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (
+          !node.textContent?.trim() ||
+          !node.parentElement?.getClientRects().length ||
+          node.parentElement.closest(".sr-only, [aria-hidden=true], [hidden]")
+        )
+          continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const rect of range.getClientRects()) {
+          textFragments++;
+          if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
+            findings.push(`Clipped history cell: ${node.textContent.trim()}`);
+        }
+      }
+    }
+    return { findings, textFragments };
+  });
+  expect(geometry.findings).toEqual([]);
+  expect(geometry.textFragments).toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(history).not.toBeVisible();
   const after = await page.evaluate(

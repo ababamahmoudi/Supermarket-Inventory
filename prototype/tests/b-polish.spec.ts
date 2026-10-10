@@ -293,7 +293,7 @@ test("Part 1 Open return exposes pickup and cancellation, then resolution after 
 
 test("Part 1 approval headers are complete and sortable Products headers and back links use shared styling", async ({
   page,
-}, testInfo) => {
+}) => {
   await signIn(page, "Supervisor");
   await page.goto("/#approvals");
   await page
@@ -306,27 +306,34 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
   });
   await expect(dialog).toBeVisible();
   expect((await dialog.boundingBox())!.width).toBeLessThanOrEqual(720.5);
-  const geometry = await dialog
-    .locator(".approval-scope-preview")
-    .evaluate((wrapper) => {
-      const header = wrapper.querySelector("th:last-child")!;
-      const range = document.createRange();
-      range.selectNodeContents(header);
-      const bounds = header.getBoundingClientRect();
-      return {
-        overflow: getComputedStyle(header).textOverflow,
-        text: header.textContent,
-        rangeRight: range.getBoundingClientRect().right,
-        cellRight: bounds.right,
-        cellLeft: bounds.left,
-        wrapperRight: wrapper.getBoundingClientRect().right,
-      };
-    });
-  expect(geometry.text).toBe("Override removed");
-  expect(geometry.overflow).not.toBe("ellipsis");
-  expect(geometry.rangeRight).toBeLessThanOrEqual(geometry.cellRight + 1);
-  if (testInfo.project.name === "desktop")
-    expect(geometry.cellRight).toBeLessThanOrEqual(geometry.wrapperRight + 1);
+  const effects = dialog.locator(".approval-scope-preview");
+  await expect(effects.locator("li")).toHaveCount(1);
+  await expect(effects).toContainText("North York");
+  await expect(effects).toContainText("Richmond Hill");
+  await expect(effects).toContainText("Newmarket");
+  await expect(effects).not.toContainText("Warehouse");
+  await expect(effects).not.toContainText("Override removed");
+  const geometry = await effects.evaluate((wrapper) => {
+    const bounds = wrapper.getBoundingClientRect();
+    return Array.from(
+      wrapper.querySelectorAll("li, strong, .approval-effect-price, .badge"),
+    )
+      .map((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return Array.from(range.getClientRects()).map((rect) => ({
+          left: rect.left,
+          right: rect.right,
+          panelLeft: bounds.left,
+          panelRight: bounds.right,
+        }));
+      })
+      .flat();
+  });
+  for (const rect of geometry) {
+    expect(rect.left).toBeGreaterThanOrEqual(rect.panelLeft - 1);
+    expect(rect.right).toBeLessThanOrEqual(rect.panelRight + 1);
+  }
   await page.keyboard.press("Escape");
   await page.goto("/#products");
   const productHeader = page

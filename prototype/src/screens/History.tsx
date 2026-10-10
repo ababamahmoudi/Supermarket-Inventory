@@ -366,7 +366,10 @@ export default function History() {
       <Dialog
         open={Boolean(selectedEntry)}
         onOpenChange={(open) => {
-          if (!open) setSelected(null);
+          if (!open) {
+            setSelected(null);
+            setError("");
+          }
         }}
         title={t("Revert change", "بازگردانی تغییر")}
         className="history-revert-dialog"
@@ -389,7 +392,18 @@ export default function History() {
             </p>
             <div className="history-revert-fields">
               {preview.map(({ patch, current, conflict: changed }, index) => (
-                <Field key={index} label={fieldLabel(patch)}>
+                <Field
+                  key={index}
+                  label={fieldLabel(patch)}
+                  error={
+                    changed
+                      ? t(
+                          "Changed since this action",
+                          "پس از این کار تغییر کرده است",
+                        )
+                      : undefined
+                  }
+                >
                   <div className="history-revert-values">
                     <div>
                       <span className="muted">{t("Current", "فعلی")}</span>
@@ -405,14 +419,6 @@ export default function History() {
                       </span>
                     </div>
                   </div>
-                  {changed && (
-                    <p className="form-error">
-                      {t(
-                        "Changed since this action",
-                        "پس از این کار تغییر کرده است",
-                      )}
-                    </p>
-                  )}
                 </Field>
               ))}
             </div>
@@ -425,8 +431,14 @@ export default function History() {
                   )}
               </p>
             )}
-            <div className="actions">
-              <Button variant="secondary" onClick={() => setSelected(null)}>
+            <div className="actions c3-dialog-actions">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setSelected(null);
+                  setError("");
+                }}
+              >
                 {t("Cancel", "لغو")}
               </Button>
               <Button

@@ -7,7 +7,7 @@ Configuration: `seed/arzon-config.json` → `pricing_categories`, `rounding_band
 
 ## Inputs and outputs
 
-- Input: `unit_cost_before_tax` (Decimal, 4 places), `pricing_category`, configuration.
+- Input: `unit_cost_before_tax` (Decimal, 4 places), `pricing_category`, configuration. Each products use their per-unit cost unchanged. Weight products retain source cost per kg/lb and normalize the cost to a canonical per-lb basis before this same pure function (see Weighed items).
 - Output: `selling_price` (Decimal, 2 places, displayed before tax), plus the intermediate values (`raw_price`, `after_band_rounding`, whether the special correction applied) so the UI can explain the result.
 - **Never use floating point.** Use Decimal (Python `decimal`, or a decimal library in TypeScript).
 
@@ -89,7 +89,7 @@ Treat this as the behavioral reference. Production code must read divisors, band
 | Kitchenware       | 1.50  | 2.50  | 2.49        | **2.49**  | **no** special correction                 |
 | Kitchenware       | 31.50 | 52.50 | 52.49       | **52.49** |                                           |
 
-The JSON file has 21 cases including boundaries (.00, .22, .23, .72). Note: with a 0.65 divisor and costs in whole cents, a raw price ending exactly in .73 cannot occur; do not write a test that expects it.
+The current owner fixture starts with 21 cases including boundaries (.00, .22, .23, .72); retained four-decimal boundary tests remain required, and C4 adds kg/lb weight cases without removing any prior case. Note: with a 0.65 divisor and costs in whole cents, a raw price ending exactly in .73 cannot occur; do not write a test that expects it.
 
 ## Margin check
 
@@ -110,7 +110,7 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 ## Price scope
 
 - Company default price per product, optional per-branch override.
-- The cost basis is the cost on the **branch's** invoice, so branches can calculate different prices. A new proposal records which branch triggered it; approval chooses **all branches** (default) or **this branch only**.
+- The cost basis is the cost on the **location's** invoice, so selling locations can calculate different prices. A new proposal retains the receiving source location; approval chooses **all selling locations** (default) or **this selling location only**. Exclude non-selling locations from price/offer effects unless Sells to customers is enabled.
 
 ## Display rules
 
@@ -126,8 +126,27 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 
 ## C manual provenance and exceptional receipts (2026-10-09)
 
-The Decimal algorithm, configured divisors/rounding and all seed cases above are unchanged. Selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again.
+The Decimal algorithm, configured divisors/rounding and all seed cases above are unchanged. Each selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again. C4 Weight products instead use explicit kg/lb source quantities and canonical per-lb approved pricing.
 
 For an already manual-priced product, regular new invoices retain the approved manual price and expose new rule price beside it. Reviewer must choose **Keep manual price / Use rule price**. Keep preserves manual provenance and evaluates any configured minimum-margin review using actual manual price/new regular cost; Use creates normal posting-time Supervisor approval even if rule/manual amounts equal so explicit approval can clear provenance. Before approval and after rejection, Cashier still charges the manual approved price. Source-linked proposals retain exact new costs/latest invoice basis and company/location scope.
 
 A **Short-dated (expiry discount)** lot requires actual expiry/Date tracking and records its real discounted receipt/payable, but never updates regular cost or selling price and creates no price-change proposal. Regular pricing basis is distinct from latest actual bought cost/history. Refused extras enter neither payable/receipt nor pricing approvals. Order expected totals are Decimal before-tax estimates, never supplier liabilities.
+
+## Weighed items (C4, 2026-10-09)
+
+Products declare **Sold by: Each / Weight** (Each for compatible existing records). For Weight invoices retain source quantity, quantity unit (kg/lb), source before-tax cost, cost unit (kg/lb), and optional case weight/unit. Quantity accepts up to three decimals. Invoice amount uses exact source-unit conversion, not a rounded displayed per-lb cost; retain source evidence and original totals/tax. All arithmetic is Decimal.
+
+Pricing normalization is a separate pure step before the existing category algorithm:
+
+1. Company conversion factor is **2.20462 lb per kg**.
+2. If source cost is per kg: canonical cost per lb = source cost ÷ factor, **half-up to four decimals**. If per lb: retain four-decimal source cost unchanged.
+3. Feed canonical cost into the same configured divisor, cent half-up, category rounding mode and special corrections. Default **Use rounding bands for weighed items** = Yes. When explicitly Off for a bands category, use half-up cents instead of the band/special-correction step; Rice's distinct configured upward-ending rule remains unchanged. Each products and historical approved prices are unaffected by this setting.
+4. Store the approved price per lb at two decimals with source/canonical units and provenance. A display choice never overwrites/recalculates that stored approved amount. Config **Main display unit** defaults lb (kg allowed); **Show second unit** defaults Yes.
+5. Display kg price = approved lb selling price × factor, half-up to cents. The displayed secondary kg price is not a new approval or pricing-engine input. Margin uses canonical cost and approved price in the same unit; preserve tax/manual-price/below-margin rules.
+
+| Source      | Canonical cost/lb | Divisor | Raw price rounded cents | Final/lb  | Display/kg |
+| ----------- | ----------------- | ------- | ----------------------- | --------- | ---------- |
+| $11.0000/kg | $4.9895           | 0.65    | $7.68                   | **$7.49** | **$16.51** |
+| $4.9895/lb  | $4.9895           | 0.65    | $7.68                   | **$7.49** | **$16.51** |
+
+Add both source-unit cases to seed/pricing-test-cases.json and test conversion precision, source quantities, display conversions and configuration without dropping all existing seed/boundary tests. Labels, Lookup, Products and product editor explicitly label per lb/per kg/per unit; the secondary display follows the company settings. Existing band-property tests apply to bands-enabled categories; the explicit bands-Off setting has its own cent-result tests.

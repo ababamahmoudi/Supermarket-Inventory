@@ -25,6 +25,24 @@ export function configuredBranches(
     includeInactive || branch.active !== false ? [branchId(branch, index)] : [],
   );
 }
+/** Retail prices and offers apply only to locations configured to sell. */
+export function sellingBranches(
+  config: CompanyConfig,
+  includeInactive = false,
+): Branch[] {
+  return config.branches.flatMap((branch, index) =>
+    (includeInactive || branch.active !== false) &&
+    (branch.sells_to_customers ?? branch.type !== "warehouse")
+      ? [branchId(branch, index)]
+      : [],
+  );
+}
+export function branchSellsToCustomers(
+  config: CompanyConfig,
+  id: Branch,
+): boolean {
+  return id !== "all" && sellingBranches(config).includes(id);
+}
 export function branchLabel(
   config: CompanyConfig,
   id: Branch,
@@ -168,6 +186,11 @@ export function saveBranchSettings(
     !["store", "warehouse"].includes(branch.type)
   )
     throw new SettingsError("branch");
+  if (
+    branch.sells_to_customers !== undefined &&
+    typeof branch.sells_to_customers !== "boolean"
+  )
+    throw new SettingsError("branch");
   const before = structuredClone(state.config.branches);
   const index = state.config.branches.findIndex(
     (entry) => entry.code === branch.code,
@@ -211,6 +234,7 @@ export function newBranch(config: CompanyConfig): ConfigBranch {
     name_fa: "",
     active: true,
     type: "store",
+    sells_to_customers: true,
     address: "",
     phone: "",
     opening_hours: "",

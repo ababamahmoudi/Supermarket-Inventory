@@ -1,5 +1,20 @@
 # Project changelog
 
+## 2026-10-09 — Pull request C3: presentation, navigation and Undo
+
+- Implemented four readable shared button styles, single search fields, proportioned table columns and user/table Columns preferences, available desktop form width and distinct sidebar icons.
+- Added stateful detail Back links and clickable breadcrumbs, immediate field-local errors, the approval summary/grouped location effects, bulk Labels selection and Offers/Notes creation dialogs. Non-selling Warehouse is excluded from customer price/offer scopes by default.
+- Extended safe scoped Undo to ten seconds, mirrored its corner, stacked independent timers and reserved phone dialog space so Undo cannot cover confirmation buttons. Posting, payments and legal corrections retain confirmation without Undo.
+- Verification: 579 units/49 files, all 21 shared pricing cases, lint/format/types/build and both complete GitHub CI jobs passed on baf348b8. Captured and individually opened 36 final screenshots; zero runtime/panel/table/text findings. Details, current checks, Ubuntu commands and the image matrix are in [PR_C3_REVIEW.md](PR_C3_REVIEW.md).
+
+## 2026-10-09 — C3/C4 specification-first owner review fixes
+
+- Recorded approved history-preserving merge gate and two stacked C3/C4 PRs without an intermediate review pause; scope prototype/docs/seed. This entry records specifications, not completed implementation or test results.
+- Updated design/source docs for four visible button variants, single wide search, aligned configurable tables, available desktop width with per-table/panel/text no-clipping proof at 1280/1440/1920, detail Back/stateful navigation, unique icons, field-local errors, approval layout, bulk Labels and creation dialogs. Superseded blanket max1440/desktop horizontal scrolling and B five-second toast rules; Undo is now10 seconds/rightEN/leftFA and conflict-aware/scoped.
+- Defined non-selling Warehouse default/configured opt-in while preserving receiving/source/history. Defined appended posted invoice corrections/actual retained originals, realistic pack fixtures preserving money, temporary New item order associations, canonical lb weighted pricing/source units/settings and product-driven/manual date workflows.
+- Defined simplified return states, retained RM memo, provisional pickup-credit projection distinct from confirmed financial posting, smaller actual credit/writeoff reconciliation,14-day alert and preserved safe-return evidence. Owner chose replacement releases provisional credit (owed $570 → $600), with no new purchase or credit ledger posting.
+- Recorded notebook English-required/Persian-optional fallback, Add location copy, defaults/decisions and the complete required automated/screenshot/Ubuntu review evidence. Implementation results will be added after actual checks.
+
 ## 2026-10-09 — Pull request C2: Orders and receiving workflow
 
 - Implemented `feat/prototype-c2-orders-requests`, [pull request #15](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/15), stacked on C1 [#14](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/14) without merging to main. It includes approved B and all C1 functionality.
@@ -57,7 +72,7 @@
 - Refined sidebar/top-bar details, compact lookup, invoice tabs/drafts layout, return numbering/actions, approval context/scope, dashboard balances, Payables overview, and adjacent Settings tester values.
 - Centralized symbol-first money, YYYY-MM-DD dates, offers, translated branch/demo-user labels, current-language product names, and isolated mixed-direction fragments.
 - Loaded Supervisor-only supplier-balance demo snapshots separately from the ledger, reconciled the original Fresh Valley invoice to avoid double counting, and restored the configured 25% minimum-margin defaults while preserving explicit saved custom edits.
-- Added balance/migration and all-screen presentation regressions, a reproducible 23-state/four-variant screenshot capture, and current Ubuntu instructions in `docs/DESIGN_POLISH_REVIEW.md`. Final executed results are recorded there.
+- Added balance/migration and all-screen presentation regressions, a reproducible 23-state/four variant screenshot capture, and current Ubuntu instructions in `docs/DESIGN_POLISH_REVIEW.md`. Final executed results are recorded there.
 - Paused B's new labels, notebooks, grouped Settings, History/Undo, and simulated-reading enhancements pending A approval. Suppliers/History page destinations remain unbuilt. Missing source return dates/authors are displayed as missing rather than invented.
 
 ## 2026-10-07 — Phase 0.2 redesign PR1: shell and four screens

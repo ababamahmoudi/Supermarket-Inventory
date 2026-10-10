@@ -1,3 +1,4 @@
+import "../c3-tables.css";
 import { translateCount } from "../i18n";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import Decimal from "decimal.js";
@@ -11,10 +12,12 @@ import {
   searchProducts,
 } from "../catalog";
 import { useDemo } from "../store";
+import { useListState } from "../navigation";
 import {
   configuredBranches,
   branchLabel as configuredBranchLabel,
   activePricingCategories,
+  sellingBranches,
 } from "../settings";
 import {
   supplierChoices,
@@ -56,7 +59,9 @@ import {
   Field,
   Dialog,
   PageHeader,
+  FilterToolbar,
   Select,
+  useTableColumns,
 } from "../ui";
 
 import {
@@ -230,7 +235,18 @@ export function ProductEditor({
   const patch = <K extends keyof ProductEdits>(
     key: K,
     value: ProductEdits[K],
-  ) => setValues((current) => ({ ...current, [key]: value }));
+  ) => {
+    setValues((current) => ({ ...current, [key]: value }));
+    const related =
+      error === key ||
+      (key === "barcode" && error === "barcode_conflict") ||
+      (key === "ai_category" && error === "category") ||
+      (key === "pricing_category" && error === "pricing_category") ||
+      (key === "main_supplier" && error === "supplier") ||
+      (key === "name_en" && error === "similar") ||
+      (key === "scope" && error === "branch");
+    if (related) setError(null);
+  };
   const priceChanged = sellingPrice !== startingPrice;
   const categories = [
     ...new Set(
@@ -424,7 +440,10 @@ export function ProductEditor({
               onChange={(event) => patch("unit_size", event.target.value)}
             />
           </Field>
-          <Field label={t("Category", "دسته")}>
+          <Field
+            label={t("Category", "دسته")}
+            error={error === "category" ? editorError(error, t) : undefined}
+          >
             <Select
               value={values.ai_category}
               onChange={(value) => patch("ai_category", value)}
@@ -434,7 +453,12 @@ export function ProductEditor({
               }))}
             />
           </Field>
-          <Field label={t("Pricing category", "دستهٔ قیمت‌گذاری")}>
+          <Field
+            label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+            error={
+              error === "pricing_category" ? editorError(error, t) : undefined
+            }
+          >
             <Select
               value={values.pricing_category}
               onChange={(value) => patch("pricing_category", value)}
@@ -444,7 +468,10 @@ export function ProductEditor({
               }))}
             />
           </Field>
-          <Field label={t("Supplier", "تأمین‌کننده")}>
+          <Field
+            label={t("Supplier", "تأمین‌کننده")}
+            error={error === "supplier" ? editorError(error, t) : undefined}
+          >
             <Select
               value={values.main_supplier}
               onChange={(value) => patch("main_supplier", value)}
@@ -479,6 +506,7 @@ export function ProductEditor({
                 onChange={(event) => {
                   setCost(event.target.value);
                   setMarginConfirmed(false);
+                  if (error === "cost" || error === "margin") setError(null);
                 }}
               />
             </Field>
@@ -497,6 +525,7 @@ export function ProductEditor({
                 setSellingPrice(event.target.value);
                 setManualPrice(true);
                 setMarginConfirmed(false);
+                if (error === "price" || error === "margin") setError(null);
               }}
             />
           </Field>
@@ -519,7 +548,13 @@ export function ProductEditor({
                 "این قیمت کمتر از حداقل حاشیه است.",
               )}
             </p>
-            <Checkbox checked={marginConfirmed} onChange={setMarginConfirmed}>
+            <Checkbox
+              checked={marginConfirmed}
+              onChange={(value) => {
+                setMarginConfirmed(value);
+                if (error === "margin") setError(null);
+              }}
+            >
               {t(
                 "Confirm price below minimum margin",
                 "تأیید قیمت زیر حداقل حاشیه",
@@ -551,7 +586,13 @@ export function ProductEditor({
                 )}
               </Button>
             ))}
-            <Checkbox checked={similarConfirmed} onChange={setSimilarConfirmed}>
+            <Checkbox
+              checked={similarConfirmed}
+              onChange={(value) => {
+                setSimilarConfirmed(value);
+                if (error === "similar") setError(null);
+              }}
+            >
               {t("Continue with this product name", "ادامه با این نام محصول")}
             </Checkbox>
           </div>
@@ -575,7 +616,10 @@ export function ProductEditor({
               <Field label={t("Branch", "شعبه")}>
                 <Select
                   value={targetBranch}
-                  onChange={(value) => setTargetBranch(value as Branch)}
+                  onChange={(value) => {
+                    setTargetBranch(value as Branch);
+                    if (error === "branch") setError(null);
+                  }}
                   options={branches.map((value) => ({
                     value,
                     label: configuredBranchLabel(state.config, value, lang),
@@ -627,11 +671,22 @@ export function ProductEditor({
             </DataTable>
           </div>
         )}
-        {error && (
-          <p className="form-error" role="alert">
-            {editorError(error, t)}
-          </p>
-        )}
+        {error &&
+          ![
+            "name_en",
+            "name_fa",
+            "unit_size",
+            "category",
+            "pricing_category",
+            "supplier",
+            "barcode_conflict",
+            "cost",
+            "price",
+          ].includes(error) && (
+            <p className="form-error" role="alert">
+              {editorError(error, t)}
+            </p>
+          )}
         <div className="actions product-editor-actions">
           <Button variant="secondary" onClick={onClose}>
             {t("Cancel", "انصراف")}
@@ -925,7 +980,7 @@ function ProductDetail({
                     </tr>
                   </thead>
                   <tbody>
-                    {branches.map((item) => {
+                    {sellingBranches(state.config).map((item) => {
                       const price = effectivePrice(state, product, item);
                       return (
                         <tr key={item}>
@@ -1557,17 +1612,63 @@ type SortColumn = "name" | "code" | "price";
 export function Products() {
   const { state, role, branch, t, lang, navigate } = useDemo();
   const [addOpen, setAddOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [pricingCategory, setPricingCategory] = useState("");
-  const [aiCategory, setAiCategory] = useState("");
-  const [status, setStatus] = useState("");
-  const [supplier, setSupplier] = useState("");
-  const [onlyPending, setOnlyPending] = useState(false);
-  const [onlyOffers, setOnlyOffers] = useState(false);
-  const [onlyManual, setOnlyManual] = useState(false);
-  const [sort, setSort] = useState<SortColumn>("name");
-  const [ascending, setAscending] = useState(true);
-  const [page, setPage] = useState(0);
+  const [search, setSearch] = useListState("products.search", "");
+  const [pricingCategory, setPricingCategory] = useListState(
+    "products.category",
+    "",
+  );
+  const [aiCategory, setAiCategory] = useListState("products.ai-category", "");
+  const [status, setStatus] = useListState("products.status", "");
+  const [supplier, setSupplier] = useListState("products.supplier", "");
+  const [onlyPending, setOnlyPending] = useListState("products.pending", false);
+  const [onlyOffers, setOnlyOffers] = useListState("products.offers", false);
+  const [onlyManual, setOnlyManual] = useListState("products.manual", false);
+  const [sort, setSort] = useListState<SortColumn>("products.sort", "name");
+  const [ascending, setAscending] = useListState("products.ascending", true);
+  const [page, setPage] = useListState("products.page", 0);
+  const tableColumns = useTableColumns("products", [
+    { key: "name", label: t("Product", "محصول"), required: true, width: 270 },
+    {
+      key: "code",
+      label: t("Product Code", "کد محصول"),
+      width: 104,
+      align: "end",
+    },
+    ...(role === "supervisor"
+      ? [
+          {
+            key: "cost",
+            label: t("Store cost", "هزینهٔ فروشگاه"),
+            width: 104,
+            align: "end" as const,
+          },
+          {
+            key: "margin",
+            label: t("Margin %", "حاشیه سود %"),
+            width: 96,
+            align: "end" as const,
+          },
+        ]
+      : []),
+    {
+      key: "price",
+      label: t("Approved price", "قیمت تأییدشده"),
+      width: 112,
+      align: "end",
+    },
+    {
+      key: "status",
+      label: t("Status and offer", "وضعیت و پیشنهاد"),
+      width: 240,
+    },
+    {
+      key: "actions",
+      label: t("Details", "جزئیات"),
+      width: 112,
+      align: "end",
+      actions: true,
+    },
+  ]);
   if (role === "cashier") return <Lookup />;
   const products = state.products.filter(
     (product) => product.company_id === state.config.company.seed_key,
@@ -1656,20 +1757,24 @@ export function Products() {
           )}
         </p>
       )}
-      <div className="catalog-filter-toolbar filter-toolbar">
-        <input
-          aria-label={t("Search products", "جست‌وجوی محصولات")}
-          type="search"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(0);
-          }}
-          placeholder={t(
-            "Name, Product Code or barcode",
-            "نام، کد محصول یا بارکد",
-          )}
-        />
+      <FilterToolbar
+        className="catalog-filter-toolbar"
+        search={
+          <input
+            aria-label={t("Search products", "جست‌وجوی محصولات")}
+            type="search"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(0);
+            }}
+            placeholder={t(
+              "Name, Product Code or barcode",
+              "نام، کد محصول یا بارکد",
+            )}
+          />
+        }
+      >
         <Select
           aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
           value={pricingCategory}
@@ -1779,6 +1884,7 @@ export function Products() {
         <Button variant="ghost" onClick={clear}>
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
+        {tableColumns.chooser}
         <span className="filter-count muted">
           {translateCount(
             "{{count}} product",
@@ -1789,7 +1895,7 @@ export function Products() {
             lang,
           )}
         </span>
-      </div>
+      </FilterToolbar>
       {!results.length ? (
         <EmptyState
           action={
@@ -1808,23 +1914,7 @@ export function Products() {
           <div className="stack">
             <DataTable
               className={`catalog-products-table${role === "supervisor" ? " with-store-cost" : ""}`}
-              columns={[
-                { width: "35%" },
-                { width: "104px", align: "end" },
-                ...(role === "supervisor"
-                  ? [
-                      { width: "120px", align: "end" as const },
-                      { width: "104px", align: "end" as const },
-                    ]
-                  : []),
-                { width: "120px", align: "end" },
-                { width: "28%" },
-                {
-                  width: role === "supervisor" ? "156px" : "84px",
-                  align: "end",
-                  actions: true,
-                },
-              ]}
+              columns={tableColumns.columns}
             >
               <thead>
                 <tr>

@@ -1,6 +1,7 @@
 import {
   branchLabel as configuredBranchLabel,
-  configuredBranches,
+  branchSellsToCustomers,
+  sellingBranches,
 } from "../settings";
 import { useState } from "react";
 import Decimal from "decimal.js";
@@ -10,30 +11,23 @@ import {
   proposeManualOverride,
   resolveApproval,
 } from "../approvals";
-import { effectiveOffer, effectivePrice } from "../catalog";
+import { effectivePrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
-import {
-  demoUserLabel,
-  LtrText,
-  Money,
-  OfferLabel,
-  ProductName,
-} from "../presentation";
+import { demoUserLabel, LtrText, Money, ProductName } from "../presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
 import { effectiveApprovalLocation } from "../received";
 import { SupplierApproval } from "./SupplierApproval";
+import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import type { Approval, Branch } from "../types";
 import {
   Badge,
   Button,
   Card,
   ConfirmDialog,
-  DataTable,
   EmptyState,
   Field,
   PageHeader,
-  Select,
   Tabs,
   NumberField,
 } from "../ui";
@@ -47,14 +41,20 @@ export function Approvals() {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
+  const [reasonErrors, setReasonErrors] = useState<Record<string, string>>({});
+  const [overrideErrors, setOverrideErrors] = useState<Record<string, string>>(
+    {},
+  );
   const [preview, setPreview] = useState<{
     approval: Approval;
     decision: "approve" | "reject";
     snapshot: string;
     target: Branch;
+    company: string;
+    branch: Branch;
   } | null>(null);
   const company = state.config.company.seed_key;
-  const branches = configuredBranches(state.config, true);
+  const branches = sellingBranches(state.config);
   const items = state.approvals
     .map((item) => ({
       ...item,
@@ -93,24 +93,27 @@ export function Approvals() {
     configuredBranchLabel(state.config, value, lang);
   const openPreview = (item: Approval, decision: "approve" | "reject") => {
     setMessage("");
-    const target =
-      branch !== "all"
+    const target = branchSellsToCustomers(state.config, item.branch)
+      ? item.branch
+      : branchSellsToCustomers(state.config, branch)
         ? branch
-        : item.branch !== "all"
-          ? item.branch
-          : branches[0];
+        : (branches[0] ?? "all");
     setPreview({
       approval: item,
       decision,
       snapshot: approvalSnapshot(state, item.product_code),
       target,
+      company,
+      branch,
     });
   };
   const confirm = () => {
     if (!preview) return;
     if (
+      preview.company !== company ||
+      preview.branch !== branch ||
       preview.snapshot !==
-      approvalSnapshot(state, preview.approval.product_code)
+        approvalSnapshot(state, preview.approval.product_code)
     ) {
       setPreview(null);
       setMessage(
@@ -121,17 +124,28 @@ export function Approvals() {
       );
       return;
     }
-    update((draft) =>
-      resolveApproval(
-        draft,
-        preview.approval.id,
-        preview.decision,
-        scope,
-        preview.target,
-        reasons[preview.approval.id],
-        preview.snapshot,
-      ),
-    );
+    try {
+      update((draft) =>
+        resolveApproval(
+          draft,
+          preview.approval.id,
+          preview.decision,
+          scope,
+          preview.target,
+          reasons[preview.approval.id],
+          preview.snapshot,
+        ),
+      );
+    } catch {
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+      setPreview(null);
+      return;
+    }
     setMessage(
       preview.approval.type === "barcode_conflict"
         ? t(
@@ -153,22 +167,24 @@ export function Approvals() {
   const marginAction = (item: Approval, action: "keep" | "override") => {
     const reason = reasons[item.id]?.trim();
     if (!reason) {
-      setMessage(
-        t(
+      setReasonErrors((current) => ({
+        ...current,
+        [item.id]: t(
           "Add a reason before keeping the price or proposing an override.",
           "پیش از حفظ قیمت یا پیشنهاد تغییر دستی، دلیل را وارد کنید.",
         ),
-      );
+      }));
       return;
     }
     const amount = overrides[item.id] ?? "";
     if (action === "override" && !/^\d+(\.\d{1,2})?$/.test(amount)) {
-      setMessage(
-        t(
+      setOverrideErrors((current) => ({
+        ...current,
+        [item.id]: t(
           "Enter a nonnegative override price with at most two decimals.",
           "قیمت دستی غیرمنفی را با حداکثر دو رقم اعشار وارد کنید.",
         ),
-      );
+      }));
       return;
     }
     update((draft) =>
@@ -398,23 +414,37 @@ export function Approvals() {
                   )}
                 </p>
                 <div className="form-grid approval-form">
-                  <Field label={t("Reason", "دلیل")}>
+                  <Field
+                    label={t("Reason", "دلیل")}
+                    error={reasonErrors[item.id]}
+                  >
                     <input
                       value={reasons[item.id] ?? ""}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setReasons({
                           ...reasons,
                           [item.id]: event.target.value,
-                        })
-                      }
+                        });
+                        setReasonErrors((current) => ({
+                          ...current,
+                          [item.id]: "",
+                        }));
+                      }}
                     />
                   </Field>
-                  <Field label={t("Manual override price", "قیمت دستی")}>
+                  <Field
+                    label={t("Manual override price", "قیمت دستی")}
+                    error={overrideErrors[item.id]}
+                  >
                     <NumberField
                       value={overrides[item.id] ?? ""}
-                      onChange={(value) =>
-                        setOverrides({ ...overrides, [item.id]: value })
-                      }
+                      onChange={(value) => {
+                        setOverrides({ ...overrides, [item.id]: value });
+                        setOverrideErrors((current) => ({
+                          ...current,
+                          [item.id]: "",
+                        }));
+                      }}
                     />
                   </Field>
                 </div>
@@ -446,7 +476,7 @@ export function Approvals() {
                       : t("Approve price", "تأیید قیمت")}
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="danger"
                   onClick={() => openPreview(item, "reject")}
                 >
                   {t("Reject", "رد کردن")}
@@ -495,106 +525,22 @@ export function Approvals() {
                   : t("Approve price", "تأیید قیمت")
           }
           onConfirm={confirm}
+          confirmVariant={preview.decision === "reject" ? "danger" : "primary"}
+          confirmDisabled={
+            preview.decision === "approve" &&
+            preview.approval.type !== "barcode_conflict" &&
+            !branches.length
+          }
         >
-          {preview.decision === "approve" &&
-          preview.approval.type !== "barcode_conflict" ? (
-            <>
-              <Field label={t("Apply price to", "اعمال قیمت به")}>
-                <Select
-                  value={scope}
-                  onChange={(value) => setScope(value as "all" | "branch")}
-                  options={[
-                    {
-                      value: "all",
-                      label: t("All branches", "همه شعبه‌ها"),
-                    },
-                    {
-                      value: "branch",
-                      label: t("This branch only", "فقط این شعبه"),
-                    },
-                  ]}
-                />
-              </Field>
-              <p>
-                {scope === "all"
-                  ? t(
-                      "All branch overrides will be removed, including intentional prices. Incompatible offers will stop; new offers wait for confirmation.",
-                      "همه قیمت‌های ویژه شعبه‌ها، از جمله قیمت‌های عمدی، حذف می‌شوند. پیشنهادهای ناسازگار متوقف می‌شوند و پیشنهادهای جدید منتظر تأیید می‌مانند.",
-                    )
-                  : t(
-                      "Only this branch changes. Other branches keep their prices and offers.",
-                      "فقط این شعبه تغییر می‌کند. شعبه‌های دیگر قیمت‌ها و پیشنهادهای خود را حفظ می‌کنند.",
-                    )}
-              </p>
-              <DataTable className="approval-scope-preview">
-                <thead>
-                  <tr>
-                    <th>{t("Branch", "شعبه")}</th>
-                    <th>{t("Price change", "تغییر قیمت")}</th>
-                    <th>{t("Affected offer", "پیشنهاد مرتبط")}</th>
-                    <th>{t("Override removed", "حذف قیمت ویژه")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(scope === "all" ? branches : [preview.target]).map(
-                    (value) => {
-                      const product = state.products.find(
-                        (item) =>
-                          item.code === preview.approval.product_code &&
-                          item.company_id === company,
-                      )!;
-                      const price = effectivePrice(state, product, value);
-                      const offer = effectiveOffer(state, product, value);
-                      return (
-                        <tr key={value}>
-                          <td>{branchName(value)}</td>
-                          <td>
-                            <div className="price-change-values">
-                              <ManualPricePill
-                                product={product}
-                                branch={value}
-                              />
-                              <span>
-                                {t("Old", "قبلی")}{" "}
-                                {price !== null && price !== undefined ? (
-                                  <Money value={price} />
-                                ) : (
-                                  "—"
-                                )}
-                              </span>
-                              <span>
-                                {t("New", "جدید")}{" "}
-                                <Money
-                                  value={preview.approval.proposed_price}
-                                />
-                              </span>
-                            </div>
-                          </td>
-                          <td>
-                            {offer ? (
-                              <OfferLabel label={offer.label} language={lang} />
-                            ) : (
-                              t("None", "ندارد")
-                            )}
-                            {offer &&
-                              offer.price !==
-                                preview.approval.proposed_price && (
-                                <> · {t("Will stop", "متوقف می‌شود")}</>
-                              )}
-                          </td>
-                          <td>
-                            {scope === "all" && product.branch_prices?.[value]
-                              ? t("Yes", "بله")
-                              : t("No", "خیر")}
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-              </DataTable>
-            </>
-          ) : null}
+          {preview.approval.type !== "barcode_conflict" && (
+            <ApprovalReviewPanel
+              approval={preview.approval}
+              scope={scope}
+              target={preview.target}
+              onScopeChange={setScope}
+              showEffects={preview.decision === "approve"}
+            />
+          )}
         </ConfirmDialog>
       )}
     </>

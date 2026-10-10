@@ -1,0 +1,124 @@
+.approval-review-content {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.approval-review-summary {
+  display: grid;
+  gap: 20px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  padding: 20px;
+}
+.approval-review-product {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.approval-review-product .product-name {
+  white-space: normal;
+  overflow: visible;
+}
+.approval-review-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(72px, 1fr) minmax(72px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.approval-review-facts > div,
+.approval-review-price-pair > span {
+  display: grid;
+  gap: 8px;
+}
+.approval-review-facts small {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.approval-review-facts strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.approval-review-facts > .approval-review-price-pair {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.approval-review-price-pair > svg {
+  flex: 0 0 auto;
+  margin-block-start: 22px;
+  color: var(--text-muted);
+}
+.approval-review-scope {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.approval-effects-heading {
+  margin: 0 0 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.approval-effect-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.approval-effect-list > li {
+  display: grid;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--surface-soft);
+  min-inline-size: 0;
+}
+.approval-effect-locations {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.approval-effect-locations > span {
+  white-space: nowrap;
+}
+.approval-effect-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  font-size: 0.875rem;
+}
+.approval-effect-price {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+.approval-warning-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--tile-lavender);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.approval-warning-callout > svg {
+  flex: 0 0 auto;
+}
+.approval-warning-callout > p {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .approval-review-summary {
+    padding: 16px;
+  }
+  .approval-review-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .approval-review-facts > .approval-review-price-pair {
+    grid-column: 1 / -1;
+  }
+}

@@ -102,7 +102,24 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();
+  const beforePost = await stored(page);
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  const confirmation = page.getByRole("dialog", {
+    name: "Post invoice",
+    exact: true,
+  });
+  await expect(confirmation).toBeVisible();
+  expect((await stored(page)).invoice).toEqual(beforePost.invoice);
+  expect((await stored(page)).ledger).toEqual(beforePost.ledger);
+  await confirmation
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  expect((await stored(page)).invoice).toEqual(beforePost.invoice);
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Post invoice", exact: true })
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click();
   await expect(page.getByRole("status")).toContainText("Posted.");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
@@ -115,6 +132,24 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
       (alert: { type: string }) => alert.type === "lower_price",
     ),
   ).toHaveLength(1);
+  const deliveryReference = page.getByLabel("Delivery document reference", {
+    exact: true,
+  });
+  const deliveryQuantity = page.getByLabel("Actual units received now", {
+    exact: true,
+  });
+  await deliveryReference.fill("");
+  await deliveryQuantity.fill("0");
+  await page
+    .getByRole("button", { name: "Receive short delivery", exact: true })
+    .click();
+  await expect(deliveryReference).toHaveAttribute("aria-invalid", "true");
+  await expect(deliveryQuantity).toHaveAttribute("aria-invalid", "true");
+  await deliveryReference.fill("FICTITIOUS-CHIPS-1");
+  await expect(deliveryReference).toHaveAttribute("aria-invalid", "false");
+  await expect(deliveryQuantity).toHaveAttribute("aria-invalid", "true");
+  await deliveryQuantity.fill("2");
+  await expect(deliveryQuantity).toHaveAttribute("aria-invalid", "false");
   await page
     .getByLabel("Delivery document reference", { exact: true })
     .fill("FICTITIOUS-CHIPS-1");

@@ -19,7 +19,10 @@ export type CompanyConfig = Omit<
     date_format?: "yyyy-mm-dd" | "dd/mm/yyyy" | "mm/dd/yyyy";
     text_size?: "normal" | "large";
   };
-  branches: (Omit<(typeof configSeed.branches)[number], "id" | "type"> & {
+  branches: (Omit<
+    (typeof configSeed.branches)[number],
+    "id" | "type" | "sells_to_customers"
+  > & {
     id?: string;
     active?: boolean;
     address?: string;
@@ -27,6 +30,7 @@ export type CompanyConfig = Omit<
     opening_hours?: string;
     tax_region?: string;
     type?: "store" | "warehouse";
+    sells_to_customers?: boolean;
   })[];
   pricing_categories: ((typeof configSeed.pricing_categories)[number] & {
     label_fa?: string;
@@ -293,6 +297,7 @@ export interface ExpiryRecord extends ScopedRecord {
 }
 export interface NoteRecord extends ScopedRecord {
   id: string;
+  archived?: boolean;
   type: "to_order" | "store_use" | "note_to_supervisor";
   text: string;
   by: string;

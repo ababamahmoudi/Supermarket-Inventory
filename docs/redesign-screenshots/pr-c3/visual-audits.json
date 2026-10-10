@@ -1,0 +1,429 @@
+{
+  "sourceCommit": "baf348b8c6c33cafc8139eb59177f5dfae3b43fc",
+  "audits": [
+    {
+      "sourceCommit": "baf348b8c6c33cafc8139eb59177f5dfae3b43fc",
+      "method": "Each of the exact final PNGs below was opened individually with view_image, then inspected against the user request/red-note concerns for approval dialog layout, dashboard overlap and Labels selection/search. Phone table sideways pan is explicitly allowed.",
+      "reviewed": [
+        {
+          "filename": "approval-dialog-en-dark.png",
+          "SHA256": "215a2f29163c1d0e06690954f165ef7b150c47ed8e72ee069c34be48340b3ae5",
+          "openedIndividually": true,
+          "checks": [
+            "Summary shows product, old and new price, cost and margin.",
+            "Identical selling-location effects are grouped; Warehouse absent.",
+            "Styled warning and secondary/primary footer actions readable; phone content fits."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "approval-dialog-en-light.png",
+          "SHA256": "327de55e6eec99f88c54cd29be4169ef003b80ef0cc0300c1fa4e706db34044f",
+          "openedIndividually": true,
+          "checks": [
+            "Summary shows product, old and new price, cost and margin.",
+            "Identical selling-location effects are grouped; Warehouse absent.",
+            "Styled warning and secondary/primary footer actions readable; phone content fits."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "approval-dialog-fa-light.png",
+          "SHA256": "ef5b49f208fb7ee1310e1a8ceeaec5caf41843ade69cf2a847adaccac5e58953",
+          "openedIndividually": true,
+          "checks": [
+            "Summary shows product, old and new price, cost and margin.",
+            "Identical selling-location effects are grouped; Warehouse absent.",
+            "Styled warning and secondary/primary footer actions readable; phone content fits."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "approval-dialog-phone.png",
+          "SHA256": "5d6f603e0f73bdd47835286d98983f7cd09326cad4b4780d9028e685a45a4c58",
+          "openedIndividually": true,
+          "checks": [
+            "Summary shows product, old and new price, cost and margin.",
+            "Identical selling-location effects are grouped; Warehouse absent.",
+            "Styled warning and secondary/primary footer actions readable; phone content fits."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "dashboard-approvals-en-dark.png",
+          "SHA256": "88a9dfdaff025313c7ef232773032946b8d4372097f7b40bdecd3e98964b68c9",
+          "openedIndividually": true,
+          "checks": [
+            "Product and bilingual name/code, prices and location readable.",
+            "Approve and Reject actions sit below compact rows without overlap.",
+            "Four KPI cards; phone capture frames entire approvals queue."
+          ],
+          "blockingIssues": [],
+          "observations": [
+            "Existing first KPI caption uses intentional ellipsis, with full text in its title; root notified separately."
+          ]
+        },
+        {
+          "filename": "dashboard-approvals-en-light.png",
+          "SHA256": "0c6533835312ecf26f0f476e2d46419eac4fd64c2c9d33b329af5ecb5ddca951",
+          "openedIndividually": true,
+          "checks": [
+            "Product and bilingual name/code, prices and location readable.",
+            "Approve and Reject actions sit below compact rows without overlap.",
+            "Four KPI cards; phone capture frames entire approvals queue."
+          ],
+          "blockingIssues": [],
+          "observations": [
+            "Existing first KPI caption uses intentional ellipsis, with full text in its title; root notified separately."
+          ]
+        },
+        {
+          "filename": "dashboard-approvals-fa-light.png",
+          "SHA256": "71a871fbe8bc6fd4545e3167b8a0f215c81107c516f324412c16c8ee22ad4f92",
+          "openedIndividually": true,
+          "checks": [
+            "Product and bilingual name/code, prices and location readable.",
+            "Approve and Reject actions sit below compact rows without overlap.",
+            "Four KPI cards; phone capture frames entire approvals queue."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "dashboard-approvals-phone.png",
+          "SHA256": "230a1b41c3e78bc7edeca98b1d6e0a4323cddaee084a62841a17d48848aa5fbb",
+          "openedIndividually": true,
+          "checks": [
+            "Product and bilingual name/code, prices and location readable.",
+            "Approve and Reject actions sit below compact rows without overlap.",
+            "Four KPI cards; phone capture frames entire approvals queue."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "labels-selection-en-dark.png",
+          "SHA256": "31805b4af7fe7d338a04929e3c5b572903dea1a5a1e68a9b39aff1cfaca55e06",
+          "openedIndividually": true,
+          "checks": [
+            "Selected row checkboxes visible; per-row copies/actions absent from Products.",
+            "Desktop search is one wide pill; headings align with values.",
+            "Copies and Add 2 products to waitlist bar visible; phone sideways table pan is permitted."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "labels-selection-en-light.png",
+          "SHA256": "2bb9ba1199c005046a7de43c31d354f55f8b84985facd23bcadd3b07c2a4a3ba",
+          "openedIndividually": true,
+          "checks": [
+            "Selected row checkboxes visible; per-row copies/actions absent from Products.",
+            "Desktop search is one wide pill; headings align with values.",
+            "Copies and Add 2 products to waitlist bar visible; phone sideways table pan is permitted."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "labels-selection-fa-light.png",
+          "SHA256": "80eb41939eb0fdf6b784007d8d892867218ea1b9a8b1d87d1e65707d94c907d2",
+          "openedIndividually": true,
+          "checks": [
+            "Selected row checkboxes visible; per-row copies/actions absent from Products.",
+            "Desktop search is one wide pill; headings align with values.",
+            "Copies and Add 2 products to waitlist bar visible; phone sideways table pan is permitted."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        },
+        {
+          "filename": "labels-selection-phone.png",
+          "SHA256": "550d55b4ee71cd621c43ee68661e112b8e932e5b133487a4957548cf1dd0ad6a",
+          "openedIndividually": true,
+          "checks": [
+            "Selected row checkboxes visible; per-row copies/actions absent from Products.",
+            "Desktop search is one wide pill; headings align with values.",
+            "Copies and Add 2 products to waitlist bar visible; phone sideways table pan is permitted."
+          ],
+          "blockingIssues": [],
+          "observations": []
+        }
+      ],
+      "blockingIssues": []
+    },
+    {
+      "sourceCommit": "baf348b8c6c33cafc8139eb59177f5dfae3b43fc",
+      "reviewer": "c4_seed_browser_final",
+      "selection": "Sorted PNG indices 12 through 29 inclusive (zero-based)",
+      "imageEditing": false,
+      "count": 18,
+      "entries": [
+        {
+          "filename": "notes-dialog-en-dark.png",
+          "sha256": "da92ecd837b88155a45ab909420d9ad4360050256ae1e13c674408fba43d4ed5",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Add note is a centered dialog rather than a permanent narrow creation card.",
+            "Note list and single clean search remain visible behind the dimmed dialog.",
+            "Dialog inputs, optional quantity field and Secondary Cancel/Primary Save note are legible; Persian mirrors field and action alignment."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "notes-dialog-en-light.png",
+          "sha256": "6a3a816692225442f9366daac845fd6549f1e79509f1bbcb7e46dceba5bdbdce",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Add note is a centered dialog rather than a permanent narrow creation card.",
+            "Note list and single clean search remain visible behind the dimmed dialog.",
+            "Dialog inputs, optional quantity field and Secondary Cancel/Primary Save note are legible; Persian mirrors field and action alignment."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "notes-dialog-fa-light.png",
+          "sha256": "9e639adeaff56de5bf028882708a5c8724a3dcbb7beb1b7a687da59616be4477",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Add note is a centered dialog rather than a permanent narrow creation card.",
+            "Note list and single clean search remain visible behind the dimmed dialog.",
+            "Dialog inputs, optional quantity field and Secondary Cancel/Primary Save note are legible; Persian mirrors field and action alignment."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "notes-dialog-phone.png",
+          "sha256": "cc51d629c49e640c179275ff20049551992f920383366ed1262ce662e3ae996a",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Add note is a centered dialog rather than a permanent narrow creation card.",
+            "Note list and single clean search remain visible behind the dimmed dialog.",
+            "Dialog inputs, optional quantity field and Secondary Cancel/Primary Save note are legible; Persian mirrors field and action alignment."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "offers-dialog-en-dark.png",
+          "sha256": "741a43340ff487e4d00a65d2064cd6dc5a4facb0aaa5f12b17e3a6f21486c539",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Create offer is a centered dialog opened from the primary page action.",
+            "Product/scope/date controls and checkbox use custom styled controls.",
+            "Dialog reflows into a phone column and actions remain inside the viewport; Persian is mirrored."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "offers-dialog-en-light.png",
+          "sha256": "1947c7d164c8cba1203f76b6d90603e37c72cd1f2d46cdc04ed46bfc88ca7792",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Create offer is a centered dialog opened from the primary page action.",
+            "Product/scope/date controls and checkbox use custom styled controls.",
+            "Dialog reflows into a phone column and actions remain inside the viewport; Persian is mirrored."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "offers-dialog-fa-light.png",
+          "sha256": "9a4d49d00670a400d021455ac12ec346fe1e34af757a133f7fd4c6b89f295302",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Create offer is a centered dialog opened from the primary page action.",
+            "Product/scope/date controls and checkbox use custom styled controls.",
+            "Dialog reflows into a phone column and actions remain inside the viewport; Persian is mirrored."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "offers-dialog-phone.png",
+          "sha256": "fe97dcd99173671e1f11bb1999d4c955f6d2ae0745a2cb81163d7626c71fa594",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Create offer is a centered dialog opened from the primary page action.",
+            "Product/scope/date controls and checkbox use custom styled controls.",
+            "Dialog reflows into a phone column and actions remain inside the viewport; Persian is mirrored."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-buttons-en-dark.png",
+          "sha256": "be01c0d542e7cc18ee52faee8119eb2742e7039883a0a82d68957c20577b3d9c",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Desktop Edit/View buttons have equal visible widths, blue borders and soft glows on alternating row fills.",
+            "First row actions are not obscured by a white overlay.",
+            "Number and text column headings align with their cells; approved/missing/pending statuses remain legible."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-buttons-en-light.png",
+          "sha256": "64c5dcc2ac08f8dc9b219235fb429ad1d52405e8ed1d53a22e34ea30181692f4",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Desktop Edit/View buttons have equal visible widths, blue borders and soft glows on alternating row fills.",
+            "First row actions are not obscured by a white overlay.",
+            "Number and text column headings align with their cells; approved/missing/pending statuses remain legible."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-buttons-fa-light.png",
+          "sha256": "3fdfd3a9d0f368850315725276e6a817e3efd573b719991ab0d08c906af49db8",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Desktop Edit/View buttons have equal visible widths, blue borders and soft glows on alternating row fills.",
+            "First row actions are not obscured by a white overlay.",
+            "Number and text column headings align with their cells; approved/missing/pending statuses remain legible."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-buttons-phone.png",
+          "sha256": "4b112dcf99395ec006eef6974d5b62cdf869aa589487516e36698114024b4a43",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Phone capture now exposes all Edit/View row actions with clear blue borders and soft glows on both striped fills.",
+            "Internal table is deliberately scrolled to its end action column, as permitted for phones; no document-level overflow.",
+            "The formerly missing button proof is visible and the first row actions are unobscured."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-columns-en-dark.png",
+          "sha256": "7f74d280047a4497fbf32155786e277f5d7b00b7871c97d0d9fd690e72b2a4cc",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Columns chooser is centered with custom checkboxes; Product identifier stays checked and disabled.",
+            "Reset columns and Secondary Close are visible and legible.",
+            "Phone chooser uses one column and all choices/actions remain in the viewport; Persian mirrors labels and actions."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-columns-en-light.png",
+          "sha256": "4e01da7f5be3ada42fa8f86c2137179ef3abb17a9dc258dff9ff5230d46eb691",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Columns chooser is centered with custom checkboxes; Product identifier stays checked and disabled.",
+            "Reset columns and Secondary Close are visible and legible.",
+            "Phone chooser uses one column and all choices/actions remain in the viewport; Persian mirrors labels and actions."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-columns-fa-light.png",
+          "sha256": "88caadab0f84c809de32d024d60e81eb7069cd3c35f74af7004110c2d829d71d",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Columns chooser is centered with custom checkboxes; Product identifier stays checked and disabled.",
+            "Reset columns and Secondary Close are visible and legible.",
+            "Phone chooser uses one column and all choices/actions remain in the viewport; Persian mirrors labels and actions."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "products-columns-phone.png",
+          "sha256": "20325a4e6db5fb26159a22ac1c54eb83a178da075c7d979c51ec8baf459d0ebc",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Columns chooser is centered with custom checkboxes; Product identifier stays checked and disabled.",
+            "Reset columns and Secondary Close are visible and legible.",
+            "Phone chooser uses one column and all choices/actions remain in the viewport; Persian mirrors labels and actions."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "suppliers-buttons-en-dark.png",
+          "sha256": "e7e20892f8f2ff01a2f1ee7b33ae59f0a057e450ae5ac4bfa28ce96fc1b25369",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Primary Add supplier and equal-width Secondary View buttons are legible on both stripe fills.",
+            "Single clean search pill matches adjacent custom filter controls.",
+            "Short Deliveries heading, nine purposeful columns and aligned money headings remain fully visible."
+          ],
+          "issues": []
+        },
+        {
+          "filename": "suppliers-buttons-en-light.png",
+          "sha256": "69147df5e584c167b1f5f7ffee516fd0daadaf894fe19fcaaba8b24460c5d062",
+          "openedIndividually": true,
+          "status": "pass",
+          "checkedAgainstOwnerNotes": [
+            "Primary Add supplier and equal-width Secondary View buttons are legible on both stripe fills.",
+            "Single clean search pill matches adjacent custom filter controls.",
+            "Short Deliveries heading, nine purposeful columns and aligned money headings remain fully visible."
+          ],
+          "issues": []
+        }
+      ]
+    },
+    {
+      "source_commit": "baf348b8c6c33cafc8139eb59177f5dfae3b43fc",
+      "reviewed_individually": true,
+      "image_edits": false,
+      "reference_notes": "User C3 requirements 1, 2, 3, 5, 8 and proof 26. Compared against original Layout problems.png and Should be on the right butom corner, also available for most of the actions.png.",
+      "screenshots": [
+        {
+          "file": "suppliers-buttons-fa-light.png",
+          "sha256": "492e231775a0ac2bb336fd053699bf037c214f2c1ef428fa2ddb15ef98488ccc",
+          "result": "pass",
+          "notes": "RTL headings, amount columns and end actions align; one clean wide search field, short Deliveries heading, readable glowing secondary View buttons, and no clipped cells or overlapping shapes."
+        },
+        {
+          "file": "suppliers-buttons-phone.png",
+          "sha256": "136545aac3f09e1adec7b0686793c7c536575182c0168f17dad912a285e9ef2e",
+          "result": "pass",
+          "notes": "Single full-width search field and clear Columns/filter actions; the phone table uses permitted internal horizontal scrolling. No document clipping or duplicate pill."
+        },
+        {
+          "file": "undo-en-dark.png",
+          "sha256": "77cab0c0178ef8cfa48f0459af8d86cfd045583d09d94ef0d147073375cb6f2e",
+          "result": "pass",
+          "notes": "Readable action name and Undo link at bottom-right above the page; distinct dark secondary/danger button styles. Temporary toast overlays page content as requested and leaves the signed-in user card clear."
+        },
+        {
+          "file": "undo-en-light.png",
+          "sha256": "97107e716309876c54d0115f56f0c7e802734e731c8365b5dd2ecb5adae53b75",
+          "result": "pass",
+          "notes": "Readable action name and Undo at bottom-right, away from signed-in card; offer columns align and secondary/danger actions remain clear. Temporary toast sits above page content."
+        },
+        {
+          "file": "undo-fa-light.png",
+          "sha256": "139ca85d182a91f16ce5e02afe789f6b50de95c626b4dcd436c2d334c26cfd75",
+          "result": "pass",
+          "notes": "Undo mirrors to bottom-left with readable Persian action name/link; table and signed-in-card placement mirror correctly. Temporary toast sits above page content."
+        },
+        {
+          "file": "undo-phone.png",
+          "sha256": "d8dc74c4c3c4351af5358c1dc28459c21ca5d9455169fbf5087b06c81001d1c9",
+          "result": "pass",
+          "notes": "Readable action-name/Undo toast fits bottom-right of phone viewport. Search and controls wrap without document overflow, and sidebar is closed."
+        }
+      ]
+    }
+  ]
+}

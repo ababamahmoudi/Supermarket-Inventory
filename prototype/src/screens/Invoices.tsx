@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
-import { ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { demoSeed as demo } from "../config";
 import { useDemo, demoUsers } from "../store";
 import {
@@ -27,12 +27,15 @@ import {
   DateField,
   Dropzone,
   Dialog,
+  ConfirmDialog,
   NumberField,
   Select,
   SegmentedControl,
   SummaryTile,
   Tabs,
+  useTableColumns,
 } from "../ui";
+import { useListState, useRouteParam } from "../navigation";
 import {
   DateText,
   demoUserLabel,
@@ -85,6 +88,7 @@ import {
 } from "../supplier-items";
 import { clearInvoiceOrder, clearInvoiceOrderLine } from "../invoice-orders";
 import { InvoiceOrderReview } from "./InvoiceOrderReview";
+import "./invoice-c3.css";
 import type {
   Branch,
   DemoInvoice,
@@ -218,7 +222,22 @@ function retainInvoiceWorkspace(draft: DemoState) {
 }
 
 export default function Invoices() {
-  const { state, update, role, branch, lang, t, money, user } = useDemo();
+  const { state, update, role, branch, lang, t, money, user, navigate } =
+    useDemo();
+  const routeId = useRouteParam("id");
+  const postedColumns = useTableColumns("invoices", [
+    {
+      key: "invoice",
+      label: t("Invoice", "فاکتور"),
+      required: true,
+      width: "18%",
+    },
+    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "23%" },
+    { key: "branch", label: t("Branch", "شعبه"), width: "16%" },
+    { key: "date", label: t("Date", "تاریخ"), width: "15%" },
+    { key: "status", label: t("Status", "وضعیت"), width: "13%" },
+    { key: "review", label: t("Review", "بررسی"), width: "15%", actions: true },
+  ]);
   const branches = configuredBranches(state.config);
   const invoiceLocation = effectiveInvoiceLocation(state, state.invoice);
   const locationSuggestion = suggestedInvoiceLocation(state, state.invoice);
@@ -259,6 +278,7 @@ export default function Invoices() {
   const [moveError, setMoveError] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
   const [message, setMessage] = useState("");
+  const [postOpen, setPostOpen] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [manualCode, setManualCode] = useState("0002");
   const [openLines, setOpenLines] = useState<Record<string, boolean>>({});
@@ -266,6 +286,9 @@ export default function Invoices() {
     Record<string, number>
   >({});
   const [deliveryRefs, setDeliveryRefs] = useState<Record<string, string>>({});
+  const [deliveryErrors, setDeliveryErrors] = useState<
+    Record<string, { quantity?: string; reference?: string }>
+  >({});
   const blockers = role ? invoiceBlockers(state, role, branch) : [];
   const currentTab: InvoiceTab =
     invoice.status === "reading"
@@ -277,29 +300,43 @@ export default function Invoices() {
             ? "needs_review"
             : "ready_to_post"
           : "drafts";
-  const [selectedView, setSelectedView] = useState<{
+  const [selectedView, setSelectedView] = useListState<{
     invoiceId: string;
     stage: InvoiceTab;
     tab: InvoiceTab;
     postedDetail: boolean;
-  } | null>(null);
+  } | null>("invoices.tab", null);
   const validSelection =
     selectedView?.invoiceId === invoice.id && selectedView.stage === currentTab;
-  const tab = validSelection ? selectedView.tab : currentTab;
-  const showPostedDetail = validSelection
-    ? selectedView.postedDetail
-    : currentTab === "posted";
+  const [listTab, setListTab] = useListState<InvoiceTab>(
+    "invoices.list-tab",
+    "drafts",
+  );
+  const tab = routeId
+    ? validSelection
+      ? selectedView.tab
+      : currentTab
+    : listTab;
+  const showPostedDetail = routeId === invoice.id;
 
   function chooseTab(nextTab: InvoiceTab, postedDetail = false) {
+    setListTab(nextTab);
     setSelectedView({
       invoiceId: invoice.id,
       stage: currentTab,
       tab: nextTab,
       postedDetail,
     });
+    if (!postedDetail && routeId) navigate("invoices");
   }
   const totals = shortTotals(invoice);
   const refused = refusedTotals(invoice);
+  const payable = /^[0-9]+(?:\.[0-9]{1,2})?$/.test(invoice.final_total)
+    ? new Decimal(invoice.final_total)
+        .minus(totals.total)
+        .minus(refused.total)
+        .toFixed(2)
+    : "0.00";
   const lowerLines = lowerPriceLines(state);
   const locked = invoice.status === "posted";
   const active = invoice.status !== "empty";
@@ -421,7 +458,7 @@ export default function Invoices() {
     );
 
   function start(manual = false) {
-    window.history.replaceState(null, "", "#invoices");
+    let id = "";
     update((draft) => {
       const currentReader = readerRef.current;
       if (
@@ -445,8 +482,10 @@ export default function Invoices() {
       retainInvoiceWorkspace(draft);
       draft.invoice = createInvoice(draft, targetBranch, manual);
       draft.invoice.receiving_employee = user?.name;
+      id = draft.invoice.id;
     });
-    chooseTab("drafts");
+    setSelectedView(null);
+    if (id) navigate(`invoices?id=${encodeURIComponent(id)}`);
     setDetailsOpen(manual);
     setMessage("");
     setUploadError("");
@@ -482,6 +521,7 @@ export default function Invoices() {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+      let attachedId = "";
       updateInvoice((draft) => {
         const existing = draft.invoice;
         if (existing.status === "posted") return;
@@ -508,11 +548,14 @@ export default function Invoices() {
               ? "reading"
               : "draft";
         draft.invoice = next;
+        attachedId = next.id;
       });
       setUploadError("");
       setMessage("");
-      chooseTab("processing");
+      setSelectedView(null);
       setDetailsOpen(false);
+      // The retained original and its review have a distinct browser-history entry.
+      if (attachedId) navigate(`invoices?id=${encodeURIComponent(attachedId)}`);
     } catch {
       setUploadError(
         t(
@@ -571,6 +614,8 @@ export default function Invoices() {
     updateInvoice((draft) => {
       postInvoice(draft, role!, branch, user?.name);
     });
+    setSelectedView(null);
+    navigate(`invoices?id=${encodeURIComponent(invoice.id)}`);
     setMessage(
       t(
         "Posted. Received, approvals, alerts, and supplier ledger are updated.",
@@ -593,12 +638,23 @@ export default function Invoices() {
       quantity <= 0 ||
       quantity > remaining
     ) {
-      setMessage(
-        t(
-          "Enter a delivery reference and no more than the remaining missing units.",
-          "مرجع تحویل را وارد کنید؛ تعداد نباید از واحدهای کمبود باقی‌مانده بیشتر باشد.",
-        ),
-      );
+      setDeliveryErrors((current) => ({
+        ...current,
+        [index]: {
+          reference: !receipt.trim()
+            ? t("Enter a delivery reference.", "مرجع تحویل را وارد کنید.")
+            : undefined,
+          quantity:
+            !Number.isSafeInteger(quantity) ||
+            quantity <= 0 ||
+            quantity > remaining
+              ? t(
+                  "Enter no more than the remaining missing units.",
+                  "تعداد نباید از واحدهای کمبود باقی‌مانده بیشتر باشد.",
+                )
+              : undefined,
+        },
+      }));
       return;
     }
     // The amount is a pure allocation preview; posting stores the same result once.
@@ -639,6 +695,7 @@ export default function Invoices() {
       `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} \u2066${money(restored)}\u2069`,
     );
     setDeliveryRefs((current) => ({ ...current, [index]: "" }));
+    setDeliveryErrors((current) => ({ ...current, [index]: {} }));
   }
 
   const branchInvoices =
@@ -649,15 +706,32 @@ export default function Invoices() {
         readableInvoice(item, state.config.company.seed_key, reader, state) &&
         (branch === "all" || effectiveInvoiceLocation(state, item) === branch),
     ) ?? [];
-  const savedDrafts =
-    state.invoices?.filter(
+  const savedDrafts = [
+    ...(state.invoices?.filter(
       (item) =>
         item.id !== invoice.id &&
         item.status !== "empty" &&
         item.status !== "posted" &&
         readableInvoice(item, state.config.company.seed_key, reader, state) &&
         (role === "floor_worker" || branch === "all" || item.branch === branch),
-    ) ?? [];
+    ) ?? []),
+    ...(!routeId &&
+    active &&
+    !locked &&
+    canReadWorkspace &&
+    (branch === "all" || invoiceLocation === branch)
+      ? [invoice]
+      : []),
+  ].filter((saved) => {
+    if (tab === "drafts") return saved.status === "draft";
+    if (tab === "processing") return saved.status === "reading";
+    if (saved.status !== "review") return false;
+    const needsReview =
+      invoiceBlockers({ ...state, invoice: saved }, role!, branch).length > 0;
+    return tab === "needs_review"
+      ? needsReview
+      : tab === "ready_to_post" && !needsReview;
+  });
   const resume = (saved: DemoInvoice) => {
     update((draft) => {
       if (
@@ -674,9 +748,21 @@ export default function Invoices() {
     });
     setDetailsOpen(true);
     setSelectedView(null);
+    navigate(`invoices?id=${encodeURIComponent(saved.id)}`);
   };
   const draftList = savedDrafts.length ? (
-    <Card title={t("Drafts", "پیش‌نویس‌ها")} className="invoice-saved-drafts">
+    <Card
+      title={
+        tab === "drafts"
+          ? t("Drafts", "پیش‌نویس‌ها")
+          : tab === "processing"
+            ? t("Processing", "در حال پردازش")
+            : tab === "needs_review"
+              ? t("Needs review", "نیازمند بررسی")
+              : t("Ready to post", "آماده ثبت")
+      }
+      className="invoice-saved-drafts"
+    >
       {savedDrafts.map((saved) => (
         <div className="dialog-actions" key={saved.id}>
           <LtrText>
@@ -741,6 +827,19 @@ export default function Invoices() {
           }
         />
       )}
+      {routeId === invoice.id && active && (
+        <a
+          className="back-link invoice-back-link"
+          href="#invoices"
+          onClick={(event) => {
+            event.preventDefault();
+            chooseTab(listTab);
+          }}
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          {t("Back to Invoices", "بازگشت به فاکتورها")}
+        </a>
+      )}
       <PageHeader
         title={t("Invoices", "فاکتورها")}
         description={t(
@@ -777,9 +876,13 @@ export default function Invoices() {
           {message}
         </div>
       )}
-      {tab === "drafts" && draftList}
+      {!routeId && tab !== "posted" && draftList}
       {tab === "posted" && !showPostedDetail ? (
-        <Card title={t("Posted invoices", "فاکتورهای ثبت‌شده")}>
+        <Card
+          title={t("Posted invoices", "فاکتورهای ثبت‌شده")}
+          className="invoice-posted-list"
+        >
+          <div className="table-column-actions">{postedColumns.chooser}</div>
           {!branchInvoices.length ? (
             <EmptyState>
               {t(
@@ -788,7 +891,10 @@ export default function Invoices() {
               )}
             </EmptyState>
           ) : (
-            <DataTable>
+            <DataTable
+              className="invoice-posted-table"
+              columns={postedColumns.columns}
+            >
               <thead>
                 <tr>
                   <th scope="col">{t("Invoice", "فاکتور")}</th>
@@ -828,6 +934,9 @@ export default function Invoices() {
                           });
                           chooseTab("posted", true);
                           setDetailsOpen(false);
+                          navigate(
+                            `invoices?id=${encodeURIComponent(item.id)}`,
+                          );
                         }}
                       >
                         {t("View invoice", "مشاهده فاکتور")}
@@ -839,7 +948,8 @@ export default function Invoices() {
             </DataTable>
           )}
         </Card>
-      ) : tab !== currentTab ? (
+      ) : !routeId && savedDrafts.length ? null : (!routeId && active) ||
+        tab !== currentTab ? (
         <Card className="invoice-view-empty">
           <EmptyState>
             {tab === "cancelled"
@@ -2829,6 +2939,7 @@ export default function Invoices() {
                                     "Actual units received now",
                                     "واحدهای واقعاً دریافت‌شده اکنون",
                                   )}
+                                  error={deliveryErrors[index]?.quantity}
                                 >
                                   <NumberField
                                     className="control-narrow"
@@ -2841,12 +2952,19 @@ export default function Invoices() {
                                       deliveryQuantities[index] ??
                                       Math.min(2, remaining)
                                     }
-                                    onChange={(value) =>
+                                    onChange={(value) => {
                                       setDeliveryQuantities((current) => ({
                                         ...current,
                                         [index]: Number(value),
-                                      }))
-                                    }
+                                      }));
+                                      setDeliveryErrors((current) => ({
+                                        ...current,
+                                        [index]: {
+                                          ...current[index],
+                                          quantity: undefined,
+                                        },
+                                      }));
+                                    }}
                                   />
                                 </Field>
                                 <Field
@@ -2854,6 +2972,7 @@ export default function Invoices() {
                                     "Delivery document reference",
                                     "مرجع سند تحویل",
                                   )}
+                                  error={deliveryErrors[index]?.reference}
                                 >
                                   <input
                                     dir="ltr"
@@ -2861,12 +2980,19 @@ export default function Invoices() {
                                       deliveryRefs[index] ??
                                       `DEMO-DELIVERY-${(line.qty_later_received ?? 0) + 1}`
                                     }
-                                    onChange={(event) =>
+                                    onChange={(event) => {
                                       setDeliveryRefs((current) => ({
                                         ...current,
                                         [index]: event.target.value,
-                                      }))
-                                    }
+                                      }));
+                                      setDeliveryErrors((current) => ({
+                                        ...current,
+                                        [index]: {
+                                          ...current[index],
+                                          reference: undefined,
+                                        },
+                                      }));
+                                    }}
                                   />
                                 </Field>
                               </div>
@@ -2934,7 +3060,10 @@ export default function Invoices() {
                 >
                   {t("Save as draft", "ذخیره به عنوان پیش‌نویس")}
                 </Button>
-                <Button onClick={post} disabled={blockers.length > 0}>
+                <Button
+                  onClick={() => setPostOpen(true)}
+                  disabled={blockers.length > 0}
+                >
                   {t("Post invoice", "ثبت فاکتور")}
                 </Button>
               </div>
@@ -2942,6 +3071,27 @@ export default function Invoices() {
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={postOpen}
+        onOpenChange={setPostOpen}
+        title={t("Post invoice", "ثبت فاکتور")}
+        description={t(
+          "Received, approvals, alerts, and supplier ledger are updated.",
+          "دریافت‌شده‌ها، تأییدها، هشدارها و دفتر تأمین‌کننده به‌روز می‌شوند.",
+        )}
+        confirmLabel={t("Post invoice", "ثبت فاکتور")}
+        confirmDisabled={blockers.length > 0}
+        onConfirm={post}
+      >
+        <p>
+          <LtrText>{invoice.supplier_invoice_number}</LtrText> ·{" "}
+          <LtrText>{invoice.supplier}</LtrText>
+        </p>
+        <p>
+          {t("Payable", "قابل پرداخت")}:{" "}
+          <Money value={payable} currency={state.config.company.currency} />
+        </p>
+      </ConfirmDialog>
       <Dialog
         open={moveOpen}
         onOpenChange={setMoveOpen}
@@ -2970,7 +3120,10 @@ export default function Invoices() {
         <Field label={t("Reason", "دلیل")}>
           <textarea
             value={moveReason}
-            onChange={(event) => setMoveReason(event.target.value)}
+            onChange={(event) => {
+              setMoveReason(event.target.value);
+              setMoveError("");
+            }}
           />
         </Field>
         {movePreview && (

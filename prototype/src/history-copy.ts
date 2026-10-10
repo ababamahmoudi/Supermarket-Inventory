@@ -5,6 +5,10 @@ import type { Language } from "./types";
 
 const actions: Record<string, [string, string]> = {
   Undone: ["Undone", "واگرد شد"],
+  note_added: ["Add note", "افزودن یادداشت"],
+  note_seen: ["Mark seen", "علامت دیده‌شده"],
+  note_resolved: ["Mark done", "علامت انجام‌شده"],
+  "Mark ordered": ["Mark ordered", "علامت سفارش‌داده‌شده"],
   "Save draft": ["Save draft", "ذخیره پیش‌نویس"],
   "Edit draft": ["Edit draft", "ویرایش پیش‌نویس"],
   "Company settings changed": [

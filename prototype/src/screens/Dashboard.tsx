@@ -1,6 +1,7 @@
 import {
   branchLabel as configuredBranchLabel,
-  configuredBranches,
+  branchSellsToCustomers,
+  sellingBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useEffect, useState, type ReactNode } from "react";
@@ -23,15 +24,15 @@ import {
   projectExpiryLocation,
 } from "../received";
 import { approvalSnapshot, resolveApproval } from "../approvals";
-import { effectiveOffer, effectivePrice } from "../catalog";
+import { effectivePrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
 import { SupplierApproval } from "./SupplierApproval";
+import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import {
   demoUserLabel,
   DateText,
   LtrText,
   Money,
-  OfferLabel,
   ProductName,
 } from "../presentation";
 import {
@@ -52,9 +53,7 @@ import {
   ConfirmDialog,
   DataTable,
   EmptyState,
-  Field,
   PageHeader,
-  Select,
 } from "../ui";
 import {
   companyTimestamp,
@@ -141,7 +140,7 @@ export function Dashboard() {
       </EmptyState>
     );
 
-  const branches = configuredBranches(state.config, true);
+  const branches = sellingBranches(state.config);
   const today = companyDate(state.config);
   const approvals = scopedRecords(
     state.approvals.map((row) => ({
@@ -229,7 +228,9 @@ export function Dashboard() {
   const notes = scopedRecords(state.notes, context)
     .filter(
       (item) =>
-        item.type === "note_to_supervisor" && item.status !== "resolved",
+        !item.archived &&
+        item.type === "note_to_supervisor" &&
+        item.status !== "resolved",
     )
     .sort(
       (left, right) =>
@@ -409,12 +410,11 @@ export function Dashboard() {
       approval,
       decision,
       snapshot: approvalSnapshot(state, approval.product_code),
-      target:
-        branch !== "all"
+      target: branchSellsToCustomers(state.config, approval.branch)
+        ? approval.branch
+        : branchSellsToCustomers(state.config, branch)
           ? branch
-          : approval.branch !== "all"
-            ? approval.branch
-            : branches[0],
+          : (branches[0] ?? "all"),
       company: context.company_id,
       branch,
     });
@@ -616,7 +616,10 @@ export function Dashboard() {
                       (item.type === "new_product" ||
                         item.type === "price_change");
                     return (
-                      <div className="dashboard-queue-row" key={item.id}>
+                      <div
+                        className={`dashboard-queue-row${inline ? "" : " has-review-action"}`}
+                        key={item.id}
+                      >
                         <div className="dashboard-queue-product">
                           {productLabel(item.product_code)}
                           <span className="muted">
@@ -682,7 +685,7 @@ export function Dashboard() {
                                 {t("Approve", "تأیید")}
                               </Button>
                               <Button
-                                variant="secondary"
+                                variant="danger"
                                 size="sm"
                                 onClick={() => openPreview(item, "reject")}
                               >
@@ -814,7 +817,7 @@ export function Dashboard() {
                 <DataTable
                   columns={[
                     { width: "90px" },
-                    { width: "150px" },
+                    { width: "130px" },
                     { width: "75px" },
                     { width: "112px" },
                     { width: "90px" },
@@ -1446,102 +1449,16 @@ export function Dashboard() {
                 : t("Approve price", "تأیید قیمت")
           }
           onConfirm={confirm}
+          confirmVariant={preview.decision === "reject" ? "danger" : "primary"}
+          confirmDisabled={preview.decision === "approve" && !branches.length}
         >
-          <p>{productLabel(preview.approval.product_code)}</p>
-          {preview.decision === "approve" && (
-            <>
-              <Field label={t("Apply price to", "اعمال قیمت به")}>
-                <Select
-                  value={scope}
-                  onChange={(value) => setScope(value as "all" | "branch")}
-                  options={[
-                    {
-                      value: "all",
-                      label: t("All branches", "همه شعبه‌ها"),
-                    },
-                    {
-                      value: "branch",
-                      label: t("This branch only", "فقط این شعبه"),
-                    },
-                  ]}
-                />
-              </Field>
-              <p className="muted">
-                {scope === "all"
-                  ? t(
-                      "All branch overrides will be removed, including intentional prices. Incompatible offers will stop; new offers wait for confirmation.",
-                      "همه قیمت‌های ویژه شعبه‌ها، از جمله قیمت‌های عمدی، حذف می‌شوند. پیشنهادهای ناسازگار متوقف می‌شوند و پیشنهادهای جدید منتظر تأیید می‌مانند.",
-                    )
-                  : t(
-                      "Only this branch changes. Other branches keep their prices and offers.",
-                      "فقط این شعبه تغییر می‌کند. شعبه‌های دیگر قیمت‌ها و پیشنهادهای خود را حفظ می‌کنند.",
-                    )}
-              </p>
-              <DataTable className="approval-scope-preview">
-                <thead>
-                  <tr>
-                    <th>{t("Branch", "شعبه")}</th>
-                    <th>{t("Price change", "تغییر قیمت")}</th>
-                    <th>{t("Affected offer", "پیشنهاد مرتبط")}</th>
-                    <th>{t("Override removed", "حذف قیمت ویژه")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(scope === "all" ? branches : [preview.target]).map(
-                    (value) => {
-                      const product = state.products.find(
-                        (item) =>
-                          item.company_id === context.company_id &&
-                          item.code === preview.approval.product_code,
-                      );
-                      if (!product) return null;
-                      const price = effectivePrice(state, product, value);
-                      const offer = effectiveOffer(state, product, value);
-                      return (
-                        <tr key={value}>
-                          <td>{branchName(value)}</td>
-                          <td>
-                            <div className="price-change-values">
-                              <ManualPricePill
-                                product={product}
-                                branch={value}
-                              />
-                              <span>
-                                {t("Old", "قبلی")}{" "}
-                                {price ? <Money value={price} /> : "—"}
-                              </span>
-                              <span>
-                                {t("New", "جدید")}{" "}
-                                <Money
-                                  value={preview.approval.proposed_price}
-                                />
-                              </span>
-                            </div>
-                          </td>
-                          <td>
-                            {offer ? (
-                              <OfferLabel label={offer.label} language={lang} />
-                            ) : (
-                              t("None", "ندارد")
-                            )}
-                            {offer &&
-                              !new Decimal(offer.price).eq(
-                                preview.approval.proposed_price,
-                              ) && <> · {t("Will stop", "متوقف می‌شود")}</>}
-                          </td>
-                          <td>
-                            {scope === "all" && product.branch_prices?.[value]
-                              ? t("Yes", "بله")
-                              : t("No", "خیر")}
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-              </DataTable>
-            </>
-          )}
+          <ApprovalReviewPanel
+            approval={preview.approval}
+            scope={scope}
+            target={preview.target}
+            onScopeChange={setScope}
+            showEffects={preview.decision === "approve"}
+          />
         </ConfirmDialog>
       )}
     </>

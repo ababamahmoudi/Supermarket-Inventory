@@ -14,6 +14,7 @@ async function saveName(page: Page, name: string) {
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await page.mouse.move(0, 0);
 }
 async function freezeClock(page: Page) {
   await page.clock.install();
@@ -67,13 +68,51 @@ test("Undo restores the product and retains append-only recorded history", async
   ).toBe(true);
 });
 
+test("Undo stays above a native modal and keyboard focus pauses its own timer", async ({
+  page,
+}) => {
+  await signIn(page, "Supervisor");
+  await freezeClock(page);
+  await saveName(page, "Potato Chips 150 g temporary name");
+  await page.mouse.move(0, 0);
+  await page.clock.runFor(1000);
+  await page.getByRole("button", { name: /^Edit Potato Chips/ }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Edit product",
+    exact: true,
+  });
+  const undo = dialog.getByRole("button", { name: "Undo", exact: true });
+  await expect(undo).toBeVisible();
+  await undo.focus();
+  await expect(undo).toBeFocused();
+  await page.clock.runFor(15000);
+  await expect(undo).toBeVisible();
+  expect(
+    await undo.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return (
+        document.elementFromPoint(
+          rect.x + rect.width / 2,
+          rect.y + rect.height / 2,
+        ) === node
+      );
+    }),
+  ).toBe(true);
+  await undo.click();
+  await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".lookup-detail-header")).not.toContainText(
+    "temporary name",
+  );
+});
+
 test("History Revert previews the actor, branch, values and requires confirmation", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
   await freezeClock(page);
   await saveName(page, "Potato Chips 150 g approved edit");
-  await page.clock.runFor(5001);
+  await page.clock.runFor(10001);
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
   await page.goto("/#history");
   const row = page
@@ -132,7 +171,9 @@ test("an intervening edit displays a conflict and cannot be silently overwritten
     name: "Revert change",
     exact: true,
   });
-  await expect(dialog.getByRole("alert")).toContainText("changed again");
+  await expect(
+    dialog.getByRole("alert").filter({ hasText: "changed again" }),
+  ).toContainText("changed again");
   await expect(
     dialog.getByRole("button", { name: "Revert change", exact: true }),
   ).toBeDisabled();
@@ -156,7 +197,7 @@ test("stacked toasts cap visible items and expire independently, including hidde
   }
   await expect(page.locator(".undo-toast:not([hidden])")).toHaveCount(3);
   await expect(page.locator(".undo-toast-more")).toHaveText("+2 more");
-  await page.clock.runFor(2500);
+  await page.clock.runFor(7500);
   await expect(page.locator(".undo-toast")).toHaveCount(4);
   await page.clock.runFor(500);
   await expect(page.locator(".undo-toast")).toHaveCount(3);
@@ -184,17 +225,17 @@ test("hover pauses only one toast and English/Persian corner placement mirrors",
   await saveName(page, "Potato Chips 150 g second change");
   const older = page.locator(".undo-toast").last();
   await older.hover();
-  await page.clock.runFor(5000);
+  await page.clock.runFor(10000);
   await expect(page.locator(".undo-toast")).toHaveCount(1);
   const english = await page.locator(".undo-toast-stack").boundingBox();
-  expect(english!.x).toBeLessThan(40);
+  const width = await page.evaluate(() => innerWidth);
+  expect(width - english!.x - english!.width).toBeLessThan(40);
   await setLanguage(page, "fa");
   await expect(page.locator(".undo-toast")).toContainText("ذخیره محصول");
   const persian = await page.locator(".undo-toast-stack").boundingBox();
-  const width = await page.evaluate(() => innerWidth);
-  expect(width - persian!.x - persian!.width).toBeLessThan(40);
+  expect(persian!.x).toBeLessThan(40);
   await page.mouse.move(0, 0);
-  await page.clock.runFor(3999);
+  await page.clock.runFor(8999);
   await expect(page.locator(".undo-toast")).toHaveCount(1);
   await page.clock.runFor(1);
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();

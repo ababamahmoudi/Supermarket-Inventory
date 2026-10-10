@@ -319,7 +319,7 @@ describe("custom notebook permissions and retained records", () => {
       readableNotebookEntries(state, actor).map((item) => item.notebook_id),
     ).toContain(record.id);
   });
-  it("lets the author edit only within the original five seconds, and an edit never restarts that window", () => {
+  it("lets the author edit only within the original ten seconds, and an edit never restarts that window", () => {
     const state = initialState();
     const record = createNotebook(state, supervisor, input());
     const entry = addNotebookEntry(state, worker, record.id, {
@@ -327,7 +327,7 @@ describe("custom notebook permissions and retained records", () => {
     });
     const created = Date.parse(entry.created_at);
     expect(
-      canEditNotebookEntry(state, worker, entry.id, new Date(created + 4999)),
+      canEditNotebookEntry(state, worker, entry.id, new Date(created + 9999)),
     ).toBe(true);
     editNotebookEntry(
       state,
@@ -335,7 +335,7 @@ describe("custom notebook permissions and retained records", () => {
       entry.id,
       { text: "First correction" },
       JSON.stringify(entry),
-      new Date(created + 4000),
+      new Date(created + 9000),
     );
     editNotebookEntry(
       state,
@@ -343,11 +343,11 @@ describe("custom notebook permissions and retained records", () => {
       entry.id,
       { text: "Second correction" },
       JSON.stringify(entry),
-      new Date(created + 4999),
+      new Date(created + 9999),
     );
     expect(entry.created_at).toBe(new Date(created).toISOString());
     expect(
-      canEditNotebookEntry(state, worker, entry.id, new Date(created + 5000)),
+      canEditNotebookEntry(state, worker, entry.id, new Date(created + 10000)),
     ).toBe(false);
     const before = structuredClone(state);
     expect(() =>
@@ -357,7 +357,7 @@ describe("custom notebook permissions and retained records", () => {
         entry.id,
         { text: "Too late" },
         undefined,
-        new Date(created + 5000),
+        new Date(created + 10000),
       ),
     ).toThrow("expired");
     expect(state).toEqual(before);

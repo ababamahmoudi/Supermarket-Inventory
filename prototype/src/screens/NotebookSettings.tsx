@@ -20,6 +20,7 @@ import {
   editNotebook,
   newNotebookInput,
   notebookError,
+  NotebookError,
   visibleNotebooks,
   type NotebookDefinition,
   type NotebookInput,
@@ -43,6 +44,7 @@ export function NotebookEditor({
     notebook ? structuredClone(notebook) : newNotebookInput(),
   );
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState("");
   const context: NotebookContext = {
     company_id: state.config.company.seed_key,
     branch,
@@ -52,7 +54,20 @@ export function NotebookEditor({
   const field = <K extends keyof NotebookInput>(
     key: K,
     value: NotebookInput[K],
-  ) => setForm((current) => ({ ...current, [key]: value }));
+  ) => {
+    if (
+      (["name", "duplicate"].includes(errorField) &&
+        (key === "name_en" || key === "name_fa")) ||
+      (errorField === "unit" && key === "fields") ||
+      (["branch", "location_unavailable"].includes(errorField) &&
+        key === "branch") ||
+      (errorField === "roles" && (key === "read_roles" || key === "add_roles"))
+    ) {
+      setError("");
+      setErrorField("");
+    }
+    setForm((current) => ({ ...current, [key]: value }));
+  };
   const labels: Record<Role, string> = {
     supervisor: t("Supervisor", "سرپرست"),
     floor_worker: t("Floor Worker", "کارمند فروشگاه"),
@@ -62,7 +77,11 @@ export function NotebookEditor({
     kind: "read_roles" | "add_roles",
     value: Role,
     checked: boolean,
-  ) =>
+  ) => {
+    if (errorField === "roles") {
+      setError("");
+      setErrorField("");
+    }
     setForm((current) => {
       const chosen = checked
         ? [...current[kind], value]
@@ -78,6 +97,7 @@ export function NotebookEditor({
           : {}),
       };
     });
+  };
   return (
     <Dialog
       open
@@ -102,11 +122,22 @@ export function NotebookEditor({
             onOpenChange(false);
           } catch (caught) {
             setError(notebookError(caught, t));
+            setErrorField(
+              caught instanceof NotebookError ? caught.key : "scope",
+            );
           }
         }}
       >
         <div className="form-grid notebook-definition-fields">
-          <Field label={t("Name (English)", "نام (انگلیسی)")}>
+          <Field
+            label={t("Name (English)", "نام (انگلیسی)")}
+            error={
+              errorField === "duplicate" ||
+              (errorField === "name" && !form.name_en.trim())
+                ? error
+                : undefined
+            }
+          >
             <input
               dir="ltr"
               value={form.name_en}
@@ -114,14 +145,22 @@ export function NotebookEditor({
               autoFocus
             />
           </Field>
-          <Field label={t("Name (Persian)", "نام (فارسی)")}>
+          <Field
+            label={t("Name (Persian)", "نام (فارسی)")}
+            error={
+              errorField === "name" && !form.name_fa.trim() ? error : undefined
+            }
+          >
             <input
               dir="rtl"
               value={form.name_fa}
               onChange={(event) => field("name_fa", event.target.value)}
             />
           </Field>
-          <Field label={t("Branch", "شعبه")}>
+          <Field
+            label={t("Branch", "شعبه")}
+            error={errorField === "branch" ? error : undefined}
+          >
             <Select
               value={form.branch}
               onChange={(value) => field("branch", value)}
@@ -197,6 +236,7 @@ export function NotebookEditor({
         {form.fields.measurement && (
           <Field
             label={t("Measurement unit", "واحد اندازه‌گیری")}
+            error={errorField === "unit" ? error : undefined}
             className="field-short"
           >
             <input
@@ -225,11 +265,12 @@ export function NotebookEditor({
             {t("Notify Supervisor", "اطلاع به سرپرست")}
           </Checkbox>
         </div>
-        {error && (
-          <p className="banner danger" role="alert">
-            {error}
-          </p>
-        )}
+        {error &&
+          !["name", "duplicate", "branch", "unit"].includes(errorField) && (
+            <p className="banner danger" role="alert">
+              {error}
+            </p>
+          )}
         <div className="actions">
           <Button
             type="button"

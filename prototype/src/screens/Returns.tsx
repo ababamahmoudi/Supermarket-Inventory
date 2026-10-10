@@ -1,10 +1,12 @@
+import "../c3-tables.css";
 import {
   branchLabel as configuredBranchLabel,
   configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { useListState } from "../navigation";
+import { ArrowLeft } from "lucide-react";
 import "./returns-a2.css";
 import policySource from "../../../docs/return-policy.md?raw";
 import { useDemo } from "../store";
@@ -24,6 +26,7 @@ import {
   NumberField,
   PageHeader,
   Select,
+  useTableColumns,
 } from "../ui";
 import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
@@ -76,10 +79,13 @@ export function Returns() {
         .map((item) => item.main_supplier),
     ]),
   ];
-  const [supplier, setSupplier] = useState("all");
-  const [status, setStatus] = useState("pending");
-  const [returnBranch, setReturnBranch] = useState("all");
-  const [search, setSearch] = useState("");
+  const [supplier, setSupplier] = useListState("returns.supplier", "all");
+  const [status, setStatus] = useListState("returns.status", "pending");
+  const [returnBranch, setReturnBranch] = useListState(
+    "returns.location",
+    "all",
+  );
+  const [search, setSearch] = useListState("returns.search", "");
   const [policyOpen, setPolicyOpen] = useState(false);
   const [photoName, setPhotoName] = useState("");
   const [active, setActive] = useState<string | null>(null);
@@ -102,14 +108,41 @@ export function Returns() {
   const [safe, setSafe] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState("");
   const [feedback, setFeedback] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
+  const tableColumns = useTableColumns("returns", [
+    {
+      key: "reference",
+      label: t("Return #", "شماره مرجوعی"),
+      required: true,
+      width: 108,
+    },
+    {
+      key: "supplier",
+      label: t("Supplier", "تأمین‌کننده"),
+      required: true,
+      width: 220,
+    },
+    { key: "location", label: t("Branch", "شعبه"), width: 144 },
+    { key: "date", label: t("Created", "ایجادشده"), width: 128 },
+    { key: "items", label: t("Items", "اقلام"), width: 76, align: "end" },
+    { key: "status", label: t("Status", "وضعیت"), width: 172 },
+    {
+      key: "actions",
+      label: t("Next action", "اقدام بعدی"),
+      width: 144,
+      align: "end",
+      actions: true,
+    },
+  ]);
   useEffect(() => {
     const onHash = () => {
       setHash(window.location.hash);
       setActive(null);
       setError("");
+      setErrorKey("");
       setFeedback("");
     };
     window.addEventListener("hashchange", onHash);
@@ -194,14 +227,24 @@ export function Returns() {
     try {
       update(action);
       setError("");
+      setErrorKey("");
       setFeedback(message);
     } catch (caught) {
+      setErrorKey(caught instanceof Error ? caught.message : "");
       setError(
         operationError(caught instanceof Error ? caught.message : "", t),
       );
       setFeedback("");
     }
   };
+  const clearFieldError = (...keys: string[]) => {
+    if (keys.includes(errorKey)) {
+      setError("");
+      setErrorKey("");
+    }
+  };
+  const fieldError = (...keys: string[]) =>
+    keys.includes(errorKey) ? error : undefined;
   const counts = (record: OperationalReturn) =>
     Object.fromEntries(
       record.lines.map((line) => [
@@ -281,16 +324,15 @@ export function Returns() {
                   )}
                 </span>
               }
-            >
-              <label className="returns-search">
-                <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+              search={
                 <input
                   aria-label={t("Search returns", "جستجوی مرجوعی‌ها")}
                   placeholder={t("Search returns", "جستجوی مرجوعی‌ها")}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                 />
-              </label>
+              }
+            >
               <Select
                 aria-label={t("Supplier", "تأمین‌کننده")}
                 value={supplier}
@@ -356,17 +398,10 @@ export function Returns() {
                 {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
             </FilterToolbar>
+            <div className="table-column-actions">{tableColumns.chooser}</div>
             <DataTable
               className="returns-overview-table"
-              columns={[
-                { width: "100px" },
-                { width: "24%" },
-                { width: "120px" },
-                { width: "130px" },
-                { width: "76px", align: "end" },
-                { width: "150px" },
-                { width: "180px", align: "end", actions: true },
-              ]}
+              columns={tableColumns.columns}
             >
               <thead>
                 <tr>
@@ -801,7 +836,11 @@ export function Returns() {
                     <Field label={t("Resolution type", "نوع حل‌وفصل")}>
                       <Select
                         value={resolution}
-                        onChange={setResolution}
+                        onChange={(value) => {
+                          setResolution(value);
+                          setError("");
+                          setErrorKey("");
+                        }}
                         options={[
                           {
                             value: "replacement_received",
@@ -851,6 +890,12 @@ export function Returns() {
                       >
                         <Field
                           className="field-short"
+                          error={fieldError(
+                            "quantity",
+                            "pickup_cap",
+                            "coverage",
+                            "recovery_cap",
+                          )}
                           label={`${productName(line.product_code)} · ${panel === "pickup" ? t("Actual pickup units", "تعداد واقعی جمع‌آوری") : panel === "cancel" ? t("Actual safe originals recovered (zero is valid)", "اصل کالای سالم واقعاً بازیابی‌شده (صفر مجاز است)") : t("Original units this settlement covers", "تعداد اصلی تحت پوشش این تسویه")}`}
                         >
                           <NumberField
@@ -858,24 +903,34 @@ export function Returns() {
                             max={line.qty}
                             step="1"
                             value={quantities[line.product_code] ?? "0"}
-                            onChange={(value) =>
+                            onChange={(value) => {
+                              clearFieldError(
+                                "quantity",
+                                "pickup_cap",
+                                "coverage",
+                                "recovery_cap",
+                              );
                               setQuantities((current) => ({
                                 ...current,
                                 [line.product_code]: value,
-                              }))
-                            }
+                              }));
+                            }}
                           />
                         </Field>
                         {panel === "cancel" && (
-                          <Field label={t("Actual disposition", "وضعیت واقعی")}>
+                          <Field
+                            label={t("Actual disposition", "وضعیت واقعی")}
+                            error={fieldError("disposition")}
+                          >
                             <Select
                               value={dispositions[line.product_code] ?? ""}
-                              onChange={(value) =>
+                              onChange={(value) => {
+                                clearFieldError("disposition", "safe");
                                 setDispositions((current) => ({
                                   ...current,
                                   [line.product_code]: value as Disposition,
-                                }))
-                              }
+                                }));
+                              }}
                               options={[
                                 {
                                   value: "",
@@ -917,6 +972,14 @@ export function Returns() {
                     resolution === "replacement_received") ? (
                     <div className="form-grid">
                       <Field
+                        error={
+                          !representative.trim()
+                            ? fieldError(
+                                "pickup_evidence",
+                                "replacement_evidence",
+                              )
+                            : undefined
+                        }
                         label={t(
                           "Supplier representative name",
                           "نام نماینده تأمین‌کننده",
@@ -924,9 +987,13 @@ export function Returns() {
                       >
                         <input
                           value={representative}
-                          onChange={(event) =>
-                            setRepresentative(event.target.value)
-                          }
+                          onChange={(event) => {
+                            setRepresentative(event.target.value);
+                            clearFieldError(
+                              "pickup_evidence",
+                              "replacement_evidence",
+                            );
+                          }}
                           placeholder={t(
                             "Type the representative name",
                             "نام نماینده را وارد کنید",
@@ -934,6 +1001,15 @@ export function Returns() {
                         />
                       </Field>
                       <Field
+                        error={
+                          !slip.trim()
+                            ? fieldError(
+                                "pickup_evidence",
+                                "replacement_evidence",
+                                "duplicate_document",
+                              )
+                            : undefined
+                        }
                         label={
                           panel === "pickup"
                             ? t(
@@ -948,7 +1024,14 @@ export function Returns() {
                       >
                         <input
                           value={slip}
-                          onChange={(event) => setSlip(event.target.value)}
+                          onChange={(event) => {
+                            setSlip(event.target.value);
+                            clearFieldError(
+                              "pickup_evidence",
+                              "replacement_evidence",
+                              "duplicate_document",
+                            );
+                          }}
                           placeholder={
                             panel === "pickup"
                               ? "DEMO-SIGNED-SLIP-001"
@@ -986,6 +1069,11 @@ export function Returns() {
                     resolution === "replacement_received" && (
                       <div className="form-grid">
                         <Field
+                          error={
+                            !replacement
+                              ? fieldError("replacement_evidence", "product")
+                              : undefined
+                          }
                           label={t(
                             "Replacement product actually received",
                             "کالای جایگزین واقعاً دریافت‌شده",
@@ -993,7 +1081,13 @@ export function Returns() {
                         >
                           <Select
                             value={replacement}
-                            onChange={setReplacement}
+                            onChange={(value) => {
+                              setReplacement(value);
+                              clearFieldError(
+                                "replacement_evidence",
+                                "product",
+                              );
+                            }}
                             options={state.products
                               .filter(
                                 (item) =>
@@ -1008,6 +1102,7 @@ export function Returns() {
                         </Field>
                         <Field
                           className="field-short"
+                          error={fieldError("quantity")}
                           label={t(
                             "Actual replacement quantity",
                             "تعداد واقعی جایگزین",
@@ -1017,11 +1112,27 @@ export function Returns() {
                             min="1"
                             step="1"
                             value={replacementQty}
-                            onChange={setReplacementQty}
+                            onChange={(value) => {
+                              setReplacementQty(value);
+                              clearFieldError("quantity", "coverage");
+                            }}
                           />
                         </Field>
-                        <Field label={t("Received date", "تاریخ دریافت")}>
-                          <DateField value={date} onChange={setDate} />
+                        <Field
+                          label={t("Received date", "تاریخ دریافت")}
+                          error={
+                            !date
+                              ? fieldError("replacement_evidence")
+                              : undefined
+                          }
+                        >
+                          <DateField
+                            value={date}
+                            onChange={(value) => {
+                              setDate(value);
+                              clearFieldError("replacement_evidence");
+                            }}
+                          />
                         </Field>
                         <Checkbox checked={fully} onChange={setFully}>
                           {t(
@@ -1042,6 +1153,10 @@ export function Returns() {
                         </p>
                         {resolution !== "no_compensation" && (
                           <Field
+                            error={fieldError(
+                              "credit_document",
+                              "duplicate_document",
+                            )}
                             label={t(
                               "Supplier credit or compensation document reference",
                               "مرجع سند بستانکاری یا جبران تأمین‌کننده",
@@ -1049,13 +1164,20 @@ export function Returns() {
                           >
                             <input
                               value={slip}
-                              onChange={(event) => setSlip(event.target.value)}
+                              onChange={(event) => {
+                                setSlip(event.target.value);
+                                clearFieldError(
+                                  "credit_document",
+                                  "duplicate_document",
+                                );
+                              }}
                               placeholder="DEMO-CREDIT-001"
                             />
                           </Field>
                         )}
                         {resolution.startsWith("credit_") && (
                           <Field
+                            error={fieldError("invoice", "single_invoice")}
                             label={t(
                               "One posted invoice to credit",
                               "یک فاکتور ثبت‌شده برای بستانکاری",
@@ -1063,7 +1185,10 @@ export function Returns() {
                           >
                             <Select
                               value={invoiceId}
-                              onChange={setInvoiceId}
+                              onChange={(value) => {
+                                setInvoiceId(value);
+                                clearFieldError("invoice", "single_invoice");
+                              }}
                               options={[
                                 {
                                   value: "",
@@ -1083,6 +1208,7 @@ export function Returns() {
                       </>
                     )}
                   <Field
+                    error={fieldError("reason")}
                     label={
                       panel === "cancel"
                         ? t(
@@ -1099,7 +1225,10 @@ export function Returns() {
                   >
                     <textarea
                       value={note}
-                      onChange={(event) => setNote(event.target.value)}
+                      onChange={(event) => {
+                        setNote(event.target.value);
+                        clearFieldError("reason");
+                      }}
                     />
                   </Field>
                   {panel === "cancel" && (
@@ -1110,7 +1239,13 @@ export function Returns() {
                           "برای کالای نزد تأمین‌کننده یا ناسالم، تعداد بازیابی را صفر نگه دارید. جایگزین‌ها و بستانکاری‌های قبلی برای بررسی سرپرست حفظ می‌شوند.",
                         )}
                       </div>
-                      <Checkbox checked={safe} onChange={setSafe}>
+                      <Checkbox
+                        checked={safe}
+                        onChange={(value) => {
+                          setSafe(value);
+                          clearFieldError("safe");
+                        }}
+                      >
                         {t(
                           "I inspected these physically recovered originals and confirm they are safe and sellable.",
                           "اصل کالاهای واقعاً بازیابی‌شده را بررسی و سالم و قابل‌فروش بودن آن‌ها را تأیید می‌کنم.",

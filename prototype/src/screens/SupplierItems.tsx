@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import {
   saveSupplierItem,
@@ -45,7 +45,10 @@ export default function SupplierItems({
   };
   const supervisor = role === "supervisor";
   const rows = supplierItems(state, context, supplier);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useListState(
+    `supplier-items.${supplier}.search`,
+    "",
+  );
   const [editor, setEditor] = useState<"new" | SupplierItemRow | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
   const visible = rows.filter((row) =>
@@ -74,9 +77,9 @@ export default function SupplierItems({
   );
   return (
     <>
-      <FilterToolbar className="supplier-items-toolbar">
-        <label className="supplier-search">
-          <Search aria-hidden size={18} />
+      <FilterToolbar
+        className="supplier-items-toolbar"
+        search={
           <input
             aria-label={t(
               "Search supplier items",
@@ -89,7 +92,8 @@ export default function SupplierItems({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-        </label>
+        }
+      >
         {query && (
           <Button variant="ghost" onClick={() => setQuery("")}>
             {t("Clear filters", "پاک کردن فیلترها")}
@@ -356,7 +360,7 @@ export default function SupplierItems({
                         </Button>
                       </td>
                       <td>
-                        <span className="nowrap">
+                        <span>
                           {branchLabel(state.config, purchase.branch, lang)}
                         </span>
                       </td>
@@ -495,7 +499,10 @@ function SupplierItemEditor({
         >
           <Select
             value={product}
-            onChange={setProduct}
+            onChange={(value) => {
+              setProduct(value);
+              if (error === "product") setError(null);
+            }}
             searchable
             options={[
               { value: "", label: t("Choose a product", "انتخاب کالا") },
@@ -529,7 +536,10 @@ function SupplierItemEditor({
               dir="ltr"
               inputMode="numeric"
               value={pack}
-              onChange={(event) => setPack(event.target.value)}
+              onChange={(event) => {
+                setPack(event.target.value);
+                if (error === "pack" || error === "quantity") setError(null);
+              }}
             />
           </Field>
           <Field
@@ -541,7 +551,10 @@ function SupplierItemEditor({
               dir="ltr"
               inputMode="decimal"
               value={quote}
-              onChange={(event) => setQuote(event.target.value)}
+              onChange={(event) => {
+                setQuote(event.target.value);
+                if (error === "cost") setError(null);
+              }}
             />
           </Field>
         </div>
@@ -551,7 +564,7 @@ function SupplierItemEditor({
             "هزینه مورد انتظار واحد، قیمت اعلام‌شده است و قیمت خرید نیست.",
           )}
         </p>
-        {error && (
+        {error && !["product", "pack", "cost"].includes(error) && (
           <p role="alert" className="problem-text">
             {errors[error]}
           </p>

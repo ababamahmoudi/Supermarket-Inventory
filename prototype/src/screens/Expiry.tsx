@@ -1,9 +1,11 @@
+import "../c3-tables.css";
 import {
   branchLabel as configuredBranchLabel,
   configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
+import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import type { Branch } from "../types";
 import { companyDate } from "../invoice";
@@ -18,6 +20,7 @@ import {
   FilterToolbar,
   PageHeader,
   Select,
+  useTableColumns,
 } from "../ui";
 import {
   clearExpiry,
@@ -35,12 +38,42 @@ export function Expiry() {
     role: role ?? "cashier",
     actor: user?.name ?? t("Floor Worker", "کارمند فروشگاه"),
   };
-  const [window, setWindow] = useState("soon");
-  const [category, setCategory] = useState("all");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"date" | "name">("date");
+  const [window, setWindow] = useListState("expiry.window", "soon");
+  const [category, setCategory] = useListState("expiry.category", "all");
+  const [search, setSearch] = useListState("expiry.search", "");
+  const [sort, setSort] = useListState<"date" | "name">("expiry.sort", "date");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const tableColumns = useTableColumns("expiry", [
+    {
+      key: "product",
+      label: t("Product", "محصول"),
+      required: true,
+      width: 220,
+    },
+    { key: "location", label: t("Branch", "شعبه"), width: 128 },
+    { key: "date", label: t("Date", "تاریخ"), width: 128 },
+    { key: "type", label: t("Type", "نوع"), width: 104 },
+    {
+      key: "days",
+      label: t("Days left", "روز باقی‌مانده"),
+      width: 88,
+      align: "end",
+    },
+    {
+      key: "supplier",
+      label: t("Supplier / invoice", "تأمین‌کننده / فاکتور"),
+      width: 200,
+    },
+    { key: "status", label: t("Status", "وضعیت"), width: 136 },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 160,
+      align: "end",
+      actions: true,
+    },
+  ]);
   const today = companyDate(state.config);
   const daysLeft = (date: string) =>
     Math.ceil((Date.parse(date) - Date.parse(today)) / 86_400_000);
@@ -216,6 +249,7 @@ export function Expiry() {
           {t("Clear filters", "پاک کردن فیلترها")}
         </Button>
       </FilterToolbar>
+      <div className="table-column-actions">{tableColumns.chooser}</div>
       {message && (
         <div className="banner approved" role="status">
           {message}
@@ -235,18 +269,7 @@ export function Expiry() {
         </EmptyState>
       ) : (
         <Card>
-          <DataTable
-            columns={[
-              { width: "22%" },
-              { width: 110 },
-              { width: 112 },
-              { width: 110 },
-              { width: 96, align: "end" },
-              { width: "20%" },
-              { width: 130 },
-              { width: 180, actions: true, align: "end" },
-            ]}
-          >
+          <DataTable className="expiry-table" columns={tableColumns.columns}>
             <thead>
               <tr>
                 <th>{t("Product", "محصول")}</th>

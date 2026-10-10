@@ -89,6 +89,10 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Post invoice", exact: true })
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click();
   const after = await saved(page);
   expect(
     after.invoices?.find((invoice) => invoice.id === draft.id),
@@ -219,6 +223,10 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Post invoice", exact: true })
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click();
   const after = await saved(page);
   const product = after.products.find((product) => product.code === "0002")!;
   expect(product.selling_price).toBe("2.79");

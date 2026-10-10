@@ -70,7 +70,14 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
   await form
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText("whole units");
+  await expect(
+    row
+      .locator(".field")
+      .filter({
+        has: page.getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true }),
+      })
+      .getByRole("alert"),
+  ).toContainText("whole units");
   await row
     .getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true })
     .fill("0.5");
@@ -95,7 +102,9 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     ordered_cases: "0.5",
   });
   await page.reload();
-  await page.getByRole("button", { name: "ORD-0001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ORD-0001", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Place order", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Order placed.");
   await page.getByRole("button", { name: "Print order", exact: true }).click();
@@ -138,7 +147,9 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
   await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await expect(output).toHaveCount(0);
   await print.getByRole("button", { name: "Close", exact: true }).click();
-  await page.getByRole("button", { name: "All orders", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Back to Orders", exact: true })
+    .click();
   await chooseOption(
     page,
     page.getByLabel("Status", { exact: true }),
@@ -171,6 +182,7 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await page.goto("/#notes");
   await page.getByRole("tab", { name: "To order", exact: true }).click();
   const noteText = "Order cooking oil for the next delivery.";
+  await page.getByRole("button", { name: "Add note", exact: true }).click();
   const noteForm = page.getByRole("form", { name: "Add note", exact: true });
   await noteForm.getByLabel("Note", { exact: true }).fill(noteText);
   await expect(
@@ -229,16 +241,28 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await editing
     .getByRole("button", { name: "Place order", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText("Expected unit cost");
+  await expect(
+    editing
+      .locator(".field")
+      .filter({
+        has: page.getByLabel("Expected unit cost — Sunflower Oil 1.8 L", {
+          exact: true,
+        }),
+      })
+      .getByRole("alert"),
+  ).toContainText("Expected unit cost");
   await editing
     .getByLabel("Expected unit cost — Sunflower Oil 1.8 L", { exact: true })
     .fill("3.55");
   await editing
     .getByRole("button", { name: "Place order", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText(
-    "every selected To order note",
-  );
+  await expect(
+    note
+      .locator(".field")
+      .filter({ has: page.getByLabel("Supplier item", { exact: true }) })
+      .getByRole("alert"),
+  ).toContainText("every selected To order note");
   await chooseOption(
     page,
     note.getByLabel("Supplier item", { exact: true }),
@@ -261,7 +285,9 @@ test("free-text To order note saves unresolved selection but needs explicit item
     )
     .toBe("ordered");
   await page.reload();
-  await page.getByRole("button", { name: "ORD-0001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ORD-0001", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Place order", exact: true }),
   ).toHaveCount(0);
@@ -291,7 +317,9 @@ test("worker ordering is opt-in and location scoped; switching location discards
     page.getByRole("dialog", { name: "Print order", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "All orders", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Back to Orders", exact: true })
+    .click();
   await page.getByRole("button", { name: "New order", exact: true }).click();
   form = page.getByRole("form", { name: "New order", exact: true });
   await chooseOption(

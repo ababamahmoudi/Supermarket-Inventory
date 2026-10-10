@@ -1,8 +1,8 @@
 .undo-toast-stack {
   position: fixed;
-  inset-inline-start: 24px;
+  inset-inline-end: 24px;
   inset-block-end: max(24px, env(safe-area-inset-bottom));
-  z-index: 90;
+  z-index: 1000;
   max-inline-size: min(440px, calc(100vw - 32px));
   display: grid;
   gap: 8px;
@@ -28,7 +28,9 @@
 .undo-toast[hidden] {
   display: none;
 }
-.undo-toast-link {
+.undo-toast .undo-toast-link {
+  min-inline-size: 40px;
+  min-block-size: 40px;
   padding: 2px 0;
   color: inherit;
   background: transparent;
@@ -48,7 +50,7 @@
   grid-column: 1 / -1;
 }
 .undo-toast-more {
-  justify-self: start;
+  justify-self: end;
   padding: 6px 12px;
   border-radius: 16px;
   background: var(--kpi-charcoal);
@@ -56,8 +58,11 @@
   font-size: 12px;
 }
 @media (max-width: 760px) {
+  .ui-dialog.confirm-dialog:has(> .undo-toast-stack) {
+    padding-block-end: calc(var(--undo-toast-block-size, 64px) + 32px);
+  }
   .undo-toast-stack {
-    inset-inline-start: 16px;
+    inset-inline-end: 16px;
     inset-block-end: max(16px, env(safe-area-inset-bottom));
   }
 }

@@ -132,6 +132,7 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   ).toBe("rejected");
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "Resume draft", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeDisabled();
