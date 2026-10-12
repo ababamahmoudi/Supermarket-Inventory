@@ -147,3 +147,77 @@ for (const language of ["en", "fa"] as const)
       contentType: "application/json",
     });
   });
+
+for (const language of ["en", "fa"] as const)
+  test(`ordinary ${language} Activity sizes stay together and an unmarked split is detected`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 1440, height: 1080 });
+    await signIn(page, "Supervisor");
+    await setLanguage(page, language);
+    await page.goto("/#dashboard");
+    const text = page
+      .locator(".dashboard-activity-list .unit-text")
+      .filter({ has: page.locator(".unit-fragment") })
+      .first();
+    await expect(text).toBeVisible();
+    // Removing .unit-fragment changes the filtered locator's first match.
+    // Retain the exact DOM node so the negative control restores its own row.
+    const textNode = await text.elementHandle();
+    if (!textNode) throw new Error("Activity text node is unavailable");
+    const clean = await inspectResponsiveLayout(
+      page,
+      "activity-units",
+      language,
+      1440,
+    );
+    expect(clean.failures).toEqual([]);
+    const saved = await textNode.evaluate((element) => {
+      const original = {
+        html: element.innerHTML,
+        style: element.getAttribute("style"),
+        text: element.textContent,
+      };
+      element.replaceChildren(
+        document.createTextNode(element.textContent ?? ""),
+      );
+      Object.assign((element as HTMLElement).style, {
+        display: "block",
+        width: "18px",
+        whiteSpace: "normal",
+      });
+      return original;
+    });
+    let broken;
+    try {
+      broken = await inspectResponsiveLayout(
+        page,
+        "raw-activity-negative-control",
+        language,
+        1440,
+      );
+      expect(
+        broken.failures.some((value) =>
+          value.includes("plain-text unit fragment broken across lines"),
+        ),
+      ).toBe(true);
+    } finally {
+      await textNode.evaluate((element, original) => {
+        element.innerHTML = original.html;
+        if (original.style === null) element.removeAttribute("style");
+        else element.setAttribute("style", original.style);
+      }, saved);
+    }
+    await expect(text).toHaveText(saved.text ?? "");
+    const restored = await inspectResponsiveLayout(
+      page,
+      "activity-restored",
+      language,
+      1440,
+    );
+    expect(restored.failures).toEqual([]);
+    await info.attach("Unmarked real Activity size wrapping negative control", {
+      body: JSON.stringify({ clean, broken, restored }, null, 2),
+      contentType: "application/json",
+    });
+  });

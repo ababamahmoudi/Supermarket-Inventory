@@ -36,6 +36,7 @@ import {
   LtrText,
   Money,
   ProductName,
+  UnitText,
 } from "../presentation";
 import {
   supplierBalanceOverview,
@@ -769,7 +770,9 @@ export function Dashboard() {
                       title={
                         item.product_code ? (
                           <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                            {productName(item.product_code)}
+                            <UnitText>
+                              {productName(item.product_code)}
+                            </UnitText>
                           </bdi>
                         ) : (
                           t("Invoice", "فاکتور")
@@ -1462,7 +1465,9 @@ export function Dashboard() {
                       {item.product_code && (
                         <span>
                           <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                            {productName(item.product_code)}
+                            <UnitText>
+                              {productName(item.product_code)}
+                            </UnitText>
                           </bdi>
                         </span>
                       )}

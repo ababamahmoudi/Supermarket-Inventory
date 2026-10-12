@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ProductName } from "./presentation";
+import { ProductName, UnitSize, UnitText } from "./presentation";
 
 describe("entered product sizes", () => {
   it("preserves the Persian decimal and grouping separators without isolating only the last digit", () => {
@@ -42,4 +42,38 @@ describe("entered product sizes", () => {
     );
     expect(container.querySelector("small")).toBeNull();
   });
+});
+
+it("retains an ordinary Activity name while keeping its size together", () => {
+  const text = "Dried Red Kidney Beans 900 g";
+  const { container } = render(<UnitText>{text}</UnitText>);
+  expect(container.textContent).toBe(text);
+  expect(container.querySelector(".unit-fragment")?.textContent).toBe("900 g");
+});
+
+describe("scalar unit sizes inside RTL display text", () => {
+  it.each([
+    ["400 g", "400 g", "400"],
+    [" 400   g ", "400 g", "400"],
+    ["150 گرمی", "150 گرمی", "150"],
+    ["۱۵۰ گرمی", "۱۵۰ گرمی", "۱۵۰"],
+    ["۴٫۵ کیلوگرمی", "۴٫۵ کیلوگرمی", "۴٫۵"],
+    ["1 L", "1 L", "1"],
+  ])(
+    "keeps %s together without changing its text or unit order",
+    (value, text, number) => {
+      const { container } = render(
+        <div dir="rtl">
+          <UnitSize value={value} data-testid="physical-size" />
+        </div>,
+      );
+      const size = container.querySelector('[data-testid="physical-size"]');
+      expect(size).toHaveAttribute("dir", "ltr");
+      expect(size?.textContent).toBe(text);
+      const group = size?.querySelector(".unit-text .unit-fragment");
+      expect(group?.textContent).toBe(text);
+      expect(group?.querySelector("bdi")).toHaveAttribute("dir", "ltr");
+      expect(group?.querySelector("bdi")?.textContent).toBe(number);
+    },
+  );
 });

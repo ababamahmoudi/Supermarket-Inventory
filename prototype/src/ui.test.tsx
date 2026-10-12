@@ -837,10 +837,11 @@ describe("shared language and number presentation", () => {
       "dir",
       "ltr",
     );
-    expect(screen.getByText("1 L").closest("bdi")).toHaveAttribute(
-      "dir",
-      "ltr",
-    );
+    const unit = view.container.querySelector(".unit-text .unit-fragment");
+    expect(unit).toHaveTextContent(/^1 L$/);
+    expect(unit?.closest("bdi")).toHaveAttribute("dir", "ltr");
+    expect(unit?.querySelector("bdi")).toHaveAttribute("dir", "ltr");
+    expect(unit?.querySelector("bdi")).toHaveTextContent(/^1$/);
     expect(screen.getByText("2026-10-07").closest("bdi")).toHaveAttribute(
       "dir",
       "ltr",

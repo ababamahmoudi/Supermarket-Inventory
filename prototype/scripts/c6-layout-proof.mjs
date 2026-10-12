@@ -63,6 +63,47 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
             `${scene}: unit fragment broken across lines: ${fragment.textContent}`,
           );
       }
+      // Cover unmarked ordinary prose too: the Activity regression used a raw
+      // text node, so checking only explicitly tagged product spans missed it.
+      const rawUnits = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+      );
+      let unitNode;
+      const unitExpression =
+        /\p{N}+(?:[.,\u066B\u066C]\p{N}+)*\s+(?:kg|g|ml|mL|L|lb|lbs|oz|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
+      while ((unitNode = rawUnits.nextNode())) {
+        const parent = unitNode.parentElement;
+        if (
+          !parent ||
+          !visible(parent) ||
+          parent.closest(
+            ".unit-fragment,.sr-only,[aria-hidden=true],script,style",
+          )
+        )
+          continue;
+        for (const match of (unitNode.textContent ?? "").matchAll(
+          unitExpression,
+        )) {
+          const range = document.createRange();
+          range.setStart(unitNode, match.index);
+          range.setEnd(unitNode, match.index + match[0].length);
+          const rects = [...range.getClientRects()].filter(
+            (rect) => rect.width > 0.1 && rect.height > 0.1,
+          );
+          if (!rects.length) continue;
+          const lines = new Set(rects.map((rect) => Math.round(rect.top)));
+          unitFragments.push({
+            text: match[0],
+            lines: lines.size,
+            source: "plain-text",
+          });
+          if (lines.size > 1)
+            failures.push(
+              `${scene}: plain-text unit fragment broken across lines: ${match[0]}`,
+            );
+        }
+      }
       for (const wrapper of document.querySelectorAll("main,.ui-data-table")) {
         if (!visible(wrapper)) continue;
         if (wrapper.scrollWidth > wrapper.clientWidth + 1)
