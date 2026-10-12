@@ -994,8 +994,18 @@ div.ui-kpi:hover {
     max-inline-size: 100%;
     min-inline-size: 0;
   }
-  :root .product-name .unit-fragment {
+  :root .product-name .unit-fragment,
+  :root .unit-text .unit-fragment {
     display: inline-block;
     white-space: nowrap;
+  }
+}
+
+@media screen {
+  :root .invoice-lines-table th,
+  :root .invoice-lines-table th * {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 }

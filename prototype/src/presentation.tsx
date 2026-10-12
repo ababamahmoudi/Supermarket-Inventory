@@ -72,6 +72,21 @@ export function UnitSize({
 }: HTMLAttributes<HTMLElement> & { value: string }) {
   return <LtrText {...props}>{formatUnitSize(value)}</LtrText>;
 }
+/** Keep physical sizes together in ordinary display text, including Activity. */
+export function UnitText({
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & { children: string }) {
+  return (
+    <span
+      {...props}
+      className={["unit-text", className].filter(Boolean).join(" ")}
+    >
+      {productNameUnits(children)}
+    </span>
+  );
+}
 export function ProductName({
   product,
   language = i18n.language as Language,
