@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+  "stage": "c6",
+  "diagnostic": false,
+  "output": "/tmp/c6-unit-review-checkout/docs/redesign-screenshots/pr-c6/gallery.html",
+  "screens": 85,
+  "individuallyReviewed": 85,
+  "references": 19,
+  "warnings": [],
+  "productionFingerprint": "ab56e36e829b674039e2420b38b7385b9c62e40d88f27649eccad5ce21765ce1"
+}
