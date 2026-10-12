@@ -1,0 +1,3354 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "/root/c6_shell",
+  "reviewedAt": "2026-10-12T13:00:46.702540+00:00",
+  "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+  "stage": "c7",
+  "variant": "fa-light",
+  "captureResults": "/tmp/c7-final-ef4dfcc-images/capture-results.json",
+  "captureResultsSHA256": "e6f1a9ad05ff5c067e76be5e32bc6160875601d44e245e9cc98be47773b2ebad",
+  "sourceManifest": "/tmp/c7-source-final9/source-manifest.json",
+  "sourceManifestSHA256": "8273e9d01a3283dcb09f2b0df2da5ed88f7b070900de9a7e12d37f1624fc74cd",
+  "reviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "hasFailures": false,
+  "method": "All seventeen fresh final Source9 FA-light PNGs were individually opened through view_image at original detail and their exact bytes/SHA-256 freshly checked against the final capture manifest. Nineteen original references were freshly rehashed against both approved owner and final source manifests, with parent-authorized reuse only of their earlier actual individual-view context. No earlier final-image verdicts/opening flags, source edits, PNG edits, crop, collage, mask or browser job was used.",
+  "summary": {
+    "expectedScreens": 17,
+    "openedScreens": 17,
+    "hashVerifiedScreens": 17,
+    "ownerBugReferencesCompared": 14,
+    "kleadReferencesCompared": 5,
+    "hashVerifiedReferences": 19,
+    "referencesPreviouslyIndividuallyOpened": 19,
+    "referencesReopenedThisReview": 0,
+    "captureManifestScreens": 85,
+    "captureExitCode": 0,
+    "captureExitCodeNote": "Parent verified actual final capture exit 0 for session 60901 and supplied the final manifest hash and production fingerprint.",
+    "productionBeforeAfterGuards": 170,
+    "browserErrors": [],
+    "automatedGeometryFailures": 0,
+    "actualMeasuredWords": 2899,
+    "measuredUnitFragments": 122,
+    "previousConcernsVisuallyResolved": 14,
+    "actualVisualFailures": 0,
+    "screensWithVisualFailures": 0,
+    "actualCopyIssues": 0,
+    "productionAssetFingerprints": [
+      "5f1150cf962cbe50f4b4418da570f5163ff6188ba9b875068af25c92d5cbd665"
+    ],
+    "overallStatus": "All seventeen final Source9 Persian originals were freshly reviewed with no visible mandatory-rule defect remaining in these frames. Product-dialog Cancel is neutral grey/borderless, while the actual outside-page Supplier Edit/More and Manual New invoice controls remain white/hairline. Earlier styling, physical-unit grouping, decimal ordering and reference-code findings are resolved. This FA-light review passes within its stated framing limits."
+  },
+  "realFailures": [],
+  "reviews": [
+    {
+      "scene": "topbar",
+      "variant": "fa-light",
+      "filename": "topbar-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/topbar-fa-light.png",
+      "sha256": "4792cd6395340dd88a9d6e81e7b8ee4909d302ea052c4b41276ddf82caa139c8",
+      "bytes": 10771,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Freshly opened the exact Source9 element original. Persian breadcrumb, slash hint, search pill, branch pill, EN, theme, text size, notifications and Demo remain separately readable with no collision. The narrow element frame does not stand in for the separate full Dashboard original.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [
+        "Element-only header capture; underlying Dashboard has its own full-page original."
+      ],
+      "applicableOwnerBugNotes": [
+        "7.50.27"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "element",
+      "role": "supervisor",
+      "route": "#dashboard",
+      "fixtureEvidence": "نورث یورک\nداشبورد\n/\nنورث یورک\nEN\nAa\n7\nدمو",
+      "automatedLayout": {
+        "scene": "topbar",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 299,
+        "contentWords": 233,
+        "unitFragments": [
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۹۰۰ گرمی",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 54,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 4
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              }
+            ],
+            "scrollWidth": 499,
+            "clientWidth": 499
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 784,
+            "clientWidth": 784
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "lookup-clearance-dates",
+      "variant": "fa-light",
+      "filename": "lookup-clearance-dates-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/lookup-clearance-dates-fa-light.png",
+      "sha256": "c9c300a10b566d61445a4ee769bed766fe952301ad4ea2fa2341ee11fed2a6d3",
+      "bytes": 148815,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 category chips and More are fully round with white fill and quiet hairlines, and All uses the accent tint. Own Sour Cherry Juice 1 L/0003 remains $2.99 with 2 for $5 and the $2.49 clearance. Two expiry dates and the latest October 12 receipt appear as quiet rows. Card Edit remains grey/borderless; no unwanted date-tracking/Add controls appear.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "Fully round category chips and More; white/hairline unselected controls and accent-tinted All."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "DateTracking bug 1",
+        "8.07.45"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#lookup",
+      "fixtureEvidence": "جست‌وجوی صندوق‌دار\n\nقیمت تأییدشدهٔ فعلی را پیدا کنید. انگلیسی یا فارسی جست‌وجو کنید یا بارکد را اسکن کنید.\n\nجست‌وجوی محصولات\nهمه\nحبوبات\nنان و محصولات نانوایی\nشوینده‌ها\nبیشتر\n1 محصول\n\nبرای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.\n\nپاک کردن فیلترها\nآب آلبالو ۱ لیتری\n\nSour Cherry Juice 1 L\n\nکد محصول 0003\n1 L\n\nنخستین ثبت در نیومارکت\n\nویرایش\n\nمحاسبه‌شده از فاکتور FV-20390: $2.99\n\n$2.99\n\nقیمت فروش\n\n۲ عدد $5\n\nپیش از مالیات\n\nقیمت فروش ویژه\n$2.49\nانقضا 2026-10-17 · نورث یورک\nانقضا 2026-10-17 · نورث یورک\nبه‌زودی منقضی\nانقضا 2026-11-06 · نورث یورک\nبه‌زودی منقضی\nآخرین دریافت 2026-10-12\nFresh Valley Foods · FV-20417\nنتایج جست‌وجو\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\nکد محصول 0003\n$2.99\n۲ عدد $5",
+      "automatedLayout": {
+        "scene": "lookup-clearance-dates",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 119,
+        "contentWords": 119,
+        "unitFragments": [
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "date-tracking",
+      "variant": "fa-light",
+      "filename": "date-tracking-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/date-tracking-fa-light.png",
+      "sha256": "5528ffabf0cda7f3aa3eee2835af9ff52ebb78475b05eeee117dda02bdbd5270",
+      "bytes": 175845,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 outside-card Columns is white/hairline. The pinned C6-SHELF-06 record retains Shelf check, 20 units and its whole October 12 date; the other two expiry rows retain whole names/dates/source references. Dot statuses, one neutral/red Remove plus More and calm inset row dividers remain readable without broken headers or cell-by-cell rules.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White/hairline outside-card Columns."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "DateTracking bug 1",
+        "7.57.32",
+        "8.05.57"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#expiry",
+      "fixtureEvidence": "پیگیری تاریخ\n\nتاریخ انقضا و بهترین زمان مصرف را بررسی کنید.\n\nافزودن تاریخ\nمحصول\nتاریخ\n2026-10-12\nمکان\nنورث یورک\nافزودن\nبیشتر\nنوع\nانقضا\nمقدار (اختیاری)\nسری ساخت (اختیاری)\nیادداشت (اختیاری)\n\nتاریخ اضافه شد.\n\nنزدیک موعد\nهمه تاریخ‌ها\nحذف‌شده\nهمه دسته‌ها\nنورث یورک\nتاریخ\nپاک کردن فیلترها\n3 مورد\nستون‌ها\nمحصول\tمکان\tتاریخ\tنوع\tروز باقی‌مانده\tمنبع / فاکتور\tوضعیت\tعملیات\n\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n0006\nمقدار: 20 واحد\nسری ساخت: C6-SHELF-06\nShelf check\n\tنورث یورک\t2026-10-12\tانقضا\t0\tثبت دستی\nDemo Supervisor\n2026-10-12\n\t\nبه‌زودی منقضی\t\nحذف\n\n\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n0006\n\tنورث یورک\t2026-10-17\tانقضا\t5\tFresh Valley Foods\nFV-20390\n2026-10-11\n\t\nبه‌زودی منقضی\t\nحذف\n\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n0003\n\tنورث یورک\t2026-11-06\tانقضا\t25\tFresh Valley Foods\nFV-20390\n2026-10-11\n\t\nبه‌زودی منقضی\t\nحذف\n\nتاریخ‌ها ثابت نمی‌کنند که کالا هنوز در قفسه است. افزودن یا حذف تاریخ موجودی یا مانده تأمین‌کننده را تغییر نمی‌دهد.",
+      "automatedLayout": {
+        "scene": "date-tracking",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 159,
+        "contentWords": 49,
+        "unitFragments": [
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "20 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 32,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive expiry-table",
+            "rows": [
+              {
+                "cells": 8,
+                "words": 10
+              },
+              {
+                "cells": 8,
+                "words": 33
+              },
+              {
+                "cells": 8,
+                "words": 23
+              },
+              {
+                "cells": 8,
+                "words": 24
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [
+          {
+            "className": "date-quick-add",
+            "scrollWidth": 1088,
+            "clientWidth": 1088,
+            "words": 20,
+            "controls": 9
+          }
+        ],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "edit-product-dates",
+      "variant": "fa-light",
+      "filename": "edit-product-dates-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/edit-product-dates-fa-light.png",
+      "sha256": "13e3edd2d2d7de62216146bfe7d6e55f3fb5b433fdd7012f58ba1df68599c40b",
+      "bytes": 131787,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 Cancel is correctly grey and borderless in the dialog footer, while the page Edit visible beneath the backdrop retains its white/hairline treatment. Title and supporting caption align with the body inset; reminder 30 is white inside the soft group. Saved dates, Type/Date/Quantity/Lot/Add controls and the footer remain bounded and visible; upper name fields are outside the scrolled body frame.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "Caption/body inset alignment, white nested reminder and corrected grey/borderless dialog Cancel."
+      ],
+      "framingNotes": [
+        "Body is scrolled to dates. Upper name/size fields are partly or wholly off-frame; title/caption/date group/footer are checked without claiming hidden fields."
+      ],
+      "applicableOwnerBugNotes": [
+        "8.07.45",
+        "8.32.08"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "viewport",
+      "role": "supervisor",
+      "route": "#product?code=0006",
+      "fixtureEvidence": "ویرایش محصول\nنان لواش ۵۰۰ گرمی · کد محصول 0006\nنام‌ها\nنام انگلیسی\nنام فارسی (اختیاری)\nقیمت‌گذاری\nدستهٔ قیمت‌گذاری\nمواد غذایی\nقیمت فروش (هر واحد)\nجزئیات\nاندازهٔ واحد\nروش فروش\nعدد\nدسته (اختیاری)\nنان و محصولات نانوایی\nتأمین‌کننده\nFresh Valley Foods\nبارکد\nتوضیحات (انگلیسی) (اختیاری)\nتوضیحات (فارسی) (اختیاری)\nپیگیری تاریخ\n\nتاریخ انقضا را اینجا پیگیری کنید و پیش از آن یادآوری دریافت کنید.\n\nبله\nیادآوری\nروز پیش از انقضا\nتاریخ‌ها در نورث یورک\nانقضا 2026-10-17\n5\nروز\nانقضا 2026-10-12\n20 واحد · سری ساخت C6-SHELF-06\n0\nروز\nنوع\nانقضا\nتاریخ\nتاریخ را انتخاب کنید\nمقدار (اختیاری)\nسری ساخت (اختیاری)\nافزودن\n\nتاریخ‌ها همراه محصول ذخیره می‌شوند.\n\nانصراف\nذخیرهٔ محصول",
+      "automatedLayout": {
+        "scene": "edit-product-dates",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 219,
+        "contentWords": 0,
+        "unitFragments": [
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "20 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 32,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 4
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive product-cost-history-table",
+            "rows": [
+              {
+                "cells": 6,
+                "words": 12
+              },
+              {
+                "cells": 6,
+                "words": 10
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive product-last-received-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [
+          {
+            "className": "confirm-dialog ui-dialog product-editor-dialog",
+            "scrollWidth": 880,
+            "clientWidth": 880,
+            "words": 88,
+            "controls": 21
+          },
+          {
+            "className": "stack product-editor-form",
+            "scrollWidth": 880,
+            "clientWidth": 880,
+            "words": 79,
+            "controls": 20
+          }
+        ],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "fa-light",
+      "filename": "invoices-list-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/invoices-list-fa-light.png",
+      "sha256": "0a262676caf47b9d9da21e986008f8eb266416f517ce9a6ff5f5f50c514b4a66",
+      "bytes": 144506,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 has eight readable posted references with complete dates, supplier names and green dot statuses. The inset row dividers and navigation chevrons are calm; Columns inside the card is neutral grey. Primary New invoice retains the primary treatment on the page background.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.10.23"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#invoices",
+      "fixtureEvidence": "فاکتورهای ثبت‌شده\nستون‌ها\nفاکتور\tتأمین‌کننده\tشعبه\tتاریخ\tوضعیت\n\nGG-11794\n\tGolden Grain Distributors\tنورث یورک\t2026-08-21\t\nثبت‌شده\n\nFV-20296\n\tFresh Valley Foods\tنورث یورک\t2026-09-18\t\nثبت‌شده\n\nSB-7848\n\tSunrise Beverages\tنورث یورک\t2026-10-02\t\nثبت‌شده\n\nGG-11842\n\tGolden Grain Distributors\tنورث یورک\t2026-09-07\t\nثبت‌شده\n\nHW-4936\n\tHomeWare Imports\tنورث یورک\t2026-09-21\t\nثبت‌شده\n\nSB-7862\n\tSunrise Beverages\tنورث یورک\t2026-10-03\t\nثبت‌شده\n\nGG-11879\n\tGolden Grain Distributors\tنورث یورک\t2026-10-07\t\nثبت‌شده\n\nFV-20390\n\tFresh Valley Foods\tنورث یورک\t2026-10-11\t\nثبت‌شده",
+      "automatedLayout": {
+        "scene": "invoices-list",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 94,
+        "contentWords": 20,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 45,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive invoice-posted-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 9
+              },
+              {
+                "cells": 5,
+                "words": 9
+              },
+              {
+                "cells": 5,
+                "words": 8
+              },
+              {
+                "cells": 5,
+                "words": 9
+              },
+              {
+                "cells": 5,
+                "words": 8
+              },
+              {
+                "cells": 5,
+                "words": 8
+              },
+              {
+                "cells": 5,
+                "words": 9
+              },
+              {
+                "cells": 5,
+                "words": 9
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "manual-invoice-missing",
+      "variant": "fa-light",
+      "filename": "manual-invoice-missing-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/manual-invoice-missing-fa-light.png",
+      "sha256": "e5515136a7d4099bf2df14f7d779466535b1c704a8d36faca6136bc8633737f3",
+      "bytes": 350198,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 neutral New invoice page control remains white/hairline. The 40/60 panes, linked missing list, real file/dropzone error and date/confirmation hints remain visible. Quantity/cost and nested select/date inputs are white at rest; Remove line is red text on neutral row fill. The actual 08:52 received time, quantity 1, cost 0.9800, subtotal $0.98, selling $1.49 and zero tax remain intact. Save/Post follows all review content without overlay; the focused missing-list outline and invalid-date border are genuine state cues.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White nested rest controls and correct white/hairline page New invoice, with neutral interior footer."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.17.16",
+        "8.20.12",
+        "8.26.04"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#invoices?id=invoice-7b8bcb3b-f1d6-4130-922c-ee3f0579c142",
+      "fixtureEvidence": "اصل فاکتور\n\nخواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است\n\nبارگذاری PDF یا عکس\n\nیک PDF یا عکس را اینجا رها کنید، یا فایل را انتخاب کنید\n\nانتخاب فایل\n\nپیش از ثبت، اصل فاکتور (PDF یا عکس) را اضافه کنید.\n\nاصل فاکتور پیوست نشده است\n\nپیوست اصل فاکتور\nموارد ناقص\nپیش از ثبت، اصل فاکتور (PDF یا عکس) را اضافه کنید.\nردیف 1: همه ردیف‌های فاکتور را بررسی و تأیید کنید.\nردیف 1: برای پیگیری تاریخ هر ردیف بله یا خیر را انتخاب کنید؛ در صورت فعال بودن تاریخ را وارد کنید.\nپیش‌نویس‌ها\nفاکتور\tتأمین‌کننده\tوضعیت\n\nDEMO-C6-MISSING\n\tFresh Valley Foods\t\nپیش‌نویس\nجمع پیش از مالیات\n$0.98\nمالیات\n$0.00\nکسر کسری و اقلام برگشتی\n$0.00\nقابل پرداخت\n$0.98\n\nاین مبلغ همین فاکتور است، نه مانده تأمین‌کننده. دریافت‌شده‌ها فقط واحدهای واقعاً تحویل‌شده را ثبت می‌کند.\n\nجزئیات فاکتور\n\nFresh Valley Foods\n·\nDEMO-C6-MISSING\n· نورث یورک ·\n2026-10-12\n\nنیازمند بررسی تغییرات در این مرورگر خودکار ذخیره می‌شوند.\n\nتأمین‌کننده\n⁦Fresh Valley Foods⁩\nشماره فاکتور تأمین‌کننده (اختیاری)\nتاریخ فاکتور\n2026-10-12\nتاریخ دریافت\n2026-10-12\nزمان دریافت\n\nزمان محلی فروشگاه، ۲۴ ساعته HH:mm\n\nکارمند دریافت‌کننده\nسرپرست نمایشی\nمکان\nنورث یورک\nنشانی تحویل (اختیاری)\nجمع پیش از مالیات\nمالیات\nجمع نهایی\nتاریخ سررسید (اختیاری)\n2026-10-26\nشرایط پرداخت (اختیاری)\nهر دو هفته (14 روز)\nمقایسه با سفارش\nسفارش (اختیاری)\nبدون سفارش مرتبط\n\nسفارش باز همین تأمین‌کننده و مکان دریافت را انتخاب کنید.\n\nبررسی ردیف‌های فاکتور\n\nکارتن یا واحد را انتخاب کنید و کالا، اندازه کارتن، تعداد، هزینه و تصمیم پیگیری تاریخ هر ردیف را تأیید کنید.\n\n1.\nباقالا کنسرو شده ۴۰۰ گرمی\nCanned Fava Beans 400 g\n\n0002 · 400 g\n\nتطبیق داده شد\nفاکتور شده\nتحویل شده\nهزینه هر واحد پیش از مالیات\nجمع ردیف\n$0.98\nقیمت فروش\n$1.49\n\nتأییدشده: $1.49\n\nواحد تعداد\nواحد\nواحد در هر کارتن\nکد کالای تأمین‌کننده (اختیاری)\n\n1 واحد\n\nکالای تطبیق‌یافته\n⁦0002⁩ · باقالا کنسرو شده ۴۰۰ گرمی\nدسته قیمت‌گذاری\nمواد غذایی\nحذف ردیف\nثبت کسری\nپیگیری تاریخ\nبله\nخیر\nپیگیری تاریخ\nانقضا\nتاریخ\nتاریخ را انتخاب کنید\n\nردیف 1: برای پیگیری تاریخ هر ردیف بله یا خیر را انتخاب کنید؛ در صورت فعال بودن تاریخ را وارد کنید.\n\nشماره بچ (اختیاری)\nتأیید این ردیف فاکتور\n\nردیف 1: همه ردیف‌های فاکتور را بررسی و تأیید کنید.\n\nافزودن کالا به فاکتور\n⁦0002⁩ · باقالا کنسرو شده ۴۰۰ گرمی\nافزودن ردیف\n+ افزودن کالای جدید\nذخیره به عنوان پیش‌نویس\nثبت فاکتور",
+      "automatedLayout": {
+        "scene": "manual-invoice-missing",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 325,
+        "contentWords": 280,
+        "unitFragments": [
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 11,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 619,
+            "clientWidth": 619
+          },
+          {
+            "className": "table-wrap ui-data-table invoice-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 35
+              },
+              {
+                "cells": 1,
+                "words": 0
+              }
+            ],
+            "scrollWidth": 619,
+            "clientWidth": 619
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "products",
+      "variant": "fa-light",
+      "filename": "products-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/products-fa-light.png",
+      "sha256": "a5bc182671ccd567f607aa29ca91af37d725ba9a3dadfd5959df040eafa9f817",
+      "bytes": 197270,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 shows white/hairline outside Columns and eight of sixteen own products, with actual codes, prices, margins, offers and status dots. Persian ۴٫۵ and ۱٫۸ are correctly ordered beside whole English 4.5 kg and 1.8 L; almond prices $7.49/lb and $16.51/kg remain whole. One Edit plus More and navigation chevron fits each calm row; card Edit stays grey/borderless.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White/hairline outside Columns; calm whole-row inset divider."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.07.45"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#products",
+      "fixtureEvidence": "محصول ↑\tکد محصول\tهزینهٔ فروشگاه\tحاشیه سود %\tقیمت تأییدشده\tوضعیت و پیشنهاد\tجزئیات\nآب آلبالو ۱ لیتری\n\nSour Cherry Juice 1 L\n\n1 L\n\n\t0003\t$1.95\t34.78%\t$2.99\t\nتأییدشده\n۲ عدد $5\n\t\nویرایش\n\nاسفنج ظرفشویی بسته ۳ عددی\n\nKitchen Sponge 3-pack\n\n3 pcs\n\n\t0014\t$1.50\t39.76%\t$2.49\t\nتأییدشده\n\t\nویرایش\n\nبادام فله\n\nBulk Almonds\n\nفروش وزنی\n\n\t0016\t\n$4.99\n/lb\t33.38%\t\n$7.49/lb\n$16.51/kg\n\t\nتأییدشده\n\t\nویرایش\n\nباقالا کنسرو شده ۴۰۰ گرمی\n\nCanned Fava Beans 400 g\n\n400 g\n\n\t0002\t$0.98\t34.23%\t$1.49\t\nتأییدشده\n\t\nویرایش\n\nبرنج باسماتی ۴٫۵ کیلوگرمی\n\nBasmati Rice 4.5 kg\n\n4.5 kg\n\n\t0001\t$18.40\t23.30%\t$23.99\t\nتأییدشده\n\t\nویرایش\n\nپلوپز ۱٫۸ لیتری\n\nRice Cooker 1.8 L\n\n1.8 L\n\n\t0013\t$31.50\t39.99%\t$52.49\t\nتأییدشده\n\t\nویرایش\n\nچای سیاه ۴۵۰ گرمی\n\nBlack Tea 450 g\n\n450 g\n\n\t0004\t$4.10\t36.83%\t$6.49\t\nتأییدشده\n\t\nویرایش\n\nچیپس سیب‌زمینی ۱۵۰ گرمی\n\nPotato Chips 150 g\n\n150 g\n\n\t0009\t$1.60\t46.49%\t$2.99\t\nتأییدشده\n۲ عدد $5\n\t\nویرایش",
+      "automatedLayout": {
+        "scene": "products",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 199,
+        "contentWords": 49,
+        "unitFragments": [
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۱٫۸ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1.8 L",
+            "lines": 1
+          },
+          {
+            "text": "1.8 L",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "150 g",
+            "lines": 1
+          },
+          {
+            "text": "150 g",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 63,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive catalog-products-table with-store-cost",
+            "rows": [
+              {
+                "cells": 7,
+                "words": 13
+              },
+              {
+                "cells": 7,
+                "words": 20
+              },
+              {
+                "cells": 7,
+                "words": 17
+              },
+              {
+                "cells": 7,
+                "words": 16
+              },
+              {
+                "cells": 7,
+                "words": 18
+              },
+              {
+                "cells": 7,
+                "words": 18
+              },
+              {
+                "cells": 7,
+                "words": 17
+              },
+              {
+                "cells": 7,
+                "words": 16
+              },
+              {
+                "cells": 7,
+                "words": 19
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "received-range",
+      "variant": "fa-light",
+      "filename": "received-range-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/received-range-fa-light.png",
+      "sha256": "4b82260f8cdccc335aeb8cb9492e553e182ab6197aad682bb697c692f222f757",
+      "bytes": 241087,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 inside-card search and filters are grey/borderless; the October 1–31 range remains one control. All twelve rows retain readable supplier/reference/date information. The two rice ۴٫۵ کیلوگرمی names are correctly ordered and grouped; 7.5 cases/30 units, 3.3333/40 and 2.6667/16 remain whole. English secondary names wrap at normal word boundaries and rows have a single inset divider.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "Single whole-row inset dividers; grey/borderless inside-card search."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.30.04",
+        "8.10.23"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#received",
+      "fixtureEvidence": "از\n2026-10-01\nتا\n2026-10-31\nنورث یورک\nهمه تأمین‌کنندگان\nهمه کالاها\nپاک کردن فیلترها\n12 تحویل\nستون‌ها",
+      "automatedLayout": {
+        "scene": "received-range",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 274,
+        "contentWords": 25,
+        "unitFragments": [
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "150 g",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۹۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "2 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "24 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "20 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "3 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "36 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "6 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "7.5 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "30 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "3.3333 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "40 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2.6667 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "16 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 کارتن",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "6 واحد",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 78,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive received-table",
+            "rows": [
+              {
+                "cells": 6,
+                "words": 9
+              },
+              {
+                "cells": 6,
+                "words": 22
+              },
+              {
+                "cells": 6,
+                "words": 19
+              },
+              {
+                "cells": 6,
+                "words": 20
+              },
+              {
+                "cells": 6,
+                "words": 21
+              },
+              {
+                "cells": 6,
+                "words": 20
+              },
+              {
+                "cells": 6,
+                "words": 20
+              },
+              {
+                "cells": 6,
+                "words": 20
+              },
+              {
+                "cells": 6,
+                "words": 22
+              },
+              {
+                "cells": 6,
+                "words": 22
+              },
+              {
+                "cells": 6,
+                "words": 19
+              },
+              {
+                "cells": 6,
+                "words": 20
+              },
+              {
+                "cells": 6,
+                "words": 19
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "returns-list",
+      "variant": "fa-light",
+      "filename": "returns-list-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/returns-list-fa-light.png",
+      "sha256": "45395de7e34978a163468b5d6637f19aaf3bdbaeef3c8e626655c9c5ecf83c6c",
+      "bytes": 107890,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 retains the two real open returns with whole references/dates and readable blue waiting-pickup and amber waiting-credit dot statuses. One grey next action plus the navigation chevron fits each row. Search and Columns inside the card remain neutral grey with no resting border; the inset divider is calm.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.30.47"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#returns",
+      "fixtureEvidence": "باز\nتاریخچه\nهمه تأمین‌کنندگان\nهمه وضعیت‌ها\nهمه شعب\nپاک کردن فیلترها\n2 نتیجه\nستون‌ها\nشماره مرجوعی\tتأمین‌کننده\tشعبه\tایجادشده\tوضعیت\tاقدام بعدی\n\n#1\n\tFresh Valley Foods\tنورث یورک\t2026-10-11\t\nدر انتظار جمع‌آوری\t\nثبت جمع‌آوری\n\n\n#2\n\tGolden Grain Distributors\tنورث یورک\t2026-10-08\t\nدر انتظار اعتبار\t\nثبت حل‌وفصل",
+      "automatedLayout": {
+        "scene": "returns-list",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 51,
+        "contentWords": 19,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 18,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive returns-overview-table",
+            "rows": [
+              {
+                "cells": 6,
+                "words": 8
+              },
+              {
+                "cells": 6,
+                "words": 12
+              },
+              {
+                "cells": 6,
+                "words": 12
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "pickup-shortfall",
+      "variant": "fa-light",
+      "filename": "pickup-shortfall-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/pickup-shortfall-fa-light.png",
+      "sha256": "76d3a070b9c9cd561b7e4b5704ea59fecddbc148b3d91a957425f18fad433106",
+      "bytes": 156828,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 preserves actual pickup input 2 against requested 3, the entered refusal reason and keep-for-next-pickup outcome. Nested quantity/reason/outcome fields are white; the evidence reference C6-SIGNED-PAPER-001 remains whole. Optional photo and note controls remain visible, Close inside the form card remains grey/borderless and history remains genuinely empty before commit.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White nested pickup fields; neutral interior Close."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.30.47",
+        "8.32.08"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "ثبت جمع‌آوری واقعی\n\nFresh Valley Foods · نورث یورک\n\nآب آلبالو ۱ لیتری\n\nتعداد مرجوعی: 3\n\nتعداد واقعی جمع‌آوری\nدلیل کسری\nنتیجه باقی‌مانده\nنگهداری برای جمع‌آوری بعدی\nنام نماینده تأمین‌کننده\nمرجع رسید کاغذی امضاشده جمع‌آوری\nعکس کالا (اختیاری)\n\nیک عکس را اینجا رها کنید، یا فایل را انتخاب کنید\n\nانتخاب فایل\nیادداشت (اختیاری)\nبستن\nثبت جمع‌آوری",
+      "automatedLayout": {
+        "scene": "pickup-shortfall",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 89,
+        "contentWords": 43,
+        "unitFragments": [
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 14
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [
+          {
+            "className": "",
+            "scrollWidth": 912,
+            "clientWidth": 912,
+            "words": 26,
+            "controls": 5
+          }
+        ],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "partial-resolution",
+      "variant": "fa-light",
+      "filename": "partial-resolution-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/partial-resolution-fa-light.png",
+      "sha256": "ef95d7bfd8a2553794f3fbda198ac80c065ba78fd2410a54af368b861be9c65d",
+      "bytes": 190121,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 preserves three picked-up units, one replacement and two still outstanding. Outcome, expected date and note are white inside the soft group, and the expected date stays bounded. Replacement feedback is readable. Whole C6-SIGNED-PAPER-001 and C6-ACTUAL-REPLACEMENT-001 history references, the entered English note and actual 08:53 timestamps remain visible. Inner Close stays grey/borderless.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White nested resolution fields, bounded expected date, readable feedback and whole history references."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.30.47",
+        "8.32.08"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "مرجوعی #1\nدر انتظار اعتبار\n\nایجادشده در 2026-10-11 توسط کارمند سالن نمایشی · Fresh Valley Foods · نورث یورک\n\nسیاست مرجوعی\nثبت حل‌وفصل\nیادداشت مرجوعی\nRM-0001\nاقلام\nمحصول\tتعداد\tجمع‌آوری‌شده\tحل‌شده\tدلیل / محل\n\nآب آلبالو ۱ لیتری\nSour Cherry Juice 1 L\n\t3\t3\t1\nجایگزین‌شده: 1\nهنوز باقی‌مانده: 2 · 2026-10-12\n\tنشتی\nسردخانه\nجایگزین دریافت‌شده: آب آلبالو ۱ لیتری × 1. هیچ مبلغی به پرداختنی‌ها اضافه نشده است.\n\nرسید جمع‌آوری امضاشده: C6-SIGNED-PAPER-001 · Fictional Representative\n\nدرخواست لغو\nثبت حل‌وفصل\n\nFresh Valley Foods · نورث یورک\n\nتعداد جمع‌آوری قفل است. نتیجه هر قلم را در زیر ثبت کنید.\n\nآب آلبالو ۱ لیتری\n\nجمع‌آوری‌شده: 3 · حل‌شده: 1 · هنوز باقی‌مانده: 2\n\nنتیجه\nهنوز باقی‌مانده\nتاریخ مورد انتظار\n2026-10-12\nیادداشت (اختیاری)\nبستن\nثبت حل‌وفصل\nمدارک و سوابق\nجمع‌آوری ثبت‌شده\n\n2026-10-12 08:53 · سرپرست نمایشی · C6-SIGNED-PAPER-001\n\nهنوز باقی‌مانده\n\n2026-10-12 08:53 · سرپرست نمایشی · \n\nThe remaining two units are still outstanding.\n\nجایگزین دریافت‌شده\n\n2026-10-12 08:53 · سرپرست نمایشی · C6-ACTUAL-REPLACEMENT-001\n\n2026-10-12 | Fictional Representative | 0003 × 1 | The remaining two units are still outstanding.",
+      "automatedLayout": {
+        "scene": "partial-resolution",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 161,
+        "contentWords": 112,
+        "unitFragments": [
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 20
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [
+          {
+            "className": "",
+            "scrollWidth": 912,
+            "clientWidth": 912,
+            "words": 23,
+            "controls": 0
+          }
+        ],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "return-memo",
+      "variant": "fa-light",
+      "filename": "return-memo-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/return-memo-fa-light.png",
+      "sha256": "2029da66d3cd448bc410072d7900a34aab8ccda5e5bec23f398dcf71d308e100",
+      "bytes": 154968,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 displays the existing tinted Print control and exact Persian print/PDF guidance. The English supplier-facing memo retains own company, RM-0001, supplier, product 0003, quantity 3, unit cost $1.95, expected credit $5.85, signed-paper reference and actual representative/signature fields. No invented Download label/action appears; scaled print geometry is a framing limit.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "Tinted existing Print control; no invented action/copy."
+      ],
+      "framingNotes": [
+        "Whole A4 memo is scaled to fit the dialog; physical printer/PDF geometry cannot be inferred from screenshot scale."
+      ],
+      "applicableOwnerBugNotes": [
+        "8.34.15",
+        "8.30.04"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "viewport",
+      "role": "supervisor",
+      "route": "#return?id=demo-return-1",
+      "fixtureEvidence": "یادداشت مرجوعی\nRM-0001\nSuper Arzon\n\nNorth York\n\nAddress: —\n\nReturn memo\nRM-0001\n\nDate: 2026-10-12\n\nSupplier\nFresh Valley Foods\n\nPhone: 555-0101\n\nEmail: orders@freshvalley.example\n\nProduct\tProduct Code\tQuantity\tUnit cost\tCredit expected\nSour Cherry Juice 1 L\t0003\t3\t$1.95\t$5.85\nTotal credit expected\n$5.85\n\nSigned paper evidence: C6-SIGNED-PAPER-001\n\nDriver\n\nName: Fictional Representative\n\nDate: 2026-10-12\n\nSignature\nStore staff\n\nName: Demo Supervisor\n\nDate: 2026-10-12\n\nSignature\n\nExpected credit is a pending claim, not a supplier credit note.\n\nبرای بارگیری نسخه، در پنجره چاپ گزینه ذخیره به صورت PDF را انتخاب کنید.\n\nچاپ",
+      "automatedLayout": {
+        "scene": "return-memo",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 42,
+        "contentWords": 0,
+        "unitFragments": [
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 17
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [
+          {
+            "className": "confirm-dialog ui-dialog",
+            "scrollWidth": 520,
+            "clientWidth": 520,
+            "words": 19,
+            "controls": 2
+          }
+        ],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "payables-ledger",
+      "variant": "fa-light",
+      "filename": "payables-ledger-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/payables-ledger-fa-light.png",
+      "sha256": "ad8a6c127fdb118e955e950bbfe31a3247cb31f652c2e4b08d413406f8306591",
+      "bytes": 231853,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 supplier balances/due dates and ledger rows remain whole. The selected supplier balance is $169.79 and exactly four summary cards fit. The $37.80/-$37.80 and $181.22/-$11.43 entries, payment/invoice dots, paid/open balances and references remain readable. Outside-card Columns is white/hairline; inner-card controls are grey/borderless and row dividers are single/inset.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.54.59"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#payables",
+      "fixtureEvidence": "دفتر تأمین‌کننده\nستون‌ها\nتاریخ\tشعبه\tنوع\tمرجع / یادداشت\tمبلغ\tچک / تاریخ پرداخت\tعملیات\n\n2026-09-18\n\tنورث یورک\t\nفاکتور\tFV-20296\t$37.80\t—\tثبت اختلاف\n\n2026-09-18\n\tنورث یورک\t\nپرداخت\tFV-20296-PAYMENT\t-$37.80\tFV-20296-DEMO\tثبت اختلاف\n\n2026-10-11\n\tنورث یورک\t\nفاکتور\tFV-20390\t$181.22\t—\tثبت اختلاف\n\n2026-10-11\n\tنورث یورک\t\nپرداخت\tFV-20390-PAYMENT\t-$11.43\tFV-20390-DEMO\tثبت اختلاف",
+      "automatedLayout": {
+        "scene": "payables-ledger",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 199,
+        "contentWords": 81,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 80,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive payables-overview-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 8
+              },
+              {
+                "cells": 5,
+                "words": 8
+              },
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive payables-ledger-table",
+            "rows": [
+              {
+                "cells": 7,
+                "words": 10
+              },
+              {
+                "cells": 7,
+                "words": 9
+              },
+              {
+                "cells": 7,
+                "words": 13
+              },
+              {
+                "cells": 7,
+                "words": 9
+              },
+              {
+                "cells": 7,
+                "words": 13
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 1088,
+            "clientWidth": 1088
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "supplier-cards",
+      "variant": "fa-light",
+      "filename": "supplier-cards-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/supplier-cards-fa-light.png",
+      "sha256": "e869d5fdbd1efe15282b96789e44367a32c92b39dfc8b2984333ec67dc67f769",
+      "bytes": 129143,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 outside-page Edit and More are white with the required quiet hairlines. Own Fresh Valley Foods contact/Net 14 content is unchanged. Exactly four KPI cards fit without icon/date collisions: last delivery 2026-10-11, one delivery this month, one open return and $169.79 balance. Tabs, next-due date and overview metadata remain whole.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "White/hairline page Edit/More controls."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#suppliers?name=Fresh%20Valley%20Foods",
+      "fixtureEvidence": "آخرین تحویل\n2026-10-11\nتحویل‌های این ماه\n1\nمرجوعی‌های باز\n1\nمانده\n$169.79",
+      "automatedLayout": {
+        "scene": "supplier-cards",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 78,
+        "contentWords": 78,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "dashboard",
+      "variant": "fa-light",
+      "filename": "dashboard-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/dashboard-fa-light.png",
+      "sha256": "80f6d5a2fdcfbaf3eaa2c78ea675d40ecc5cc7509b050c9ade15849b0d96bf1f",
+      "bytes": 294769,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 retains exactly four KPI cards and the prescribed wide/narrow sections with Notes/Activity aside. Approvals More is borderless at rest; each approval keeps one small primary action plus More. Alerts, Returns, recent invoices, balances and own-data charts have readable headings/values and calm rows. The Persian rice ۴٫۵ کیلوگرمی and all other size fragments stay grouped. Current-week panels retain actual empty states, and no sampled reference chart data/names are substituted.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [
+        "Borderless resting Approvals More."
+      ],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#dashboard",
+      "fixtureEvidence": "داشبورد سرپرست\n\nاولویت‌های شعبه، تأییدها و فعالیت اخیر.\n\nبررسی تأییدها\nتأییدهای در انتظار\n2\n1 تغییر قیمت · 1 محصول جدید\nهشدارهای باز\n3\n0 کاهش قیمت · 1 اختلاف\nکسری‌های باز\n0\nکالاهای در انتظار تحویل\nانقضای نزدیک\n2\nدر بازهٔ یادآوری هر محصول\nصف تأییدها\nنان لواش ۵۰۰ گرمی\nLavash Bread 500 g\n0006\nتغییر قیمت\nقبلی\n$1.99\nجدید\n$2.99\nنورث یورک\nتأیید\nبیشتر\nزرشک خشک 100 گرمی\nDried Barberries 100 g\n0015\nمحصول جدید\nقبلی\n—\nجدید\n$5.49\nنورث یورک\nتأیید\nبیشتر\nهشدارها\nچای سیاه ۴۵۰ گرمی\nهمه شعب\nاختلاف\nبررسی\nنان لواش ۵۰۰ گرمی\nنورث یورک\nپیگیری تاریخ\nبررسی\nآب آلبالو ۱ لیتری\nنورث یورک\nپیگیری تاریخ\nبررسی\nفاکتورهای اخیر\nفاکتور\tتأمین‌کننده\tوضعیت\tعملیات\n\nFV-20390\n\tFresh Valley Foods\t\nثبت‌شده\t\n\n\nGG-11879\n\tGolden Grain Distributors\t\nثبت‌شده\t\n\n\nSB-7862\n\tSunrise Beverages\t\nثبت‌شده\t\n\n\nSB-7848\n\tSunrise Beverages\t\nثبت‌شده\t\n\n\nHW-4936\n\tHomeWare Imports\t\nثبت‌شده\t\nمرجوعی‌ها\nمشاهده همه مرجوعی‌ها\nFresh Valley Foods\nنورث یورک · آب آلبالو ۱ لیتری\nباز\nGolden Grain Distributors\nنورث یورک · برنج باسماتی ۴٫۵ کیلوگرمی\nبخشی حل‌شده\nمانده تأمین‌کنندگان\nتأمین‌کننده\tمانده\tفاکتورهای باز\tسررسید گذشته\tعملیات\nHomeWare Imports\t$1,260.00\t1\t$0.00\t\n\nGolden Grain Distributors\t$842.10\t2\t$210.00\t\n\nFresh Valley Foods\t$169.79\t1\t$0.00\t\n\nSunrise Beverages\t$96.40\t1\t$96.40\t\n\nCorner Spice Co.\t$0.00\t0\t$0.00\t\nخرید از تأمین‌کنندگان، این ماه\nGolden Grain Distributors\n$636.00\nFresh Valley Foods\n$181.22\nSunrise Beverages\n$133.59\n\nخرید خالص · CAD\n\nخرید، ۸ هفته گذشته\n2026-08-18\n2026-09-01\n2026-09-15\n2026-10-06\n\nخرید خالص · CAD\n\nدریافتی‌های این هفته\n\nاین هفته تحویلی ثبت نشده است.\n\nتغییر قیمت‌های این هفته\n\nاین هفته تغییری در قیمت ثبت نشده است.\n\nیادداشت‌های سرپرست\nمشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.\nکارمند سالن نمایشی · نورث یورک · همین حالا\nباز\nفعالیت\nDS\nتأیید قیمت\nچای سیاه ۴۵۰ گرمی\nسرپرست نمایشی · نورث یورک\n20 ساعت پیش\nDS\nتأیید قیمت\nلوبیا قرمز ۹۰۰ گرمی\nسرپرست نمایشی · نورث یورک\n1 روز پیش",
+      "automatedLayout": {
+        "scene": "dashboard",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 299,
+        "contentWords": 233,
+        "unitFragments": [
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "۹۰۰ گرمی",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 54,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 4
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              }
+            ],
+            "scrollWidth": 499,
+            "clientWidth": 499
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 784,
+            "clientWidth": 784
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "approvals",
+      "variant": "fa-light",
+      "filename": "approvals-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/approvals-fa-light.png",
+      "sha256": "3553b0aa520e79f8d08ac205cea906dcd23e7da59b8e563fd9daede126f06071",
+      "bytes": 132588,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 two pending cards retain whole Lavash Bread 500 g and Dried Barberries 100 g names, codes and invoice references. Prices/cost/margins remain $1.99/$2.99/$1.55/48.16% and $5.49/$3.40/38.07%. Normal card Approve/Reject actions are bounded and unobscured; text and money do not collide.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#approvals",
+      "fixtureEvidence": "تأییدها\n\nکالاها و قیمت‌های جدید را بررسی کنید. قیمت در انتظار، جایگزین قیمت تأییدشده نمی‌شود.\n\nدر انتظار\nتأییدشده\nردشده\nجایگزین‌شده\nنان لواش ۵۰۰ گرمی\n\nLavash Bread 500 g\n\nدر انتظار\nتغییر قیمت\nنورث یورک · کد کالا 0006\nقیمت قبلی\n$1.99\nقیمت جدید\n$2.99\nهزینه واحد\n$1.55\nحاشیه سود\n48.16%\nشعبه: نورث یورک\nایجادشده توسط: کارمند سالن نمایشی\n\nفاکتور: FV-20390\n\nتأیید قیمت\nرد کردن\nزرشک خشک 100 گرمی\n\nDried Barberries 100 g\n\nدر انتظار\nکالای جدید\nنورث یورک · کد کالا 0015\nقیمت قبلی\nهنوز قیمت تأییدشده ندارد\nقیمت جدید\n$5.49\nهزینه واحد\n$3.40\nحاشیه سود\n38.07%\nشعبه: نورث یورک\nایجادشده توسط: کارمند سالن نمایشی\n\nفاکتور: FV-20390\n\nتأیید کالا\nرد کردن",
+      "automatedLayout": {
+        "scene": "approvals",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 111,
+        "contentWords": 111,
+        "unitFragments": [
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "500 g",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "100 g",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    },
+    {
+      "scene": "settings",
+      "variant": "fa-light",
+      "filename": "settings-fa-light.png",
+      "absolutePath": "/tmp/c7-final-ef4dfcc-images/settings-fa-light.png",
+      "sha256": "1db1d787eef6dd7e254947bf508d6dbe6c19f60a8c97882fb49ef82253c95e99",
+      "bytes": 212633,
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "openedIndividually": true,
+      "openedWith": "view_image",
+      "reviewPerformedOnFinalOriginal": true,
+      "openingEvidence": "This exact final Source9 ef4dfcc original was freshly opened individually through view_image(detail=\"original\") in this review, including unchanged-hash frames. No Source8 image verdict or opening flag, collage, crop, edit or mask was reused.",
+      "hashVerifiedAgainstCaptureManifest": true,
+      "freshHashVerifiedAgainstCaptureManifest": true,
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "observation": "Fresh Source9 selected Returns/Date tracking/Labels section retains the bounded 14/30 controls, English-only supplier document choices, label-field/language toggles and existing template. The 18-cell grid, 60×40 mm dimensions, margins/gaps and start cell fit. All inner-card controls use the grey neutral fill; the first selected print cell outline is a real selection cue.",
+      "C7differences": [],
+      "resolvedPreviousConcerns": [],
+      "framingNotes": [],
+      "applicableOwnerBugNotes": [
+        "8.32.08",
+        "8.30.04"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "role": "supervisor",
+      "route": "#settings?group=returns",
+      "fixtureEvidence": "تنظیمات\nشرکت\nشعب\nکارکنان\nکاتالوگ\nقیمت‌گذاری و تأییدها\nپیشنهادها\nمالیات\nدریافت کالا\nمرجوعی/پیگیری تاریخ/برچسب\nیادداشت‌ها\nاعلان‌ها\nبخش‌ها\nداده‌ها\nمرجوعی/پیگیری تاریخ/برچسب\n\nاعتبار مرجوعی در انتظار، یادآوری‌ها، فهرست انتظار برچسب و قالب‌های A4.\n\nمرجوعی‌ها\nکسر اعتبار مورد انتظار هنگام جمع‌آوری\nیادآوری اعتبار در انتظار (روز)\n\nجمع‌آوری یک ادعای در انتظار ثبت می‌کند. فقط سرپرست اعتبار تأییدشده را ثبت می‌کند.\n\nیادآوری پیش‌فرض تاریخ (روز)\nزبان رسید مرجوعی\nفقط انگلیسی\nزبان سفارش چاپی تأمین‌کننده\nفقط انگلیسی\nذخیره تغییرات\nفهرست انتظار برچسب‌ها\nتغییر اخیر قیمت (روز)\nافزودن خودکار کالا پس از تأیید قیمت جدید\nفیلدهای برچسب\nنام کالا\nتوضیحات\nقیمت فروش\nپیشنهاد\nکد کالا\nنشان\nاندازه واحد\nنشان مالیات\nزبان‌ها\nانگلیسی\nفارسی\nقالب‌ها\n\nعادی\n\nقالب ذخیره‌شده\nعادی\nقالب جدید\nنمایش بایگانی‌شده‌ها\n\nقالب آماده\n\nنام قالب\nسبک برچسب\nعادی\nعرض (میلی‌متر)\nارتفاع (میلی‌متر)\nحاشیه بالا (میلی‌متر)\nحاشیه پایین (میلی‌متر)\nحاشیه چپ (میلی‌متر)\nحاشیه راست (میلی‌متر)\nفاصله افقی (میلی‌متر)\nفاصله عمودی (میلی‌متر)\nجابه‌جایی افقی (میلی‌متر)\nجابه‌جایی عمودی (میلی‌متر)\nخانه شروع\nچاپ برگه تنظیم آزمایشی\nکپی قالب\nبایگانی قالب\nذخیره قالب\n18 برچسب در هر برگه (3 × 6)\nاولین خانه استفاده‌نشده را انتخاب کنید.\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18",
+      "automatedLayout": {
+        "scene": "settings",
+        "language": "fa",
+        "width": 1440,
+        "actualWidth": 1440,
+        "words": 181,
+        "contentWords": 181,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 248,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 912,
+          "navScrollHeight": 912
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 357.921875,
+            "height": 18.5625
+          },
+          {
+            "className": "topbar-search",
+            "width": 280,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 149.28125,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 72.796875,
+            "height": 36
+          }
+        ],
+        "failures": []
+      }
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/klead-v1/1-components-and-tokens.png",
+      "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+      "bytes": 672206,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/klead-v1/2-lookup.png",
+      "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94",
+      "bytes": 413573,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/klead-v1/3-date-tracking.png",
+      "sha256": "94bad568825c9351cc63dc9b5cc54d84cfeff57fefe1ef2b64a519095a42bfae",
+      "bytes": 431131,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/klead-v1/4-edit-product.png",
+      "sha256": "7e972d6d45bcbc84ed73f2e674d4e74ccbbc6c35088b5cbe2fd0f07c1d1425c6",
+      "bytes": 210147,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/klead-v1/5-phone-dark.png",
+      "sha256": "ed480b2513fcce07cb0ecd23692ba0b65c313b9c866c6f2611a3258b62bfcf95",
+      "bytes": 106212,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/DateTracking bug 1.png",
+      "sha256": "55cf9bad8be9e45c019f555b61b10616c5a4346aa747ca38552cc65de5d1e262",
+      "bytes": 529786,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.50.27 PM.png",
+      "sha256": "54e2836e159db3d5565226e5d727403d14293992b38d670de1e3423d0cf83954",
+      "bytes": 267758,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.57.32 PM.png",
+      "sha256": "e5fdaa14c224cf33245fff6cce792363972c258df6ea8ef775ff378f180501ae",
+      "bytes": 726872,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+      "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432",
+      "bytes": 571927,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+      "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f",
+      "bytes": 425821,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.10.23 PM.png",
+      "sha256": "864a711f668db6c8cfe3872615453e0775f3c3c410f78173f4cbc2c30b667e26",
+      "bytes": 536594,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.17.16 PM.png",
+      "sha256": "670590f23178d4feb55e78d8ef6e35a7ef890b0f66f0a145375de0dae6491038",
+      "bytes": 498604,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.20.12 PM.png",
+      "sha256": "0e2ec2473f0806dc2e86c14b640cd443e9ec02c6a810628689202887a8e92fd9",
+      "bytes": 642675,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.26.04 PM.png",
+      "sha256": "1551ab3cd0516ce0cd9bd0cfe238f4f72d91d03f1a58f1727c4c2f5a846b6276",
+      "bytes": 537493,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.04 PM.png",
+      "sha256": "b7a9e1e055f01098d9712225ce4b8ebc52f74e92ebcbcc93a075a3d0d2f713fe",
+      "bytes": 804514,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.47 PM.png",
+      "sha256": "2544afda3f9661e9a803ed076f13a19f0a873c4dbe713e6fafc587ae5218f3bc",
+      "bytes": 460442,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+      "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68",
+      "bytes": 438533,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.34.15 PM.png",
+      "sha256": "019eb0ec8bcbfa2fe47edf7e2dad3f889b8de00200841a6008d394fac52a794b",
+      "bytes": 389005,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    },
+    {
+      "path": "/workspace/Supermarket-Inventory/docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.54.59 PM.png",
+      "sha256": "3bb95c54b5999edd8ad5ae56596f87bc60e20043b1adadc676e35629295e5fb4",
+      "bytes": 512792,
+      "openedIndividually": true,
+      "openedIndividuallyInPriorReview": true,
+      "reopenedInThisReview": false,
+      "openingEvidence": "This unchanged original reference was individually opened in dfce23f; parent-authorized reuse is limited to that actual reference context. Bytes and SHA-256 were freshly recomputed for Source9 and match the approved owner manifest, prior opening record and final Source9 source manifest.",
+      "priorReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+      "hashVerifiedAgainstOwnerManifest": true,
+      "hashVerifiedAgainstFinalSourceManifest": true,
+      "comparedInThisReview": true,
+      "copiedOrEdited": false
+    }
+  ],
+  "resolvedPriorReview": {
+    "path": "/tmp/c7-final-ceaf042-images/visual-review-fa-light.json",
+    "scope": "The prior failed record is retained unchanged. Structure and original-reference context only are reused; all seventeen Source9 PNGs were freshly individually opened and current findings independently recorded. Source8 dialog Cancel regression is visibly resolved without undoing outside-page header fixes."
+  },
+  "referenceReuseEvidence": {
+    "approvedBy": "/root",
+    "priorIndividualOpeningReview": "/tmp/c6-final-dfce23f-images/visual-review-fa-light.json",
+    "allReferenceHashesUnchanged": true
+  },
+  "persianDecimalAndUnitChecks": {
+    "receivedRiceWholeFragments": [
+      {
+        "text": "۴٫۵ کیلوگرمی",
+        "lines": 1
+      },
+      {
+        "text": "۴٫۵ کیلوگرمی",
+        "lines": 1
+      }
+    ],
+    "productSizeFragments": [
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴٫۵ کیلوگرمی",
+        "lines": 1
+      },
+      {
+        "text": "4.5 kg",
+        "lines": 1
+      },
+      {
+        "text": "4.5 kg",
+        "lines": 1
+      },
+      {
+        "text": "۱٫۸ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "1.8 L",
+        "lines": 1
+      },
+      {
+        "text": "1.8 L",
+        "lines": 1
+      },
+      {
+        "text": "۴۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      }
+    ],
+    "dashboardUnitFragments": [
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "100 گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "۴٫۵ کیلوگرمی",
+        "lines": 1
+      },
+      {
+        "text": "۴۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "۹۰۰ گرمی",
+        "lines": 1
+      }
+    ],
+    "allMeasuredUnitFragmentsSingleLine": true,
+    "manualFinding": "Fresh Source9 Products and Received preserve correctly ordered ۴٫۵ / 4.5 kg, Products preserves ۱٫۸ / 1.8 L, and Dashboard Return/Activity/Alerts keep number-plus-unit fragments together. The actual history references remain whole. All 122 measured current unit fragments have one line.",
+    "realFailures": []
+  },
+  "allowedIntentionalDifferences": [
+    "The documented light green text adjustment from #1A7F45 to #197D44 is deliberate: the former reference tint pairing is 4.4451:1 and the documented adjusted pair is 4.56258:1. References remain unchanged.",
+    "The separately pending dark Primary owner choice is not silently treated as answered. This FA-light review does not test or resolve that dark pairing.",
+    "English-only supplier-facing memo, entered English notes, representative/evidence/template names and the application’s own logo/products are deliberate actual content rather than borrowed sample data.",
+    "The existing memo action keeps the exact Print label and invokes the print/PDF flow; tinting its presentation does not invent a new Download action.",
+    "Remove line correctly uses red text on neutral row fill rather than a red-tinted fill; this is the explicit row-action treatment.",
+    "The missing-list blue focus ring and invalid-date red border are genuine focus/error cues, not resting borders."
+  ],
+  "limitations": [
+    "This individual review covers only the seventeen FA-light originals captured at a 1440 × 1080 browser viewport. Other variants and responsive/contrast/behavior proofs are owned separately.",
+    "The product-editor body is scrolled to dates, leaving upper name/size fields off-frame. Hidden upper fields are not represented as visibly reviewed.",
+    "Very tall full-page frames are automatically downscaled by the image-view tool; fine text observations are supported only where readable and by the retained original/real layout metadata. No crop or collage was created.",
+    "Static frames do not prove company/role privacy, keyboard focus, Undo/accounting inversion, document bytes, file persistence/capacity or price-engine correctness.",
+    "The scaled supplier memo cannot establish physical printer/PDF alignment.",
+    "The separately pending dark Primary choice is not approved or evaluated by this FA-light review."
+  ]
+}

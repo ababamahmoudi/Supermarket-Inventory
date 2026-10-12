@@ -1,0 +1,3524 @@
+{
+  "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+  "stage": "c7",
+  "variant": "mid-900",
+  "viewport": {
+    "width": 900,
+    "height": 1080
+  },
+  "captureExitCode": 0,
+  "captureExitCodeNote": "Parent independently verified actual capture exit 0 in session60901; this review does not infer runner exit from a manifest.",
+  "captureManifestSHA256": "e6f1a9ad05ff5c067e76be5e32bc6160875601d44e245e9cc98be47773b2ebad",
+  "immutableSourceManifestSHA256": "8273e9d01a3283dcb09f2b0df2da5ed88f7b070900de9a7e12d37f1624fc74cd",
+  "capturedAndIndividuallyOpened": 17,
+  "referenceImagesIndividuallyOpened": 19,
+  "referenceImagesReopenedInThisReview": [],
+  "browserErrors": [],
+  "totalAutomatedFailures": 0,
+  "totalVisualFailures": 0,
+  "screensWithVisualFailures": 0,
+  "reviewPassed": true,
+  "overallReviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "strictGalleryEligibilityScope": "These17 actual fresh mid-900 review records are eligible to join the other four final-source variant reports. The full85/85/19 strict gallery generator was not run by this reviewer.",
+  "previous13VisualFailureOccurrencesResolved": 13,
+  "previous13VisualFailureOccurrencesRemaining": 0,
+  "productionBuildFingerprint": [
+    "5f1150cf962cbe50f4b4418da570f5163ff6188ba9b875068af25c92d5cbd665"
+  ],
+  "styleFamiliesReviewed": [
+    "Responsive current-page breadcrumb/search icon and one reachable account; no topbar collision.",
+    "Fully round category choices with white/hairline normal and tinted selected surfaces.",
+    "Borderless filled resting controls; appropriate visible focus and error states.",
+    "Primary/tinted/neutral/destructive/plain hierarchy, including neutral dialog Cancel and tinted memo Print.",
+    "Caption/title/body inset and bounded dialog presentation.",
+    "Distinct white reminder/control surfaces inside soft date/pickup/resolution groups.",
+    "Return policy/main action at logical header end with title/status/subtitle preserved.",
+    "White/hairline neutral page controls versus grey borderless in-card controls; supplier Edit/More corrected.",
+    "Calm nonstriped rows with inset dividers, no cell-border boxes and compact actions/disclosures.",
+    "Status dot/word versus card/header pill consistency and solid Dashboard summary cards.",
+    "Whole words, identifiers, prices, dates and units, with allowed wrapping at spaces and honest width adaptation."
+  ],
+  "method": "Every one of the17 NEW final-source ef4dfcc mid-900 original PNGs was actually opened individually via view_image in this review; no source7/source8 candidate pixels or candidate opened flags were reused. Each fresh image SHA/source and the exact capture/build fingerprint were independently verified. All19 untouched original-reference hashes also match both the reference manifest and immutable final-source manifest. Original-reference viewing context alone is reused with explicit parent authorization. All13 previously reported source873 style occurrences and the later dialog-Cancel regression were checked in these new pixels and are visibly resolved. No genuine remaining visual/word/overlap/unit/code/date failure was observed. This is a static17-image review, not an additional browser/CI/Safari/printer run. Only this report JSON was written: no source/Rootdocs/PNG edits, masks/collages, browser jobs, hooks, staging or commits occurred.",
+  "referenceManifestFiles": [
+    {
+      "path": "design-references/klead-v1/1-components-and-tokens.png",
+      "source_name": "1-components-and-tokens.png",
+      "bytes": 672206,
+      "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/klead-v1/2-lookup.png",
+      "source_name": "2-lookup.png",
+      "bytes": 413573,
+      "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/klead-v1/3-date-tracking.png",
+      "source_name": "3-date-tracking.png",
+      "bytes": 431131,
+      "sha256": "94bad568825c9351cc63dc9b5cc54d84cfeff57fefe1ef2b64a519095a42bfae",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/klead-v1/4-edit-product.png",
+      "source_name": "4-edit-product.png",
+      "bytes": 210147,
+      "sha256": "7e972d6d45bcbc84ed73f2e674d4e74ccbbc6c35088b5cbe2fd0f07c1d1425c6",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/klead-v1/5-phone-dark.png",
+      "source_name": "5-phone-dark.png",
+      "bytes": 106212,
+      "sha256": "ed480b2513fcce07cb0ecd23692ba0b65c313b9c866c6f2611a3258b62bfcf95",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/DateTracking bug 1.png",
+      "source_name": "DateTracking bug 1.png",
+      "bytes": 529786,
+      "sha256": "55cf9bad8be9e45c019f555b61b10616c5a4346aa747ca38552cc65de5d1e262",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.50.27 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.50.27 PM.png",
+      "bytes": 267758,
+      "sha256": "54e2836e159db3d5565226e5d727403d14293992b38d670de1e3423d0cf83954",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.57.32 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.57.32 PM.png",
+      "bytes": 726872,
+      "sha256": "e5fdaa14c224cf33245fff6cce792363972c258df6ea8ef775ff378f180501ae",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.05.57 PM.png",
+      "bytes": 571927,
+      "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.07.45 PM.png",
+      "bytes": 425821,
+      "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.10.23 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.10.23 PM.png",
+      "bytes": 536594,
+      "sha256": "864a711f668db6c8cfe3872615453e0775f3c3c410f78173f4cbc2c30b667e26",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.17.16 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.17.16 PM.png",
+      "bytes": 498604,
+      "sha256": "670590f23178d4feb55e78d8ef6e35a7ef890b0f66f0a145375de0dae6491038",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.20.12 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.20.12 PM.png",
+      "bytes": 642675,
+      "sha256": "0e2ec2473f0806dc2e86c14b640cd443e9ec02c6a810628689202887a8e92fd9",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.26.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.26.04 PM.png",
+      "bytes": 537493,
+      "sha256": "1551ab3cd0516ce0cd9bd0cfe238f4f72d91d03f1a58f1727c4c2f5a846b6276",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.04 PM.png",
+      "bytes": 804514,
+      "sha256": "b7a9e1e055f01098d9712225ce4b8ebc52f74e92ebcbcc93a075a3d0d2f713fe",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.47 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.47 PM.png",
+      "bytes": 460442,
+      "sha256": "2544afda3f9661e9a803ed076f13a19f0a873c4dbe713e6fafc587ae5218f3bc",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.32.08 PM.png",
+      "bytes": 438533,
+      "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.34.15 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.34.15 PM.png",
+      "bytes": 389005,
+      "sha256": "019eb0ec8bcbfa2fe47edf7e2dad3f889b8de00200841a6008d394fac52a794b",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.54.59 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.54.59 PM.png",
+      "bytes": 512792,
+      "sha256": "3bb95c54b5999edd8ad5ae56596f87bc60e20043b1adadc676e35629295e5fb4",
+      "openedIndividually": true,
+      "sha256Verified": true,
+      "sourceManifestSHA256Matches": true,
+      "referenceViewingNote": "All 19 originals were actually opened individually during earlier read-only reviews. Retained reference viewing context is explicitly authorized; each original hash and its current immutable source-manifest hash are freshly revalidated here. No fresh reference open or reused candidate-screenshot open is claimed."
+    }
+  ],
+  "reviews": [
+    {
+      "scene": "topbar",
+      "variant": "mid-900",
+      "filename": "topbar-mid-900.png",
+      "sha256": "aa884fcbbb180039ff898c0926da0a39040d6868157fa1e47bf5f192613aa00f",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "element",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 828,
+        "height": 60
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 7.50.27 PM.png",
+          "sha256": "54e2836e159db3d5565226e5d727403d14293992b38d670de1e3423d0cf83954",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.50.27 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "At 900 px, the current-page breadcrumb and search icon are separated; all branch/language/theme/text-size/notifications/Demo controls remain visible.",
+        "The single initials account remains at the sidebar bottom and the original Arzon logo is retained."
+      ],
+      "previousSourceFindingsVerifiedResolved": [],
+      "automatedLayout": {
+        "scene": "topbar",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 287,
+        "contentWords": 235,
+        "unitFragments": [
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 48,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              }
+            ],
+            "scrollWidth": 459,
+            "clientWidth": 459
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "This PNG captures the topbar element only. The underlying page is measured separately in the exact capture manifest."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "This PNG captures the topbar element only. The underlying page is measured separately in the exact capture manifest."
+      ]
+    },
+    {
+      "scene": "lookup-clearance-dates",
+      "variant": "mid-900",
+      "filename": "lookup-clearance-dates-mid-900.png",
+      "sha256": "c901add52e05eb8267809d9b4657f7c7f4934d3e7e6ce7a0c12687d2927df84c",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1093
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "DateTracking bug 1.png",
+          "sha256": "55cf9bad8be9e45c019f555b61b10616c5a4346aa747ca38552cc65de5d1e262",
+          "path": "design-references/c6-owner-bugs/DateTracking bug 1.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.07.45 PM.png",
+          "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "2-lookup.png",
+          "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94",
+          "path": "design-references/klead-v1/2-lookup.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "5-phone-dark.png",
+          "sha256": "ed480b2513fcce07cb0ecd23692ba0b65c313b9c866c6f2611a3258b62bfcf95",
+          "path": "design-references/klead-v1/5-phone-dark.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The actual large price, normal offer beside it, local clearance price and expiry remain present.",
+        "Dates and Last received are read-only quiet rows with icon tiles; no tracking toggle or date-entry control appears in Lookup.",
+        "Actual product names, codes, atomic units and receipt provenance are retained."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Category choices are now fully round white/hairline pills; selected All uses the blue tint/text."
+      ],
+      "automatedLayout": {
+        "scene": "lookup-clearance-dates",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 114,
+        "contentWords": 114,
+        "unitFragments": [
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "date-tracking",
+      "variant": "mid-900",
+      "filename": "date-tracking-mid-900.png",
+      "sha256": "40c972b3c6d8250aca6061644a3e385c665d330b0bfe640d0bd377f9f1232cd2",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1412
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 7.57.32 PM.png",
+          "sha256": "e5fdaa14c224cf33245fff6cce792363972c258df6ea8ef775ff378f180501ae",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.57.32 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.05.57 PM.png",
+          "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "3-date-tracking.png",
+          "sha256": "94bad568825c9351cc63dc9b5cc54d84cfeff57fefe1ef2b64a519095a42bfae",
+          "path": "design-references/klead-v1/3-date-tracking.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The quick-add form, Date/Quantity controls, subdued optional labels and selected newly added row remain visible.",
+        "Due soon/All dates/Removed has the raised round selected thumb; rows are calm and have Remove plus More.",
+        "Product names, dates, reminder and location values remain whole without visible collisions."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Columns on the page background is now white with the specified hairline."
+      ],
+      "automatedLayout": {
+        "scene": "date-tracking",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 123,
+        "contentWords": 46,
+        "unitFragments": [
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "20 units",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 20,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive expiry-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 24
+              },
+              {
+                "cells": 5,
+                "words": 14
+              },
+              {
+                "cells": 5,
+                "words": 15
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [
+          {
+            "className": "date-quick-add",
+            "scrollWidth": 724,
+            "clientWidth": 724,
+            "words": 18,
+            "controls": 9
+          }
+        ],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "edit-product-dates",
+      "variant": "mid-900",
+      "filename": "edit-product-dates-mid-900.png",
+      "sha256": "9c9fa7e7f6517b2053b349764d939fae79691d5af6ab3d57dcf2516687a32fdd",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "viewport",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.07.45 PM.png",
+          "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "4-edit-product.png",
+          "sha256": "7e972d6d45bcbc84ed73f2e674d4e74ccbbc6c35088b5cbe2fd0f07c1d1425c6",
+          "path": "design-references/klead-v1/4-edit-product.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The dialog has a visible title, close control, bounded body, soft Date tracking group and white dated rows.",
+        "The inline Type/Date/Quantity/Add row, optional lot and Neutral Cancel before Primary Save are visible.",
+        "The form is intentionally scrolled to Dates; this image does not prove the omitted name/pricing sections above.",
+        "Final product-dialog Cancel is neutral grey, borderless and intrinsic; Save product remains the Primary action, with no outside-card white/hairline style leaking into this footer."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "The product caption now shares the title/body inline inset.",
+        "Remind me 30 is now a distinct white inset number field inside the soft grey group."
+      ],
+      "automatedLayout": {
+        "scene": "edit-product-dates",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 199,
+        "contentWords": 0,
+        "unitFragments": [
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "20 units",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 30,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 5
+              },
+              {
+                "cells": 3,
+                "words": 4
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive product-cost-history-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 9
+              },
+              {
+                "cells": 5,
+                "words": 9
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive product-last-received-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [
+          {
+            "className": "confirm-dialog ui-dialog product-editor-dialog",
+            "scrollWidth": 868,
+            "clientWidth": 868,
+            "words": 80,
+            "controls": 21
+          },
+          {
+            "className": "stack product-editor-form",
+            "scrollWidth": 868,
+            "clientWidth": 868,
+            "words": 71,
+            "controls": 20
+          }
+        ],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "The dialog is intentionally scrolled to Date tracking. Names/pricing and preceding rows above the viewport are not shown; this is not evidence that those fields are absent.",
+        "Overlay contentWords is zero while the total-word counter is positive. Actual pixels were individually opened; that subcounter is not used as complete form-containment proof."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "The dialog is intentionally scrolled to Date tracking. Names/pricing and preceding rows above the viewport are not shown; this is not evidence that those fields are absent.",
+        "Overlay contentWords is zero while the total-word counter is positive. Actual pixels were individually opened; that subcounter is not used as complete form-containment proof."
+      ]
+    },
+    {
+      "scene": "invoices-list",
+      "variant": "mid-900",
+      "filename": "invoices-list-mid-900.png",
+      "sha256": "b5fb778bbd00ad81160e3fdda5443f8f448fe0785d8b233dbf7e8dfeb917dc5c",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.10.23 PM.png",
+          "sha256": "864a711f668db6c8cfe3872615453e0775f3c3c410f78173f4cbc2c30b667e26",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.10.23 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The list uses calm inset row dividers, plain invoice references and separate detail/navigation chevrons.",
+        "Visible status uses a coloured dot and words; filter/tab controls and actual amounts fit."
+      ],
+      "previousSourceFindingsVerifiedResolved": [],
+      "automatedLayout": {
+        "scene": "invoices-list",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 76,
+        "contentWords": 19,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 36,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive invoice-posted-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 4
+              },
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "manual-invoice-missing",
+      "variant": "mid-900",
+      "filename": "manual-invoice-missing-mid-900.png",
+      "sha256": "2bd6ed1c2873ba9db2bf550cf182cd276f23b9a3c5da2a952e99fbdf5f1fe476",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 4039
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.17.16 PM.png",
+          "sha256": "670590f23178d4feb55e78d8ef6e35a7ef890b0f66f0a145375de0dae6491038",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.17.16 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.20.12 PM.png",
+          "sha256": "0e2ec2473f0806dc2e86c14b640cd443e9ec02c6a810628689202887a8e92fd9",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.20.12 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.26.04 PM.png",
+          "sha256": "1551ab3cd0516ce0cd9bd0cfe238f4f72d91d03f1a58f1727c4c2f5a846b6276",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.26.04 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The amber list shows three actual blockers with local errors; error/focus borders are appropriate exceptions to the borderless resting-field rule.",
+        "Custom original upload, local received fields, named Invoiced/Delivered controls, singular unit, Remove line and totals are present.",
+        "No stacked typing/autosave Undo capsule obstructs Save as draft/Post invoice."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Resting Invoiced/Delivered/unit-cost fields are filled and borderless, with distinct white controls inside the nested grey group. Red validation and blue focus treatments remain visible."
+      ],
+      "automatedLayout": {
+        "scene": "manual-invoice-missing",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 295,
+        "contentWords": 250,
+        "unitFragments": [
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 16,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          },
+          {
+            "className": "table-wrap ui-data-table invoice-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 10
+              },
+              {
+                "cells": 5,
+                "words": 25
+              },
+              {
+                "cells": 1,
+                "words": 0
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "Original PNG is 900 × 4039 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "Original PNG is 900 × 4039 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ]
+    },
+    {
+      "scene": "products",
+      "variant": "mid-900",
+      "filename": "products-mid-900.png",
+      "sha256": "dffe5088f26905a58ad662374abd6af0f9cfd903da4d95109a18159b4c6700f2",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1284
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.05.57 PM.png",
+          "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "Calm nonstriped rows retain current names, codes and atomic price/unit values.",
+        "Neutral Edit, More and detail chevrons retain the permitted actions; unavailable approved price is shown honestly."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Columns on the page background is now white with the specified hairline."
+      ],
+      "automatedLayout": {
+        "scene": "products",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 158,
+        "contentWords": 43,
+        "unitFragments": [
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          },
+          {
+            "text": "۹۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          },
+          {
+            "text": "355 ml",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 36,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive catalog-products-table with-store-cost",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 13
+              },
+              {
+                "cells": 4,
+                "words": 13
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 12
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 16
+              },
+              {
+                "cells": 4,
+                "words": 12
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "received-range",
+      "variant": "mid-900",
+      "filename": "received-range-mid-900.png",
+      "sha256": "3a939626d18d4648f80677180eb1858b128272e1a57e44ab33339aaf2706683a",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1627
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.30.04 PM.png",
+          "sha256": "b7a9e1e055f01098d9712225ce4b8ebc52f74e92ebcbcc93a075a3d0d2f713fe",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.04 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "One From/To range with Today/This week/This month replaces duplicate Choose date controls.",
+        "The Received 400 g fragment remains atomic; invoice references, names and row values fit without a visible overlap.",
+        "Names may wrap at spaces while prices/codes/units remain whole."
+      ],
+      "previousSourceFindingsVerifiedResolved": [],
+      "automatedLayout": {
+        "scene": "received-range",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 212,
+        "contentWords": 22,
+        "unitFragments": [
+          {
+            "text": "400 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "150 g",
+            "lines": 1
+          },
+          {
+            "text": "۱۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "۴٫۵ کیلوگرمی",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          },
+          {
+            "text": "۹۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "۴۵۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "2 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "24 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 case",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "20 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "3 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "36 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 case",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "6 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 case",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 unit",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "7.5 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "30 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "3.3333 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "40 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2.6667 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "16 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "2 cases",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "12 units",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 case",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "6 units",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 52,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive received-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 17
+              },
+              {
+                "cells": 4,
+                "words": 14
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 16
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 17
+              },
+              {
+                "cells": 4,
+                "words": 17
+              },
+              {
+                "cells": 4,
+                "words": 15
+              },
+              {
+                "cells": 4,
+                "words": 16
+              },
+              {
+                "cells": 4,
+                "words": 15
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "returns-list",
+      "variant": "mid-900",
+      "filename": "returns-list-mid-900.png",
+      "sha256": "f9a2be4a9bcb536756c709b4db9953a96e48b49e1713423ada4ffb14c8097734",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.30.47 PM.png",
+          "sha256": "2544afda3f9661e9a803ed076f13a19f0a873c4dbe713e6fafc587ae5218f3bc",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.47 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The Open/History track has a raised selected thumb; calm return rows show actual suppliers and one next action plus navigation chevron.",
+        "Return identifiers and supplier names remain whole; hidden permitted values remain a separate expanded-details concern."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "The in-card Search returns field is now grey-filled and borderless, matching its sibling filters."
+      ],
+      "automatedLayout": {
+        "scene": "returns-list",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 34,
+        "contentWords": 18,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 9,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive returns-overview-table",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 4
+              },
+              {
+                "cells": 3,
+                "words": 6
+              },
+              {
+                "cells": 3,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "pickup-shortfall",
+      "variant": "mid-900",
+      "filename": "pickup-shortfall-mid-900.png",
+      "sha256": "ad7b3eb4ac8fa4534ce8671ee0153dde3bbcd7ffbe37f2a1fcef0b1299156ae8",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1761
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.32.08 PM.png",
+          "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The real item has return quantity 3, actual pickup 2, required shortfall reason and Keep for next pickup outcome.",
+        "Representative, signed pickup-paper reference, optional photo and note fields plus Close/main footer remain visible.",
+        "No saved pickup evidence has been fabricated for this pre-save fixture."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Return policy and Record pickup are now at the logical header end. Grouped actual-quantity/reason/outcome controls have white inset surfaces."
+      ],
+      "automatedLayout": {
+        "scene": "pickup-shortfall",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 90,
+        "contentWords": 41,
+        "unitFragments": [
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 15
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [
+          {
+            "className": "",
+            "scrollWidth": 724,
+            "clientWidth": 724,
+            "words": 27,
+            "controls": 5
+          }
+        ],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "partial-resolution",
+      "variant": "mid-900",
+      "filename": "partial-resolution-mid-900.png",
+      "sha256": "57e4dade0b63ac50793f903c2fdcb030093aa8ae1bf1df3aafb313ed1974d79d",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1942
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.32.08 PM.png",
+          "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The real saved signed pickup is 3; item progress shows resolved/replaced 1 and outstanding 2 with the expected date.",
+        "The retained pickup paper/evidence history and actual replacement are visible; the subsequent form states pickup quantities are locked.",
+        "The outcome/expected-date/note group and Close/main footer remain clear; success feedback is in the current English language."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Return policy and Record resolution are now at the logical header end. The locked outcome/expected-date group has white inset fields and an intrinsic date width."
+      ],
+      "automatedLayout": {
+        "scene": "partial-resolution",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 149,
+        "contentWords": 111,
+        "unitFragments": [
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "1 L",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 21
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [
+          {
+            "className": "",
+            "scrollWidth": 724,
+            "clientWidth": 724,
+            "words": 10,
+            "controls": 0
+          }
+        ],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "return-memo",
+      "variant": "mid-900",
+      "filename": "return-memo-mid-900.png",
+      "sha256": "5a479d499510f53e9b1405d5000924ecb2e75056a6364362e6499ebb644dac14",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "viewport",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.34.15 PM.png",
+          "sha256": "019eb0ec8bcbfa2fe47edf7e2dad3f889b8de00200841a6008d394fac52a794b",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.34.15 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The whole supplier-facing page remains English and uses RM-0001, actual supplier/product/code/quantity/cost/expected-credit totals and signed-paper reference.",
+        "Driver and store-staff name/date/signature lines remain visible; the absent configured address is shown honestly as an em dash.",
+        "The document is scaled as one page inside the dialog; physical print geometry is not judged from screen-scale text."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "The screen-only Print action now uses the tinted treatment; the English document remains unchanged in physical layout."
+      ],
+      "automatedLayout": {
+        "scene": "return-memo",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 42,
+        "contentWords": 0,
+        "unitFragments": [
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "۱ لیتری",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 10,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive return-lines-table",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 18
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [
+          {
+            "className": "confirm-dialog ui-dialog",
+            "scrollWidth": 520,
+            "clientWidth": 520,
+            "words": 17,
+            "controls": 2
+          }
+        ],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "Supplier-facing memo remains English by default; missing configured address is shown honestly as an em dash. Screen preview scaling cannot establish physical-printer alignment.",
+        "Overlay contentWords is zero while the total-word counter is positive. Actual pixels were individually opened; that subcounter is not used as complete form-containment proof."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "Supplier-facing memo remains English by default; missing configured address is shown honestly as an em dash. Screen preview scaling cannot establish physical-printer alignment.",
+        "Overlay contentWords is zero while the total-word counter is positive. Actual pixels were individually opened; that subcounter is not used as complete form-containment proof."
+      ]
+    },
+    {
+      "scene": "payables-ledger",
+      "variant": "mid-900",
+      "filename": "payables-ledger-mid-900.png",
+      "sha256": "9aec8b4440fbdfd29682b50b3f141581cf9542a13d9827db32ccf371fd02393f",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 2064
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "Pasted 2026-10-10 at 8.54.59 PM.png",
+          "sha256": "3bb95c54b5999edd8ad5ae56596f87bc60e20043b1adadc676e35629295e5fb4",
+          "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.54.59 PM.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The Supplier ledger Columns control is correctly in the card title, separated from the table header.",
+        "Amounts, dates and references remain whole; calm rows and coloured status words retain actual finance data.",
+        "Four ledger KPIs and secondary/tinted summary controls retain the approved layout and scoped record values."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "The supplier-list Columns on the page background is now white/hairline. The ledger-card Columns remains correctly in its title."
+      ],
+      "automatedLayout": {
+        "scene": "payables-ledger",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 161,
+        "contentWords": 77,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 59,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive payables-overview-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 5
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive payables-ledger-table",
+            "rows": [
+              {
+                "cells": 4,
+                "words": 5
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 7
+              },
+              {
+                "cells": 4,
+                "words": 6
+              },
+              {
+                "cells": 4,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 7
+              },
+              {
+                "cells": 5,
+                "words": 7
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "Original PNG is 900 × 2064 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "Original PNG is 900 × 2064 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ]
+    },
+    {
+      "scene": "supplier-cards",
+      "variant": "mid-900",
+      "filename": "supplier-cards-mid-900.png",
+      "sha256": "ae39367574f160835042c18488fc57d6f5b26fd40496e17fe20d9acbe7033390",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        },
+        {
+          "sourceName": "2-lookup.png",
+          "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94",
+          "path": "design-references/klead-v1/2-lookup.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "Four actual cards fit; Last delivery/month deliveries/open returns have navigation arrows and Balance remains a static card.",
+        "The whole delivery date is separate from its icon, and supplier contacts/payment terms are retained.",
+        "Solid blue/ink cards, wrapped tab choices and actual scoped overview values remain visible.",
+        "The final formerly failing supplier header controls are white/hairline on page background; no generic resting-border exception was accepted."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "Supplier header Edit and More now use white fill with the specified page-control hairline; the unresolved source7 occurrence is visibly fixed."
+      ],
+      "automatedLayout": {
+        "scene": "supplier-cards",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 76,
+        "contentWords": 76,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "dashboard",
+      "variant": "mid-900",
+      "filename": "dashboard-mid-900.png",
+      "sha256": "15b758c1a82e492db12ad03cd8ef16bfbbbe3eee75d5a317aa52af2a96236b69",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 3032
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "Exactly four solid blue/ink KPIs and the approved order/grid remain present, followed by the scoped actual record panels and charts.",
+        "The below-main Notes for Supervisor/Activity panels use real records and initials at this width.",
+        "Calm invoice/balance lists, chart dates and atomic product units remain legible without visible text/control collisions."
+      ],
+      "previousSourceFindingsVerifiedResolved": [
+        "The Approvals-queue More controls are now transparent/borderless icon controls, without the old resting circle outline."
+      ],
+      "automatedLayout": {
+        "scene": "dashboard",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 287,
+        "contentWords": 235,
+        "unitFragments": [
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1
+          },
+          {
+            "text": "100 g",
+            "lines": 1
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "500 g",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "1 L",
+            "lines": 1
+          },
+          {
+            "text": "4.5 kg",
+            "lines": 1
+          },
+          {
+            "text": "450 g",
+            "lines": 1
+          },
+          {
+            "text": "900 g",
+            "lines": 1
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 48,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              },
+              {
+                "cells": 3,
+                "words": 3
+              }
+            ],
+            "scrollWidth": 459,
+            "clientWidth": 459
+          },
+          {
+            "className": "table-wrap ui-data-table is-responsive",
+            "rows": [
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 6
+              },
+              {
+                "cells": 5,
+                "words": 5
+              },
+              {
+                "cells": 5,
+                "words": 6
+              }
+            ],
+            "scrollWidth": 724,
+            "clientWidth": 724
+          }
+        ],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "Original PNG is 900 × 3032 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "Original PNG is 900 × 3032 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ]
+    },
+    {
+      "scene": "approvals",
+      "variant": "mid-900",
+      "filename": "approvals-mid-900.png",
+      "sha256": "7546d3941255aac35d3b2e9d8236d89f4d37ad117ecc620692542e82e7c5e609",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 1080
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "Round segmented choices, bounded approval cards and current old/new prices retain approved behavior.",
+        "Pending/type pills, names/codes/provenance and Primary Approve with destructive Reject remain whole.",
+        "The missing old approved price is stated honestly rather than invented."
+      ],
+      "previousSourceFindingsVerifiedResolved": [],
+      "automatedLayout": {
+        "scene": "approvals",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 101,
+        "contentWords": 101,
+        "unitFragments": [
+          {
+            "text": "500 g",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "۵۰۰ گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "100 g",
+            "lines": 1,
+            "source": "plain-text"
+          },
+          {
+            "text": "100 گرمی",
+            "lines": 1,
+            "source": "plain-text"
+          }
+        ],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": []
+    },
+    {
+      "scene": "settings",
+      "variant": "mid-900",
+      "filename": "settings-mid-900.png",
+      "sha256": "c595a3f562a267a4c4aca6bc94a56113886d72348ce6cf8fc73fd653bb28399d",
+      "viewport": {
+        "width": 900,
+        "height": 1080
+      },
+      "captureMode": "page",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256Verified": true,
+      "openedIndividually": true,
+      "pngDimensions": {
+        "width": 900,
+        "height": 3037
+      },
+      "referenceChecks": [
+        {
+          "sourceName": "1-components-and-tokens.png",
+          "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+          "path": "design-references/klead-v1/1-components-and-tokens.png",
+          "openedIndividually": true,
+          "sha256Verified": true,
+          "viewingContext": "Prior actual individual original-reference viewing is explicitly authorized for reuse. Fresh candidate PNG was opened now, and both current original/candidate hashes independently match their manifests.",
+          "sourceManifestSHA256Matches": true
+        }
+      ],
+      "visualChecks": [
+        "The Returns/date tracking/labels section shows per-product default reminder and separate English-only supplier-document settings.",
+        "Label language/field choices and exact existing Regular 60 by 40 mm/margin/gap values remain present.",
+        "Filled fields, subdued section text, tinted print-test action and labelled starting slots preserve the existing choices."
+      ],
+      "previousSourceFindingsVerifiedResolved": [],
+      "automatedLayout": {
+        "scene": "settings",
+        "language": "en",
+        "width": 900,
+        "actualWidth": 900,
+        "words": 171,
+        "contentWords": 171,
+        "unitFragments": [],
+        "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+        "cells": 0,
+        "tables": [],
+        "forms": [],
+        "sidebar": {
+          "width": 72,
+          "clientHeight": 1080,
+          "scrollHeight": 1080,
+          "navClientHeight": 916,
+          "navScrollHeight": 916
+        },
+        "topbar": [
+          {
+            "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "breadcrumbs",
+            "width": 252.34375,
+            "height": 18.5625
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button topbar-search-icon",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-select ui-input has-leading-icon branch-pill",
+            "width": 165.046875,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button language-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+            "width": 36,
+            "height": 36
+          },
+          {
+            "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+            "width": 90.609375,
+            "height": 36
+          }
+        ],
+        "failures": []
+      },
+      "realFailures": [],
+      "framingNotes": [
+        "Original PNG is 900 × 3037 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ],
+      "C7differences": [
+        "The documented minimal AA green-text adjustment (#1A7F45 to #197D44 on the supplied tint) preserves its role while meeting 4.5:1. Actual source/runtime contrast proof is separate from this static screenshot review.",
+        "The dark Primary owner choice remains pending. This variant is English light at 900 px; it does not claim the requested lighter dark-blue/white pairing passes or that the owner approved the interim accessible treatment.",
+        "A Print label action drawn in a retouch does not create a workflow absent from the existing screen. Existing Labels print/waitlist actions remain in their approved workflow; styling does not authorize invented actions.",
+        "Company logo, people, scoped records, chart values and honest empty address are retained from the actual demo, rather than copied or invented from style references.",
+        "Visible lifecycle/status meanings follow the explicit design-document vocabulary; real table statuses use coloured dots plus words, and card/header statuses use tinted pills."
+      ],
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "reviewWarnings": [
+        "Original PNG is 900 × 3037 px. view_image scales only the displayed representation; saved original pixels/bytes remain unchanged."
+      ]
+    }
+  ]
+}

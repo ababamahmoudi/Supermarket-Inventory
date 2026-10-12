@@ -1,0 +1,2667 @@
+{
+  "generatedAt": "2026-10-12T13:14:51.305804+00:00",
+  "applicationSourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+  "c6BaselineApplicationSource": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+  "meaning": "Recorded exact-source local checks and final screenshot evidence; owner acceptance and latest publication-head CI are separate gates. Overlapping or superseded runs are not summed.",
+  "localProofs": {
+    "unit": {
+      "artifactSHA256": "a2a87be6bd3b883d8e8d55b79c2034ca5d31ca3ad4624b1f2703d824cf2e7de3",
+      "result": {
+        "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "runnerExitCode": 0,
+        "session": 19949,
+        "files": 87,
+        "passed": 968,
+        "failed": 0,
+        "pending": 0,
+        "total": 968,
+        "pricingChecks": 68,
+        "seedCaseCount": 23,
+        "jsonSHA256": "c8117c1f2317c4f47e9d8e14973202bd7d419b0780f5be87e18b7a6095adc6cc",
+        "log": "/tmp/c7-final9-unit.log",
+        "lintBuildExitCode": 0,
+        "lintBuildSession": 8169,
+        "lintBuildLog": "/tmp/c7-final9-lint-build.log"
+      }
+    },
+    "controls": {
+      "artifactSHA256": "f248f848c66b9aa1343098250754716461b00a3218dac938c6d6d1a1573a8587",
+      "result": {
+        "overall": "passed",
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "snapshot": "/tmp/c7-source-final9",
+        "preview": "http://127.0.0.1:5543",
+        "testSha256": "c00eee5a47bb35da7e2f01d3226f9905f7d9ca4884aa39a2e227e72bb2ddf049",
+        "workers": 1,
+        "expectedCaseCount": 32,
+        "caseCount": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "statuses": {
+          "passed": 32
+        },
+        "stats": {
+          "startTime": "2026-10-12T12:44:56.915Z",
+          "duration": 145675.59300000002,
+          "expected": 32,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "groups": {
+          "retouch_controls": {
+            "passed": 32
+          }
+        },
+        "contrastProofs": [],
+        "cases": [
+          {
+            "title": "Klead retouch: expanded invoice resting controls retain focus and error cues (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5749,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Remove line has a destructive tone and preserves Undo (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4275,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: hyphenated invoice reference is whole and contained (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3651,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Lookup category choices are pills with normal and selected token surfaces (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3751,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: tables paint one inset row divider without cell underlines (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 2082,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5904,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: reminder days remain a surface field inside the soft tracking group (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4497,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: shared controls and a real partial return retain their surface hierarchy (en)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8223,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: expanded invoice resting controls retain focus and error cues (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5947,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Remove line has a destructive tone and preserves Undo (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4907,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: hyphenated invoice reference is whole and contained (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4073,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Lookup category choices are pills with normal and selected token surfaces (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4654,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: tables paint one inset row divider without cell underlines (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 2771,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5406,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: reminder days remain a surface field inside the soft tracking group (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4933,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa)",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8868,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: expanded invoice resting controls retain focus and error cues (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4932,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Remove line has a destructive tone and preserves Undo (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3447,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: hyphenated invoice reference is whole and contained (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3336,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Lookup category choices are pills with normal and selected token surfaces (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 2865,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: tables paint one inset row divider without cell underlines (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 1764,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4239,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: reminder days remain a surface field inside the soft tracking group (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3124,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: shared controls and a real partial return retain their surface hierarchy (en)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5299,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: expanded invoice resting controls retain focus and error cues (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4290,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Remove line has a destructive tone and preserves Undo (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4136,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: hyphenated invoice reference is whole and contained (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 2868,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: Lookup category choices are pills with normal and selected token surfaces (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3523,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: tables paint one inset row divider without cell underlines (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 2059,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4079,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: reminder days remain a surface field inside the soft tracking group (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3230,
+            "errors": []
+          },
+          {
+            "title": "Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa)",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 6349,
+            "errors": []
+          }
+        ]
+      }
+    },
+    "controlsRuntime": {
+      "artifactSHA256": "4da4b4d59a772b37890820e68cefb259351578c361acbb51588d171c3c155fd6",
+      "result": {
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "snapshot": "/tmp/c7-source-final9",
+        "preview": "http://127.0.0.1:5543",
+        "nodeVersion": "v22.23.3",
+        "nodePathPrefix": "/workspace/scratch/supermarket-review-node/bin",
+        "chromiumExecutable": "/usr/bin/chromium",
+        "testSha256": "c00eee5a47bb35da7e2f01d3226f9905f7d9ca4884aa39a2e227e72bb2ddf049",
+        "job": "klead-positive",
+        "workers": 1,
+        "startedAt": "2026-10-12T12:44:55.853859+00:00",
+        "finishedAt": "2026-10-12T12:47:22.611677+00:00",
+        "durationSeconds": 146.75791071902495,
+        "exitCode": 0,
+        "argv": [
+          "env",
+          "PATH=/workspace/scratch/supermarket-review-node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+          "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium",
+          "node",
+          "/tmp/c7-source-final9/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config=/tmp/c7-final-verification/c7-ef4dfcc-klead-positive.config.mjs"
+        ],
+        "cwd": "/tmp/c7-source-final9/prototype",
+        "log": "/tmp/c7-final-verification/c7-ef4dfcc-klead-positive.log",
+        "results": "/tmp/c7-final-verification/c7-ef4dfcc-klead-positive/results.json"
+      }
+    },
+    "dialogFooterContexts": {
+      "artifactSHA256": "b38b66bdf95de210c0d099c4a66580b5a516bbd28d26cfc053260ce05d1a446e",
+      "result": {
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "testSha256": "c00eee5a47bb35da7e2f01d3226f9905f7d9ca4884aa39a2e227e72bb2ddf049",
+        "overall": "passed",
+        "editorContextCount": 16,
+        "contexts": [
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "desktop",
+            "theme": "light",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 78.53125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "desktop",
+            "theme": "light",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 78.53125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "desktop",
+            "theme": "dark",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 78.53125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "desktop",
+            "theme": "dark",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 78.53125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "desktop",
+            "theme": "light",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 72.125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "desktop",
+            "theme": "light",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 72.125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "desktop",
+            "theme": "dark",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 72.125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "desktop",
+            "theme": "dark",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 40,
+              "width": 72.125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "phone",
+            "theme": "light",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 78.53125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "phone",
+            "theme": "light",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 78.53125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "phone",
+            "theme": "dark",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 78.53125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (en)",
+            "project": "phone",
+            "theme": "dark",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 78.53125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "phone",
+            "theme": "light",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 72.125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "phone",
+            "theme": "light",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(20, 26, 43)",
+              "background": "rgb(238, 240, 243)",
+              "surface": [
+                238,
+                240,
+                243
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 72.125,
+              "contrast": 15.17147047013006,
+              "tokens": {
+                "surface": "rgb(255, 255, 255)",
+                "surfaceRgb": [
+                  255,
+                  255,
+                  255
+                ],
+                "text": "rgb(20, 26, 43)",
+                "field": "rgb(240, 241, 244)",
+                "danger": "rgb(180, 35, 24)",
+                "dangerFill": "rgb(252, 233, 231)",
+                "neutral": "rgb(238, 240, 243)",
+                "accent": "rgb(43, 89, 195)",
+                "tint": "rgb(233, 238, 249)",
+                "tintInk": "rgb(43, 89, 195)",
+                "hairline": "rgb(225, 227, 232)"
+              },
+              "borderColour": "rgb(20, 26, 43)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "phone",
+            "theme": "dark",
+            "entry": "lookup",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 72.125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          },
+          {
+            "case": "Klead retouch: product caption shares the title and body inset (fa)",
+            "project": "phone",
+            "theme": "dark",
+            "entry": "product-detail",
+            "geometry": {
+              "titleDifference": 0,
+              "bodyDifference": 0
+            },
+            "cancel": {
+              "colour": "rgb(243, 244, 247)",
+              "background": "rgb(34, 39, 52)",
+              "surface": [
+                34,
+                39,
+                52
+              ],
+              "borderVisible": false,
+              "outlineVisible": false,
+              "shadow": "none",
+              "radii": [
+                12,
+                12,
+                12,
+                12
+              ],
+              "height": 44,
+              "width": 72.125,
+              "contrast": 13.563111264392555,
+              "tokens": {
+                "surface": "rgb(24, 28, 37)",
+                "surfaceRgb": [
+                  24,
+                  28,
+                  37
+                ],
+                "text": "rgb(243, 244, 247)",
+                "field": "rgb(34, 39, 52)",
+                "danger": "rgb(242, 118, 106)",
+                "dangerFill": "rgba(242, 118, 106, 0.12)",
+                "neutral": "rgb(34, 39, 52)",
+                "accent": "rgb(115, 151, 240)",
+                "tint": "rgba(115, 151, 240, 0.18)",
+                "tintInk": "rgb(157, 183, 245)",
+                "hairline": "rgba(255, 255, 255, 0.08)"
+              },
+              "borderColour": "rgb(243, 244, 247)",
+              "borderWidth": "0px"
+            }
+          }
+        ]
+      }
+    },
+    "matrix": {
+      "artifactSHA256": "a9a32e8b70ffb9b3a7fd11fb31b26038d321a160916f096883109df56bbc9045",
+      "result": {
+        "overall": "passed",
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "snapshot": "/tmp/c7-source-final9",
+        "preview": "http://127.0.0.1:5543",
+        "testSha256": "c00eee5a47bb35da7e2f01d3226f9905f7d9ca4884aa39a2e227e72bb2ddf049",
+        "workers": 2,
+        "expectedCaseCount": 72,
+        "caseCount": 72,
+        "passed": 72,
+        "failed": 0,
+        "skipped": 0,
+        "statuses": {
+          "passed": 72
+        },
+        "stats": {
+          "startTime": "2026-10-12T12:48:34.859Z",
+          "duration": 312850.034,
+          "expected": 72,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "groups": {
+          "adaptive_tables_and_shell": {
+            "passed": 32
+          },
+          "composited_contrast": {
+            "passed": 8
+          },
+          "persian_decimal_visual_order": {
+            "passed": 32
+          }
+        },
+        "contrastProofs": [
+          {
+            "title": "Klead composited text contrast en light",
+            "project": "desktop",
+            "inspectionCount": 51,
+            "sampleCount": 5256,
+            "minimumContrast": 4.885,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast en dark",
+            "project": "desktop",
+            "inspectionCount": 51,
+            "sampleCount": 5256,
+            "minimumContrast": 4.8245,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast fa light",
+            "project": "desktop",
+            "inspectionCount": 51,
+            "sampleCount": 5247,
+            "minimumContrast": 4.885,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast fa dark",
+            "project": "desktop",
+            "inspectionCount": 51,
+            "sampleCount": 5247,
+            "minimumContrast": 4.8245,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast en light",
+            "project": "phone",
+            "inspectionCount": 51,
+            "sampleCount": 3543,
+            "minimumContrast": 4.5626,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast en dark",
+            "project": "phone",
+            "inspectionCount": 51,
+            "sampleCount": 3543,
+            "minimumContrast": 5.0799,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast fa light",
+            "project": "phone",
+            "inspectionCount": 51,
+            "sampleCount": 3537,
+            "minimumContrast": 4.5626,
+            "failures": 0
+          },
+          {
+            "title": "Klead composited text contrast fa dark",
+            "project": "phone",
+            "inspectionCount": 51,
+            "sampleCount": 3537,
+            "minimumContrast": 5.0799,
+            "failures": 0
+          }
+        ],
+        "cases": [
+          {
+            "title": "C7 adaptive tables and shell: en 390px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 6975,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 768px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5100,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 900px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 10819,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1024px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 7727,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1180px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8812,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1280px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8212,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1440px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8125,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1920px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8832,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 390px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 7544,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 768px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 11395,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 900px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 13175,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1024px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 13975,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1180px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 13189,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1280px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 11705,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1440px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 13247,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1920px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 10593,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 390px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8578,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 768px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 10052,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 900px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9128,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1024px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9227,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1180px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9562,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1280px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8014,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1440px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9670,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: en 1920px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 7851,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 390px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 6171,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 768px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9993,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 900px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 12894,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1024px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 12048,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1180px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 14026,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1280px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 10898,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1440px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 9705,
+            "errors": []
+          },
+          {
+            "title": "C7 adaptive tables and shell: fa 1920px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 8889,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast en light",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 14636,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast en dark",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 19401,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast fa light",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 21372,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast fa dark",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 20174,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast en light",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 17585,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast en dark",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 17649,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast fa light",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 19057,
+            "errors": []
+          },
+          {
+            "title": "Klead composited text contrast fa dark",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 16983,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 390px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3153,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 768px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5540,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 900px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4347,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1024px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4584,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1180px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3462,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1280px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4320,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1440px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4150,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1920px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5722,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 390px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5455,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 768px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4233,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 900px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4522,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1024px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4664,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1180px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3522,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1280px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5137,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1440px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4472,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1920px",
+            "project": "desktop",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4923,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 390px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3797,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 768px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3429,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 900px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3830,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1024px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4451,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1180px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4743,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1280px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3766,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1440px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5559,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in en at 1920px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4841,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 390px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4401,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 768px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4323,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 900px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5050,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1024px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3994,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1180px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4709,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1280px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 4629,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1440px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 3663,
+            "errors": []
+          },
+          {
+            "title": "stored Persian decimal retains its actual visual order in fa at 1920px",
+            "project": "phone",
+            "status": "passed",
+            "attempts": 1,
+            "durationMs": 5510,
+            "errors": []
+          }
+        ],
+        "contrastSampleCount": 35166,
+        "minimumContrast": 4.5626,
+        "contrastFailures": 0
+      }
+    },
+    "matrixRuntime": {
+      "artifactSHA256": "4599c418a61f01b5e36d152735e63259680d843a5e2ec01e36e90bae94409906",
+      "result": {
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "snapshot": "/tmp/c7-source-final9",
+        "preview": "http://127.0.0.1:5543",
+        "nodeVersion": "v22.23.3",
+        "nodePathPrefix": "/workspace/scratch/supermarket-review-node/bin",
+        "chromiumExecutable": "/usr/bin/chromium",
+        "testSha256": "c00eee5a47bb35da7e2f01d3226f9905f7d9ca4884aa39a2e227e72bb2ddf049",
+        "job": "responsive-contrast",
+        "workers": 2,
+        "startedAt": "2026-10-12T12:48:33.807420+00:00",
+        "finishedAt": "2026-10-12T12:53:47.745396+00:00",
+        "durationSeconds": 313.93815107800765,
+        "exitCode": 0,
+        "argv": [
+          "env",
+          "PATH=/workspace/scratch/supermarket-review-node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+          "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium",
+          "node",
+          "/tmp/c7-source-final9/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config=/tmp/c7-final-verification/c7-ef4dfcc-responsive-contrast.config.mjs"
+        ],
+        "cwd": "/tmp/c7-source-final9/prototype",
+        "log": "/tmp/c7-final-verification/c7-ef4dfcc-responsive-contrast.log",
+        "results": "/tmp/c7-final-verification/c7-ef4dfcc-responsive-contrast/results.json"
+      }
+    },
+    "protected79": {
+      "artifactSHA256": "6570eead12576a624d6800969fc86ffe7000a964294479fba9665b67582dfc25",
+      "result": {
+        "reviewedAt": "2026-10-12T12:43:08.758290+00:00",
+        "reviewer": "c7_final_qa",
+        "baseline": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+        "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "snapshotPath": "/tmp/c7-source-final9",
+        "protectedPathCount": 79,
+        "protectedPathsSHA256": "6a1616ad5344ce8d7b5e2a44460eee9c034eea4a323fcb302a13a5167531727f",
+        "canonicalListsAndBaselineHashesMatch": true,
+        "gitByteIdenticalCount": 79,
+        "gitDifferences": [],
+        "snapshotCheckedCount": 79,
+        "snapshotMissing": [],
+        "snapshotDifferences": [],
+        "files": {
+          "assets/arzon-logo.png": {
+            "baselineSHA256": "fd23e435c58b6f5a371a729b1db4d8a47f87bfc38453f87a60b7fe968ef2e5ef",
+            "sourceSHA256": "fd23e435c58b6f5a371a729b1db4d8a47f87bfc38453f87a60b7fe968ef2e5ef",
+            "bytes": 6072,
+            "byteIdentical": true,
+            "snapshotSHA256": "fd23e435c58b6f5a371a729b1db4d8a47f87bfc38453f87a60b7fe968ef2e5ef"
+          },
+          "prototype/src/approvals.ts": {
+            "baselineSHA256": "3293647461b38800ecc3eff2732d92f87a8953818961641388e3bb2430d10214",
+            "sourceSHA256": "3293647461b38800ecc3eff2732d92f87a8953818961641388e3bb2430d10214",
+            "bytes": 23919,
+            "byteIdentical": true,
+            "snapshotSHA256": "3293647461b38800ecc3eff2732d92f87a8953818961641388e3bb2430d10214"
+          },
+          "prototype/src/auth.ts": {
+            "baselineSHA256": "6f2984c40e1c5e07584d72e208ece99758340c9efa9f26e283a387b48e7e3337",
+            "sourceSHA256": "6f2984c40e1c5e07584d72e208ece99758340c9efa9f26e283a387b48e7e3337",
+            "bytes": 7504,
+            "byteIdentical": true,
+            "snapshotSHA256": "6f2984c40e1c5e07584d72e208ece99758340c9efa9f26e283a387b48e7e3337"
+          },
+          "prototype/src/b-state.ts": {
+            "baselineSHA256": "f28bc6fa06f3489d9d80f8b7e91d90cdcd517effbe979ae6597450dd8e2c52cc",
+            "sourceSHA256": "f28bc6fa06f3489d9d80f8b7e91d90cdcd517effbe979ae6597450dd8e2c52cc",
+            "bytes": 1302,
+            "byteIdentical": true,
+            "snapshotSHA256": "f28bc6fa06f3489d9d80f8b7e91d90cdcd517effbe979ae6597450dd8e2c52cc"
+          },
+          "prototype/src/branch-requests.ts": {
+            "baselineSHA256": "3274f9705492039c54b9e37c05a667e03c2b8247d408a945a12b1ebb5987c100",
+            "sourceSHA256": "3274f9705492039c54b9e37c05a667e03c2b8247d408a945a12b1ebb5987c100",
+            "bytes": 26059,
+            "byteIdentical": true,
+            "snapshotSHA256": "3274f9705492039c54b9e37c05a667e03c2b8247d408a945a12b1ebb5987c100"
+          },
+          "prototype/src/c-notes-i18n.ts": {
+            "baselineSHA256": "752245ec3e2a0795a3cfb2f6e7a098030be052c3aae80f9634750309946893ab",
+            "sourceSHA256": "752245ec3e2a0795a3cfb2f6e7a098030be052c3aae80f9634750309946893ab",
+            "bytes": 1864,
+            "byteIdentical": true,
+            "snapshotSHA256": "752245ec3e2a0795a3cfb2f6e7a098030be052c3aae80f9634750309946893ab"
+          },
+          "prototype/src/c-orders-i18n.ts": {
+            "baselineSHA256": "2fb68b44e4122bf33dc61e49a6a9de84b7e3c227324106a77a7c3b9f53ea6c46",
+            "sourceSHA256": "2fb68b44e4122bf33dc61e49a6a9de84b7e3c227324106a77a7c3b9f53ea6c46",
+            "bytes": 4430,
+            "byteIdentical": true,
+            "snapshotSHA256": "2fb68b44e4122bf33dc61e49a6a9de84b7e3c227324106a77a7c3b9f53ea6c46"
+          },
+          "prototype/src/c-state.ts": {
+            "baselineSHA256": "73131ec54be6eb187c4faa924d0c071d4a1b827f7b973b86243a1d919743d5e5",
+            "sourceSHA256": "73131ec54be6eb187c4faa924d0c071d4a1b827f7b973b86243a1d919743d5e5",
+            "bytes": 2188,
+            "byteIdentical": true,
+            "snapshotSHA256": "73131ec54be6eb187c4faa924d0c071d4a1b827f7b973b86243a1d919743d5e5"
+          },
+          "prototype/src/c2-state.ts": {
+            "baselineSHA256": "1fc56db140c30f208af352c3eec43e1fff30afa58fbfe6a1056385ca3c9c0b50",
+            "sourceSHA256": "1fc56db140c30f208af352c3eec43e1fff30afa58fbfe6a1056385ca3c9c0b50",
+            "bytes": 1029,
+            "byteIdentical": true,
+            "snapshotSHA256": "1fc56db140c30f208af352c3eec43e1fff30afa58fbfe6a1056385ca3c9c0b50"
+          },
+          "prototype/src/c3-column-preferences.ts": {
+            "baselineSHA256": "d401e90257049320fe76fc37ac8124c3a76fb42c898367d88802b09d5f46f753",
+            "sourceSHA256": "d401e90257049320fe76fc37ac8124c3a76fb42c898367d88802b09d5f46f753",
+            "bytes": 2867,
+            "byteIdentical": true,
+            "snapshotSHA256": "d401e90257049320fe76fc37ac8124c3a76fb42c898367d88802b09d5f46f753"
+          },
+          "prototype/src/c4-state.ts": {
+            "baselineSHA256": "b17a17914aaf4321ae4869b60bf92a09834165f44d76872143b917d5b0a1cb35",
+            "sourceSHA256": "b17a17914aaf4321ae4869b60bf92a09834165f44d76872143b917d5b0a1cb35",
+            "bytes": 3771,
+            "byteIdentical": true,
+            "snapshotSHA256": "b17a17914aaf4321ae4869b60bf92a09834165f44d76872143b917d5b0a1cb35"
+          },
+          "prototype/src/c6-state.ts": {
+            "baselineSHA256": "ea59038a7b1b0c927cc0b8508725f1c817b4191fc20772c047dde6660e3091d0",
+            "sourceSHA256": "ea59038a7b1b0c927cc0b8508725f1c817b4191fc20772c047dde6660e3091d0",
+            "bytes": 1062,
+            "byteIdentical": true,
+            "snapshotSHA256": "ea59038a7b1b0c927cc0b8508725f1c817b4191fc20772c047dde6660e3091d0"
+          },
+          "prototype/src/c6-table-layout.ts": {
+            "baselineSHA256": "9d1c1e090ba26b34182e092c6b7bbb5a9469cca5b7e2258efa7d9abf75d4d674",
+            "sourceSHA256": "9d1c1e090ba26b34182e092c6b7bbb5a9469cca5b7e2258efa7d9abf75d4d674",
+            "bytes": 4075,
+            "byteIdentical": true,
+            "snapshotSHA256": "9d1c1e090ba26b34182e092c6b7bbb5a9469cca5b7e2258efa7d9abf75d4d674"
+          },
+          "prototype/src/catalog.ts": {
+            "baselineSHA256": "44884b972cf664f560c8fa1fd3acdb5e95d9f742d49975933a3942099025abfd",
+            "sourceSHA256": "44884b972cf664f560c8fa1fd3acdb5e95d9f742d49975933a3942099025abfd",
+            "bytes": 5380,
+            "byteIdentical": true,
+            "snapshotSHA256": "44884b972cf664f560c8fa1fd3acdb5e95d9f742d49975933a3942099025abfd"
+          },
+          "prototype/src/company-time.ts": {
+            "baselineSHA256": "7eb41a372e4457d63847a01d7e6ebe323c459dd374f9108c45a8454416ad921a",
+            "sourceSHA256": "7eb41a372e4457d63847a01d7e6ebe323c459dd374f9108c45a8454416ad921a",
+            "bytes": 2917,
+            "byteIdentical": true,
+            "snapshotSHA256": "7eb41a372e4457d63847a01d7e6ebe323c459dd374f9108c45a8454416ad921a"
+          },
+          "prototype/src/compat/configuration.json": {
+            "baselineSHA256": "1c66efd949b369864234816e6832859fe71e9a482685f4cf5b931c32d50410b6",
+            "sourceSHA256": "1c66efd949b369864234816e6832859fe71e9a482685f4cf5b931c32d50410b6",
+            "bytes": 10005,
+            "byteIdentical": true,
+            "snapshotSHA256": "1c66efd949b369864234816e6832859fe71e9a482685f4cf5b931c32d50410b6"
+          },
+          "prototype/src/compat/operational-data.json": {
+            "baselineSHA256": "2b2ca25680bd5cc8d282859bbbed25f1a1aebe7b247bffbe5ef59efd2ea6c87e",
+            "sourceSHA256": "2b2ca25680bd5cc8d282859bbbed25f1a1aebe7b247bffbe5ef59efd2ea6c87e",
+            "bytes": 14695,
+            "byteIdentical": true,
+            "snapshotSHA256": "2b2ca25680bd5cc8d282859bbbed25f1a1aebe7b247bffbe5ef59efd2ea6c87e"
+          },
+          "prototype/src/compat/pricing-boundaries.json": {
+            "baselineSHA256": "c0d8d2e644e10a70f8fed2a43a7d8250157fd42756536f5b97e9947d2399129d",
+            "sourceSHA256": "c0d8d2e644e10a70f8fed2a43a7d8250157fd42756536f5b97e9947d2399129d",
+            "bytes": 1058,
+            "byteIdentical": true,
+            "snapshotSHA256": "c0d8d2e644e10a70f8fed2a43a7d8250157fd42756536f5b97e9947d2399129d"
+          },
+          "prototype/src/config.ts": {
+            "baselineSHA256": "06f9a5c7188c300d142ed7cda48cba27c73b7aea897d43b65c1f7154b34d04d8",
+            "sourceSHA256": "06f9a5c7188c300d142ed7cda48cba27c73b7aea897d43b65c1f7154b34d04d8",
+            "bytes": 4672,
+            "byteIdentical": true,
+            "snapshotSHA256": "06f9a5c7188c300d142ed7cda48cba27c73b7aea897d43b65c1f7154b34d04d8"
+          },
+          "prototype/src/dashboard-data.ts": {
+            "baselineSHA256": "e65df886ca543a9058abaa7deff2d75da5e177eb98b13ac944cc159c1a48e34f",
+            "sourceSHA256": "e65df886ca543a9058abaa7deff2d75da5e177eb98b13ac944cc159c1a48e34f",
+            "bytes": 6019,
+            "byteIdentical": true,
+            "snapshotSHA256": "e65df886ca543a9058abaa7deff2d75da5e177eb98b13ac944cc159c1a48e34f"
+          },
+          "prototype/src/date-reminder-settings.ts": {
+            "baselineSHA256": "f739a217c4569a4ffbd481dd35bfa594fac104d94f5afe405a72584560638df8",
+            "sourceSHA256": "f739a217c4569a4ffbd481dd35bfa594fac104d94f5afe405a72584560638df8",
+            "bytes": 1104,
+            "byteIdentical": true,
+            "snapshotSHA256": "f739a217c4569a4ffbd481dd35bfa594fac104d94f5afe405a72584560638df8"
+          },
+          "prototype/src/date-tracking.ts": {
+            "baselineSHA256": "3a92fff5462e7eac2eae2153b480f6896080058dbec8bc435e4cbbd75c82c072",
+            "sourceSHA256": "3a92fff5462e7eac2eae2153b480f6896080058dbec8bc435e4cbbd75c82c072",
+            "bytes": 23157,
+            "byteIdentical": true,
+            "snapshotSHA256": "3a92fff5462e7eac2eae2153b480f6896080058dbec8bc435e4cbbd75c82c072"
+          },
+          "prototype/src/demo-fixtures.ts": {
+            "baselineSHA256": "59898c8fce9aa33f8b89c42ef5ee1356fdaf15a61028fa6d307f08da64a3117e",
+            "sourceSHA256": "59898c8fce9aa33f8b89c42ef5ee1356fdaf15a61028fa6d307f08da64a3117e",
+            "bytes": 12283,
+            "byteIdentical": true,
+            "snapshotSHA256": "59898c8fce9aa33f8b89c42ef5ee1356fdaf15a61028fa6d307f08da64a3117e"
+          },
+          "prototype/src/demo-originals.ts": {
+            "baselineSHA256": "44956063920cc0a4fdfed3aaff10b92bcbded2da2a530a6ac7f7497470b0aa56",
+            "sourceSHA256": "44956063920cc0a4fdfed3aaff10b92bcbded2da2a530a6ac7f7497470b0aa56",
+            "bytes": 8055,
+            "byteIdentical": true,
+            "snapshotSHA256": "44956063920cc0a4fdfed3aaff10b92bcbded2da2a530a6ac7f7497470b0aa56"
+          },
+          "prototype/src/file-database.ts": {
+            "baselineSHA256": "e39ff7d26e7088db490b40c9e50366717c735b5cb9683995116e585d58d0a3d1",
+            "sourceSHA256": "e39ff7d26e7088db490b40c9e50366717c735b5cb9683995116e585d58d0a3d1",
+            "bytes": 16864,
+            "byteIdentical": true,
+            "snapshotSHA256": "e39ff7d26e7088db490b40c9e50366717c735b5cb9683995116e585d58d0a3d1"
+          },
+          "prototype/src/fixtures/a2-demo-data.json": {
+            "baselineSHA256": "b239373100c716cc83df49bfb127f3daf1bd274ac1817afcbf6630eb33848ce6",
+            "sourceSHA256": "b239373100c716cc83df49bfb127f3daf1bd274ac1817afcbf6630eb33848ce6",
+            "bytes": 8264,
+            "byteIdentical": true,
+            "snapshotSHA256": "b239373100c716cc83df49bfb127f3daf1bd274ac1817afcbf6630eb33848ce6"
+          },
+          "prototype/src/formatters.ts": {
+            "baselineSHA256": "7d136475d0aff3215526302c5d934005ac19dd6d4ba14bf3602fa393c8d8f24e",
+            "sourceSHA256": "7d136475d0aff3215526302c5d934005ac19dd6d4ba14bf3602fa393c8d8f24e",
+            "bytes": 9790,
+            "byteIdentical": true,
+            "snapshotSHA256": "7d136475d0aff3215526302c5d934005ac19dd6d4ba14bf3602fa393c8d8f24e"
+          },
+          "prototype/src/history-copy.ts": {
+            "baselineSHA256": "558ac619b56af364b620b235f239dae1cc59532eac2737e6e5509f0f35d29a49",
+            "sourceSHA256": "558ac619b56af364b620b235f239dae1cc59532eac2737e6e5509f0f35d29a49",
+            "bytes": 14377,
+            "byteIdentical": true,
+            "snapshotSHA256": "558ac619b56af364b620b235f239dae1cc59532eac2737e6e5509f0f35d29a49"
+          },
+          "prototype/src/history-storage.ts": {
+            "baselineSHA256": "c0b819888b0b30b205c5d0811987ad4cc58f73f6d4a76277eef86cd3408ffb98",
+            "sourceSHA256": "c0b819888b0b30b205c5d0811987ad4cc58f73f6d4a76277eef86cd3408ffb98",
+            "bytes": 9559,
+            "byteIdentical": true,
+            "snapshotSHA256": "c0b819888b0b30b205c5d0811987ad4cc58f73f6d4a76277eef86cd3408ffb98"
+          },
+          "prototype/src/history.ts": {
+            "baselineSHA256": "377a11b893f84931ba1b9c8da949b02bb4b8d6786dbf6db49591ec282e132d1d",
+            "sourceSHA256": "377a11b893f84931ba1b9c8da949b02bb4b8d6786dbf6db49591ec282e132d1d",
+            "bytes": 33633,
+            "byteIdentical": true,
+            "snapshotSHA256": "377a11b893f84931ba1b9c8da949b02bb4b8d6786dbf6db49591ec282e132d1d"
+          },
+          "prototype/src/i18n.ts": {
+            "baselineSHA256": "a27b327896c5d2362c4947b003a455ccba15170031a7bed70e20c6bca230539a",
+            "sourceSHA256": "a27b327896c5d2362c4947b003a455ccba15170031a7bed70e20c6bca230539a",
+            "bytes": 1331,
+            "byteIdentical": true,
+            "snapshotSHA256": "a27b327896c5d2362c4947b003a455ccba15170031a7bed70e20c6bca230539a"
+          },
+          "prototype/src/ids.ts": {
+            "baselineSHA256": "9c9d12d85a7486ef69099cb17d47d78de40a8cc5e5450975b4fbb74a321e5e34",
+            "sourceSHA256": "9c9d12d85a7486ef69099cb17d47d78de40a8cc5e5450975b4fbb74a321e5e34",
+            "bytes": 659,
+            "byteIdentical": true,
+            "snapshotSHA256": "9c9d12d85a7486ef69099cb17d47d78de40a8cc5e5450975b4fbb74a321e5e34"
+          },
+          "prototype/src/invoice-corrections.ts": {
+            "baselineSHA256": "5bb3f7888341fbeca51d04647d132bdf34be4209d8c8e7a4715b8b127819eb32",
+            "sourceSHA256": "5bb3f7888341fbeca51d04647d132bdf34be4209d8c8e7a4715b8b127819eb32",
+            "bytes": 33996,
+            "byteIdentical": true,
+            "snapshotSHA256": "5bb3f7888341fbeca51d04647d132bdf34be4209d8c8e7a4715b8b127819eb32"
+          },
+          "prototype/src/invoice-entry.ts": {
+            "baselineSHA256": "507c63fce4e3fb663d0a269166c1f6c32ce14eb2f8a4a98c920111eb4abb534a",
+            "sourceSHA256": "507c63fce4e3fb663d0a269166c1f6c32ce14eb2f8a4a98c920111eb4abb534a",
+            "bytes": 2595,
+            "byteIdentical": true,
+            "snapshotSHA256": "507c63fce4e3fb663d0a269166c1f6c32ce14eb2f8a4a98c920111eb4abb534a"
+          },
+          "prototype/src/invoice-orders.ts": {
+            "baselineSHA256": "42e3fe4f66c692115f36172ccc537de13f839dfde3df8f9846e77fd94b0e3624",
+            "sourceSHA256": "42e3fe4f66c692115f36172ccc537de13f839dfde3df8f9846e77fd94b0e3624",
+            "bytes": 18031,
+            "byteIdentical": true,
+            "snapshotSHA256": "42e3fe4f66c692115f36172ccc537de13f839dfde3df8f9846e77fd94b0e3624"
+          },
+          "prototype/src/invoice-version.ts": {
+            "baselineSHA256": "7318c7630434fb8803666ae7027c9235b169af7a27379208a8d9a730ef2208fe",
+            "sourceSHA256": "7318c7630434fb8803666ae7027c9235b169af7a27379208a8d9a730ef2208fe",
+            "bytes": 2404,
+            "byteIdentical": true,
+            "snapshotSHA256": "7318c7630434fb8803666ae7027c9235b169af7a27379208a8d9a730ef2208fe"
+          },
+          "prototype/src/invoice-weight.ts": {
+            "baselineSHA256": "9a7a97e0d1d8ab1ac1bde1fce1b9dfd01d216111f81579e7419ade0fbef441c4",
+            "sourceSHA256": "9a7a97e0d1d8ab1ac1bde1fce1b9dfd01d216111f81579e7419ade0fbef441c4",
+            "bytes": 5691,
+            "byteIdentical": true,
+            "snapshotSHA256": "9a7a97e0d1d8ab1ac1bde1fce1b9dfd01d216111f81579e7419ade0fbef441c4"
+          },
+          "prototype/src/invoice.ts": {
+            "baselineSHA256": "c595c3a6441aa9bd71ee42f3088a0d9d5639f3d6a4c21e6cc2a5d1dca485b572",
+            "sourceSHA256": "c595c3a6441aa9bd71ee42f3088a0d9d5639f3d6a4c21e6cc2a5d1dca485b572",
+            "bytes": 51163,
+            "byteIdentical": true,
+            "snapshotSHA256": "c595c3a6441aa9bd71ee42f3088a0d9d5639f3d6a4c21e6cc2a5d1dca485b572"
+          },
+          "prototype/src/label-workflow.ts": {
+            "baselineSHA256": "f68cc859b61cca722d27acd66679705100174497419c4b87e9ac2d8f22ba4341",
+            "sourceSHA256": "f68cc859b61cca722d27acd66679705100174497419c4b87e9ac2d8f22ba4341",
+            "bytes": 17563,
+            "byteIdentical": true,
+            "snapshotSHA256": "f68cc859b61cca722d27acd66679705100174497419c4b87e9ac2d8f22ba4341"
+          },
+          "prototype/src/labels.ts": {
+            "baselineSHA256": "f92dc242f35c132a8bf49928f98023bc36c60e016b7b26392b3ef8877a9d1640",
+            "sourceSHA256": "f92dc242f35c132a8bf49928f98023bc36c60e016b7b26392b3ef8877a9d1640",
+            "bytes": 5723,
+            "byteIdentical": true,
+            "snapshotSHA256": "f92dc242f35c132a8bf49928f98023bc36c60e016b7b26392b3ef8877a9d1640"
+          },
+          "prototype/src/manual-prices.ts": {
+            "baselineSHA256": "f0c7ee95f6328c7d5accf1f137177495ef0015142ecd0a32b1964808e05fc16d",
+            "sourceSHA256": "f0c7ee95f6328c7d5accf1f137177495ef0015142ecd0a32b1964808e05fc16d",
+            "bytes": 6238,
+            "byteIdentical": true,
+            "snapshotSHA256": "f0c7ee95f6328c7d5accf1f137177495ef0015142ecd0a32b1964808e05fc16d"
+          },
+          "prototype/src/manual-product.ts": {
+            "baselineSHA256": "35f7116cb64a6f024e2f4d2711153a05c8db8d96cc41eb86c2c3a367a239542e",
+            "sourceSHA256": "35f7116cb64a6f024e2f4d2711153a05c8db8d96cc41eb86c2c3a367a239542e",
+            "bytes": 8848,
+            "byteIdentical": true,
+            "snapshotSHA256": "35f7116cb64a6f024e2f4d2711153a05c8db8d96cc41eb86c2c3a367a239542e"
+          },
+          "prototype/src/navigation.ts": {
+            "baselineSHA256": "7d51b05a3748ce2e283b782eb2a5373e0176b22ef670ab93c3d082e6aa5fe268",
+            "sourceSHA256": "7d51b05a3748ce2e283b782eb2a5373e0176b22ef670ab93c3d082e6aa5fe268",
+            "bytes": 5334,
+            "byteIdentical": true,
+            "snapshotSHA256": "7d51b05a3748ce2e283b782eb2a5373e0176b22ef670ab93c3d082e6aa5fe268"
+          },
+          "prototype/src/notebooks.ts": {
+            "baselineSHA256": "6e85a556a0eae241b749ca62b63ae0a4f77b051a34c86441c6b3ed9ef61cb3d7",
+            "sourceSHA256": "6e85a556a0eae241b749ca62b63ae0a4f77b051a34c86441c6b3ed9ef61cb3d7",
+            "bytes": 20731,
+            "byteIdentical": true,
+            "snapshotSHA256": "6e85a556a0eae241b749ca62b63ae0a4f77b051a34c86441c6b3ed9ef61cb3d7"
+          },
+          "prototype/src/offer-list.ts": {
+            "baselineSHA256": "8eab228ed0abb0df5bfb1d1bd21983bc1984f5f18308c96fb1a6853fa4215003",
+            "sourceSHA256": "8eab228ed0abb0df5bfb1d1bd21983bc1984f5f18308c96fb1a6853fa4215003",
+            "bytes": 2110,
+            "byteIdentical": true,
+            "snapshotSHA256": "8eab228ed0abb0df5bfb1d1bd21983bc1984f5f18308c96fb1a6853fa4215003"
+          },
+          "prototype/src/operational-print.tsx": {
+            "baselineSHA256": "17a2587cfff526c19fde3c4baf1f0119858a806c44f1e5cbcd611d6d952011f9",
+            "sourceSHA256": "17a2587cfff526c19fde3c4baf1f0119858a806c44f1e5cbcd611d6d952011f9",
+            "bytes": 1604,
+            "byteIdentical": true,
+            "snapshotSHA256": "17a2587cfff526c19fde3c4baf1f0119858a806c44f1e5cbcd611d6d952011f9"
+          },
+          "prototype/src/operations.ts": {
+            "baselineSHA256": "3975549c6e1d11cff4b1e22da250971efd888a4390cb804ea507f96b1b1faecb",
+            "sourceSHA256": "3975549c6e1d11cff4b1e22da250971efd888a4390cb804ea507f96b1b1faecb",
+            "bytes": 55676,
+            "byteIdentical": true,
+            "snapshotSHA256": "3975549c6e1d11cff4b1e22da250971efd888a4390cb804ea507f96b1b1faecb"
+          },
+          "prototype/src/order-print.tsx": {
+            "baselineSHA256": "f2f6b5c17868b90e6f8b52c824ff2507313ee7e488ee99925a3ad05fcc81550a",
+            "sourceSHA256": "f2f6b5c17868b90e6f8b52c824ff2507313ee7e488ee99925a3ad05fcc81550a",
+            "bytes": 5814,
+            "byteIdentical": true,
+            "snapshotSHA256": "f2f6b5c17868b90e6f8b52c824ff2507313ee7e488ee99925a3ad05fcc81550a"
+          },
+          "prototype/src/orders.ts": {
+            "baselineSHA256": "82435948c22910097d78806dd45c1b3d0da205b1e31f8c26e5a1e7bfcc637503",
+            "sourceSHA256": "82435948c22910097d78806dd45c1b3d0da205b1e31f8c26e5a1e7bfcc637503",
+            "bytes": 44185,
+            "byteIdentical": true,
+            "snapshotSHA256": "82435948c22910097d78806dd45c1b3d0da205b1e31f8c26e5a1e7bfcc637503"
+          },
+          "prototype/src/pricing.ts": {
+            "baselineSHA256": "4c0c586af334eb1e0e998f6bac681a9c72c8790efa8195c12f19eaf4de3a639d",
+            "sourceSHA256": "4c0c586af334eb1e0e998f6bac681a9c72c8790efa8195c12f19eaf4de3a639d",
+            "bytes": 6986,
+            "byteIdentical": true,
+            "snapshotSHA256": "4c0c586af334eb1e0e998f6bac681a9c72c8790efa8195c12f19eaf4de3a639d"
+          },
+          "prototype/src/print-images.ts": {
+            "baselineSHA256": "29766c04a8b710dcb61b64469b453cf39d408ab00992e1ca5cfdd5307aa9a860",
+            "sourceSHA256": "29766c04a8b710dcb61b64469b453cf39d408ab00992e1ca5cfdd5307aa9a860",
+            "bytes": 1011,
+            "byteIdentical": true,
+            "snapshotSHA256": "29766c04a8b710dcb61b64469b453cf39d408ab00992e1ca5cfdd5307aa9a860"
+          },
+          "prototype/src/product-costs.ts": {
+            "baselineSHA256": "c372d0f25779a499f2360bd27abccbe32869a262104a566296e7ff5ea76144e4",
+            "sourceSHA256": "c372d0f25779a499f2360bd27abccbe32869a262104a566296e7ff5ea76144e4",
+            "bytes": 3171,
+            "byteIdentical": true,
+            "snapshotSHA256": "c372d0f25779a499f2360bd27abccbe32869a262104a566296e7ff5ea76144e4"
+          },
+          "prototype/src/product-editor.ts": {
+            "baselineSHA256": "02d778a136f44e5637aeb38f600a8c06346f245deecfa2dce5f60acd3aaf6af4",
+            "sourceSHA256": "02d778a136f44e5637aeb38f600a8c06346f245deecfa2dce5f60acd3aaf6af4",
+            "bytes": 12543,
+            "byteIdentical": true,
+            "snapshotSHA256": "02d778a136f44e5637aeb38f600a8c06346f245deecfa2dce5f60acd3aaf6af4"
+          },
+          "prototype/src/receipt-lots.ts": {
+            "baselineSHA256": "6fd2d58188978b20bc06fd8db818a1e68b53ab4ab740f91bad3193b6731d639c",
+            "sourceSHA256": "6fd2d58188978b20bc06fd8db818a1e68b53ab4ab740f91bad3193b6731d639c",
+            "bytes": 17695,
+            "byteIdentical": true,
+            "snapshotSHA256": "6fd2d58188978b20bc06fd8db818a1e68b53ab4ab740f91bad3193b6731d639c"
+          },
+          "prototype/src/received.ts": {
+            "baselineSHA256": "c06fd0fff104946c06bb5375bccd67e16b26b6897e7b5c18be75b0052fd391c5",
+            "sourceSHA256": "c06fd0fff104946c06bb5375bccd67e16b26b6897e7b5c18be75b0052fd391c5",
+            "bytes": 21039,
+            "byteIdentical": true,
+            "snapshotSHA256": "c06fd0fff104946c06bb5375bccd67e16b26b6897e7b5c18be75b0052fd391c5"
+          },
+          "prototype/src/return-item-resolutions.ts": {
+            "baselineSHA256": "a799abd5ced2d22380c47ec0913808df36b29e58c8b365b108afb6de213bdd19",
+            "sourceSHA256": "a799abd5ced2d22380c47ec0913808df36b29e58c8b365b108afb6de213bdd19",
+            "bytes": 10050,
+            "byteIdentical": true,
+            "snapshotSHA256": "a799abd5ced2d22380c47ec0913808df36b29e58c8b365b108afb6de213bdd19"
+          },
+          "prototype/src/return-memo.tsx": {
+            "baselineSHA256": "8b5f3ba40931f4d8e30a48fa6b1d4a32de551ef2ec09bc845c564417817147c3",
+            "sourceSHA256": "8b5f3ba40931f4d8e30a48fa6b1d4a32de551ef2ec09bc845c564417817147c3",
+            "bytes": 7081,
+            "byteIdentical": true,
+            "snapshotSHA256": "8b5f3ba40931f4d8e30a48fa6b1d4a32de551ef2ec09bc845c564417817147c3"
+          },
+          "prototype/src/return-status.ts": {
+            "baselineSHA256": "a8ee5225373f8192302c368a2725d59128c9d09971b7297753647dd698f33cad",
+            "sourceSHA256": "a8ee5225373f8192302c368a2725d59128c9d09971b7297753647dd698f33cad",
+            "bytes": 473,
+            "byteIdentical": true,
+            "snapshotSHA256": "a8ee5225373f8192302c368a2725d59128c9d09971b7297753647dd698f33cad"
+          },
+          "prototype/src/return-test-fixture.ts": {
+            "baselineSHA256": "8b17f2ea557bf6e252c3d5ff120be1775201abc8b9a9692d564978e532ed8eb4",
+            "sourceSHA256": "8b17f2ea557bf6e252c3d5ff120be1775201abc8b9a9692d564978e532ed8eb4",
+            "bytes": 1404,
+            "byteIdentical": true,
+            "snapshotSHA256": "8b17f2ea557bf6e252c3d5ff120be1775201abc8b9a9692d564978e532ed8eb4"
+          },
+          "prototype/src/return-workflow.ts": {
+            "baselineSHA256": "5425b6db7e90694bfb0c5851166814d746f3585594d78f516f4be9f08b3409fb",
+            "sourceSHA256": "5425b6db7e90694bfb0c5851166814d746f3585594d78f516f4be9f08b3409fb",
+            "bytes": 17974,
+            "byteIdentical": true,
+            "snapshotSHA256": "5425b6db7e90694bfb0c5851166814d746f3585594d78f516f4be9f08b3409fb"
+          },
+          "prototype/src/settings.ts": {
+            "baselineSHA256": "70035efaced58730abf3575710b03c7340eb0ce396a735cc76dc02674e0bd8bc",
+            "sourceSHA256": "70035efaced58730abf3575710b03c7340eb0ce396a735cc76dc02674e0bd8bc",
+            "bytes": 10754,
+            "byteIdentical": true,
+            "snapshotSHA256": "70035efaced58730abf3575710b03c7340eb0ce396a735cc76dc02674e0bd8bc"
+          },
+          "prototype/src/sha256.ts": {
+            "baselineSHA256": "875462150612958cdb9a22419a4598d5ddc9514a4b7ece89aafab4b0f8c72ec1",
+            "sourceSHA256": "875462150612958cdb9a22419a4598d5ddc9514a4b7ece89aafab4b0f8c72ec1",
+            "bytes": 3881,
+            "byteIdentical": true,
+            "snapshotSHA256": "875462150612958cdb9a22419a4598d5ddc9514a4b7ece89aafab4b0f8c72ec1"
+          },
+          "prototype/src/signed-return-pickups.ts": {
+            "baselineSHA256": "18a9b4f014679f9b9ca4c2ebc7719fa1d7da76471c3bfefa04bff229ee6534f3",
+            "sourceSHA256": "18a9b4f014679f9b9ca4c2ebc7719fa1d7da76471c3bfefa04bff229ee6534f3",
+            "bytes": 14346,
+            "byteIdentical": true,
+            "snapshotSHA256": "18a9b4f014679f9b9ca4c2ebc7719fa1d7da76471c3bfefa04bff229ee6534f3"
+          },
+          "prototype/src/store.tsx": {
+            "baselineSHA256": "a7b08174e1f0fd5cf2bf3696014a213d31d7aef56e3cd7d95635467984272d05",
+            "sourceSHA256": "a7b08174e1f0fd5cf2bf3696014a213d31d7aef56e3cd7d95635467984272d05",
+            "bytes": 38206,
+            "byteIdentical": true,
+            "snapshotSHA256": "a7b08174e1f0fd5cf2bf3696014a213d31d7aef56e3cd7d95635467984272d05"
+          },
+          "prototype/src/supplier-balances.ts": {
+            "baselineSHA256": "6d59e150e4cf055128c12e34541b34fc0ec1ff5e75331d01bd1a09e394b1367c",
+            "sourceSHA256": "6d59e150e4cf055128c12e34541b34fc0ec1ff5e75331d01bd1a09e394b1367c",
+            "bytes": 8980,
+            "byteIdentical": true,
+            "snapshotSHA256": "6d59e150e4cf055128c12e34541b34fc0ec1ff5e75331d01bd1a09e394b1367c"
+          },
+          "prototype/src/supplier-document-settings.ts": {
+            "baselineSHA256": "8f1024214cd567736a4860d82c09d73d421c5eda39ce7f8a0f9bc99b8436ac71",
+            "sourceSHA256": "8f1024214cd567736a4860d82c09d73d421c5eda39ce7f8a0f9bc99b8436ac71",
+            "bytes": 1378,
+            "byteIdentical": true,
+            "snapshotSHA256": "8f1024214cd567736a4860d82c09d73d421c5eda39ce7f8a0f9bc99b8436ac71"
+          },
+          "prototype/src/supplier-editor.ts": {
+            "baselineSHA256": "7e32f1118dbc092dc46be591eeff9ff94a7473df6b38259bdf543666f0d97dda",
+            "sourceSHA256": "7e32f1118dbc092dc46be591eeff9ff94a7473df6b38259bdf543666f0d97dda",
+            "bytes": 14146,
+            "byteIdentical": true,
+            "snapshotSHA256": "7e32f1118dbc092dc46be591eeff9ff94a7473df6b38259bdf543666f0d97dda"
+          },
+          "prototype/src/supplier-items.ts": {
+            "baselineSHA256": "4a3525c282f71902c820476635195e6ef9a7e804a680d46175ac63fe3ccaa1be",
+            "sourceSHA256": "4a3525c282f71902c820476635195e6ef9a7e804a680d46175ac63fe3ccaa1be",
+            "bytes": 23682,
+            "byteIdentical": true,
+            "snapshotSHA256": "4a3525c282f71902c820476635195e6ef9a7e804a680d46175ac63fe3ccaa1be"
+          },
+          "prototype/src/suppliers.ts": {
+            "baselineSHA256": "b5fce85e1cdd7c1b338ef7ebd71e284ef0ab87bdc9331226b6143de0c2848461",
+            "sourceSHA256": "b5fce85e1cdd7c1b338ef7ebd71e284ef0ab87bdc9331226b6143de0c2848461",
+            "bytes": 14483,
+            "byteIdentical": true,
+            "snapshotSHA256": "b5fce85e1cdd7c1b338ef7ebd71e284ef0ab87bdc9331226b6143de0c2848461"
+          },
+          "prototype/src/test/setup.ts": {
+            "baselineSHA256": "6a3ef6985b3e19542228f25bb61d111cc295b5256a20146e253f5ebcf609b229",
+            "sourceSHA256": "6a3ef6985b3e19542228f25bb61d111cc295b5256a20146e253f5ebcf609b229",
+            "bytes": 691,
+            "byteIdentical": true,
+            "snapshotSHA256": "6a3ef6985b3e19542228f25bb61d111cc295b5256a20146e253f5ebcf609b229"
+          },
+          "prototype/src/types.ts": {
+            "baselineSHA256": "c5feee5ff219a613ea2a6b13604df4fba74e25e419d9ba93e07c376210418e9f",
+            "sourceSHA256": "c5feee5ff219a613ea2a6b13604df4fba74e25e419d9ba93e07c376210418e9f",
+            "bytes": 14726,
+            "byteIdentical": true,
+            "snapshotSHA256": "c5feee5ff219a613ea2a6b13604df4fba74e25e419d9ba93e07c376210418e9f"
+          },
+          "prototype/src/undo-notification-policy.ts": {
+            "baselineSHA256": "02107ab90c7601822b2afd50ff031187222e795c18a4858a1adae99f94c402e0",
+            "sourceSHA256": "02107ab90c7601822b2afd50ff031187222e795c18a4858a1adae99f94c402e0",
+            "bytes": 731,
+            "byteIdentical": true,
+            "snapshotSHA256": "02107ab90c7601822b2afd50ff031187222e795c18a4858a1adae99f94c402e0"
+          },
+          "prototype/src/undo-queue.ts": {
+            "baselineSHA256": "9badb37c201b3b9cb95ec822ecf3c93ca520ab6b3d99002314b7562d727b8d15",
+            "sourceSHA256": "9badb37c201b3b9cb95ec822ecf3c93ca520ab6b3d99002314b7562d727b8d15",
+            "bytes": 1228,
+            "byteIdentical": true,
+            "snapshotSHA256": "9badb37c201b3b9cb95ec822ecf3c93ca520ab6b3d99002314b7562d727b8d15"
+          },
+          "prototype/src/use-stored-file.ts": {
+            "baselineSHA256": "c77eff6ead5bb2988b3db45917770cd6a1fb0bb5160f8029d2d23885c2498cd4",
+            "sourceSHA256": "c77eff6ead5bb2988b3db45917770cd6a1fb0bb5160f8029d2d23885c2498cd4",
+            "bytes": 1754,
+            "byteIdentical": true,
+            "snapshotSHA256": "c77eff6ead5bb2988b3db45917770cd6a1fb0bb5160f8029d2d23885c2498cd4"
+          },
+          "prototype/src/weighed.ts": {
+            "baselineSHA256": "1d7a4ae14d73d6f5699919064b4fe579b50f52c9a4d261c705ca51f202f4ae43",
+            "sourceSHA256": "1d7a4ae14d73d6f5699919064b4fe579b50f52c9a4d261c705ca51f202f4ae43",
+            "bytes": 6307,
+            "byteIdentical": true,
+            "snapshotSHA256": "1d7a4ae14d73d6f5699919064b4fe579b50f52c9a4d261c705ca51f202f4ae43"
+          },
+          "seed/arzon-config.json": {
+            "baselineSHA256": "f149cb145445be9df547e778591e014835bcc3a14c1d05e2bda92dd49d8e1a32",
+            "sourceSHA256": "f149cb145445be9df547e778591e014835bcc3a14c1d05e2bda92dd49d8e1a32",
+            "bytes": 9875,
+            "byteIdentical": true,
+            "snapshotSHA256": "f149cb145445be9df547e778591e014835bcc3a14c1d05e2bda92dd49d8e1a32"
+          },
+          "seed/demo-data.json": {
+            "baselineSHA256": "858ee795ef3c233e1e68cf965425f88aad4aca50e160558092311e2e81cd5f45",
+            "sourceSHA256": "858ee795ef3c233e1e68cf965425f88aad4aca50e160558092311e2e81cd5f45",
+            "bytes": 21751,
+            "byteIdentical": true,
+            "snapshotSHA256": "858ee795ef3c233e1e68cf965425f88aad4aca50e160558092311e2e81cd5f45"
+          },
+          "seed/pricing-test-cases.json": {
+            "baselineSHA256": "3ec285adc218fac456e564f3cc8981a5f373b3a272a5c0bb8632e9c19ca5f7bb",
+            "sourceSHA256": "3ec285adc218fac456e564f3cc8981a5f373b3a272a5c0bb8632e9c19ca5f7bb",
+            "bytes": 8080,
+            "byteIdentical": true,
+            "snapshotSHA256": "3ec285adc218fac456e564f3cc8981a5f373b3a272a5c0bb8632e9c19ca5f7bb"
+          },
+          "seed/pricing_reference.py": {
+            "baselineSHA256": "32b2e8f9d6a011d1465589393c83fdeaa201318f46ae36bbccd704c74c1a3c7e",
+            "sourceSHA256": "32b2e8f9d6a011d1465589393c83fdeaa201318f46ae36bbccd704c74c1a3c7e",
+            "bytes": 2168,
+            "byteIdentical": true,
+            "snapshotSHA256": "32b2e8f9d6a011d1465589393c83fdeaa201318f46ae36bbccd704c74c1a3c7e"
+          }
+        },
+        "method": "Read exact Git blobs, compare every byte and SHA256, then independently compare immutable snapshot disk bytes to candidate blobs."
+      }
+    },
+    "invoiceReturnsAst": {
+      "artifactSHA256": "14598984b2e436f9323a70efc46ecbeb4b327aaf74059d51cf85d7cb3486ad03",
+      "result": {
+        "previous_sha": "873fe4ab05c3b596787766d270f7c505988776e6",
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "reviewer": "c7_final_qa",
+        "method": "TypeScript AST comparison removes only explicitly allowed JSX presentation attributes, then verifies the entire remaining syntax tree, all callback and controlled-property expressions, and each if/ternary/logical short-circuit condition. Formatting whitespace is ignored; literals and operators are retained.",
+        "files": {
+          "prototype/src/screens/Invoices.tsx": {
+            "parse_diagnostics": 0,
+            "handlers_preserved": true,
+            "handler_count": 86,
+            "controlled_props_preserved": true,
+            "controlled_prop_count": 102,
+            "guards_preserved": true,
+            "guard_count": 401,
+            "all_other_ast_nodes_preserved": true,
+            "allowed_previous_attributes": [
+              {
+                "tag": "Button",
+                "name": "variant",
+                "value": "\"neutral\""
+              }
+            ],
+            "allowed_final_attributes": [
+              {
+                "tag": "DataTable",
+                "name": "columns",
+                "value": "{[\n                        {\n                          key: \"invoice\",\n                          required: true,\n                          priority: 0,\n                          minWidth: 240,\n                          mobilePrimary: true,\n                        },\n                        { key: \"supplier\", priority: 2, mobilePrimary: true },\n                        { key: \"branch\", priority: 4 },\n                        { key: \"date\", priority: 3 },\n                        { key: \"status\", priority: 1, mobilePrimary: true },\n                      ]}"
+              },
+              {
+                "tag": "LtrText",
+                "name": "className",
+                "value": "\"invoice-draft-reference\""
+              },
+              {
+                "tag": "Button",
+                "name": "variant",
+                "value": "\"destructive\""
+              }
+            ],
+            "snapshot_matches_git": true,
+            "source_sha256": "58c518f3be6fdec94e9a94d473067f6111518d10edda9ab51f325b2465ce55ea"
+          },
+          "prototype/src/screens/Returns.tsx": {
+            "parse_diagnostics": 0,
+            "handlers_preserved": true,
+            "handler_count": 35,
+            "controlled_props_preserved": true,
+            "controlled_prop_count": 17,
+            "guards_preserved": true,
+            "guard_count": 137,
+            "all_other_ast_nodes_preserved": true,
+            "allowed_previous_attributes": [],
+            "allowed_final_attributes": [
+              {
+                "tag": "Button",
+                "name": "variant",
+                "value": "\"tinted\""
+              },
+              {
+                "tag": "LtrText",
+                "name": "className",
+                "value": "\"return-evidence-reference\""
+              }
+            ],
+            "snapshot_matches_git": true,
+            "source_sha256": "75570542b10c3b4eab7a2eeab79959ac7f56035ecd04ba496797e2f57242f28d"
+          }
+        }
+      }
+    },
+    "uiKeyboardAst": {
+      "artifactSHA256": "afa942ab9865aabbb45be790ec41007859ee80da97ad057b5ef0b968764ec2e6",
+      "result": {
+        "source_sha": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "previous_ui_sha": "7f589eac07f9f87787d93fc090c5af4b98ac2518",
+        "verifierNodeVersion": "v22.23.3",
+        "reviewed_keyboard_patch_sha": "ceaf04206d91996b19d3fc75af982fc7f71c47ca",
+        "reviewed_function_source_sha256": "6a639b946d592393c9e94d0ab5853b33f0bc5d0737d0d97ae75b8f8149d233ba",
+        "reviewed_function_ast_sha256": "1bcb6ce8e80472cb62ed991195939718ee33aea10b47d9d9bd1c4f56c49b1e4a",
+        "method": "Replace only Source7 MenuSubmenu with the exact reviewed keyboard-fix function, then require full ui.tsx AST equality. Separately require every other JSX callback, controlled prop and outside-submenu guard to match. No generic ui.tsx or MenuSubmenu exclusion.",
+        "intended_change": [
+          "When an open submenu trigger receives Escape or the RTL-aware back arrow, prevent default/propagation and close only that submenu, restoring its trigger focus.",
+          "Cancel the pending child-focus animation frame on reopen, close and unmount; use an opening ref to prevent even a retained late callback from focusing a closed submenu.",
+          "Existing child-menu navigation, closed-trigger Escape bubbling, all data callbacks, controlled props and other UI components remain unchanged."
+        ],
+        "parse_diagnostics": 0,
+        "entire_ui_matches_exact_reviewed_patch": true,
+        "all_nodes_outside_menu_submenu_preserved": true,
+        "all_ui_handlers_identical": false,
+        "jsx_handler_count": 54,
+        "intended_changed_jsx_handler_count": 1,
+        "other_jsx_handlers_preserved": true,
+        "jsx_handler_changes": [
+          {
+            "index": 49,
+            "scope": "MenuSubmenu",
+            "name": "onKeyDown",
+            "tag": "button",
+            "className": "\"ui-menu-item ui-menu-submenu-trigger\"",
+            "previousExpressionSha256": "f48514abc5d62d3b10ec62a3fcd9f92ad804babaf66da7e4131ffc3b7a5fd376",
+            "finalExpressionSha256": "c424db5e291dd46c7c3933a78d1bf4109e46307db6a2a7a9b064e3b93e0a9ae3"
+          }
+        ],
+        "controlled_props_preserved": true,
+        "controlled_prop_count": 41,
+        "outside_submenu_guards_preserved": true,
+        "outside_submenu_guard_count": 301,
+        "submenu_keyboard_guards_intentionally_changed": true,
+        "snapshot_matches_git": true,
+        "source_file_sha256": "64c43b69263273f088219bd791cf1b747afba9f8cbf1df6b53df7b68a8b7a6d2",
+        "diagnostic_evidence": "/tmp/c7-demo-escape-probe-results/results.json (Source7 real UI held-focus-frame reproduction: parent menu wrongly closed)",
+        "controlled_raf_regression": "prototype/src/ui.test.tsx: controlled frame callback tests Escape/back arrow in both LTR and RTL; verifies cancellation, late-frame no-op, parent retention, second Escape outer close and no action invocation."
+      }
+    },
+    "physicalLabels": {
+      "artifactSHA256": "43255b8dd8d586038d1b77b53ef1c9ea971405642034472a0f064661b9248f26",
+      "result": {
+        "physicalLabelFunctionsByteIdentical": true,
+        "baselinePhysicalSHA256": "468cde505f4a9cebb831b1bcca386eef5e02b5c5f65049ec3f6aea494a0c16a0",
+        "currentPhysicalSHA256": "468cde505f4a9cebb831b1bcca386eef5e02b5c5f65049ec3f6aea494a0c16a0",
+        "existingPrintStyles": {
+          "prototype/src/screens/invoice-settings-labels.css": {
+            "unchanged": true,
+            "sha256": "a9222ce38dd8998e9dc139496c1c92d62ae402da032c85b3caf2abb4f4d61c19"
+          },
+          "prototype/src/screens/labels-a2.css": {
+            "unchanged": true,
+            "sha256": "1919c6306ef36357f6ffdf6653f016c3a5987826097486f1d36fe2bc24154f13"
+          },
+          "prototype/src/screens/labels-b.css": {
+            "unchanged": true,
+            "sha256": "b60ed1f71c9a00f793e3b861590f967656da49191353546e5dde7cfe1b347865"
+          },
+          "prototype/src/screens/labels-c1.css": {
+            "unchanged": true,
+            "sha256": "3b02ce4f2c36ad1a8fd946fb7cde721a0c4f53c2df583c010cd0727ab3c9cdc5"
+          },
+          "prototype/src/screens/c3-labels-notes-offers.css": {
+            "unchanged": true,
+            "sha256": "52a1f1763ad1d66c25d74accad7c08216304078689f0422cadaec121e39ac51c"
+          },
+          "prototype/src/label-workflow.ts": {
+            "unchanged": true,
+            "sha256": "f68cc859b61cca722d27acd66679705100174497419c4b87e9ac2d8f22ba4341"
+          }
+        },
+        "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "earlierAuditedSource": "7f589eac07f9f87787d93fc090c5af4b98ac2518",
+        "labelsScreenUnchangedSincePhysicalAudit": true,
+        "labelsScreenSHA256": "31f5a31951335a1474c39d7dc82e8b71699caf47f52384196d42093360784137",
+        "verification": "Exact Labels.tsx Git blob matches the preceding audited version; this retains the previously verified byte-identical physical label functions and physical declarations. Source preservation does not establish physical printer alignment."
+      }
+    },
+    "captureSummary": {
+      "artifactSHA256": "2c58eb6f2de3210adcb708b33db2ea9fa3592b35a30153b18e61852d81b8f7ba",
+      "result": {
+        "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+        "runnerExitCode": 0,
+        "session": 60901,
+        "count": 85,
+        "beforeAfterAssetGuards": 170,
+        "browserErrors": 0,
+        "geometryFindings": 0,
+        "visualReview": "Complete: all five final reports passed; strict gallery verified 85/85/19 with no warnings.",
+        "productionFingerprint": "5f1150cf962cbe50f4b4418da570f5163ff6188ba9b875068af25c92d5cbd665",
+        "manifestSHA256": "e6f1a9ad05ff5c067e76be5e32bc6160875601d44e245e9cc98be47773b2ebad"
+      }
+    }
+  },
+  "finalScreenshots": {
+    "directory": "redesign-screenshots/pr-c7",
+    "captureManifestSHA256": "e6f1a9ad05ff5c067e76be5e32bc6160875601d44e245e9cc98be47773b2ebad",
+    "galleryManifestSHA256": "6ad05036a99287e9de57cb5ed8cbcecd709114926822db48e0886e61c774c332",
+    "galleryHTMLSHA256": "1e995fcdd2e02043dbb06290819722fd61624c7b5a1a89f304046d65d88a971e",
+    "individualReviewReportSHA256": {
+      "visual-review-en-light.json": "aa7427019d388f701c408b289775e7a11cb440e5085ffedd237130101c1a8f72",
+      "visual-review-fa-light.json": "13224f060aa61010c91356701f8bf70b5ebe707cbea6595354fb058d15ac1832",
+      "visual-review-phone-dark.json": "0384f82bd9799aa0d5a9a45c86d4461ed22a4c710133ab24bf68ba42fdbec533",
+      "visual-review-en-dark.json": "b2051d70a4bb48b4936cb4349893ce43315d5dfe076ffddb34beaa08728192d0",
+      "visual-review-mid-900.json": "741d66ae3b9f9827543769b0c13b1ecb0593b236cc61c83105385af08ccd18dd"
+    },
+    "screens": 85,
+    "actuallyIndividuallyReviewed": 85,
+    "originalReferences": 19,
+    "sourceProductionFingerprint": "5f1150cf962cbe50f4b4418da570f5163ff6188ba9b875068af25c92d5cbd665",
+    "diagnostic": false,
+    "warnings": []
+  },
+  "latestPublicationCIGate": {
+    "checksURL": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/20/checks",
+    "requirement": "Both required jobs and complete browser step must pass on the final publication head before merge. The publication check runs after this documentation commit; its live result is reported in the PR description."
+  },
+  "supersededDiagnostics": {
+    "source7": "7f589ea full CI:590passed/4failed/4flaky/42skipped; failed Lookup shape taxonomy and old visual header/reference issues were corrected.",
+    "source8": "ceaf042 passed unit/32/72 and capture geometry but three actual variant reviews found product-dialog Cancel inherited a page-header fill/border. Ineligible for final gallery; fixed by descendant exclusion and 16 explicit footer contexts on source9."
+  },
+  "limits": [
+    "Owner/Manager authority mapping for Correct pickup is unanswered; Supervisor has not been silently granted it.",
+    "Accessible dark Primary is interim pending owner darker-blue/white versus lighter-blue/ink choice.",
+    "Actual Mac Safari and physical printer alignment were not exercised.",
+    "Nonsecure file-crypto fallback tests use simulated reserved.invalid transport; live GitHub CI evidence uses real HTTPS API."
+  ],
+  "c6LatestPublicationLiveCI": {
+    "headSHA": "261f544e63f8979f719b7abee1fdf596ad5dcc5c",
+    "runID": 38235989273,
+    "runURL": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38235989273",
+    "runStatus": "completed",
+    "runConclusion": "success",
+    "allRequiredJobsPassed": true,
+    "browserSummary": {
+      "passed": 525,
+      "passedOnRetry": 1,
+      "skipped": 42,
+      "listed": 568
+    },
+    "scope": "Fresh live API confirmation. The retained C6 unit source was962/87; this browser count is a separate CI run and is not summed with focused runs."
+  }
+}
