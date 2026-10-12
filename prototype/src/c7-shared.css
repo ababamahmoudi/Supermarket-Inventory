@@ -88,6 +88,63 @@
     background: var(--field-fill);
     border: 0;
   }
+  :root .filter-toolbar .filter-count .ui-button.button.button-neutral {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+  }
+  :root
+    .ui-card
+    .filter-toolbar
+    .filter-count
+    .ui-button.button.button-neutral {
+    background: var(--neutral-fill);
+    border: 0;
+  }
+  :root .ui-card .filter-toolbar .filter-search-pill {
+    background: var(--field-fill);
+    border: 0;
+  }
+  :root .lookup-page .lookup-category-chips .ui-button.filter-chip,
+  :root .lookup-page .lookup-category-more.ui-button.ui-menu-trigger {
+    border: 1px solid var(--page-control-border);
+    border-radius: var(--radius-round);
+    background: var(--surface);
+    color: var(--text);
+  }
+  :root .lookup-page .lookup-category-chips .ui-button.filter-chip.is-selected,
+  :root
+    .lookup-page
+    .lookup-category-more.ui-button.ui-menu-trigger.is-selected {
+    border-color: var(--color-clear);
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+  }
+  :root .ui-card .ui-menu-trigger.ui-icon-button:not(:focus-visible) {
+    border: 0;
+    outline: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root .product-editor-dialog > .dialog-description {
+    padding: 0 24px 16px;
+  }
+  :root .product-date-editor .product-reminder-setting input.ui-number,
+  :root .product-date-editor > .field .ui-input,
+  :root .return-item-form .ui-input,
+  :root .return-item-form .field input:not([type="file"]),
+  :root .return-item-form .field textarea {
+    background: var(--surface);
+  }
+  :root .return-item-form .ui-date {
+    inline-size: min(100%, 280px);
+    max-inline-size: 280px;
+  }
+  :root .return-lines-card > .banner.info {
+    display: block;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: var(--line-height-body);
+  }
   :root .ui-data-table tbody tr:not(.table-expanded-row):nth-child(n) {
     background-color: var(--color-clear);
     background-image: var(--table-row-rule);
@@ -106,6 +163,15 @@
   :root .ui-data-table td,
   :root .ui-data-table th {
     background: var(--color-clear);
+    border: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root
+    .ui-data-table.is-responsive
+    > table
+    > tbody
+    > tr:not(.table-expanded-row)
+    > td {
     border: 0;
     box-shadow: var(--shadow-none);
   }
@@ -320,9 +386,25 @@
       tbody
       tr:not(.table-expanded-row):nth-child(n) {
       block-size: auto;
-      background: var(--surface-soft);
-      background-image: none;
+      background-color: var(--surface-soft);
+      background-image: var(--table-row-rule);
+      background-size: calc(100% - 32px) 1px;
+      background-repeat: no-repeat;
+      background-position: center bottom;
       border-radius: var(--radius-control);
+    }
+    :root
+      .ui-data-table.is-mobile.is-responsive
+      > table
+      > tbody
+      > tr:not(.table-expanded-row)
+      > td {
+      border: 0;
+      background-image: none;
+      box-shadow: var(--shadow-none);
+    }
+    :root .product-editor-dialog > .dialog-description {
+      padding-inline: 16px;
     }
     :root .dashboard-layout,
     :root .dashboard-main,
@@ -343,6 +425,15 @@
     }
     :root .kpi-card {
       padding: 16px;
+    }
+  }
+  @media (max-width: 1279px) {
+    :root .return-detail-header {
+      flex-direction: column;
+    }
+    :root .return-header-actions {
+      inline-size: 100%;
+      justify-content: flex-end;
     }
   }
 }

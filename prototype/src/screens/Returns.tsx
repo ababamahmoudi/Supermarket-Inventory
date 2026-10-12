@@ -606,6 +606,7 @@ export function Returns() {
               )}
             </p>
             <Button
+              variant="tinted"
               onClick={() => {
                 update((draft) => {
                   draft.activity.unshift({

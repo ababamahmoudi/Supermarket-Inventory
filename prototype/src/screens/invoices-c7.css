@@ -97,6 +97,33 @@
   :root .invoice-list-number-link:hover {
     color: var(--accent);
   }
+  :root .invoice-draft-reference {
+    white-space: nowrap;
+  }
+  :root
+    .invoice-lines-table
+    .field
+    > :is(input:not([type="file"]), textarea, .ui-input) {
+    outline: none;
+    border-color: var(--color-clear);
+    background: var(--field-fill);
+    box-shadow: var(--shadow-none);
+  }
+  :root
+    .invoice-lines-table
+    .field
+    > :is(input:not([type="file"]), textarea, .ui-input):focus-visible {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: var(--shadow-focus);
+  }
+  :root
+    .invoice-lines-table
+    .field
+    > :is(input:not([type="file"]), textarea, .ui-input)[aria-invalid="true"] {
+    border-color: var(--danger);
+    background: var(--surface);
+  }
   :root .invoice-original-controls {
     gap: 8px;
     margin-block-end: 16px;
@@ -190,10 +217,9 @@
     border: 0;
     border-radius: var(--radius-control);
   }
-  :root .invoice-workspace .invoice-line-form .field > input,
-  :root .invoice-workspace .invoice-line-form .field > .ui-select,
-  :root .invoice-workspace .invoice-line-form .field > .ui-number-field,
-  :root .invoice-workspace .invoice-line-form .field > .ui-date-field {
+  :root .invoice-lines-table .invoice-line-review .field > input,
+  :root .invoice-lines-table .invoice-line-review .field > textarea,
+  :root .invoice-lines-table .invoice-line-review .field > .ui-input {
     background: var(--surface);
   }
   :root .invoice-details-toggle {
@@ -285,6 +311,10 @@
     }
   }
   @container invoice-review (max-width: 760px) {
+    :root .invoice-lines-table .invoice-line-summary .field > input,
+    :root .invoice-lines-table .invoice-line-summary .field > .ui-select {
+      background: var(--surface);
+    }
     :root .invoice-workspace .invoice-line-form {
       grid-template-columns: minmax(0, 1fr);
     }

@@ -1801,7 +1801,21 @@ export default function Invoices() {
                     title={t("Drafts", "پیش‌نویس‌ها")}
                     className="invoice-draft-list"
                   >
-                    <DataTable>
+                    <DataTable
+                      columns={[
+                        {
+                          key: "invoice",
+                          required: true,
+                          priority: 0,
+                          minWidth: 240,
+                          mobilePrimary: true,
+                        },
+                        { key: "supplier", priority: 2, mobilePrimary: true },
+                        { key: "branch", priority: 4 },
+                        { key: "date", priority: 3 },
+                        { key: "status", priority: 1, mobilePrimary: true },
+                      ]}
+                    >
                       <thead>
                         <tr>
                           <th>{t("Invoice", "فاکتور")}</th>
@@ -1814,7 +1828,7 @@ export default function Invoices() {
                       <tbody>
                         <tr>
                           <td>
-                            <LtrText>
+                            <LtrText className="invoice-draft-reference">
                               {invoice.supplier_invoice_number || "—"}
                             </LtrText>
                           </td>
@@ -3363,7 +3377,7 @@ export default function Invoices() {
                                   </fieldset>
                                   {!locked && (
                                     <Button
-                                      variant="neutral"
+                                      variant="destructive"
                                       className="invoice-remove-line"
                                       size="sm"
                                       onClick={() => {
