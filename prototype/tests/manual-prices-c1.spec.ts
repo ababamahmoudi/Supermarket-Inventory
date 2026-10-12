@@ -40,7 +40,7 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     page.locator(".catalog-products-table .manual-price-pill"),
   ).toHaveText("Manual price");
   await page
-    .getByRole("button", { name: "View Potato Chips 150 g", exact: true })
+    .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Cost history", exact: true }),
@@ -69,7 +69,7 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     page.locator(".catalog-products-table .manual-price-pill"),
   ).toHaveText("Manual price");
   await page
-    .getByRole("button", { name: "View Potato Chips 150 g", exact: true })
+    .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Cost history", exact: true }),

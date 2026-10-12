@@ -670,7 +670,7 @@ export default function BranchRequests() {
                       <bdi dir="auto">{line.free_text}</bdi>
                     )}
                     <Button
-                      variant="ghost"
+                      variant="danger"
                       size="sm"
                       onClick={() =>
                         setLines(lines.filter((_, i) => i !== index))
@@ -748,7 +748,7 @@ export default function BranchRequests() {
             >
               {t("Save as draft", "ذخیره پیش‌نویس")}
             </Button>
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>
+            <Button variant="secondary" onClick={() => setFormOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
           </div>
@@ -836,7 +836,7 @@ export default function BranchRequests() {
               <p className="helper">
                 {t("Copied from", "کپی از")}{" "}
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   onClick={() => openRequest(request.source_request_id!)}
                 >

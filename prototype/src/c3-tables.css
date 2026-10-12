@@ -31,8 +31,10 @@
   text-align: end;
 }
 :root .catalog-products-table .catalog-row-actions {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 8px;
 }
 .catalog-products-table .catalog-product-secondary,

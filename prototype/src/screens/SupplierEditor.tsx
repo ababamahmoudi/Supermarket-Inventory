@@ -276,7 +276,7 @@ export function SupplierEditor({
             {matches.map((record) => (
               <Button
                 key={record.id}
-                variant="ghost"
+                variant="secondary"
                 onClick={() => {
                   onClose();
                   navigate(`suppliers?name=${encodeURIComponent(record.name)}`);

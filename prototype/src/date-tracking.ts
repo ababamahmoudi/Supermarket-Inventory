@@ -141,7 +141,8 @@ function appendAudit(
     at,
     product_code: productCode,
     reversible: true,
-    entity_type: action === "Stop tracking this product" ? "product" : "date",
+    entity_type:
+      action === "Add date" || action === "Remove date" ? "date" : "product",
     entity_id: entityId,
     scope: location === "all" ? "all" : "branch",
   });
@@ -195,6 +196,10 @@ export function addTrackedDate(
     created_by: context.actor,
     created_at: at,
   };
+  // An explicit manual date is also the operator's decision to track this
+  // product. Keep it in the same transaction and History entry, so Undo
+  // restores the prior preference together with the retained date evidence.
+  product.date_tracking = true;
   state.expiry.push(entry);
   appendAudit(
     state,
@@ -206,6 +211,37 @@ export function addTrackedDate(
     at,
   );
   return entry;
+}
+
+/** The inline preference switch never removes existing date evidence. */
+export function setProductDateTracking(
+  state: DemoState,
+  context: HistoryContext,
+  productCode: string,
+  enabled: boolean,
+  location: Branch,
+): void {
+  requireOperator(state, context);
+  if (!allowedDateLocations(state, context).includes(location))
+    throw new DateTrackingError("location");
+  const product = state.products.find(
+    (item) =>
+      item.company_id === context.company_id &&
+      item.code === productCode &&
+      item.status !== "archived",
+  );
+  if (!product) throw new DateTrackingError("product");
+  if (product.date_tracking === enabled) return;
+  product.date_tracking = enabled;
+  appendAudit(
+    state,
+    context,
+    enabled ? "Turn on date tracking" : "Turn off date tracking",
+    product.code,
+    location,
+    product.code,
+    new Date().toISOString(),
+  );
 }
 
 export function removeTrackedDate(

@@ -207,7 +207,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     "Refused / sent back with the driver · 6 · $6.60",
   );
   await expect(postedLine).toContainText("Accept new cost");
-  await expect(postedLine.getByRole("cell").nth(2)).toHaveText("$1.1000");
+  await expect(postedLine.getByRole("cell").nth(2)).toHaveText("$1.10");
   await expect(
     page.locator(
       ".posted-invoice-document input, .posted-invoice-document select",

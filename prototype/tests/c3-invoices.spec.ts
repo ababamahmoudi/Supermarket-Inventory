@@ -217,11 +217,7 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
   await expect(
     page.locator(".invoice-posted-table th[data-column-key=supplier]"),
   ).toHaveCount(0);
-  await page
-    .locator(".invoice-posted-table")
-    .getByRole("button", { name: "View invoice", exact: true })
-    .first()
-    .click();
+  await page.locator(".invoice-posted-table").getByRole("link").first().click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   await expect(
     page.getByRole("link", { name: "Back to Invoices", exact: true }),
@@ -232,11 +228,7 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
   await expect(
     page.getByRole("tab", { name: "Posted", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
-  await page
-    .locator(".invoice-posted-table")
-    .getByRole("button", { name: "View invoice", exact: true })
-    .first()
-    .click();
+  await page.locator(".invoice-posted-table").getByRole("link").first().click();
   await page
     .getByRole("link", { name: "Back to Invoices", exact: true })
     .click();

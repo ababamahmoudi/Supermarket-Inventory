@@ -51,6 +51,9 @@ async function visibleGeometry(page: Page, route: string) {
         controls: controls.map((control) => ({
           name: control.getAttribute("aria-label") ?? control.textContent,
           height: control.getBoundingClientRect().height,
+          kind: control.matches("input,.ui-input,.ui-checked-control")
+            ? "field"
+            : control.getAttribute("data-control-kind"),
         })),
         selects,
         searches,
@@ -59,7 +62,7 @@ async function visibleGeometry(page: Page, route: string) {
 }
 
 for (const language of ["en", "fa"] as const) {
-  test(`Part 1 filter controls are 44px, readable, searchable and compact in ${language}`, async ({
+  test(`Filter fields are 44px and actions are 40px, readable, searchable and compact in ${language}`, async ({
     page,
   }) => {
     await signIn(page, "Supervisor");
@@ -67,11 +70,16 @@ for (const language of ["en", "fa"] as const) {
     for (const route of ["products", "offers", "expiry", "returns", "notes"]) {
       const geometry = await visibleGeometry(page, route);
       expect(geometry.controls.length, route).toBeGreaterThan(0);
-      for (const control of geometry.controls)
+      for (const control of geometry.controls) {
         expect(
-          Math.abs(control.height - 44),
+          ["field", "action", "icon"],
+          `${route}: ${control.name} has a defined control kind`,
+        ).toContain(control.kind);
+        expect(
+          Math.abs(control.height - (control.kind === "field" ? 44 : 40)),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
+      }
       for (const select of geometry.selects) {
         expect(
           select.textWidth,

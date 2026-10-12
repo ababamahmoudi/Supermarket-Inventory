@@ -121,9 +121,9 @@ export default function SupplierItems({
                   { width: "145px", align: "end" as const },
                 ]
               : []),
-            { width: "130px" },
-            { width: "140px" },
-            { width: "150px", actions: true },
+            { width: "160px" },
+            { width: "160px" },
+            ...(supervisor ? [{ width: "150px", actions: true }] : []),
           ]}
         >
           <thead>
@@ -143,7 +143,7 @@ export default function SupplierItems({
               )}
               <th>{t("Date last bought", "تاریخ آخرین خرید")}</th>
               <th>{t("Last invoice", "آخرین فاکتور")}</th>
-              <th>{t("Actions", "عملیات")}</th>
+              {supervisor && <th>{t("Actions", "عملیات")}</th>}
             </tr>
           </thead>
           <tbody>
@@ -168,10 +168,15 @@ export default function SupplierItems({
                 }
               >
                 <td>
-                  <ProductName
-                    product={row}
-                    language={row.name_fa ? lang : "en"}
-                  />
+                  <a
+                    href={`#product?code=${encodeURIComponent(row.product_code)}`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <ProductName
+                      product={row}
+                      language={row.name_fa ? lang : "en"}
+                    />
+                  </a>
                   <small className="muted supplier-secondary">
                     <LtrText>{row.product_code}</LtrText>
                     {row.unit_size && (
@@ -209,7 +214,7 @@ export default function SupplierItems({
                 <td>
                   {row.last_invoice_id ? (
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={(event) => {
                         event.stopPropagation();
@@ -226,48 +231,34 @@ export default function SupplierItems({
                     <span className="muted">—</span>
                   )}
                 </td>
-                <td>
-                  <div className="actions supplier-item-actions">
-                    {supervisor ? (
-                      <>
+                {supervisor && (
+                  <td>
+                    <div className="actions supplier-item-actions">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setHistoryId(row.id);
+                        }}
+                      >
+                        {t("History", "تاریخچه")}
+                      </Button>
+                      {editable && (
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={(event) => {
                             event.stopPropagation();
-                            setHistoryId(row.id);
+                            setEditor(row);
                           }}
                         >
-                          {t("History", "تاریخچه")}
+                          {t("Edit", "ویرایش")}
                         </Button>
-                        {editable && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setEditor(row);
-                            }}
-                          >
-                            {t("Edit", "ویرایش")}
-                          </Button>
-                        )}
-                      </>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() =>
-                          navigate(
-                            `product?code=${encodeURIComponent(row.product_code)}`,
-                          )
-                        }
-                      >
-                        {t("View", "نمایش")}
-                      </Button>
-                    )}
-                  </div>
-                </td>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -348,7 +339,7 @@ export default function SupplierItems({
                       </td>
                       <td>
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() =>
                             navigate(

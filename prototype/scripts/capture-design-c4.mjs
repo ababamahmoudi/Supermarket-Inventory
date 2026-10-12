@@ -82,7 +82,7 @@ async function visit(page, route) {
 }
 async function stableAppearance(page, variant) {
   if (variant === "en-dark") await button(page, "Switch to dark theme").click();
-  if (variant === "fa-light") await button(page, "فارسی").click();
+  if (variant === "fa-light") await button(page, "Switch to Persian").click();
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme",
     variant === "en-dark" ? "dark" : "light",

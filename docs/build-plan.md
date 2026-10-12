@@ -159,3 +159,16 @@ Separate paid inventory phase after register-sales integration: stock counts/lev
 - [ ] Product-based invoice tracking, manual date add/remove/reason/stop/Removed/nextdate, notebookENrequiredFAoptional and Addlocation copy work.
 - [ ] Open/History returns and retained RM memo/pending-credit projection/actual smallercredit/writeoff/replacement release/14-day alert reconcile with protected financial/physical evidence. Owner replacement answer: projectedowed $570 → $600, no new purchase/credit posting.
 - [ ] Required four variant screenshots are opened against all 14 annotated owner images. Actual tests/pricing/layout/print proof and exact Ubuntu branch/run/click guide are supplied; physical printer calibration remains a separate check.
+
+## C5 owner acceptance (2026-10-10)
+
+- [x] C3 then C4 merged with original history and every required check green; main integration green before creating C5 from main. Work only prototype/docs, seed unchanged.
+- [x] All nine new owner annotations read, design-language updated before prototype edits; dashboard/Approvals/round tabs and all approved domain behavior retained.
+- [x] Every text action12 px/40 px/intrinsic; four variants; horizontal end-aligned table controls≤200 px/max two; rare actions in ⋯ and redundant View removed.
+- [x] Top-bar controls 40 px/border/glow, target-language circle, input borders≥3:1 in both themes, visible Select glow, consistent visible-label status tones.
+- [x] Columns beside count/card title; posted header/totals/whole-page original25–400 toolbar; return header/640 px policy; weighed product price stacked/Sold by weight.
+- [x] Quick-add Enter/refocus/pinned-highlight/More/Undo; Lookup Dates authorized On/Off/inline add/auto-enable Undo; Products menu preselects entry.
+- [x] Current active/scheduled one product row, legitimate scopes preserved; Past stopped/ended newest first; identical submissions create no duplicate versions.
+- [x] Complete all-screen button audit and automated computed-style/status/domain checks, all existing tests/pricing passing, requested ENlight/ENdark/Persian/phone screenshots individually opened against all nine annotations; exact Ubuntu/click review guide supplied.
+
+Final evidence and the required latest-head CI gate: [C5 review guide](PR_C5_REVIEW.md), [button audit](PR_C5_BUTTON_AUDIT.md), and [PR #18 checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/18/checks). The review remains unmerged.

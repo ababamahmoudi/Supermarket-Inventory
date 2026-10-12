@@ -44,17 +44,23 @@ test("Offers combines name/code/label search, category, supplier, type and statu
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
     .click();
+  await expect(current.locator("tbody tr")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Past offers", exact: true }).click();
+  const past = page.locator("section.card").filter({
+    has: page.getByRole("heading", { name: "Past offers", exact: true }),
+  });
   await chooseOption(
     page,
     filters.getByLabel("Offer status", { exact: true }),
     "stopped",
     "Stopped",
   );
-  await expect(current.locator("tbody tr")).toHaveCount(1);
-  await expect(current.getByText("Stopped", { exact: true })).toBeVisible();
+  await expect(past.locator("tbody tr")).toHaveCount(1);
+  await expect(past.getByText("Stopped", { exact: true })).toBeVisible();
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
+  await page.getByRole("tab", { name: "Current offers", exact: true }).click();
   await chooseOption(
     page,
     filters.getByLabel("Offer status", { exact: true }),
@@ -101,9 +107,15 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   const current = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "Current offers", exact: true }),
   });
-  await expect(current.locator("tbody tr")).toHaveCount(6);
+  await expect(current.locator("tbody tr")).toHaveCount(5);
+  await expect(current.locator('tr[data-product-code="0003"]')).toHaveCount(1);
   await expect(
-    current.getByRole("cell", { name: "Richmond Hill", exact: true }),
+    current.locator(
+      'tr[data-product-code="0003"] .offer-scope .offer-group-entry',
+    ),
+  ).toHaveCount(2);
+  await expect(
+    current.getByText("Richmond Hill", { exact: true }),
   ).toBeVisible();
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
@@ -114,9 +126,9 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     "North York",
   );
   await expect(current.locator("tbody tr")).toHaveCount(5);
-  await expect(
-    current.getByRole("cell", { name: "Richmond Hill", exact: true }),
-  ).toHaveCount(0);
+  await expect(current.getByText("Richmond Hill", { exact: true })).toHaveCount(
+    0,
+  );
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
@@ -140,7 +152,9 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await filters.getByLabel("Search suppliers", { exact: true }).fill("fresh");
   await expect(overview.locator("tbody tr")).toHaveCount(1);
   await expect(overview).toContainText("$169.79");
-  await overview.getByRole("button", { name: "View", exact: true }).click();
+  await overview
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
+    .click();
   const report = page.getByLabel("Supplier financial report", { exact: true });
   await expect(report.locator(".payables-summary-grid")).toContainText(
     "$169.79",

@@ -699,7 +699,7 @@ export function Dashboard() {
                             </>
                           ) : (
                             <Button
-                              variant="ghost"
+                              variant="secondary"
                               size="sm"
                               onClick={() => navigate("approvals")}
                             >
@@ -712,7 +712,7 @@ export function Dashboard() {
                   })}
                   {approvals.length > 6 && (
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       onClick={() => navigate("approvals")}
                     >
                       {t("View all approvals", "مشاهده همه تأییدها")}
@@ -774,7 +774,7 @@ export function Dashboard() {
                       }
                       action={
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() => navigate("alerts")}
                         >
@@ -789,7 +789,10 @@ export function Dashboard() {
                     />
                   ))}
                   {alerts.length > 5 && (
-                    <Button variant="ghost" onClick={() => navigate("alerts")}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate("alerts")}
+                    >
                       {t("View all alerts", "مشاهده همه هشدارها")}
                     </Button>
                   )}
@@ -867,7 +870,7 @@ export function Dashboard() {
                         </td>
                         <td>
                           <Button
-                            variant="ghost"
+                            variant="secondary"
                             size="sm"
                             onClick={() =>
                               navigate(
@@ -888,7 +891,7 @@ export function Dashboard() {
               <div className="dashboard-card-header">
                 <h2>{t("Returns", "مرجوعی‌ها")}</h2>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   onClick={() => navigate("returns")}
                 >
@@ -946,7 +949,7 @@ export function Dashboard() {
                         }
                         action={
                           <Button
-                            variant="ghost"
+                            variant="secondary"
                             size="sm"
                             onClick={() =>
                               navigate(
@@ -1013,7 +1016,7 @@ export function Dashboard() {
                       </td>
                       <td>
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() => navigate("payables")}
                         >
@@ -1233,7 +1236,7 @@ export function Dashboard() {
                       }
                       action={
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() =>
                             navigate(
@@ -1311,7 +1314,7 @@ export function Dashboard() {
                       }
                       action={
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() =>
                             navigate(`product?code=${item.product_code}`)
@@ -1369,7 +1372,7 @@ export function Dashboard() {
                     }
                     action={
                       <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="sm"
                         onClick={() => navigate("notes")}
                       >

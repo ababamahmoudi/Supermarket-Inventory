@@ -24,7 +24,9 @@ test("Supervisor supplier overview reconciles balances and opens financial tabs"
     .getByLabel("Search suppliers", { exact: true })
     .fill("Fresh Valley");
   await expect(overview.locator("tbody tr")).toHaveCount(1);
-  await fresh.getByRole("button", { name: "View", exact: true }).click();
+  await fresh
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
+    .click();
   await expect(page).toHaveURL(/#suppliers\?name=Fresh%20Valley%20Foods/);
   await expect(
     page.getByRole("heading", { name: "Fresh Valley Foods", exact: true }),
@@ -80,8 +82,8 @@ for (const language of ["en", "fa"] as const) {
     await overview
       .getByRole("row")
       .filter({ hasText: "Fresh Valley Foods" })
-      .getByRole("button", {
-        name: language === "en" ? "View" : "نمایش",
+      .getByRole("link", {
+        name: "Fresh Valley Foods",
         exact: true,
       })
       .click();

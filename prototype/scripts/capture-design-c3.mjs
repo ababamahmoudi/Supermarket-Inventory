@@ -57,7 +57,7 @@ const button = (page, en, fa) =>
 
 async function appearance(page, variant) {
   if (variant === "en-dark") await button(page, "Switch to dark theme").click();
-  if (variant === "fa-light") await button(page, "فارسی").click();
+  if (variant === "fa-light") await button(page, "Switch to Persian").click();
 }
 async function setupScene(page, scene, variant) {
   const route = scene.startsWith("suppliers")

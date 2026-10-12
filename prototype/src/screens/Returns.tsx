@@ -12,11 +12,12 @@ import { useOperationalPrint } from "../operational-print-hook";
 import {
   returnUiStatus,
   returnUiStatusLabel,
-  returnStatusLabel,
+  returnClosureSubtype,
   returnFinancialFingerprint,
   type ReturnMemo,
 } from "../return-workflow";
 import "./returns-a2.css";
+import { ReturnStatusBadge } from "../ReturnStatusBadge";
 import policySource from "../../../docs/return-policy.md?raw";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
@@ -248,22 +249,10 @@ export function Returns() {
   };
   const statusLabel = (status: string) => returnUiStatusLabel(status, t);
   const returnStatus = (record: OperationalReturn) => (
-    <Badge
-      tone={
-        record.status === "cancelled"
-          ? "neutral"
-          : record.status === "resolved" || record.status === "picked_up"
-            ? "approved"
-            : record.status === "open"
-              ? "info"
-              : record.status === "partially_resolved" ||
-                  record.status === "cancellation_review"
-                ? "progress"
-                : "pending"
-      }
-    >
-      {returnStatusLabel(record, t)}
-    </Badge>
+    <ReturnStatusBadge
+      status={returnUiStatus(record)}
+      outcome={returnClosureSubtype(record)}
+    />
   );
   const run = (action: (draft: typeof state) => void, message: string) => {
     try {
@@ -366,16 +355,19 @@ export function Returns() {
               className="returns-toolbar"
               aria-label={t("Filter returns", "فیلتر مرجوعی‌ها")}
               count={
-                <span aria-live="polite">
-                  <LtrText>{overviewReturns.length}</LtrText>{" "}
-                  {translateCount(
-                    "result",
-                    "results",
-                    "نتیجه",
-                    "نتیجه",
-                    overviewReturns.length,
-                    lang,
-                  )}
+                <span className="returns-toolbar-end">
+                  <span aria-live="polite">
+                    <LtrText>{overviewReturns.length}</LtrText>{" "}
+                    {translateCount(
+                      "result",
+                      "results",
+                      "نتیجه",
+                      "نتیجه",
+                      overviewReturns.length,
+                      lang,
+                    )}
+                  </span>
+                  {tableColumns.chooser}
                 </span>
               }
               search={
@@ -447,7 +439,6 @@ export function Returns() {
                 {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
             </FilterToolbar>
-            <div className="table-column-actions">{tableColumns.chooser}</div>
             <DataTable
               className="returns-overview-table"
               columns={tableColumns.columns}
@@ -458,7 +449,9 @@ export function Returns() {
                   <th>{t("Supplier", "تأمین‌کننده")}</th>
                   <th>{t("Branch", "شعبه")}</th>
                   <th>{t("Created", "ایجادشده")}</th>
-                  <th className="number-cell">{t("Items", "اقلام")}</th>
+                  <th className="number-cell returns-items-cell">
+                    {t("Items", "اقلام")}
+                  </th>
                   <th>{t("Status", "وضعیت")}</th>
                   <th className="action-cell">
                     {t("Next action", "اقدام بعدی")}
@@ -519,7 +512,7 @@ export function Returns() {
                       <td>
                         <DateText value={record.created_at} />
                       </td>
-                      <td className="number-cell">
+                      <td className="number-cell returns-items-cell">
                         <LtrText>
                           {record.lines.reduce(
                             (sum, line) => sum + line.qty,
@@ -529,9 +522,12 @@ export function Returns() {
                       </td>
                       <td>{returnStatus(record)}</td>
                       <td className="action-cell">
-                        <Button asChild variant="secondary" size="sm">
-                          <a href={detailHref(record)}>{action}</a>
-                        </Button>
+                        {record.status !== "cancelled" &&
+                          record.status !== "resolved" && (
+                            <Button asChild variant="secondary" size="sm">
+                              <a href={detailHref(record)}>{action}</a>
+                            </Button>
+                          )}
                       </td>
                     </tr>
                   );
@@ -652,6 +648,7 @@ export function Returns() {
         open={policyOpen}
         onOpenChange={setPolicyOpen}
         title={t("Return policy", "سیاست مرجوعی")}
+        className="return-policy-dialog"
         description={t(
           "Keep the signed pickup slip and record only what actually happened.",
           "رسید جمع‌آوری امضاشده را نگهداری و فقط رویداد واقعی را ثبت کنید.",
@@ -660,34 +657,51 @@ export function Returns() {
         <div className="return-policy-content">
           <ol>
             <li>
-              {t(
-                "Count originals, record condition and location, and keep damaged goods off the sales floor.",
-                "اصل کالاها را بشمارید، وضعیت و محل را ثبت و کالای آسیب‌دیده را از فروش خارج کنید.",
-              )}
+              <strong>{t("Count and separate", "شمارش و جداسازی")}</strong>
+              <p>
+                {t(
+                  "Count originals, record their condition and location, and keep damaged goods off the sales floor.",
+                  "اصل کالاها را بشمارید، وضعیت و محل آن‌ها را ثبت و کالای آسیب‌دیده را از فروش خارج کنید.",
+                )}
+              </p>
             </li>
             <li>
-              {t(
-                "Check actual pickup quantities with the representative. Obtain a signed paper slip before handing over goods.",
-                "تعداد واقعی را با نماینده بررسی کنید. پیش از تحویل، رسید کاغذی امضاشده بگیرید.",
-              )}
+              <strong>{t("Confirm pickup", "تأیید جمع‌آوری")}</strong>
+              <p>
+                {t(
+                  "Confirm actual quantities with the representative and obtain a signed paper slip before handing over goods.",
+                  "تعداد واقعی را با نماینده تأیید کنید و پیش از تحویل کالا رسید کاغذی امضاشده بگیرید.",
+                )}
+              </p>
             </li>
             <li>
-              {t(
-                "Retain the signed original and record its reference. A pickup does not require a new invoice.",
-                "اصل امضاشده را نگهداری و مرجع آن را ثبت کنید. جمع‌آوری به فاکتور جدید نیاز ندارد.",
-              )}
+              <strong>
+                {t("Keep signed evidence", "نگهداری مدرک امضاشده")}
+              </strong>
+              <p>
+                {t(
+                  "Keep the signed original and its reference; pickup does not require a new invoice.",
+                  "اصل امضاشده و مرجع آن را نگهداری کنید؛ جمع‌آوری به فاکتور جدید نیاز ندارد.",
+                )}
+              </p>
             </li>
             <li>
-              {t(
-                "Workers submit claims and evidence; Supervisors verify and post money. Replacements record actual receipts.",
-                "کارکنان ادعا و مدرک ارسال می‌کنند؛ سرپرست پول را تأیید و ثبت می‌کند. جایگزین دریافت واقعی را ثبت می‌کند.",
-              )}
+              <strong>{t("Record the outcome", "ثبت نتیجه")}</strong>
+              <p>
+                {t(
+                  "Workers submit claims and evidence, Supervisors verify and post money, and replacements record actual receipts.",
+                  "کارکنان ادعا و مدرک ارسال می‌کنند، سرپرستان پول را تأیید و ثبت می‌کنند و برای جایگزین دریافت واقعی ثبت می‌شود.",
+                )}
+              </p>
             </li>
             <li>
-              {t(
-                "Cancellation never restores supplier-held or unsafe goods, and never automatically reverses compensation.",
-                "لغو هرگز کالای نزد تأمین‌کننده یا ناسالم را به موجودی بازنمی‌گرداند و جبران را خودکار معکوس نمی‌کند.",
-              )}
+              <strong>{t("Cancel safely", "لغو ایمن")}</strong>
+              <p>
+                {t(
+                  "Cancellation never restores supplier-held or unsafe goods or automatically reverses compensation.",
+                  "لغو هرگز کالای نزد تأمین‌کننده یا ناسالم را به موجودی بازنمی‌گرداند یا جبران را خودکار معکوس نمی‌کند.",
+                )}
+              </p>
             </li>
           </ol>
           <div className="actions">
@@ -706,7 +720,7 @@ export function Returns() {
                 URL.revokeObjectURL(url);
               }}
             >
-              {t("Download the full return policy", "دریافت سیاست کامل مرجوعی")}
+              {t("Download full policy", "دانلود سیاست کامل")}
             </Button>
             <Button onClick={() => setPolicyOpen(false)}>
               {t("Close", "بستن")}
@@ -739,8 +753,13 @@ export function Returns() {
             <Card className="return-header-card">
               <div className="return-detail-header">
                 <div>
-                  <h1>
-                    {t("Return", "مرجوعی")} <LtrText>#{number}</LtrText> ·{" "}
+                  <div className="return-detail-title">
+                    <h1>
+                      {t("Return", "مرجوعی")} <LtrText>#{number}</LtrText>
+                    </h1>
+                    {returnStatus(record)}
+                  </div>
+                  <p className="muted return-detail-subtitle">
                     {t("created", "ایجادشده در")}{" "}
                     <DateText value={creation.created_at} /> {t("by", "توسط")}{" "}
                     <bdi>
@@ -751,17 +770,19 @@ export function Returns() {
                           )
                         : "—"}
                     </bdi>
-                  </h1>
-                  <p className="muted">
-                    <LtrText>{record.supplier}</LtrText> ·{" "}
+                    {" · "}
+                    <LtrText>{record.supplier}</LtrText>
+                    {" · "}
                     <span className="branch-label">
                       {configuredBranchLabel(state.config, record.branch, lang)}
                     </span>
                   </p>
                 </div>
                 <div className="return-header-actions">
-                  {returnStatus(record)}
-                  <Button variant="ghost" onClick={() => setPolicyOpen(true)}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPolicyOpen(true)}
+                  >
                     {t("Return policy", "سیاست مرجوعی")}
                   </Button>
                   {record.status !== "cancelled" &&

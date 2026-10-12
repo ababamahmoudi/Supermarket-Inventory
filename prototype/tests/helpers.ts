@@ -66,9 +66,10 @@ export async function setBranch(page: Page, branch: string) {
 }
 
 export async function setLanguage(page: Page, language: "en" | "fa") {
+  if ((await page.locator("html").getAttribute("lang")) === language) return;
   await page
     .getByRole("button", {
-      name: language === "fa" ? "فارسی" : "English",
+      name: language === "fa" ? "Switch to Persian" : "تغییر به انگلیسی",
       exact: true,
     })
     .click();

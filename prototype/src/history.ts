@@ -597,8 +597,36 @@ function patchScope(
 ) {
   if (typeof patch.path[0] !== "string" || !safeRoots.has(patch.path[0]))
     throw new HistoryError("irreversible");
+  const productSelector = patch.path[1];
+  const trackedProduct =
+    patch.path[0] === "products" &&
+    typeof productSelector === "object" &&
+    productSelector.key === "code"
+      ? state.products.find((product) => product.code === productSelector.value)
+      : undefined;
+  // C5 authorizes only a worker's explicit tracking switch (or Add date's
+  // atomic auto-enable), not general catalog editing through a reversal.
+  const workerDatePreference =
+    context.role === "floor_worker" &&
+    patch.path.length === 3 &&
+    patch.path[0] === "products" &&
+    patch.path[2] === "date_tracking" &&
+    trackedProduct?.company_id === context.company_id &&
+    trackedProduct.code === entry.product_code &&
+    ["Add date", "Turn on date tracking", "Turn off date tracking"].includes(
+      entry.action,
+    ) &&
+    entry.branch !== "all" &&
+    entry.branch === context.branch &&
+    context.allowed_branches.includes(entry.branch) &&
+    configuredBranches(state.config).includes(entry.branch) &&
+    patch.after_exists &&
+    typeof patch.after === "boolean" &&
+    (!patch.before_exists || typeof patch.before === "boolean") &&
+    patch.after === (entry.action !== "Turn off date tracking");
   if (
     context.role !== "supervisor" &&
+    !workerDatePreference &&
     ![
       "notes",
       "expiry",

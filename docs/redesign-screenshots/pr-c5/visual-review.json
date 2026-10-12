@@ -1,0 +1,912 @@
+{
+  "sourceCommit": "f96d36944bc72e16b09d8a7d25cc964d584dce23",
+  "productionFingerprint": "7430f22e293a69c0cd63e8dc56cd7738489194cec52dd46fc71ff897f2dfd7b9",
+  "reviewedAt": "2026-10-10T17:29:45.351899+00:00",
+  "method": "All 60 actual PNGs independently opened with view_image in four variant reviews; each compared with applicable notes from the nine previously individually opened owner annotations. No montage, screenshot editing or hidden interface elements. PNG hashes independently verified against variant capture manifests. Computed dimensions and contrast are recorded separately in the button audit.",
+  "summary": {
+    "imagesIndividuallyOpened": 60,
+    "ownerAnnotationsReadAndCompared": 9,
+    "visualFindings": 0,
+    "additionalRootImagesOpened": 7
+  },
+  "ownerReferences": [
+    {
+      "file": "Screenshot 2026-10-09 225656.png",
+      "sha256": "a4e150b31c714e084d15d999aae3de9f743c69a732da1de98bba0b3f748ae264",
+      "root_opened": true,
+      "notes": "Replace EN|FA with single target-language circle; Lookup Dates inline controls."
+    },
+    {
+      "file": "Screenshot 2026-10-09 230242.png",
+      "sha256": "84b0867d340956bb35b56863ef64ca6b7bf405f5e735c39610caf98f3d47a522",
+      "root_opened": true,
+      "notes": "Invoices View buttons oversized capsule; rectangular compact actions and Columns placement."
+    },
+    {
+      "file": "Screenshot 2026-10-09 230606.png",
+      "sha256": "56c10f874a8e6a1bde4a496d53740d30f787b0eee0532dd826b51805f3dd04f7",
+      "root_opened": true,
+      "notes": "Posted header/action geometry, paired totals, whole-page original/default zoom-out."
+    },
+    {
+      "file": "Screenshot 2026-10-09 230807.png",
+      "sha256": "a79ead8554aaae805e50d186bcdbdfe482b8c25293e699c710b07ff202851226",
+      "root_opened": true,
+      "notes": "Correction dropdowns invisible: retain radius, visible border/resting glow; fields contrast."
+    },
+    {
+      "file": "Screenshot 2026-10-09 232039.png",
+      "sha256": "6d9fe3dcdb2e4e491836a6e69865e8562900f3cc1aaa55f408c16862ded50b9b",
+      "root_opened": true,
+      "notes": "Return title/status/subtitle hierarchy, secondary policy and aligned primary pickup."
+    },
+    {
+      "file": "Screenshot 2026-10-09 232140.png",
+      "sha256": "6f6cf7e46f0365ed2396dbafd6a94058349d39d6299b2dd84cb54901af3dcc21",
+      "root_opened": true,
+      "notes": "Policy wider, brief numbered titled steps, no inner box, compact actions."
+    },
+    {
+      "file": "Screenshot 2026-10-09 232254.png",
+      "sha256": "9f9a3f5868db068ac99f0873ce8db8f481bb8fb9b7e101a7a50d318bcd5f1dde",
+      "root_opened": true,
+      "notes": "Waiting for credit same amber tone for different internal statuses; Items/Status spacing."
+    },
+    {
+      "file": "Screenshot 2026-10-09 232510.png",
+      "sha256": "57d45d7336fe1db939d91ae4a7127561605a1227d8fe74b2f57d15ad934bc849",
+      "root_opened": true,
+      "notes": "Date actions too wide/round/stacked; Remove plus More; Columns near count; quick-add."
+    },
+    {
+      "file": "Screenshot 2026-10-09 232627.png",
+      "sha256": "656a52eec1f46932954986ebe9be423b2e17d14fb829cd2fbb4f43adf075a77e",
+      "root_opened": true,
+      "notes": "Repeated Lavash historical versions mixed in Current; retain Past, prevent duplicate submissions."
+    }
+  ],
+  "images": [
+    {
+      "filename": "alerts-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "f72b0539d9413acf06e8e7c3b0f0a63192807a75baa372f737f826b2b903b481",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Compact intrinsic Apply this price to all actions; primary Mark as intentional; readable dark table/card contrast."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "alerts-en-light.png",
+      "variant": "en-light",
+      "SHA256": "8c4fd110fd9e32262f4a5da56ef7acaa641d2ed04b7529e4f2fd88c225974ba4",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Apply this price to all is a compact rectangular Secondary action at each row end. Numeric approved-price cells and headers align at the end. Conflict uses red/problem tone; Mark as intentional is the single solid Primary action in the card."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "alerts-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "9cce42ca2f864547a9a7a9d2873213c89824aa0ada87795f3ad5a028b76050d2",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Shared compact rectangular actions, clear branch and selling-price alignment, red conflict badge; no action or text overlap.",
+      "ownerReferences": []
+    },
+    {
+      "filename": "alerts-phone.png",
+      "variant": "phone",
+      "SHA256": "afa72637c480b30caee5772487b638027ce04c9b24cc2bfee7eb6c7d9bc05a20",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Conflict status is red; Mark as intentional is an intrinsic40px solid action. Cards and copy fit phone width; branch-price table is horizontally pannable as permitted."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 225656.png"]
+    },
+    {
+      "filename": "approvals-tabs-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "9f9450182e24951dedd8b3f49b0e443164bedf851c81c3266232be3106c026c3",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Rounded Pending/Approved/Rejected/Superseded tabs retained.",
+        "Existing price/product approval cards and data remain; blue primary approval/red rejection actions compact."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "approvals-tabs-en-light.png",
+      "variant": "en-light",
+      "SHA256": "2ca07004b9238bd7555d8efce99df9a7200d3c2bb1c77a0836f9cf5b5092dc7e",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Pending/Approved/Rejected/Superseded tabs retain round widget styling. The approved four-value card grid remains; old/new prices, unit cost and margin have clear hierarchy. Missing old price is muted text. Approve and red/glow Reject are compact rectangular actions."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "approvals-tabs-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "d78d38b8207e60fdd699352665603450778e25cd2385b109088a81a7bf738fe3",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Existing approved layout and round tabs preserved; pending amber, approval type blue, translated demo creator. Old/new selling prices and two-decimal unit costs isolated LTR, compact approve/reject actions.",
+      "ownerReferences": []
+    },
+    {
+      "filename": "approvals-tabs-phone.png",
+      "variant": "phone",
+      "SHA256": "0efef848f7bc798ba21c340adcf746cd7fdd26e7ebc21172e6e76d41ff14f1cd",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Pending/Approved/Rejected/Superseded tabs retained. Pending/Price change/New product pills are readable; cards preserve existing pricing and two intrinsic adjacent Approve/Reject controls without horizontal page overflow."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 225656.png"]
+    },
+    {
+      "filename": "correct-invoice-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "ad9bcb60b47da945be373d79f6e835b9206a0fff8804f5ecc08a70473b339f49",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Bounded input widths; visible custom Product/Quantity unit/Date type dropdown borders and calendar; two-column desktop layout.",
+        "Editable cost precision remains as entered; no native browser selectors."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "correct-invoice-en-light.png",
+      "variant": "en-light",
+      "SHA256": "e75bb172734e4a2ff90b3b57b1313f5d93de5ac8641260c755ab349df3f155ea",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Product/Quantity unit/Date type custom dropdowns show blue borders and resting glow. Text/date/numeric fields have clear borders, narrow numeric widths and consistent labels; editable exact costs retain four decimals. Round Yes/No choices remain semantic widgets. The visible portion shows the first two line sections; later sections/footer require the dialog vertical scroll and are not claimed visually reviewed by this image."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230807.png"]
+    },
+    {
+      "filename": "correct-invoice-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "50a4e8d36e04a6cf2f36be5f2bbcf4f62f333c41744ff78bf7de2044545a0760",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Custom selects have visible border/resting glow, short quantity/cost inputs readable, raw editable four-decimal costs retained. Centered internally scrollable dialog, custom date and round yes/no controls have no horizontal clipping.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 230807.png",
+          "SHA256": "a79ead8554aaae805e50d186bcdbdfe482b8c25293e699c710b07ff202851226",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "correct-invoice-phone.png",
+      "variant": "phone",
+      "SHA256": "b9975f34e4a2fd83f6c930cbf82e21087010475a3263d60d005a88af5ab9180b",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Correct invoice dialog fits phone width. Product and Quantity unit dropdowns have clear border/glow; narrow quantities and unit-cost fields remain visible, current-radius controls and round Yes/No are preserved. Dialog scrolls vertically for later lines/footer; this screenshot intentionally shows first-line fields."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230807.png"]
+    },
+    {
+      "filename": "date-quick-add-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "b9c7f92375911a10c6bb3ba3fa3df9be06b9f46a448185e41f231dc27399f067",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Product/Date/Location and More/Add align in one bounded desktop row; selected name clears the search icon; extras are bounded.",
+        "Count beside Columns; Remove/More actions horizontal and compact; no stopped entries mixed into the active list."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "date-quick-add-en-light.png",
+      "variant": "en-light",
+      "SHA256": "a53ac196c85117a4bcf2c34dcc64d3a7e31915d21f1045c855d2c1140a0bde6c",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Product search icon and selected Basmati Rice text no longer overlap. Quick-add product/date/location/More/Add and expanded optional evidence have visible field borders. Date row Remove plus circular More are horizontal; count and Columns are adjacent at the inline end."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232510.png"]
+    },
+    {
+      "filename": "date-quick-add-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "19a33e78bfd90bb0762aca216bad5f37babc865c482d20506f79375656e22713",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Selected Product primary label now Persian and search icon clear of its value. Date ISO, current location, short optional quantity/lot fields, expanded More and custom controls remain legible. Count/Columns adjacent; row Remove/More compact. English user-entered note intentionally preserved.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232510.png",
+          "SHA256": "57d45d7336fe1db939d91ae4a7127561605a1227d8fe74b2f57d15ad934bc849",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "date-quick-add-phone.png",
+      "variant": "phone",
+      "SHA256": "0a86fd9a3f6d7d37765f43e40e61aa14a795089eb39e5b3c71a9d3c06a3c2d17",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Product text now clears the search icon. Selected product, full date, and current North York location are legible; More/Add sit together at the end. Expanded Type/Quantity/Lot/Note fields are readable and bounded. Count/Columns are adjacent. Phone table pan is permitted; this fixture demonstrates entry fields, while new-row highlighting and Undo are separately exercised by browser tests.",
+        "Final resting input border remains clear after real focus blur; product search text has visible clearance from the icon. Selected-label language behavior is separately covered by focused tests and Persian final capture review."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232510.png"]
+    },
+    {
+      "filename": "invoices-list-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "e9160317b0435416e04246eb85fd9c64244dc6ef3bd59434e4a4960a72ec75dc",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Compact invoice-number detail actions replace View; no stretched table buttons; Columns stays in title row; rounded tabs retained."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "invoices-list-en-light.png",
+      "variant": "en-light",
+      "SHA256": "e9cc62a113c0d46ff026eb87dd1d2172130fc05aea9defcb95c57f48b5859d05",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Columns is at the inline end of the Posted invoices card heading. Compact invoice-reference controls open details; the redundant View invoice column is absent. Table headers/body align visually, muted header/no fill and alternating borderless rows remain. All sidebar groups/account fit the viewport without scrolling."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230242.png"]
+    },
+    {
+      "filename": "invoices-list-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "90d1ff79a2f19d0fc5c6047e61e23d1fc472dac969a5a0243cea3f8e0abe7079",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Compact rectangular invoice references replace duplicate View actions. Columns is at title inline-end, round tabs retained, Posted badges green, dates ISO and proper supplier names isolated.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 230242.png",
+          "SHA256": "84b0867d340956bb35b56863ef64ca6b7bf405f5e735c39610caf98f3d47a522",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "invoices-list-phone.png",
+      "variant": "phone",
+      "SHA256": "36ce6dc20beb0b797f6ab39d6f3f499f92527d9f069e16ac78f2180bd7461363",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Posted card title and Columns are adjacent; invoice-number actions replace separate View controls and remain intrinsic rounded rectangles. Phone table panning is permitted; supplier cells continue beyond the initial viewport."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230242.png"]
+    },
+    {
+      "filename": "lookup-dates-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "c2a194b48ab0629e189c57c11a112621806e292369575497c637f1d9d645e019",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Dates section visibly shows Off and no open dates plus inline Date/Add controls.",
+        "No skip-link strip, sticky-bar occlusion or clipped search content after real focus/scroll normalization."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "lookup-dates-en-light.png",
+      "variant": "en-light",
+      "SHA256": "539b1c22314d19eb621a309154f9b88675c06145d5e9927bcc8c7d0314cd1793",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Dates section has concrete location, custom Off switch, open-date empty state and inline date/Add. Hero search uses one bordered pill; product Edit remains separate from Dates."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 225656.png"]
+    },
+    {
+      "filename": "lookup-dates-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "107fc82cc1242c15b34c6d88cb1ffab2562802e06a1afee39f8a788992ea7dc7",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Current-location inline Dates Off/add controls remain visible and bounded without entering Edit. Persian primary names/secondary English names and isolated $23.99 price; no clipping or overlap.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 225656.png",
+          "SHA256": "a4e150b31c714e084d15d999aae3de9f743c69a732da1de98bba0b3f748ae264",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "lookup-dates-phone.png",
+      "variant": "phone",
+      "SHA256": "8843b131edffd52334700130af30268b3ad1d5c5f4cb42da80146a83fa9980c9",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "The Dates region has concrete North York, Off switch, scoped empty copy and inline custom Date/Add controls; product price/card content remains readable.",
+        "The previous scrolled capture artifact is corrected: top bar appears only at the document top, Lookup search shows0001 with scan control, and no Skip to content strip obscures the page. Dates region, North York scope, Off switch and inline Date/Add remain clear."
+      ],
+      "ownerReferences": [
+        "Screenshot 2026-10-09 225656.png",
+        "Screenshot 2026-10-09 232510.png"
+      ]
+    },
+    {
+      "filename": "offers-current-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "467b726664e2c1e1a1666a3fff62fe20df04135e4e2d811a3304434118058ba9",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Each current product appears once; only active offers are shown; Lavash is one row; compact red Stop offer buttons."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "offers-current-en-light.png",
+      "variant": "en-light",
+      "SHA256": "c33511d9d436197bd57ade4464e9a312692a241c8ba1abee67efc9b2860dc3fe",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Current shows five distinct active product rows, including one Lavash Bread row; no stopped rows. Stop offer buttons are intrinsic rectangular red/glow. Current/Past tabs remain round and mix-and-match remains available."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232627.png"]
+    },
+    {
+      "filename": "offers-current-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "873a01040fcedc04b3e714a2a2aab9730c57f32488586dde57fd431d4831d671",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Current shows exactly five active products, one Lavash row, green statuses and retained all-branch/mix-and-match scope. Compact danger Stop actions and round tabs are preserved.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232627.png",
+          "SHA256": "656a52eec1f46932954986ebe9be423b2e17d14fb829cd2fbb4f43adf075a77e",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "offers-current-phone.png",
+      "variant": "phone",
+      "SHA256": "c90b63ba92a9255c25986f48a1f9baea65336db3c6dd94c24319cb35e2d8aeb9",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Current/Past tabs remain round. Five distinct current product rows are shown; Lavash appears once, with historical entries excluded. Actions/location details remain inside permitted phone table pan."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232627.png"]
+    },
+    {
+      "filename": "offers-past-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "ad41b7ed1c72e11d133181ec6d88d92ea72aa6d1ac5f4c7114121dee805686ed",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Stopped Sour Cherry Juice appears once in Past with gray status; no Stop action; product identity fully visible; tabs retained."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "offers-past-en-light.png",
+      "variant": "en-light",
+      "SHA256": "01777890d4ac92e9727d7121716c441250ad1b6ccb3aed5a7a90ba816a05bae8",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Stopped offer appears in Past with neutral-gray badge and preserved record; no redundant action column. Scoped Undo is visible in charcoal toast with rectangular action."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232627.png"]
+    },
+    {
+      "filename": "offers-past-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "e0fa310dd31f923117cbca71f51595f351ef05de9366a4e3a1e4167e6d34c3d1",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Stop feedback now Persian. Past retains the stopped record with grey status and its scope; table, toast and Undo action legible. Current/Past separation remains correct.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232627.png",
+          "SHA256": "656a52eec1f46932954986ebe9be423b2e17d14fb829cd2fbb4f43adf075a77e",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "offers-past-phone.png",
+      "variant": "phone",
+      "SHA256": "fe5023a5ad2fa553f9215d0b4eeb309b2714e6920119af9641802b438e2992b9",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Past tab selected, one stopped record retained and scoped Undo visible; Product identity now starts the table. Neutral Stopped status is verified in the desktop counterpart and semantic status tests; it lies outside this initial phone table pan.",
+        "The previous retained-pan artifact is corrected: table starts at its Product column and visibly identifies Sour Cherry Juice1L with the retained offer. Scoped Undo remains visible; additional status/action columns are accessible through permitted phone table pan."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232627.png"]
+    },
+    {
+      "filename": "original-whole-page-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "4247bf8b10bec3c2727c006ea9d7a7aabd45dcb46e720fe8ceb2eb11bb96a2bf",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Full original page fits both dimensions at initial57%; title/filename and toolbar are unobscured.",
+        "Toolbar order is minus/percent/plus/Fit width/Fit page/Download with compact actions."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "original-whole-page-en-light.png",
+      "variant": "en-light",
+      "SHA256": "53ff56587040fa70899a06042d19d6481fa5b0eb1f322c98843489f2900ac8d5",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "The full original page including footer is visible at57%. Compact toolbar contains minus/percent/plus/Fit width/Fit page/Download; buttons use their shared shape and border/glow. Four-decimal values inside the original document remain unchanged evidence rather than editable app fields."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230606.png"]
+    },
+    {
+      "filename": "original-whole-page-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "f1e5ebae299a5321c9fc287033e88a59d0537bfbd11929b3a4347ff90b1984ec",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Initial 57% view fits the entire retained original with all six rows, totals and footer. Compact minus/percentage/plus/Fit width/Fit page/Download toolbar. Raw English original text and four-decimal original costs deliberately unchanged.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 230606.png",
+          "SHA256": "56c10f874a8e6a1bde4a496d53740d30f787b0eee0532dd826b51805f3dd04f7",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "original-whole-page-phone.png",
+      "variant": "phone",
+      "SHA256": "4a681893fbf144c90af9f0a15bdbfe470f0bc88663cd1c2a3d9558caa18e80c2",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Entire original invoice page is visible, and zoom minus/100%/plus, Fit width, Fit page and Download controls fit phone width.",
+        "The previous sticky-header overlap is corrected by a genuine full-page phone capture: Original invoice title/filename, minus/100%/plus/Fit width/Fit page/Download and the whole document page are visible below the totals. No source UI is hidden and no image is edited. This full-page state legitimately has the same image hash as the separately captured Posted invoice phone scene."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230606.png"]
+    },
+    {
+      "filename": "posted-invoice-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "e143ae90477e696b27ebce8d45c275bc9e8851fe93f8f430a0bb7d908bb3bde3",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Inline invoice number/status and compact Correct/Move actions.",
+        "Six read-only unit costs show two decimals; quantity uses case/cases appropriately.",
+        "All five totals labels sit visibly beside their amounts; primary Payable remains bold.",
+        "Original document is visibly whole at initial Fit page; original retained document precision is unchanged."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "posted-invoice-en-light.png",
+      "variant": "en-light",
+      "SHA256": "ec5e815919340a475a222a23907ebccc7804aaecb7b608c8db6af226f867be5f",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Invoice number/Posted status share one header line; Correct invoice and Move invoice align at the inline end with matching action geometry. Totals labels now visibly end beside their amounts, with bold Payable. Read-only unit costs display cents and singular quantities say1 case. Whole original page including footer is visible below the compact zoom/download toolbar."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230606.png"]
+    },
+    {
+      "filename": "posted-invoice-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "be6a881774e1d1ec8f7f1982c6c188f9c2b5d54ea0657eba338187c12af132b0",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Known demo Received-by alias now translated; actual source evidence and proper supplier names remain unchanged. Header invoice number/status together and Correct/Move compact. Five paired totals have label text adjacent to amounts and bold Payable. Read-only costs two decimals, original whole page at initial 57%.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 230606.png",
+          "SHA256": "56c10f874a8e6a1bde4a496d53740d30f787b0eee0532dd826b51805f3dd04f7",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "posted-invoice-phone.png",
+      "variant": "phone",
+      "SHA256": "4a681893fbf144c90af9f0a15bdbfe470f0bc88663cd1c2a3d9558caa18e80c2",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Invoice number/Posted green pill share one row; Correct/Move actions match rectangle shape/height. All five totals are paired label/amount rows below lines, payable bold. Whole original page visible with compact wrapped zoom/Fit/Download toolbar. Phone table panning is permitted."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 230606.png"]
+    },
+    {
+      "filename": "products-weight-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "a5432fe7f8a465a7459b22a595362f28c01bcb772639881e07a90ac66e580b18",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Result count sits immediately beside Columns at the inline end; compact Edit/More actions.",
+        "Sold by weight; store cost two decimals in one LTR fragment; primary $7.49/lb and smaller secondary $16.51/kg."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "products-weight-en-light.png",
+      "variant": "en-light",
+      "SHA256": "4a97e5e57a1ec3ea5dc3909f188c7a01d5016ce5e8fa3b54511594d2c0589581",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Read-only Store cost is$4.99/lb in one LTR fragment. Approved price is$7.49/lb above smaller$16.51/kg without a dot, and Sold by weight is visible. Edit and circular More are horizontal at the row end. The result count and Columns now form one compact group at the filter row inline end; the earlier216px separation is removed."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232510.png"]
+    },
+    {
+      "filename": "products-weight-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "db2b9209c7567aea3376e66ea2a3934ea55c66805c6880dc0f1bd74a81de7dbc",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Result count and Columns now adjacent. Weight price stack is $7.49/lb above muted $16.51/kg, no dot separator, Sold by weight present; read-only $4.99/lb cost has two decimals in one LTR run. Edit/More compact.",
+      "ownerReferences": []
+    },
+    {
+      "filename": "products-weight-phone.png",
+      "variant": "phone",
+      "SHA256": "62bf6814ed41984a1eb75b8c43c5af9340d7c45142c87d0ac47a5ce54674c410",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Sold by weight is visible for Bulk Almonds; Product name is the detail target. Search/filter controls remain legible and bounded. Columns and count are adjacent on phone. Prices and row actions are in the permitted horizontal table pan, so their two-line detail is proven in desktop images and automated checks.",
+        "Final Columns/count grouping is now visibly adjacent at the inline end of the wrapped filter row."
+      ],
+      "ownerReferences": [
+        "Screenshot 2026-10-09 230807.png",
+        "Screenshot 2026-10-09 230242.png"
+      ]
+    },
+    {
+      "filename": "return-detail-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "227aa527da5d2593225b22a06a7ae4dd58b1156affd42e60cb8c850942b1283c",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Return number and blue status inline; created-by/date/supplier/location subtitle below; policy and pickup actions aligned at the inline end.",
+        "Items and evidence remain visible; red Cancel return action compact."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "return-detail-en-light.png",
+      "variant": "en-light",
+      "SHA256": "5069f30cccc3f481d843e3dce7d49ee861549a90b3adca536c25121b7ad2865d",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Waiting for pickup is immediately beside Return #1 and blue; creation/supplier/location subtitle is below. Return policy and Record pickup align at inline end with matching rectangular geometry. Cancel return has red border/glow."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232039.png"]
+    },
+    {
+      "filename": "return-detail-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "2a333c5add0aeaf2a09d448427ca055147ed7c4a439542bced4c7ebe60a37393",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Reference/title and blue Waiting for pickup badge share header line; creation, translated demo actor, supplier and current-location subtitle follow. Return policy secondary and pickup primary align together; cancel uses compact danger.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232039.png",
+          "SHA256": "6d9fe3dcdb2e4e491836a6e69865e8562900f3cc1aaa55f408c16862ded50b9b",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "return-detail-phone.png",
+      "variant": "phone",
+      "SHA256": "07033adf87dfb284fb1a624fe55a32fafb53b5c5fb66b2872671c6e3c3ba6469",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Return number and Waiting for pickup blue pill share the title row; supplier/current North York location subtitle is below. Return policy secondary and Record pickup primary are adjacent matching40px controls. Items/evidence fit width."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232039.png"]
+    },
+    {
+      "filename": "return-policy-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "505f4b5ceb78af8cf28770cd8ef980a3431ce271d6f80f848030d8efe70466ae",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Visible numbering1–5; each short bold title followed by explanation; one concise summary; wide single dialog without nested card.",
+        "Secondary Download full policy and primary Close are compact and legible."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "return-policy-en-light.png",
+      "variant": "en-light",
+      "SHA256": "3c81883c8453df867703178dfe73dd475cfd591bed48c811b097952bf44fa0c6",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Five visible numbers1–5 precede bold short step titles and sentences in a centered640px dialog. Summary, no nested card, Secondary Download full policy and Primary Close are visible."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232140.png"]
+    },
+    {
+      "filename": "return-policy-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "36164ed05e608bcd9c0f2ba16dd22cdaf8be45a57ea1bd990ad0bb5032d3867c",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Approximately 640-pixel borderless dialog with one-line summary, visible native 1–5 markers, five short bold titles and one sentence each. No framed nested box. Download full policy secondary and Close primary use compact rectangular shared actions.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232140.png",
+          "SHA256": "6f6cf7e46f0365ed2396dbafd6a94058349d39d6299b2dd84cb54901af3dcc21",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "return-policy-phone.png",
+      "variant": "phone",
+      "SHA256": "daa95a2ef3f051bea33201eeab152571e14b17ab4a554a7d6d87467523f9eaae",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Dialog fits390px width and844px height with all five numbered bold titles/sentences visible, no inner policy box, readable summary, and adjacent Download full policy secondary/Close primary actions."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232140.png"]
+    },
+    {
+      "filename": "returns-list-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "9d213582902ecd2f5795a296e3e3581b2a07ec16299b984c5d0f2268937f4342",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Two different retained return states both display the same amber Waiting for credit badge.",
+        "Separate Items/Status headers; compact Record resolution actions; result count beside Columns."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "returns-list-en-light.png",
+      "variant": "en-light",
+      "SHA256": "e45a62dde0fa549040bf65612bfc524aa53309a319bcc452392b49f08784de00",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Both Waiting for credit badges are amber. Items and Status headings are clearly separated. Record resolution is compact and rectangular. Result count and Columns are adjacent at the inline end of the wrapping filter bar."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232254.png"]
+    },
+    {
+      "filename": "returns-list-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "6428db143e660b0774d3ccf97c152656e651d9aaf9779187dd7bc27a84fd3538",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Both records with visible Waiting for credit have identical amber status treatment despite different internal lifecycle states. Items/Status spacing clear; count/Columns adjacent and compact action rows without duplicate View.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 232254.png",
+          "SHA256": "9f9a3f5868db068ac99f0873ce8db8f481bb8fb9b7e101a7a50d318bcd5f1dde",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "returns-list-phone.png",
+      "variant": "phone",
+      "SHA256": "105c47ad0af55c588e5c7712ce79f6aa1e3416375b4bcc374d42e8c859dcfdcd",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Open/History pills are retained. Columns sits beside result count, and table name/reference opens detail. Initial phone view requires horizontal pan for Items/Status/action columns.",
+        "The previous scrolled capture artifact is corrected: full top bar starts at the document top and Returns heading/subtitle are entirely visible. Count/Columns remain adjacent; permitted horizontal table pan retains the reference/name column initially."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 232254.png"]
+    },
+    {
+      "filename": "topbar-en-dark.png",
+      "variant": "en-dark",
+      "SHA256": "5dc33b9ab607567faf2c5d57182b718891f07cf7457f285c2d78cc1d9da7528e",
+      "reviewer": "/root/c5_browser_proof",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Uniform40px controls; thin blue borders/glow; one round target-language button displaying Persian."
+      ],
+      "ownerReferences": []
+    },
+    {
+      "filename": "topbar-en-light.png",
+      "variant": "en-light",
+      "SHA256": "c66078eaded26e201c5dba4fb0fefaf517dc4aef65af9f7c241fef62b08aebfe",
+      "reviewer": "/root/c5_shell_controls",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "One circular فا target-language control replaces the former language pair. All visible topbar controls have aligned outer height, blue border/glow; search and branch use their permitted pill shapes. Notifications has a corner count without a chevron; Demo is a compact rectangular menu."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 225656.png"]
+    },
+    {
+      "filename": "topbar-fa-light.png",
+      "variant": "fa-light",
+      "SHA256": "a69816d648c50e1bb189d2252a53d2033f6e536ef0e3e9394b4b40eac0cabf1e",
+      "reviewer": "/root/c5_documents_returns",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": "Single target-language EN circle and thin bordered/glowing 40-pixel top-bar controls; search/location pills and RTL breadcrumbs legible. Demo controls stay in the Demo menu.",
+      "ownerReferences": [
+        {
+          "filename": "Screenshot 2026-10-09 225656.png",
+          "SHA256": "a4e150b31c714e084d15d999aae3de9f743c69a732da1de98bba0b3f748ae264",
+          "comparison": "requested presentation correction visible in this final image"
+        }
+      ]
+    },
+    {
+      "filename": "topbar-phone.png",
+      "variant": "phone",
+      "SHA256": "3c5c0ab1b7a8f7300a175573dd172936bfc1c235d3a93baec5a5562d59afdd4d",
+      "reviewer": "/root/c5_dates",
+      "openedIndividually": true,
+      "findings": [],
+      "observations": [
+        "Uniform blue borders and soft glow, circular icon controls, target Persian language circle, compact search and current North York location pills; wrapping preserves every visible control at390px."
+      ],
+      "ownerReferences": ["Screenshot 2026-10-09 225656.png"]
+    }
+  ],
+  "additionalRootInspection": {
+    "reviewer": "/root",
+    "sourceCommit": "f96d36944bc72e16b09d8a7d25cc964d584dce23",
+    "method": "Each listed image independently opened with view_image and compared with previously individually opened owner annotations. Computed geometry is established separately by browser audit.",
+    "images": [
+      {
+        "filename": "posted-invoice-en-light.png",
+        "SHA256": "ec5e815919340a475a222a23907ebccc7804aaecb7b608c8db6af226f867be5f",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Invoice/status/header, compact matched header actions; cents costs and case plurals; five totals labels visibly adjacent to amounts; retained original whole page visible with compact toolbar."
+      },
+      {
+        "filename": "return-policy-en-light.png",
+        "SHA256": "3c81883c8453df867703178dfe73dd475cfd591bed48c811b097952bf44fa0c6",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Five visible numbered steps with bold titles and short sentences; one-line summary and 640px desktop dialog, no inner card; rectangular Secondary download and Primary Close."
+      },
+      {
+        "filename": "date-quick-add-en-light.png",
+        "SHA256": "a53ac196c85117a4bcf2c34dcc64d3a7e31915d21f1045c855d2c1140a0bde6c",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Selected product clears the search icon; date/location/Add and optional fields legible; intrinsic Remove plus More; Columns directly beside result count."
+      },
+      {
+        "filename": "correct-invoice-en-dark.png",
+        "SHA256": "ad9bcb60b47da945be373d79f6e835b9206a0fff8804f5ecc08a70473b339f49",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Dark correction fields show clear borders and resting dropdown glow; grouped rounded Yes/No choices retained; four-decimal editable source costs preserved."
+      },
+      {
+        "filename": "posted-invoice-fa-light.png",
+        "SHA256": "be6a881774e1d1ec8f7f1982c6c188f9c2b5d54ea0657eba338187c12af132b0",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Mirrored RTL header and adjacent totals; LTR currency values remain coherent; Demo Floor Worker actor localized; retained English original document remains unchanged."
+      },
+      {
+        "filename": "original-whole-page-phone.png",
+        "SHA256": "4a681893fbf144c90af9f0a15bdbfe470f0bc88663cd1c2a3d9558caa18e80c2",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Actual phone page returns to scroll start: document heading, compact viewer controls and the whole retained original page are unobscured. Table starts at product identity and scrolls within its own container; phone wrap keeps header actions reachable."
+      },
+      {
+        "filename": "lookup-dates-phone.png",
+        "SHA256": "8843b131edffd52334700130af30268b3ad1d5c5f4cb42da80146a83fa9980c9",
+        "openedIndividually": true,
+        "findings": [],
+        "observations": "Actual phone scroll/focus reset preserves visible search and heading; Dates location, Off switch, date and intrinsic Add remain legible without sticky overlap or focus-strip artifact."
+      }
+    ]
+  }
+}

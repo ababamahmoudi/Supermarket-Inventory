@@ -431,14 +431,31 @@ describe("C3 draft-order and approval Undo", () => {
     expect(state.offers.find((item) => item.id === offer.id)!.status).toBe(
       "stopped",
     );
+    const retired = structuredClone(
+      state.offers.find((item) => item.id === offer.id)!,
+    );
     activateOffer(state, offer, "floor_worker");
+    const reactivated = state.offers.find(
+      (item) =>
+        item.status === "active" &&
+        item.company_id === offer.company_id &&
+        item.product_code === offer.product_code &&
+        item.branch === offer.branch &&
+        item.scope === offer.scope,
+    )!;
+    expect(reactivated.id).not.toBe(offer.id);
+    expect(state.offers.find((item) => item.id === offer.id)).toEqual(retired);
     const stopped = capture(state, context, () =>
-      stopOffer(state, offer.id, false, "floor_worker"),
+      stopOffer(state, reactivated.id, false, "floor_worker"),
     );
+    expect(
+      state.offers.find((item) => item.id === reactivated.id)!.status,
+    ).toBe("stopped");
     reverseActivity(state, context, stopped.id, "undo");
-    expect(state.offers.find((item) => item.id === offer.id)!.status).toBe(
-      "active",
-    );
+    expect(
+      state.offers.find((item) => item.id === reactivated.id)!.status,
+    ).toBe("active");
+    expect(state.offers.find((item) => item.id === offer.id)).toEqual(retired);
   });
   it("undoes waitlist addition/removal without altering another location's queue", () => {
     const state = initialState(),

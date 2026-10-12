@@ -29,22 +29,7 @@
   display: none;
 }
 .undo-toast .undo-toast-link {
-  min-inline-size: 40px;
-  min-block-size: 40px;
-  padding: 2px 0;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.undo-toast-link:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 5px;
-  border-radius: 4px;
+  flex: 0 0 auto;
 }
 .undo-toast-error {
   grid-column: 1 / -1;

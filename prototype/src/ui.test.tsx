@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -31,6 +32,7 @@ import {
   Field,
   Menu,
   MenuItem,
+  Button,
   NumberField,
   Radio,
   Select,
@@ -47,6 +49,33 @@ beforeEach(async () => {
 function show(children: ReactNode) {
   return render(<DemoProvider>{children}</DemoProvider>);
 }
+
+it.each([
+  ["Waiting for pickup", "info"],
+  ["در انتظار جمع‌آوری", "info"],
+  ["Waiting for credit", "pending"],
+  ["در انتظار اعتبار", "pending"],
+  ["در انتظار بستانکاری", "pending"],
+  ["Pending credit", "pending"],
+  ["اعتبار در انتظار", "pending"],
+  ["Closed", "approved"],
+  ["بسته‌شده", "approved"],
+  ["Credited", "approved"],
+  ["اعتبار دریافت‌شده", "approved"],
+  ["Replaced", "approved"],
+  ["جایگزین‌شده", "approved"],
+  ["Written off", "neutral"],
+  ["سوخت‌شده", "neutral"],
+  ["Cancelled", "neutral"],
+  ["لغوشده", "neutral"],
+])(
+  "gives %s its canonical tone despite a conflicting legacy tone",
+  (label, tone) => {
+    show(<Badge tone="danger">{label}</Badge>);
+    expect(screen.getByText(label)).toHaveClass(tone);
+    expect(screen.getByText(label)).not.toHaveClass("danger");
+  },
+);
 
 const statuses = [
   { value: "draft", label: "Draft" },
@@ -575,6 +604,46 @@ describe("styled Dropzone", () => {
 });
 
 describe("styled Menu", () => {
+  it("keeps icon-menu text accessible, preserves rich badges and restores keyboard focus", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn();
+    show(
+      <>
+        <Menu
+          iconOnly
+          label="More actions"
+          icon={<span aria-hidden="true">⋯</span>}
+        >
+          <MenuItem onClick={action}>Stop tracking this product</MenuItem>
+        </Menu>
+        <Menu
+          iconOnly
+          aria-label="Notifications, 3 unread"
+          label={<span className="notification-count">3</span>}
+        >
+          <MenuItem onClick={vi.fn()}>Approvals</MenuItem>
+        </Menu>
+      </>,
+    );
+    const trigger = screen.getByRole("button", { name: "More actions" });
+    expect(trigger).toHaveClass("ui-icon-button", "button-secondary");
+    expect(within(trigger).getByText("More actions")).toHaveClass("sr-only");
+    const notifications = screen.getByRole("button", {
+      name: "Notifications, 3 unread",
+    });
+    expect(within(notifications).getByText("3")).toBeVisible();
+    expect(notifications.querySelector(".lucide-chevron-down")).toBeNull();
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+    const item = screen.getByRole("menuitem", {
+      name: "Stop tracking this product",
+    });
+    await waitFor(() => expect(item).toHaveFocus());
+    await user.keyboard("{Enter}");
+    expect(action).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
   it("moves among enabled actions and restores trigger focus after Escape", async () => {
     const user = userEvent.setup();
     const onLock = vi.fn();
@@ -758,4 +827,97 @@ it("keeps header and financial body fragments in the same shared table columns",
     expect(cell.style.textAlign).toBe(header.style.textAlign);
   }
   expect(warn).not.toHaveBeenCalled();
+});
+
+it("reflows weighted columns on resize and column changes while reserving intrinsic actions", () => {
+  let width = 900;
+  const observers = new Set<ResizeObserverCallback>();
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+        observers.add(callback);
+      }
+      callback: ResizeObserverCallback;
+      observe() {}
+      disconnect() {
+        observers.delete(this.callback);
+      }
+    },
+  );
+  const rectangle = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockImplementation(function (this: HTMLElement) {
+      const measuredWidth = this.classList.contains("ui-data-table")
+        ? width
+        : this.classList.contains("ui-button")
+          ? 80
+          : 0;
+      return { width: measuredWidth, height: 40 } as DOMRect;
+    });
+  const contents = (hideSupplier: boolean) => (
+    <DataTable
+      columns={[
+        { key: "reference", width: 108 },
+        { key: "supplier", width: 220, hidden: hideSupplier },
+        { key: "status", width: 172 },
+        { key: "actions", actions: true },
+      ]}
+    >
+      <thead>
+        <tr>
+          <th>Return #</th>
+          <th>Supplier</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Return #1</td>
+          <td>Fictional supplier</td>
+          <td>Waiting for pickup</td>
+          <td style={{ paddingInlineStart: 12, paddingInlineEnd: 12 }}>
+            <Button variant="secondary">Record pickup</Button>
+          </td>
+        </tr>
+      </tbody>
+    </DataTable>
+  );
+  try {
+    const rendered = show(contents(false));
+    const widths = () =>
+      Array.from(rendered.container.querySelectorAll("col")).map((column) => {
+        expect(column.style.width).toMatch(/^\d+(?:\.\d+)?px$/);
+        return parseFloat(column.style.width);
+      });
+    let measured = widths();
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(900);
+    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
+    expect(measured[2] / measured[0]).toBeCloseTo(172 / 108);
+    expect(measured[3]).toBe(104);
+
+    width = 640;
+    act(() => {
+      for (const callback of Array.from(observers))
+        callback([], {} as ResizeObserver);
+    });
+    measured = widths();
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
+    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
+    expect(measured[3]).toBe(104);
+    rendered.rerender(<DemoProvider>{contents(true)}</DemoProvider>);
+    measured = widths();
+    expect(measured).toHaveLength(3);
+    expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
+    expect(measured[1] / measured[0]).toBeCloseTo(172 / 108);
+    expect(measured[2]).toBe(104);
+    expect(observers.size).toBe(1);
+    rendered.unmount();
+    expect(observers.size).toBe(0);
+  } finally {
+    rectangle.mockRestore();
+    vi.unstubAllGlobals();
+  }
 });

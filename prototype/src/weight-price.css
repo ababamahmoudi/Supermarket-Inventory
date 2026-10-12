@@ -14,6 +14,15 @@
   font-weight: 400;
   white-space: nowrap;
 }
+.weight-price-stacked {
+  display: inline-grid;
+  justify-items: end;
+  gap: 4px;
+}
+.weight-price-stacked .weight-price-secondary {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
 .shelf-label .shelf-label-content .price .weight-price {
   flex-wrap: nowrap;
   gap: 0.1em;

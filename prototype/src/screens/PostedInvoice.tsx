@@ -11,7 +11,13 @@ import {
   refusedTotals,
 } from "../invoice";
 import { effectiveInvoiceLocation } from "../received";
-import { DateText, LtrText, Money, ProductName } from "../presentation";
+import {
+  DateText,
+  demoUserLabel,
+  LtrText,
+  Money,
+  ProductName,
+} from "../presentation";
 import { Badge, Button, Card, DataTable } from "../ui";
 import type { DemoInvoice, InvoiceLine } from "../types";
 import "./invoice-document-c4.css";
@@ -23,7 +29,11 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
       <>
         {line.quantity_unit === "cases" && (
           <>
-            <LtrText>{line.quantity_entered}</LtrText> {t("cases", "کارتن")}{" "}
+            <LtrText>{line.quantity_entered}</LtrText>{" "}
+            {t(
+              new Decimal(line.quantity_entered || 0).eq(1) ? "case" : "cases",
+              "کارتن",
+            )}{" "}
             ·{" "}
           </>
         )}
@@ -40,21 +50,20 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
         )}
       </>
     );
-  if ((line.units_per_case ?? 1) > 1)
+  if ((line.units_per_case ?? 1) > 1) {
+    const cases = new Decimal(line.qty_invoiced)
+      .div(line.units_per_case!)
+      .toDecimalPlaces(4);
     return (
       <>
-        <LtrText>
-          {new Decimal(line.qty_invoiced)
-            .div(line.units_per_case!)
-            .toDecimalPlaces(4)
-            .toString()}
-        </LtrText>{" "}
-        {t("cases", "کارتن")}{" "}
+        <LtrText>{cases.toString()}</LtrText>{" "}
+        {t(cases.eq(1) ? "case" : "cases", "کارتن")}{" "}
         <span className="muted">
           (<LtrText>{line.qty_invoiced}</LtrText> {t("units", "واحد")})
         </span>
       </>
     );
+  }
   return (
     <LtrText>
       {tCount(
@@ -91,16 +100,18 @@ export function PostedInvoice({
   const refused = refusedTotals(invoice);
   return (
     <>
-      <Card
-        title={invoice.supplier_invoice_number}
-        className="posted-invoice-document"
-      >
-        <div className="inline-actions">
-          <Badge tone="approved">
-            {versions.length > 1
-              ? t("Corrected", "اصلاح‌شده")
-              : t("Posted", "ثبت‌شده")}
-          </Badge>
+      <Card className="posted-invoice-document">
+        <div className="posted-invoice-title-row">
+          <div className="posted-invoice-title">
+            <h2>
+              <LtrText>{invoice.supplier_invoice_number}</LtrText>
+            </h2>
+            <Badge tone="approved">
+              {versions.length > 1
+                ? t("Corrected", "اصلاح‌شده")
+                : t("Posted", "ثبت‌شده")}
+            </Badge>
+          </div>
           {role === "supervisor" && current && (
             <div className="actions">
               <Button onClick={onCorrect}>
@@ -150,7 +161,11 @@ export function PostedInvoice({
           </div>
           <div>
             <dt>{t("Received by", "دریافت‌کننده")}</dt>
-            <dd>{invoice.receiving_employee ?? "—"}</dd>
+            <dd>
+              {invoice.receiving_employee
+                ? demoUserLabel(invoice.receiving_employee, lang)
+                : "—"}
+            </dd>
           </div>
           <div>
             <dt>{t("Payment terms", "شرایط پرداخت")}</dt>
@@ -282,18 +297,19 @@ export function PostedInvoice({
                     </p>
                   </td>
                   <td className="numeric">
-                    <Money
-                      value={
-                        line.sold_by === "weight"
-                          ? (line.source_cost_before_tax ??
-                            line.unit_cost_before_tax)
-                          : line.unit_cost_before_tax
-                      }
-                      decimals={4}
-                    />
-                    {line.sold_by === "weight" && (
-                      <LtrText>/{line.source_cost_unit ?? "lb"}</LtrText>
-                    )}
+                    <LtrText>
+                      <Money
+                        value={
+                          line.sold_by === "weight"
+                            ? (line.source_cost_before_tax ??
+                              line.unit_cost_before_tax)
+                            : line.unit_cost_before_tax
+                        }
+                        decimals={2}
+                      />
+                      {line.sold_by === "weight" &&
+                        `/${line.source_cost_unit ?? "lb"}`}
+                    </LtrText>
                   </td>
                   <td className="numeric">
                     <Money value={line.line_total} />
@@ -354,7 +370,7 @@ export function PostedInvoice({
               />
             </dd>
           </div>
-          <div>
+          <div className="posted-invoice-payable">
             <dt>{t("Payable", "قابل پرداخت")}</dt>
             <dd>
               <Money
@@ -387,16 +403,16 @@ export function PostedInvoice({
         {versions.length > 1 && (
           <div className="posted-invoice-versions">
             {versions.map((version, index) => (
-              <a
-                key={version.version_id}
-                className="button button-secondary"
-                href={`#invoices?id=${encodeURIComponent(original.id)}&version=${encodeURIComponent(version.version_id)}`}
-              >
-                {index === 0
-                  ? t("Original invoice", "اصل فاکتور")
-                  : t("Correction", "اصلاح")}{" "}
-                {index > 0 && <LtrText>{index}</LtrText>}
-              </a>
+              <Button key={version.version_id} asChild variant="secondary">
+                <a
+                  href={`#invoices?id=${encodeURIComponent(original.id)}&version=${encodeURIComponent(version.version_id)}`}
+                >
+                  {index === 0
+                    ? t("Original invoice", "اصل فاکتور")
+                    : t("Correction", "اصلاح")}{" "}
+                  {index > 0 && <LtrText>{index}</LtrText>}
+                </a>
+              </Button>
             ))}
           </div>
         )}

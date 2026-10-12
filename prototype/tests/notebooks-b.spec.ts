@@ -43,7 +43,7 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Add note", exact: true }).click();
 }
 
-test("Notes search has a search icon, a placeholder, 44px controls and the singular note count", async ({
+test("Notes search has a search icon, a placeholder, 44px fields, 40px actions and the singular note count", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -54,12 +54,22 @@ test("Notes search has a search icon, a placeholder, 44px controls and the singu
   await search.fill("Sunflower oil");
   await expect(page.locator(".filter-count")).toHaveText("1 note");
   await expect(page.locator(".filter-count")).not.toHaveText("1 notes");
-  const heights = await page.locator(".filter-toolbar").evaluate((el) =>
+  const controls = await page.locator(".filter-toolbar").evaluate((el) =>
     Array.from(el.querySelectorAll("input,button,.ui-checked-control"))
       .filter((control) => control.getBoundingClientRect().height > 0)
-      .map((control) => control.getBoundingClientRect().height),
+      .map((control) => ({
+        height: control.getBoundingClientRect().height,
+        kind: control.matches("input,.ui-input,.ui-checked-control")
+          ? "field"
+          : control.getAttribute("data-control-kind"),
+      })),
   );
-  expect(heights.every((height) => Math.abs(height - 44) <= 1)).toBe(true);
+  for (const control of controls) {
+    expect(["field", "action", "icon"]).toContain(control.kind);
+    expect(
+      Math.abs(control.height - (control.kind === "field" ? 44 : 40)),
+    ).toBeLessThanOrEqual(1);
+  }
 });
 
 test("Supervisor configures a custom notebook and entries persist with author, branch and enabled fields", async ({

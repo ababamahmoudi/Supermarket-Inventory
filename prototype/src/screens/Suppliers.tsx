@@ -173,13 +173,6 @@ export default function Suppliers() {
           },
         ]
       : []),
-    {
-      key: "actions",
-      label: t("Actions", "عملیات"),
-      width: 104,
-      align: "end",
-      actions: true,
-    },
   ]);
   if (role !== "supervisor" && role !== "floor_worker")
     return (
@@ -293,16 +286,19 @@ export default function Suppliers() {
             className="suppliers-toolbar"
             aria-label={t("Supplier filters", "فیلتر تأمین‌کنندگان")}
             count={
-              <>
-                {translateCount(
-                  "{{count}} supplier",
-                  "{{count}} suppliers",
-                  "{{count}} تأمین‌کننده",
-                  "{{count}} تأمین‌کننده",
-                  rows.length,
-                  lang,
-                )}
-              </>
+              <span className="filter-toolbar-end">
+                <span>
+                  {translateCount(
+                    "{{count}} supplier",
+                    "{{count}} suppliers",
+                    "{{count}} تأمین‌کننده",
+                    "{{count}} تأمین‌کننده",
+                    rows.length,
+                    lang,
+                  )}
+                </span>
+                {tableColumns.chooser}
+              </span>
             }
             search={
               <input
@@ -361,7 +357,6 @@ export default function Suppliers() {
             >
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
-            {tableColumns.chooser}
           </FilterToolbar>
           <DataTable
             className={
@@ -412,7 +407,6 @@ export default function Suppliers() {
                     </th>
                   </>
                 )}
-                <th>{t("Actions", "عملیات")}</th>
               </tr>
             </thead>
             <tbody>
@@ -427,7 +421,16 @@ export default function Suppliers() {
                   }}
                 >
                   <td>
-                    <LtrText>{supplier.name}</LtrText>
+                    <a
+                      href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openSupplier(supplier.name);
+                      }}
+                    >
+                      <LtrText>{supplier.name}</LtrText>
+                    </a>
                   </td>
                   <td>
                     <Badge
@@ -467,18 +470,6 @@ export default function Suppliers() {
                       </td>
                     </>
                   )}
-                  <td>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openSupplier(supplier.name);
-                      }}
-                    >
-                      {t("View", "نمایش")}
-                    </Button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -727,7 +718,6 @@ export default function Suppliers() {
                     { width: "125px", align: "end" as const },
                   ]
                 : []),
-              { width: "80px", actions: true },
             ]}
           >
             <thead>
@@ -743,14 +733,15 @@ export default function Suppliers() {
                     <th>{t("Outstanding", "مانده پرداخت")}</th>
                   </>
                 )}
-                <th>{t("Actions", "عملیات")}</th>
               </tr>
             </thead>
             <tbody>
               {detail.invoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td>
-                    <LtrText>{invoice.number}</LtrText>
+                    <a href={`#invoices?id=${encodeURIComponent(invoice.id)}`}>
+                      <LtrText>{invoice.number}</LtrText>
+                    </a>
                   </td>
                   <td>
                     <DateText value={invoice.received} />
@@ -768,19 +759,6 @@ export default function Suppliers() {
                       <td>{money(invoice.financial.outstanding)}</td>
                     </>
                   )}
-                  <td>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() =>
-                        navigate(
-                          `invoices?id=${encodeURIComponent(invoice.id)}`,
-                        )
-                      }
-                    >
-                      {t("View", "نمایش")}
-                    </Button>
-                  </td>
                 </tr>
               ))}
             </tbody>

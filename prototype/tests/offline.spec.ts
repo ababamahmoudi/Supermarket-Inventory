@@ -33,7 +33,9 @@ test("all screens and both languages work offline with no console errors", async
   await context.setOffline(true);
   for (const language of ["en", "fa"]) {
     if (language === "fa")
-      await page.getByRole("button", { name: "فارسی", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Switch to Persian", exact: true })
+        .click();
     await expect(page.locator("html")).toHaveAttribute(
       "dir",
       language === "fa" ? "rtl" : "ltr",

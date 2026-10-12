@@ -200,7 +200,7 @@ it("lists a separate pending claim and a retained RM link in Supervisor Payables
   await user.click(
     screen.getByRole("button", { name: "Record evidenced pickup" }),
   );
-  await user.click(screen.getAllByRole("button", { name: "View" })[0]);
+  await user.click(screen.getByRole("link", { name: "Fresh Valley Foods" }));
   expect(
     screen.getByRole("heading", { name: "Pending credit" }),
   ).toBeInTheDocument();

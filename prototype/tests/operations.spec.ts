@@ -234,7 +234,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   await page
     .getByRole("row")
     .filter({ hasText: "Fresh Valley Foods" })
-    .getByRole("button", { name: "View", exact: true })
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
     .click();
   await expect(
     page.getByText("$169.79", { exact: true }).first(),
@@ -369,7 +369,9 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   await expect(
     page.getByRole("heading", { name: "Date tracking", exact: true, level: 1 }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "فارسی", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Switch to Persian", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "پیگیری تاریخ", exact: true, level: 1 }),
@@ -412,7 +414,7 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   }
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
-    page.getByRole("heading", { name: /^Return #1 · created/, level: 1 }),
+    page.getByRole("heading", { name: /^Return #1$/, level: 1 }),
   ).toBeVisible();
 
   await visit(page, "Notes");
@@ -474,7 +476,7 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   await page
     .getByRole("row")
     .filter({ hasText: "Fresh Valley Foods" })
-    .getByRole("button", { name: "View", exact: true })
+    .getByRole("link", { name: "Fresh Valley Foods", exact: true })
     .click();
   await page
     .getByRole("button", {

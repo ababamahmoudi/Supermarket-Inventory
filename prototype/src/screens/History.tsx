@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 import { useDemo } from "../store";
 import {
   canReverse,
@@ -24,6 +25,8 @@ import {
   EmptyState,
   Field,
   FilterToolbar,
+  Menu,
+  MenuItem,
   PageHeader,
   Select,
 } from "../ui";
@@ -40,22 +43,34 @@ function InvoiceVersionLinks({ entry }: { entry: Activity }) {
   if (!after?.version_id) return null;
   const route = `#invoices?id=${encodeURIComponent(entry.entity_id)}&version=`;
   return (
-    <div className="history-invoice-version-links">
-      <Button asChild variant="secondary" size="sm">
-        <a href={`${route}original`}>{t("View original", "نمایش اصل")}</a>
-      </Button>
-      {before?.version_id && before.version_id !== "original" && (
-        <Button asChild variant="secondary" size="sm">
-          <a href={`${route}${encodeURIComponent(before.version_id)}`}>
-            {t("View previous version", "نمایش نسخه قبلی")}
-          </a>
-        </Button>
-      )}
+    <div className="actions history-invoice-version-links">
       <Button asChild variant="secondary" size="sm">
         <a href={`${route}${encodeURIComponent(after.version_id)}`}>
           {t("View corrected", "نمایش اصلاح‌شده")}
         </a>
       </Button>
+      <Menu
+        iconOnly
+        icon={<MoreHorizontal size={20} aria-hidden="true" />}
+        label={t("More actions", "کارهای بیشتر")}
+      >
+        <MenuItem
+          onClick={() => {
+            window.location.hash = `${route}original`;
+          }}
+        >
+          {t("View original", "نمایش اصل")}
+        </MenuItem>
+        {before?.version_id && before.version_id !== "original" && (
+          <MenuItem
+            onClick={() => {
+              window.location.hash = `${route}${encodeURIComponent(before.version_id!)}`;
+            }}
+          >
+            {t("View previous version", "نمایش نسخه قبلی")}
+          </MenuItem>
+        )}
+      </Menu>
     </div>
   );
 }
@@ -333,7 +348,7 @@ export default function History() {
           <DataTable
             className="history-table"
             columns={[
-              { width: 145 },
+              { width: 170 },
               { width: 160 },
               { width: 110 },
               { width: 190 },

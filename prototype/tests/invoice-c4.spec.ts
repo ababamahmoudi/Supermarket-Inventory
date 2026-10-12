@@ -162,16 +162,23 @@ for (const language of ["en", "fa"] as const)
       .first();
     await expect(
       row.getByRole("link", {
-        name: fa ? "نمایش اصل" : "View original",
-        exact: true,
-      }),
-    ).toHaveAttribute("href", /version=original/);
-    await expect(
-      row.getByRole("link", {
         name: fa ? "نمایش اصلاح‌شده" : "View corrected",
         exact: true,
       }),
     ).toHaveAttribute("href", new RegExp(`version=${correction.id}`));
+    await row
+      .getByRole("button", {
+        name: fa ? "کارهای بیشتر" : "More actions",
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole("menuitem", {
+        name: fa ? "نمایش اصل" : "View original",
+        exact: true,
+      })
+      .click();
+    await expect(page).toHaveURL(/version=original/);
   });
 
 /** A real two-page PDF built from vector content, uploaded through the same file control. */

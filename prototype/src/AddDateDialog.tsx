@@ -226,7 +226,7 @@ function AddDateForm({
         <div className="c3-dialog-actions">
           <Button
             type="button"
-            variant="quiet"
+            variant="secondary"
             onClick={() => onOpenChange(false)}
           >
             {t("Cancel", "لغو")}
@@ -349,7 +349,7 @@ function RemoveDateForm({
         </p>
       )}
       <div className="c3-dialog-actions">
-        <Button variant="quiet" onClick={() => onOpenChange(false)}>
+        <Button variant="secondary" onClick={() => onOpenChange(false)}>
           {t("Cancel", "لغو")}
         </Button>
         <Button
@@ -441,7 +441,7 @@ function StopTrackingForm({
         </p>
       )}
       <div className="c3-dialog-actions">
-        <Button variant="quiet" onClick={() => onOpenChange(false)}>
+        <Button variant="secondary" onClick={() => onOpenChange(false)}>
           {t("Cancel", "لغو")}
         </Button>
         <Button
