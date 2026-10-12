@@ -1,0 +1,234 @@
+{
+  "stage": "c6",
+  "applicationSourceCommit": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+  "sourceCommit": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+  "publicationKind": "documentation-only preparation; application checks belong to the source above",
+  "branch": "feat/prototype-c6-functional-fixes",
+  "unit": {
+    "status": "passed",
+    "exitCode": 0,
+    "sessionId": 70965,
+    "passed": 962,
+    "failed": 0,
+    "pending": 0,
+    "files": 87,
+    "sourceArtifact": "/tmp/c6-7862eac-unit-results.json",
+    "artifactSHA256": "0bca61b93005bb65cf061b8c76f55aa5beb53b8eb8febe896effe794146b457a"
+  },
+  "pricing": {
+    "status": "passed",
+    "seedCases": 23,
+    "checks": 68,
+    "passed": 68,
+    "includedInUnitTotal": true,
+    "testFile": "prototype/src/pricing.test.ts",
+    "seedSHA256": "3ec285adc218fac456e564f3cc8981a5f373b3a272a5c0bb8632e9c19ca5f7bb"
+  },
+  "lintFormatTypeBuild": {
+    "status": "passed",
+    "commands": ["npm run lint", "npm run build"],
+    "sourceArtifact": "/tmp/c6-7862eac-lint-build.log",
+    "artifactSHA256": "353470dbfd36d5f1df02d26a64f8d86438cfd88d2d5a89dec5e468d1db177c50",
+    "nonfatalBuildWarning": "Some bundled chunks exceed 500 kB; the build exits successfully."
+  },
+  "ci": {
+    "runId": 38228438796,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38228438796",
+    "sourceCommit": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+    "reportedConclusion": "success",
+    "requiredJobs": [
+      {
+        "name": "Prototype lint, pricing and unit tests, build, and browsers",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "prototypeBrowserCommand": "npm run e2e -- --workers=2",
+    "fullBrowserNumericTotals": null,
+    "provenance": "The coordinating agent independently queried the live GitHub API and verified this exact source/run and both required job successes. The documentation agent read that verified result and retained its proof file; it did not perform another API query.",
+    "transport": {
+      "mode": "LIVE GitHub API",
+      "independentlyVerifiedByRootLiveAPI": true,
+      "docAgentQueriedLiveAPI": false
+    },
+    "laterDocumentationHeadChecks": "Required again on the final publication head before merge.",
+    "independentlyVerifiedByRootLiveAPI": true,
+    "docAgentQueriedLiveAPI": false,
+    "verifiedAtUTC": "2026-10-12T10:03:11.608397+00:00",
+    "proofFile": "c6-7862eac-ci-live-proof.json",
+    "earlierRootLiveVerificationAtUTC": "2026-10-12T09:31:42Z",
+    "proofSHA256": "43301a562e82bc153b7c43881afeb94e3b5c2e9d1d60b152108e453e082b2676",
+    "proofMethod": "Actual live GitHub REST API through the configured HTTPS proxy",
+    "status": "passed",
+    "browserStep": {
+      "name": "Test desktop and phone browser workflows",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "focusedLocalBrowser": {
+    "scope": "selected final CI regressions; not the full suite",
+    "sourceCommit": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 1,
+    "flaky": 0,
+    "skipExplanation": "Existing desktop-only check is inapplicable in the phone project.",
+    "sourceArtifact": "/tmp/c6-final-eight-ci-fixes.log",
+    "artifactSHA256": "d3ec6951916c37477bd58fe9758a4376eed75d01a5b1a433dd16a3324ac654cb",
+    "summedWithOtherRuns": false
+  },
+  "capture": {
+    "status": "passed",
+    "exitCode": 0,
+    "sessionId": 59393,
+    "screenshots": 85,
+    "scenes": 17,
+    "variants": ["en-light", "en-dark", "fa-light", "mid-900", "phone-dark"],
+    "browserErrors": 0,
+    "layoutFindings": 0,
+    "buildFingerprint": "ab56e36e829b674039e2420b38b7385b9c62e40d88f27649eccad5ce21765ce1",
+    "beforeAfterAssetGuards": 170,
+    "sourceManifest": "../redesign-screenshots/pr-c6/capture-results.json",
+    "manifestSHA256": "f949f95a71fe1d52a5ca1ffabff5f07e43069d06e3ec0e29b78b8cd8b0c88670",
+    "pngBytePreservation": "All 85 copied PNGs matched the original SHA256 and capture manifest; no image editing."
+  },
+  "gallery": {
+    "status": "passed",
+    "strict": true,
+    "diagnostic": false,
+    "screenshots": 85,
+    "individuallyReviewed": 85,
+    "originalReferences": 19,
+    "warnings": [],
+    "html": "../redesign-screenshots/pr-c6/gallery.html",
+    "manifest": "../redesign-screenshots/pr-c6/gallery.manifest.json",
+    "htmlSHA256": "c132b0b707dbd92ac0849ab87e42d5f22a4dac899020790fdc24388086c220be",
+    "manifestSHA256": "9ff3ff3cca7e748e2279eb646cc4f0fde678f6a5edb1ecaaaab89a1cce813299"
+  },
+  "individualReviews": [
+    {
+      "variant": "en-light",
+      "path": "../redesign-screenshots/pr-c6/visual-review-en-light.json",
+      "sha256": "4659c08237bb56b7c567c342ade8dd2da9f8c2adef18a801fdee9ec8cac96a13",
+      "individuallyOpened": 17,
+      "unresolvedRealFailures": 0
+    },
+    {
+      "variant": "en-dark",
+      "path": "../redesign-screenshots/pr-c6/visual-review-en-dark.json",
+      "sha256": "0304f40fb66f0fcccc9bb5c1a46d8e2abc9820bb0463d9d6c7911cca93975e41",
+      "individuallyOpened": 17,
+      "unresolvedRealFailures": 0
+    },
+    {
+      "variant": "fa-light",
+      "path": "../redesign-screenshots/pr-c6/visual-review-fa-light.json",
+      "sha256": "0d71f9bea3f3359fbc5286ff2bbd25c158d505ab1ddc1fd763e63a7976a97837",
+      "individuallyOpened": 17,
+      "unresolvedRealFailures": 0
+    },
+    {
+      "variant": "mid-900",
+      "path": "../redesign-screenshots/pr-c6/visual-review-mid-900.json",
+      "sha256": "738c615a0fc924d4cc0a5809fbe34d6ac66aedf21dcbe9d929ac2e69f63390fd",
+      "individuallyOpened": 17,
+      "unresolvedRealFailures": 0
+    },
+    {
+      "variant": "phone-dark",
+      "path": "../redesign-screenshots/pr-c6/visual-review-phone-dark.json",
+      "sha256": "9555f7cdea9f3a1717b686dabe970cbf907fc48d08798edc2f5042ba01bb7aa8",
+      "individuallyOpened": 17,
+      "unresolvedRealFailures": 0
+    }
+  ],
+  "protectedSourceComparison": {
+    "priorApplicationSource": "2cc823725a819aaf239f54ff95415f63ead7cb0f",
+    "scope": "Selected storage, signed-return guards, pricing, print modules and owner seeds are byte-identical. This does not claim all application files are unchanged or substitute old failing full-run results for final verification.",
+    "files": [
+      {
+        "path": "prototype/src/file-database.ts",
+        "sha256": "e39ff7d26e7088db490b40c9e50366717c735b5cb9683995116e585d58d0a3d1",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/signed-return-pickups.ts",
+        "sha256": "18a9b4f014679f9b9ca4c2ebc7719fa1d7da76471c3bfefa04bff229ee6534f3",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/return-item-resolutions.ts",
+        "sha256": "a799abd5ced2d22380c47ec0913808df36b29e58c8b365b108afb6de213bdd19",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/pricing.ts",
+        "sha256": "4c0c586af334eb1e0e998f6bac681a9c72c8790efa8195c12f19eaf4de3a639d",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/return-memo.tsx",
+        "sha256": "8b5f3ba40931f4d8e30a48fa6b1d4a32de551ef2ec09bc845c564417817147c3",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/order-print.tsx",
+        "sha256": "f2f6b5c17868b90e6f8b52c824ff2507313ee7e488ee99925a3ad05fcc81550a",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/operational-print.tsx",
+        "sha256": "17a2587cfff526c19fde3c4baf1f0119858a806c44f1e5cbcd611d6d952011f9",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/operational-print.css",
+        "sha256": "fef07a73fdf3645bafaf9029380e4003d32048c06400bd05ede9c81dd6596650",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "prototype/src/label-workflow.ts",
+        "sha256": "f68cc859b61cca722d27acd66679705100174497419c4b87e9ac2d8f22ba4341",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "seed/pricing-test-cases.json",
+        "sha256": "3ec285adc218fac456e564f3cc8981a5f373b3a272a5c0bb8632e9c19ca5f7bb",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "seed/demo-data.json",
+        "sha256": "858ee795ef3c233e1e68cf965425f88aad4aca50e160558092311e2e81cd5f45",
+        "identicalToPriorProtectedSource": true
+      },
+      {
+        "path": "seed/arzon-config.json",
+        "sha256": "f149cb145445be9df547e778591e014835bcc3a14c1d05e2bda92dd49d8e1a32",
+        "identicalToPriorProtectedSource": true
+      }
+    ]
+  },
+  "limitations": [
+    "The documentation agent did not repeat the live API query; it retains the coordinating agent's independently verified exact-source live CI proof.",
+    "Actual Safari execution and physical-printer alignment are not verified.",
+    "Final C7 retouch, its own 85-image gallery and final checks remain separate and pending.",
+    "Static screenshots do not independently prove dynamic workflows, permissions, signed evidence, money calculations or durable files; the recorded automated checks are separate evidence.",
+    "No complete final cloud-local browser run on 7862eac is claimed. Full browser success is the live-verified GitHub workflow; selected local regressions remain separate."
+  ],
+  "openOwnerQuestions": [
+    "Owner/Manager permission mapping for Correct pickup remains unanswered; Supervisor is not silently granted that authority.",
+    "Final dark Primary colour/text choice remains unanswered; accessible interim treatment is not owner approval."
+  ],
+  "notFinalEvidence": "Older local full runs on superseded source, including failing 2cc8237 results, are not marked passed or summed into the final browser claim.",
+  "nonsecureHTTPOriginTest": {
+    "transport": "SIMULATED reserved.invalid cloud test origin only",
+    "actualBrowserOperations": "Real IndexedDB file writes, legacy migration, original downloads and byte verification remain real browser operations.",
+    "scopeLimitation": "This transport qualification does not apply to the independently verified live GitHub CI API."
+  }
+}

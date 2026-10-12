@@ -1,0 +1,192 @@
+{
+  "observedAt": "2026-10-12T10:03:11.608397+00:00",
+  "method": "Actual live GitHub REST API through the configured HTTPS proxy",
+  "simulation": false,
+  "verifiedBy": "root",
+  "run": {
+    "id": 38228438796,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "7862eacfd89558729f72aa9d427fb8a70881d63e",
+    "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38228438796",
+    "name": "CI",
+    "updated_at": "2026-10-12T09:26:19Z"
+  },
+  "jobs": [
+    {
+      "name": "Prototype lint, pricing and unit tests, build, and browsers",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check out repository",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Read the prototype Node.js requirement",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up the prototype Node.js version",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install frozen prototype dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check prototype lint and formatting",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run prototype unit tests and every seed pricing case",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build the prototype",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chromium and browser dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test desktop and phone browser workflows",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload prototype browser failures",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Set up the prototype Node.js version",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Check out repository",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Lint, tests, build, and service smoke checks",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check out repository",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Node.js",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare the environment",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run lint checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run unit and integration tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build the frontend",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start and check services",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check hooks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run browser smoke tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Audit runtime dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload browser results",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Show logs and stop services",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Node.js",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Check out repository",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "qualification": "SIMULATED reserved.invalid transport concerns only a separate cloud nonsecure-HTTP browser test, not GitHub CI or this API read. Full final-source CI browser job passed; numeric browser totals were not retrieved."
+}
