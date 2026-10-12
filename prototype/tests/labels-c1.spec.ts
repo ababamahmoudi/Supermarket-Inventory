@@ -170,12 +170,10 @@ test("built-in templates can be duplicated, edited, archived and restored withou
     await page.evaluate(() => localStorage.getItem("supermarket-prototype-v1")),
   ).toBe(archivedState);
   await expect(
-    page
-      .getByRole("status")
-      .filter({
-        hasText:
-          "This template is archived. Restore it before editing or printing.",
-      }),
+    page.getByRole("status").filter({
+      hasText:
+        "This template is archived. Restore it before editing or printing.",
+    }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Restore template", exact: true })
