@@ -434,6 +434,12 @@ for (const language of ["en", "fa"] as const) {
     for (const theme of ["light", "dark"] as const) {
       if (theme === "dark") await dark(page, language);
       const dialog = await editor(page);
+      const tracking = dialog.getByRole("switch", {
+        name: exact("Date tracking", "پیگیری تاریخ"),
+      });
+      if ((await tracking.getAttribute("aria-checked")) !== "true")
+        await tracking.click();
+      await expect(tracking).toHaveAttribute("aria-checked", "true");
       const reminder = dialog.getByLabel(
         exact("Reminder days", "روزهای یادآوری"),
       );
@@ -542,6 +548,11 @@ for (const language of ["en", "fa"] as const) {
     );
     await button(header, "Record resolution").click();
     await setLanguage(page, language);
+    await choose(
+      page,
+      field(form, "Outcome", "نتیجه"),
+      exact("Replaced", "جایگزین‌شده"),
+    );
     await form.locator(".return-item-form h4").click();
     await page.mouse.move(0, 0);
     await settled(page);
