@@ -153,6 +153,16 @@
     background-position: center bottom;
     block-size: 64px;
   }
+  :root
+    .ui-data-table.table-wrap.is-responsive
+    > table
+    > tbody
+    > tr:not(.table-expanded-row):nth-child(n) {
+    background-image: var(--table-row-rule);
+    background-size: calc(100% - 32px) 1px;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+  }
   :root .ui-data-table tbody tr:not(.table-expanded-row):hover {
     background-color: var(--hover-fill);
   }

@@ -161,6 +161,7 @@ async function appearance(control: Locator) {
         field: token("--field-fill"),
         danger: token("--danger"),
         dangerFill: token("--danger-bg"),
+        neutral: token("--neutral-fill"),
         accent: token("--accent"),
         tint: token("--accent-soft"),
         tintInk: token("--accent-tint-text"),
@@ -226,9 +227,13 @@ for (const language of ["en", "fa"] as const) {
     const before = await stored(page);
     const remove = button(page, "Remove line", "حذف ردیف");
     await expect(remove).toBeVisible();
+    expect(
+      await remove.evaluate((element) => !!element.closest("tbody > tr")),
+    ).toBe(true);
     const style = await appearance(remove);
     expect.soft(style.colour).toBe(style.tokens.danger);
-    expect.soft(style.background).toBe(style.tokens.dangerFill);
+    // docs/design-language.md:76: "in rows neutral fill/red text".
+    expect.soft(style.background).toBe(style.tokens.neutral);
     expect.soft(style.borderVisible).toBe(false);
     expect.soft(style.outlineVisible).toBe(false);
     expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
