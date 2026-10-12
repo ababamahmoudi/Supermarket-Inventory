@@ -1,31 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { useDemo } from "./store";
 import { historyActionLabel, historyErrorMessage } from "./history-copy";
 import type { UndoToast } from "./undo-queue";
-import { Button } from "./ui";
+import { Button, IconButton } from "./ui";
 import "./undo-toasts.css";
 
-function UndoToastItem({
-  toast,
-  hidden,
-}: {
-  toast: UndoToast;
-  hidden: boolean;
-}) {
-  const { lang, t, undoActivity, pauseUndo } = useDemo();
+function UndoToastItem({ toast }: { toast: UndoToast }) {
+  const { lang, t, undoActivity, pauseUndo, dismissUndo } = useDemo();
   const [error, setError] = useState("");
   useEffect(() => () => pauseUndo(toast.id, false), [toast.id, pauseUndo]);
-  useEffect(() => {
-    // A hovered/focused item can become the hidden fourth item after another
-    // action. Hidden items must keep counting down instead of staying paused.
-    if (hidden && toast.running_since === null) pauseUndo(toast.id, false);
-  }, [hidden, toast.id, toast.running_since, pauseUndo]);
   return (
     <div
       className="undo-toast"
       data-testid="undo-toast"
-      hidden={hidden}
       onMouseEnter={() => pauseUndo(toast.id, true)}
       onMouseLeave={(event) => {
         if (!event.currentTarget.contains(document.activeElement))
@@ -42,9 +31,8 @@ function UndoToastItem({
     >
       <span>{historyActionLabel(toast.action, lang)}</span>
       <Button
-        variant="secondary"
+        variant="plain"
         className="undo-toast-link"
-        type="button"
         onClick={() => {
           try {
             undoActivity(toast.id);
@@ -55,6 +43,12 @@ function UndoToastItem({
       >
         {t("Undo", "واگرد")}
       </Button>
+      <IconButton
+        aria-label={t("Dismiss Undo message", "بستن پیام واگرد")}
+        onClick={() => dismissUndo(toast.id)}
+      >
+        <X size={18} aria-hidden="true" />
+      </IconButton>
       {error && (
         <span className="undo-toast-error" role="alert">
           {error}
@@ -65,12 +59,10 @@ function UndoToastItem({
 }
 
 export default function UndoToasts() {
-  const { undoToasts, user, locked, mustChangePassword, t, tCount } = useDemo();
+  const { undoToasts, user, locked, mustChangePassword, t } = useDemo();
   const stackRef = useRef<HTMLElement>(null);
   const [host, setHost] = useState<HTMLElement>(() => document.body);
   useEffect(() => {
-    // showModal dialogs live above every CSS stacking context. Keeping the
-    // stack in the active dialog also keeps Undo inside its keyboard boundary.
     const chooseHost = () => {
       const dialogs =
         document.querySelectorAll<HTMLDialogElement>("dialog[open]");
@@ -88,49 +80,62 @@ export default function UndoToasts() {
   }, []);
   useEffect(() => {
     const stack = stackRef.current;
-    if (!(host instanceof HTMLDialogElement) || !stack) return;
-    // Phone dialogs need scrollable space below their actions so the fixed
-    // Undo stack remains accessible without covering Save or confirmation.
-    const reserveSpace = () =>
-      host.style.setProperty(
-        "--undo-toast-block-size",
-        `${Math.max(64, Math.ceil(stack.getBoundingClientRect().height))}px`,
-      );
-    reserveSpace();
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(reserveSpace);
-    observer?.observe(stack);
+    if (!stack) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height =
+          document.documentElement.clientHeight || window.innerHeight;
+        let offset = 24;
+        // Reserve the real footer geometry rather than placing a message over its controls.
+        for (const bar of document.querySelectorAll<HTMLElement>(
+          ".bottom-bar, .invoice-action-footer, .labels-selection-bar, .sticky-actions, [data-sticky-actions], dialog[open] .dialog-actions, dialog[open] .c3-dialog-actions, dialog[open] .product-editor-actions",
+        )) {
+          const style = getComputedStyle(bar);
+          const bounds = bar.getBoundingClientRect();
+          if (
+            !bounds.height ||
+            style.visibility === "hidden" ||
+            style.display === "none" ||
+            bounds.bottom > height + 2 ||
+            bounds.top < 0
+          )
+            continue;
+          if (
+            ["fixed", "sticky"].includes(style.position) ||
+            bounds.bottom > height - 120
+          )
+            offset = Math.max(offset, height - bounds.top + 12);
+        }
+        stack.style.setProperty(
+          "--undo-footer-offset",
+          `${Math.ceil(offset)}px`,
+        );
+      });
+    };
+    measure();
+    const observer = new MutationObserver(measure);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
     return () => {
-      observer?.disconnect();
-      host.style.removeProperty("--undo-toast-block-size");
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+      cancelAnimationFrame(frame);
     };
   }, [host, undoToasts.length, user, locked, mustChangePassword]);
   if (!user || locked || mustChangePassword || !undoToasts.length) return null;
-  const extra = Math.max(0, undoToasts.length - 3);
   return createPortal(
     <aside
       ref={stackRef}
       className="undo-toast-stack"
       aria-label={t("Recent actions", "کارهای اخیر")}
     >
-      <div aria-live="polite" aria-atomic="false" className="undo-toast-items">
-        {undoToasts.map((toast, index) => (
-          <UndoToastItem key={toast.id} toast={toast} hidden={index >= 3} />
-        ))}
+      <div aria-live="polite" aria-atomic="true">
+        <UndoToastItem key={undoToasts[0].id} toast={undoToasts[0]} />
       </div>
-      {extra > 0 && (
-        <span className="undo-toast-more">
-          {tCount(
-            "+{{count}} more",
-            "+{{count}} more",
-            "+{{count}} مورد دیگر",
-            "+{{count}} مورد دیگر",
-            extra,
-          )}
-        </span>
-      )}
     </aside>,
     host,
   );

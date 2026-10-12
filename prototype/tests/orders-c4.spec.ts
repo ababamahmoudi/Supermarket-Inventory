@@ -42,6 +42,7 @@ async function assertOrderGeometry(page: Page) {
       const failures: string[] = [];
       for (const panel of panels) {
         const element = panel as HTMLElement;
+        if (!element.getClientRects().length) continue;
         const bounds = element.getBoundingClientRect();
         if (
           element.scrollWidth > element.clientWidth + 2 ||
@@ -53,10 +54,12 @@ async function assertOrderGeometry(page: Page) {
       for (const cell of document.querySelectorAll<HTMLElement>(
         ".order-items-table td",
       )) {
+        if (!cell.getClientRects().length) continue;
         const bounds = cell.getBoundingClientRect();
         for (const element of cell.querySelectorAll<HTMLElement>(
           ".ui-number,.pill,.product-name strong,.product-name small,.money,button",
         )) {
+          if (!element.getClientRects().length) continue;
           const content = element.getBoundingClientRect();
           if (
             content.width &&
@@ -92,6 +95,22 @@ for (const language of ["en", "fa"] as const)
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await signIn(page, "Supervisor");
+    await page.goto("/#settings?group=returns");
+    const supplierLanguage = page.getByLabel(
+      "Printed supplier order language",
+      { exact: true },
+    );
+    await chooseOption(
+      page,
+      supplierLanguage,
+      "bilingual",
+      "English and Persian",
+    );
+    await page
+      .locator(".form-card")
+      .filter({ has: supplierLanguage })
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
     const form = await newItemOrder(page, language);
     await assertOrderGeometry(page);
     const row = form.locator(".order-new-item-row");
@@ -108,12 +127,35 @@ for (const language of ["en", "fa"] as const)
     await cases.scrollIntoViewIfNeeded();
     await expect(cases).toBeVisible();
     await expect(cases).toHaveValue("2");
+    const details = row.getByRole("button", {
+      name: language === "fa" ? "نمایش جزئیات" : "Show details",
+      exact: true,
+    });
+    if (await details.count()) await details.click();
+    const rowDetails = row.locator("xpath=following-sibling::tr[1]");
     await expect(
-      row.getByRole("textbox", {
+      form.getByRole("textbox", {
         name: `${language === "fa" ? "هزینهٔ مورد انتظار واحد" : "Expected unit cost"} — Fictional delivery item`,
         exact: true,
       }),
     ).toHaveValue("");
+    if (await rowDetails.count()) {
+      const geometry = await rowDetails.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return Array.from(
+          element.querySelectorAll<HTMLElement>("input, button, dd"),
+        )
+          .filter((child) => child.getClientRects().length)
+          .every((child) => {
+            const rect = child.getBoundingClientRect();
+            return (
+              rect.left >= bounds.left - 2 && rect.right <= bounds.right + 2
+            );
+          });
+      });
+      expect(geometry).toBe(true);
+    }
+    await assertOrderGeometry(page);
     await form
       .getByRole("button", {
         name: language === "fa" ? "ثبت سفارش" : "Place order",

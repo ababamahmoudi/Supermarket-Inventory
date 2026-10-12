@@ -1,253 +1,163 @@
-# Design language (v2, C5 revision — 2026-10-10)
+# Klead design language v1
 
-**Direction (chosen by Ali):** the style of the reference dashboards in `docs/design-references/` (a SnowUI-style web dashboard): white grouped sidebar, soft light-gray page, white borderless cards with large rounded corners, generous spacing, bold KPI cards, pastel status pills, rounded table rows, thin line icons, a breadcrumb top bar, an optional right-hand activity panel, and light + dark themes. Calm, sleek, modern.
+Owner specification: C6/C7, 2026-10-11. This document replaces the previous design language completely, including C2/C3/C5 borders, resting glows, typography, striped rows and control sizes. C6 uses it for new and changed components; C7 applies it to every existing screen. Match the five owner retouches (components/tokens, Lookup, Date tracking, Edit product, dark phone Lookup). Take visual style only; retain company logo, people, products and actual demo data.
 
-We take the **visual style only**. Do not copy the references' logo, illustrations, photos/avatars, sample names, or chart data. The iOS mockups in the reference set are not relevant (this is a web app).
+## Hard rules
 
-Version 1 of this document (navy sidebar, bordered cards) is replaced in full.
-
-## Hard rules (mandatory, check every screen)
-
-1. **No native browser controls on screen.** Replace every `<select>` with a styled Select/Combobox, every file input with a **dropzone**, and every checkbox/radio/switch/date input/number stepper with the styled component. "Choose File · No file chosen" must never appear.
-2. **Use the available page width with deliberate padding.** At 1440–1920 px, tables, invoice documents and New order use the available content area; no blanket 1440 px page cap or narrow form card leaving unused space. Keep individual fields readable: short values (quantity, copies, price) use narrow 120–160 px inputs, related fields stay together, and ordinary single-column dialogs may remain bounded. Notes and Offers creation use dialogs rather than permanent narrow cards. Keep 28 px page padding (16 px on phones).
-3. **Borderless cards.** Separate surfaces by fill color, not borders or shadows.
-4. **Clear hierarchy.** One page title, one short subtitle, one primary action (top right). Numbers big; labels small and muted. Empty or missing values are muted text ("No approved price yet"), never large headings.
-5. **The sidebar never scrolls** on a 1080p screen: grouped sections, 40 px items, role-filtered.
-6. **Demo-only controls** (role switcher, reset) live in one small **Demo** menu in the top bar, never as labeled form fields.
-7. **No invented wording.** Use the terms in `requirements.md` §18 and the copy rules below.
-8. **Max four KPI cards per page.** Everything else is a list or table you can act on, not a wall of counters.
-9. **Row actions and inputs must be visible on every row color.** Buttons and fields inside striped tables use a style that contrasts with both the stripe and the plain row (e.g., an outline or a fill one step darker than the stripe). Same padding on every row.
-10. **Tabs:** one segmented control style everywhere, fit-content width, one active style, and 24 px space before the content below.
-11. **Spacing scale:** 8 px label→control, 20 px between fields, 24 px before action buttons, 24 px between cards. Nothing touches the element above it.
-12. **One date format:** YYYY-MM-DD in tables, forms, and date pickers. One price format: `$2.99` (symbol first) in every language.
-13. **The top bar is sticky** and every dialog, confirmation and prompt opens **centered** with a dimmed backdrop. Esc and backdrop click close it; focus enters the dialog and returns to its trigger on close.
-14. **Persian and English mixed text follows the rules in "Mixed-direction text" below.**
-15. **Filter toolbar fields are 44 px tall; action buttons are 40 px.** Size custom selects to their complete option text instead of ellipsizing short filter labels; wrap narrow toolbars rather than growing controls taller. Every search field has its icon and translated placeholder. Tables follow without an empty spacer. Top-bar fields follow the 40 px rule.
-16. **Nothing is clipped on desktop.** At 1280, 1440 and 1920 px, no table or panel may scroll sideways, conceal text or crop an action. Size columns for the available area, wrap readable long descriptions, and reflow rows/panels when needed. Keep short status/offer pills, prices and unit fragments intact. Sideways table scrolling is permitted on phones only; Orders items instead become phone cards. Never claim a passing layout capture from document-level overflow alone: check each table, panel and visible text element.
-17. **Text action buttons are rounded rectangles:** Primary, Secondary, Danger and Quiet use **12 px radius**, **40 px height**, and intrinsic text-plus-padding width. Never stretch actions to fill a table column or form. Round shapes are reserved for icon buttons, tabs/segmented choices, filter chips, search, top-bar location/account pills and status pills. Sorting headers, calendar cells, menu options, sidebar navigation and selectable result rows are semantic widgets, not ordinary text actions; retain their component-specific layout.
-18. **Table actions:** at most two visible controls in one horizontal row at the inline end, with an Actions column sized to those controls. Text actions are at most **200 px** wide; put rarer actions in the circular **⋯** menu. Drop redundant View actions when the row/name/reference already opens the detail; keep permitted Edit. Date rows show **Remove** and **⋯ → Stop tracking this product**. Preserve the approved dashboard and Approvals grids and round segmented tabs/toggles.
-19. **Top-bar controls:** every search, location, language, theme, text-size, notification and Demo/account control is **40 px high**, with the same thin blue border and soft glow. Icons are circles; search, location and account controls are pills. The language button is a single circle showing the target language: **فا** in English, **EN** in Persian, with accessible labels **Switch to Persian / تغییر به انگلیسی**. The existing account menu remains at the sidebar bottom; do not duplicate it.
-20. **Visible fields in both themes:** inputs, numbers, textareas and date triggers keep their existing radius and use a thin border with at least **3:1** contrast against adjacent surfaces, plus focus glow. Select/Combobox triggers also have the Secondary border and resting soft glow. Nested search inputs use one outer border, never two fields inside a pill.
+1. No visible native browser controls. Use shared styled Select/Combobox, file dropzone, checkbox, radio, switch, date picker and number controls; hidden native inputs can support accessible interaction, but browser file-input copy never appears.
+2. All screen colours, radii and shadows come from **one standalone Klead tokens CSS file**, with light/dark custom properties. No literals in component/feature CSS or inline styles. Printed documents are the exception. Keep reusable tokens separate from company settings; company branding can override the accent.
+3. Cards are borderless with the soft shadow below. Remove C5 resting borders/glows from buttons and fields. Only specified hairlines remain. Focus gets the ring.
+4. One page title/secondary line and one Primary per area. At most four KPI cards. Preserve approved Dashboard/Approvals behavior and the exact Dashboard layout below.
+5. Use available width with 28 px desktop/16 px phone padding. Short numeric fields and intrinsic text actions do not stretch edge to edge. Dialogs are bounded; tables, invoice comparison and New order use content width.
+6. Sidebar never scrolls at 1080p; short windows may collapse groups while keeping every destination/account reachable. Below 1280 px collapse to icons with hover/focus labels. Below 760 px use mobile navigation and table cards.
+7. Never break inside a word or overlap text/controls. Prices, dates, codes, unit fragments, short statuses and action labels stay whole. Long prose wraps at spaces. No sideways page/table scroll: hide lower-priority columns, expose permitted values in Columns/expanded details, then cards below 760 px.
+8. Each table declares its identifying/essential columns and responsive priorities. Identifying name/reference mandatory. Width-hidden columns do not overwrite saved Columns preferences. Role-private fields never appear in choosers, details, cards or hidden accessible text.
+9. Demo role/reset/simulated-reading controls only in the small Demo menu. Keep “AI invoice reading is simulated” on Invoices and “Demo with fictional data” in Demo only. Use exact business vocabulary, no invented copy.
+10. Dates YYYY-MM-DD and prices `$2.99` in both languages. Operational timestamps use configured store time; UTC internally. Use singular/plural translations and `(optional)` after labels.
+11. Root dir, logical CSS, bilingual translations and isolated numeric/proper-name fragments are mandatory. Missing Persian product names fall back to English.
+12. Dialogs centered with dimmed backdrop, focus trap/return, Esc/backdrop close where safe. Keyboard access, reduced motion and **4.5:1 text contrast** on actual composited surfaces apply in both themes.
+13. Top bar sticky. Undo reserves space above sticky action bars, never covers controls, never appears for typing/autosave. Incomplete Save/Post/Send actions explain missing fields when clicked rather than silently disabling.
+14. Exact printing geometry below, Decimal rules, permissions, business records, original evidence and audit history survive retouch unchanged.
 
 ## Tokens
 
-Light values are sampled from the references; dark values likewise. Brand tokens are per company (Settings) so other supermarkets can rebrand.
+| Role                                | Light                 | Dark                                     |
+| ----------------------------------- | --------------------- | ---------------------------------------- |
+| Page                                | `#F4F5F7`             | `#0E1117`                                |
+| Surface: cards/sidebar/dialogs      | `#FFFFFF`             | `#181C25`                                |
+| Field fill                          | `#F0F1F4`             | `#222734`                                |
+| Neutral button fill                 | `#EEF0F3`             | `#222734`                                |
+| Hairline                            | `#E6E7EB`             | `rgba(255,255,255,0.08)`                 |
+| Row divider                         | `#EEF0F3`             | `rgba(255,255,255,0.08)`                 |
+| Ink                                 | `#141A2B`             | `#F3F4F7`                                |
+| Secondary text                      | `#5A6070`             | `#A4AAB8`                                |
+| Sidebar group text                  | `#6B7180`             | secondary text, verified on dark surface |
+| Accent                              | `#2B59C3`             | `#7397F0`                                |
+| Accent tint                         | `#E9EEF9`             | `rgba(115,151,240,0.18)`                 |
+| Text on tint                        | `#2B59C3`             | `#9DB7F5`                                |
+| Hover/selected list fill            | `#F4F6FA`             | derived neutral surface token            |
+| Segmented track                     | `#EBEDF0`             | neutral fill token                       |
+| Page-background control fill/border | `#FFFFFF` / `#E1E3E8` | dark surface / hairline                  |
+| Keyboard focus ring                 | `rgba(43,89,195,0.2)` | verified dark accent-ring token          |
 
-| Token                    | Light                                     | Dark                                      | Use                                                            |
-| ------------------------ | ----------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
-| `--page`                 | `#F5F5F7`                                 | `#333333`                                 | Page background                                                |
-| `--sidebar`              | `#FFFFFF`                                 | `#333333`                                 | Sidebar and top bar                                            |
-| `--surface`              | `#FFFFFF`                                 | `#3B3B3B`                                 | Cards                                                          |
-| `--surface-soft`         | `#FAFAFA`                                 | `#434343`                                 | Table row stripes, inner panels, input fill                    |
-| `--nav-active`           | `#EBEBED`                                 | `#474747`                                 | Active sidebar item, hovered rows                              |
-| `--search-fill`          | `#F0F0F2`                                 | `#474747`                                 | Search pill, icon buttons                                      |
-| `--divider`              | `#EDEDED`                                 | `#4A4A4A`                                 | Rare dividers (top bar bottom edge)                            |
-| `--text`                 | `#1C1C1C`                                 | `#FFFFFF`                                 | Primary text                                                   |
-| `--text-muted`           | `#666666`                                 | `#ADADAD`                                 | Labels, secondary text, table headers                          |
-| `--accent`               | `#2B59C3`                                 | `#5B86E5`                                 | Primary buttons, focus ring, links, active indicators          |
-| `--accent-hover`         | `#234AA8`                                 | `#7398EA`                                 | Hover                                                          |
-| `--accent-soft`          | `#E6EDFA`                                 | `rgba(91,134,229,.18)`                    | Offer pills, selected rows                                     |
-| `--accent-fill`          | `#2B59C3`                                 | `#3D68D4`                                 | Primary button fill (white text meets contrast in both themes) |
-| `--kpi-accent`           | `linear-gradient(135deg,#234AA8,#3D68D4)` | same                                      | KPI card variant A                                             |
-| `--kpi-charcoal`         | `linear-gradient(135deg,#0F0F0F,#4A4A4A)` | `linear-gradient(135deg,#4A4A4A,#5E5E5E)` | KPI card variant B                                             |
-| `--tile-lavender`        | `#ECEEFB`                                 | `rgba(149,164,252,.14)`                   | Summary tile A                                                 |
-| `--tile-sky`             | `#E7F1FD`                                 | `rgba(0,122,255,.14)`                     | Summary tile B                                                 |
-| `--secondary-fill`       | `#FFFFFF`                                 | `#292B30`                                 | Secondary action surface                                       |
-| `--secondary-text`       | `#1C1C1C`                                 | `#FFFFFF`                                 | Secondary text (at least 4.5:1)                                |
-| `--secondary-border`     | `#2B59C3`                                 | `#7398EA`                                 | Thin secondary border (at least 3:1 against adjacent surfaces) |
-| `--secondary-glow`       | `rgba(43,89,195,.14)`                     | `rgba(115,152,234,.18)`                   | Soft resting button glow                                       |
-| `--secondary-glow-hover` | `rgba(43,89,195,.22)`                     | `rgba(115,152,234,.28)`                   | Slightly stronger hover glow                                   |
-| `--brand-red`            | `#E00A12`                                 | same                                      | **Logo only.** Never for status or buttons.                    |
-
-Super Arzon's accent `#2B59C3` is a brighter tone of the logo blue (`#284898`) so the vivid style of the references keeps the store's brand. Replace with official brand colors when received.
-
-### Status pills (fixed vocabulary; text colors meet WCAG AA on their backgrounds)
-
-| Meaning     | Statuses                                                                                      | Light text / bg       | Dark text / bg                      |
-| ----------- | --------------------------------------------------------------------------------------------- | --------------------- | ----------------------------------- |
-| Waiting     | Pending, Waiting for supplier, Waiting for credit, Pending credit, Expiring soon, Still pending, Back-ordered | `#9A5B00` / `#FEF5E6` | `#FFB547` / `rgba(255,150,0,.16)`   |
-| Done        | Approved, Posted, Active, Resolved, Taken care of, Picked up, Received, Closed, Credited, Replaced | `#1A7F37` / `#EAFAEF` | `#5BD67C` / `rgba(51,199,89,.16)`   |
-| In progress | Needs review, Processing, Ready to post, Partially resolved, Partially received               | `#7E2FA8` / `#F1E9F6` | `#D18BF0` / `rgba(176,81,223,.18)`  |
-| Info        | Open, Waiting for pickup, New product, Price change, Taxable, Intentional, Manual price, Ordered, Requested, Sent | `#0058B8` / `#E1EDFB` | `#5AA9FF` / `rgba(0,122,255,.18)`   |
-| Neutral     | Draft, Cancelled, Written off, Rejected, Archived, Cleared, Stopped                           | `#5C5C5C` / `#F0F0F0` | `#BDBDBD` / `rgba(255,255,255,.10)` |
-| Problem     | Short, Conflict, Expired, Overdue, Failed, Tax discrepancy, Missing                           | `#C4281C` / `#FFEBEA` | `#FF7A70` / `rgba(255,59,47,.18)`   |
-
-Pill: fully rounded, 12 px/500 text, padding 4 px 10 px, optional 6 px leading dot. Always a word, never color alone. Offer pills ("2 for $5") use `--accent-soft` with `--accent` text.
-
-Map tone from the **visible lifecycle label**, not the retained internal status. Both `picked_up` and `partially_resolved` display amber **Waiting for credit** everywhere, including supplier tables and detail. Closed outcomes display green **Credited / Replaced**, gray **Written off**; Cancelled is gray. English and Persian translations use the same semantic tone. Test label-to-tone consistency without rewriting historical evidence.
+**Pending owner colour decision:** dark accent `#7397F0` with white Primary text fails 4.5:1. Owner chooses darker Primary fill `#2B59C3` with white (retain lighter dark accent for links/icons), or lighter fill with ink text. Do not silently relax contrast or claim unresolved pairing passes. Every status/secondary/selected/hover/disabled text pair is measured on its actual background; inaccessible raw reference combinations require a documented token adjustment.
 
 ## Typography
 
-- **Inter** for Latin, **Vazirmatn** for Persian (`Inter, Vazirmatn, system-ui, sans-serif`; reversed when `dir="rtl"`). Tabular numerals for prices, quantities, codes.
-- Sizes in `rem` so one **"Comfortable text size"** setting (+2 px) can scale everything on the shared store computer.
+English/numbers: **Manrope**, weights 400–800. Persian: **Vazirmatn**. Bundle fonts for offline-after-load use. Prices/table numbers use tabular figures. Rem sizes support the existing comfortable-text preference.
 
-| Role                               | Size / weight                                               |
-| ---------------------------------- | ----------------------------------------------------------- |
-| Page title                         | 24 / 600                                                    |
-| Card title                         | 16 / 600 (neutral text color; color is reserved for status) |
-| Body, table cells                  | 14 / 400                                                    |
-| Labels, table headers, helper text | 13 / 500, `--text-muted`                                    |
-| KPI number                         | 28 / 600                                                    |
-| Cashier hero price                 | 40 / 700                                                    |
-| Buttons                            | 14 / 500                                                    |
+| Role         | Size/line-height        | Weight        | Tracking |
+| ------------ | ----------------------- | ------------- | -------- |
+| Large title  | 30/36                   | ExtraBold 800 | -0.02em  |
+| Title        | 20/26                   | ExtraBold 800 | normal   |
+| Headline     | 15/20                   | Bold 700      | normal   |
+| Body         | 14/20                   | Medium 500    | normal   |
+| Caption      | 12/16                   | SemiBold 600  | normal   |
+| Lookup price | 60/60                   | ExtraBold 800 | normal   |
+| Field label  | 13/readable line-height | SemiBold 600  | normal   |
 
-## Spacing, shape, icons, motion
+## Shape, depth and spacing
 
-- 4 px base. Page padding 28 px (16 px on phones). Card padding 24 px. Gap between cards 28 px (16 px on phones).
-- Radius: cards and dropzones 16 px; inputs, buttons, table rows, inner panels 12 px; dialogs 20 px; pills, search, segmented controls fully rounded.
-- Icons: lucide at 20 px, stroke width 1.5 (thin line style of the references).
-- Motion: 150 to 200ms for hover, open/close, toasts only. Respect reduced motion.
+- Cards radius 20, no border, shadow `0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04)`.
+- Dialogs radius 24, shadow `0 24px 64px rgba(20,26,43,0.24)`.
+- Menus radius 14, hairline, shadow `0 16px 40px rgba(20,26,43,0.16)`.
+- Fields/buttons radius 12; small buttons/sidebar items radius 10; tabs/chips/pills/icon buttons fully round. Lookup search radius 16; Undo radius 14. Values live only in tokens.
+- 4 px spacing base; label-to-control 8; fields 20; before actions/after tabs/between cards 24; card padding 24; phone gap 16.
+- Lucide outline icons: sidebar 18, ordinary 20. Hover/open transitions 150–200 ms; reduced-motion supported.
+
+## Buttons and fields
+
+| Variant          | Treatment                                                     | Examples                            |
+| ---------------- | ------------------------------------------------------------- | ----------------------------------- |
+| Primary          | Solid Klead blue with approved contrasting text; one per area | Post invoice, Add, Save changes     |
+| Secondary/tinted | Blue tint/blue tint text                                      | Print label, Add to waitlist        |
+| Neutral          | Grey fill/ink                                                 | Cancel, Edit, Columns, Move invoice |
+| Plain            | Blue text only                                                | Clear filters, + Add date, links    |
+| Destructive      | Red tint/red text; in rows neutral fill/red text              | Remove, Stop, Reject                |
+
+Buttons have **no resting border/glow**. On page background outside cards, neutral buttons/menus/filter search use white fill and 1px page-control border. Hover 4% darker; pressed 8%; keyboard focus 4 px ring. Ordinary: **40 px high, 16 px inline padding, 14 px SemiBold**. Small: **32 px, 12 px padding, 13 px**. Icons: **36 px circles**, transparent, grey hover, accessible name. Top-bar controls 36 px. **Phone text buttons 44 px**. Text never wraps; width intrinsic.
+
+Fields **44 px**, field fill, no resting border. Focus: white/light or dark surface, 1 px accent border/ring. Error: surface, 1 px red border and red message underneath. Label 13 px SemiBold above; secondary `(optional)` after label. Dropdown matches field/chevron, searchable when needed. The old resting 3:1 border rule is superseded, visible focus remains required. Styled dropzones retain real picker/camera behavior without native copy.
+
+## Choices and statuses
+
+Segmented controls have a grey track and a white raised selected thumb, fully round: Pending/Approved/Rejected, Open/History, Due soon/All dates/Removed. Filter chips are white with a hairline; the selected chip uses the blue tint and blue text. Toggles are 44 × 26 px, blue when on. Custom checkboxes use the accent.
+
+| Tone        | Light text / dot / tint                 | Dark text        |
+| ----------- | --------------------------------------- | ---------------- |
+| Green       | `#1A7F45` / `#1F9D55` / `#E6F4EC`       | `#4CC17E`        |
+| Amber       | `#9A5B00` / `#E08A00` / `#FDF3E2`       | `#E9A23B`        |
+| Red         | `#B42318` / `#D92D20` / `#FCE9E7`       | `#F2766A`        |
+| Grey        | `#5A6070` / `#8A90A0` / `#EEF0F3`       | secondary text   |
+| Blue / info | accent-tint text / accent / accent tint | accent-tint text |
+
+Dark tints use 12–18%, measured on the actual surface. **Tables use a coloured dot and words; cards and headers use a soft tinted pill.** Never colour alone. Visible label determines tone: Waiting for pickup blue; Waiting for credit, Pending credit and Expiring soon amber; Credited, Replaced, Posted, Approved, Active and Received green; Written off, Cancelled, Rejected, Archived and Stopped grey; Short, Conflict, Expired, Overdue, Failed and Missing red. Other in-progress statuses use blue info. Translation never changes tone and an internal legacy state never overrides the visible lifecycle.
+
+## Calm tables and adaptive width
+
+- No stripes or cell borders; a 1 px row divider is inset 16 px at each end. Rows are 56–64 px; headings are 12 px SemiBold secondary text. Use soft hover/selection fill.
+- Shared header/cell padding and logical alignment: text at start, numbers at end. Match headers to values within 2 px in English and Persian. Prices, dates, codes, statuses, unit fragments and actions never split.
+- Detail-opening rows show a chevron and support keyboard/click actions; remove redundant View. End actions: **at most one small button plus ⋯**.
+- Omit lower-priority columns progressively until the table fits. Omitted authorized values remain in Columns and expanded details. Below 760 px use cards. Keep user-hidden and width-hidden columns separate.
+- Products, Suppliers, Received, Invoices, Orders, Payables, Returns and Date tracking retain Columns/Reset columns. Put Columns beside the count or in the title row when there is no filter row; **Payables ledger Columns belongs in its card title**. Identifying column mandatory; role-private money never selectable.
+- Check actual words, text/control collisions, clipping and table/panel/page overflow at **390, 768, 900, 1024, 1180, 1280, 1440 and 1920 px in EN and FA**. A passing page width cannot excuse inner overflow or split prices.
 
 ## App shell
 
-**Sidebar (240 px, white, collapsible to 72 px icons-only):**
+**Sidebar:** 248 px, white in light theme or dark surface, hairline at inline end. Own logo directly on white; dark uses a small white tile. Group labels Daily, Catalog, Supervisor and Admin: 12 px SemiBold grey. Items: 34 px high, radius 10, outline 18 px grey icon; active blue tint, blue icon and Bold label. Counts are small grey capsules; Approvals/Alerts use blue tint. The signed-in person sits at the bottom in a soft grey block with Lock/Sign out menu. Below 1280 px use icons only, retaining hover/focus labels and count dots. Desktop account remains at sidebar bottom. On phones the same initials/account menu may move to the priority top bar, matching the phone reference; hide its sidebar copy while the top-bar version is shown so only one account control is visible. Never make the sidebar scroll.
 
-- Top: Super Arzon logo (horizontal, 32 px tall) and the company name. Light theme: directly on white. **Dark theme: on a small white rounded tile** so the red and blue stay legible.
-- Sections with muted 13 px labels, items shown by role:
-  - **Daily:** Lookup · Invoices · Received · Returns · Labels · Date tracking · Notes · Branch requests
-  - **Catalog:** Products · Offers · Suppliers
-  - **Supervisor:** Dashboard · Approvals · Alerts · Payables · Orders
-  - **Admin:** Users and devices · Settings · History
-- Item: 40 px, icon + label, active = `--nav-active` fill + 3 px accent bar at the inline-start edge. Counts as small pills at the inline-end.
-- Bottom: user chip (initials avatar, name, role) opening a menu with **Lock** and **Sign out**.
+Groups remain Daily (Lookup, Invoices, Received, Returns, Labels, Date tracking, Notes, Branch requests); Catalog (Products, Offers, Suppliers); Supervisor (Dashboard, Approvals, Alerts, Payables, Orders); Admin (Users and devices, Settings, History). Filter by role and actual implemented destinations; icons remain unique.
 
-**Top bar (64 px, sticky, `--sidebar` background, 1 px `--divider` bottom):** sidebar toggle · breadcrumbs ("North York / Invoices / FV-20417") · spacer · search pill (280 px, `/` shortcut; products by name, code, barcode) · branch pill (Supervisor: switcher incl. "All branches"; others: static) · single round target-language button **فا / EN** · theme toggle (sun/moon) · text size · notifications bell with count · **Demo** menu (prototype only). All controls follow Hard rule 19; responsive wrapping preserves 40 px controls.
+**Top bar:** 60 px, page colour at 85% with background blur and bottom hairline. Left: sidebar button then breadcrumb (location grey, page ink). Right in order: filled search pill with `/` hint; soft location pill with blue pin; plain round target-language **فا in EN / EN in FA**, theme, text size, notifications with blue count; soft Demo pill. All 36 px high, no outlines. At 760–1279 px the breadcrumb shows current page only and search becomes an icon opening the field. `/` stays a key hint. Nothing overlaps or hides a permitted action; responsive mobile placement retains all actions.
 
-**Right panel (280 px, only on dashboards and only at ≥1440 px width; otherwise it moves below the main content):** "Notes for Supervisor" (like the references' Notifications list) and "Activity" (timeline: initials avatar, action, relative time).
-
-## Components
-
-| Component                     | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **KPI card**                  | Bold. Alternate `--kpi-accent` and `--kpi-charcoal` across the row (as in the reference). White text: label 14/500, number 28/600, a one-line breakdown ("2 price changes · 1 new product"), small round icon button top-right. Clickable to the filtered list. Max 4 per page.                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Summary tile**              | Soft. `--tile-lavender` / `--tile-sky` alternating, dark text. For totals inside pages (invoice subtotal, tax, shorts deduction, payable).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **Card**                      | `--surface`, radius 16, padding 24. Header: title left; text tabs (active in `--text`, inactive in `--text-muted`), filters, or a round "…" icon button right.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Data table**                | One shared component defines column widths once. Header/body use equal inline padding and identical logical alignment: text `start`, numbers `end`; actions reserve intrinsic end width. Header row: no fill, 13 px muted. Rows: 48 px minimum, radius12, alternating `--surface-soft`, hover `--nav-active`. Numbers tabular. At most two horizontal40 px controls; text actions ≤200 px, rarer actions in ⋯. Toolbar: search, filters, Clear filters, result count and Columns; wrap on phones. Sticky header. Verify header/cell alignment within2 px in both languages. |
-| **Buttons**                   | Four variants only: **Primary**, **Secondary**, **Quiet**, **Danger**. Text actions: radius12 px, height40 px, intrinsic width. One Primary per area. Icon-only controls: circle40 px and accessible label. Quiet only Clear filters and Back to links. |
-| **Inputs**                    | 44 px, `--surface-soft` fill, thin `--secondary-border` meeting3:1 contrast, radius12, visible focus ring/glow, label above13/500, helper/error below. Top-bar search is40 px; Lookup hero remains56 px. |
-| **Select / Combobox**         | Input radius/fill, Secondary thin border and soft resting glow, chevron; searchable above8 options, radius12 popover. Trigger fits complete option text within field maximum; options may wrap. |
-| **File dropzone**             | Radius 16, 1.5 px dashed `--divider` border, upload icon, "Drop a PDF or photo here, or browse". After upload: file chip with name, size, remove. Camera capture on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Checkbox / switch / radio** | Custom, 18 px, radius 5, `--accent` when on, visible focus ring.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Segmented control / tabs**  | Pill container in `--search-fill`; active segment `--surface` with clear contrast. Inactive options retain readable full-contrast text in both themes, including Yes/No, kept/refused and Short/Back-ordered/Cancelled. Keep 24 px space before content.                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **Dialog**                    | Radius 20, normally max width 520; supplier/manual-entry forms and Review approval may use up to 720 px. Wrap a table header instead of clipping its last column. Confirm button repeats the action ("Approve price").                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **Toast**                     | Charcoal pill, white text, action name and **Undo** when reversible. Bottom-right in English, bottom-left in Persian, above all interface layers; 10 seconds of unpaused display time. Pause while hovered or focused; newest first, independent timers, at most three visible plus **+N more**. See requirements §23 for safe action coverage.                                                                                                                                                                                                                                                                                                                              |
-| **Empty state**               | Icon in a soft circle, one sentence, one primary button. Never a big "0".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Avatar**                    | Initials in a soft tinted circle. No photos.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **Price block**               | Approved price large; pending price beside it with a Waiting pill; Taxable (Info pill) and offer pill below. A product without an approved price shows muted "No approved price yet".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **Charts**                    | Dashboard uses only recorded purchases: **Purchases by supplier, this month** as rounded bars and **Purchases, last 8 weeks** as a thin line with soft fill. Source: posted, non-voided purchase invoices after open shorts and linked purchase credits/corrections, scoped by company/branch/time zone; exclude payments/opening balances. Use Decimal totals before plotting, week dates on the axis, amount tooltips on hover/focus and honest empty states. Do not place a list of week totals beneath the line chart. No sales/revenue chart until cash-register data exists.                                                                                           |
+**Page header:** Large title, secondary line, Primary action at inline end. Dashboard right panel is 280 px at ≥1440 px; below the main content at narrower widths. Notes for Supervisor/Activity use actual records and initials rather than copied avatars.
 
 ## Key layouts
 
-**Supervisor dashboard**
+**Supervisor dashboard: preserve exact order and grid.**
 
-1. KPI row (4): **Approvals waiting · Open alerts · Open shorts · Expiring soon**.
-2. 12-column grid row: **Approvals queue** (8 columns) and **Alerts** (4). Equal-height cards. Each approval row uses the same columns: product block (current-language name, other-language name and Product Code), change-type pill, Old → New, location, fixed end action column with Primary **Approve** and Danger **Reject**. Use a non-overlapping grid; on narrow screens buttons move below the content rather than covering location text. Alerts use the shared list row: title, muted second line, pill, one action at the end.
-3. Equal-height grid row: **Recent invoices** table (8 columns), status pills; **Returns** (4), shared list rows for open/waiting-for-credit returns, with **View all returns →** as a header link.
-4. Row: **Supplier balances** table, top five by balance (Supervisor only).
-5. Equal-height grid row: **Purchases by supplier, this month** and **Purchases, last 8 weeks** (6 columns each).
-6. Equal-height grid row: **Arrived this week** (actual Received entries in the company-timezone week; cases/units, location/date and invoice link; no stock estimate) and **Price changes this week** (from effective approved/manual changes), 6 columns each. Use the same title/secondary-line/pill/end-action list row as other dashboard lists. No extra KPI cards.
-7. Right panel: Notes for Supervisor and Activity. All charts and lists use the active company/branch scope; stack cards at narrow widths.
+1. Four KPIs: **Approvals waiting · Open alerts · Open shorts · Expiring soon**. The two coloured variants are now **solid blue and solid ink**, replacing gradients.
+2. A 12-column row: **Approvals queue** (8 columns) / **Alerts** (4), equal-height cards. Approval rows preserve product/names/code, change type, Old → New, location and Approve/Reject; narrow actions move below and never overlap. Alerts use title, secondary line, status and end action.
+3. Equal-height **Recent invoices** (8) / **Returns** (4), retaining the View all returns header link.
+4. **Supplier balances**, top five by balance, Supervisor-only.
+5. Equal-height **Purchases by supplier, this month** / **Purchases, last 8 weeks**, 6 columns each.
+6. Equal-height **Arrived this week** / **Price changes this week**, 6 each. Actual Received and approved/manual changes; no stock or sales estimate, no additional KPI.
+7. Notes for Supervisor and Activity in the right panel. Scope all content to company/allowed location and stack responsively.
 
-**Floor Worker home:** KPI row (4): **My drafts · Needs review · Offers to confirm · Expiring soon**; then "Today's suppliers and open returns" and "My notes".
+Worker home retains My drafts, Needs review, Offers to confirm and Expiring soon, then Today's suppliers and open returns and My notes. Purchase charts derive posted non-voided purchases net of shorts, linked credits and corrections, Decimal until rendering, configured-zone periods and honest empty states. Never invent sales.
 
-**Cashier lookup:** centered column (max 880 px). Hero search pill (56 px tall, large icon, autofocus, accepts barcode scanner input). Results as rows: name (EN), Persian name below in muted text, product code, price right-aligned, pills. Arrow keys + Enter select. Selected row uses `--nav-active` plus the 3 px accent bar, preserving offer-pill contrast; results mirror exactly in Persian with name at inline start and a fixed price/pill column at inline end. Selected product shows the price block with the 40 px price, Supervisor-only Edit, and recorded invoice/manual-change provenance.
+**Lookup:** centered column, max 880 px. White/surface search 56 px, radius 16, scan inside. AI-category chips: All, most-used categories, More. Calm result list with names/code at start, prices at end, offers as pills, selected blue tint. Product price **60 px**, offer pill beside. Read-only Dates and Last received are two quiet rows with small icon tiles: `Expires YYYY-MM-DD · Location`, close-date pill. **No tracking switch, date entry or Add in Lookup.** Current-location price/clearance/expiry only; no other store's prices/lots. Supervisor Edit opens the shared editor.
 
-**Invoice review:** on wide screens two panes: document preview left (40%, sticky beneath the top bar), lines table right. Summary tiles above lines (subtotal, tax, shorts deduction, payable); invoice-amount note directly beneath the tiles. Compact line rows: matched/confirmed lines collapsed, decision lines open automatically, any row opens on click; shared column headers replace repeated labels. Pending price uses **Pending** pill plus **Goes to approval when posted** muted text. Each line has **Track date: Yes / No**: initialize from the product’s explicit Yes/No setting; an unknown setting requires a choice. Yes always requires a valid type/date. Existing line confirmation remains mandatory. Bottom action bar spans the review width with `--surface` fill and reserved page space: **Save as draft** and **Post invoice**; blockers in a banner above it. Demo answers live only in the Demo menu.
+**Add/Edit product:** English name and pricing category required; Persian name, descriptions and category optional. Date tracking Yes immediately reveals a soft grey group in the same form: toggle, **Remind me [30] days before expiry**, current-location dates as white rows, inline Type/Date/Quantity/Add and optional lot. Edit/remove within this form. Save product and dates together. Dialog title/caption, round ×, small grey section headings and hairline footer with Neutral Cancel then main action.
 
-**Sign-in:** soft gray page, one centered card (max 420 px, radius 20): logo, title "Sign in", Username, Password (with show/hide), intrinsic-width primary **Sign in** button, muted help line. On registered store computers, a row of "recent users" name chips (initials avatar + first name) above the fields. Single target-language button in the top corner. No PIN pad. C5's intrinsic-width action rule supersedes the former full-card submit button.
+**Date tracking:** retain quick-add product scan/name/code/barcode, date, current allowed location, Enter/Add, refocus, new-row pin/highlight and More for Type/Quantity/Lot/Note. Due soon/All dates/Removed segments. Product/reminder/stop semantics come from requirements §10.
 
-**Suppliers overview:** toolbar (search pill, branch pill, filter chips), then the data table; money columns appear only for Supervisors. Supplier page: header card, KPI row (max 4), tabs as a segmented control, tab content in cards.
+**Invoice review:** wide layout retains 40% sticky original pane plus lines, summary/totals and reserved Save as draft/Post invoice bar. What's missing is an amber linked list at form top, plus local field errors. No autosave/edit Undo. Posted number/status share header with end actions; five adjacent end-aligned totals: Subtotal, Tax, Invoice total, Deductions, bold Payable. Original whole-page default, 25–400% toolbar − / % / + / Fit width / Fit page / Download; actual bytes unchanged.
 
-**Forms:** fields in a logical order, related short values adjacent, actions at the bottom inline end. New order and invoice documents use available page width; phone order items use cards. Add note and Create offer open centered dialogs. Ordinary single-column dialogs may use max 720 px; never apply that cap to a desktop table or invoice comparison.
+**Returns:** title/status together, creation/supplier/location subtitle and policy/next action at end. Pickup actual quantity per item, shortfall reason/disposition, locked saved pickup and separate authorized Correct pickup. Resolution groups clear item progress, credited/replaced/outstanding quantities. Policy about 640 px, summary and five numbered bold-title/one-sentence steps, no inner card, Download full policy and Close. Supplier memo defaults English and uses RM reference.
 
-## Copy rules
+**Sign-in:** centered max 420 px surface card, own logo, Username, Password with show/hide, intrinsic Primary Sign in, help and Recent users row. Forced Choose a new password; no PIN. **Suppliers:** four useful summary cards; Last delivery/month deliveries/open returns navigate to exact scoped records; Balance is static without hover/pointer/glow. **Received:** one From/To range with Today/This week/This month. **Payables:** ledger Columns in title; atomic money/date/code and private monetary fields.
 
-- Sentence case. Plain verbs that say what happens: "Save as draft", "Post invoice", "Approve price", "Mark as short", "Record pickup".
-- One name per action everywhere (button, toast, history).
-- Errors say what went wrong and how to fix it: "Add the original invoice (PDF or photo) before posting."
-- Empty states invite the next action: "No drafts. Start a new invoice."
-- Use the terminology in `requirements.md` §18. Do not invent new section names or labels.
-- Use i18n plural forms for every counted noun: **1 note**, **2 notes**, not **1 notes**. Keep grammar correct for zero/one/many in both languages.
-- Remove page-level fictional/demo disclaimers from Payables, Offers and other operational pages. Keep only **AI invoice reading is simulated** on Invoices and **Demo with fictional data** inside the small Demo menu. This changes presentation, not the fictional nature of the prototype or its documentation.
+## Undo, validation and copy
 
-## Accessibility, RTL, theming
+**One dark ink capsule**, radius 14, white text, light-blue Undo and ×, at bottom inline end (right EN / left FA) for about **8 seconds**. A new eligible action replaces it; no stacks or +N. Reserve space above sticky actions and preserve keyboard reachability. Undo after eligible remove/stop/approve/reject/send/complete transitions, never field edit/autosave. Preserve scoped conflict-aware inversion and no legal/financial Undo.
 
-- WCAG AA contrast (the pill colors above are chosen for it), visible focus rings, targets at least 40 px, keyboard-operable tables and menus.
-- RTL: `dir` on the root, CSS logical properties, sidebar and right panel mirror, directional icons mirror. Prices, codes, and dates use Western digits.
-- Light theme is the default. Dark theme uses the dark token column; the toggle is in the top bar. Theme and text size are remembered per user/device.
+Incomplete Save/Post/Send click opens **What's missing**: an amber box at top with a short list, each item linked to scroll/focus/highlight its field, and a red field message underneath. An edit clears only that field's error. Save as draft checks genuine draft requirements, not posting-only originals/review gates.
 
-## Mixed-direction text (Persian with English, numbers, prices)
+Sentence case, plain verbs, the same name in button/History and exact requirements §18 vocabulary. Optional labels use **Note (optional)**, never Optional note. Singular **1 unit** everywhere. Isolate Latin text, proper names, numbers, prices, codes, dates and units inside FA. Current-language name primary, other secondary, English fallback if Persian empty. Weighed approved/converted prices occupy separate /lb and /kg lines, without a leading dot. Read-only cost displays cents; stored/editable/computed cost retains four decimals.
 
-- Wrap every left-to-right fragment inside Persian text in an isolated span (`<bdi>` or `unicode-bidi: isolate`): unit sizes ("1 L", "400 g"), prices, Product Codes, barcodes, English names, supplier names. "1 L" must never render as "L 1".
-- Use **one formatter** for prices (`$2.99`), unit sizes, dates (YYYY-MM-DD), and offers. English offer label: "2 for $5". Persian offer label: "۲ عدد $5" style from the translation file (Ali reviews the wording); the price part stays isolated.
-- Signed prices include the minus sign within the isolated fragment (`−$7.23`); invoice line-number punctuation and shorts parentheses are isolated with their numeric content. Supplier proper names are always isolated.
-- Price changes: show "Old $1.99" and "New $2.99" as two labeled values, or use an arrow that follows the reading direction (→ in English, ← in Persian).
-- **Tables in Persian:** header and cells use the same logical alignment (`text-align: start`; numbers `end`), so every header sits exactly above its values.
-- **Names:** the current language's name is primary (bold), the other language's name secondary (muted, below it), in lists, cards, tables, and labels alike.
-- Every user-facing string comes from the translation files, including branch names, demo user names, and status words; no English left in the Persian UI except proper names (suppliers, brands).
-- Unit-cost display is two decimals (`$1.40`), while stored/calculated/editable costs retain four decimals. Dates use Inter with tabular numerals, not monospace. Use sentence-case **Selling price** everywhere. Match EN and فا visually in the language toggle; equal pixel font sizes alone are not sufficient.
-- Buttons are actions, never past-tense states. Date tracking uses **Add date**, **Remove**, and **Stop tracking this product**; keep the same translated action names in dialogs, toasts and History.
+## Documents and exact printing
 
-## Small components (added)
+Supplier-facing Return memo/Print order default **English only**, with separate per-document company settings. Internal picking lists and labels retain bilingual settings. Display language never rewrites signed original or financial snapshot.
 
-- **User chip** (sidebar bottom): one line, name truncated with an ellipsis, role below in muted text, radius 12, same width as nav items.
-- **Collapsed sidebar:** same toggle icon in both states, tooltips on hover, a small dot on icons that have counts, round avatar.
-- **Top bar icons:** text size as "Aa" with a tooltip; notification count as a small pill at the bell's top corner (no extra chevron); single circular language button shows the target language at readable contrast.
-- **Undo toast (C3):** charcoal pill with action name and **Undo**, bottom-right in English/bottom-left in Persian, **10 seconds**, above dialogs, bars and menus. Pause only that toast while hovered or keyboard-focused; retain independent timers/newest-first stacking, at most **3** plus **+N more**. An action never resets another timer. Preserve focus and make the stack reachable on phones. This supersedes the B five-second opposite-corner rule.
-- **Pills hug their text**; never stretch a pill to full width.
-- **Sortable headers** use the shared 13 px muted table-header style and a small arrow. **Back to Products** and **Back to Returns** share the directional arrow icon.
-- Invoice selling-price provenance such as **Approved: $1.49** is a single muted line below the price.
+- A4 is **210 × 297 mm**. Regular labels: **60 × 40 mm**, margins **10 mm**, gaps **4 mm**. Promo: **210 × 148.5 mm**, zero margins/gaps, exactly two per A4; black border **1.5 mm**, content/border inset **at least 5 mm**.
+- Active Promo: black SPECIAL / ویژه band, huge offer, small regular price, both label names. Regular active-offer SPECIAL remains mandatory even when optional offer text is off. Unpromoted Promo prints approved regular price without an invented offer.
+- Omit logo when label width is below **50 mm**; otherwise height at least **8 mm**, contained. Preserve codes/units/tax; no barcode or promotion-expiry additions. Grayscale preview is actual monochrome output.
+- Return memo: store/address/**RM-0001**/date, supplier contacts, product/code/quantity/unit cost/expected credit, total and driver/store-staff signature/name/date. Never internal `demo-return-1` as supplier reference.
+- Screen preview scales the whole page; physical geometry, calibration, page breaks and source evidence stay unchanged. Physical printer alignment remains a separate operator check.
 
-## C label and receiving presentation (2026-10-09)
+## C6/C7 proof
 
-- Built-in **Regular** uses the previously tested shelf geometry:60 × 40 mm,10 mm A4 margins,4 mm gaps,zero calibration offsets. **Promo** is exact half-A4:210 × 148.5 mm,zero page margins/gaps,two slots per210 × 297 mm sheet. Inset thick1.5 mm black border and content at least5 mm from physical edges; scale screen preview only, retain exact physical dimensions for print. Both are editable/duplicable/archivable company presets, never deleted or silently recreated after archive.
-- Promo with an active offer must work on a black-and-white printer: **solid black band with white SPECIAL / ویژه**, very large bold offer, smaller **Regular $2.99** and current-language name primary/other name below. Regular active-offer labels always get a small black SPECIAL band, even when optional offer text is hidden. Promo without an active offer shows approved regular price large and omits promotional wording; never invent an offer.
-- **Grayscale preview** renders the real print layout in monochrome, with black text/white paper regardless of theme. Preserve bilingual shaping, isolated codes/prices/units, tax indicator, existing logo width/height rule and no barcode/promotion-expiry fields. Physical print/PDF output must preserve the requested millimetres; preview scaling cannot alter them.
-- Staff price blocks carry an Info **Manual price** pill and **Rule price $X.XX · Manual price $Y.YY** when price provenance is manual; margins/costs remain Supervisor-only. The pill is a translated word, never color alone. New invoice decisions **Keep manual price / Use rule price** use the shared segmented-choice style.
-- Received, Orders and Branch requests follow shared Data table/toolbar/empty-state/dialog styles. Incoming/receiving checklists use custom styled checkboxes; decisions use existing blockers style. Additional sidebar items retain40 px role-filtered grouping and a non-scrolling1080p layout; do not add Stock. Warehouse remains a styled location-picker option, never a native dropdown.
+Retain existing pricing/unit/domain checks. Add all Part 2 tests, twenty 3 MB photo migration/persistence, token-only components and ≥4.5:1 text contrast in both themes. Capture the 17 requested scenes in EN light, EN dark, FA, 900 px and phone, including real clearance/date/pickup/partial-resolution/What's missing states. Individually open each final capture beside all 14 bug notes and five retouches, recording mismatches honestly. C6/C7 are stacked without an intermediate approval stop; neither merges without later approval.
 
-## C3 shared presentation and navigation contract
-
-### Four button variants
-
-| Variant   | Light                                                      | Dark                                                         | Use                                                                                |
-| --------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| Primary   | Solid `--accent-fill`, white text                          | Solid `--accent-fill`, white text                            | Main action; one per area                                                          |
-| Secondary | White rounded rectangle, thin blue border, soft blue glow | Dark charcoal rounded rectangle, thin blue border, soft blue glow | Edit, Add to waitlist, invoice-reference actions, Return policy, Fit width, dialog Cancel and other ordinary actions |
-| Quiet     | Readable text with optional icon                           | Readable text with optional icon                             | **Clear filters** and **← Back to …** links only                                     |
-| Danger    | Red text, red border and soft red glow                     | Legible red text, red border and soft red glow               | Reject, Remove, Cancel return/order, Stop offer and other stop/cancel actions        |
-
-Secondary takes the visual treatment from the owner's glowing-button reference, not its “Generate” copy. Text contrast is at least **4.5:1**, border contrast at least **3:1** against the adjacent background in both themes and row colors. Use the configured accent; hover strengthens the soft glow slightly, keyboard focus has a clear ring, and reduced motion is respected. Cards stay borderless: the button treatment does not authorize card borders/shadows. No faint legacy outline variants remain.
-
-- **Search pill:** one rounded field, icon inside the same surface, no nested pill. Labels/Notes/Suppliers/Returns use at least 320 px on desktop, full width on phones, and 44 px height matching filters. Placeholder is fully visible.
-- **Suppliers default columns (C5):** Supplier, Status, Last delivery, Deliveries, Open returns, Open shorts, Balance, Overdue (eight for Supervisor; six for workers). The name/row opens detail so no redundant View/empty Actions column. Payment terms, Sales rep/phone and Next due date remain hidden by default and available through authorized Columns/detail. Extra selected columns wrap/group within desktop width.
-- **Tables:** text/start and numbers/money/end headers align with body cells in both languages. Compact purposeful gaps; intrinsic-width horizontal actions at the inline end, at most two, 40 px high/max 200 px per text action. Fix covering pseudo-elements/sticky layers rather than hiding the covered action. Suppliers uses **Deliveries** as the short column heading with “this month” context. Tables and panels reflow without desktop horizontal overflow at all three required widths.
-- **Columns chooser:** Products, Suppliers, Received, Invoices, Orders, Payables, Returns and Date tracking expose **Columns** and **Reset columns**. Place Columns in the filter row beside the result count; Invoices (no filter row) puts it at the inline end of the card-title row. The identifying name/reference column remains visible. Hidden columns persist by company/user/table in browser storage; never expose unauthorized monetary columns through the chooser.
-- **Navigation:** every invoice, return, order, supplier and request detail has a leading **Back to [list]** link. Every breadcrumb segment is actionable. Browser Back restores the preceding list's tab, filters and scroll position within the same user/company context.
-- **Sidebar icons:** every item has a unique icon. Invoices = receipt/paper invoice; Received = delivery truck/downward-box; Orders = shopping cart; Approvals = check badge. Automated uniqueness proof includes all configured visible items.
-- **Errors:** validation lives beside the relevant field and clears as soon as that field changes. Keep unrelated errors; server/transaction errors use a concise banner. Check every form, including the confirmed-supplier gate on New order.
-- **Review approval:** top summary product, Old → New, unit cost and margin; then **Apply price to**. Short effect rows group only locations with identical outcomes. Show **Override removed** only for a real removed override, warning in a callout, action buttons bottom inline end. Non-selling locations are excluded.
-- **Labels Products:** row checkboxes and **Select all filtered** replace per-row Copies/Add to waitlist. Selected products show a sticky bottom bar **Copies [1] · Add 5 products to waitlist** (correct pluralization). Copies per product are edited only in Waitlist. Keep name/code/selling-price/offer alignment and all current filters.
-- **Offers/Notes:** top-right Primary **Create offer** and top **Add note** beside **New notebook** open dialogs; remove permanent creation cards. Lists are the main content.
-- **Non-selling locations:** Warehouse is excluded from approval effects, offer scope and per-location selling-price lists unless its configured **Sells to customers** setting is enabled. Receiving/order/request visibility still follows permissions. Preserve historical non-selling overrides as hidden evidence until explicit selling opt-in; all-selling approval must not clear them.
-
-## C4 document and operational layouts
-
-Posted invoices are readable documents, not disabled forms: header, product/quantity cases and units/unit cost/line total/tracked date, retained short/extra/short-dated decisions, totals, and Original invoice. No draft auto-save message. Supervisor **Correct invoice** opens a populated correction and an impact preview; **Corrected** links the retained versions in History.
-
-Original images fit the panel with zoom. PDFs have a viewer, page navigation and **Download**. Missing manual originals show **No original attached** and **Attach original**; posting still requires a valid original. Every fictional demo original must match its own recorded header, packs, lines, subtotal, tax and total. Operational print previews scale the whole physical page to fit, preserving exact A4/label print dimensions and correctly paired EN/FA headings.
-
-Weighed prices label their unit, with the approved price primary and optional converted price smaller. Products shows **$7.49/lb** on the first line, **$16.51/kg** underneath without a leading dot, and **Sold by weight** in Unit size. Keep isolated numeric fragments and all pricing logic. Date entry follows C5's inline layouts below; Remove keeps its reason dialog and retained history. Returns retain **Open / History** and the label-to-tone contract above. Return memo and Payables pending credit remain unchanged; no Returned to stock column.
-
-## C5 owner reference corrections (2026-10-10)
-
-These rules supersede C3's capsule text actions, stacked full-column table buttons, EN | فا control, borderless fields and C4's date-add dialog. Keep the approved dashboard, Approvals screen and round tabs/toggles.
-
-- **Posted invoice:** number and status share one header line; Correct invoice and Move invoice sit at the inline end with matching 12 px/40 px geometry. Totals below lines align at the inline end: Subtotal, Tax, Invoice total, Deductions, then bold Payable, one label and adjacent amount per row.
-- **Original invoice:** show the whole page by default; allow **25%–400%** zoom, including below Fit width. Compact toolbar: **− / zoom % / + / Fit width / Fit page / Download**, with PDF navigation retained. The document's bytes, actual dimensions, original history and exact downloads are unchanged.
-- **Return detail:** title with status immediately beside it, creation/supplier/location subtitle below; Secondary Return policy and Primary Record pickup/next action at the inline end, both 40 px. Separate Items and Status columns clearly in the list.
-- **Return policy:** about 640 px wide; brief summary, five numbered steps with a short bold title and one sentence each, no nested card. Secondary **Download full policy**, Primary **Close**. Preserve all existing safe-original, evidence and settlement rules.
-- **Date tracking:** top quick-add bar: searchable scan/name/code/barcode product, date, concrete allowed location defaulting to current, Primary **Add**. Enter submits; clear and refocus product, keep chosen date/location, clear optional evidence; pin/highlight the new row and offer existing scoped Undo. **More** reveals Type (Expiry default/Best before), Quantity, Lot and Note. No Add date dialog on this page.
-- **Lookup Dates:** Supervisor/Floor Worker On/Off switch, current concrete-location open dates and inline date/Add. No Edit product or dialog. Adding when preference is Off/unset enables it atomically, says so and includes that preference change in Undo. Off alone preserves open dates; Supervisor Stop tracking menu retains the explicit remove-existing choice. Products **⋯ → Add date** opens the quick-add page with that product selected.
-- **Offers:** round **Current offers / Past offers** tabs. Current has active/scheduled offers only, one row per product; legitimate distinct selling-location scopes remain visible within that row. Past retains stopped/ended records newest first. Repeating an identical current offer in the same scope is idempotent; changed terms preserve the predecessor in history. Keep mix-and-match, permissions, scope and Undo.
-- **Proof:** review doc includes every action button and semantic widget by screen/label/style/radius/height/width, with actual browser measurements. Automated checks enforce 12 px text actions, intrinsic table actions ≤200 px, all top-bar controls 40 px/border/glow and status consistency in both themes/languages. Preserve all pricing/tests/seed files. Capture the requested EN light, EN dark, Persian and phone screens; open each final image and compare all nine owner annotations.
+**Klead contrast adjustment (2026-10-11):** The supplied green text `#1A7F45` on `#E6F4EC` measures 4.4451:1, below the owner's mandatory 4.5:1. Use the smallest measured darkening, `#197D44`, giving 4.56258:1 with the same tint. Keep the original reference files unchanged and list this deliberate accessibility difference; all rendered pairs still require actual contrast proof. This does not resolve the separately pending dark Primary choice.

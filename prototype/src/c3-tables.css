@@ -168,7 +168,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px 12px;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: var(--radius-control);
   }
   :root
     .suppliers-table:is(
@@ -183,8 +183,8 @@
     align-items: flex-start;
     min-inline-size: 0;
     padding: 0;
-    border-radius: 0;
-    background: transparent;
+    border-radius: var(--radius-none);
+    background: var(--color-clear);
     text-align: start !important;
   }
   :root

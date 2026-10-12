@@ -5,34 +5,34 @@
   max-block-size: 40px;
   inline-size: fit-content;
   min-inline-size: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 :root .ui-button.button.button-primary {
-  border: 1px solid transparent;
+  border: 1px solid var(--color-clear);
   background: var(--accent-fill);
-  color: #fff;
+  color: var(--klead-white);
   outline: none;
 }
 :root .ui-button.button.button-secondary {
   border: 1px solid var(--secondary-border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--secondary-fill);
   color: var(--secondary-text);
   outline: none;
-  box-shadow: 0 2px 12px var(--secondary-glow);
+  box-shadow: var(--shadow-none);
   transition: box-shadow 160ms ease;
 }
 :root .ui-button.button.button-secondary:hover:not(:disabled) {
   background: var(--secondary-fill);
-  box-shadow: 0 3px 18px var(--secondary-glow-hover);
+  box-shadow: var(--shadow-none);
 }
 :root .ui-button.button.button-quiet,
 :root .ui-button.button.button-ghost {
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--color-clear);
+  background: var(--color-clear);
   color: var(--text);
   outline: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-none);
 }
 :root .ui-button.button.button-quiet:hover:not(:disabled),
 :root .ui-button.button.button-ghost:hover:not(:disabled) {
@@ -40,16 +40,16 @@
 }
 :root .ui-button.button.button-danger {
   border: 1px solid var(--danger);
-  border-radius: 12px;
-  background: transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-clear);
   color: var(--danger);
   outline: none;
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--danger) 14%, transparent);
+  box-shadow: var(--shadow-none);
   transition: box-shadow 160ms ease;
 }
 :root .ui-button.button.button-danger:hover:not(:disabled) {
   background: var(--danger-bg);
-  box-shadow: 0 3px 18px color-mix(in srgb, var(--danger) 22%, transparent);
+  box-shadow: var(--shadow-none);
   filter: none;
 }
 :root .ui-button.button:focus-visible {
@@ -57,13 +57,13 @@
   outline-offset: 3px;
 }
 :root .ui-button.ui-icon-button.button {
-  border-radius: 50%;
+  border-radius: var(--radius-round);
 }
 :root .ui-segments button,
 :root .pills button,
 :root .tabs button {
   color: var(--text);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-clear);
 }
 :root .ui-segments button[aria-pressed="false"],
 :root .pills button[aria-pressed="false"] {
@@ -86,7 +86,7 @@
   min-block-size: 44px;
   padding-inline: 14px;
   gap: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--search-fill);
 }
 :root .filter-toolbar .filter-search-pill input,
@@ -99,9 +99,9 @@
   min-block-size: 44px;
   padding: 0;
   border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  border-radius: var(--radius-none);
+  background: var(--color-clear);
+  box-shadow: var(--shadow-none);
   outline: none;
   color: var(--text);
   font-size: 0.875rem;

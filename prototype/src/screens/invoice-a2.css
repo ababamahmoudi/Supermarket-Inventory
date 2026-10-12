@@ -92,7 +92,7 @@
   inline-size: 100%;
   padding: 0;
   border: 0;
-  background: transparent;
+  background: var(--color-clear);
   color: inherit;
   text-align: start;
   cursor: pointer;
@@ -169,7 +169,7 @@
   gap: 12px;
   padding: 16px;
   background: var(--surface);
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--radius-section-top);
 }
 .invoice-action-footer .bottom-bar {
   padding: 0;
@@ -222,7 +222,7 @@
   margin: 0;
   background: var(--surface-soft);
   color: var(--text);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   max-block-size: 65dvh;
   overflow: auto;
 }

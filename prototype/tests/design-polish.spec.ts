@@ -23,6 +23,11 @@ const routes = [
 
 async function assertPresentation(page: Page) {
   const failures = await page.evaluate(() => {
+    const shadowProbe = document.createElement("div");
+    shadowProbe.style.boxShadow = "var(--shadow-card)";
+    document.body.append(shadowProbe);
+    const approvedCardShadow = getComputedStyle(shadowProbe).boxShadow;
+    shadowProbe.remove();
     const visible = (element: Element) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
@@ -57,7 +62,7 @@ async function assertPresentation(page: Page) {
             style.borderBottomWidth,
             style.borderLeftWidth,
           ].some((width) => parseFloat(width) !== 0) ||
-          style.boxShadow !== "none"
+          style.boxShadow !== approvedCardShadow
         );
       })
       .map((element) => element.className);

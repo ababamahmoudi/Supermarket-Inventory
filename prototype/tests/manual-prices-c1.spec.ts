@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   chooseOption,
   resetDemo,
@@ -7,6 +7,17 @@ import {
   signIn,
 } from "./helpers";
 
+async function showManualPrice(page: Page) {
+  const table = page.locator(".catalog-products-table");
+  const badge = table.locator(".manual-price-pill");
+  if (!(await badge.isVisible()))
+    await table
+      .getByRole("button", { name: "Show details", exact: true })
+      .first()
+      .click();
+  await expect(badge).toHaveText("Manual price");
+}
+
 test("manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only", async ({
   page,
 }) => {
@@ -14,12 +25,33 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await setBranch(page, "all");
   await page.goto("/#products");
   await page.getByLabel("Search products", { exact: true }).fill("0009");
-  await expect(
-    page.getByRole("columnheader", { name: "Store cost", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("columnheader", { name: "Margin %", exact: true }),
-  ).toBeVisible();
+  const table = page.locator(".catalog-products-table");
+  const productRow = table
+    .locator("tbody tr")
+    .filter({ hasText: "0009" })
+    .first();
+  for (const label of ["Store cost", "Margin %"]) {
+    const heading = table.getByRole("columnheader", {
+      name: label,
+      exact: true,
+    });
+    const cell = productRow.locator(`td[data-column-label="${label}"]`);
+    if (await heading.count()) await expect(heading).toBeVisible();
+    else if (await cell.isVisible()) {
+      await expect(cell).toHaveAttribute("data-column-label", label);
+      await expect(cell).not.toBeEmpty();
+    } else {
+      await productRow
+        .getByRole("button", { name: "Show details", exact: true })
+        .click();
+      await expect(
+        table.locator(".table-expanded-row").getByText(label, { exact: true }),
+      ).toBeVisible();
+      await productRow
+        .getByRole("button", { name: "Hide details", exact: true })
+        .click();
+    }
+  }
   await page
     .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
     .click();
@@ -36,9 +68,7 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await expect(editor).not.toBeVisible();
   await page.getByLabel("Manual prices", { exact: true }).check();
   await expect(page.locator(".catalog-products-table tbody tr")).toHaveCount(1);
-  await expect(
-    page.locator(".catalog-products-table .manual-price-pill"),
-  ).toHaveText("Manual price");
+  await showManualPrice(page);
   await page
     .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();
@@ -66,8 +96,11 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     page.getByRole("columnheader", { name: "Margin %", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.locator(".catalog-products-table .manual-price-pill"),
-  ).toHaveText("Manual price");
+    page.locator(
+      '.catalog-products-table td[data-column-label="Store cost"], .catalog-products-table td[data-column-label="Margin %"]',
+    ),
+  ).toHaveCount(0);
+  await showManualPrice(page);
   await page
     .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();

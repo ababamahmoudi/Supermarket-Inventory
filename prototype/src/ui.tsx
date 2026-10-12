@@ -39,6 +39,12 @@ import {
   Columns3,
 } from "lucide-react";
 import { useDemo } from "./store";
+import { translate } from "./i18n";
+import {
+  allocateTableColumns,
+  tableResponsiveDefinition,
+  type ResponsiveColumn,
+} from "./c6-table-layout";
 import {
   defaultHiddenColumns,
   normaliseHiddenColumns,
@@ -59,6 +65,10 @@ const buttonVariants = cva("button", {
     variant: {
       primary: "button-primary",
       secondary: "button-secondary",
+      tinted: "button-tinted",
+      neutral: "button-neutral",
+      plain: "button-plain",
+      destructive: "button-destructive",
       danger: "button-danger",
       quiet: "button-quiet",
       ghost: "button-quiet button-ghost",
@@ -75,7 +85,16 @@ export function Button({
   type = "button",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "danger" | "quiet" | "ghost";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "tinted"
+    | "neutral"
+    | "plain"
+    | "destructive"
+    | "danger"
+    | "quiet"
+    | "ghost";
   size?: "default" | "sm";
   asChild?: boolean;
 }) {
@@ -276,7 +295,7 @@ export function Field({
         "aria-label"?: string;
         "aria-labelledby"?: string;
         "aria-describedby"?: string;
-        "aria-invalid"?: boolean;
+        "aria-invalid"?: boolean | "true" | "false" | "grammar" | "spelling";
       }>)
     : null;
   const id = child?.props.id ?? generated;
@@ -300,7 +319,9 @@ export function Field({
               ]
                 .filter(Boolean)
                 .join(" ") || undefined,
-            "aria-invalid": Boolean(error),
+            "aria-invalid": error
+              ? true
+              : (child.props["aria-invalid"] ?? false),
           })
         : children}
       {(error || hint) && (
@@ -338,21 +359,24 @@ export function DataTable({
   children,
   className,
   columns,
+  responsive = true,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
-  columns?: {
-    key?: string;
-    label?: string;
-    width?: string | number;
-    align?: "start" | "end";
-    actions?: boolean;
-    hidden?: boolean;
-  }[];
+  columns?: ResponsiveColumn[];
+  responsive?: boolean;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
   const [availableWidth, setAvailableWidth] = useState(0);
+  const [mobile, setMobile] = useState(() => window.innerWidth < 760);
+  const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const detailsId = useId();
+  useEffect(() => {
+    const resize = () => setMobile(window.innerWidth < 760);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
   const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
     Children.toArray(nodes).flatMap((node, index) =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment
@@ -382,7 +406,7 @@ export function DataTable({
   const headerCells = isValidElement<{ children?: ReactNode }>(headerRow)
     ? cells(headerRow.props.children)
     : [];
-  const resolvedColumns =
+  const resolvedColumns: ResponsiveColumn[] =
     columns ??
     (isValidElement<{ children?: ReactNode }>(headerRow)
       ? cells(headerRow.props.children).map((cell) => {
@@ -405,7 +429,29 @@ export function DataTable({
           };
         })
       : []);
-  const visibleColumns = resolvedColumns.filter((column) => !column.hidden);
+  const layout = responsive
+    ? allocateTableColumns(
+        resolvedColumns,
+        availableWidth,
+        mobile,
+        resolvedColumns.map((column, index) =>
+          column.actions ? (actionWidths[column.key ?? String(index)] ?? 0) : 0,
+        ),
+      )
+    : {
+        visible: resolvedColumns.flatMap((column, index) =>
+          column.hidden ? [] : [index],
+        ),
+        collapsed: [],
+        minimums: resolvedColumns.map(() => 0),
+      };
+  const visibleIndexes = new Set(layout.visible);
+  const visibleColumns = layout.visible.map((index) => resolvedColumns[index]);
+  const flexibleMinimum = layout.visible.reduce(
+    (total, index) =>
+      total + (resolvedColumns[index].actions ? 0 : layout.minimums[index]),
+    0,
+  );
   const columnWeight = (column: (typeof resolvedColumns)[number]): number => {
     if (typeof column.width === "number") return Math.max(1, column.width);
     if (column.width?.endsWith("%"))
@@ -418,13 +464,13 @@ export function DataTable({
     (total, column) => total + columnWeight(column),
     0,
   );
-  const columnId = (column: (typeof resolvedColumns)[number], index: number) =>
-    column.key ?? String(index);
+  const columnId = (column: (typeof resolvedColumns)[number]) =>
+    column.key ?? String(resolvedColumns.indexOf(column));
   const fixedActionWidth = visibleColumns.reduce(
-    (total, column, index) =>
+    (total, column) =>
       total +
       (column.actions
-        ? (actionWidths[columnId(column, index)] ?? columnWeight(column))
+        ? (actionWidths[columnId(column)] ?? columnWeight(column))
         : 0),
     0,
   );
@@ -451,11 +497,9 @@ export function DataTable({
         wrapperStyle.paddingInlineStart,
         wrapperStyle.paddingInlineEnd,
       ].reduce((total, value) => total + (parseFloat(value) || 0), 0);
-      const minimumWidth = parseFloat(getComputedStyle(table).minWidth) || 0;
       const width = Math.max(
         0,
         wrapper.getBoundingClientRect().width - wrapperInsets,
-        minimumWidth,
       );
       setAvailableWidth((previous) =>
         Math.abs(previous - width) < 0.01 ? previous : width,
@@ -501,7 +545,7 @@ export function DataTable({
           );
           for (const control of controls) measured.add(control);
         }
-        next[columnId(column, index)] = Math.ceil(width);
+        next[columnId(column)] = Math.ceil(width);
       });
       setActionWidths((previous) =>
         Object.keys(next).length === Object.keys(previous).length &&
@@ -524,8 +568,8 @@ export function DataTable({
       observer?.disconnect();
     };
   });
-  const decorate = (nodes: ReactNode): ReactNode =>
-    Children.map(nodes, (node) => {
+  const decorate = (nodes: ReactNode, path = "table"): ReactNode =>
+    Children.map(nodes, (node, nodeIndex) => {
       if (
         !isValidElement<{
           children?: ReactNode;
@@ -537,7 +581,21 @@ export function DataTable({
         return node;
       if (node.type === "tr") {
         let columnIndex = 0;
-        return cloneElement(node, {
+        const rowKey = String(node.key ?? `${path}-${nodeIndex}`);
+        const rowCells = cells(node.props.children);
+        const bodyRow = rowCells.some(
+          (cell) => isValidElement(cell) && cell.type === "td",
+        );
+        const fullRow = rowCells.some(
+          (cell) =>
+            isValidElement<{ colSpan?: number }>(cell) &&
+            (cell.props.colSpan ?? 1) > 1,
+        );
+        const canExpand =
+          responsive && bodyRow && !fullRow && layout.collapsed.length > 0;
+        const expanded = expandedRows.includes(rowKey);
+        const rowId = `${detailsId}-${encodeURIComponent(rowKey)}`;
+        const decoratedRow = cloneElement(node, {
           children: Children.map(cells(node.props.children), (cell) => {
             if (
               !isValidElement<{
@@ -554,10 +612,14 @@ export function DataTable({
             columnIndex += span;
             const covered = resolvedColumns
               .slice(originalIndex, originalIndex + span)
-              .filter((column) => !column.hidden);
+              .filter((_, index) => visibleIndexes.has(originalIndex + index));
             if (resolvedColumns.length && !covered.length) return null;
             const column = covered[0];
             if (!column) return cell;
+            const identity = canExpand && originalIndex === layout.visible[0];
+            const content = isValidElement<{ children?: ReactNode }>(cell)
+              ? cell.props.children
+              : undefined;
             return cloneElement(cell, {
               colSpan: span > 1 ? covered.length : cell.props.colSpan,
               "data-column-key": column.key,
@@ -572,18 +634,84 @@ export function DataTable({
                 ...cell.props.style,
                 textAlign: column.actions ? "end" : (column.align ?? "start"),
               },
+              ...(identity
+                ? {
+                    children: (
+                      <div className="table-identity">
+                        <div className="table-identity-content">{content}</div>
+                        <IconButton
+                          className="table-details-toggle"
+                          aria-label={
+                            expanded
+                              ? translate("Hide details", "پنهان کردن جزئیات")
+                              : translate("Show details", "نمایش جزئیات")
+                          }
+                          aria-expanded={expanded}
+                          aria-controls={rowId}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedRows((previous) =>
+                              expanded
+                                ? previous.filter((key) => key !== rowKey)
+                                : [...previous, rowKey],
+                            );
+                          }}
+                        >
+                          <ChevronDown size={16} aria-hidden="true" />
+                        </IconButton>
+                      </div>
+                    ),
+                  }
+                : {}),
             });
           }),
         });
+        return canExpand && expanded ? (
+          <Fragment key={rowKey}>
+            {decoratedRow}
+            <tr className="table-expanded-row" id={rowId}>
+              <td colSpan={visibleColumns.length}>
+                <dl>
+                  {layout.collapsed.map((index) => {
+                    const cell = rowCells[index];
+                    return isValidElement<{ children?: ReactNode }>(cell) ? (
+                      <div key={resolvedColumns[index].key ?? index}>
+                        <dt>
+                          {resolvedColumns[index].label ||
+                            textOf(headerCells[index])}
+                        </dt>
+                        <dd>{cell.props.children}</dd>
+                      </div>
+                    ) : null;
+                  })}
+                </dl>
+              </td>
+            </tr>
+          </Fragment>
+        ) : (
+          decoratedRow
+        );
       }
-      return cloneElement(node, { children: decorate(node.props.children) });
+      return cloneElement(node, {
+        children: decorate(node.props.children, `${path}-${nodeIndex}`),
+      });
     });
   return (
     <div
       ref={wrapperRef}
-      className={cn("table-wrap", "ui-data-table", className)}
+      className={cn(
+        "table-wrap",
+        "ui-data-table",
+        responsive && "is-responsive",
+        mobile && "is-mobile",
+        className,
+      )}
       tabIndex={0}
       data-visible-column-count={visibleColumns.length}
+      data-width-hidden-column-count={
+        layout.collapsed.filter((index) => !resolvedColumns[index].hidden)
+          .length
+      }
       {...props}
     >
       <table
@@ -603,12 +731,14 @@ export function DataTable({
               data-action-column={column.actions || undefined}
               style={{
                 width: column.actions
-                  ? `${actionWidths[columnId(column, index)] ?? columnWeight(column)}px`
-                  : flexibleWeight
-                    ? availableWidth
-                      ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
-                      : `${(columnWeight(column) / totalWeight) * 100}%`
-                    : undefined,
+                  ? `${actionWidths[columnId(column)] ?? columnWeight(column)}px`
+                  : responsive && availableWidth
+                    ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - fixedActionWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
+                    : flexibleWeight
+                      ? availableWidth
+                        ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
+                        : `${(columnWeight(column) / totalWeight) * 100}%`
+                      : undefined,
               }}
             />
           ))}
@@ -659,8 +789,8 @@ export function useTableColumns(
     setPreference({ key, hidden: defaultHiddenColumns(definitions) });
   };
   return {
-    columns: definitions.map((column) => ({
-      ...column,
+    columns: definitions.map((column, index) => ({
+      ...tableResponsiveDefinition(table, column, index),
       hidden: !isVisible(column.key),
     })),
     isVisible,
@@ -690,7 +820,7 @@ export function ColumnChooser({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button variant="neutral" onClick={() => setOpen(true)}>
         <Columns3 size={18} strokeWidth={1.5} aria-hidden="true" />
         {t("Columns", "ستون‌ها")}
       </Button>
@@ -713,10 +843,10 @@ export function ColumnChooser({
           ))}
         </div>
         <div className="actions c3-dialog-actions">
-          <Button variant="secondary" onClick={onReset}>
+          <Button variant="neutral" onClick={onReset}>
             {t("Reset columns", "بازنشانی ستون‌ها")}
           </Button>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button variant="neutral" onClick={() => setOpen(false)}>
             {t("Close", "بستن")}
           </Button>
         </div>
@@ -791,11 +921,15 @@ export function Dialog({
           ? document.activeElement
           : null;
       dialog.showModal();
-      dialog
-        .querySelector<HTMLElement>(
-          "[autofocus], input:not([disabled]), button:not([disabled]), [tabindex='0']",
+      (
+        dialog.querySelector<HTMLElement>("[autofocus]") ??
+        dialog.querySelector<HTMLElement>(
+          "input:not([disabled]), textarea:not([disabled])",
+        ) ??
+        dialog.querySelector<HTMLElement>(
+          "button:not([disabled]), [tabindex='0']",
         )
-        ?.focus();
+      )?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
       trigger.current?.focus();
@@ -809,7 +943,38 @@ export function Dialog({
     <dialog
       ref={ref}
       className={cn("confirm-dialog ui-dialog", className)}
-      aria-labelledby={titleId}
+      tabIndex={-1}
+      aria-labelledby={open ? titleId : undefined}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab" || event.defaultPrevented) return;
+        const dialog = event.currentTarget;
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter(
+          (element) =>
+            element.tabIndex >= 0 &&
+            !element.closest(
+              '[hidden],[inert],[aria-hidden="true"],dialog:not([open])',
+            ) &&
+            getComputedStyle(element).visibility !== "hidden" &&
+            element.getClientRects().length > 0,
+        );
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (!first || !last) {
+          event.preventDefault();
+          dialog.focus();
+        } else if (
+          (event.shiftKey && document.activeElement === first) ||
+          (!event.shiftKey && document.activeElement === last) ||
+          !dialog.contains(document.activeElement)
+        ) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onOpenChange(false);
@@ -826,7 +991,15 @@ export function Dialog({
           onOpenChange(false);
       }}
     >
-      <h2 id={titleId}>{title}</h2>
+      <div className="ui-dialog-header">
+        <h2 id={titleId}>{title}</h2>
+        <IconButton
+          aria-label={translate("Close dialog", "بستن پنجره")}
+          onClick={() => onOpenChange(false)}
+        >
+          <X size={20} aria-hidden="true" />
+        </IconButton>
+      </div>
       {description && (
         <div className="dialog-description muted">{description}</div>
       )}
@@ -982,12 +1155,14 @@ export function Select({
   searchable,
   className,
   disabled,
+  leadingIcon,
   ...attributes
 }: ControlAttributes & {
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
   searchable?: boolean;
+  leadingIcon?: ReactNode;
 }) {
   const { t } = useDemo();
   const {
@@ -1103,7 +1278,11 @@ export function Select({
         {...attributes}
         ref={triggerRef}
         type="button"
-        className={cn("ui-select ui-input", className)}
+        className={cn(
+          "ui-select ui-input",
+          leadingIcon && "has-leading-icon",
+          className,
+        )}
         disabled={disabled}
         role="combobox"
         aria-haspopup="listbox"
@@ -1117,6 +1296,11 @@ export function Select({
         onClick={() => (popupOpen ? closePopup() : open())}
         onKeyDown={keydown}
       >
+        {leadingIcon && (
+          <span className="select-leading" aria-hidden="true">
+            {leadingIcon}
+          </span>
+        )}
         {options.map((option) => (
           <span
             key={option.value}
@@ -2019,6 +2203,7 @@ export function Avatar({
 }
 
 type SegmentedProps = {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
@@ -2026,6 +2211,7 @@ type SegmentedProps = {
   className?: string;
 };
 function Segments({
+  id,
   value,
   onChange,
   options,
@@ -2035,6 +2221,7 @@ function Segments({
 }: SegmentedProps & { tabs: boolean }) {
   return (
     <div
+      id={id}
       {...props}
       role={tabs ? "tablist" : "group"}
       className={cn("ui-segments", { "ui-tabs": tabs }, className)}
@@ -2124,9 +2311,11 @@ export function KpiCard({
       <span className="ui-kpi-label">{label}</span>
       <span className="ui-kpi-number tabular">{value}</span>
       {breakdown && <span className="ui-kpi-breakdown">{breakdown}</span>}
-      <span className="ui-kpi-icon" aria-hidden="true">
-        {icon ?? <ArrowUpRight size={20} strokeWidth={1.5} />}
-      </span>
+      {(icon || onClick) && (
+        <span className="ui-kpi-icon" aria-hidden="true">
+          {icon ?? <ArrowUpRight size={20} strokeWidth={1.5} />}
+        </span>
+      )}
     </>
   );
   return onClick ? (

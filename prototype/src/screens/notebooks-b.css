@@ -50,7 +50,7 @@
   align-items: center;
   gap: 20px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
 }
 .notebook-definition-row p {
@@ -69,25 +69,25 @@
 .notebook-entry-details > span {
   background: var(--surface-soft);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .notebook-search-pill {
   display: flex;
   align-items: center;
   gap: 8px;
   background: var(--search-fill);
-  border-radius: 22px;
+  border-radius: var(--radius-toast);
   padding-inline-start: 14px;
   block-size: 44px;
   inline-size: min(320px, 100%);
   min-inline-size: 180px;
 }
 .notebook-search-pill input {
-  background: transparent;
+  background: var(--color-clear);
   min-inline-size: 0;
   inline-size: 100%;
   block-size: 44px;
-  border-radius: 22px;
+  border-radius: var(--radius-toast);
 }
 .notebook-search-pill svg {
   flex-shrink: 0;

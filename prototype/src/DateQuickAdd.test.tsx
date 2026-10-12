@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it } from "vitest";
 import i18n from "./i18n";
+import { addTrackedDate, stopProductDateTracking } from "./date-tracking";
 import { ProductDatesSection } from "./ProductDatesSection";
 import { DemoProvider, useDemo } from "./store";
 import Expiry from "./screens/Expiry";
@@ -21,6 +22,9 @@ function Harness({ lookup = false }: { lookup?: boolean }) {
     undoActivity,
     setBranch,
     setLang,
+    update,
+    historyContext,
+    revertActivity,
   } = useDemo();
   return (
     <>
@@ -34,6 +38,46 @@ function Harness({ lookup = false }: { lookup?: boolean }) {
       <button onClick={() => setBranch("Branch 1")}>Use North York</button>
       <button onClick={() => setLang("fa")}>Use Persian</button>
       <button onClick={() => setLang("en")}>Use English</button>
+      <button
+        onClick={() => {
+          if (historyContext)
+            update((next) =>
+              addTrackedDate(next, historyContext, {
+                product_code: next.products[0].code,
+                branch: "Branch 1",
+                date_type: "expiry",
+                date: "2026-11-04",
+              }),
+            );
+        }}
+      >
+        Add fixture date
+      </button>
+      <button
+        onClick={() => {
+          if (historyContext)
+            update((next) =>
+              stopProductDateTracking(
+                next,
+                historyContext,
+                next.products[0].code,
+                "keep",
+              ),
+            );
+        }}
+      >
+        Keep fixture date
+      </button>
+      <button
+        onClick={() => {
+          const latest = [...state.activity]
+            .reverse()
+            .find((entry) => entry.action === "Add date");
+          if (latest) revertActivity(latest.id);
+        }}
+      >
+        Revert latest date
+      </button>
       {lookup ? (
         <ProductDatesSection product={state.products[0]} />
       ) : (
@@ -162,9 +206,10 @@ it("adding in another allowed location keeps the date and chosen location while 
     retainedDate!,
   );
   expect(location).toHaveTextContent("Richmond Hill");
-  expect(
-    screen.getByRole("combobox", { name: "Time window" }),
-  ).toHaveTextContent("All active dates");
+  expect(screen.getByRole("tab", { name: "All dates" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   const newRow = document.querySelector(
     '.expiry-table tbody tr[data-new-date="true"]',
   )!;
@@ -174,7 +219,7 @@ it("adding in another allowed location keeps the date and chosen location while 
   expect(within(newRow as HTMLElement).getByText("0001")).toBeInTheDocument();
 });
 
-it("the Products quick-add route validates the preselected product and preserves a working Add date Undo", async () => {
+it("the Products quick-add route validates the preselected product and preserves safe History reversion without a transient Add toast", async () => {
   const user = await show();
   window.location.hash = "expiry?product=0001";
   await waitFor(() =>
@@ -192,7 +237,10 @@ it("the Products quick-add route validates the preselected product and preserves
   await chooseToday(user, form);
   await user.click(within(form).getByRole("button", { name: "Add" }));
   expect(screen.getByTestId("date-preference")).toHaveTextContent("true");
-  await user.click(screen.getByRole("button", { name: "Undo Add date" }));
+  expect(
+    screen.queryByRole("button", { name: "Undo Add date" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Revert latest date" }));
   expect(screen.getByTestId("date-preference")).toHaveTextContent("false");
   expect(screen.getByTestId("manual-dates")).toHaveTextContent(
     '"status":"removed"',
@@ -218,34 +266,55 @@ it("selected product labels follow language changes while typed scanner text sta
   expect(product).toHaveValue("DEMO-600000");
 });
 
-it("Lookup permits worker On/Off and inline Add, preserves existing dates when Off and denies Cashier mutations", async () => {
+it.each([false, true])(
+  "renders retained quick-add success in the current language without adding another date (tracking already on: %s)",
+  async (trackingAlreadyOn) => {
+    const user = await show();
+    if (trackingAlreadyOn)
+      await user.click(
+        screen.getByRole("button", { name: "Add fixture date" }),
+      );
+    const form = screen.getByRole("form", { name: "Add date" });
+    await user.type(
+      within(form).getByRole("combobox", { name: "Product" }),
+      "0001",
+    );
+    await chooseToday(user, form);
+    await user.click(within(form).getByRole("button", { name: "Add" }));
+    const english = trackingAlreadyOn
+      ? "Date added."
+      : "Date added. Date tracking turned on.";
+    const persian = trackingAlreadyOn
+      ? "تاریخ اضافه شد."
+      : "تاریخ اضافه شد. پیگیری تاریخ روشن شد.";
+    expect(within(form).getByRole("status")).toHaveTextContent(english);
+    const retainedDates = screen.getByTestId("manual-dates").textContent;
+    await user.click(screen.getByRole("button", { name: "Use Persian" }));
+    expect(within(form).getByRole("status")).toHaveTextContent(persian);
+    expect(within(form).getByRole("status")).not.toHaveTextContent(
+      "Date added.",
+    );
+    expect(screen.getByTestId("manual-dates").textContent).toBe(retainedDates);
+    await user.click(screen.getByRole("button", { name: "Use English" }));
+    expect(within(form).getByRole("status")).toHaveTextContent(english);
+    expect(screen.getByTestId("manual-dates").textContent).toBe(retainedDates);
+  },
+);
+
+it("C6 Lookup dates are read-only for every role and kept dates remain visible", async () => {
   const user = await show(true);
+  await user.click(screen.getByRole("button", { name: "Add fixture date" }));
+  await user.click(screen.getByRole("button", { name: "Keep fixture date" }));
   const section = screen.getByRole("region", { name: "Dates" });
-  const toggle = within(section).getByRole("switch", { name: "Date tracking" });
-  expect(toggle).toHaveAttribute("aria-checked", "false");
-  await user.click(screen.getByRole("button", { name: "Use Floor Worker" }));
-  const form = within(section).getByRole("form", { name: "Add date" });
-  await chooseToday(user, form);
-  await user.click(within(form).getByRole("button", { name: "Add" }));
-  expect(toggle).toHaveAttribute("aria-checked", "true");
-  expect(
-    screen.getByText("Date added. Date tracking turned on."),
-  ).toBeInTheDocument();
-  const originalDates = screen.getByTestId("manual-dates").textContent;
-  await user.click(toggle);
-  expect(toggle).toHaveAttribute("aria-checked", "false");
-  expect(screen.getByTestId("manual-dates")).toHaveTextContent(originalDates!);
-  await user.click(
-    screen.getByRole("button", {
-      name: "Undo Turn off date tracking",
-    }),
-  );
-  expect(toggle).toHaveAttribute("aria-checked", "true");
-  await user.click(screen.getByRole("button", { name: "Use Cashier" }));
-  expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
-  expect(
-    within(section).queryByRole("button", { name: "Add" }),
-  ).not.toBeInTheDocument();
-  expect(within(section).getByText("North York")).toBeInTheDocument();
-  expect(within(section).getByText("Expiry")).toBeInTheDocument();
+  const retained = screen.getByTestId("manual-dates").textContent;
+  for (const account of ["Use Supervisor", "Use Floor Worker", "Use Cashier"]) {
+    await user.click(screen.getByRole("button", { name: account }));
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
+    expect(within(section).queryByRole("form")).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: "Add" }),
+    ).not.toBeInTheDocument();
+    expect(section).toHaveTextContent("Expires 2026-11-04 · North York");
+    expect(screen.getByTestId("manual-dates")).toHaveTextContent(retained!);
+  }
 });

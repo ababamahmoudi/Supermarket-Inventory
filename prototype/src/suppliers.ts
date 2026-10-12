@@ -1,3 +1,4 @@
+import { companyCalendarDate } from "./company-time";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
@@ -145,13 +146,11 @@ function postedInvoices(state: DemoState, context: OperationsContext) {
       (invoice) => inScope(invoice, context) && invoice.status === "posted",
     );
 }
-function receivedDate(invoice: DemoInvoice) {
-  return (
-    invoice.received_at ??
-    invoice.invoice_date ??
-    invoice.posted_at ??
-    ""
-  ).slice(0, 10);
+function receivedDate(state: DemoState, invoice: DemoInvoice) {
+  return companyCalendarDate(
+    state.config,
+    invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
+  );
 }
 function supplierShorts(
   state: DemoState,
@@ -222,7 +221,10 @@ export function suppliersOverview(
     const invoices = postedInvoices(state, context).filter((invoice) =>
       matches(invoice.supplier),
     );
-    const dates = invoices.map(receivedDate).filter(Boolean).sort();
+    const dates = invoices
+      .map((invoice) => receivedDate(state, invoice))
+      .filter(Boolean)
+      .sort();
     return {
       name,
       id: details?.id,
@@ -295,7 +297,9 @@ export function supplierPage(
       : null;
   const invoices = postedInvoices(state, context)
     .filter((invoice) => invoice.supplier === name)
-    .sort((a, b) => receivedDate(b).localeCompare(receivedDate(a)));
+    .sort((a, b) =>
+      receivedDate(state, b).localeCompare(receivedDate(state, a)),
+    );
   const products = state.products.filter(
     (product) =>
       product.company_id === context.company_id &&
@@ -308,7 +312,7 @@ export function supplierPage(
       id: invoice.id,
       number: invoice.supplier_invoice_number,
       branch: invoice.branch,
-      received: receivedDate(invoice),
+      received: receivedDate(state, invoice),
       due_date: invoice.due_date,
       items: invoice.lines.length,
       status: invoice.status,
@@ -334,7 +338,7 @@ export function supplierPage(
           )
           .map((line) => ({
             invoice: invoice.supplier_invoice_number,
-            date: receivedDate(invoice),
+            date: receivedDate(state, invoice),
             cost: line.unit_cost_before_tax,
           })),
       );

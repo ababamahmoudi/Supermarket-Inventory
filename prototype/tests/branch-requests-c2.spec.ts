@@ -66,7 +66,9 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
     .getByRole("button", { name: "Open", exact: true })
     .click();
   await page.getByRole("button", { name: "Mark as sent", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Confirm every item");
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Confirm every item");
   await page
     .locator(".request-checklist-item")
     .first()

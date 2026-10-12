@@ -40,6 +40,18 @@ export async function signIn(page: Page, role: DemoRole) {
     page.getByRole("button", { name: "Demo", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".user-chip-copy strong")).toHaveText(account.name);
+  // Initial file migration is asynchronous; fixtures must wait for the real
+  // durable snapshot instead of racing its first localStorage write.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem("supermarket-prototype-v1");
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        return Array.isArray(saved.products) && Array.isArray(saved.ledger);
+      }),
+    )
+    .toBe(true);
 }
 
 export async function chooseOption(

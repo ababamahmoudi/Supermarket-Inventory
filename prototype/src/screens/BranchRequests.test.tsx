@@ -87,13 +87,26 @@ describe("Branch requests presentation", () => {
     await userEvent.clear(screen.getByLabelText("Quantity"));
     await userEvent.type(screen.getByLabelText("Quantity"), "1.5");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "positive whole number of units",
-    );
+    expect(
+      screen.getByRole("alert", { name: "What's missing" }),
+    ).toHaveTextContent("positive whole number of units");
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).branch_requests ?? [],
     ).toHaveLength(0);
     expect(screen.getByLabelText("Quantity")).toHaveValue("1.5");
+    expect(screen.getByLabelText("Quantity")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    const link = screen.getByRole("link", {
+      name: /positive whole number of units/,
+    });
+    expect(link).toHaveAttribute(
+      "href",
+      `#${screen.getByLabelText("Quantity").id}`,
+    );
+    await userEvent.click(link);
+    expect(screen.getByLabelText("Quantity")).toHaveFocus();
   });
   it("clears draft editor when the acting user or endpoint changes, and blocks Cashier", async () => {
     mount();

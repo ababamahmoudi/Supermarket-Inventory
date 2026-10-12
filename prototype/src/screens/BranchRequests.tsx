@@ -2,6 +2,7 @@ import { useState } from "react";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
+import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 import { useListState, useRouteParam } from "../navigation";
 import {
   Badge,
@@ -33,6 +34,7 @@ import {
   saveBranchRequestDraft,
   sendBranchRequest,
   pickingListSnapshot,
+  requestQuantityUnits,
   type BranchRequest,
   type BranchRequestContext,
   type BranchRequestItem,
@@ -155,7 +157,7 @@ export function RequestPickingList({
         <div>
           <BilingualPrintText en="Date" fa="تاریخ" />
           <bdi dir="ltr">
-            {(request.requested_at ?? request.created_at).slice(0, 10)}
+            <DateText value={request.requested_at ?? request.created_at} />
           </bdi>
         </div>
       </div>
@@ -242,8 +244,7 @@ export function RequestPickingList({
       {request.sent_by && (
         <p>
           <BilingualPrintText en="Sent by" fa="ارسال‌کننده" />
-          <bdi>{request.sent_by}</bdi> ·{" "}
-          <bdi dir="ltr">{request.sent_at?.slice(0, 10)}</bdi>
+          <bdi>{request.sent_by}</bdi> · <DateText value={request.sent_at} />
         </p>
       )}
     </OperationalPrintDocument>
@@ -291,6 +292,9 @@ export default function BranchRequests() {
     [reason, setReason] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState<string>("");
+  const [missing, setMissing] = useState<ValidationIssue[]>([]);
+  const missingFor = (id: string) =>
+    missing.find((issue) => issue.fieldId === id)?.message;
   const [errorField, setErrorField] = useState<
     BranchRequestError["code"] | null
   >(null);
@@ -309,6 +313,10 @@ export default function BranchRequests() {
       setErrorField(null);
     }
   };
+  const clearMissingField = (fieldId: string) =>
+    setMissing((previous) =>
+      previous.filter((issue) => issue.fieldId !== fieldId),
+    );
   const fieldError = (field: BranchRequestError["code"]) =>
     errorField === field ? error : undefined;
   const currentSessionKey = `${context.company_id}:${context.role}:${branch}:${context.username ?? ""}`;
@@ -353,12 +361,72 @@ export default function BranchRequests() {
     active.includes(request.to_branch) &&
     allowed.includes(request.to_branch),
   );
-  const run = (work: (draft: typeof state) => void, success: string) => {
+  const run = (
+    work: (draft: typeof state) => void,
+    success: string,
+    checklist?: "send" | "receive",
+  ) => {
+    if (checklist && request) {
+      const next: ValidationIssue[] = [];
+      for (const item of request.items) {
+        if (
+          checklist === "receive" &&
+          new Decimal(item.sent_quantity ?? "0").lte(0)
+        )
+          continue;
+        const chosen = decisions[item.id];
+        const fieldId = `request-decision-${item.id}`;
+        if (!chosen)
+          next.push({
+            id: `decision:${item.id}`,
+            fieldId,
+            message: t(...errorText.decision),
+          });
+        else {
+          try {
+            const maximum = new Decimal(
+              checklist === "send"
+                ? item.quantity
+                : (item.sent_quantity ?? "0"),
+            );
+            const value = new Decimal(chosen.quantity);
+            if (!value.isFinite() || value.lt(0) || value.gt(maximum))
+              throw new Error("quantity");
+            if (
+              (chosen.decision === "short" || chosen.decision === "missing") &&
+              value.eq(maximum)
+            ) {
+              next.push({
+                id: `decision:${item.id}`,
+                fieldId,
+                message: t(...errorText.decision),
+              });
+              continue;
+            }
+            if (value.gt(0))
+              requestQuantityUnits(
+                chosen.quantity,
+                item.quantity_unit,
+                item.units_per_case,
+              );
+          } catch {
+            next.push({
+              id: `quantity:${item.id}`,
+              fieldId,
+              message: t(...errorText.quantity),
+            });
+          }
+        }
+      }
+      setMissing(next);
+      if (next.length) return;
+    }
     try {
       update(work);
       setError("");
       setMessage(success);
       setErrorField(null);
+      setMissing([]);
     } catch (failure) {
       setErrorField(
         failure instanceof BranchRequestError ? failure.code : null,
@@ -371,6 +439,7 @@ export default function BranchRequests() {
     }
   };
   const openDraft = (value?: BranchRequest) => {
+    setMissing([]);
     setEditing(value ? structuredClone(value) : null);
     setSource(value?.from_branch ?? (branch === "all" ? "" : branch));
     setDestination(value?.to_branch ?? "");
@@ -383,6 +452,60 @@ export default function BranchRequests() {
     setMessage("");
   };
   const save = (send: boolean) => {
+    const next: ValidationIssue[] = [];
+    if (!active.includes(source) || !allowed.includes(source))
+      next.push({
+        id: "location:source",
+        fieldId: "request-source",
+        message: t(
+          "Choose an allowed requesting location.",
+          "یک محل درخواست‌کننده مجاز انتخاب کنید.",
+        ),
+      });
+    if (!active.includes(destination) || destination === source)
+      next.push({
+        id: "location:destination",
+        fieldId: "request-destination",
+        message: t(
+          "Choose a different active sending location.",
+          "یک محل ارسال‌کننده فعال و متفاوت انتخاب کنید.",
+        ),
+      });
+    if (!lines.length)
+      next.push({
+        id: "items",
+        fieldId: "request-products",
+        message: t(...errorText.items),
+      });
+    for (const line of lines) {
+      try {
+        if (
+          line.kind === "catalog" &&
+          line.quantity_unit === "cases" &&
+          line.units_per_case === undefined
+        )
+          throw new BranchRequestError("pack");
+        requestQuantityUnits(
+          line.quantity,
+          line.quantity_unit,
+          line.units_per_case,
+        );
+      } catch (cause) {
+        const code =
+          cause instanceof BranchRequestError && cause.code === "pack"
+            ? "pack"
+            : "quantity";
+        next.push({
+          id: `${code}:${line.key}`,
+          fieldId: `request-${code}-${line.key}`,
+          message: t(...errorText[code]),
+        });
+      }
+    }
+    setMissing(next);
+    setError("");
+    setErrorField(null);
+    if (next.length) return;
     let id = "";
     run(
       (draft) => {
@@ -490,17 +613,21 @@ export default function BranchRequests() {
           }
           className="request-form"
         >
+          <WhatsMissing issues={missing} />
           <div className="request-location-fields">
             <Field
               label={t("Requesting location", "محل درخواست‌کننده")}
               error={
-                !active.includes(source) ? fieldError("location") : undefined
+                missingFor("request-source") ??
+                (!active.includes(source) ? fieldError("location") : undefined)
               }
             >
               <Select
+                id="request-source"
                 value={source}
                 onChange={(value) => {
                   setSource(value);
+                  clearMissingField("request-source");
                   clearError("location");
                 }}
                 disabled={branch !== "all" || Boolean(editing)}
@@ -518,15 +645,18 @@ export default function BranchRequests() {
             <Field
               label={t("Sending location", "محل ارسال‌کننده")}
               error={
-                !active.includes(destination) || destination === source
+                missingFor("request-destination") ??
+                (!active.includes(destination) || destination === source
                   ? fieldError("location")
-                  : undefined
+                  : undefined)
               }
             >
               <Select
+                id="request-destination"
                 value={destination}
                 onChange={(value) => {
                   setDestination(value);
+                  clearMissingField("request-destination");
                   clearError("location");
                 }}
                 options={[
@@ -543,9 +673,10 @@ export default function BranchRequests() {
           </div>
           <Field
             label={t("Search products", "جستجوی کالا")}
-            error={fieldError("items")}
+            error={missingFor("request-products") ?? fieldError("items")}
           >
             <input
+              id="request-products"
               className="ui-input"
               value={productSearch}
               onChange={(event) => setProductSearch(event.target.value)}
@@ -588,6 +719,7 @@ export default function BranchRequests() {
                           ),
                         ];
                         clearError("items");
+                        clearMissingField("request-products");
                         setLines([
                           ...lines,
                           {
@@ -610,18 +742,40 @@ export default function BranchRequests() {
             </div>
           )}
           <div className="request-free-item">
-            <Field label={t("Free-text item", "مورد با نام دلخواه")}>
+            <Field
+              label={t("Free-text item", "مورد با نام دلخواه")}
+              error={missingFor("request-free-item")}
+            >
               <input
+                id="request-free-item"
                 className="ui-input"
                 value={freeText}
-                onChange={(event) => setFreeText(event.target.value)}
+                onChange={(event) => {
+                  setFreeText(event.target.value);
+                  clearMissingField("request-free-item");
+                  clearError("items");
+                }}
               />
             </Field>
             <Button
               variant="secondary"
-              disabled={!freeText.trim()}
               onClick={() => {
+                if (!freeText.trim()) {
+                  setMissing([
+                    {
+                      id: "items:free",
+                      fieldId: "request-free-item",
+                      message: t(
+                        "Enter an item name.",
+                        "نام مورد را وارد کنید.",
+                      ),
+                    },
+                  ]);
+                  return;
+                }
                 clearError("items");
+                clearMissingField("request-free-item");
+                clearMissingField("request-products");
                 setLines([
                   ...lines,
                   {
@@ -646,6 +800,14 @@ export default function BranchRequests() {
                   item.code === line.product_code,
               );
               const change = (patch: Partial<DraftLine>) => {
+                if (
+                  "quantity" in patch ||
+                  "quantity_unit" in patch ||
+                  "units_per_case" in patch
+                )
+                  clearMissingField(`request-quantity-${line.key}`);
+                if ("units_per_case" in patch)
+                  clearMissingField(`request-pack-${line.key}`);
                 if ("quantity" in patch || "quantity_unit" in patch)
                   clearError("quantity");
                 if ("units_per_case" in patch) clearError("pack", "quantity");
@@ -682,9 +844,13 @@ export default function BranchRequests() {
                   <div className="request-quantity-fields">
                     <Field
                       label={t("Quantity", "تعداد")}
-                      error={fieldError("quantity")}
+                      error={
+                        missingFor(`request-quantity-${line.key}`) ??
+                        fieldError("quantity")
+                      }
                     >
                       <NumberField
+                        id={`request-quantity-${line.key}`}
                         value={line.quantity}
                         onChange={(quantity) => change({ quantity })}
                       />
@@ -704,7 +870,10 @@ export default function BranchRequests() {
                     {line.quantity_unit === "cases" && (
                       <Field
                         label={t("Units per case", "تعداد در کارتن")}
-                        error={fieldError("pack")}
+                        error={
+                          missingFor(`request-pack-${line.key}`) ??
+                          fieldError("pack")
+                        }
                         hint={
                           line.kind === "free_text"
                             ? t(
@@ -715,6 +884,7 @@ export default function BranchRequests() {
                         }
                       >
                         <NumberField
+                          id={`request-pack-${line.key}`}
                           value={line.units_per_case ?? ""}
                           step={1}
                           onChange={(value) =>
@@ -738,14 +908,8 @@ export default function BranchRequests() {
             })}
           </div>
           <div className="actions">
-            <Button disabled={!lines.length} onClick={() => save(true)}>
-              {t("Send", "ارسال")}
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={!lines.length}
-              onClick={() => save(false)}
-            >
+            <Button onClick={() => save(true)}>{t("Send", "ارسال")}</Button>
+            <Button variant="secondary" onClick={() => save(false)}>
               {t("Save as draft", "ذخیره پیش‌نویس")}
             </Button>
             <Button variant="secondary" onClick={() => setFormOpen(false)}>
@@ -824,10 +988,7 @@ export default function BranchRequests() {
                 <dt>{t("Date", "تاریخ")}</dt>
                 <dd>
                   <DateText
-                    value={(request.requested_at ?? request.created_at).slice(
-                      0,
-                      10,
-                    )}
+                    value={request.requested_at ?? request.created_at}
                   />
                 </dd>
               </div>
@@ -875,6 +1036,7 @@ export default function BranchRequests() {
                   />
                 </Field>
               )}
+            <WhatsMissing issues={missing} />
             <div className="request-checklist">
               {request.items.map((item) => {
                 const sendSide = request.status === "requested" && targetAction;
@@ -897,7 +1059,16 @@ export default function BranchRequests() {
                     },
                   });
                 return (
-                  <div className="request-checklist-item" key={item.id}>
+                  <div
+                    className="request-checklist-item"
+                    id={`request-decision-${item.id}`}
+                    key={item.id}
+                  >
+                    {missingFor(`request-decision-${item.id}`) && (
+                      <p className="form-error" role="alert">
+                        {missingFor(`request-decision-${item.id}`)}
+                      </p>
+                    )}
                     <div className="request-checklist-heading">
                       <RequestItemName item={item} />
                       <strong>
@@ -960,6 +1131,7 @@ export default function BranchRequests() {
                           }
                           onChange={(checked) => {
                             clearError("decision", "quantity");
+                            clearMissingField(`request-decision-${item.id}`);
                             if (checked) mark(sendSide ? "sent" : "received");
                             else {
                               const next = { ...decisions };
@@ -982,6 +1154,7 @@ export default function BranchRequests() {
                           size="sm"
                           onClick={() => {
                             clearError("decision", "quantity");
+                            clearMissingField(`request-decision-${item.id}`);
                             mark(sendSide ? "short" : "missing");
                           }}
                         >
@@ -1002,6 +1175,9 @@ export default function BranchRequests() {
                               value={current.quantity}
                               onChange={(quantity) => {
                                 clearError("quantity", "decision");
+                                clearMissingField(
+                                  `request-decision-${item.id}`,
+                                );
                                 setDecisions({
                                   ...decisions,
                                   [item.id]: { ...current, quantity },
@@ -1025,13 +1201,13 @@ export default function BranchRequests() {
             {request.sent_by && (
               <p className="helper">
                 {t("Sent by", "ارسال‌کننده")}: {request.sent_by} ·{" "}
-                <DateText value={request.sent_at!.slice(0, 10)} />
+                <DateText value={request.sent_at} />
               </p>
             )}
             {request.received_by && (
               <p className="helper">
                 {t("Received by", "دریافت‌کننده")}: {request.received_by} ·{" "}
-                <DateText value={request.received_at!.slice(0, 10)} />
+                <DateText value={request.received_at} />
               </p>
             )}
             <div className="actions">
@@ -1090,6 +1266,7 @@ export default function BranchRequests() {
                         "Request marked as sent.",
                         "درخواست به‌عنوان ارسال‌شده ثبت شد.",
                       ),
+                      "send",
                     )
                   }
                 >
@@ -1129,6 +1306,7 @@ export default function BranchRequests() {
                         "Request marked as received.",
                         "درخواست به‌عنوان دریافت‌شده ثبت شد.",
                       ),
+                      "receive",
                     )
                   }
                 >
@@ -1330,7 +1508,7 @@ export default function BranchRequests() {
                         )}
                       </td>
                       <td>
-                        <DateText value={item.created_at.slice(0, 10)} />
+                        <DateText value={item.created_at} />
                       </td>
                       <td>
                         <Button

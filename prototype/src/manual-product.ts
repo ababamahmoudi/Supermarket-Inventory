@@ -6,6 +6,11 @@ import { configuredBranches, activePricingCategories } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
 import { reconcileOffers } from "./approvals";
 import { setManualPriceMarker } from "./manual-prices";
+import { normalizeSearch, lookupBranch } from "./catalog";
+import {
+  applyProductDateDrafts,
+  validateProductDateDrafts,
+} from "./date-tracking";
 import type { DemoState, Product } from "./types";
 import type { ProductEditorContext, ProductEdits } from "./product-editor";
 
@@ -105,9 +110,8 @@ export function addProduct(
       !context.allowed_branches.includes(context.branch))
   )
     fail("branch");
-  for (const field of ["name_en", "name_fa", "unit_size"] as const)
+  for (const field of ["name_en", "unit_size"] as const)
     if (!edits[field].trim()) fail(field);
-  if (!edits.ai_category.trim()) fail("category");
   const category = activePricingCategories(state.config).find(
     (item) => item.key === edits.pricing_category,
   );
@@ -123,7 +127,7 @@ export function addProduct(
     state.products.some(
       (product) =>
         product.company_id === context.company_id &&
-        product.barcode === edits.barcode.trim(),
+        normalizeSearch(product.barcode) === normalizeSearch(edits.barcode),
     )
   )
     fail("barcode_conflict");
@@ -173,6 +177,14 @@ export function addProduct(
   if (context.role === "supervisor" && below && !edits.minimum_margin_confirmed)
     fail("margin");
   const code = nextProductCode(state);
+  validateProductDateDrafts(
+    state,
+    context,
+    code,
+    edits.dates,
+    edits.date_reminder_days,
+    edits.date_tracking_stop,
+  );
   state.product_code_high_water = Number(code);
   const product: Product = {
     company_id: context.company_id,
@@ -187,6 +199,10 @@ export function addProduct(
     barcode: edits.barcode.trim(),
     main_supplier: edits.main_supplier,
     date_tracking: edits.date_tracking,
+    date_reminder_days: edits.date_reminder_days,
+    first_added_branch: invoiceQuickAdd
+      ? state.invoice.branch
+      : lookupBranch(context.branch),
     sold_by: edits.sold_by ?? "each",
     last_cost_before_tax: new Decimal(canonicalCost).toFixed(4),
     selling_price:
@@ -203,6 +219,7 @@ export function addProduct(
     status: context.role === "supervisor" ? "active" : "pending_approval",
   };
   state.products.push(product);
+  applyProductDateDrafts(state, context, product, edits.dates, now);
   if (context.role === "supervisor")
     setManualPriceMarker(state, product, "all", price, context.actor, now);
   if (context.role === "floor_worker")

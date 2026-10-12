@@ -77,6 +77,8 @@ export function effectiveOffer(
     (offer) =>
       offer.company_id === product.company_id &&
       offer.product_code === product.code &&
+      !offer.clearance &&
+      !offer.lot_id &&
       offer.status === "active" &&
       offer.currency === state.config.company.currency &&
       isOfferScheduledNow(offer, state.config.company.timezone) &&

@@ -10,18 +10,51 @@ async function snapshot(page: Page) {
 }
 
 async function checkAlignment(table: Locator) {
-  const columns = await table.evaluate((node) => {
-    const headers = [...node.querySelectorAll("thead th")];
-    const rows = [...node.querySelectorAll("tbody tr")];
-    return headers
-      .map((header, index) => {
-        const head = header.getBoundingClientRect();
-        const style = getComputedStyle(header);
-        return rows.map((row) => {
-          const cell = row.children[index] as HTMLElement;
-          const body = cell.getBoundingClientRect();
-          const bodyStyle = getComputedStyle(cell);
-          return {
+  await table.page().evaluate(() => document.fonts.ready);
+  const geometry = await table.evaluate((node) => {
+    const headers = [...node.querySelectorAll<HTMLElement>("thead th")];
+    const rows = [
+      ...node.querySelectorAll<HTMLElement>(
+        "tbody > tr:not(.table-expanded-row)",
+      ),
+    ];
+    const wrapper = node.closest<HTMLElement>(".ui-data-table")!;
+    const identity = (cell: HTMLElement) =>
+      cell.dataset.columnKey
+        ? `key:${cell.dataset.columnKey}`
+        : `label:${cell.dataset.columnLabel}`;
+    const headerMap = new Map(
+      headers.map((header) => [identity(header), header]),
+    );
+    const cards = wrapper.classList.contains("is-mobile");
+    const tableBox = node.getBoundingClientRect();
+    const wrapperBox = wrapper.getBoundingClientRect();
+    const contains = (outer: DOMRect, inner: DOMRect) =>
+      inner.left >= outer.left - 2 &&
+      inner.right <= outer.right + 2 &&
+      inner.top >= outer.top - 2 &&
+      inner.bottom <= outer.bottom + 2;
+    const columns = [];
+    const cardCells = [];
+    for (const row of rows) {
+      const rowBox = row.getBoundingClientRect();
+      const cells = [
+        ...row.querySelectorAll<HTMLElement>(":scope > td, :scope > th"),
+      ];
+      for (const [index, cell] of cells.entries()) {
+        if (!cell.getClientRects().length) continue;
+        const body = cell.getBoundingClientRect();
+        const bodyStyle = getComputedStyle(cell);
+        const header = headerMap.get(identity(cell));
+        if (!cards) {
+          if (!header?.getClientRects().length) {
+            columns.push({ matched: false });
+            continue;
+          }
+          const head = header.getBoundingClientRect();
+          const style = getComputedStyle(header);
+          columns.push({
+            matched: true,
             left: Math.abs(head.left - body.left),
             right: Math.abs(head.right - body.right),
             headerPadding: [style.paddingInlineStart, style.paddingInlineEnd],
@@ -31,17 +64,107 @@ async function checkAlignment(table: Locator) {
             ],
             headerAlign: style.textAlign,
             bodyAlign: bodyStyle.textAlign,
-          };
+          });
+          continue;
+        }
+        const label = cell.dataset.columnLabel ?? "";
+        const caption = getComputedStyle(cell, "::before");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d")!;
+        context.font = `${caption.fontWeight} ${caption.fontSize} ${caption.fontFamily}`;
+        const widestLabelWord = Math.max(
+          0,
+          ...label.split(/\s+/).map((word) => context.measureText(word).width),
+        );
+        const fragments = [];
+        const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+        let text: Node | null;
+        while ((text = walker.nextNode())) {
+          const parent = text.parentElement;
+          if (
+            !text.textContent?.trim() ||
+            !parent?.getClientRects().length ||
+            parent.closest(".sr-only,[hidden],[aria-hidden=true]")
+          )
+            continue;
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          fragments.push(...range.getClientRects());
+        }
+        const controls = [
+          ...cell.querySelectorAll<HTMLElement>(
+            "button,a,input,[role=combobox],[role=checkbox]",
+          ),
+        ].filter((control) => control.getClientRects().length);
+        cardCells.push({
+          matched: Boolean(header),
+          labelled:
+            index === 0 ||
+            (caption.content.replace(/^["']|["']$/g, "") === label &&
+              label.length > 0),
+          captionFits: index === 0 || widestLabelWord <= body.width + 2,
+          captionBeforeValue:
+            index === 0 ||
+            fragments.every(
+              (fragment) =>
+                fragment.top >=
+                body.top + Number.parseFloat(caption.fontSize) - 2,
+            ),
+          visibleValueFragments: fragments.length,
+          rowContained: contains(tableBox, rowBox),
+          cellContained: contains(rowBox, body),
+          valuesContained: fragments.every((fragment) =>
+            contains(body, fragment),
+          ),
+          controlsContained: controls.every((control) =>
+            contains(body, control.getBoundingClientRect()),
+          ),
+          noCellOverflow: cell.scrollWidth <= cell.clientWidth + 2,
         });
-      })
-      .flat();
+      }
+    }
+    return {
+      cards,
+      visibleRows: rows.length,
+      columns,
+      cardCells,
+      uniqueHeaderIdentities: headerMap.size === headers.length,
+      tableContained:
+        tableBox.left >= wrapperBox.left - 2 &&
+        tableBox.right <= wrapperBox.right + 2,
+      noTableOverflow: wrapper.scrollWidth <= wrapper.clientWidth + 2,
+      noPageOverflow: document.documentElement.scrollWidth <= innerWidth + 2,
+    };
   });
-  expect(columns.length).toBeGreaterThan(0);
-  for (const column of columns) {
-    expect(column.left).toBeLessThanOrEqual(2);
-    expect(column.right).toBeLessThanOrEqual(2);
-    expect(column.headerPadding).toEqual(column.bodyPadding);
-    expect(column.headerAlign).toBe(column.bodyAlign);
+  expect(geometry.visibleRows).toBeGreaterThan(0);
+  expect(geometry.uniqueHeaderIdentities).toBe(true);
+  expect(geometry.tableContained).toBe(true);
+  expect(geometry.noTableOverflow).toBe(true);
+  expect(geometry.noPageOverflow).toBe(true);
+  if (geometry.cards) {
+    expect(geometry.cardCells.length).toBeGreaterThan(0);
+    for (const cell of geometry.cardCells) {
+      expect(cell.matched).toBe(true);
+      expect(cell.labelled).toBe(true);
+      expect(cell.captionFits).toBe(true);
+      expect(cell.captionBeforeValue).toBe(true);
+      expect(cell.visibleValueFragments).toBeGreaterThan(0);
+      expect(cell.rowContained).toBe(true);
+      expect(cell.cellContained).toBe(true);
+      expect(cell.valuesContained).toBe(true);
+      expect(cell.controlsContained).toBe(true);
+      expect(cell.noCellOverflow).toBe(true);
+    }
+  } else {
+    expect(geometry.columns.length).toBeGreaterThan(0);
+    for (const column of geometry.columns) {
+      expect(column.matched).toBe(true);
+      if (!column.matched) continue;
+      expect(column.left).toBeLessThanOrEqual(2);
+      expect(column.right).toBeLessThanOrEqual(2);
+      expect(column.headerPadding).toEqual(column.bodyPadding);
+      expect(column.headerAlign).toBe(column.bodyAlign);
+    }
   }
 }
 
@@ -139,7 +262,7 @@ test("Return policy dialog centers, closes with Escape and backdrop, and restore
   await expect(trigger).toBeFocused();
 });
 
-test("Returns columns align within two pixels in English and Persian on overview and detail", async ({
+test("Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -234,9 +357,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .locator(".return-header-card")
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("3");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
@@ -255,12 +376,15 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .locator(".return-header-card")
     .getByRole("button", { name: "Record resolution", exact: true })
     .click();
-  await page
-    .getByLabel(
-      "Sour Cherry Juice 1 L · Original units this settlement covers",
-      { exact: true },
-    )
-    .fill("1");
+  await chooseOption(
+    page,
+    page.getByRole("combobox", { name: "Outcome", exact: true }),
+    "replaced",
+    "Replaced",
+  );
+  await page.getByLabel("Original quantity covered", { exact: true }).fill("1");
+  await page.getByLabel("Remaining expected date", { exact: true }).click();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
   await page
     .getByLabel("Actual replacement quantity", { exact: true })
     .fill("2");
@@ -280,10 +404,11 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByLabel("Replacement receipt reference", { exact: true })
     .fill("A2-REPLACEMENT-001");
   await page
-    .getByRole("button", { name: "Receive replacement", exact: true })
+    .locator(".return-action-card")
+    .getByRole("button", { name: "Record resolution", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Replacement received. Pending credit was released for the covered quantities.",
+    "Recorded item resolutions. Credit claims require Supervisor verification.",
   );
   const received = await snapshot(page);
   expect(received.ledger).toEqual(before.ledger);

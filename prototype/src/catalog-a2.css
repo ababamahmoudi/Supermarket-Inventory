@@ -15,7 +15,7 @@
   inset-inline-start: 0;
   inset-block: 12px;
   inline-size: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-mark-small);
   background: var(--accent);
 }
 .lookup-page .lookup-result-price {
@@ -115,7 +115,7 @@
   }
 }
 .catalog-filter-toolbar input[type="search"] {
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 .catalog-products-table.with-store-cost table {
   min-inline-size: 1120px;

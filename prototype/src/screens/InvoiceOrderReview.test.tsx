@@ -105,23 +105,63 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
   expect(
     screen.getByRole("heading", { name: "Compare with order" }),
   ).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Post invoice" }));
   expect(
-    screen.getByText(
-      "Enter a nonnegative unit cost with no more than four decimal places.",
-    ),
+    screen.getByRole("link", {
+      name: /Enter a nonnegative unit cost with no more than four decimal places/,
+    }),
   ).toBeVisible();
-  expect(screen.getByRole("button", { name: "Post invoice" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Post invoice" })).toBeEnabled();
   fireEvent.change(cost, { target: { value: "0.9800" } });
   const pack = screen.getByLabelText("Units per case");
   fireEvent.change(pack, { target: { value: "" } });
   expect(
     screen.getByRole("heading", { name: "Compare with order" }),
   ).toBeVisible();
-  expect(screen.getByLabelText("Invoiced quantity")).toHaveValue("12");
-  expect(screen.getByRole("button", { name: "Post invoice" })).toBeDisabled();
+  expect(screen.getByLabelText("Invoiced")).toHaveValue("12");
+  expect(screen.getByRole("button", { name: "Post invoice" })).toBeEnabled();
   fireEvent.change(pack, { target: { value: "12" } });
-  expect(screen.getByLabelText("Invoiced quantity")).toHaveValue("12");
+  expect(screen.getByLabelText("Invoiced")).toHaveValue("12");
   expect(
     screen.getByRole("columnheader", { name: "Ordered units remaining" }),
   ).toBeVisible();
+});
+
+it("shows every invalid total together as a field link and local error without crashing while fields are cleared", () => {
+  const state = initialState();
+  state.invoice = createInvoice(state, "Branch 1", true);
+  window.location.hash = `#invoices?id=${encodeURIComponent(state.invoice.id)}`;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  sessionStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      username: "supervisor",
+      branch: "Branch 1",
+      lang: "en",
+      locked: false,
+      authenticatedAt: Date.now(),
+    }),
+  );
+  render(
+    <DemoProvider>
+      <Invoices />
+    </DemoProvider>,
+  );
+  fireEvent.change(screen.getByLabelText("Subtotal"), {
+    target: { value: "" },
+  });
+  fireEvent.change(screen.getByLabelText("Tax"), { target: { value: "bad" } });
+  fireEvent.change(screen.getByLabelText("Final total"), {
+    target: { value: "" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Post invoice" }));
+  for (const label of ["Subtotal", "Tax", "Final total"]) {
+    expect(
+      screen.getByRole("link", { name: new RegExp(`^${label}:`) }),
+    ).toBeVisible();
+    expect(screen.getByLabelText(label)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  }
 });

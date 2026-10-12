@@ -2,6 +2,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import type Decimal from "decimal.js";
 import i18n, { translate } from "./i18n";
+import { useConfiguredTimeZone } from "./store";
 import {
   formatDate,
   formatMoney,
@@ -55,12 +56,13 @@ export function DateText({
   className,
   ...props
 }: HTMLAttributes<HTMLElement> & { value: string | Date | null | undefined }) {
+  const timeZone = useConfiguredTimeZone();
   return (
     <LtrText
       {...props}
       className={["date-text", className].filter(Boolean).join(" ")}
     >
-      {formatDate(value)}
+      {formatDate(value, timeZone)}
     </LtrText>
   );
 }
@@ -68,7 +70,26 @@ export function UnitSize({
   value,
   ...props
 }: HTMLAttributes<HTMLElement> & { value: string }) {
-  return <LtrText {...props}>{formatUnitSize(value)}</LtrText>;
+  return (
+    <LtrText {...props}>
+      <UnitText>{formatUnitSize(value)}</UnitText>
+    </LtrText>
+  );
+}
+/** Keep physical sizes together in ordinary display text, including Activity. */
+export function UnitText({
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & { children: string }) {
+  return (
+    <span
+      {...props}
+      className={["unit-text", className].filter(Boolean).join(" ")}
+    >
+      {productNameUnits(children)}
+    </span>
+  );
 }
 export function ProductName({
   product,
@@ -79,27 +100,53 @@ export function ProductName({
   language?: Language;
   className?: string;
 }) {
-  const primary = language === "fa" ? product.name_fa : product.name_en;
-  const secondary = language === "fa" ? product.name_en : product.name_fa;
+  const hasPersian = Boolean(product.name_fa.trim());
+  const primaryLanguage = language === "fa" && hasPersian ? "fa" : "en";
+  const primary = primaryLanguage === "fa" ? product.name_fa : product.name_en;
+  const secondary =
+    primaryLanguage === "fa" ? product.name_en : product.name_fa;
   return (
     <span className={["product-name", className].filter(Boolean).join(" ")}>
       <strong>
-        <bdi dir={language === "fa" ? "rtl" : "ltr"} lang={language}>
-          {primary}
+        <bdi
+          dir={primaryLanguage === "fa" ? "rtl" : "ltr"}
+          lang={primaryLanguage}
+        >
+          {productNameUnits(primary)}
         </bdi>
       </strong>
-      {secondary && (
+      {secondary.trim() && (
         <small>
           <bdi
-            dir={language === "fa" ? "ltr" : "rtl"}
-            lang={language === "fa" ? "en" : "fa"}
+            dir={primaryLanguage === "fa" ? "ltr" : "rtl"}
+            lang={primaryLanguage === "fa" ? "en" : "fa"}
           >
-            {secondary}
+            {productNameUnits(secondary)}
           </bdi>
         </small>
       )}
     </span>
   );
+}
+/** Bind an entered size to its unit without changing names or stored data. */
+function productNameUnits(value: string): ReactNode[] {
+  const fragments: ReactNode[] = [];
+  const units =
+    /(\p{N}+(?:[.,\u066B\u066C]\p{N}+)*)(\s+)(kg|g|ml|mL|L|lb|lbs|oz|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
+  let start = 0;
+  for (const match of value.matchAll(units)) {
+    fragments.push(value.slice(start, match.index));
+    fragments.push(
+      <span className="unit-fragment" key={match.index}>
+        <bdi dir="ltr">{match[1]}</bdi>
+        {match[2]}
+        {match[3]}
+      </span>,
+    );
+    start = match.index + match[0].length;
+  }
+  fragments.push(value.slice(start));
+  return fragments;
 }
 export function OfferLabel({
   label,

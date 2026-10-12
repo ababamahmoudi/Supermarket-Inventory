@@ -86,6 +86,8 @@ export function fieldContrast(
     label: string;
     border: string;
     borderWidth: string;
+    textContrast: number;
+    focused: boolean;
     interiorContrast: number;
     adjacentContrast: number;
     glow: string;

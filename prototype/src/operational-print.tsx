@@ -1,16 +1,21 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import type { Language } from "./types";
 import "./operational-print.css";
 
+const PrintLanguagePolicy = createContext<"bilingual" | "en">("bilingual");
+
 export function BilingualPrintText({ en, fa }: { en: string; fa: string }) {
+  const policy = useContext(PrintLanguagePolicy);
   return (
     <span className="operational-bilingual">
       <span lang="en" dir="ltr">
         {en}
       </span>
-      <span lang="fa" dir="rtl">
-        {fa}
-      </span>
+      {policy === "bilingual" && (
+        <span lang="fa" dir="rtl">
+          {fa}
+        </span>
+      )}
     </span>
   );
 }
@@ -21,6 +26,7 @@ export function OperationalPrintDocument({
   company_name,
   reference,
   language,
+  documentLanguage = "bilingual",
   children,
 }: {
   title_en: string;
@@ -28,24 +34,29 @@ export function OperationalPrintDocument({
   company_name: string;
   reference: string;
   language: Language;
+  documentLanguage?: "bilingual" | "en";
   children: ReactNode;
 }) {
   return (
-    <article
-      className="operational-print-document"
-      lang={language}
-      dir={language === "fa" ? "rtl" : "ltr"}
-    >
-      <header className="operational-print-heading">
-        <div>
-          <strong>{company_name}</strong>
-          <h1>
-            <BilingualPrintText en={title_en} fa={title_fa} />
-          </h1>
-        </div>
-        <bdi dir="ltr">{reference}</bdi>
-      </header>
-      {children}
-    </article>
+    <PrintLanguagePolicy.Provider value={documentLanguage}>
+      <article
+        className="operational-print-document"
+        lang={documentLanguage === "en" ? "en" : language}
+        dir={
+          documentLanguage === "en" ? "ltr" : language === "fa" ? "rtl" : "ltr"
+        }
+      >
+        <header className="operational-print-heading">
+          <div>
+            <strong>{company_name}</strong>
+            <h1>
+              <BilingualPrintText en={title_en} fa={title_fa} />
+            </h1>
+          </div>
+          <bdi dir="ltr">{reference}</bdi>
+        </header>
+        {children}
+      </article>
+    </PrintLanguagePolicy.Provider>
   );
 }

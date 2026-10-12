@@ -9,7 +9,7 @@
   max-block-size: calc(100dvh - 32px);
 }
 .confirm-dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: var(--klead-overlay);
 }
 .dialog-description {
   margin-block-end: 20px;
@@ -72,7 +72,7 @@
   inline-size: 260px;
   max-inline-size: 100%;
   padding-inline: 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--search-fill);
   color: var(--text-muted);
 }
@@ -83,8 +83,8 @@
   min-inline-size: 0;
   inline-size: 100%;
   padding: 0;
-  border-radius: 0;
-  background: transparent;
+  border-radius: var(--radius-none);
+  background: var(--color-clear);
 }
 .filter-search-pill:focus-within {
   outline: 2px solid var(--accent);
@@ -97,7 +97,7 @@
 .filter-toolbar input:not([type]) {
   inline-size: 240px;
   max-inline-size: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 .filter-toolbar .field > label {
   display: none;

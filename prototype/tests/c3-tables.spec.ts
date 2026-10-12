@@ -183,10 +183,37 @@ for (const width of [1280, 1440, 1920]) {
               exact: true,
             })
             .click();
-          await expect(page.locator(".suppliers-table")).toHaveAttribute(
-            "data-visible-column-count",
-            "11",
+          const supplierTable = page.locator(".suppliers-table");
+          await expect
+            .poll(async () => {
+              const visible = Number(
+                await supplierTable.getAttribute("data-visible-column-count"),
+              );
+              const widthHidden = Number(
+                await supplierTable.getAttribute(
+                  "data-width-hidden-column-count",
+                ),
+              );
+              return visible + widthHidden;
+            })
+            .toBe(11);
+          const widthHidden = Number(
+            await supplierTable.getAttribute("data-width-hidden-column-count"),
           );
+          if (widthHidden) {
+            await supplierTable
+              .locator(".table-details-toggle")
+              .first()
+              .click();
+            await expect(
+              supplierTable.locator(".table-expanded-row dl > div"),
+            ).toHaveCount(widthHidden);
+            await check("suppliers width-hidden values remain in row details");
+            await supplierTable
+              .locator(".table-details-toggle")
+              .first()
+              .click();
+          }
           await check("suppliers with every optional column enabled");
         }
       }
@@ -250,6 +277,9 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
   await page.goto("/#products");
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator(".catalog-products-table td[data-column-key=price]").first(),
   ).toBeVisible();
   await page.goto("/#suppliers");
   await expect(
@@ -276,6 +306,9 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator(".catalog-products-table td[data-column-key=price]").first(),
   ).toBeVisible();
 });
 
@@ -320,6 +353,11 @@ test("an order error belongs to its invalid item and clears immediately only whe
 }) => {
   await signIn(page, "Supervisor");
   const form = await newOrder(page);
+  const details = form.getByRole("button", {
+    name: "Show details",
+    exact: true,
+  });
+  while (await details.count()) await details.first().click();
   const costs = form.getByRole("textbox", { name: /^Expected unit cost —/ });
   const cases = form.getByRole("textbox", { name: /^Cases —/ });
   expect(await costs.count()).toBeGreaterThan(1);

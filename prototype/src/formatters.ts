@@ -37,19 +37,48 @@ export function formatMoney(
   return `${amount.isNegative() && !amount.isZero() ? "-" : ""}${symbol}${digits}`;
 }
 
-/** Keep the recorded calendar date; changing language never changes its day. */
-export function formatDate(value: string | Date | null | undefined): string {
+/** Calendar dates stay unchanged; instants use the configured store's day. */
+export function formatDate(
+  value: string | Date | null | undefined,
+  timeZone = configSeed.company.timezone,
+): string {
   if (!value) return "—";
-  if (value instanceof Date)
-    return Number.isNaN(value.getTime())
-      ? "—"
-      : value.toISOString().slice(0, 10);
-  const date = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
-  return date ?? "—";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return value;
+  const instant = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(instant.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    numberingSystem: "latn",
+  }).format(instant);
 }
 
 export function formatUnitSize(value: string): string {
   return value.trim().replace(/\s+/g, " ");
+}
+
+/** Keep the entered quantity's precision; choose only its translated unit label. */
+export function formatQuantity(
+  value: string | number,
+  unit: "units" | "cases" | "lb" | "kg",
+  language: Language,
+): string {
+  let singular = false;
+  try {
+    singular = new Decimal(value).eq(1);
+  } catch {
+    /* Invalid form drafts retain their text. */
+  }
+  const label =
+    unit === "units"
+      ? translate(singular ? "unit" : "units", "واحد", language)
+      : unit === "cases"
+        ? translate(singular ? "case" : "cases", "کارتن", language)
+        : unit;
+  return `${value} ${label}`;
 }
 
 export function branchLabel(branch: string, language: Language): string {
@@ -147,6 +176,20 @@ const activityCopy: Record<string, [string, string]> = {
     "اصل کالای سالم دریافت شد",
   ],
   return_pickup: ["Recorded return pickup", "جمع‌آوری مرجوعی ثبت شد"],
+  return_pickup_corrected: ["Corrected pickup", "جمع‌آوری اصلاح شد"],
+  return_resolution_outstanding: [
+    "Recorded outstanding return",
+    "باقی‌مانده مرجوعی ثبت شد",
+  ],
+  return_leftover_shelf: [
+    "Put returned goods back on the shelf",
+    "کالای مرجوعی به قفسه بازگردانده شد",
+  ],
+  return_leftover_thrown_away: [
+    "Recorded thrown-away return goods",
+    "دورریختن کالای مرجوعی ثبت شد",
+  ],
+  "Remove line": ["Remove line", "حذف ردیف"],
   replacement_received: ["Received replacement", "جایگزین دریافت شد"],
   return_claim_submitted: ["Submitted return claim", "ادعای مرجوعی ارسال شد"],
   return_claim_posted: ["Posted return claim", "ادعای مرجوعی ثبت شد"],

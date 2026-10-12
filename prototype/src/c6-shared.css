@@ -1,0 +1,1013 @@
+/* Shared Klead components. All colour, shape and depth values are tokens. */
+:root {
+  font-family: var(--font-en);
+  font-size: var(--font-size-base);
+  line-height: 1.4286;
+}
+body {
+  color: var(--text);
+  background: var(--page);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+}
+[dir="rtl"] {
+  font-family: var(--font-fa);
+}
+h1 {
+  font-size: var(--font-size-large-title);
+  line-height: var(--line-height-large-title);
+  font-weight: var(--font-weight-large-title);
+  letter-spacing: var(--tracking-large-title);
+}
+h2 {
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+  font-weight: var(--font-weight-large-title);
+}
+h3 {
+  font-size: var(--font-size-headline);
+  line-height: var(--line-height-headline);
+  font-weight: var(--font-weight-headline);
+}
+.date-text,
+.numeric,
+.price,
+.price-display,
+time {
+  font-family: var(--font-en);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+:root .ui-button.button:not(.ui-icon-button) {
+  block-size: 40px;
+  min-block-size: 40px;
+  max-block-size: 40px;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  padding-inline: 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-none);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-caption);
+  white-space: nowrap;
+}
+:root .ui-button.button.button-primary {
+  background: var(--accent-fill);
+  color: var(--primary-text);
+}
+:root .ui-button.button.button-secondary,
+:root .ui-button.button.button-tinted {
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+}
+:root .ui-button.button.button-neutral {
+  background: var(--neutral-fill);
+  color: var(--text);
+}
+:root .ui-button.button.button-danger,
+:root .ui-button.button.button-destructive {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+:root td .ui-button.button.button-danger,
+:root td .ui-button.button.button-destructive {
+  background: var(--neutral-fill);
+}
+:root .ui-button.button.button-quiet,
+:root .ui-button.button.button-plain,
+:root .ui-button.button.button-ghost {
+  background: var(--color-clear);
+  color: var(--accent);
+}
+:root .ui-button.button[class*="button-"]:hover:not(:disabled) {
+  box-shadow: var(--shadow-none);
+  filter: brightness(0.96);
+}
+:root .ui-button.button[class*="button-"]:active:not(:disabled) {
+  filter: brightness(0.92);
+}
+:root .ui-button.button.button-secondary:hover:not(:disabled),
+:root .ui-button.button.button-tinted:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+:root .ui-button.button.button-danger:hover:not(:disabled),
+:root .ui-button.button.button-destructive:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+:root td .ui-button.button.button-danger:hover:not(:disabled),
+:root td .ui-button.button.button-destructive:hover:not(:disabled) {
+  background: var(--neutral-fill);
+}
+:root .ui-button.button.button-quiet:hover:not(:disabled),
+:root .ui-button.button.button-plain:hover:not(:disabled),
+:root .ui-button.button.button-ghost:hover:not(:disabled) {
+  background: var(--color-clear);
+}
+:root .ui-button.button-sm:not(.ui-icon-button),
+:root .table-actions .ui-button.button:not(.ui-icon-button),
+:root .catalog-row-actions .ui-button.button:not(.ui-icon-button) {
+  block-size: 32px;
+  min-block-size: 32px;
+  max-block-size: 32px;
+  padding-inline: 12px;
+  font-size: var(--font-size-label);
+  border-radius: var(--radius-small);
+}
+:root .ui-button.button.ui-icon-button {
+  inline-size: 36px;
+  min-inline-size: 36px;
+  block-size: 36px;
+  min-block-size: 36px;
+  max-block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-clear);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-none);
+}
+:root .ui-button.button.ui-icon-button:hover:not(:disabled) {
+  background: var(--neutral-fill);
+  filter: none;
+}
+:root .ui-button.button:focus-visible,
+:root .ui-menu-trigger:focus-visible,
+:root .ui-input:focus-visible,
+:root .field input:focus-visible,
+:root .field textarea:focus-visible,
+:root .ui-option:focus-visible,
+:root .ui-menu-item:focus-visible,
+:root .ui-segments button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 0;
+  box-shadow: var(--shadow-focus);
+}
+:root .ui-card.card {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+:root .ui-dialog.confirm-dialog {
+  border: 0;
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+}
+.ui-dialog::backdrop {
+  background: var(--klead-overlay);
+}
+.ui-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 8px;
+}
+.ui-dialog-header h2 {
+  min-inline-size: 0;
+}
+.ui-dialog-header > .ui-icon-button {
+  flex: 0 0 auto;
+}
+/* The product form keeps its identity and actions visible around a scrolling body. */
+:root .ui-dialog.product-editor-dialog {
+  inline-size: min(880px, calc(100vw - 32px));
+  max-inline-size: min(880px, calc(100vw - 32px));
+  max-block-size: calc(100dvh - 32px);
+  padding: 0;
+  overflow: hidden;
+}
+:root .ui-dialog.product-editor-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.product-editor-dialog > .ui-dialog-header {
+  flex: 0 0 auto;
+  padding: 24px 24px 16px;
+  margin: 0;
+  background: var(--surface);
+}
+:root .product-editor-dialog .product-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+.product-editor-body {
+  display: grid;
+  gap: 20px;
+  padding: 8px 24px 24px;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+:root .product-editor-dialog .product-editor-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 16px 24px;
+  border-block-start: 1px solid var(--divider);
+  background: var(--surface);
+}
+@media (max-width: 759px) {
+  .product-editor-dialog > .ui-dialog-header {
+    padding: 20px 16px 12px;
+  }
+  .product-editor-body {
+    padding: 8px 16px 16px;
+  }
+  :root .product-editor-dialog .product-editor-actions {
+    padding: 16px;
+  }
+}
+:root .ui-popover {
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-menu);
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+}
+:root .field label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-caption);
+  line-height: var(--line-height-headline);
+}
+:root .ui-input,
+:root input.ui-input[type="text"],
+:root .field input:not([type="file"]),
+:root .field textarea,
+:root .password-field input,
+:root .ui-select-search input {
+  min-block-size: 44px;
+  border: 1px solid var(--color-clear);
+  border-radius: var(--radius-control);
+  background: var(--field-fill);
+  color: var(--text);
+  box-shadow: var(--shadow-none);
+}
+:root .ui-input:focus-visible,
+:root .field input:focus-visible,
+:root .field textarea:focus-visible,
+:root .password-field input:focus-visible,
+:root .ui-select-search input:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-focus);
+}
+:root .ui-input[aria-invalid="true"],
+:root .field input[aria-invalid="true"],
+:root .field textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--surface);
+  outline: none;
+}
+:root .ui-select {
+  box-shadow: var(--shadow-none);
+}
+:root .filter-search-pill,
+:root .lookup-search-pill {
+  border: 0;
+  box-shadow: var(--shadow-none);
+}
+:root .filter-toolbar .filter-search-pill {
+  background: var(--surface);
+  border: 1px solid var(--page-control-border);
+}
+:root .filter-toolbar .filter-search-pill input,
+:root .lookup-page .lookup-search-pill input.lookup-search {
+  border: 0;
+  background: var(--color-clear);
+  box-shadow: var(--shadow-none);
+}
+:root .ui-segments {
+  background: var(--segment-track);
+  border-radius: var(--radius-round);
+}
+:root .ui-segments button {
+  border: 0;
+  border-radius: var(--radius-round);
+  color: var(--text-muted);
+}
+:root .ui-segments button[aria-pressed="true"],
+:root .ui-segments button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-thumb);
+}
+:root .ui-switch-track {
+  inline-size: 44px;
+  block-size: 26px;
+  padding: 2px;
+  background: var(--neutral-fill);
+  border-radius: var(--radius-round);
+}
+:root .ui-switch-track > span {
+  inline-size: 22px;
+  block-size: 22px;
+  background: var(--klead-white);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-thumb);
+}
+:root .ui-checked-control[aria-checked="true"] .ui-switch-track {
+  background: var(--accent-fill);
+}
+:root .ui-checked-control[aria-checked="true"] .ui-switch-track > span {
+  margin-inline-start: 18px;
+}
+:root .ui-badge.badge {
+  border: 0;
+  border-radius: var(--radius-round);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+:root .ui-data-table:not(.is-mobile) .ui-badge.badge:not(.offer-pill) {
+  padding: 0;
+  background: var(--color-clear);
+}
+.ui-badge.pending .ui-status-dot {
+  background: var(--pending-dot);
+}
+.ui-badge.approved .ui-status-dot {
+  background: var(--approved-dot);
+}
+.ui-badge.danger .ui-status-dot {
+  background: var(--danger-dot);
+}
+.ui-badge.neutral .ui-status-dot {
+  background: var(--neutral-dot);
+}
+div.ui-kpi {
+  cursor: default;
+}
+.ui-kpi-label {
+  grid-row: 1;
+}
+.ui-kpi-number {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.ui-kpi-icon {
+  grid-row: 1;
+  background: var(--surface-kpi-icon);
+}
+.kpi-icon {
+  background: var(--surface-kpi-icon);
+}
+.lookup-approved-price .price {
+  display: block;
+  line-height: 1.25;
+  margin-block: 4px;
+}
+.dashboard-alerts .dashboard-list-row {
+  grid-template-areas: "copy action" "pill pill";
+}
+div.ui-kpi:hover {
+  filter: none;
+  box-shadow: var(--shadow-none);
+}
+.whats-missing {
+  padding: 16px;
+  border-radius: var(--radius-control);
+  background: var(--pending-bg);
+  color: var(--pending);
+  margin-block: 0 24px;
+}
+.whats-missing h3 {
+  font-size: var(--font-size-body);
+  margin-block-end: 8px;
+}
+.whats-missing ul {
+  display: grid;
+  gap: 8px;
+  padding-inline-start: 20px;
+  list-style: disc;
+}
+.whats-missing a {
+  color: var(--pending);
+  text-decoration: underline;
+}
+.validation-field-highlight {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-focus);
+}
+.form-error {
+  color: var(--danger);
+}
+:root .ui-button.button:disabled,
+:root .ui-input:disabled,
+:root .field input:disabled,
+:root .field textarea:disabled,
+:root .ui-option:disabled,
+:root .ui-menu-item:disabled,
+:root .ui-segments button:disabled,
+:root .ui-checked-control:disabled {
+  opacity: 1;
+  color: var(--disabled-text);
+  background: var(--disabled-fill);
+  cursor: not-allowed;
+}
+
+/* Width-hidden columns retain their original values in the row's details. */
+:root .ui-data-table {
+  overflow: visible;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:root .ui-data-table table.has-defined-columns {
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+:root .ui-data-table th,
+:root .ui-data-table td {
+  padding: 12px;
+  border: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+:root .ui-data-table th,
+:root .ui-data-table th *,
+:root .ui-data-table td.numeric,
+:root .ui-data-table time,
+:root .ui-data-table .date-text,
+:root .ui-data-table .branch-label,
+:root .ui-data-table .table-actions,
+:root .ui-data-table .table-actions * {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root .ui-data-table th {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+:root .ui-data-table th .ui-button.button:not(.ui-icon-button) {
+  inline-size: fit-content;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  padding-inline: 0;
+  block-size: 32px;
+  min-block-size: 32px;
+  max-block-size: 32px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+  color: var(--text-muted);
+  background: var(--color-clear);
+  border: 0;
+  box-shadow: var(--shadow-none);
+  white-space: nowrap;
+}
+:root
+  .ui-data-table.is-responsive
+  tbody
+  tr:not(.table-expanded-row):nth-child(n) {
+  background: var(--color-clear);
+}
+:root .ui-data-table.is-responsive tbody tr:not(.table-expanded-row):hover {
+  background: var(--hover-fill);
+}
+:root .ui-data-table.is-responsive tbody tr:not(.table-expanded-row) td {
+  box-shadow: var(--shadow-row-divider);
+}
+.table-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.table-identity-content {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root .table-details-toggle.ui-icon-button {
+  flex: 0 0 28px;
+  inline-size: 28px;
+  min-inline-size: 28px;
+  block-size: 32px;
+  min-block-size: 32px;
+}
+.table-details-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.table-expanded-row dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 16px 24px;
+  padding: 16px;
+  margin: 0;
+  background: var(--surface-soft);
+  border-radius: var(--radius-control);
+}
+.table-expanded-row dl > div {
+  min-inline-size: 0;
+}
+.table-expanded-row dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+  margin-block-end: 6px;
+}
+.table-expanded-row dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.table-expanded-row .numeric {
+  text-align: start;
+}
+
+/* Shell: the 760–1279 band keeps content width instead of squeezing navigation. */
+:root .sidebar {
+  inline-size: 248px;
+  min-inline-size: 248px;
+  padding: 20px 16px 16px;
+  background: var(--surface);
+  border-inline-end: 1px solid var(--divider);
+}
+:root .is-collapsed .sidebar {
+  inline-size: 72px;
+  min-inline-size: 72px;
+  padding-inline: 12px;
+}
+.sidebar nav {
+  overflow: visible;
+}
+.sidebar .nav-section-label {
+  color: var(--group-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+.sidebar nav a {
+  min-block-size: 34px;
+  block-size: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-small);
+  color: var(--text);
+}
+.sidebar nav a > svg {
+  inline-size: 18px;
+  block-size: 18px;
+  color: var(--text-muted);
+}
+.sidebar nav a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  font-weight: var(--font-weight-headline);
+}
+.sidebar nav a[aria-current="page"] > svg {
+  color: var(--accent-tint-text);
+}
+.sidebar nav a[aria-current="page"]::before {
+  display: none;
+}
+/* Icon navigation shows the same translated label on hover and keyboard focus. */
+.is-collapsed .sidebar:not(.is-open) nav a {
+  position: relative;
+}
+.is-collapsed .sidebar:not(.is-open) nav a:is(:hover, :focus) .nav-item-label {
+  display: block;
+  position: absolute;
+  inset-inline-start: calc(100% + 12px);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inline-size: max-content;
+  max-inline-size: 240px;
+  padding: 8px 12px;
+  border-radius: var(--radius-menu);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-menu);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-caption);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 60;
+}
+:root .sidebar .user-menu.ui-button.button {
+  block-size: 56px;
+  min-block-size: 56px;
+  max-block-size: 56px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--neutral-fill);
+  box-shadow: var(--shadow-none);
+  color: var(--text);
+}
+:root .topbar {
+  min-block-size: 60px;
+  block-size: 60px;
+  padding: 12px 28px;
+  gap: 12px;
+  flex-wrap: nowrap;
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--surface-topbar);
+  backdrop-filter: blur(16px);
+  border-block-end: 1px solid var(--divider);
+}
+:root .topbar > .ui-button,
+:root .topbar > .ui-button.button:not(.ui-icon-button),
+:root .topbar > .ui-menu-trigger,
+:root .topbar > .ui-select,
+:root .topbar > .branch-pill.static,
+:root .topbar > .topbar-search {
+  block-size: 36px;
+  min-block-size: 36px;
+  max-block-size: 36px;
+  border: 0;
+  background: var(--color-clear);
+  color: var(--text);
+  box-shadow: var(--shadow-none);
+}
+:root .topbar > .ui-icon-button,
+:root .topbar > .notifications-menu {
+  inline-size: 36px;
+  min-inline-size: 36px;
+  padding: 0;
+  border-radius: var(--radius-round);
+}
+:root .topbar > .branch-pill,
+:root .topbar > .topbar-search,
+:root .topbar > .ui-button.button.demo-menu {
+  background: var(--neutral-fill);
+  border-radius: var(--radius-round);
+}
+:root .topbar > .branch-pill {
+  max-inline-size: 180px;
+  padding-inline: 12px;
+}
+:root .topbar > .ui-button.button.demo-menu {
+  padding-inline: 14px;
+}
+:root .topbar-search input:not([type="checkbox"]):not([type="radio"]) {
+  block-size: 36px;
+  min-block-size: 36px;
+  max-block-size: 36px;
+  border: 0;
+  padding-block: 0;
+  background: var(--color-clear);
+  border-radius: var(--radius-none);
+}
+.topbar .breadcrumbs {
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  gap: 8px;
+  white-space: nowrap;
+}
+.topbar .breadcrumbs a {
+  color: var(--text);
+}
+.topbar .breadcrumbs .breadcrumb-location {
+  color: var(--text-muted);
+}
+.topbar-search-icon {
+  display: none;
+}
+.topbar-search-dialog {
+  max-inline-size: 480px;
+}
+.topbar-search-dialog form {
+  display: grid;
+  gap: 24px;
+}
+.topbar-search-dialog .actions {
+  justify-content: flex-end;
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  :root .topbar {
+    gap: 8px;
+    padding-inline: 20px;
+  }
+  :root .topbar > .topbar-search {
+    inline-size: 200px;
+    flex: 0 0 200px;
+  }
+  :root .topbar > .branch-pill {
+    max-inline-size: 144px;
+  }
+}
+@media (min-width: 760px) and (max-width: 1279px) {
+  :root .sidebar {
+    inline-size: 72px;
+    min-inline-size: 72px;
+    padding-inline: 12px;
+  }
+  .sidebar .nav-item-label,
+  .sidebar .nav-section-label,
+  .sidebar .store-name,
+  .sidebar .user-chip-copy,
+  .sidebar .nav-count {
+    display: none;
+  }
+  .sidebar .sidebar-brand {
+    padding-inline: 0;
+  }
+  .sidebar nav a,
+  .sidebar .user-chip {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .sidebar .nav-count-dot {
+    display: block;
+  }
+  :root .topbar {
+    gap: 8px;
+    padding-inline: 20px;
+  }
+  .topbar .breadcrumbs > :not(.breadcrumb-page) {
+    display: none;
+  }
+  :root .topbar > .topbar-search {
+    display: none;
+  }
+  .topbar-search-icon {
+    display: inline-flex;
+  }
+  :root .is-collapsed .sidebar.is-open {
+    position: fixed;
+    inset-inline-start: 0;
+    z-index: 50;
+    inline-size: 248px;
+    min-inline-size: 248px;
+    padding-inline: 16px;
+  }
+  .menu-open .workspace {
+    margin-inline-start: 72px;
+  }
+  .sidebar.is-open .nav-item-label,
+  .sidebar.is-open .nav-section-label,
+  .sidebar.is-open .store-name,
+  .sidebar.is-open .user-chip-copy,
+  .sidebar.is-open .nav-count {
+    display: initial;
+  }
+  .sidebar.is-open nav a {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 759px) {
+  :root .sidebar {
+    display: none;
+    inline-size: 248px;
+    min-inline-size: 248px;
+  }
+  :root .sidebar.is-open {
+    display: flex;
+  }
+  :root .topbar {
+    block-size: auto;
+    min-block-size: 60px;
+    padding: 12px 16px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .topbar .breadcrumbs,
+  :root .topbar > .topbar-search {
+    display: none;
+  }
+  :root .topbar > .sidebar-toggle {
+    order: 0;
+  }
+  :root .topbar > .branch-pill {
+    order: 1;
+    flex: 1 1 auto;
+    max-inline-size: none;
+  }
+  :root .topbar > .notifications-menu {
+    order: 2;
+  }
+  .topbar::after {
+    content: "";
+    flex-basis: 100%;
+    order: 3;
+  }
+  :root .topbar > .topbar-search-icon {
+    display: inline-flex;
+    order: 4;
+  }
+  :root .topbar > .language-toggle {
+    order: 5;
+  }
+  :root .topbar > .theme-toggle {
+    order: 6;
+  }
+  :root .topbar > .text-size-toggle {
+    order: 7;
+  }
+  :root .topbar > .demo-menu {
+    order: 8;
+    margin-inline-start: auto;
+  }
+  :root .ui-button.button:not(.ui-icon-button),
+  :root .ui-data-table .ui-button.button:not(.ui-icon-button) {
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
+  }
+  :root .topbar > .ui-button.button:not(.ui-icon-button) {
+    block-size: 36px;
+    min-block-size: 36px;
+    max-block-size: 36px;
+  }
+  :root .ui-data-table.is-responsive table,
+  :root .ui-data-table.is-responsive tbody {
+    display: block;
+    inline-size: 100%;
+  }
+  :root .ui-data-table.is-responsive colgroup {
+    display: none;
+  }
+  :root .ui-data-table.is-responsive thead {
+    display: none;
+  }
+  :root .ui-data-table.is-responsive tbody {
+    display: grid;
+    gap: 12px;
+  }
+  :root .ui-data-table.is-responsive tbody tr:not(.table-expanded-row) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+  }
+  :root .ui-data-table.is-responsive tbody tr td {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: var(--shadow-none);
+    text-align: start;
+    background: var(--color-clear);
+  }
+  :root .ui-data-table.is-responsive tbody tr td:first-child {
+    grid-column: 1 / -1;
+  }
+  :root .ui-data-table.is-responsive tbody tr td:not(:first-child)::before {
+    content: attr(data-column-label);
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-caption);
+    margin-block-end: 6px;
+  }
+  :root .ui-data-table.is-responsive tbody tr td.numeric {
+    align-items: flex-start;
+  }
+  :root .ui-data-table.is-responsive tbody tr td.table-actions {
+    grid-column: 1 / -1;
+    align-items: flex-end;
+  }
+  :root
+    .ui-data-table.is-responsive
+    tbody
+    tr
+    td.table-actions:has(> .ui-button + .ui-button) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  :root .ui-data-table.is-responsive .table-expanded-row {
+    display: block;
+    padding: 0;
+  }
+  :root .ui-data-table.is-responsive .table-expanded-row dl {
+    background: var(--surface-soft);
+  }
+  .main-content {
+    padding: 16px;
+    min-inline-size: 0;
+  }
+}
+:root .ui-select.has-leading-icon {
+  grid-template-columns: 18px minmax(0, 1fr) 18px;
+  gap: 8px;
+}
+:root .ui-select.has-leading-icon > .select-leading {
+  grid-column: 1;
+  color: var(--accent);
+  display: flex;
+}
+:root .ui-select.has-leading-icon > span:not(.select-leading) {
+  grid-column: 2;
+}
+:root .ui-select.has-leading-icon > svg {
+  grid-column: 3;
+}
+.branch-pill.static {
+  gap: 8px;
+}
+.branch-pin-icon {
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+.card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 16px;
+  min-inline-size: 0;
+}
+.card-heading > h2 {
+  min-inline-size: 0;
+}
+.card-heading > .ui-button {
+  flex: 0 0 auto;
+}
+:root .notification-count {
+  background: var(--accent-fill);
+  color: var(--primary-text);
+}
+:root .ui-calendar-day.selected {
+  background: var(--accent-fill);
+  color: var(--primary-text);
+}
+:root .ui-calendar-day:disabled,
+:root .ui-dropzone.is-disabled {
+  opacity: 1;
+  color: var(--disabled-text);
+}
+:root .user-avatar,
+:root .avatar {
+  color: var(--accent-tint-text);
+}
+:root .ui-kpi-accent {
+  color: var(--primary-text);
+}
+:root .topbar-search:focus-within,
+:root .filter-search-pill:focus-within,
+:root .lookup-search-pill:focus-within {
+  outline: 1px solid var(--accent);
+  outline-offset: 0;
+  box-shadow: var(--shadow-focus);
+}
+:root .ui-badge.offer-pill,
+:root .offer-pill,
+:root .tab-count,
+:root .ui-option[aria-selected="true"] {
+  color: var(--accent-tint-text);
+}
+:root input::placeholder,
+:root textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+:root .language-toggle {
+  font-family: var(--font-en);
+}
+:root .language-toggle[lang="fa"] {
+  font-family: var(--font-fa);
+}
+:root .table-details-toggle.ui-icon-button {
+  flex-basis: 36px;
+  inline-size: 36px;
+  min-inline-size: 36px;
+  block-size: 36px;
+  min-block-size: 36px;
+}
+/* Cost history's long bilingual headings wrap only at word boundaries. */
+@media screen {
+  :root .product-cost-history-table th {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root .order-items-table input.ui-number {
+    inline-size: min(144px, 100%);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+  :root .product-name .unit-fragment,
+  :root .unit-text .unit-fragment {
+    display: inline-block;
+    white-space: nowrap;
+  }
+}
+
+@media screen {
+  :root .invoice-lines-table th,
+  :root .invoice-lines-table th *,
+  :root .posted-invoice-lines th,
+  :root .posted-invoice-lines th * {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}

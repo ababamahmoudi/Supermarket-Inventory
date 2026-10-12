@@ -33,9 +33,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("3");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
@@ -51,12 +49,15 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Record resolution", exact: true })
     .click();
-  await page
-    .getByLabel(
-      "Sour Cherry Juice 1 L · Original units this settlement covers",
-      { exact: true },
-    )
-    .fill("1");
+  await chooseOption(
+    page,
+    page.getByRole("combobox", { name: "Outcome", exact: true }),
+    "replaced",
+    "Replaced",
+  );
+  await page.getByLabel("Original quantity covered", { exact: true }).fill("1");
+  await page.getByLabel("Remaining expected date", { exact: true }).click();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
   await page
     .getByLabel("Actual replacement quantity", { exact: true })
     .fill("2");
@@ -73,10 +74,11 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Replacement receipt reference", { exact: true })
     .fill("DEMO-REPLACE-001");
   await page
-    .getByRole("button", { name: "Receive replacement", exact: true })
+    .locator(".return-action-card")
+    .getByRole("button", { name: "Record resolution", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Pending credit was released",
+    "Recorded item resolutions",
   );
   const after = await stored(page);
   expect(after.ledger).toEqual(before.ledger);
@@ -264,7 +266,22 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   await expect(
     page.getByText("$119.79", { exact: true }).first(),
   ).toBeVisible();
-  await expect(page.getByRole("cell", { name: /DEMO-1001/ })).toBeVisible();
+  while (
+    await page
+      .locator(".payables-ledger-table")
+      .getByRole("button", { name: "Show details", exact: true })
+      .count()
+  )
+    await page
+      .locator(".payables-ledger-table")
+      .getByRole("button", { name: "Show details", exact: true })
+      .first()
+      .click();
+  await expect(
+    page
+      .locator(".payables-ledger-table")
+      .getByText("DEMO-1001", { exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("tab", { name: "Month-end summary", exact: true })
     .click();
@@ -292,7 +309,12 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   await expect(page.locator(".payables-report-heading")).toContainText(
     "Fresh Valley Foods",
   );
-  await expect(page.getByRole("cell", { name: /DEMO-1001/ })).toBeVisible();
+  await expect(
+    page
+      .locator(".payables-report")
+      .getByText("DEMO-1001", { exact: true })
+      .first(),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "Month-end ledger summary",
@@ -393,24 +415,25 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("1");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("1");
   const beforePickup = await stored(page);
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .last()
     .click();
-  for (const label of [
-    "Supplier representative name",
-    "Signed paper pickup slip reference",
+  for (const [label, message] of [
+    ["Supplier representative name", "Enter the supplier representative name."],
+    [
+      "Signed paper pickup slip reference",
+      "Enter the signed paper pickup slip reference.",
+    ],
   ]) {
     await expect(
       page
         .locator(".field")
         .filter({ has: page.getByLabel(label, { exact: true }) })
         .getByRole("alert"),
-    ).toContainText("Add the representative name and signed slip reference");
+    ).toHaveText(message);
   }
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
@@ -435,7 +458,14 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .fill("0");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   await expect(
-    page.locator(".notebook-entry-dialog .form-error"),
+    page
+      .locator(".notebook-entry-dialog .field")
+      .filter({
+        has: page.getByLabel("Actual quantity used (required)", {
+          exact: true,
+        }),
+      })
+      .getByRole("alert"),
   ).toContainText("Enter a positive whole quantity");
   expect(await stored(page)).toEqual(beforeStoreUse);
   await expect(
@@ -497,10 +527,12 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   await page
     .getByRole("button", { name: "Record ledger entry", exact: true })
     .click();
-  await page
-    .getByRole("dialog", { name: "Record ledger entry", exact: true })
-    .getByRole("button", { name: "Record ledger entry", exact: true })
-    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Record ledger entry", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Enter a valid amount");
   await expect(
     page
       .locator(".field")

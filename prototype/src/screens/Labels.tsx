@@ -8,6 +8,8 @@ import {
 import { createPortal, flushSync } from "react-dom";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice } from "../catalog";
+import { effectiveClearanceOffers } from "../receipt-lots";
+import { useRouteParam } from "../navigation";
 import { ProductPrice } from "../weight-price-presentation";
 import { translateCount } from "../i18n";
 import {
@@ -31,14 +33,20 @@ import {
   prepareLabelPrint,
   saveLabelTemplate,
   setLabelTemplateArchived,
+  setLabelWaitlistLot,
   validateLabelTemplate,
   type LabelActor,
   type LabelPrintSnapshot,
+  type LabelPrintProduct,
 } from "../label-workflow";
 import { createId } from "../ids";
 import { ManualPricePill } from "../manual-price-presentation";
 import { categoryLabel } from "../formatters";
 import { useDemo } from "../store";
+import { StoredFileImage } from "../stored-file";
+import { isStoredFileReference } from "../file-database";
+import { waitForPrintImages } from "../print-images";
+import { WhatsMissing } from "../WhatsMissing";
 import type { Branch, DemoState, LabelTemplate, Product } from "../types";
 import {
   Badge,
@@ -151,6 +159,11 @@ function errorText(error: unknown, t: ReturnType<typeof useDemo>["t"]) {
       );
     if (error.code === "template")
       return t("Enter a template name.", "نام قالب را وارد کنید.");
+    if (error.code === "lot")
+      return t(
+        "Choose an active clearance lot in this location and the Promo template before printing.",
+        "پیش از چاپ، یک سری فروش ویژهٔ فعال در این مکان و قالب ویژه را انتخاب کنید.",
+      );
     if (error.code === "price")
       return t(
         "No approved price yet. Confirm the product and price before adding or printing labels.",
@@ -196,7 +209,8 @@ function ShelfLabel({
     template.width,
     Math.max(0.1, template.height - (showLogo ? 9 : 0)),
   );
-  const offer = effectiveOffer(state, product, branch);
+  const lotOffer = (product as LabelPrintProduct).label_clearance_offer;
+  const offer = lotOffer ?? effectiveOffer(state, product, branch);
   const taxable = state.config.tax.profiles.find(
     (profile) => profile.key === product.tax_profile,
   )?.taxable;
@@ -243,11 +257,19 @@ function ShelfLabel({
           </div>
           <div className="price promo-label-price">
             {offer ? (
-              <OfferLabel
-                label={offer.label}
-                language={lang}
-                currency={state.config.company.currency}
-              />
+              lotOffer ? (
+                <ProductPrice
+                  value={lotOffer.price}
+                  product={product}
+                  config={state.config}
+                />
+              ) : (
+                <OfferLabel
+                  label={offer.label}
+                  language={lang}
+                  currency={state.config.company.currency}
+                />
+              )
             ) : (
               <ProductPrice
                 value={effectivePrice(state, product, branch)!}
@@ -292,9 +314,10 @@ function ShelfLabel({
         </div>
         {showLogo && (
           <span className="shelf-label-logo">
-            <img
+            <StoredFileImage
               className={state.config.company.logo_data ? "" : "arzon-logo-art"}
-              src={state.config.company.logo_data || logo}
+              value={state.config.company.logo_data || logo}
+              companyId={state.config.company.seed_key}
               alt={state.config.company.name}
             />
           </span>
@@ -383,9 +406,10 @@ function ShelfLabel({
       </div>
       {showLogo && (
         <span className="shelf-label-logo">
-          <img
+          <StoredFileImage
             className={state.config.company.logo_data ? "" : "arzon-logo-art"}
-            src={state.config.company.logo_data || logo}
+            value={state.config.company.logo_data || logo}
+            companyId={state.config.company.seed_key}
             alt={state.config.company.name}
           />
         </span>
@@ -729,6 +753,16 @@ function TemplateDesigner({
     }
   };
   const save = () => {
+    if (draft.archived) {
+      setError(
+        t(
+          "This template is archived. Restore it before editing or printing.",
+          "این قالب بایگانی شده است. پیش از ویرایش یا چاپ آن را بازیابی کنید.",
+        ),
+      );
+      setErrorField("archived");
+      return;
+    }
     try {
       const next = {
         ...draft,
@@ -778,6 +812,26 @@ function TemplateDesigner({
       className="labels-template-designer"
       title={t("Templates", "قالب‌ها")}
     >
+      <WhatsMissing
+        issues={
+          error
+            ? [
+                {
+                  id: errorField ?? "template",
+                  message: error,
+                  fieldId:
+                    errorField === "archived"
+                      ? "label-template-restore"
+                      : errorField === "name"
+                        ? "label-template-name"
+                        : errorField && errorField !== "geometry"
+                          ? `label-template-${errorField}`
+                          : "label-template-width",
+                },
+              ]
+            : []
+        }
+      />
       <div className="label-template-picker">
         <Field label={t("Saved template", "قالب ذخیره‌شده")}>
           <Select
@@ -822,6 +876,7 @@ function TemplateDesigner({
             error={errorField === "name" ? error : undefined}
           >
             <input
+              id="label-template-name"
               value={draft.name}
               disabled={draft.archived}
               onChange={(event) => {
@@ -864,9 +919,15 @@ function TemplateDesigner({
               <Field
                 key={key}
                 label={`${t(en, fa)} (${t("mm", "میلی‌متر")})`}
-                error={errorField === key ? error : undefined}
+                error={
+                  errorField === key ||
+                  (errorField === "geometry" && key === "width")
+                    ? error
+                    : undefined
+                }
               >
                 <NumberField
+                  id={`label-template-${key}`}
                   disabled={draft.archived}
                   dir="ltr"
                   min={key.startsWith("offset") ? undefined : "0"}
@@ -904,9 +965,7 @@ function TemplateDesigner({
             </p>
           )}
           <div className="label-designer-actions">
-            <Button onClick={save} disabled={draft.archived}>
-              {t("Save template", "ذخیره قالب")}
-            </Button>
+            <Button onClick={save}>{t("Save template", "ذخیره قالب")}</Button>
             <Button
               variant="secondary"
               onClick={printAlignment}
@@ -925,6 +984,7 @@ function TemplateDesigner({
             )}
             {id && (
               <Button
+                id="label-template-restore"
                 variant={draft.archived ? "secondary" : "danger"}
                 onClick={() => setArchived(!draft.archived)}
               >
@@ -1099,10 +1159,26 @@ export function LabelsSettings() {
 
 export function Labels() {
   const { state, update, branch, lang, user, t } = useDemo();
+  const requestedLot = useRouteParam("lot");
+  const requestedPromo =
+    requestedLot &&
+    branch !== "all" &&
+    branchLabelWaitlist(state, branch).some(
+      (item) => item.lot_id === requestedLot,
+    )
+      ? state.templates.find(
+          (item) =>
+            item.company_id === state.config.company.seed_key &&
+            item.style === "promo" &&
+            !item.archived,
+        )
+      : undefined;
   const [tab, setTab] = useState(
-    state.templates.filter((item) => !item.archived).length
-      ? "products"
-      : "templates",
+    requestedPromo
+      ? "waitlist"
+      : state.templates.filter((item) => !item.archived).length
+        ? "products"
+        : "templates",
   );
   const [filters, setFilters] = useState(emptyLabelFilters);
   const [selection, setSelection] = useState<{
@@ -1115,10 +1191,12 @@ export function Labels() {
   const [allCopies, setAllCopies] = useState(1);
   const [templateId, setTemplateId] = useState(
     () =>
+      requestedPromo?.id ??
       state.templates.find(
         (item) =>
           item.company_id === state.config.company.seed_key && !item.archived,
-      )?.id ?? "",
+      )?.id ??
+      "",
   );
   const [startSlot, setStartSlot] = useState(1);
   const [error, setError] = useState("");
@@ -1127,6 +1205,7 @@ export function Labels() {
   );
   const [printState, setPrintState] = useState<DemoState | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const actor = actorFor(user, branch);
   const templates = state.templates.filter(
     (item) =>
@@ -1141,7 +1220,18 @@ export function Labels() {
         candidate.company_id === item.company_id &&
         candidate.code === item.product_code,
     );
-    return product ? Array<Product>(item.copies).fill(product) : [];
+    if (!product) return [];
+    const clearance = item.lot_id
+      ? effectiveClearanceOffers(state, product, branch).find(
+          (offer) => offer.lot_id === item.lot_id,
+        )
+      : undefined;
+    if (item.lot_id && !clearance) return [];
+    return Array<LabelPrintProduct>(item.copies).fill({
+      ...product,
+      label_lot_id: item.lot_id,
+      label_clearance_offer: clearance,
+    });
   });
   const run = (action: (next: DemoState) => void) => {
     try {
@@ -1189,9 +1279,19 @@ export function Labels() {
           candidate.code === item.product_code &&
           candidate.company_id === item.company_id,
       );
-      return product && allowed(product);
+      return (
+        product &&
+        allowed(product) &&
+        (!item.lot_id ||
+          (template?.style === "promo" &&
+            effectiveClearanceOffers(state, product, branch).some(
+              (offer) => offer.lot_id === item.lot_id,
+            )))
+      );
     });
-  const print = () => {
+  const print = async () => {
+    if (printing) return;
+    setPrinting(true);
     try {
       if (!template) throw new LabelWorkflowError("template");
       const snapshot = prepareLabelPrint(
@@ -1205,11 +1305,32 @@ export function Labels() {
         setPendingPrint(snapshot);
         setPrintState(structuredClone(state));
       });
+      if (
+        isStoredFileReference(state.config.company.logo_data) &&
+        state.label_settings?.fields?.logo !== false &&
+        template.width >= 50
+      ) {
+        try {
+          await waitForPrintImages(
+            document.querySelector(".label-print-output"),
+          );
+        } catch {
+          setError(
+            t(
+              "The label logo could not load. Reattach it in Settings or turn off Logo before printing.",
+              "نشان برچسب بارگیری نشد. آن را در تنظیمات دوباره پیوست کنید یا پیش از چاپ نشان را خاموش کنید.",
+            ),
+          );
+          return;
+        }
+      }
       window.print();
       setConfirmationOpen(true);
       setError("");
     } catch (cause) {
       setError(errorText(cause, t));
+    } finally {
+      setPrinting(false);
     }
   };
   let previewPages: (Product | null)[][] = [];
@@ -1625,6 +1746,14 @@ export function Labels() {
                           candidate.company_id === item.company_id &&
                           candidate.code === item.product_code,
                       );
+                      const lotOffer =
+                        product && item.lot_id
+                          ? effectiveClearanceOffers(
+                              state,
+                              product,
+                              branch,
+                            ).find((offer) => offer.lot_id === item.lot_id)
+                          : undefined;
                       return (
                         <tr key={item.id}>
                           <td>
@@ -1633,19 +1762,57 @@ export function Labels() {
                             ) : (
                               <LtrText>{item.product_code}</LtrText>
                             )}
+                            {product &&
+                              (item.lot_id ||
+                                effectiveClearanceOffers(state, product, branch)
+                                  .length > 0) && (
+                                <Select
+                                  aria-label={t(
+                                    `Label price for ${item.product_code}`,
+                                    `قیمت برچسب برای ${item.product_code}`,
+                                  )}
+                                  value={item.lot_id ?? ""}
+                                  onChange={(value) =>
+                                    run((next) =>
+                                      setLabelWaitlistLot(
+                                        next,
+                                        item.id,
+                                        value || undefined,
+                                        branch,
+                                        actor,
+                                      ),
+                                    )
+                                  }
+                                  options={[
+                                    {
+                                      value: "",
+                                      label: t("Regular price", "قیمت عادی"),
+                                    },
+                                    ...effectiveClearanceOffers(
+                                      state,
+                                      product,
+                                      branch,
+                                    ).map((offer) => ({
+                                      value: offer.lot_id!,
+                                      label: `${t("Clearance price", "قیمت فروش ویژه")} ${offer.price} · ${offer.expiry_date}`,
+                                    })),
+                                  ]}
+                                />
+                              )}
                           </td>
                           <td>
                             <LtrText>{item.product_code}</LtrText>
                           </td>
                           <td>
-                            {product && allowed(product) ? (
+                            {product &&
+                            allowed(product) &&
+                            (!item.lot_id || lotOffer) ? (
                               <div className="label-price-display">
                                 <ProductPrice
-                                  value={effectivePrice(
-                                    state,
-                                    product,
-                                    branch,
-                                  )!}
+                                  value={
+                                    lotOffer?.price ??
+                                    effectivePrice(state, product, branch)!
+                                  }
                                   product={product}
                                   config={state.config}
                                 />
@@ -1657,8 +1824,12 @@ export function Labels() {
                             ) : (
                               <span className="muted">
                                 {t(
-                                  "No approved price yet",
-                                  "هنوز قیمت تأییدشده ندارد",
+                                  item.lot_id
+                                    ? "No active clearance offer"
+                                    : "No approved price yet",
+                                  item.lot_id
+                                    ? "پیشنهاد فروش ویژهٔ فعالی وجود ندارد"
+                                    : "هنوز قیمت تأییدشده ندارد",
                                 )}
                               </span>
                             )}
@@ -1815,7 +1986,10 @@ export function Labels() {
               <div className="label-designer-actions">
                 <Button
                   disabled={
-                    !template || !printable || previewPages.length === 0
+                    printing ||
+                    !template ||
+                    !printable ||
+                    previewPages.length === 0
                   }
                   onClick={print}
                 >

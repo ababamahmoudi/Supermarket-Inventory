@@ -25,11 +25,11 @@ test("company and supplier validation clears only when its related field changes
     .click();
   const supplierName = dialog.getByLabel("Supplier name", { exact: true });
   await expect(supplierName).toHaveAttribute("aria-invalid", "true");
-  await dialog.getByLabel("Phone", { exact: true }).fill("555-0100");
+  await dialog.getByLabel("Phone (optional)", { exact: true }).fill("555-0100");
   await expect(supplierName).toHaveAttribute("aria-invalid", "true");
   await supplierName.fill("Fictional supplier validation");
   await expect(supplierName).toHaveAttribute("aria-invalid", "false");
-  const email = dialog.getByLabel("Email", { exact: true });
+  const email = dialog.getByLabel("Email (optional)", { exact: true });
   await email.fill("invalid");
   await dialog
     .getByRole("button", { name: "Add supplier", exact: true })
@@ -78,9 +78,22 @@ test("Warehouse selling opt-in persists and is reversible without changing recei
       ),
     )
     .toBe(true);
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+  await page.goto("/#history");
   await page
-    .getByTestId("undo-toast")
-    .getByRole("button", { name: "Undo", exact: true })
+    .getByLabel("Search History", { exact: true })
+    .fill("Branches changed");
+  await expect(
+    page.locator(".history-table tbody > tr:not(.table-expanded-row)"),
+  ).toHaveCount(1);
+  await page
+    .locator(".history-table tbody > tr:not(.table-expanded-row)")
+    .first()
+    .getByRole("button", { name: "Revert", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Revert change", exact: true })
+    .getByRole("button", { name: "Revert change", exact: true })
     .click();
   await expect
     .poll(() =>
@@ -110,6 +123,7 @@ test("Warehouse selling opt-in persists and is reversible without changing recei
 
 test("request detail Back and browser Back retain tab and search, with actionable breadcrumbs", async ({
   page,
+  isMobile,
 }) => {
   await signIn(page, "Floor Worker");
   await page.goto("/#requests");
@@ -149,8 +163,20 @@ test("request detail Back and browser Back retain tab and search, with actionabl
   const crumbs = page.getByRole("navigation", {
     name: "Breadcrumbs",
     exact: true,
+    includeHidden: true,
   });
-  await expect(crumbs.getByRole("link")).toHaveCount(3);
+  await expect(crumbs.getByRole("link", { includeHidden: true })).toHaveCount(
+    3,
+  );
+  if (isMobile) await expect(crumbs).not.toBeVisible();
+  else await expect(crumbs).toBeVisible();
+  await expect(
+    crumbs.getByRole("link", {
+      name: "Branch requests",
+      exact: true,
+      includeHidden: true,
+    }),
+  ).toHaveAttribute("href", "#requests");
   await page.goBack();
   await expect(page.getByLabel("Search requests", { exact: true })).toHaveValue(
     reference,

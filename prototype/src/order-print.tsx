@@ -17,6 +17,8 @@ export function OrderPrintDocument({
   config: CompanyConfig;
   language: Language;
 }) {
+  const documentLanguage = config.supplier_documents?.supplier_order ?? "en";
+  const printLanguage = documentLanguage === "en" ? "en" : language;
   const amount = (value: string | null) =>
     value === null
       ? "—"
@@ -26,9 +28,10 @@ export function OrderPrintDocument({
       <OperationalPrintDocument
         title_en="Order"
         title_fa="سفارش"
-        company_name={config.company.name}
+        company_name={config.company.name_en}
         reference={order.reference}
-        language={language}
+        language={printLanguage}
+        documentLanguage={documentLanguage}
       >
         <dl className="operational-print-meta">
           <div>
@@ -94,8 +97,12 @@ export function OrderPrintDocument({
               <tr key={line.id}>
                 <td>
                   <ProductName
-                    product={line}
-                    language={line.name_fa ? language : "en"}
+                    product={
+                      documentLanguage === "en"
+                        ? { ...line, name_fa: "" }
+                        : line
+                    }
+                    language={line.name_fa ? printLanguage : "en"}
                   />
                   {line.new_item && (
                     <span className="order-print-new-item">

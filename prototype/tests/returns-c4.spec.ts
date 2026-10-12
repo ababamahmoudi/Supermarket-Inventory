@@ -13,7 +13,16 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
     .locator(".return-header-card")
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page.getByLabel(/Actual pickup units$/).fill("1");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("1");
+  await page
+    .getByLabel("Shortfall reason", { exact: true })
+    .fill("Rep accepted one item today");
+  await chooseOption(
+    page,
+    page.getByLabel("Leftover outcome", { exact: true }),
+    "keep_for_next_pickup",
+    "Keep for next pickup",
+  );
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Demo Driver C4");
@@ -45,9 +54,9 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
     .click();
   const dialog = page.getByRole("dialog", { name: "Return memo", exact: true });
   await expect(dialog).toContainText("Demo Driver C4");
-  await expect(dialog).toContainText("نام راننده");
+  await expect(dialog).toContainText("Driver");
   await expect(dialog).toContainText("Signature");
-  await expect(dialog).toContainText("امضا");
+  await expect(dialog.locator('[lang="fa"]')).toHaveCount(0);
   await expect
     .poll(() =>
       dialog.locator(".return-memo-preview").evaluate((preview) => {

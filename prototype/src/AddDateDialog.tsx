@@ -9,6 +9,7 @@ import {
   DateTrackingError,
   dateTrackingErrorMessage,
   nextTrackedDate,
+  productReminderDays,
   removeTrackedDate,
   scopedTrackedDates,
   stopProductDateTracking,
@@ -24,7 +25,6 @@ import type { Branch } from "./types";
 import {
   Badge,
   Button,
-  Checkbox,
   DateField,
   Dialog,
   Field,
@@ -256,6 +256,9 @@ export function NextTrackedDate({
     : undefined;
   if (!entry) return null;
   const days = trackedDateDaysLeft(entry.date, companyDate(state.config));
+  const product = state.products.find(
+    (item) => item.company_id === entry.company_id && item.code === productCode,
+  );
   const label = (
     <>
       {entry.date_type === "best_before"
@@ -267,7 +270,7 @@ export function NextTrackedDate({
   );
   return (
     <div className={["next-tracked-date", className].filter(Boolean).join(" ")}>
-      {days <= state.config.expiry.expiring_soon_days ? (
+      {days <= productReminderDays(state, product) ? (
         <Badge tone={days < 0 ? "danger" : "pending"}>{label}</Badge>
       ) : (
         <span className="muted">{label}</span>
@@ -400,7 +403,7 @@ function StopTrackingForm({
       item.company_id === state.config.company.seed_key &&
       item.code === productCode,
   );
-  const [removeOpen, setRemoveOpen] = useState(false);
+  const [choice, setChoice] = useState<"keep" | "clear" | "">("");
   const [error, setError] = useState("");
   return (
     <Dialog
@@ -420,26 +423,44 @@ function StopTrackingForm({
           "پیگیری تاریخ روی خیر تنظیم می‌شود.",
         )}
       </p>
-      <Checkbox
-        checked={removeOpen}
-        onChange={(value) => {
-          setRemoveOpen(value);
-          setError("");
-        }}
-      >
-        {t("Remove existing open dates", "حذف تاریخ‌های باز موجود")}
-      </Checkbox>
+      <Field label={t("Stop tracking", "توقف پیگیری")} error={error}>
+        <Select
+          value={choice}
+          onChange={(value) => {
+            setChoice(value as "keep" | "clear");
+            setError("");
+          }}
+          options={[
+            {
+              value: "",
+              label: t(
+                "Choose what to do with the dates",
+                "انتخاب کنید با تاریخ‌ها چه شود",
+              ),
+            },
+            {
+              value: "keep",
+              label: t(
+                "Stop tracking, keep the date on the product",
+                "توقف پیگیری، نگه‌داشتن تاریخ روی محصول",
+              ),
+            },
+            {
+              value: "clear",
+              label: t(
+                "Stop tracking and clear the dates",
+                "توقف پیگیری و پاک‌کردن تاریخ‌ها",
+              ),
+            },
+          ]}
+        />
+      </Field>
       <p className="muted">
         {t(
-          "Existing dates stay active unless you choose to remove them.",
-          "تاریخ‌های موجود فعال می‌مانند مگر حذف آن‌ها را انتخاب کنید.",
+          "Either choice removes the product from Date tracking and stops reminders. Kept dates remain on Lookup.",
+          "هر دو انتخاب محصول را از پیگیری تاریخ حذف می‌کنند و یادآوری را متوقف می‌کنند. تاریخ‌های نگه‌داشته‌شده در جست‌وجو باقی می‌مانند.",
         )}
       </p>
-      {error && (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
-      )}
       <div className="c3-dialog-actions">
         <Button variant="secondary" onClick={() => onOpenChange(false)}>
           {t("Cancel", "لغو")}
@@ -449,12 +470,13 @@ function StopTrackingForm({
           onClick={() => {
             try {
               if (!historyContext) throw new DateTrackingError("permission");
+              if (!choice) throw new DateTrackingError("stop_choice");
               update((draft) =>
                 stopProductDateTracking(
                   draft,
                   historyContext,
                   productCode,
-                  removeOpen,
+                  choice,
                 ),
               );
               onSaved?.();

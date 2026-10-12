@@ -54,6 +54,7 @@ function edits(patch: Partial<ProductEdits> = {}): ProductEdits {
     barcode: product.barcode,
     main_supplier: product.main_supplier,
     date_tracking: false,
+    date_tracking_stop: "keep",
     scope: "all",
     ...patch,
   };

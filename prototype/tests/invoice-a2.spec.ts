@@ -42,7 +42,11 @@ test("each invoice line requires one date answer, collapses when confirmed and o
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   const first = lines.first();
   await first
     .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
@@ -227,10 +231,22 @@ test("Supplier invoice links open the actual posted document and retained origin
   await signIn(page, "Supervisor");
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Invoices", exact: true }).click();
-  const row = page
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: "FV-20390", exact: true }) });
-  await row.getByRole("link", { name: "FV-20390", exact: true }).click();
+  const openedSupplierInvoices = page.locator(".supplier-tab-card");
+  const invoiceLink = openedSupplierInvoices.getByRole("link", {
+    name: "FV-20390",
+    exact: true,
+  });
+  if (!(await invoiceLink.isVisible())) {
+    const details = openedSupplierInvoices.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    for (let index = 0; index < (await details.count()); index += 1) {
+      await details.nth(index).click();
+      if (await invoiceLink.isVisible()) break;
+    }
+  }
+  await invoiceLink.click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   const original = page.locator(".invoice-original-media img");
   await expect(original).toBeVisible();
@@ -238,14 +254,19 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(
     await original.evaluate((image: HTMLImageElement) => image.naturalWidth),
   ).toBeGreaterThan(0);
-  const source = await original.evaluate((image) => {
+  const source = await original.evaluate(async (image) => {
     const data = image.getAttribute("src")!;
+    const bytes = await (await fetch(data)).arrayBuffer();
     const document = new DOMParser().parseFromString(
-      decodeURIComponent(data.slice(data.indexOf(",") + 1)),
+      new TextDecoder().decode(bytes),
       "image/svg+xml",
     );
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
     return {
       data,
+      sha256: Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join(""),
       text: Array.from(document.querySelectorAll("text")).map(
         (entry) => entry.textContent,
       ),
@@ -279,7 +300,34 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(invoice.supplier_invoice_number).toBe("FV-20390");
   expect(invoice.status).toBe("posted");
   expect(invoice.file_type).toBe("image/svg+xml");
-  expect(source.data).toBe(invoice.file_data);
+  expect(invoice.file_data).toMatch(/^idb-file:v1:/);
+  const retainedSource = await page.evaluate(async (reference: string) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("supermarket-prototype-files-v1", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const record = await new Promise<{ source: Blob }>((resolve, reject) => {
+        const request = database
+          .transaction("files", "readonly")
+          .objectStore("files")
+          .get(reference);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return record.source.text();
+    } finally {
+      database.close();
+    }
+  }, invoice.file_data);
+  expect(retainedSource).toContain("Fresh Valley Foods");
+  expect(retainedSource).toContain(invoice.final_total);
+  expect(retainedSource).toBe(
+    await original.evaluate(async (image) =>
+      (await fetch(image.getAttribute("src")!)).text(),
+    ),
+  );
   expect(source.text).toContain(invoice.final_total);
   const document = page.locator(".posted-invoice-document");
   await expect(document).toContainText("FV-20390");
@@ -292,7 +340,31 @@ test("Supplier invoice links open the actual posted document and retained origin
   await expect(original).toHaveAttribute("src", source.data);
   await expect(document).toContainText("FV-20390");
   await page.reload();
-  await expect(original).toHaveAttribute("src", source.data);
   await expect(original).toBeVisible();
+  await expect(original).toHaveJSProperty("complete", true);
+  expect(
+    await original.evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  const reloadedSource = await original.evaluate(async (image) => {
+    const bytes = await (await fetch(image.getAttribute("src")!)).arrayBuffer();
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return {
+      text: new TextDecoder().decode(bytes),
+      sha256: Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join(""),
+    };
+  });
+  expect(reloadedSource.text).toBe(retainedSource);
+  expect(reloadedSource.sha256).toBe(source.sha256);
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice
+          .file_data,
+    ),
+  ).toBe(invoice.file_data);
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(document).toContainText("FV-20390");
   expect(errors).toEqual([]);
 });

@@ -169,6 +169,19 @@ Separate paid inventory phase after register-sales integration: stock counts/lev
 - [x] Columns beside count/card title; posted header/totals/whole-page original25–400 toolbar; return header/640 px policy; weighed product price stacked/Sold by weight.
 - [x] Quick-add Enter/refocus/pinned-highlight/More/Undo; Lookup Dates authorized On/Off/inline add/auto-enable Undo; Products menu preselects entry.
 - [x] Current active/scheduled one product row, legitimate scopes preserved; Past stopped/ended newest first; identical submissions create no duplicate versions.
-- [x] Complete all-screen button audit and automated computed-style/status/domain checks, all existing tests/pricing passing, requested ENlight/ENdark/Persian/phone screenshots individually opened against all nine annotations; exact Ubuntu/click review guide supplied.
+- [x] Complete all-screen button audit and automated computed-style/status/domain checks, all existing tests/pricing passing, requested EN light/EN dark/Persian/phone screenshots individually opened against all nine annotations; exact Ubuntu/click review guide supplied.
 
-Final evidence and the required latest-head CI gate: [C5 review guide](PR_C5_REVIEW.md), [button audit](PR_C5_BUTTON_AUDIT.md), and [PR #18 checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/18/checks). The review remains unmerged.
+Final evidence and the required latest-head CI gate: [C5 review guide](PR_C5_REVIEW.md), [button audit](PR_C5_BUTTON_AUDIT.md), and [PR #18 checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/18/checks). C5 was subsequently owner-approved and merged with history at 2dbb64aab13cdbb6ecfe5a540c590ebb32c503ce after every CI check passed.
+
+## C6/C7 acceptance (2026-10-11)
+
+The complete43-item owner mapping, required 17-scene/five-variant screenshot matrix, original 14bug/five-retouch identities and evidence boundaries are [C6/C7 acceptance](C6_C7_ACCEPTANCE.md). These are exit criteria; boxes are checked only after actual final-source verification.
+
+- [x] C5 approved; all required CI passed; merge preserved original history; C6 branch created from resulting main 2dbb64a.
+- [x] Owner request and all 19 reference images read; Klead design-language fully replaced and eight source docs saved before implementation.
+- [ ] C6 implements every functional item1–23 with safe tenant/location/role scope, immutable source/financial/physical records and unchanged Decimal pricing.
+- [ ] C7 stacks on C6 without intermediate review stop and applies items24–41 to all existing screens, retaining approved Dashboard layout and exact print geometry.
+- [ ] Required new domain/storage/layout/token/contrast tests and all existing checks pass on both review heads; browser files migrate with verified backups, twenty 3 MB photos survive refresh with exact originals.
+- [ ] Eight widths×EN/FA verify actual words/text/control/panel/table/page bounds; mobilecards, prioritizedColumns/details and intermediate shell work.
+- [ ] Both PRs supply17 scenes×five variants, all 85 images individually reviewed against14 bugs/five retouches; report exact differences honestly and distinguish physical printer/Safari checks.
+- [ ] Separate C6/C7 PR descriptions contain changes/click testing/tests/docs/open questions; exact Ubuntu branch commands and detailed nonprogrammer review guide provided. No automatic merge, paidresource/backend/realAI/inventory.

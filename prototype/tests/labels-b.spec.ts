@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setBranch, signIn } from "./helpers";
-import { addSelectedLabels } from "./label-selection";
+import { addSelectedLabels, waitlistCopies } from "./label-selection";
 
 async function saveTemplate(page: Parameters<typeof signIn>[0]) {
   await page
@@ -105,9 +105,7 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   await page.getByLabel("Search products", { exact: true }).fill("0003");
   await addSelectedLabels(page, ["0003"], 20);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
-  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
-    "20",
-  );
+  await expect(await waitlistCopies(page, "0003")).toHaveValue("20");
   await expect(
     page.locator(".label-bilingual-preview .print-sheet"),
   ).toHaveCount(2);
@@ -123,9 +121,7 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
     .getByRole("dialog")
     .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
-    "20",
-  );
+  await expect(await waitlistCopies(page, "0003")).toHaveValue("20");
   await page.reload();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await page.getByLabel("Saved template", { exact: true }).click();
@@ -179,9 +175,7 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
-  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
-    "1",
-  );
+  await expect(await waitlistCopies(page, "0003")).toHaveValue("1");
   await page.getByRole("button", { name: "Remove", exact: true }).click();
   await expect(
     page.getByText("No labels waiting. Add products from the Products tab.", {

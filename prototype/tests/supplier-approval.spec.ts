@@ -24,15 +24,35 @@ async function proposeSupplier(page: Page, name: string) {
     exact: true,
   });
   await dialog.getByLabel("Supplier name", { exact: true }).fill(name);
-  await dialog.getByLabel("Phone", { exact: true }).fill("416-555-0173");
-  await dialog.getByLabel("Payment terms", { exact: true }).fill("Net 30");
+  await dialog
+    .getByLabel("Phone (optional)", { exact: true })
+    .fill("416-555-0173");
+  await chooseOption(
+    page,
+    dialog.getByLabel("Payment terms (optional)", { exact: true }),
+    "30",
+    "Monthly (30 days)",
+  );
+  await dialog
+    .getByLabel("Email (optional)", { exact: true })
+    .fill("orders@example.test");
+  await dialog
+    .getByLabel("Sales representative (optional)", { exact: true })
+    .fill("Fictional Representative");
+  await dialog
+    .getByLabel("Sales rep phone (optional)", { exact: true })
+    .fill("416-555-0174");
   await dialog
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
 }
 
 test("Supervisor confirms a worker supplier from Approvals without product-price fields", async ({
@@ -133,6 +153,7 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   ).toBe("rejected");
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  await page.getByRole("tab", { name: "Needs review", exact: true }).click();
   await page
     .locator(".invoice-saved-drafts .dialog-actions")
     .filter({
@@ -142,7 +163,11 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
     .click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Confirm supplier", exact: true }),
   ).toHaveCount(0);

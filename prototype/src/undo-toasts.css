@@ -1,54 +1,41 @@
 .undo-toast-stack {
   position: fixed;
   inset-inline-end: 24px;
-  inset-block-end: max(24px, env(safe-area-inset-bottom));
+  inset-block-end: max(
+    var(--undo-footer-offset, 24px),
+    env(safe-area-inset-bottom)
+  );
   z-index: 1000;
   max-inline-size: min(440px, calc(100vw - 32px));
-  display: grid;
-  gap: 8px;
   pointer-events: none;
-}
-.undo-toast-items {
-  display: grid;
-  gap: 8px;
 }
 .undo-toast {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  border-radius: 22px;
-  color: #fff;
-  background: var(--kpi-charcoal);
-  font-size: 13px;
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  border-radius: var(--radius-toast);
+  color: var(--klead-white);
+  background: var(--klead-toast-ink);
+  font-size: var(--font-size-label);
   line-height: 1.5;
   pointer-events: auto;
 }
-.undo-toast[hidden] {
-  display: none;
+:root .undo-toast .undo-toast-link.ui-button.button {
+  color: var(--klead-toast-link);
+  background: var(--color-clear);
+  padding-inline: 8px;
 }
-.undo-toast .undo-toast-link {
-  flex: 0 0 auto;
+:root .undo-toast .ui-button.ui-icon-button {
+  color: var(--klead-white);
 }
 .undo-toast-error {
   grid-column: 1 / -1;
 }
-.undo-toast-more {
-  justify-self: end;
-  padding: 6px 12px;
-  border-radius: 16px;
-  background: var(--kpi-charcoal);
-  color: #fff;
-  font-size: 12px;
-}
-@media (max-width: 760px) {
-  .ui-dialog.confirm-dialog:has(> .undo-toast-stack) {
-    padding-block-end: calc(var(--undo-toast-block-size, 64px) + 32px);
-  }
+@media (max-width: 759px) {
   .undo-toast-stack {
     inset-inline-end: 16px;
-    inset-block-end: max(16px, env(safe-area-inset-bottom));
   }
 }
 @media print {

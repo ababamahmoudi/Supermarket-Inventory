@@ -114,9 +114,9 @@ test("company settings save deliberately, persist and record before/after Histor
   });
   await page.getByLabel("Time zone", { exact: true }).fill("Invalid/Zone");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Enter a valid time zone",
-  );
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Enter a valid time zone");
   expect(
     await page.evaluate(
       () =>
@@ -155,10 +155,23 @@ test("new branch configuration works in the live branch switcher and retains his
   ).toContainText("North Market");
   await page.reload();
   const row = page.getByRole("row").filter({
-    has: page.getByRole("rowheader", { name: "North Market", exact: true }),
+    has: page.getByRole("rowheader", {
+      name: /^North Market(?: (?:Show|Hide) details)?$/,
+    }),
   });
   await row.getByRole("button", { name: "Deactivate", exact: true }).click();
-  await expect(row).toContainText("Inactive");
+  if ((await row.innerText()).includes("Inactive"))
+    await expect(row).toContainText("Inactive");
+  else {
+    await row
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+    await expect(
+      row.locator(
+        "xpath=following-sibling::tr[1][contains(@class, 'table-expanded-row')]",
+      ),
+    ).toContainText("Inactive");
+  }
   await page.locator(".topbar").getByLabel("Branch", { exact: true }).click();
   await expect(
     page.getByRole("option", { name: "North Market", exact: true }),
@@ -237,18 +250,17 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
   expect(tableGeometry.textFragments).toBeGreaterThan(0);
   expect(tableGeometry.clippedText).toEqual([]);
   if (await page.evaluate(() => window.innerWidth <= 760)) {
-    expect(tableGeometry.tableWidth).toBeGreaterThanOrEqual(900);
-    expect(tableGeometry.scrollWidth).toBeGreaterThan(
-      tableGeometry.wrapperWidth,
+    expect(tableGeometry.tableWidth).toBeLessThanOrEqual(
+      tableGeometry.wrapperWidth + 2,
     );
-    expect(["auto", "scroll"]).toContain(tableGeometry.overflowX);
+    expect(tableGeometry.scrollWidth).toBeLessThanOrEqual(
+      tableGeometry.wrapperWidth + 2,
+    );
+    await expect(pricingTable).toHaveClass(/is-mobile/);
     const firstArchive = pricingTable
       .getByRole("button", { name: "Archive", exact: true })
       .first();
     await firstArchive.scrollIntoViewIfNeeded();
-    await pricingTable.evaluate((wrapper) => {
-      wrapper.scrollLeft = wrapper.scrollWidth;
-    });
     await expect(firstArchive).toBeInViewport();
   } else {
     expect(tableGeometry.tableContained).toBe(true);
@@ -286,9 +298,14 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await page.reload();
   await group(page, "Catalog");
-  await expect(
-    page.getByLabel("Cost divisor for Bakery", { exact: true }),
-  ).toHaveValue("0.50");
+  const divisor = page.getByLabel("Cost divisor for Bakery", { exact: true });
+  if (!(await divisor.count()))
+    await pricingTable
+      .locator("tbody > tr:not(.table-expanded-row)")
+      .filter({ has: page.getByText("Bakery", { exact: true }) })
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+  await expect(divisor).toHaveValue("0.50");
   const after = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(
       (product: { selling_price: string }) => product.selling_price,

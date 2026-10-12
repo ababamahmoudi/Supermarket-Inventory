@@ -1,4 +1,9 @@
 import "../c3-tables.css";
+import {
+  WhatsMissing,
+  FieldError,
+  type ValidationIssue,
+} from "../WhatsMissing";
 import { useEffect, useRef, useState } from "react";
 import { useListState, useRouteParam } from "../navigation";
 import Decimal from "decimal.js";
@@ -21,7 +26,7 @@ import {
 } from "../ui";
 import { DateText, LtrText, Money, ProductName } from "../presentation";
 import { branchLabel, configuredBranches } from "../settings";
-import { supplierRecords } from "../supplier-editor";
+import { supplierRecords, supplierMatches } from "../supplier-editor";
 import { packUnits, costPerCase } from "../supplier-items";
 import {
   canUseOrders,
@@ -169,6 +174,9 @@ export default function Orders() {
   const [errorKey, setErrorKey] = useState("");
   const [errorItemId, setErrorItemId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>(
+    [],
+  );
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [printPreview, setPrintPreview] = useState<Order | null>(null);
@@ -326,6 +334,97 @@ export default function Orders() {
       return false;
     }
   };
+  const validationError = (fieldId: string) =>
+    validationIssues.find((issue) => issue.fieldId === fieldId)?.message;
+  const clearValidation = (fieldId: string) =>
+    setValidationIssues((current) =>
+      current.filter((issue) => issue.fieldId !== fieldId),
+    );
+  const validateForm = (place: boolean) => {
+    if (!form) return false;
+    const issues: ValidationIssue[] = [];
+    const add = (fieldId: string, code: string, name?: string) => {
+      if (!issues.some((issue) => issue.fieldId === fieldId))
+        issues.push({
+          id: `${fieldId}-error`,
+          fieldId,
+          message: `${name ? `${name}: ` : ""}${orderError(new Error(code), t)}`,
+        });
+    };
+    if (!locations.includes(form.branch)) add("order-location", "location");
+    if (!suppliers.some((supplier) => supplierMatches(supplier, form.supplier)))
+      add("order-supplier", "supplier");
+    const selected = candidates.filter((item) =>
+      Boolean(form.cases[item.id]?.trim()),
+    );
+    if (place && !selected.length && !form.newItems.length)
+      add("order-items", "empty");
+    const validCost = (value: string) =>
+      /^\d+(\.\d{1,4})?$/.test(value) &&
+      new Decimal(value).isFinite() &&
+      new Decimal(value).gte(0);
+    for (const item of selected) {
+      const name = lang === "fa" ? item.name_fa || item.name_en : item.name_en;
+      try {
+        orderCandidateQuantity(item, form.cases[item.id]);
+      } catch {
+        add(`order-cases-${item.id}`, "quantity", name);
+      }
+      const cost = form.costs[item.id]?.trim() || item.expected_unit_cost;
+      if (cost !== null && cost !== undefined && !validCost(cost))
+        add(`order-cost-${item.id}`, "cost", name);
+      if (place && (cost === null || cost === undefined || cost === ""))
+        add(`order-cost-${item.id}`, "cost", name);
+    }
+    for (const item of form.newItems) {
+      if (!item.name_en.trim()) add(`order-name-${item.id}`, "name");
+      if (
+        item.units_per_case !== null &&
+        (!Number.isSafeInteger(item.units_per_case) || item.units_per_case <= 0)
+      )
+        add(`order-pack-${item.id}`, "pack", item.name_en);
+      try {
+        if (item.units_per_case === null) {
+          const cases = new Decimal(form.cases[item.id]);
+          if (!cases.isFinite() || !cases.isInteger() || cases.lte(0))
+            throw new Error();
+        } else packUnits(form.cases[item.id], "cases", item.units_per_case);
+      } catch {
+        add(`order-cases-${item.id}`, "quantity", item.name_en);
+      }
+      if (form.costs[item.id]?.trim() && !validCost(form.costs[item.id].trim()))
+        add(`order-cost-${item.id}`, "cost", item.name_en);
+    }
+    if (place)
+      for (const noteId of form.selectedNotes) {
+        const itemId = form.noteItems[noteId];
+        if (!itemId || !form.cases[itemId]?.trim())
+          add(`order-note-${noteId}`, "notes");
+      }
+    if (!issues.length) {
+      // Domain validation on a throwaway copy protects stale notes, identities and permission rules.
+      try {
+        const preview = structuredClone(state);
+        const order = form.id
+          ? saveOrderDraft(preview, context, form.id, input(), form.version)
+          : createOrder(preview, context, input());
+        if (place) placeOrder(preview, context, order.id, order.version);
+      } catch (caught) {
+        const code = caught instanceof Error ? caught.message : "item";
+        const target =
+          code === "location"
+            ? "order-location"
+            : code === "supplier"
+              ? "order-supplier"
+              : code === "notes"
+                ? `order-note-${form.selectedNotes[0] ?? ""}`
+                : "order-items";
+        add(target, code);
+      }
+    }
+    setValidationIssues(issues);
+    return !issues.length;
+  };
   const clearFieldError = (...keys: string[]) => {
     if (keys.includes(errorKey)) {
       setError("");
@@ -389,6 +488,7 @@ export default function Orders() {
     setNewItemOpen(false);
   };
   const newForm = () => {
+    setValidationIssues([]);
     setForm({
       branch:
         branch === "all"
@@ -447,15 +547,21 @@ export default function Orders() {
   };
   const setItemCases = (id: string, value: string) => {
     if (errorItemId === id) clearFieldError("quantity");
+    clearValidation(`order-cases-${id}`);
+    clearValidation("order-items");
     clearFieldError("empty");
     if (form?.selectedNotes.some((noteId) => form.noteItems[noteId] === id))
       clearFieldError("notes");
+    for (const noteId of form?.selectedNotes ?? [])
+      if (form?.noteItems[noteId] === id)
+        clearValidation(`order-note-${noteId}`);
     setForm((current) =>
       current ? { ...current, cases: { ...current.cases, [id]: value } } : null,
     );
   };
   const setItemCost = (id: string, value: string) => {
     if (errorItemId === id) clearFieldError("cost");
+    clearValidation(`order-cost-${id}`);
     setForm((current) =>
       current ? { ...current, costs: { ...current.costs, [id]: value } } : null,
     );
@@ -505,6 +611,7 @@ export default function Orders() {
     ],
   });
   const save = (place: boolean) => {
+    if (!validateForm(place)) return;
     let savedId = "";
     if (
       run(
@@ -654,15 +761,20 @@ export default function Orders() {
                 save(false);
               }}
             >
+              <WhatsMissing issues={validationIssues} />
               <div className="order-heading-fields">
                 <Field
                   label={t("Location", "مکان")}
-                  error={fieldError("location")}
+                  error={
+                    fieldError("location") || validationError("order-location")
+                  }
                 >
                   <Select
+                    id="order-location"
                     value={form.branch}
                     onChange={(value) => {
                       clearFieldError("location", "notes");
+                      clearValidation("order-location");
                       setForm({
                         ...form,
                         branch: value,
@@ -681,9 +793,12 @@ export default function Orders() {
                 </Field>
                 <Field
                   label={t("Supplier", "تأمین‌کننده")}
-                  error={fieldError("supplier")}
+                  error={
+                    fieldError("supplier") || validationError("order-supplier")
+                  }
                 >
                   <Select
+                    id="order-supplier"
                     value={form.supplier}
                     onChange={(value) => {
                       clearFieldError(
@@ -694,6 +809,8 @@ export default function Orders() {
                         "quantity",
                         "cost",
                       );
+                      clearValidation("order-supplier");
+                      clearValidation("order-items");
                       setForm({
                         ...form,
                         supplier: value,
@@ -717,13 +834,18 @@ export default function Orders() {
               </div>
               {form.supplier && (
                 <>
-                  <div className="row-between order-items-heading">
+                  <div
+                    id="order-items"
+                    tabIndex={-1}
+                    className="row-between order-items-heading"
+                  >
                     <h2>{t("Supplier items", "کالاهای تأمین‌کننده")}</h2>
                     <Button variant="secondary" onClick={openNewItem}>
                       <Plus size={16} />
                       {t("New item", "کالای جدید")}
                     </Button>
                   </div>
+                  <FieldError>{validationError("order-items")}</FieldError>
                   {!candidates.length && !form.newItems.length ? (
                     <EmptyState>
                       {t(
@@ -815,9 +937,13 @@ export default function Orders() {
                                 <Field
                                   label={t("Cases", "کارتن")}
                                   className="order-table-field"
-                                  error={itemError(item.id, "quantity")}
+                                  error={
+                                    itemError(item.id, "quantity") ||
+                                    validationError(`order-cases-${item.id}`)
+                                  }
                                 >
                                   <NumberField
+                                    id={`order-cases-${item.id}`}
                                     aria-label={`${t("Cases", "کارتن")} — ${name}`}
                                     value={form.cases[item.id] ?? ""}
                                     min="0"
@@ -850,9 +976,13 @@ export default function Orders() {
                                     "هزینهٔ مورد انتظار واحد",
                                   )}
                                   className="order-table-field"
-                                  error={itemError(item.id, "cost")}
+                                  error={
+                                    itemError(item.id, "cost") ||
+                                    validationError(`order-cost-${item.id}`)
+                                  }
                                 >
                                   <NumberField
+                                    id={`order-cost-${item.id}`}
                                     aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${name}`}
                                     value={
                                       form.costs[item.id] ??
@@ -958,14 +1088,19 @@ export default function Orders() {
                                     "واحد در کارتن (اختیاری)",
                                   )}
                                   className="order-table-field"
-                                  error={itemError(item.id, "pack")}
+                                  error={
+                                    itemError(item.id, "pack") ||
+                                    validationError(`order-pack-${item.id}`)
+                                  }
                                 >
                                   <NumberField
+                                    id={`order-pack-${item.id}`}
                                     aria-label={`${t("Units per case", "واحد در کارتن")} — ${item.name_en}`}
                                     value={item.units_per_case ?? ""}
                                     min="1"
                                     step="1"
                                     onChange={(value) => {
+                                      clearValidation(`order-pack-${item.id}`);
                                       if (errorItemId === item.id)
                                         clearFieldError("pack", "quantity");
                                       setForm({
@@ -990,9 +1125,13 @@ export default function Orders() {
                                 <Field
                                   label={t("Cases", "کارتن")}
                                   className="order-table-field"
-                                  error={itemError(item.id, "quantity")}
+                                  error={
+                                    itemError(item.id, "quantity") ||
+                                    validationError(`order-cases-${item.id}`)
+                                  }
                                 >
                                   <NumberField
+                                    id={`order-cases-${item.id}`}
                                     aria-label={`${t("Cases", "کارتن")} — ${item.name_en}`}
                                     value={form.cases[item.id] ?? ""}
                                     min="0"
@@ -1023,9 +1162,13 @@ export default function Orders() {
                                     "هزینهٔ مورد انتظار واحد (اختیاری)",
                                   )}
                                   className="order-table-field"
-                                  error={itemError(item.id, "cost")}
+                                  error={
+                                    itemError(item.id, "cost") ||
+                                    validationError(`order-cost-${item.id}`)
+                                  }
                                 >
                                   <NumberField
+                                    id={`order-cost-${item.id}`}
                                     aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${item.name_en}`}
                                     value={form.costs[item.id] ?? ""}
                                     min="0"
@@ -1155,15 +1298,18 @@ export default function Orders() {
                             <Field
                               label={t("Supplier item", "کالای تأمین‌کننده")}
                               error={
-                                !form.noteItems[note.id]
+                                validationError(`order-note-${note.id}`) ||
+                                (!form.noteItems[note.id]
                                   ? fieldError("notes")
-                                  : undefined
+                                  : undefined)
                               }
                             >
                               <Select
+                                id={`order-note-${note.id}`}
                                 value={form.noteItems[note.id] ?? ""}
                                 onChange={(value) => {
                                   clearFieldError("notes");
+                                  clearValidation(`order-note-${note.id}`);
                                   setForm({
                                     ...form,
                                     noteItems: {
@@ -1229,7 +1375,40 @@ export default function Orders() {
                       {t("Edit draft", "ویرایش پیش‌نویس")}
                     </Button>
                     <Button
-                      onClick={() =>
+                      onClick={() => {
+                        try {
+                          placeOrder(
+                            structuredClone(state),
+                            context,
+                            selected.id,
+                            selected.version,
+                          );
+                        } catch (caught) {
+                          const code =
+                            caught instanceof Error ? caught.message : "item";
+                          const missingLine = selected.lines.find(
+                            (line) =>
+                              !line.new_item &&
+                              line.expected_unit_cost === null,
+                          );
+                          editForm(selected);
+                          const fieldId =
+                            code === "cost" && missingLine
+                              ? `order-cost-${missingLine.supplier_item_id}`
+                              : code === "supplier"
+                                ? "order-supplier"
+                                : code === "location"
+                                  ? "order-location"
+                                  : "order-items";
+                          setValidationIssues([
+                            {
+                              id: `${fieldId}-error`,
+                              fieldId,
+                              message: orderError(caught, t),
+                            },
+                          ]);
+                          return;
+                        }
                         run(
                           (draft) => {
                             placeOrder(
@@ -1240,8 +1419,8 @@ export default function Orders() {
                             );
                           },
                           t("Order placed.", "سفارش ثبت شد."),
-                        )
-                      }
+                        );
+                      }}
                     >
                       {t("Place order", "ثبت سفارش")}
                     </Button>
@@ -1628,8 +1807,18 @@ export default function Orders() {
             addNewItem();
           }}
         >
+          <WhatsMissing
+            issues={Object.entries(newItemErrors)
+              .filter(([, message]) => message)
+              .map(([key, message]) => ({
+                id: `order-new-${key}-error`,
+                fieldId: `order-new-${key}`,
+                message,
+              }))}
+          />
           <Field label={t("Name", "نام")} error={newItemErrors.name}>
             <input
+              id="order-new-name"
               value={newItemName}
               onChange={(event) => {
                 setNewItemName(event.target.value);
@@ -1643,6 +1832,7 @@ export default function Orders() {
               error={newItemErrors.pack}
             >
               <NumberField
+                id="order-new-pack"
                 value={newItemPack}
                 min="1"
                 step="1"
@@ -1654,6 +1844,7 @@ export default function Orders() {
             </Field>
             <Field label={t("Cases", "کارتن")} error={newItemErrors.quantity}>
               <NumberField
+                id="order-new-quantity"
                 value={newItemCases}
                 min="0"
                 step={newItemPack ? "0.5" : "1"}
@@ -1671,6 +1862,7 @@ export default function Orders() {
               error={newItemErrors.cost}
             >
               <NumberField
+                id="order-new-cost"
                 value={newItemCost}
                 min="0"
                 step="0.0001"
@@ -1706,12 +1898,22 @@ export default function Orders() {
           "رسیدهای قبلی و ارتباط با فاکتورها حفظ می‌شوند.",
         )}
       >
-        <Field label={t("Reason", "دلیل")} error={fieldError("reason")}>
+        <WhatsMissing
+          issues={validationIssues.filter(
+            (issue) => issue.fieldId === "order-cancel-reason",
+          )}
+        />
+        <Field
+          label={t("Reason", "دلیل")}
+          error={fieldError("reason") || validationError("order-cancel-reason")}
+        >
           <textarea
+            id="order-cancel-reason"
             value={reason}
             onChange={(event) => {
               setReason(event.target.value);
               clearFieldError("reason");
+              clearValidation("order-cancel-reason");
             }}
             rows={3}
           />
@@ -1723,6 +1925,16 @@ export default function Orders() {
           <Button
             variant="danger"
             onClick={() => {
+              if (!reason.trim()) {
+                setValidationIssues([
+                  {
+                    id: "order-cancel-reason-error",
+                    fieldId: "order-cancel-reason",
+                    message: orderError(new Error("reason"), t),
+                  },
+                ]);
+                return;
+              }
               if (
                 run(
                   (draft) => {

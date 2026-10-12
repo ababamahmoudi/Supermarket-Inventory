@@ -63,18 +63,18 @@
   max-inline-size: 340px;
   display: block;
   aspect-ratio: 210 / 297;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .label-a4-paper {
-  fill: #fff;
+  fill: var(--klead-white);
 }
 .label-preview-slot rect {
-  fill: #f5f5f7;
-  stroke: #ddd;
+  fill: var(--surface-soft);
+  stroke: var(--divider);
   stroke-width: 0.3;
 }
 .label-preview-slot text {
-  fill: #666;
+  fill: var(--text-muted);
   font-family: Inter, Vazirmatn, sans-serif;
   pointer-events: none;
 }
@@ -82,22 +82,22 @@
   cursor: pointer;
 }
 .label-preview-slot.is-used rect {
-  fill: #e3e3e5;
+  fill: var(--surface-soft);
 }
 .label-preview-slot.is-start rect {
-  fill: #e6edfa;
-  stroke: #2b59c3;
+  fill: var(--accent-soft);
+  stroke: var(--accent);
   stroke-width: 1;
 }
 .label-preview-slot:focus rect {
-  stroke: #2b59c3;
+  stroke: var(--accent);
   stroke-width: 1.3;
 }
 .label-live-preview-error {
   color: var(--text-muted);
   padding: 24px;
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 0.8125rem;
 }
 .labels-filter-toolbar {
@@ -111,14 +111,14 @@
   min-inline-size: 200px;
   max-inline-size: 320px;
   block-size: 44px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding-inline: 14px;
   background: var(--search-fill);
 }
 .labels-search-pill input {
   padding: 0;
   border: 0;
-  background: transparent;
+  background: var(--color-clear);
   min-inline-size: 0;
   inline-size: 100%;
   block-size: 44px;
@@ -169,7 +169,7 @@
   overflow: hidden;
   position: relative;
   margin-block-end: 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .label-scaled-sheet > div {
   position: absolute;

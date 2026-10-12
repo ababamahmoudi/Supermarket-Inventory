@@ -44,6 +44,12 @@ function pickup(
 ) {
   recordPickup(state, worker, "c4-return", {
     quantities: { "0003": qty },
+    shortfalls: {
+      "0003": {
+        reason: "Remaining goods kept for next pickup",
+        outcome: "keep_for_next_pickup",
+      },
+    },
     representative: "Demo Driver",
     slip,
   });

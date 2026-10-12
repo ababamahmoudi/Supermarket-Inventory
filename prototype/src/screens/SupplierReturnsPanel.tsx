@@ -38,17 +38,31 @@ export function SupplierReturnsPanel({
       label: t("Return #", "شماره مرجوعی"),
       required: true,
       width: 110,
+      priority: 0,
+      mobilePrimary: true,
     },
-    { key: "location", label: t("Location", "مکان"), width: 130 },
-    { key: "created", label: t("Created", "ایجادشده"), width: 110 },
-    { key: "items", label: t("Items", "اقلام"), width: 64, align: "end" },
-    { key: "status", label: t("Status", "وضعیت"), width: 220 },
+    { key: "location", label: t("Location", "مکان"), width: 130, priority: 3 },
+    {
+      key: "created",
+      label: t("Created", "ایجادشده"),
+      width: 110,
+      priority: 4,
+    },
+    {
+      key: "items",
+      label: t("Items", "اقلام"),
+      width: 64,
+      align: "end",
+      priority: 5,
+    },
+    { key: "status", label: t("Status", "وضعیت"), width: 220, priority: 1 },
     ...(supervisor
       ? [
           {
             key: "credit",
             label: t("Pending credit", "اعتبار در انتظار"),
             width: 120,
+            priority: 2,
             align: "end" as const,
           },
         ]

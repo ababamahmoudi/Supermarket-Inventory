@@ -6,6 +6,10 @@ export interface TableColumnDefinition {
   width?: string | number;
   align?: "start" | "end";
   actions?: boolean;
+  /** Smaller priorities remain visible longer when the real content width shrinks. */
+  priority?: number;
+  minWidth?: number;
+  mobilePrimary?: boolean;
 }
 
 export interface TablePreferenceScope {

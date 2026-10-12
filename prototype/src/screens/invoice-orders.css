@@ -38,7 +38,7 @@
   min-inline-size: 0;
   padding: 16px;
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .invoice-new-item-name {
   display: flex;

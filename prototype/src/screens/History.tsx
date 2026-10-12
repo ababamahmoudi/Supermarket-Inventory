@@ -32,6 +32,7 @@ import {
 } from "../ui";
 import type { Activity } from "../types";
 import { useListState } from "../navigation";
+import { formatDate } from "../formatters";
 import "./history-b.css";
 
 function InvoiceVersionLinks({ entry }: { entry: Activity }) {
@@ -116,8 +117,8 @@ export default function History() {
       (person === "all" || entry.by === person) &&
       (branch === "all" || entry.branch === branch) &&
       (action === "all" || entry.action === action) &&
-      (!from || entry.at.slice(0, 10) >= from) &&
-      (!to || entry.at.slice(0, 10) <= to) &&
+      (!from || formatDate(entry.at, state.config.company.timezone) >= from) &&
+      (!to || formatDate(entry.at, state.config.company.timezone) <= to) &&
       (!search ||
         `${historyActionLabel(entry.action, lang)} ${entry.by} ${entry.product_code ?? ""} ${entry.entity_id ?? ""} ${JSON.stringify(entry.before)} ${JSON.stringify(entry.after)}`
           .toLowerCase()

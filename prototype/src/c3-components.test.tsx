@@ -1,3 +1,4 @@
+import postcss from "postcss";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
@@ -267,24 +268,62 @@ function contrast(first: string, second: string): number {
   return (values[0] + 0.05) / (values[1] + 0.05);
 }
 
-it("keeps the actual secondary tokens readable against both themes and every table-row surface", () => {
-  const css = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
-  const tokens = (name: string) =>
-    Array.from(
-      css.matchAll(new RegExp(`${name}:\\s*([^;]+);`, "g")),
-      (match) => match[1].match(/#[a-f\d]{6}/i)?.[0] ?? "",
-    );
-  const fills = tokens("--secondary-fill");
-  const texts = tokens("--secondary-text");
-  const borders = tokens("--secondary-border");
-  expect(fills).toHaveLength(2);
-  for (let theme = 0; theme < 2; theme++) {
-    expect(contrast(texts[theme], fills[theme])).toBeGreaterThanOrEqual(4.5);
-    const backgrounds =
-      theme === 0
-        ? ["#ffffff", "#fafafa", "#ebebed", "#e6edfa"]
-        : ["#333333", "#3b3b3b", "#434343", "#474747", "#41495a"];
-    for (const background of [...backgrounds, fills[theme]])
-      expect(contrast(borders[theme], background)).toBeGreaterThanOrEqual(3);
+it("keeps Klead neutral and tinted actions readable in both themes", () => {
+  const css = readFileSync(
+    resolve(process.cwd(), "src/klead-tokens.css"),
+    "utf8",
+  );
+  const sheets = postcss.parse(css);
+  for (const dark of [false, true]) {
+    const vars: Record<string, string> = {};
+    sheets.walkRules((rule) => {
+      if (
+        rule.selector === ":root" ||
+        (dark && rule.selector === ':root[data-theme="dark"]')
+      )
+        rule.walkDecls((declaration) => {
+          if (declaration.prop.startsWith("--"))
+            vars[declaration.prop] = declaration.value;
+        });
+    });
+    const resolveToken = (name: string): string => {
+      const value = vars[name];
+      if (!value) throw new Error(`Missing token ${name}`);
+      const reference = value.match(/^var\((--[\w-]+)(?:,\s*(.*))?\)$/);
+      if (!reference) return value;
+      return vars[reference[1]]
+        ? resolveToken(reference[1])
+        : (reference[2] ?? value);
+    };
+    const neutralFill = resolveToken("--secondary-fill");
+    const neutralText = resolveToken("--secondary-text");
+    expect(contrast(neutralText, neutralFill)).toBeGreaterThanOrEqual(4.5);
+    const tint = resolveToken("--accent-soft");
+    let tintSurface = tint;
+    if (tint.startsWith("rgba")) {
+      const [r, g, b, alpha] = tint.match(/[\d.]+/g)!.map(Number);
+      const base = resolveToken("--surface");
+      const channels = [r, g, b].map((channel, index) =>
+        Math.round(
+          channel * alpha +
+            parseInt(base.slice(1 + index * 2, 3 + index * 2), 16) *
+              (1 - alpha),
+        ),
+      );
+      tintSurface =
+        "#" +
+        channels
+          .map((channel) => channel.toString(16).padStart(2, "0"))
+          .join("");
+    }
+    expect(
+      contrast(resolveToken("--accent-tint-text"), tintSurface),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrast(
+        resolveToken("--disabled-text"),
+        resolveToken("--disabled-fill"),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
   }
 });

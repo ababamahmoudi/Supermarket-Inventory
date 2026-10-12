@@ -53,7 +53,10 @@ async function visibleGeometry(page: Page, route: string) {
           height: control.getBoundingClientRect().height,
           kind: control.matches("input,.ui-input,.ui-checked-control")
             ? "field"
-            : control.getAttribute("data-control-kind"),
+            : control.closest(".ui-segments")
+              ? "choice"
+              : control.getAttribute("data-control-kind"),
+          small: control.classList.contains("button-sm"),
         })),
         selects,
         searches,
@@ -64,6 +67,7 @@ async function visibleGeometry(page: Page, route: string) {
 for (const language of ["en", "fa"] as const) {
   test(`Filter fields are 44px and actions are 40px, readable, searchable and compact in ${language}`, async ({
     page,
+    isMobile,
   }) => {
     await signIn(page, "Supervisor");
     if (language === "fa") await setLanguage(page, "fa");
@@ -72,11 +76,24 @@ for (const language of ["en", "fa"] as const) {
       expect(geometry.controls.length, route).toBeGreaterThan(0);
       for (const control of geometry.controls) {
         expect(
-          ["field", "action", "icon"],
+          ["field", "action", "icon", "choice"],
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
         expect(
-          Math.abs(control.height - (control.kind === "field" ? 44 : 40)),
+          Math.abs(
+            control.height -
+              (control.kind === "field"
+                ? 44
+                : control.kind === "icon"
+                  ? 36
+                  : control.kind === "choice"
+                    ? 40
+                    : isMobile
+                      ? 44
+                      : control.small
+                        ? 32
+                        : 40),
+          ),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
       }
@@ -282,9 +299,16 @@ test("Part 1 Open return exposes pickup and cancellation, then resolution after 
     .click();
   const form = page.locator(".return-action-card");
   await form
-    .getByLabel(/Actual pickup units/)
+    .getByLabel("Actual pickup quantity", { exact: true })
     .first()
     .fill("1");
+  await form
+    .getByLabel("Shortfall reason", { exact: true })
+    .fill("Rep accepted one item today");
+  await form.getByLabel("Leftover outcome", { exact: true }).click();
+  await page
+    .getByRole("option", { name: "Keep for next pickup", exact: true })
+    .click();
   await form
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Receiving representative");
@@ -355,9 +379,9 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
       .trim(),
     text: element.textContent,
   }));
-  expect(style.font).toBe(13);
+  expect(style.font).toBe(12);
   expect(style.text).toMatch(/[↑↓]/);
-  expect(style.color).toBe("rgb(102, 102, 102)");
+  expect(style.color).toBe("rgb(90, 96, 112)");
   await page.goto("/#product?code=0001");
   await expect(
     page

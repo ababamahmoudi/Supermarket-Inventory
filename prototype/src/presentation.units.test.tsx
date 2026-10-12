@@ -1,0 +1,79 @@
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { ProductName, UnitSize, UnitText } from "./presentation";
+
+describe("entered product sizes", () => {
+  it("preserves the Persian decimal and grouping separators without isolating only the last digit", () => {
+    const product = {
+      name_en: "Rice 4.5 kg",
+      name_fa: "برنج ۴٫۵ کیلوگرمی و ۱۲٬۰۰۰ گرمی",
+    };
+    const { container } = render(
+      <ProductName product={product} language="fa" />,
+    );
+    expect(container.querySelector("small")?.textContent).toBe(product.name_en);
+    expect(container.querySelector("strong")?.textContent).toBe(
+      product.name_fa,
+    );
+    const sizes = container.querySelectorAll("strong .unit-fragment");
+    expect([...sizes].map((element) => element.textContent)).toEqual([
+      "۴٫۵ کیلوگرمی",
+      "۱۲٬۰۰۰ گرمی",
+    ]);
+    expect(
+      [...sizes].map((element) => element.querySelector("bdi")?.textContent),
+    ).toEqual(["۴٫۵", "۱۲٬۰۰۰"]);
+  });
+
+  it("preserves the entered English name when it is the Persian fallback", () => {
+    const product = { name_en: "Rice 4.5 kg", name_fa: "" };
+    const { container } = render(
+      <ProductName product={product} language="fa" />,
+    );
+    expect(container.querySelector("strong")?.textContent).toBe(
+      product.name_en,
+    );
+    expect(container.querySelector("strong > bdi")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(container.querySelector(".unit-fragment")?.textContent).toBe(
+      "4.5 kg",
+    );
+    expect(container.querySelector("small")).toBeNull();
+  });
+});
+
+it("retains an ordinary Activity name while keeping its size together", () => {
+  const text = "Dried Red Kidney Beans 900 g";
+  const { container } = render(<UnitText>{text}</UnitText>);
+  expect(container.textContent).toBe(text);
+  expect(container.querySelector(".unit-fragment")?.textContent).toBe("900 g");
+});
+
+describe("scalar unit sizes inside RTL display text", () => {
+  it.each([
+    ["400 g", "400 g", "400"],
+    [" 400   g ", "400 g", "400"],
+    ["150 گرمی", "150 گرمی", "150"],
+    ["۱۵۰ گرمی", "۱۵۰ گرمی", "۱۵۰"],
+    ["۴٫۵ کیلوگرمی", "۴٫۵ کیلوگرمی", "۴٫۵"],
+    ["1 L", "1 L", "1"],
+  ])(
+    "keeps %s together without changing its text or unit order",
+    (value, text, number) => {
+      const { container } = render(
+        <div dir="rtl">
+          <UnitSize value={value} data-testid="physical-size" />
+        </div>,
+      );
+      const size = container.querySelector('[data-testid="physical-size"]');
+      expect(size).toHaveAttribute("dir", "ltr");
+      expect(size?.textContent).toBe(text);
+      const group = size?.querySelector(".unit-text .unit-fragment");
+      expect(group?.textContent).toBe(text);
+      expect(group?.querySelector("bdi")).toHaveAttribute("dir", "ltr");
+      expect(group?.querySelector("bdi")?.textContent).toBe(number);
+    },
+  );
+});

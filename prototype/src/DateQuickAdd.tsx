@@ -51,7 +51,9 @@ export function DateQuickAdd({
   const [activeCode, setActiveCode] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<"added" | "tracking_enabled" | null>(
+    null,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState<Omit<AddTrackedDateInput, "product_code">>(
     {
@@ -167,14 +169,7 @@ export function DateQuickAdd({
         }).id;
       });
       setErrors({});
-      setMessage(
-        trackingEnabled
-          ? t(
-              "Date added. Date tracking turned on.",
-              "تاریخ اضافه شد. پیگیری تاریخ روشن شد.",
-            )
-          : t("Date added.", "تاریخ اضافه شد."),
-      );
+      setMessage(trackingEnabled ? "tracking_enabled" : "added");
       setDraft((previous) => ({
         ...previous,
         quantity: "",
@@ -239,7 +234,7 @@ export function DateQuickAdd({
                   setSelectedCode("");
                   setActiveCode("");
                   setSearchOpen(true);
-                  setMessage("");
+                  setMessage(null);
                   setErrors((previous) => ({ ...previous, product_code: "" }));
                 }}
                 onFocus={() => setSearchOpen(true)}
@@ -409,7 +404,12 @@ export function DateQuickAdd({
       )}
       {message && (
         <p className="date-quick-feedback" role="status">
-          {message}
+          {message === "tracking_enabled"
+            ? t(
+                "Date added. Date tracking turned on.",
+                "تاریخ اضافه شد. پیگیری تاریخ روشن شد.",
+              )
+            : t("Date added.", "تاریخ اضافه شد.")}
         </p>
       )}
     </form>

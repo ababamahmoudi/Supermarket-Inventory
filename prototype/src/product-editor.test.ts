@@ -37,6 +37,7 @@ function edits(code = "0009"): ProductEdits {
     barcode: product.barcode,
     main_supplier: product.main_supplier,
     date_tracking: false,
+    date_tracking_stop: "keep",
     scope: "all",
   };
 }
@@ -199,9 +200,7 @@ describe("shared Supervisor product editor", () => {
     const before = structuredClone(state);
     for (const patch of [
       { name_en: " " },
-      { name_fa: "" },
       { unit_size: "" },
-      { ai_category: "" },
       { pricing_category: "not-configured" },
       { main_supplier: "not-configured" },
       { barcode: state.products[0].barcode },

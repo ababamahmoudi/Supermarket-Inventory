@@ -1,0 +1,119 @@
+.product-date-editor {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-card);
+  min-inline-size: 0;
+}
+.product-date-editor-heading {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: wrap;
+}
+.product-date-editor-heading > div:first-child {
+  flex: 1 1 180px;
+  min-inline-size: 0;
+}
+.product-date-editor-heading > .ui-checked-control {
+  flex: 0 0 auto;
+}
+.product-date-editor-heading h3 {
+  margin: 0;
+}
+.product-date-editor-heading p {
+  margin-block: 6px 0;
+}
+.product-reminder-setting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.product-reminder-setting .ui-number {
+  inline-size: 72px;
+}
+.product-editor-date-rows {
+  display: grid;
+  gap: 12px;
+}
+.product-editor-date-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-control);
+  min-inline-size: 0;
+}
+.product-editor-date-value {
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  text-align: start;
+  display: grid;
+  gap: 6px;
+  flex: 1 1 200px;
+  min-inline-size: min(200px, 100%);
+  padding: 0;
+}
+.product-editor-date-value strong {
+  white-space: nowrap;
+}
+.product-editor-date-row[data-removed] {
+  color: var(--text-muted);
+}
+.product-editor-date-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 16px;
+  inline-size: 100%;
+}
+.product-editor-date-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.product-editor-date-inline .field {
+  min-inline-size: 0;
+}
+.product-editor-date-inline .ui-number {
+  max-inline-size: 120px;
+}
+.product-editor-date-inline > .ui-button {
+  justify-self: end;
+}
+.product-quiet-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.product-quiet-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  flex: 0 0 32px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-small);
+  color: var(--text-muted);
+}
+.product-dates-readonly .product-date-evidence {
+  display: none;
+}
+.product-dates-readonly .product-last-delivery-row {
+  padding-block-start: 12px;
+}
+@media (max-width: 759px) {
+  .product-date-editor {
+    padding: 16px;
+  }
+  .product-editor-date-fields {
+    grid-template-columns: 1fr;
+  }
+}

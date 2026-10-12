@@ -47,6 +47,7 @@ import {
 } from "../ui";
 import type { OperationsContext } from "../operations";
 import "./suppliers-a2.css";
+import { companyDate, dateAfter } from "../invoice";
 
 type Tab =
   | "overview"
@@ -111,42 +112,63 @@ export default function Suppliers() {
   const tableColumns = useTableColumns("suppliers", [
     {
       key: "name",
+      priority: 1,
+      minWidth: 180,
+      mobilePrimary: true,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
       width: 210,
     },
-    { key: "status", label: t("Status", "وضعیت"), width: 136 },
+    {
+      key: "status",
+      priority: 2,
+      minWidth: 120,
+      label: t("Status", "وضعیت"),
+      width: 136,
+    },
     {
       key: "last_delivery",
+      priority: 6,
+      minWidth: 124,
       label: t("Last delivery", "آخرین تحویل"),
       width: 128,
     },
     {
       key: "deliveries",
+      priority: 7,
+      minWidth: 90,
       label: t("Deliveries", "تحویل‌ها"),
       width: 84,
       align: "end",
     },
     {
       key: "returns",
+      priority: 4,
+      minWidth: 105,
       label: t("Open returns", "مرجوعی‌های باز"),
       width: 88,
       align: "end",
     },
     {
       key: "shorts",
+      priority: 5,
+      minWidth: 100,
       label: t("Open shorts", "کسری‌های باز"),
       width: 88,
       align: "end",
     },
     {
       key: "terms",
+      priority: 9,
+      minWidth: 140,
       label: t("Payment terms", "شرایط پرداخت"),
       width: 96,
       defaultVisible: false,
     },
     {
       key: "contact",
+      priority: 10,
+      minWidth: 180,
       label: t("Sales rep and phone", "نماینده فروش و تلفن"),
       width: 160,
       defaultVisible: false,
@@ -155,18 +177,24 @@ export default function Suppliers() {
       ? [
           {
             key: "balance",
+            priority: 3,
+            minWidth: 105,
             label: t("Balance", "مانده"),
             width: 120,
             align: "end" as const,
           },
           {
             key: "overdue",
+            priority: 8,
+            minWidth: 100,
             label: t("Overdue", "سررسید گذشته"),
             width: 120,
             align: "end" as const,
           },
           {
             key: "due",
+            priority: 11,
+            minWidth: 124,
             label: t("Next due date", "سررسید بعدی"),
             width: 128,
             defaultVisible: false,
@@ -508,6 +536,14 @@ export default function Suppliers() {
     ["notes", "Notes", "یادداشت‌ها"],
   ];
   const effectiveTab = tab === "payments" && !supervisor ? "overview" : tab;
+  const latestInvoice = detail.invoices
+    .filter((invoice) => invoice.status === "posted")
+    .sort((left, right) => right.received.localeCompare(left.received))[0];
+  const monthFrom = `${companyDate(state.config).slice(0, 7)}-01`;
+  const nextMonth = new Date(`${monthFrom}T12:00:00Z`);
+  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+  const monthTo = dateAfter(nextMonth.toISOString().slice(0, 10), -1);
+
   return (
     <>
       <Button
@@ -625,16 +661,34 @@ export default function Suppliers() {
       <div className="stats-grid supplier-kpis">
         <KpiCard
           label={t("Last delivery", "آخرین تحویل")}
+          onClick={
+            latestInvoice
+              ? () =>
+                  navigate(
+                    `invoices?id=${encodeURIComponent(latestInvoice.id)}`,
+                  )
+              : undefined
+          }
           value={<DateText value={current.last_delivery} />}
           tone="accent"
         />
         <KpiCard
           label={t("Deliveries this month", "تحویل‌های این ماه")}
+          onClick={() =>
+            navigate(
+              `invoices?supplier=${encodeURIComponent(current.name)}&from=${monthFrom}&to=${monthTo}&tab=posted`,
+            )
+          }
           value={current.deliveries_this_month}
           tone="charcoal"
         />
         <KpiCard
           label={t("Open returns", "مرجوعی‌های باز")}
+          onClick={() =>
+            navigate(
+              `returns?supplier=${encodeURIComponent(current.name)}&tab=open`,
+            )
+          }
           value={current.open_returns}
           tone="accent"
         />
@@ -855,6 +909,7 @@ export default function Suppliers() {
                           "Invoice and order differences",
                           "اختلاف‌های فاکتور و سفارش",
                         ),
+                        date_reminder: t("Expiry reminder", "یادآوری انقضا"),
                         return_credit_overdue: t(
                           "Return waiting for credit",
                           "مرجوعی در انتظار اعتبار",

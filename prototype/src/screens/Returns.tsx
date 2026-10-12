@@ -18,9 +18,12 @@ import {
 } from "../return-workflow";
 import "./returns-a2.css";
 import { ReturnStatusBadge } from "../ReturnStatusBadge";
+import { ReturnActionForms, ReturnCancellationForm } from "./ReturnActionForms";
+import { returnItemProgress } from "../return-item-resolutions";
+import { StoredFileImage } from "../stored-file";
+import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 import policySource from "../../../docs/return-policy.md?raw";
 import { useDemo } from "../store";
-import { companyDate } from "../invoice";
 import {
   Badge,
   Button,
@@ -30,8 +33,6 @@ import {
   ConfirmDialog,
   Tabs,
   DataTable,
-  DateField,
-  Dropzone,
   EmptyState,
   Field,
   FilterToolbar,
@@ -42,20 +43,45 @@ import {
 } from "../ui";
 import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
-  cancelReturn,
   operationError,
+  canCorrectReturnPickup,
+  returnUnpickedQuantity,
   companyTimestamp,
   postReturnClaim,
-  receiveReplacement,
-  recordPickup,
   reviewCancellation,
   scopedRecords,
-  submitFinancialClaim,
-  type Disposition,
   type OperationalReturn,
   type OperationsContext,
-  type ReturnClaim,
 } from "../operations";
+
+const returnFeedback = {
+  pickup: [
+    "Recorded pickup and retained Return memo.",
+    "جمع‌آوری ثبت و یادداشت مرجوعی نگهداری شد.",
+  ],
+  correct: [
+    "Corrected pickup. The original signed record is retained.",
+    "جمع‌آوری اصلاح شد. سابقه امضاشده اصلی نگهداری می‌شود.",
+  ],
+  resolve: [
+    "Recorded item resolutions. Credit claims require Supervisor verification.",
+    "حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید سرپرست نیاز دارد.",
+  ],
+  cancel: [
+    "Recorded cancellation disposition. Existing compensation remains unchanged.",
+    "وضعیت لغو ثبت شد. جبران قبلی بدون تغییر باقی ماند.",
+  ],
+  posted: ["Verified and posted claim once.", "ادعا تأیید و یک‌بار ثبت شد."],
+  cancellationApproved: [
+    "Approved cancellation; retained existing settlement.",
+    "لغو تأیید شد؛ تسویه قبلی حفظ شد.",
+  ],
+  cancellationDeclined: [
+    "Declined cancellation; preserved return history.",
+    "لغو رد شد؛ سابقه مرجوعی حفظ شد.",
+  ],
+} as const;
+type ReturnFeedbackKey = keyof typeof returnFeedback;
 
 export function Returns() {
   const { state, update, role, user, branch, t, lang } = useDemo();
@@ -108,29 +134,21 @@ export function Returns() {
   );
   const [search, setSearch] = useListState("returns.search", "");
   const [policyOpen, setPolicyOpen] = useState(false);
-  const [photoName, setPhotoName] = useState("");
   const [active, setActive] = useState<string | null>(null);
-  const [panel, setPanel] = useState<"pickup" | "resolve" | "cancel">("pickup");
-  const [quantities, setQuantities] = useState<Record<string, string>>({});
-  const [representative, setRepresentative] = useState("");
-  const [slip, setSlip] = useState("");
-  const [photo, setPhoto] = useState("");
-  const [note, setNote] = useState("");
-  const [resolution, setResolution] = useState("replacement_received");
-  const [replacement, setReplacement] = useState("");
-  const [replacementQty, setReplacementQty] = useState("1");
-  const [date, setDate] = useState(() => companyDate(state.config));
-  const [fully, setFully] = useState(false);
-  const [invoiceId, setInvoiceId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dispositions, setDispositions] = useState<Record<string, Disposition>>(
+  const [panel, setPanel] = useState<
+    "pickup" | "correct" | "resolve" | "cancel"
+  >("pickup");
+  const [claimAmounts, setClaimAmounts] = useState<Record<string, string>>({});
+  const [verifiedClaims, setVerifiedClaims] = useState<Record<string, boolean>>(
     {},
   );
-  const [safe, setSafe] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [claimItemAmounts, setClaimItemAmounts] = useState<
+    Record<string, Record<string, string>>
+  >({});
+  const [claimIssues, setClaimIssues] = useState<ValidationIssue[]>([]);
   const [error, setError] = useState("");
   const [errorKey, setErrorKey] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState<ReturnFeedbackKey | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
   const [manualMemo, setMemo] = useState<ReturnMemo | null>(null);
@@ -140,6 +158,7 @@ export function Returns() {
     claimId: string;
     amount: string;
     fingerprint: string;
+    itemAmounts?: Record<string, string>;
   } | null>(null);
   const { printDocument, printOutput } = useOperationalPrint();
   const memoReference = new URLSearchParams(hash.split("?")[1] ?? "").get(
@@ -167,23 +186,33 @@ export function Returns() {
       label: t("Return #", "شماره مرجوعی"),
       required: true,
       width: 108,
+      priority: 0,
+      mobilePrimary: true,
     },
     {
       key: "supplier",
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
       width: 220,
+      priority: 0,
     },
-    { key: "location", label: t("Branch", "شعبه"), width: 144 },
-    { key: "date", label: t("Created", "ایجادشده"), width: 128 },
-    { key: "items", label: t("Items", "اقلام"), width: 76, align: "end" },
-    { key: "status", label: t("Status", "وضعیت"), width: 172 },
+    { key: "location", label: t("Branch", "شعبه"), width: 144, priority: 3 },
+    { key: "date", label: t("Created", "ایجادشده"), width: 128, priority: 4 },
+    {
+      key: "items",
+      label: t("Items", "اقلام"),
+      width: 76,
+      align: "end",
+      priority: 5,
+    },
+    { key: "status", label: t("Status", "وضعیت"), width: 172, priority: 1 },
     {
       key: "actions",
       label: t("Next action", "اقدام بعدی"),
       width: 144,
       align: "end",
       actions: true,
+      priority: 2,
     },
   ]);
   useEffect(() => {
@@ -193,7 +222,7 @@ export function Returns() {
       setMemo(null);
       setError("");
       setErrorKey("");
-      setFeedback("");
+      setFeedback(null);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -240,12 +269,27 @@ export function Returns() {
       (!query || searchableText.includes(query))
     );
   });
+  useEffect(() => {
+    if (!hash.startsWith("#returns?")) return;
+    const params = new URLSearchParams(hash.split("?")[1]);
+    if (params.has("supplier")) {
+      setSupplier(params.get("supplier") ?? "all");
+      setReturnTab(params.get("tab") === "history" ? "history" : "open");
+      setStatus("all");
+      setReturnBranch("all");
+      setSearch("");
+    }
+  }, [hash, setSupplier, setReturnTab, setStatus, setReturnBranch, setSearch]);
   const returns = selected ? [selected] : [];
   const productName = (code: string) => {
     const product = state.products.find(
       (item) => item.company_id === context.company_id && item.code === code,
     );
-    return product ? (lang === "fa" ? product.name_fa : product.name_en) : code;
+    return product
+      ? lang === "fa"
+        ? product.name_fa || product.name_en
+        : product.name_en
+      : code;
   };
   const statusLabel = (status: string) => returnUiStatusLabel(status, t);
   const returnStatus = (record: OperationalReturn) => (
@@ -254,7 +298,10 @@ export function Returns() {
       outcome={returnClosureSubtype(record)}
     />
   );
-  const run = (action: (draft: typeof state) => void, message: string) => {
+  const run = (
+    action: (draft: typeof state) => void,
+    message: ReturnFeedbackKey,
+  ) => {
     try {
       update(action);
       setError("");
@@ -265,7 +312,7 @@ export function Returns() {
       setError(
         operationError(caught instanceof Error ? caught.message : "", t),
       );
-      setFeedback("");
+      setFeedback(null);
     }
   };
   const clearFieldError = (...keys: string[]) => {
@@ -276,48 +323,13 @@ export function Returns() {
   };
   const fieldError = (...keys: string[]) =>
     keys.includes(errorKey) ? error : undefined;
-  const counts = (record: OperationalReturn) =>
-    Object.fromEntries(
-      record.lines.map((line) => [
-        line.product_code,
-        Number(quantities[line.product_code] ?? "0"),
-      ]),
-    );
   const openPanel = (record: OperationalReturn, nextPanel: typeof panel) => {
     setActive(record.id);
     setPanel(nextPanel);
-    setQuantities({});
-    setRepresentative("");
-    setSlip("");
-    setPhoto("");
-    setPhotoName("");
-    setNote("");
-    setAmount("");
-    setInvoiceId("");
-    setDispositions({});
-    setSafe(false);
-    setVerified(false);
-    setFully(false);
-    setReplacement(record.lines[0]?.product_code ?? "");
     setError("");
-    setFeedback("");
+    setErrorKey("");
+    setFeedback(null);
   };
-  const loadPhoto = (file?: File) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPhoto(String(reader.result));
-      setPhotoName(file.name);
-    };
-    reader.readAsDataURL(file);
-  };
-  const eligibleInvoices = state.ledger.filter(
-    (row) =>
-      row.company_id === context.company_id &&
-      row.branch === context.branch &&
-      row.supplier === selected?.supplier &&
-      row.type === "invoice",
-  );
   if (!role || role === "cashier")
     return (
       <EmptyState>
@@ -571,7 +583,13 @@ export function Returns() {
       >
         {memo && (
           <>
-            <ReturnMemoPreview memo={memo} language={lang} />
+            <ReturnMemoPreview
+              memo={memo}
+              language={lang}
+              documentLanguage={
+                state.config.supplier_documents?.return_memo ?? "en"
+              }
+            />
             <p className="muted">
               {t(
                 "Choose Save as PDF in the print window to download a copy.",
@@ -592,7 +610,13 @@ export function Returns() {
                   });
                 });
                 printDocument(
-                  <ReturnMemoDocument memo={memo} language={lang} />,
+                  <ReturnMemoDocument
+                    memo={memo}
+                    language={lang}
+                    documentLanguage={
+                      state.config.supplier_documents?.return_memo ?? "en"
+                    }
+                  />,
                 );
               }}
             >
@@ -637,11 +661,15 @@ export function Returns() {
                 confirmation.returnId,
                 confirmation.claimId,
                 confirmation.amount,
+                confirmation.itemAmounts,
               ),
-            t("Verified and posted claim once.", "ادعا تأیید و یک‌بار ثبت شد."),
+            "posted",
           );
           setConfirmation(null);
-          setVerified(false);
+          setVerifiedClaims((current) => ({
+            ...current,
+            [confirmation.claimId]: false,
+          }));
         }}
       />
       <Dialog
@@ -735,7 +763,7 @@ export function Returns() {
       )}
       {feedback && (
         <div className="banner approved" role="status">
-          {feedback}
+          {t(returnFeedback[feedback][0], returnFeedback[feedback][1])}
         </div>
       )}
       {returns.map((record) => {
@@ -788,7 +816,11 @@ export function Returns() {
                   {record.status !== "cancelled" &&
                     record.status !== "cancellation_review" &&
                     record.status !== "resolved" &&
-                    record.status !== "claim_pending" && (
+                    (record.status !== "claim_pending" ||
+                      record.lines.some(
+                        (line) =>
+                          returnItemProgress(record, line).available > 0,
+                      )) && (
                       <Button
                         onClick={() =>
                           openPanel(
@@ -913,6 +945,51 @@ export function Returns() {
                               0}
                             {usesPounds(line) ? " lb" : ""}
                           </LtrText>
+                          <div className="return-item-progress">
+                            {returnItemProgress(record, line).credited > 0 && (
+                              <span>
+                                {t("Credited", "اعتبار دریافت‌شده")}:{" "}
+                                <bdi>
+                                  {returnItemProgress(record, line).credited}
+                                </bdi>
+                              </span>
+                            )}
+                            {returnItemProgress(record, line).replaced > 0 && (
+                              <span>
+                                {t("Replaced", "جایگزین‌شده")}:{" "}
+                                <bdi>
+                                  {returnItemProgress(record, line).replaced}
+                                </bdi>
+                              </span>
+                            )}
+                            {returnItemProgress(record, line).written_off >
+                              0 && (
+                              <span>
+                                {t("Written off", "سوخت‌شده")}:{" "}
+                                <bdi>
+                                  {returnItemProgress(record, line).written_off}
+                                </bdi>
+                              </span>
+                            )}
+                            {returnItemProgress(record, line).outstanding >
+                              0 && (
+                              <span>
+                                {t("Still outstanding", "هنوز باقی‌مانده")}:{" "}
+                                <bdi>
+                                  {returnItemProgress(record, line).outstanding}
+                                </bdi>
+                                {line.outstanding_expected_date && (
+                                  <>
+                                    {" "}
+                                    ·{" "}
+                                    <DateText
+                                      value={line.outstanding_expected_date}
+                                    />
+                                  </>
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>
                           {line.reason === "Leaking"
@@ -965,7 +1042,10 @@ export function Returns() {
                 record.status !== "cancellation_review" && (
                   <div className="return-secondary-actions">
                     {record.status !== "open" &&
-                      record.status !== "resolved" && (
+                      record.status !== "resolved" &&
+                      record.lines.some(
+                        (line) => returnUnpickedQuantity(record, line) > 0,
+                      ) && (
                         <Button
                           variant="secondary"
                           onClick={() => openPanel(record, "pickup")}
@@ -973,6 +1053,15 @@ export function Returns() {
                           {t("Record pickup", "ثبت جمع‌آوری")}
                         </Button>
                       )}
+                    {record.pickup_memos?.length &&
+                    canCorrectReturnPickup(context) ? (
+                      <Button
+                        variant="neutral"
+                        onClick={() => openPanel(record, "correct")}
+                      >
+                        {t("Correct pickup", "اصلاح جمع‌آوری")}
+                      </Button>
+                    ) : null}
                     <Button
                       variant="danger"
                       onClick={() => openPanel(record, "cancel")}
@@ -989,578 +1078,31 @@ export function Returns() {
             </Card>
             {active === record.id &&
               record.status !== "cancelled" &&
-              record.status !== "cancellation_review" && (
-                <Card className="return-action-card form-section">
-                  <h3>
-                    {panel === "pickup"
-                      ? t("Record actual pickup", "ثبت جمع‌آوری واقعی")
-                      : panel === "resolve"
-                        ? t("Record resolution", "ثبت حل‌وفصل")
-                        : t(
-                            "Actual original-goods disposition",
-                            "وضعیت واقعی اصل کالا",
-                          )}
-                  </h3>
-                  {panel === "resolve" && (
-                    <Field label={t("Resolution type", "نوع حل‌وفصل")}>
-                      <Select
-                        value={resolution}
-                        onChange={(value) => {
-                          setResolution(value);
-                          setError("");
-                          setErrorKey("");
-                        }}
-                        options={[
-                          {
-                            value: "replacement_received",
-                            label: t("Replaced", "جایگزین‌شده"),
-                          },
-                          {
-                            value: "credit_current_invoice",
-                            label: t("Credited", "اعتبار دریافت‌شده"),
-                          },
-                          {
-                            value: "cash_or_other",
-                            label: t(
-                              "Cash or other compensation",
-                              "نقد یا جبران دیگر",
-                            ),
-                          },
-                          ...(role === "supervisor"
-                            ? [
-                                {
-                                  value: "no_compensation",
-                                  label: t("Written off", "سوخت‌شده"),
-                                },
-                              ]
-                            : []),
-                        ]}
-                      />
-                    </Field>
-                  )}
-                  <div className="form-grid">
-                    {record.lines.map((line) => (
-                      <div
-                        className="return-quantity-fields"
-                        key={line.product_code}
-                      >
-                        <Field
-                          className="field-short"
-                          error={fieldError(
-                            "quantity",
-                            "weight_quantity",
-                            "pickup_cap",
-                            "coverage",
-                            "recovery_cap",
-                          )}
-                          label={`${productName(line.product_code)}${usesPounds(line) ? " (lb)" : ""} · ${panel === "pickup" ? t("Actual pickup units", "تعداد واقعی جمع‌آوری") : panel === "cancel" ? t("Actual safe originals recovered (zero is valid)", "اصل کالای سالم واقعاً بازیابی‌شده (صفر مجاز است)") : t("Original units this settlement covers", "تعداد اصلی تحت پوشش این تسویه")}`}
-                        >
-                          <NumberField
-                            min="0"
-                            max={line.qty}
-                            step={usesPounds(line) ? "0.001" : "1"}
-                            value={quantities[line.product_code] ?? "0"}
-                            onChange={(value) => {
-                              clearFieldError(
-                                "quantity",
-                                "weight_quantity",
-                                "pickup_cap",
-                                "coverage",
-                                "recovery_cap",
-                              );
-                              setQuantities((current) => ({
-                                ...current,
-                                [line.product_code]: value,
-                              }));
-                            }}
-                          />
-                        </Field>
-                        {panel === "cancel" && (
-                          <Field
-                            label={t("Actual disposition", "وضعیت واقعی")}
-                            error={fieldError("disposition")}
-                          >
-                            <Select
-                              value={dispositions[line.product_code] ?? ""}
-                              onChange={(value) => {
-                                clearFieldError("disposition", "safe");
-                                setDispositions((current) => ({
-                                  ...current,
-                                  [line.product_code]: value as Disposition,
-                                }));
-                              }}
-                              options={[
-                                {
-                                  value: "",
-                                  label: t(
-                                    "Choose disposition",
-                                    "انتخاب وضعیت",
-                                  ),
-                                },
-                                {
-                                  value: "supplier_held",
-                                  label: t(
-                                    "Supplier still holds originals — restore zero",
-                                    "اصل کالا نزد تأمین‌کننده است — بازیابی صفر",
-                                  ),
-                                },
-                                {
-                                  value: "unsafe_on_site",
-                                  label: t(
-                                    "Damaged or unsafe on site — restore zero",
-                                    "کالای آسیب‌دیده یا ناسالم در محل — بازیابی صفر",
-                                  ),
-                                },
-                                {
-                                  value: "recovered_sellable",
-                                  label: t(
-                                    "Originals physically recovered and safe to sell",
-                                    "اصل کالا واقعاً بازیابی‌شده و سالم برای فروش",
-                                  ),
-                                },
-                              ]}
-                            />
-                          </Field>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {panel === "pickup" ||
-                  (panel === "resolve" &&
-                    resolution === "replacement_received") ? (
-                    <div className="form-grid">
-                      <Field
-                        error={
-                          !representative.trim()
-                            ? fieldError(
-                                "pickup_evidence",
-                                "replacement_evidence",
-                              )
-                            : undefined
-                        }
-                        label={t(
-                          "Supplier representative name",
-                          "نام نماینده تأمین‌کننده",
-                        )}
-                      >
-                        <input
-                          value={representative}
-                          onChange={(event) => {
-                            setRepresentative(event.target.value);
-                            clearFieldError(
-                              "pickup_evidence",
-                              "replacement_evidence",
-                            );
-                          }}
-                          placeholder={t(
-                            "Type the representative name",
-                            "نام نماینده را وارد کنید",
-                          )}
-                        />
-                      </Field>
-                      <Field
-                        error={
-                          !slip.trim()
-                            ? fieldError(
-                                "pickup_evidence",
-                                "replacement_evidence",
-                                "duplicate_document",
-                              )
-                            : undefined
-                        }
-                        label={
-                          panel === "pickup"
-                            ? t(
-                                "Signed paper pickup slip reference",
-                                "مرجع رسید کاغذی امضاشده جمع‌آوری",
-                              )
-                            : t(
-                                "Replacement receipt reference",
-                                "مرجع رسید جایگزین",
-                              )
-                        }
-                      >
-                        <input
-                          value={slip}
-                          onChange={(event) => {
-                            setSlip(event.target.value);
-                            clearFieldError(
-                              "pickup_evidence",
-                              "replacement_evidence",
-                              "duplicate_document",
-                            );
-                          }}
-                          placeholder={
-                            panel === "pickup"
-                              ? "DEMO-SIGNED-SLIP-001"
-                              : "DEMO-REPLACEMENT-001"
-                          }
-                        />
-                      </Field>
-                      <Field
-                        label={t("Optional item photo", "عکس اختیاری کالا")}
-                      >
-                        <Dropzone
-                          accept="image/*"
-                          fileName={
-                            photo
-                              ? photoName || t("Item photo", "عکس کالا")
-                              : undefined
-                          }
-                          onChange={loadPhoto}
-                          onRemove={() => {
-                            setPhoto("");
-                            setPhotoName("");
-                          }}
-                        />
-                      </Field>
-                      {photo && (
-                        <img
-                          className="evidence-photo"
-                          src={photo}
-                          alt={t("Evidence photo", "عکس مدرک")}
-                        />
-                      )}
-                    </div>
-                  ) : null}
-                  {panel === "resolve" &&
-                    resolution === "replacement_received" && (
-                      <div className="form-grid">
-                        <Field
-                          error={
-                            !replacement
-                              ? fieldError("replacement_evidence", "product")
-                              : undefined
-                          }
-                          label={t(
-                            "Replacement product actually received",
-                            "کالای جایگزین واقعاً دریافت‌شده",
-                          )}
-                        >
-                          <Select
-                            value={replacement}
-                            onChange={(value) => {
-                              setReplacement(value);
-                              clearFieldError(
-                                "replacement_evidence",
-                                "product",
-                                "quantity",
-                                "weight_quantity",
-                              );
-                            }}
-                            options={state.products
-                              .filter(
-                                (item) =>
-                                  item.company_id === context.company_id &&
-                                  item.status === "active",
-                              )
-                              .map((product) => ({
-                                value: product.code,
-                                label: productName(product.code),
-                              }))}
-                          />
-                        </Field>
-                        <Field
-                          className="field-short"
-                          error={fieldError("quantity", "weight_quantity")}
-                          label={`${t(
-                            "Actual replacement quantity",
-                            "تعداد واقعی جایگزین",
-                          )}${usesPounds({ product_code: replacement, qty: 0, reason: "" }) ? " (lb)" : ""}`}
-                        >
-                          <NumberField
-                            min={
-                              usesPounds({
-                                product_code: replacement,
-                                qty: 0,
-                                reason: "",
-                              })
-                                ? "0.001"
-                                : "1"
-                            }
-                            step={
-                              usesPounds({
-                                product_code: replacement,
-                                qty: 0,
-                                reason: "",
-                              })
-                                ? "0.001"
-                                : "1"
-                            }
-                            value={replacementQty}
-                            onChange={(value) => {
-                              setReplacementQty(value);
-                              clearFieldError(
-                                "quantity",
-                                "weight_quantity",
-                                "coverage",
-                              );
-                            }}
-                          />
-                        </Field>
-                        <Field
-                          label={t("Received date", "تاریخ دریافت")}
-                          error={
-                            !date
-                              ? fieldError("replacement_evidence")
-                              : undefined
-                          }
-                        >
-                          <DateField
-                            value={date}
-                            onChange={(value) => {
-                              setDate(value);
-                              clearFieldError("replacement_evidence");
-                            }}
-                          />
-                        </Field>
-                        <Checkbox checked={fully} onChange={setFully}>
-                          {t(
-                            "Fully resolves the original return (otherwise partial)",
-                            "مرجوعی اصلی را کامل حل می‌کند (در غیر این صورت جزئی)",
-                          )}
-                        </Checkbox>
-                      </div>
-                    )}
-                  {panel === "resolve" &&
-                    resolution !== "replacement_received" && (
-                      <>
-                        <p className="banner info">
-                          {t(
-                            "Workers submit evidence and covered quantities. Only a Supervisor verifies and posts financial amounts.",
-                            "کارکنان مدرک و تعداد پوشش‌داده‌شده ارسال می‌کنند. فقط سرپرست مبالغ مالی را تأیید و ثبت می‌کند.",
-                          )}
-                        </p>
-                        {role === "supervisor" &&
-                          resolution !== "no_compensation" && (
-                            <Field
-                              className="field-short"
-                              label={t(
-                                "Actual credit amount",
-                                "مبلغ واقعی اعتبار",
-                              )}
-                              error={fieldError("amount")}
-                            >
-                              <NumberField
-                                value={amount}
-                                onChange={(value) => {
-                                  setAmount(value);
-                                  clearFieldError("amount");
-                                }}
-                              />
-                            </Field>
-                          )}
-                        {resolution !== "no_compensation" && (
-                          <Field
-                            error={fieldError(
-                              "credit_document",
-                              "duplicate_document",
-                            )}
-                            label={t(
-                              "Credit note number",
-                              "شماره یادداشت اعتبار",
-                            )}
-                          >
-                            <input
-                              value={slip}
-                              onChange={(event) => {
-                                setSlip(event.target.value);
-                                clearFieldError(
-                                  "credit_document",
-                                  "duplicate_document",
-                                );
-                              }}
-                              placeholder="DEMO-CREDIT-001"
-                            />
-                          </Field>
-                        )}
-                        {resolution.startsWith("credit_") && (
-                          <Field
-                            error={fieldError("invoice", "single_invoice")}
-                            label={t(
-                              "One posted invoice to credit",
-                              "یک فاکتور ثبت‌شده برای بستانکاری",
-                            )}
-                          >
-                            <Select
-                              value={invoiceId}
-                              onChange={(value) => {
-                                setInvoiceId(value);
-                                clearFieldError("invoice", "single_invoice");
-                              }}
-                              options={[
-                                {
-                                  value: "",
-                                  label: t(
-                                    "Choose an invoice",
-                                    "انتخاب فاکتور",
-                                  ),
-                                },
-                                ...eligibleInvoices.map((row) => ({
-                                  value: row.invoice_id ?? row.id,
-                                  label: row.reference,
-                                })),
-                              ]}
-                            />
-                          </Field>
-                        )}
-                      </>
-                    )}
-                  <Field
-                    error={fieldError("reason")}
-                    label={
-                      panel === "cancel"
-                        ? t(
-                            "Cancellation reason (required)",
-                            "دلیل لغو (ضروری)",
-                          )
-                        : resolution === "no_compensation"
-                          ? t(
-                              "Reason for no compensation (required)",
-                              "دلیل بدون جبران (ضروری)",
-                            )
-                          : panel === "resolve" &&
-                              resolution === "no_compensation"
-                            ? t(
-                                "Write-off reason (required)",
-                                "دلیل سوخت‌کردن (ضروری)",
-                              )
-                            : t("Optional note", "یادداشت اختیاری")
-                    }
-                  >
-                    <textarea
-                      value={note}
-                      onChange={(event) => {
-                        setNote(event.target.value);
-                        clearFieldError("reason");
-                      }}
-                    />
-                  </Field>
-                  {panel === "cancel" && (
-                    <>
-                      <div className="banner info">
-                        {t(
-                          "Leave recovered quantity at zero for supplier-held or unsafe goods. Existing replacements and credits are preserved for Supervisor review.",
-                          "برای کالای نزد تأمین‌کننده یا ناسالم، تعداد بازیابی را صفر نگه دارید. جایگزین‌ها و بستانکاری‌های قبلی برای بررسی سرپرست حفظ می‌شوند.",
-                        )}
-                      </div>
-                      <Checkbox
-                        checked={safe}
-                        onChange={(value) => {
-                          setSafe(value);
-                          clearFieldError("safe");
-                        }}
-                      >
-                        {t(
-                          "I inspected these physically recovered originals and confirm they are safe and sellable.",
-                          "اصل کالاهای واقعاً بازیابی‌شده را بررسی و سالم و قابل‌فروش بودن آن‌ها را تأیید می‌کنم.",
-                        )}
-                      </Checkbox>
-                    </>
-                  )}
-                  <p className="muted">
-                    {t("Recorded by", "ثبت‌کننده")}:{" "}
-                    {demoUserLabel(context.actor, lang)} ·{" "}
-                    <span className="branch-label">
-                      {configuredBranchLabel(
-                        state.config,
-                        context.branch,
-                        lang,
-                      )}
-                    </span>
-                  </p>
-                  <div className="actions">
-                    <Button
-                      disabled={context.branch === "all"}
-                      onClick={() => {
-                        if (panel === "pickup")
-                          run(
-                            (draft) =>
-                              recordPickup(draft, context, record.id, {
-                                quantities: counts(record),
-                                representative,
-                                slip,
-                                photo,
-                                note,
-                              }),
-                            t(
-                              "Recorded pickup and retained Return memo.",
-                              "جمع‌آوری ثبت و یادداشت مرجوعی نگهداری شد.",
-                            ),
-                          );
-                        else if (panel === "cancel")
-                          run(
-                            (draft) =>
-                              cancelReturn(draft, context, record.id, {
-                                reason: note,
-                                dispositions,
-                                recovered: counts(record),
-                                safe,
-                              }),
-                            t(
-                              "Recorded cancellation disposition. Existing compensation remains unchanged.",
-                              "وضعیت لغو ثبت شد. جبران قبلی بدون تغییر باقی ماند.",
-                            ),
-                          );
-                        else if (resolution === "replacement_received")
-                          run(
-                            (draft) =>
-                              receiveReplacement(draft, context, record.id, {
-                                product_code: replacement,
-                                qty: Number(replacementQty),
-                                covers: counts(record),
-                                date,
-                                representative,
-                                note,
-                                photo,
-                                receipt: slip,
-                                invoice_id: invoiceId || undefined,
-                                fully,
-                              }),
-                            t(
-                              "Replacement received. Pending credit was released for the covered quantities.",
-                              "جایگزین دریافت شد. اعتبار در انتظار تعداد پوشش‌داده‌شده آزاد شد.",
-                            ),
-                          );
-                        else
-                          run(
-                            (draft) =>
-                              submitFinancialClaim(draft, context, record.id, {
-                                type: resolution as ReturnClaim["type"],
-                                covers: counts(record),
-                                document: slip,
-                                invoice_id: invoiceId,
-                                reason: note,
-                                amount:
-                                  role === "supervisor" &&
-                                  resolution !== "no_compensation"
-                                    ? amount
-                                    : undefined,
-                              }),
-                            t(
-                              "Submitted claim for Supervisor verification.",
-                              "ادعا برای تأیید سرپرست ارسال شد.",
-                            ),
-                          );
-                      }}
-                    >
-                      {panel === "pickup"
-                        ? t("Record pickup", "ثبت جمع‌آوری")
-                        : panel === "cancel"
-                          ? t(
-                              "Record cancellation disposition",
-                              "ثبت وضعیت لغو",
-                            )
-                          : resolution === "replacement_received"
-                            ? t("Receive replacement", "دریافت جایگزین")
-                            : t("Submit claim", "ارسال ادعا")}
-                    </Button>
-                    <Button variant="secondary" onClick={() => setActive(null)}>
-                      {t("Close", "بستن")}
-                    </Button>
-                  </div>
-                </Card>
-              )}
+              record.status !== "cancellation_review" &&
+              (panel === "cancel" ? (
+                <ReturnCancellationForm
+                  key={`${record.id}-cancel`}
+                  record={record}
+                  context={context}
+                  onClose={() => setActive(null)}
+                  onSaved={() => {
+                    setActive(null);
+                    setFeedback("cancel");
+                  }}
+                />
+              ) : (
+                <ReturnActionForms
+                  key={`${record.id}-${panel}`}
+                  record={record}
+                  context={context}
+                  mode={panel}
+                  onClose={() => setActive(null)}
+                  onSaved={() => {
+                    setActive(null);
+                    setFeedback(panel);
+                  }}
+                />
+              ))}
             <div id="return-claims">
               {(record.claims ?? []).map((claim) => (
                 <Card key={claim.id} className="form-section return-claim-card">
@@ -1588,42 +1130,174 @@ export function Returns() {
                   </p>
                   {role === "supervisor" && claim.status === "submitted" && (
                     <>
+                      <WhatsMissing issues={claimIssues} />
                       <Field
                         className="field-short"
-                        error={fieldError("amount")}
+                        error={
+                          fieldError("amount") ||
+                          claimIssues.find(
+                            (issue) =>
+                              issue.fieldId === `claim-amount-${claim.id}`,
+                          )?.message
+                        }
                         label={t(
                           "Verified financial amount (Supervisor only)",
                           "مبلغ مالی تأییدشده (فقط سرپرست)",
                         )}
                       >
                         <NumberField
-                          value={amount || claim.amount || ""}
+                          id={`claim-amount-${claim.id}`}
+                          value={claimAmounts[claim.id] ?? claim.amount ?? ""}
                           onChange={(value) => {
-                            setAmount(value);
+                            setClaimAmounts((current) => ({
+                              ...current,
+                              [claim.id]: value,
+                            }));
                             clearFieldError("amount");
+                            setClaimIssues((current) =>
+                              current.filter(
+                                (issue) =>
+                                  issue.fieldId !== `claim-amount-${claim.id}`,
+                              ),
+                            );
                           }}
                           disabled={claim.type === "no_compensation"}
                         />
                       </Field>
-                      <Checkbox checked={verified} onChange={setVerified}>
+                      {claim.type !== "no_compensation" &&
+                        Object.values(claim.covers).filter((count) => count > 0)
+                          .length > 1 && (
+                          <div className="form-grid">
+                            {Object.entries(claim.covers)
+                              .filter(([, count]) => count > 0)
+                              .map(([code]) => (
+                                <Field
+                                  key={code}
+                                  className="field-short"
+                                  label={`${productName(code)} · ${t("Actual credit amount", "مبلغ واقعی اعتبار")}`}
+                                  error={
+                                    claimIssues.find(
+                                      (issue) =>
+                                        issue.fieldId ===
+                                        `claim-item-${claim.id}-${code}`,
+                                    )?.message
+                                  }
+                                >
+                                  <NumberField
+                                    id={`claim-item-${claim.id}-${code}`}
+                                    value={
+                                      claimItemAmounts[claim.id]?.[code] ??
+                                      claim.item_amounts?.[code] ??
+                                      ""
+                                    }
+                                    onChange={(value) => {
+                                      setClaimItemAmounts((current) => ({
+                                        ...current,
+                                        [claim.id]: {
+                                          ...current[claim.id],
+                                          [code]: value,
+                                        },
+                                      }));
+                                      setClaimIssues((current) =>
+                                        current.filter(
+                                          (issue) =>
+                                            issue.fieldId !==
+                                            `claim-item-${claim.id}-${code}`,
+                                        ),
+                                      );
+                                    }}
+                                  />
+                                </Field>
+                              ))}
+                          </div>
+                        )}
+                      <Checkbox
+                        id={`claim-verify-${claim.id}`}
+                        checked={!!verifiedClaims[claim.id]}
+                        onChange={(value) => {
+                          setVerifiedClaims((current) => ({
+                            ...current,
+                            [claim.id]: value,
+                          }));
+                          setClaimIssues((current) =>
+                            current.filter(
+                              (issue) =>
+                                issue.fieldId !== `claim-verify-${claim.id}`,
+                            ),
+                          );
+                        }}
+                      >
                         {t(
                           "I verified the document, covered quantities, and invoice allocation.",
                           "سند، تعداد پوشش‌داده‌شده و تخصیص فاکتور را تأیید کردم.",
                         )}
                       </Checkbox>
                       <Button
-                        disabled={!verified || context.branch === "all"}
-                        onClick={() =>
+                        onClick={() => {
+                          const missing: ValidationIssue[] = [];
+                          if (!verifiedClaims[claim.id])
+                            missing.push({
+                              id: `claim-verify-${claim.id}-error`,
+                              fieldId: `claim-verify-${claim.id}`,
+                              message: t(
+                                "Verify the document, covered quantities and invoice allocation.",
+                                "سند، تعداد تحت پوشش و تخصیص فاکتور را تأیید کنید.",
+                              ),
+                            });
+                          if (
+                            claim.type !== "no_compensation" &&
+                            !(
+                              Number(claimAmounts[claim.id] ?? claim.amount) > 0
+                            )
+                          )
+                            missing.push({
+                              id: `claim-amount-${claim.id}-error`,
+                              fieldId: `claim-amount-${claim.id}`,
+                              message: t(
+                                "Enter a valid verified financial amount.",
+                                "مبلغ مالی تأییدشده معتبر وارد کنید.",
+                              ),
+                            });
+                          const coveredCodes = Object.keys(claim.covers).filter(
+                            (code) => claim.covers[code] > 0,
+                          );
+                          const itemAmounts =
+                            claim.type !== "no_compensation" &&
+                            coveredCodes.length > 1
+                              ? Object.fromEntries(
+                                  coveredCodes.map((code) => [
+                                    code,
+                                    claimItemAmounts[claim.id]?.[code] ??
+                                      claim.item_amounts?.[code] ??
+                                      "",
+                                  ]),
+                                )
+                              : undefined;
+                          if (itemAmounts)
+                            for (const code of coveredCodes)
+                              if (!(Number(itemAmounts[code]) > 0))
+                                missing.push({
+                                  id: `claim-item-${claim.id}-${code}-error`,
+                                  fieldId: `claim-item-${claim.id}-${code}`,
+                                  message: t(
+                                    `Enter the actual credit amount for ${productName(code)}.`,
+                                    `مبلغ واقعی اعتبار ${productName(code)} را وارد کنید.`,
+                                  ),
+                                });
+                          setClaimIssues(missing);
+                          if (missing.length) return;
                           setConfirmation({
                             returnId: record.id,
                             claimId: claim.id,
-                            amount: amount || claim.amount || "",
+                            amount:
+                              claimAmounts[claim.id] ?? claim.amount ?? "",
+                            itemAmounts,
                             fingerprint: returnFinancialFingerprint(
                               state,
                               record.id,
                             ),
-                          })
-                        }
+                          });
+                        }}
                       >
                         {t("Verify and post claim", "تأیید و ثبت ادعا")}
                       </Button>
@@ -1676,10 +1350,7 @@ export function Returns() {
                                 settlement_retained: retainSettlement,
                                 note: reviewNote,
                               }),
-                            t(
-                              "Approved cancellation; retained existing settlement.",
-                              "لغو تأیید شد؛ تسویه قبلی حفظ شد.",
-                            ),
+                            "cancellationApproved",
                           )
                         }
                       >
@@ -1696,10 +1367,7 @@ export function Returns() {
                                 settlement_retained: false,
                                 note: reviewNote,
                               }),
-                            t(
-                              "Declined cancellation; preserved return history.",
-                              "لغو رد شد؛ سابقه مرجوعی حفظ شد.",
-                            ),
+                            "cancellationDeclined",
                           )
                         }
                       >
@@ -1726,18 +1394,25 @@ export function Returns() {
                   (record.evidence ?? []).map((event) => (
                     <div className="history-row" key={event.id}>
                       <strong>
-                        {event.kind === "pickup"
-                          ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
-                          : event.kind === "replacement"
-                            ? t("Received replacement", "جایگزین دریافت‌شده")
-                            : event.kind === "original_recovery"
-                              ? t(
-                                  "Received safe original goods",
-                                  "اصل کالای سالم دریافت شد",
-                                )
-                              : event.kind.startsWith("cancellation")
-                                ? t("Cancellation review", "بررسی لغو")
-                                : t("Resolution claim", "ادعای حل‌وفصل")}
+                        {event.kind === "pickup_correction"
+                          ? t("Corrected pickup", "جمع‌آوری اصلاح‌شده")
+                          : event.kind === "outstanding"
+                            ? t("Still outstanding", "هنوز باقی‌مانده")
+                            : event.kind === "pickup"
+                              ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
+                              : event.kind === "replacement"
+                                ? t(
+                                    "Received replacement",
+                                    "جایگزین دریافت‌شده",
+                                  )
+                                : event.kind === "original_recovery"
+                                  ? t(
+                                      "Received safe original goods",
+                                      "اصل کالای سالم دریافت شد",
+                                    )
+                                  : event.kind.startsWith("cancellation")
+                                    ? t("Cancellation review", "بررسی لغو")
+                                    : t("Resolution claim", "ادعای حل‌وفصل")}
                       </strong>
                       <p>
                         <LtrText>
@@ -1748,9 +1423,10 @@ export function Returns() {
                       </p>
                       {event.note && <p>{event.note}</p>}
                       {event.photo && (
-                        <img
+                        <StoredFileImage
                           className="evidence-photo"
-                          src={event.photo}
+                          value={event.photo}
+                          companyId={context.company_id}
                           alt={t(
                             "Retained local evidence photo",
                             "عکس مدرک محلی حفظ‌شده",

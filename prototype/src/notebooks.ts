@@ -1,10 +1,12 @@
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { branchId, configuredBranches } from "./settings";
-import { UNDO_DURATION } from "./undo-queue";
 import { en as notesEn, fa as notesFa } from "./c-notes-i18n";
 import type { DemoState, Role, Branch } from "./types";
 import type { OperationsContext } from "./operations";
+
+/** The approved author-edit window is independent of transient Undo duration. */
+export const NOTEBOOK_EDIT_WINDOW = 10_000;
 
 export interface NotebookFields {
   product: boolean;
@@ -470,13 +472,17 @@ function editableEntry(
   if (context.role !== "supervisor") {
     if (record.by !== context.actor) fail("edit_permission");
     const elapsed = now.getTime() - Date.parse(record.created_at);
-    if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed >= UNDO_DURATION)
+    if (
+      !Number.isFinite(elapsed) ||
+      elapsed < 0 ||
+      elapsed >= NOTEBOOK_EDIT_WINDOW
+    )
       fail("expired");
   }
   return { record, notebook, scopedContext };
 }
 
-/** Author edits expire with the original five-second window; edits never reset it. */
+/** Author edits expire with the original ten-second window; edits never reset it. */
 export function canEditNotebookEntry(
   state: DemoState,
   context: NotebookContext,
@@ -688,8 +694,8 @@ export function notebookError(
       "فقط نویسنده یا سرپرست می‌تواند این یادداشت را ویرایش کند.",
     ],
     expired: [
-      "The five-second edit window has ended. Ask the Supervisor to edit this note.",
-      "مهلت پنج‌ثانیه‌ای ویرایش پایان یافته است. از سرپرست بخواهید این یادداشت را ویرایش کند.",
+      "The ten-second edit window has ended. Ask the Supervisor to edit this note.",
+      "مهلت ده‌ثانیه‌ای ویرایش پایان یافته است. از سرپرست بخواهید این یادداشت را ویرایش کند.",
     ],
     stale: [
       "This note changed. Open it again before editing.",

@@ -1,7 +1,27 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
 
 test.setTimeout(60000);
+
+async function responsiveColumn(row: Locator, label: string) {
+  const cell = row.locator(`td[data-column-label="${label}"]`);
+  if (await cell.count()) {
+    await expect(cell).toBeVisible();
+    return cell;
+  }
+  const showDetails = row.getByRole("button", {
+    name: "Show details",
+    exact: true,
+  });
+  if (await showDetails.isVisible()) await showDetails.click();
+  const value = row
+    .locator("xpath=following-sibling::tr[1]")
+    .locator("dl > div")
+    .filter({ has: row.page().getByText(label, { exact: true }) })
+    .locator("dd");
+  await expect(value).toBeVisible();
+  return value;
+}
 
 test("Offers combines name/code/label search, category, supplier, type and status without changing prices", async ({
   page,
@@ -56,7 +76,16 @@ test("Offers combines name/code/label search, category, supplier, type and statu
     "Stopped",
   );
   await expect(past.locator("tbody tr")).toHaveCount(1);
-  await expect(past.getByText("Stopped", { exact: true })).toBeVisible();
+  const stoppedOffer = past.locator('tr[data-product-code="0003"]');
+  await expect(stoppedOffer).toHaveCount(1);
+  await expect(stoppedOffer).toContainText("Sour Cherry Juice");
+  const stoppedOfferValue = await responsiveColumn(stoppedOffer, "Offer");
+  await expect(stoppedOfferValue).toContainText("2 for $5");
+  await expect(stoppedOfferValue).toContainText("$2.99");
+  const stoppedStatus = await responsiveColumn(stoppedOffer, "Status");
+  await expect(
+    stoppedStatus.getByText("Stopped", { exact: true }),
+  ).toBeVisible();
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
@@ -164,9 +193,16 @@ test("Payables filters supplier totals and keeps selected report in the same bra
     filters.getByLabel("Payables branch", { exact: true }),
     "Richmond Hill",
   );
-  await expect(
-    overview.getByRole("cell", { name: "Richmond Hill", exact: true }),
-  ).toBeVisible();
+  const selectedSupplier = overview.locator("tbody tr").filter({
+    has: page.getByRole("link", { name: "Fresh Valley Foods", exact: true }),
+  });
+  await expect(selectedSupplier).toHaveCount(1);
+  await expect(await responsiveColumn(selectedSupplier, "Branch")).toHaveText(
+    "Richmond Hill",
+  );
+  await expect(await responsiveColumn(selectedSupplier, "Balance")).toHaveText(
+    "$0.00",
+  );
   await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
   await filters
     .getByRole("checkbox", { name: "With balance", exact: true })

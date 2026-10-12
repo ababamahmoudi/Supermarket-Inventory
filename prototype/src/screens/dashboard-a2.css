@@ -114,7 +114,7 @@
   align-items: center;
   gap: 8px 12px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .dashboard-list-row:nth-child(odd) {
   background: var(--surface-soft);
@@ -174,7 +174,7 @@
 }
 .purchase-bar-track {
   block-size: 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--surface-soft);
   margin-block-start: 8px;
   overflow: hidden;
@@ -182,7 +182,7 @@
 .purchase-bar-track > span {
   display: block;
   block-size: 100%;
-  border-radius: inherit;
+  border-radius: var(--radius-round);
   background: var(--accent);
 }
 .purchase-bar-row:nth-child(even) .purchase-bar-track > span {
@@ -214,7 +214,7 @@
   inset-block-start: 0;
   inset-inline-start: 0;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font-size: 0.6875rem;

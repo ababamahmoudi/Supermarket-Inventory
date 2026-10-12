@@ -84,7 +84,7 @@ test("retained case quote bills exactly, remembers the pack and leaves the poste
     "cases",
     "Cases",
   );
-  await line.getByLabel("Invoiced quantity", { exact: true }).fill("500");
+  await line.getByLabel("Invoiced", { exact: true }).fill("500");
   await line.getByLabel("Case cost before tax", { exact: true }).fill("19.99");
   await expect(
     line.getByLabel("Unit cost before tax", { exact: true }),
@@ -140,6 +140,15 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   await form
     .getByRole("textbox", { name: /^Cases — Canned Fava Beans/ })
     .fill("1");
+  const expectedCost = form.getByRole("textbox", {
+    name: /^Expected unit cost — Canned Fava Beans/,
+  });
+  if (!(await expectedCost.count()))
+    await form
+      .locator("tbody tr")
+      .filter({ hasText: "Canned Fava Beans" })
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
   await form
     .getByRole("textbox", { name: /^Expected unit cost — Canned Fava Beans/ })
     .fill("0.9800");
@@ -148,7 +157,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const order = before.orders!.at(-1)!;
   expect(order.status).toBe("ordered");
   const line = await manual(page);
-  await line.getByLabel("Invoiced quantity", { exact: true }).fill("18");
+  await line.getByLabel("Invoiced", { exact: true }).fill("18");
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.1000");
   const comparison = page.locator(".invoice-order-card");
   await chooseOption(
@@ -157,20 +166,29 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     order.id,
     `${order.reference} · ${order.date}`,
   );
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
-    page.getByText(
-      "Choose a decision for every order difference before posting.",
-      { exact: true },
-    ),
+    page.getByRole("link", {
+      name: "Choose a decision for every order difference before posting.",
+      exact: true,
+    }),
   ).toBeVisible();
   const row = comparison.locator('tr[data-invoice-line="0"]');
-  await row
+  const refusal = comparison.getByRole("button", {
+    name: "Refused / sent back with the driver",
+    exact: true,
+  });
+  if (!(await refusal.count()))
+    await row
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+  await comparison
     .getByRole("button", {
       name: "Refused / sent back with the driver",
       exact: true,
     })
     .click();
-  await row
+  await comparison
     .getByRole("button", { name: "Accept new cost", exact: true })
     .click();
   await confirmNoDate(page);
@@ -256,7 +274,11 @@ test("short-dated expiry discount requires a real date and preserves an existing
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   await expect(
     line.getByRole("button", { name: "Keep manual price", exact: true }),
   ).toHaveCount(0);

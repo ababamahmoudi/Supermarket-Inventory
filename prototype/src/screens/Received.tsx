@@ -9,15 +9,15 @@ import {
   Button,
   Card,
   DataTable,
-  DateField,
   EmptyState,
-  Field,
   FilterToolbar,
   PageHeader,
   Select,
   useTableColumns,
 } from "../ui";
 import "./received-c.css";
+import { ReceivedDateRange } from "./ReceivedDateRange";
+import "./invoice-entry-c6.css";
 
 function useReceivedColumns() {
   const { t } = useDemo();
@@ -27,22 +27,53 @@ function useReceivedColumns() {
       label: t("Product", "کالا"),
       required: true,
       width: "21%",
+      priority: 1,
+      minWidth: 200,
+      mobilePrimary: true,
     },
     {
       key: "quantity",
       label: t("Cases and units", "کارتن و واحد"),
       width: "10%",
+      priority: 2,
+      minWidth: 170,
       align: "end",
     },
-    { key: "location", label: t("Location", "مکان"), width: "14%" },
-    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "17%" },
+    {
+      key: "location",
+      priority: 6,
+      minWidth: 130,
+      label: t("Location", "مکان"),
+      width: "14%",
+    },
+    {
+      key: "supplier",
+      priority: 5,
+      minWidth: 165,
+      label: t("Supplier", "تأمین‌کننده"),
+      width: "17%",
+    },
     {
       key: "invoice",
+      priority: 4,
+      minWidth: 145,
       label: t("Invoice number", "شماره فاکتور"),
       width: "14%",
     },
-    { key: "date", label: t("Date", "تاریخ"), width: "12%" },
-    { key: "actor", label: t("Received by", "دریافت‌کننده"), width: "12%" },
+    {
+      key: "date",
+      priority: 3,
+      minWidth: 124,
+      label: t("Date", "تاریخ"),
+      width: "12%",
+    },
+    {
+      key: "actor",
+      priority: 7,
+      minWidth: 150,
+      label: t("Received by", "دریافت‌کننده"),
+      width: "12%",
+    },
   ]);
 }
 
@@ -254,12 +285,14 @@ export default function Received({
           </span>
         }
       >
-        <Field label={t("From", "از")}>
-          <DateField value={from} onChange={setFrom} />
-        </Field>
-        <Field label={t("To", "تا")}>
-          <DateField value={to} onChange={setTo} />
-        </Field>
+        <ReceivedDateRange
+          from={from}
+          to={to}
+          onChange={(nextFrom, nextTo) => {
+            setFrom(nextFrom);
+            setTo(nextTo);
+          }}
+        />
         {role === "supervisor" && (
           <Select
             value={branch}

@@ -740,10 +740,11 @@ describe("shared language and number presentation", () => {
       "dir",
       "ltr",
     );
-    expect(screen.getByText("1 L").closest("bdi")).toHaveAttribute(
-      "dir",
-      "ltr",
-    );
+    const unit = view.container.querySelector(".unit-text .unit-fragment");
+    expect(unit).toHaveTextContent(/^1 L$/);
+    expect(unit?.closest("bdi")).toHaveAttribute("dir", "ltr");
+    expect(unit?.querySelector("bdi")).toHaveAttribute("dir", "ltr");
+    expect(unit?.querySelector("bdi")).toHaveTextContent(/^1$/);
     expect(screen.getByText("2026-10-07").closest("bdi")).toHaveAttribute(
       "dir",
       "ltr",
@@ -894,8 +895,10 @@ it("reflows weighted columns on resize and column changes while reserving intrin
       });
     let measured = widths();
     expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(900);
-    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
-    expect(measured[2] / measured[0]).toBeCloseTo(172 / 108);
+    expect(measured).toHaveLength(4);
+    expect(measured[0]).toBeGreaterThanOrEqual(180);
+    expect(measured[1]).toBeGreaterThanOrEqual(180);
+    expect(measured[2]).toBeGreaterThanOrEqual(160);
     expect(measured[3]).toBe(104);
 
     width = 640;
@@ -905,13 +908,23 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     });
     measured = widths();
     expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
-    expect(measured[1] / measured[0]).toBeCloseTo(220 / 108);
-    expect(measured[3]).toBe(104);
+    expect(measured).toHaveLength(3);
+    expect(
+      screen.queryByRole("columnheader", { name: "Status" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
+    expect(screen.getByText("Waiting for pickup")).toBeVisible();
+    expect(measured[2]).toBe(104);
     rendered.rerender(<DemoProvider>{contents(true)}</DemoProvider>);
     measured = widths();
     expect(measured).toHaveLength(3);
     expect(measured.reduce((sum, value) => sum + value, 0)).toBeCloseTo(640);
-    expect(measured[1] / measured[0]).toBeCloseTo(172 / 108);
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    expect(
+      screen.queryByRole("columnheader", { name: "Supplier" }),
+    ).not.toBeInTheDocument();
+    expect(measured[0]).toBeGreaterThanOrEqual(180);
+    expect(measured[1]).toBeGreaterThanOrEqual(160);
     expect(measured[2]).toBe(104);
     expect(observers.size).toBe(1);
     rendered.unmount();

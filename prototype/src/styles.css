@@ -1,50 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  --page: #f5f5f7;
-  --sidebar: #ffffff;
-  --surface: #ffffff;
-  --surface-soft: #fafafa;
-  --nav-active: #ebebed;
-  --search-fill: #f0f0f2;
-  --divider: #ededed;
-  --text: #1c1c1c;
-  --text-muted: #666666;
-  --accent: var(--company-primary, #2b59c3);
-  --accent-hover: var(--company-primary-hover, #234aa8);
-  --accent-soft: var(--company-primary-soft, #e6edfa);
-  --accent-fill: var(--company-primary-fill, var(--company-primary, #2b59c3));
-  --secondary-fill: #ffffff;
-  --secondary-text: #1c1c1c;
-  --secondary-border: var(--company-primary, #2b59c3);
-  --secondary-glow: rgb(43 89 195 / 0.14);
-  --secondary-glow-hover: rgb(43 89 195 / 0.22);
-  --kpi-accent: linear-gradient(
-    135deg,
-    var(--company-primary-hover, #234aa8),
-    var(--company-kpi-accent-end, #3d68d4)
-  );
-  --kpi-charcoal: linear-gradient(135deg, #0f0f0f, #4a4a4a);
-  --tile-lavender: #eceefb;
-  --tile-sky: #e7f1fd;
-  --brand-red: #e00a12;
-  --pending: #9a5b00;
-  --pending-bg: #fef5e6;
-  --approved: #1a7f37;
-  --approved-bg: #eafaef;
-  --progress: #7e2fa8;
-  --progress-bg: #f1e9f6;
-  --info: #0058b8;
-  --info-bg: #e1edfb;
-  --neutral: #5c5c5c;
-  --neutral-bg: #f0f0f0;
-  --danger: #c4281c;
-  --danger-bg: #ffebea;
-  --card: var(--surface);
-  --border: var(--divider);
-  --brand: var(--accent);
-  --brand-hover: var(--accent-hover);
-  --sidebar-active: var(--nav-active);
   font-family: Inter, Vazirmatn, system-ui, sans-serif;
   color: var(--text);
   background: var(--page);
@@ -55,39 +11,6 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #333333;
-  --sidebar: #333333;
-  --surface: #3b3b3b;
-  --surface-soft: #434343;
-  --nav-active: #474747;
-  --search-fill: #474747;
-  --divider: #4a4a4a;
-  --text: #ffffff;
-  --text-muted: #adadad;
-  --accent: var(--company-dark-primary, #5b86e5);
-  --accent-hover: var(--company-dark-primary-hover, #7398ea);
-  --accent-soft: var(--company-dark-primary-soft, rgba(91, 134, 229, 0.18));
-  --accent-fill: var(--company-dark-primary-fill, #3d68d4);
-  --secondary-fill: #292b30;
-  --secondary-text: #ffffff;
-  --secondary-border: var(--company-dark-primary-hover, #7398ea);
-  --secondary-glow: rgb(115 152 234 / 0.18);
-  --secondary-glow-hover: rgb(115 152 234 / 0.28);
-  --kpi-charcoal: linear-gradient(135deg, #4a4a4a, #5e5e5e);
-  --tile-lavender: rgba(149, 164, 252, 0.14);
-  --tile-sky: rgba(0, 122, 255, 0.14);
-  --pending: #ffb547;
-  --pending-bg: rgba(255, 150, 0, 0.16);
-  --approved: #5bd67c;
-  --approved-bg: rgba(51, 199, 89, 0.16);
-  --progress: #d18bf0;
-  --progress-bg: rgba(176, 81, 223, 0.18);
-  --info: #5aa9ff;
-  --info-bg: rgba(0, 122, 255, 0.18);
-  --neutral: #bdbdbd;
-  --neutral-bg: rgba(255, 255, 255, 0.1);
-  --danger: #ff7a70;
-  --danger-bg: rgba(255, 59, 47, 0.18);
 }
 :root[data-text-size="comfortable"] {
   font-size: 18px;
@@ -113,7 +36,7 @@ a,
 input,
 select,
 textarea {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: var(--color-clear);
 }
 button {
   cursor: pointer;
@@ -212,7 +135,7 @@ time {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 20px;
   min-inline-size: 0;
 }
@@ -240,8 +163,8 @@ time {
   gap: 8px;
   min-block-size: 44px;
   padding: 8px 16px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 1px solid var(--color-clear);
+  border-radius: var(--radius-small);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -271,7 +194,7 @@ time {
 }
 .button-ghost {
   color: inherit;
-  background: transparent;
+  background: var(--color-clear);
 }
 .button-sm {
   padding-inline: 12px;
@@ -282,7 +205,7 @@ time {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -309,7 +232,7 @@ time {
 }
 .banner {
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -335,7 +258,7 @@ textarea {
   min-block-size: 44px;
   padding: 10px 12px;
   border: 1px solid var(--text-muted);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--card);
   color: var(--text);
 }
@@ -400,16 +323,16 @@ textarea[aria-invalid="true"] {
   gap: 4px;
   padding: 4px;
   background: var(--neutral-bg);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   align-items: center;
   flex-wrap: wrap;
 }
 .pills button {
   min-block-size: 44px;
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 0;
-  background: transparent;
+  background: var(--color-clear);
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
@@ -422,7 +345,7 @@ textarea[aria-invalid="true"] {
 .table-wrap {
   overflow: auto;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--card);
 }
 table {
@@ -450,7 +373,7 @@ th {
 th button {
   min-block-size: 44px;
   border: 0;
-  background: transparent;
+  background: var(--color-clear);
   padding: 0;
   text-align: start;
   font: inherit;
@@ -498,7 +421,7 @@ tbody tr:focus-within {
 }
 .stat-icon {
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .stats-grid {
   display: grid;
@@ -515,7 +438,7 @@ tbody tr:focus-within {
   background: var(--card);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 button.stat-card:hover {
   border-color: var(--brand);
@@ -539,7 +462,7 @@ button.stat-card:hover {
   place-items: center;
   inline-size: 44px;
   block-size: 44px;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .stat-card > .muted {
   grid-column: 1;
@@ -580,14 +503,14 @@ button.stat-card:hover {
   max-block-size: calc(100vh - 32px);
   overflow: auto;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--card);
   padding: 24px;
   color: var(--text);
-  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+  box-shadow: var(--shadow-dialog);
 }
 .confirm-dialog::backdrop {
-  background: rgb(15 23 42 / 0.4);
+  background: var(--klead-overlay);
 }
 .confirm-dialog h2 {
   margin-block-end: 8px;
@@ -628,7 +551,7 @@ button.stat-card:hover {
   padding: 0 8px 20px;
 }
 .logo-tile {
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--card);
   padding: 8px 12px;
   display: flex;
@@ -663,7 +586,7 @@ button.stat-card:hover {
   padding: 10px 12px;
   margin-block-end: 4px;
   color: var(--card);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   font-size: 14px;
 }
 .sidebar nav a:hover,
@@ -682,7 +605,7 @@ button.stat-card:hover {
   padding: 0 7px;
   color: var(--pending);
   background: var(--pending-bg);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 13px;
 }
 .sidebar-user {
@@ -705,7 +628,7 @@ button.stat-card:hover {
   inline-size: 36px;
   block-size: 36px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--sidebar-active);
 }
 .sidebar-session {
@@ -799,7 +722,7 @@ button.stat-card:hover {
   min-block-size: 56px;
   padding: 8px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--card);
   color: var(--text-muted);
   font-size: 14px;
@@ -915,7 +838,7 @@ button.stat-card:hover {
     inset: 0;
     z-index: 19;
     border: 0;
-    background: rgb(15 23 42 / 0.4);
+    background: var(--klead-overlay);
   }
   .mobile-menu {
     display: inline-flex;
@@ -1061,7 +984,7 @@ button.stat-card:hover {
 .return-line {
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .history-row {
   padding-block: 12px;
@@ -1072,7 +995,7 @@ button.stat-card:hover {
   max-block-size: 180px;
   object-fit: contain;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
 }
 .row {
   display: flex;
@@ -1094,7 +1017,7 @@ button.stat-card:hover {
 .offer-task {
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   background: var(--card);
 }
 .tabs {
@@ -1105,15 +1028,15 @@ button.stat-card:hover {
   flex-wrap: wrap;
   gap: 4px;
   padding: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--neutral-bg);
 }
 .tabs button {
   min-block-size: 44px;
   padding: 8px 14px;
   border: 0;
-  border-radius: 999px;
-  background: transparent;
+  border-radius: var(--radius-round);
+  background: var(--color-clear);
   color: var(--text-muted);
 }
 .tabs button[aria-selected="true"],
@@ -1128,7 +1051,7 @@ button.stat-card:hover {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgb(15 23 42 / 0.4);
+  background: var(--klead-overlay);
 }
 .dialog {
   inline-size: min(560px, 100%);
@@ -1136,10 +1059,10 @@ button.stat-card:hover {
   overflow: auto;
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--card);
   color: var(--text);
-  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+  box-shadow: var(--shadow-dialog);
 }
 .dialog > h2 {
   margin-block-end: 12px;
@@ -1148,22 +1071,22 @@ button.stat-card:hover {
 .topbar-search input:not([type="checkbox"]):not([type="radio"]) {
   padding-inline-start: 36px;
   padding-inline-end: 28px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   min-block-size: 36px;
 }
 .lookup-search-pill input.lookup-search {
   min-block-size: 56px !important;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 .ui-select.branch-pill {
   min-block-size: 36px;
   block-size: 36px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 .branch-pill.static {
   padding: 8px 12px;
   background: var(--search-fill);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   white-space: nowrap;
 }
 .sidebar-brand {
@@ -1194,7 +1117,7 @@ button.stat-card:hover {
   gap: 12px;
   inline-size: 100%;
   padding: 0;
-  background: transparent;
+  background: var(--color-clear);
   color: var(--text);
   border: 0;
   min-block-size: 40px;
@@ -1246,8 +1169,8 @@ small,
 .card {
   padding: 24px;
   border: 0;
-  border-radius: 16px;
-  box-shadow: none;
+  border-radius: var(--radius-search);
+  box-shadow: var(--shadow-none);
 }
 .card > h2 {
   margin-block-end: 20px;
@@ -1275,7 +1198,7 @@ input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   min-block-size: 44px;
   font-size: 0.875rem;
@@ -1288,11 +1211,11 @@ textarea:focus {
 .button {
   min-block-size: 40px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 0.875rem;
 }
 .button-primary {
-  color: #fff;
+  color: var(--klead-white);
   background: var(--accent-fill);
 }
 .button-primary:hover:not(:disabled) {
@@ -1308,7 +1231,7 @@ textarea:focus {
   background: var(--nav-active);
 }
 .button-ghost {
-  background: transparent;
+  background: var(--color-clear);
   color: var(--text);
 }
 .button-danger {
@@ -1317,7 +1240,7 @@ textarea:focus {
 }
 .banner {
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 0.8125rem;
 }
 .badge {
@@ -1335,8 +1258,8 @@ textarea:focus {
 }
 .table-wrap {
   border: 0;
-  border-radius: 12px;
-  background: transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-clear);
 }
 table {
   border-collapse: separate;
@@ -1360,12 +1283,12 @@ tbody tr:hover td {
   background: var(--nav-active);
 }
 tbody tr td:first-child {
-  border-start-start-radius: 12px;
-  border-end-start-radius: 12px;
+  border-start-start-radius: var(--radius-control);
+  border-end-start-radius: var(--radius-control);
 }
 tbody tr td:last-child {
-  border-start-end-radius: 12px;
-  border-end-end-radius: 12px;
+  border-start-end-radius: var(--radius-control);
+  border-end-end-radius: var(--radius-control);
 }
 td.numeric,
 th.numeric {
@@ -1385,18 +1308,18 @@ th.numeric {
 .tabs button.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.06);
+  box-shadow: var(--shadow-thumb);
 }
 .confirm-dialog,
 .dialog {
   max-inline-size: 520px;
   border: 0;
-  border-radius: 20px;
-  box-shadow: none;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-none);
 }
 .confirm-dialog::backdrop,
 .dialog-backdrop {
-  background: rgb(0 0 0 / 0.35);
+  background: var(--klead-overlay);
 }
 .app-shell {
   min-block-size: 100dvh;
@@ -1463,7 +1386,7 @@ th.numeric {
   gap: 12px;
   padding: 8px 12px;
   margin-block-end: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 0.875rem;
   color: var(--text);
   position: relative;
@@ -1478,7 +1401,7 @@ th.numeric {
   inset-inline-start: 0;
   inline-size: 3px;
   block-size: 20px;
-  border-radius: 3px;
+  border-radius: var(--radius-mark);
   background: var(--accent);
 }
 .sidebar :focus-visible {
@@ -1512,13 +1435,13 @@ th.numeric {
 }
 .user-avatar,
 .initials-avatar {
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--tile-lavender);
   color: var(--text);
 }
 .nav-count,
 .notification-count {
-  border-radius: 99px;
+  border-radius: var(--radius-round);
   font-size: 0.6875rem;
   line-height: 1.4;
 }
@@ -1588,7 +1511,7 @@ th.numeric {
   min-block-size: 36px;
   block-size: 36px;
   background: var(--search-fill);
-  border-radius: 99px;
+  border-radius: var(--radius-round);
   padding-inline-start: 36px;
 }
 .topbar-search {
@@ -1613,11 +1536,11 @@ th.numeric {
 .branch-pill .ui-select-trigger {
   min-block-size: 36px;
   block-size: 36px;
-  border-radius: 99px;
+  border-radius: var(--radius-round);
 }
 .static-branch-pill {
   background: var(--search-fill);
-  border-radius: 99px;
+  border-radius: var(--radius-round);
   padding: 8px 12px;
   font-size: 0.8125rem;
   white-space: nowrap;
@@ -1640,7 +1563,7 @@ th.numeric {
   inset-block-start: -2px;
   inset-inline-end: -2px;
   background: var(--accent);
-  color: #fff;
+  color: var(--klead-white);
   min-inline-size: 16px;
 }
 .demo-menu button {
@@ -1663,7 +1586,7 @@ th.numeric {
   z-index: 80;
   padding: 10px 16px;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .skip-link:focus {
   inset-block-start: 10px;
@@ -1679,7 +1602,7 @@ th.numeric {
 }
 .signin-card {
   inline-size: min(420px, 100%);
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   padding: 32px;
   margin-block-start: 0;
 }
@@ -1743,7 +1666,7 @@ html[data-theme="dark"] .signin-logo {
   margin-block-end: 6px;
   padding: 4px 8px;
   border: 0;
-  border-radius: 99px;
+  border-radius: var(--radius-round);
   background: var(--surface-soft);
   color: var(--text);
   min-block-size: 40px;
@@ -1772,8 +1695,8 @@ html[data-theme="dark"] .signin-logo {
   align-content: start;
   text-align: start;
   border: 0;
-  border-radius: 16px;
-  color: #fff;
+  border-radius: var(--radius-search);
+  color: var(--klead-white);
   padding: 20px;
   min-block-size: 156px;
   position: relative;
@@ -1799,18 +1722,18 @@ html[data-theme="dark"] .signin-logo {
 }
 .kpi-detail {
   font-size: 0.75rem;
-  color: #fff;
+  color: var(--klead-white);
 }
 .kpi-icon {
   position: absolute;
   inset-block-start: 16px;
   inset-inline-end: 16px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   display: grid;
   place-items: center;
   inline-size: 30px;
   block-size: 30px;
-  background: rgb(255 255 255 / 0.12);
+  background: var(--color-current);
 }
 .dashboard-row {
   display: grid;
@@ -1858,7 +1781,7 @@ html[data-theme="dark"] .signin-logo {
 }
 .dashboard-queue-row:nth-child(odd) {
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding-inline: 12px;
 }
 .dashboard-alert-item,
@@ -1915,7 +1838,7 @@ html[data-theme="dark"] .signin-logo {
   align-items: center;
   position: relative;
   background: var(--surface);
-  border-radius: 99px;
+  border-radius: var(--radius-round);
 }
 .lookup-search-pill > svg {
   margin-inline-start: 20px;
@@ -1925,8 +1848,8 @@ html[data-theme="dark"] .signin-logo {
   block-size: 56px;
   min-block-size: 56px;
   padding-inline: 16px;
-  background: transparent;
-  border-radius: 99px;
+  background: var(--color-clear);
+  border-radius: var(--radius-round);
   font-size: 1rem;
 }
 .lookup-filterbar {
@@ -1949,10 +1872,10 @@ html[data-theme="dark"] .signin-logo {
   gap: 8px 20px;
   text-align: start;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 16px;
   color: var(--text);
-  background: transparent;
+  background: var(--color-clear);
 }
 .lookup-result-row:nth-child(odd) {
   background: var(--surface-soft);
@@ -2049,7 +1972,7 @@ html[data-theme="dark"] .signin-logo {
 .invoice-preview {
   overflow: hidden;
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .invoice-preview-pdf {
   inline-size: 100%;
@@ -2120,7 +2043,7 @@ html[data-theme="dark"] .signin-logo {
   gap: 16px;
   padding: 16px;
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .invoice-line-form .field {
   max-inline-size: 100%;
@@ -2158,7 +2081,7 @@ html[data-theme="dark"] .signin-logo {
   padding: 16px;
   background: var(--surface);
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   flex-wrap: wrap;
 }
 .invoice-manual-line {
@@ -2219,7 +2142,7 @@ html[data-theme="dark"] .signin-logo {
     grid-template-columns: minmax(0, 1fr) 280px;
   }
   .dashboard-aside .card {
-    background: transparent;
+    background: var(--color-clear);
     padding: 12px 8px;
   }
 }
@@ -2403,12 +2326,12 @@ html[data-theme="dark"] .signin-logo {
   max-block-size: calc(100dvh - 2rem);
 }
 .confirm-dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: var(--klead-overlay);
 }
 .dialog-backdrop {
   z-index: 70;
   place-items: center;
-  background: rgb(0 0 0 / 0.45);
+  background: var(--klead-overlay);
 }
 .ltr-fragment {
   direction: ltr;
@@ -2445,7 +2368,7 @@ td {
 tbody th[scope="row"] {
   position: static;
   padding: 12px;
-  background: transparent;
+  background: var(--color-clear);
   font-size: 0.875rem;
 }
 tbody tr:nth-child(odd) th[scope="row"] {
@@ -2455,12 +2378,12 @@ tbody tr:hover th[scope="row"] {
   background: var(--nav-active);
 }
 tbody th[scope="row"]:first-child {
-  border-start-start-radius: 12px;
-  border-end-start-radius: 12px;
+  border-start-start-radius: var(--radius-control);
+  border-end-start-radius: var(--radius-control);
 }
 tbody th[scope="row"]:last-child {
-  border-start-end-radius: 12px;
-  border-end-end-radius: 12px;
+  border-start-end-radius: var(--radius-control);
+  border-end-end-radius: var(--radius-control);
 }
 th.numeric,
 td.numeric,
@@ -2559,7 +2482,7 @@ td .button:focus-visible,
 .pills button.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-thumb);
 }
 .language-toggle button {
   color: var(--text);
@@ -2567,7 +2490,7 @@ td .button:focus-visible,
 .return-line,
 .offer-task {
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
 }
 .offer-task {

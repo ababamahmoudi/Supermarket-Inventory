@@ -1,5 +1,13 @@
 import Decimal from "decimal.js";
-import { effectivePrice, lookupBranch } from "./catalog";
+import { effectivePrice, lookupBranch, normalizeSearch } from "./catalog";
+import {
+  applyProductDateDrafts,
+  validateProductDateDrafts,
+  DateTrackingError,
+  type ProductDateDraft,
+  type StopTrackingChoice,
+} from "./date-tracking";
+import { projectExpiryLocation } from "./received";
 import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import { createId } from "./ids";
 import {
@@ -29,6 +37,9 @@ export interface ProductEdits {
   barcode: string;
   main_supplier: string;
   date_tracking?: boolean;
+  date_reminder_days?: number;
+  dates?: ProductDateDraft[];
+  date_tracking_stop?: StopTrackingChoice;
   sold_by?: "each" | "weight";
   selling_price?: string;
   scope: "all" | "branch";
@@ -93,6 +104,7 @@ function snapshot(state: DemoState, product: Product) {
     approvals: state.approvals.filter(matches),
     offers: state.offers.filter(matches),
     alerts: state.alerts.filter(matches),
+    dates: state.expiry.filter(matches),
   });
 }
 export function productEditSnapshot(
@@ -121,9 +133,8 @@ export function saveProductEdits(
     fail("unit_size");
   if (productEditSnapshot(state, code, context.company_id) !== expectedSnapshot)
     fail("stale");
-  for (const key of ["name_en", "name_fa", "unit_size"] as const)
+  for (const key of ["name_en", "unit_size"] as const)
     if (!edits[key].trim()) fail(key);
-  if (!edits.ai_category.trim()) fail("category");
   if (
     !state.config.pricing_categories.some(
       (category) => category.key === edits.pricing_category,
@@ -152,11 +163,25 @@ export function saveProductEdits(
       (item) =>
         item.company_id === context.company_id &&
         item.code !== code &&
-        item.barcode === edits.barcode.trim(),
+        normalizeSearch(item.barcode) === normalizeSearch(edits.barcode),
     )
   )
     fail("barcode_conflict");
   let price: string | undefined;
+  validateProductDateDrafts(
+    state,
+    context,
+    code,
+    edits.dates,
+    edits.date_reminder_days,
+    edits.date_tracking_stop,
+  );
+  if (
+    edits.date_tracking === false &&
+    product.date_tracking !== false &&
+    !edits.date_tracking_stop
+  )
+    throw new DateTrackingError("stop_choice");
   if (edits.selling_price !== undefined) {
     if (!/^\d+(\.\d{1,2})?$/.test(edits.selling_price)) fail("price");
     const amount = new Decimal(edits.selling_price);
@@ -197,8 +222,27 @@ export function saveProductEdits(
     barcode: edits.barcode.trim(),
     main_supplier: edits.main_supplier,
     date_tracking: edits.date_tracking,
+    date_reminder_days: edits.date_reminder_days ?? product.date_reminder_days,
     sold_by: edits.sold_by ?? product.sold_by ?? "each",
   });
+  applyProductDateDrafts(state, context, product, edits.dates, now);
+  if (edits.date_tracking === false && edits.date_tracking_stop === "clear") {
+    for (const entry of state.expiry) {
+      if (
+        entry.company_id !== context.company_id ||
+        entry.product_code !== code ||
+        entry.status !== "active" ||
+        !context.allowed_branches.includes(
+          projectExpiryLocation(state, entry).branch,
+        )
+      )
+        continue;
+      entry.status = "removed";
+      entry.removal_action = "stop_tracking";
+      entry.removed_at = now.toISOString();
+      entry.removed_by = context.actor;
+    }
+  }
   if (price !== undefined) {
     const targetBranch = edits.scope === "all" ? "all" : context.branch;
     if (edits.scope === "all") {
@@ -309,7 +353,7 @@ export function recordProductBarcodeConflict(
     (item) =>
       item.company_id === context.company_id &&
       item.code !== code &&
-      item.barcode === normalized,
+      normalizeSearch(item.barcode) === normalizeSearch(normalized),
   );
   if (!normalized || !existing) return;
   const duplicate = state.approvals.some(

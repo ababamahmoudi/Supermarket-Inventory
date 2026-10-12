@@ -31,7 +31,7 @@
 }
 .supplier-item-quote {
   background: var(--surface-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 16px;
   display: grid;
   gap: 8px;

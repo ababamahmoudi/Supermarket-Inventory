@@ -6,10 +6,12 @@ import {
   resolveSupplierApproval,
   supplierApprovalSnapshot,
   supplierRecords,
+  missingInvoiceSupplierDetails,
 } from "../supplier-editor";
 import type { Approval } from "../types";
 import { Badge, Button, Card, ConfirmDialog } from "../ui";
 import "./supplier-approval.css";
+import { SupplierEditor } from "./SupplierEditor";
 
 /** Shared by the approvals page and the dashboard queue; supplier decisions have no price scope. */
 export function SupplierApproval({
@@ -37,6 +39,7 @@ export function SupplierApproval({
     snapshot: string;
   } | null>(null);
   const [error, setError] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
   const supplier = supplierRecords(state).find(
     (item) =>
       item.company_id === state.config.company.seed_key &&
@@ -66,6 +69,14 @@ export function SupplierApproval({
       return;
     }
     setError("");
+    if (
+      decision === "approve" &&
+      supplier.invoice_review_required &&
+      missingInvoiceSupplierDetails(supplier).length
+    ) {
+      setEditorOpen(true);
+      return;
+    }
     setPreview({
       decision,
       snapshot: supplierApprovalSnapshot(state, approval.id),
@@ -129,6 +140,17 @@ export function SupplierApproval({
   );
   return (
     <>
+      {editorOpen && (
+        <SupplierEditor
+          supplier={supplier}
+          completeForInvoice
+          onClose={() => setEditorOpen(false)}
+          onSaved={() => {
+            setEditorOpen(false);
+            setError("");
+          }}
+        />
+      )}
       {compact ? (
         <div className="dashboard-queue-row dashboard-supplier-approval">
           <div className="dashboard-queue-product">

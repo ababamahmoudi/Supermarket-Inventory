@@ -258,8 +258,23 @@ describe("dashboard content from the same scoped business records", () => {
   it("shows this week's actual arrivals and ignores retained counters and To order reminders", () => {
     const state = initialState();
     const today = companyDate(state.config);
+    // The relative historical fixture can legitimately have no arrivals on a
+    // Monday. Keep this check tied to an explicit actual receipt in this week.
+    const invoice = structuredClone(state.invoices![0]);
+    state.invoices!.push({
+      ...invoice,
+      id: "this-week-actual-arrival",
+      branch: context.branch,
+      supplier_invoice_number: "THIS-WEEK-ACTUAL-ARRIVAL",
+      posted_at: `${today}T16:00:00Z`,
+      received_at: `${today}T16:00:00Z`,
+      invoice_date: today,
+    });
     const rows = dashboardArrivals(state, context, today);
     expect(rows.length).toBeGreaterThan(0);
+    expect(
+      rows.some((row) => row.invoice_number === "THIS-WEEK-ACTUAL-ARRIVAL"),
+    ).toBe(true);
     for (const row of rows) {
       expect(row.units).toBeGreaterThan(0);
       expect(row.company_id).toBe(context.company_id);

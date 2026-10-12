@@ -5,7 +5,7 @@ export interface UndoToast {
   remaining: number;
   running_since: number | null;
 }
-export const UNDO_DURATION = 10_000;
+export const UNDO_DURATION = 8_000;
 export function remainingTime(toast: UndoToast, now: number): number {
   return Math.max(
     0,
@@ -20,12 +20,8 @@ export function addUndoToast(
   toast: Pick<UndoToast, "id" | "action" | "actor_username">,
   now: number,
 ): UndoToast[] {
-  return [
-    { ...toast, remaining: UNDO_DURATION, running_since: now },
-    ...queue.filter(
-      (item) => item.id !== toast.id && remainingTime(item, now) > 0,
-    ),
-  ];
+  void queue;
+  return [{ ...toast, remaining: UNDO_DURATION, running_since: now }];
 }
 export function pauseUndoToast(
   queue: UndoToast[],

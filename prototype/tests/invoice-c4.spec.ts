@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
 import Decimal from "decimal.js";
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
 import type { DemoState } from "../src/types";
@@ -156,10 +158,26 @@ for (const language of ["en", "fa"] as const)
       correction,
     );
     await page.goto("/#history");
-    const row = page
-      .locator(".history-table tbody tr")
-      .filter({ hasText: fa ? "اصلاح فاکتور" : "Correct invoice" })
-      .first();
+    const correctedLink = page.locator(".history-table").getByRole("link", {
+      name: fa ? "نمایش اصلاح‌شده" : "View corrected",
+      exact: true,
+    });
+    await expect(correctedLink).toBeVisible();
+    const row = correctedLink.locator("xpath=ancestor::tr[1]");
+    const action = fa ? "اصلاح فاکتور" : "Correct invoice";
+    if (!(await row.getByText(action, { exact: true }).isVisible())) {
+      const disclosure = row.getByRole("button", {
+        name: fa ? "نمایش جزئیات" : "Show details",
+        exact: true,
+      });
+      const panelId = await disclosure.getAttribute("aria-controls");
+      await disclosure.click();
+      await expect(
+        page.locator(`[id=${JSON.stringify(panelId)}]`),
+      ).toContainText(action);
+    } else {
+      await expect(row.getByText(action, { exact: true })).toBeVisible();
+    }
     await expect(
       row.getByRole("link", {
         name: fa ? "نمایش اصلاح‌شده" : "View corrected",
@@ -213,14 +231,18 @@ function twoPagePdf() {
 
 test("an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh", async ({
   page,
-}) => {
+}, testInfo) => {
+  const fixture = twoPagePdf();
+  const digest = (bytes: Buffer) =>
+    createHash("sha256").update(bytes).digest("hex");
+  const expectedHash = digest(fixture.buffer);
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(twoPagePdf());
+    .setInputFiles(fixture);
   const canvas = page.getByRole("img", {
     name: "Original invoice PDF",
     exact: true,
@@ -232,6 +254,21 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
       canvas.evaluate((element) => (element as HTMLCanvasElement).width),
     )
     .toBeGreaterThan(1);
+  const pixel = (vertical: number) =>
+    canvas.evaluate((element, vertical) => {
+      const canvas = element as HTMLCanvasElement;
+      return Array.from(
+        canvas
+          .getContext("2d")!
+          .getImageData(
+            Math.floor(canvas.width / 2),
+            Math.floor(canvas.height * vertical),
+            1,
+            1,
+          ).data,
+      ).slice(0, 3);
+    }, vertical);
+  await expect.poll(() => pixel(0.18)).toEqual([51, 102, 204]);
   const initialPixels = await canvas.evaluate((element) =>
     (element as HTMLCanvasElement).toDataURL(),
   );
@@ -242,13 +279,111 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
       canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL()),
     )
     .not.toBe(initialPixels);
-  const uploaded = (await saved(page)).invoice.file_data;
-  expect(uploaded).toMatch(/^data:application\/pdf;base64,/);
+  await expect.poll(() => pixel(0.63)).toEqual([204, 102, 51]);
+  await expect
+    .poll(async () => (await saved(page)).invoice.file_data)
+    .toMatch(new RegExp(`^idb-file:v1:.*:${expectedHash}$`));
+  const retained = await saved(page);
+  const uploaded = retained.invoice.file_data!;
+  const companyId = retained.config.company.seed_key;
+  expect(retained.invoice.file_size).toBe(fixture.buffer.length);
+  const storedPdf = () =>
+    page.evaluate(
+      async ({ reference, companyId }) => {
+        const database = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open("supermarket-prototype-files-v1", 1);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        try {
+          const record = await new Promise<{
+            company_id: string;
+            type: string;
+            sha256: string;
+            source_size: number;
+            source: Blob;
+          }>((resolve, reject) => {
+            const request = database
+              .transaction("files", "readonly")
+              .objectStore("files")
+              .get(reference);
+            request.onsuccess = () =>
+              request.result
+                ? resolve(request.result)
+                : reject(new Error("Missing retained PDF source."));
+            request.onerror = () => reject(request.error);
+          });
+          if (record.company_id !== companyId)
+            throw new Error("Stored PDF company scope mismatch.");
+          return {
+            company_id: record.company_id,
+            type: record.type,
+            sha256: record.sha256,
+            size: record.source_size,
+            bytes: Array.from(
+              new Uint8Array(await record.source.arrayBuffer()),
+            ),
+          };
+        } finally {
+          database.close();
+        }
+      },
+      { reference: uploaded, companyId },
+    );
+  const beforeReload = await storedPdf();
+  expect(beforeReload.type).toBe("application/pdf");
+  expect(beforeReload.sha256).toBe(expectedHash);
+  expect(beforeReload.size).toBe(fixture.buffer.length);
+  expect(Buffer.from(beforeReload.bytes)).toEqual(fixture.buffer);
+  expect(digest(Buffer.from(beforeReload.bytes))).toBe(expectedHash);
   await page.reload();
   await expect(page.locator(".invoice-pdf-pages")).toContainText("1 / 2");
   expect((await saved(page)).invoice.file_data).toBe(uploaded);
+  await expect.poll(() => pixel(0.18)).toEqual([51, 102, 204]);
+  const afterReload = await storedPdf();
+  expect(afterReload).toEqual(beforeReload);
+  expect(Buffer.from(afterReload.bytes)).toEqual(fixture.buffer);
+  const downloadEvent = page.waitForEvent("download");
+  await page
+    .locator(".invoice-original-controls")
+    .getByRole("button", { name: "Download", exact: true })
+    .click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe(fixture.name);
+  const downloadPath = await download.path();
+  expect(downloadPath).not.toBeNull();
+  const downloaded = await readFile(downloadPath!);
+  expect(downloaded).toEqual(fixture.buffer);
+  expect(digest(downloaded)).toBe(expectedHash);
   await expect(
     page.getByRole("alert").filter({ hasText: "preview could not be opened" }),
   ).toHaveCount(0);
   await expect(page.locator("iframe,embed,object")).toHaveCount(0);
+  const evidencePath = testInfo.outputPath("two-page-pdf-bytes-proof.json");
+  await writeFile(
+    evidencePath,
+    JSON.stringify(
+      {
+        reference: uploaded,
+        company_id: companyId,
+        original_bytes: fixture.buffer.length,
+        original_sha256: expectedHash,
+        retained_sha256: afterReload.sha256,
+        download_sha256: digest(downloaded),
+        exact_bytes_before_after_reload_and_download: true,
+        page_one_rgb: [51, 102, 204],
+        page_two_rgb: [204, 102, 51],
+        first_page_rendered_after_reload: true,
+      },
+      null,
+      2,
+    ),
+  );
+  await testInfo.attach(
+    "Two real PDF pages and unchanged source after reload/download",
+    {
+      path: evidencePath,
+      contentType: "application/json",
+    },
+  );
 });

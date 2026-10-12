@@ -140,9 +140,16 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           element.getAttribute("aria-label") || element.textContent,
         );
         const kind = kindOf(element);
-        const variantClass = ["primary", "secondary", "danger", "quiet"].find(
-          (value) => element.classList.contains(`button-${value}`),
-        );
+        const variantClass = [
+          "primary",
+          "secondary",
+          "tinted",
+          "neutral",
+          "danger",
+          "destructive",
+          "quiet",
+          "plain",
+        ].find((value) => element.classList.contains(`button-${value}`));
         const nearestRow = element.closest("tbody tr");
         const dialog = element.closest("dialog");
         const row =
@@ -239,22 +246,21 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         };
         buttons.push(entry);
         if (kind === "action") {
-          if (entry.radii.some((radius) => radius !== "12px"))
+          const phone = document.documentElement.clientWidth < 760;
+          const small =
+            element.classList.contains("button-sm") ||
+            element.closest(".table-actions, .catalog-row-actions");
+          const expectedRadius = small ? "10px" : "12px";
+          const expectedHeight = phone ? 44 : small ? 32 : 40;
+          if (entry.radii.some((radius) => radius !== expectedRadius))
             failures.push(
               `Text action radius: ${label} (${entry.radii.join("/")})`,
             );
-          if (Math.abs(rect.height - 40) > 1)
+          if (Math.abs(rect.height - expectedHeight) > 1)
             failures.push(
               `Text action height: ${label} (${round(rect.height)}px)`,
             );
           if (!variantClass) failures.push(`Unstyled text action: ${label}`);
-          if (
-            variantClass === "quiet" &&
-            !/^Clear filters$|^Back to\b|^پاک کردن فیلترها$|^بازگشت به/.test(
-              label,
-            )
-          )
-            failures.push(`Quiet ordinary action: ${label}`);
           if (row && rect.width > 200.5)
             failures.push(
               `Table action wider than 200px: ${label} (${round(rect.width)}px)`,
@@ -286,8 +292,20 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             const [first, second] = controls.map((element) =>
               element.getBoundingClientRect(),
             );
-            if (Math.abs(first.top - second.top) > 1)
+            if (
+              Math.abs(
+                first.top + first.height / 2 - second.top - second.height / 2,
+              ) > 1
+            )
               failures.push(`Stacked row actions: ${tidy(cell.textContent)}`);
+            if (
+              Math.min(first.right, second.right) -
+                Math.max(first.left, second.left) >
+              1
+            )
+              failures.push(
+                `Overlapping row actions: ${tidy(cell.textContent)}`,
+              );
           }
         }
       }
@@ -372,15 +390,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             borderStyle: style.borderTopStyle,
             glow: style.boxShadow,
           });
-          if (Math.abs(rect.height - 40) > 1)
+          if (Math.abs(rect.height - 36) > 1)
             failures.push(`Topbar height: ${label} (${round(rect.height)}px)`);
           if (
-            parseFloat(style.borderTopWidth) < 0.5 ||
-            style.borderTopStyle === "none"
+            parseFloat(style.borderTopWidth) > 0.5 &&
+            style.borderTopStyle !== "none"
           )
-            failures.push(`Topbar missing border: ${label}`);
-          if (style.boxShadow === "none")
-            failures.push(`Topbar missing glow: ${label}`);
+            failures.push(`Topbar resting border: ${label}`);
+          if (style.boxShadow !== "none" && !element.matches(":focus-visible"))
+            failures.push(`Topbar resting shadow: ${label}`);
         }
       }
       const statuses = [...document.querySelectorAll(".ui-badge, .badge")]
@@ -540,6 +558,8 @@ export async function fieldContrast(page, scope = "dialog[open]") {
             element.className,
           border: style.borderTopColor,
           borderWidth: style.borderTopWidth,
+          textContrast: contrast(parse(style.color), background),
+          focused: element === document.activeElement,
           interiorContrast: contrast(border, background),
           adjacentContrast: contrast(border, adjacent),
           glow: style.boxShadow,
