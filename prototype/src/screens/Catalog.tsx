@@ -106,6 +106,7 @@ import {
   LtrText,
   OfferLabel,
   UnitSize,
+  UnitText,
 } from "../presentation";
 
 const PAGE_SIZE = 8;
@@ -1226,17 +1227,18 @@ function ProductDetail({
   const received = canSeeOperations
     ? lastReceivedByLocation(state, context, product.code)
     : [];
+  const title = showName
+    ? lang === "fa"
+      ? product.name_fa || product.name_en
+      : product.name_en
+    : undefined;
   return (
-    <Card
-      title={
-        showName
-          ? lang === "fa"
-            ? product.name_fa || product.name_en
-            : product.name_en
-          : undefined
-      }
-      className="product-detail-card product-page-detail"
-    >
+    <Card className="product-detail-card product-page-detail">
+      {title && (
+        <h2>
+          <UnitText>{title}</UnitText>
+        </h2>
+      )}
       <div className="stack">
         {showName && (
           <p
@@ -1244,7 +1246,9 @@ function ProductDetail({
             lang={lang === "fa" ? "en" : "fa"}
           >
             <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              {lang === "fa" ? product.name_en : product.name_fa}
+              <UnitText>
+                {lang === "fa" ? product.name_en : product.name_fa}
+              </UnitText>
             </bdi>
           </p>
         )}
@@ -1623,14 +1627,18 @@ function LookupProductDetail({ product }: { product: Product }) {
         <div>
           <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-              {lang === "fa"
-                ? product.name_fa || product.name_en
-                : product.name_en}
+              <UnitText>
+                {lang === "fa"
+                  ? product.name_fa || product.name_en
+                  : product.name_en}
+              </UnitText>
             </bdi>
           </h2>
           <p className="muted" lang={lang === "fa" ? "en" : "fa"}>
             <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              {lang === "fa" ? product.name_en : product.name_fa}
+              <UnitText>
+                {lang === "fa" ? product.name_en : product.name_fa}
+              </UnitText>
             </bdi>
           </p>
           <p className="lookup-product-meta muted">
@@ -2031,9 +2039,11 @@ export function Lookup() {
                     >
                       <strong lang={lang}>
                         <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                          {lang === "fa"
-                            ? product.name_fa || product.name_en
-                            : product.name_en}
+                          <UnitText>
+                            {lang === "fa"
+                              ? product.name_fa || product.name_en
+                              : product.name_en}
+                          </UnitText>
                         </bdi>
                       </strong>
                       <span className="lookup-result-secondary muted">
@@ -2042,7 +2052,9 @@ export function Lookup() {
                           lang={lang === "fa" ? "en" : "fa"}
                           dir={lang === "fa" ? "ltr" : "rtl"}
                         >
-                          {lang === "fa" ? product.name_en : product.name_fa}
+                          <UnitText>
+                            {lang === "fa" ? product.name_en : product.name_fa}
+                          </UnitText>
                         </bdi>
                         <span className="lookup-result-meta">
                           {t(state.config.terminology.product_code, "کد محصول")}{" "}
@@ -2535,15 +2547,21 @@ export function Products() {
                         >
                           <strong className="catalog-product-name">
                             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                              {lang === "fa"
-                                ? product.name_fa || product.name_en
-                                : product.name_en}
+                              <UnitText>
+                                {lang === "fa"
+                                  ? product.name_fa || product.name_en
+                                  : product.name_en}
+                              </UnitText>
                             </bdi>
                           </strong>
                         </a>
                         <p className="muted catalog-product-secondary">
                           <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-                            {lang === "fa" ? product.name_en : product.name_fa}
+                            <UnitText>
+                              {lang === "fa"
+                                ? product.name_en
+                                : product.name_fa}
+                            </UnitText>
                           </bdi>
                         </p>
                         <p className="muted">
@@ -2732,14 +2750,18 @@ export function ProductPage() {
         <div>
           <h1>
             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-              {lang === "fa"
-                ? product.name_fa || product.name_en
-                : product.name_en}
+              <UnitText>
+                {lang === "fa"
+                  ? product.name_fa || product.name_en
+                  : product.name_en}
+              </UnitText>
             </bdi>
           </h1>
           <p className="muted product-other-name">
             <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              {lang === "fa" ? product.name_en : product.name_fa}
+              <UnitText>
+                {lang === "fa" ? product.name_en : product.name_fa}
+              </UnitText>
             </bdi>
           </p>
           <p className="helper">

@@ -70,7 +70,11 @@ export function UnitSize({
   value,
   ...props
 }: HTMLAttributes<HTMLElement> & { value: string }) {
-  return <LtrText {...props}>{formatUnitSize(value)}</LtrText>;
+  return (
+    <LtrText {...props}>
+      <UnitText>{formatUnitSize(value)}</UnitText>
+    </LtrText>
+  );
 }
 /** Keep physical sizes together in ordinary display text, including Activity. */
 export function UnitText({

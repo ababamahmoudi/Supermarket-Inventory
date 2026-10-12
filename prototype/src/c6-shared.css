@@ -1003,7 +1003,9 @@ div.ui-kpi:hover {
 
 @media screen {
   :root .invoice-lines-table th,
-  :root .invoice-lines-table th * {
+  :root .invoice-lines-table th *,
+  :root .posted-invoice-lines th,
+  :root .posted-invoice-lines th * {
     white-space: normal;
     overflow-wrap: normal;
     word-break: normal;
