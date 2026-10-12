@@ -150,3 +150,9 @@ Pricing normalization is a separate pure step before the existing category algor
 | $4.9895/lb  | $4.9895           | 0.65    | $7.68                   | **$7.49** | **$16.51** |
 
 Add both source-unit cases to seed/pricing-test-cases.json and test conversion precision, source quantities, display conversions and configuration without dropping all existing seed/boundary tests. Labels, Lookup, Products and product editor explicitly label per lb/per kg/per unit; the secondary display follows the company settings. Existing band-property tests apply to bands-enabled categories; the explicit bands-Off setting has its own cent-result tests.
+
+## C8 display and temporary-price boundary (2026-10-12)
+
+The configured Decimal category algorithm and every existing seed case remain unchanged. A sale is a separate effective-price overlay; regular receipt comparisons and proposals still use the regular approved price/cost. On a different regular cost, manual-price review defaults to Use the new calculated price; the reviewer confirms that decision before posting. Same cost and short-dated receipts do not replace manual price.
+
+Currency displays use at least two and at most four decimals, trimming only zeros after the second:18.4000 → 18.40 and 1.5525 → 1.5525. This applies to read-only costs and printed invoice/order/supplier amounts, without changing four-decimal storage or cent allocations. Weighed sale entry retains exact current-main-unit cents; full-precision conversion handles comparisons and secondary display without changing canonical regular prices. Sale quick picks round down to configured .49/.99 endings, independently of the normal category rounding/special-correction engine.

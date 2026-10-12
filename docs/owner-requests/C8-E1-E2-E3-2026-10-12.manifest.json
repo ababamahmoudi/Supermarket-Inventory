@@ -1,0 +1,10 @@
+{
+  "originalFile": "Pasted text.txt",
+  "sedimentFileId": "file_00000000d9ec81f58f41195604b6f6af",
+  "originalSHA256": "da91a5015ef3daf57cae58a67c7f2c1ae55395fe3841a00acce99f6214fa3dc1",
+  "originalBytes": 32762,
+  "repositoryFile": "C8-E1-E2-E3-2026-10-12.md",
+  "repositorySHA256": "1b14cac878f24404088a120acd640d4078e6445ea71b3507bcc7d1758adfa3f0",
+  "repositoryBytes": 32730,
+  "normalization": "Repository pre-commit removed trailing whitespace only; original uploaded bytes retained in attachment. Line content verified unchanged after whitespace normalization."
+}

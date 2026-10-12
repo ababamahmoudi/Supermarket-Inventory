@@ -193,3 +193,35 @@ Individual review of the corrected C6 Persian Received screenshot found that iso
 **Decision:** Escape or the RTL-aware back arrow closes only the active submenu, restores its trigger focus and cancels deferred child focus; a retained late frame cannot focus a closed submenu. The exact reviewed function and controlled-frame regression distinguish this intended keyboard-handler change from unchanged business callbacks, controlled values and outside-submenu guards. Do not describe every UI handler as identical.
 
 **Decision:** Scope the page-background white/hairline exception to actual header controls and exclude nested cards/dialogs. Test product editor entry through Lookup and the actual Products header in both light/dark: dialog Cancel stays neutral grey/borderless while the header remains white/hairline. Strict screenshot publication also rejects failed/diagnostic verdicts and visual-failure payloads independently of zero geometry findings; fresh individual review is mandatory. No permission, amount, stored record, print geometry or owner approval changes.
+
+## 028 — Owner approval, resolved choices and C8/E order (2026-10-12)
+
+**Context:** The owner approved C6/C7, required green history-preserving merges before C8 and authorized four stacked PRs without an intermediate review.
+
+**Decision:** Start C8 from gated main `3b6da31`, then E1/E2/E3. Update source docs first at each stage; change prototype/docs/seed only. Deadline October 30, joint owner review. Correct pickup is Owner/Manager only; Supervisor proxy until E1. Dark filled Primary/KPI is #2B59C3 / white; #7397F0 only dark links/icons/tabs/focus. These answers supersede pending statements in Decisions 023/024.
+
+**Why:** No unanswered authority/palette question or silent privilege grant remains.
+
+## 029 — Independent store sale overlay and deterministic lifecycle (C8, 2026-10-12)
+
+**Context:** Mapped multi-buy offers cannot reduce any arbitrary price. A sale must not corrupt regular invoice approval or retained evidence.
+
+**Decision:** Separate each store's SaleSchedule from current regular price and pending SaleRequest. Use reviewed retail targets, Decimal amount/unit, inclusive local calendar dates, versioned History and idempotent clock effects. Sale pauses the ordinary multi-buy effect without mutating its record, excludes mix-and-match and keeps clearance independent. Weighed entry preserves main-unit cents; secondary conversion does not round-trip through lb cents. A changed regular receipt cost defaults Use calculated; same-cost and short-dated receipts preserve manual price.
+
+**Why:** Temporary price restores the current regular price without Warehouse, stock or financial-ledger writes.
+
+## 030 — Linked sale evidence, label intent and source-first proof (C8, 2026-10-12)
+
+**Context:** Requests, receipt alerts, held deliveries, reminders and label checkboxes must correspond to real scoped evidence.
+
+**Decision:** Pending requests cannot charge until guarded approval. Cost alerts preserve invoice/sale/cost/margin before/after and event identity. Hold is an instruction Note, never a StockMovement. Automatic queue stores Regular/Promo preference and source identity; future regular intent cannot overwrite active Promo. Revert checks versions/current clock, never revives an elapsed sale or stale regular price. Currency minimum 2 / maximum 4 formatting preserves stored costs and geometry. Every new acceptance entry starts Planned until executed evidence exists.
+
+**Why:** Real review/labels remain coherent without fabricated movements, settlement or test results.
+
+## 031 — Changed-cost manual prices require the final approval (C8, 2026-10-12)
+
+**Context:** The owner's C8 rule places Use calculated versus Keep in the approval. The older receiving-only Keep path could suppress that approval, and a retained sale alert could claim a decision was still waiting after it had been decided.
+
+**Decision:** Every accepted normal changed-cost receipt with retained manual price creates a versioned approval. Store both price/cost snapshots and the receiver's recommendation in `manual_price_review`; the authorised approver defaults to Use calculated or explicitly Keeps at the original store, retaining manual provenance. Either selected choice requires a reason when below the configured minimum margin or below cost, with the shared **Add a reason. / یک دلیل اضافه کنید.** error. Use a pure `manualRegularApprovalPreview` and the optional final `resolveApproval` decision argument. Same-cost and short-dated evidence stays unchanged. Resolve actual linked approval status in sale-alert presentation, using the current regular amount and **Current regular price / قیمت عادی فعلی** when it is no longer pending. Preserve receipt and alert source evidence.
+
+**Why:** Receiving remains practical without making a recommendation the price approval, and alerts describe their actual state. This specification records no test counts, screenshots or completion claim.

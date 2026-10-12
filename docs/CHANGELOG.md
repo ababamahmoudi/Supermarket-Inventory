@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-12 — C6/C7 approval and C8/E specifications
+
+- Owner approved C6/C7. Root verified required green CI and merged them in order with original history before C8 starts from main `3b6da31`. Older pending review/CI entries remain historical checkpoints.
+- Resolved Correct pickup authority (Owner/Manager, current Supervisor until E1) and dark filled Primary/KPI (#2B59C3 / white; lighter #7397F0 only dark links/icons/tabs/focus).
+- Recorded all 22 fixes and complete sales/request/regular-price/invoice-alert/hold/reminder/label contracts before code. [C8/E acceptance](C8_E_ACCEPTANCE.md) tracks planned requirements, tests and screenshots.
+- E1 roles/People, E2 store price tasks/notifications and E3 phones/PWA/hosting instructions are authorized planned stages. Four stacked PRs, no intermediate pause, deadline October 30; prototype/docs/seed only. No resources/accounts/backend/real AI/stock/deployment.
+- This entry records source specifications and owner decisions, **not C8/E implementation or unexecuted results**. Add actual checks and click guides after stage verification.
+
 ## 2026-10-12 — C7 Klead presentation and combined review guide
 
 - Applied the **owner's supplied Klead design language** to the shared shell and existing screens: bundled Manrope/Vazirmatn, standalone light/dark tokens, semantic buttons, filled custom fields, status dots/pills, inset list dividers, labelled row chevrons and shared footers. Retained the prescribed Dashboard layout and actual fictional records; no implementation approval is implied.
