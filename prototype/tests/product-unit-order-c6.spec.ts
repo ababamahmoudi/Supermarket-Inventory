@@ -9,15 +9,10 @@ for (const language of ["en", "fa"] as const)
       await page.setViewportSize({ width, height: 1080 });
       await signIn(page, "Supervisor");
       await setLanguage(page, language);
-      await page.goto("/#products");
-      await page
-        .getByLabel(
-          language === "fa" ? "جست‌وجوی محصولات" : "Search products",
-          { exact: true },
-        )
-        .fill("0001");
+      await page.goto("/#received");
       const name = page
-        .locator('.catalog-products-table .product-name bdi[lang="fa"]')
+        .locator('.received-table .product-name bdi[lang="fa"]')
+        .filter({ hasText: "برنج باسماتی ۴٫۵ کیلوگرمی" })
         .first();
       await expect(name).toHaveText("برنج باسماتی ۴٫۵ کیلوگرمی");
       const fragment = name.locator(".unit-fragment");

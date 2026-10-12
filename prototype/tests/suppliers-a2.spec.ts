@@ -1,5 +1,42 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { setBranch, setLanguage, signIn } from "./helpers";
+
+/** Retain the named field check when its authorized value moves into a card or row disclosure. */
+async function expectSupplierField(table: Locator, label: string) {
+  const heading = table.getByRole("columnheader", { name: label, exact: true });
+  if (await heading.isVisible()) {
+    await expect(heading).toBeVisible();
+    return;
+  }
+  const cell = table
+    .locator(`td[data-column-label=${JSON.stringify(label)}]:visible`)
+    .first();
+  if (await cell.count()) {
+    await expect(cell).toBeVisible();
+    expect(
+      await cell.evaluate(
+        (element) => getComputedStyle(element, "::before").content,
+      ),
+    ).toBe(`"${label}"`);
+    return;
+  }
+  const caption = table
+    .locator(".table-expanded-row dt")
+    .filter({ hasText: label });
+  if (!(await caption.first().isVisible())) {
+    const disclosures = table.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    const count = await disclosures.count();
+    for (let index = 0; index < count; index += 1) {
+      await disclosures.first().click();
+      if (await caption.first().isVisible()) break;
+    }
+  }
+  await expect(caption.first()).toBeVisible();
+  await expect(caption.first()).toHaveText(label);
+}
 
 test("Supervisor supplier overview reconciles balances and opens financial tabs", async ({
   page,
@@ -33,29 +70,27 @@ test("Supervisor supplier overview reconciles balances and opens financial tabs"
   ).toBeVisible();
   await page.getByRole("tab", { name: "Invoices", exact: true }).click();
   const content = page.locator(".supplier-tab-card");
-  await expect(
-    content.getByRole("columnheader", { name: "Outstanding", exact: true }),
-  ).toBeVisible();
-  await expect(
-    content.getByRole("row").filter({ hasText: "FV-20390" }),
-  ).toContainText("$169.79");
+  await expectSupplierField(content, "Outstanding");
+  const invoiceRow = content
+    .getByRole("row")
+    .filter({ hasText: "FV-20390" })
+    .first();
+  if ((await invoiceRow.innerText()).includes("$169.79")) {
+    await expect(invoiceRow).toContainText("$169.79");
+  } else {
+    const disclosure = invoiceRow.locator(".table-details-toggle");
+    const panelId = await disclosure.getAttribute("aria-controls");
+    if ((await disclosure.getAttribute("aria-expanded")) !== "true")
+      await disclosure.click();
+    await expect(
+      content.locator(`[id=${JSON.stringify(panelId)}]`),
+    ).toContainText("$169.79");
+  }
   await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
-  await expect(
-    content.getByRole("columnheader", {
-      name: "Last bought / case",
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    content.getByRole("columnheader", {
-      name: "Last bought / unit",
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expectSupplierField(content, "Last bought / case");
+  await expectSupplierField(content, "Last bought / unit");
   await page.getByRole("tab", { name: "Payments", exact: true }).click();
-  await expect(
-    content.getByRole("columnheader", { name: "Amount", exact: true }),
-  ).toBeVisible();
+  await expectSupplierField(content, "Amount");
   await page
     .getByRole("button", { name: "Back to Suppliers", exact: true })
     .click();

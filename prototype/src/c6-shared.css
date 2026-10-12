@@ -873,6 +873,16 @@ div.ui-kpi:hover {
     grid-column: 1 / -1;
     align-items: flex-end;
   }
+  :root
+    .ui-data-table.is-responsive
+    tbody
+    tr
+    td.table-actions:has(> .ui-button + .ui-button) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
   :root .ui-data-table.is-responsive .table-expanded-row {
     display: block;
     padding: 0;

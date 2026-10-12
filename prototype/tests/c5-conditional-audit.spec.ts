@@ -290,9 +290,26 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
   await measure(page, "Corrected posted invoice version actions");
   await page.goto("/#history");
   const corrected = page
-    .locator(".history-table tbody tr")
-    .filter({ hasText: "Correct invoice" })
-    .first();
+    .locator(".history-table")
+    .getByRole("link", { name: "View corrected", exact: true })
+    .locator("xpath=ancestor::tr[1]");
+  if (
+    !(await corrected.getByText("Correct invoice", { exact: true }).isVisible())
+  ) {
+    const details = corrected.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    const panelId = await details.getAttribute("aria-controls");
+    await details.click();
+    await expect(page.locator(`[id=${JSON.stringify(panelId)}]`)).toContainText(
+      "Correct invoice",
+    );
+  } else {
+    await expect(
+      corrected.getByText("Correct invoice", { exact: true }),
+    ).toBeVisible();
+  }
   await corrected
     .getByRole("button", { name: "More actions", exact: true })
     .click();
@@ -312,12 +329,30 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await page.goto("/#history");
-  await page
+  const savedRow = page
     .locator(".history-table tbody tr")
-    .filter({ hasText: "Save product" })
-    .first()
-    .getByRole("button", { name: "Revert", exact: true })
-    .click();
+    .filter({
+      has: page.getByRole("button", { name: "Revert", exact: true }),
+    })
+    .first();
+  if (
+    !(await savedRow.getByText("Save product", { exact: true }).isVisible())
+  ) {
+    const details = savedRow.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    const panelId = await details.getAttribute("aria-controls");
+    await details.click();
+    await expect(page.locator(`[id=${JSON.stringify(panelId)}]`)).toContainText(
+      "Save product",
+    );
+  } else {
+    await expect(
+      savedRow.getByText("Save product", { exact: true }),
+    ).toBeVisible();
+  }
+  await savedRow.getByRole("button", { name: "Revert", exact: true }).click();
   await measure(page, "Revert History change confirmation");
 });
 

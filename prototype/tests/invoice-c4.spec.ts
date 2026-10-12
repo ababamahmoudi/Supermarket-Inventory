@@ -158,10 +158,26 @@ for (const language of ["en", "fa"] as const)
       correction,
     );
     await page.goto("/#history");
-    const row = page
-      .locator(".history-table tbody tr")
-      .filter({ hasText: fa ? "اصلاح فاکتور" : "Correct invoice" })
-      .first();
+    const correctedLink = page.locator(".history-table").getByRole("link", {
+      name: fa ? "نمایش اصلاح‌شده" : "View corrected",
+      exact: true,
+    });
+    await expect(correctedLink).toBeVisible();
+    const row = correctedLink.locator("xpath=ancestor::tr[1]");
+    const action = fa ? "اصلاح فاکتور" : "Correct invoice";
+    if (!(await row.getByText(action, { exact: true }).isVisible())) {
+      const disclosure = row.getByRole("button", {
+        name: fa ? "نمایش جزئیات" : "Show details",
+        exact: true,
+      });
+      const panelId = await disclosure.getAttribute("aria-controls");
+      await disclosure.click();
+      await expect(
+        page.locator(`[id=${JSON.stringify(panelId)}]`),
+      ).toContainText(action);
+    } else {
+      await expect(row.getByText(action, { exact: true })).toBeVisible();
+    }
     await expect(
       row.getByRole("link", {
         name: fa ? "نمایش اصلاح‌شده" : "View corrected",

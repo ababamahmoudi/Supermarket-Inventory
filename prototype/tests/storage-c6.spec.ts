@@ -331,8 +331,23 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   await page.goto("/#history");
   const row = page
     .locator(".history-table tbody tr")
-    .filter({ hasText: "Save product" })
+    .filter({
+      has: page.getByRole("button", { name: "Revert", exact: true }),
+    })
     .first();
+  if (!(await row.getByText("Save product", { exact: true }).isVisible())) {
+    const details = row.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    const panelId = await details.getAttribute("aria-controls");
+    await details.click();
+    await expect(page.locator(`[id=${JSON.stringify(panelId)}]`)).toContainText(
+      "Save product",
+    );
+  } else {
+    await expect(row.getByText("Save product", { exact: true })).toBeVisible();
+  }
   await row.getByRole("button", { name: "Revert", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Revert change", exact: true })
