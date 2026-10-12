@@ -104,17 +104,25 @@
   margin-block-start: 5px;
 }
 .order-total {
-  display: flex;
+  display: grid;
+  /* Match the final column's 168 of 1076 desktop table-width shares. */
+  grid-template-columns: minmax(0, 1fr) calc(100% * 168 / 1076);
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  max-inline-size: 440px;
+  inline-size: 100%;
+  max-inline-size: none;
   margin-inline-start: auto;
   text-align: end;
   padding-block: 20px;
-  padding-inline-end: 8px;
+}
+.order-total > span {
+  margin-inline-end: 20px;
 }
 .order-total strong {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding-inline: 8px;
+  direction: ltr;
+  text-align: right;
   font-size: 24px;
   white-space: nowrap;
 }
@@ -274,8 +282,23 @@
 :root .order-form-card .order-items-table th {
   white-space: normal;
 }
+:root .order-form-card .order-items-table :is(th, td).numeric {
+  direction: ltr;
+}
+:root .order-form-card .order-items-table .order-item-caption {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
 :root .order-form-card .order-items-table .field {
   justify-items: end;
+}
+:root .order-form-card .order-table-field > .field-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 :root .order-form-card .order-items-table input.ui-number {
   inline-size: 100%;
@@ -288,9 +311,6 @@
   background: var(--field-fill);
   box-shadow: var(--shadow-none);
 }
-:root[dir="rtl"] .order-form-card .order-items-table input.ui-number {
-  text-align: left;
-}
 :root .order-form-card .order-items-table input.ui-number:focus-visible {
   border-color: var(--accent);
   background: var(--surface);
@@ -299,59 +319,6 @@
 :root .order-form-card .order-items-table input.ui-number[aria-invalid="true"] {
   border-color: var(--danger);
   background: var(--surface);
-}
-@container order-form (max-width: 1000px) {
-  .order-items-table table,
-  .order-items-table tbody {
-    display: block;
-    inline-size: 100%;
-    min-inline-size: 0;
-  }
-  .order-items-table colgroup,
-  .order-items-table thead {
-    display: none;
-  }
-  .order-items-table tbody {
-    display: grid;
-    gap: 16px;
-  }
-  .order-items-table tbody tr {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 12px;
-    padding: 16px;
-    border-radius: var(--radius-search);
-    background: var(--surface-soft);
-  }
-  :root .order-form-card .order-items-table tbody td {
-    display: block;
-    min-inline-size: 0;
-    padding: 0;
-    border-radius: var(--radius-none);
-    text-align: start !important;
-    background: var(--color-clear);
-  }
-  .order-items-table tbody td:first-child {
-    grid-column: 1 / -1;
-  }
-  .order-items-table td::before {
-    content: attr(data-label);
-    display: block;
-    margin-block-end: 8px;
-    color: var(--text-muted);
-    font-size: var(--font-size-label);
-    font-weight: var(--font-weight-caption);
-  }
-  .order-items-table td:first-child::before {
-    display: none;
-  }
-  :root .order-form-card .order-items-table .field {
-    justify-items: start;
-  }
-  :root .order-form-card .order-items-table input.ui-number {
-    margin-inline-start: 0;
-    background: var(--surface);
-  }
 }
 @media (max-width: 760px) {
   :root .order-items-table.ui-data-table {
@@ -376,9 +343,16 @@
     display: grid;
     gap: 16px;
   }
-  .order-items-table tbody tr {
+  :root
+    .order-form-card
+    .order-items-table
+    tbody
+    tr:not(.table-expanded-row):nth-child(n) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    block-size: auto;
+    min-block-size: 0;
+    align-items: start;
     gap: 16px 12px;
     padding: 16px;
     border-radius: var(--radius-search);
@@ -422,6 +396,13 @@
     overflow: hidden;
     clip-path: inset(50%);
   }
+  :root .order-form-card .order-items-table .field {
+    justify-items: start;
+  }
+  :root .order-form-card .order-items-table input.ui-number {
+    margin-inline-start: 0;
+    background: var(--surface);
+  }
   .order-detail-meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
@@ -433,7 +414,7 @@
     inline-size: min(300px, 100%);
   }
   .order-total {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 @media print {

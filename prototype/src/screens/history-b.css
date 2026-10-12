@@ -63,6 +63,10 @@
   overflow-wrap: normal;
   word-break: normal;
 }
+.history-invoice-reference {
+  display: inline-block;
+  white-space: nowrap;
+}
 .history-revert-dialog {
   inline-size: min(720px, calc(100vw - 32px));
   max-inline-size: 720px;
@@ -99,6 +103,9 @@
   margin-block-start: 24px;
 }
 @media (max-width: 760px) {
+  :root .history-table tbody tr > td[data-column-key="values"] {
+    grid-column: 1 / -1;
+  }
   .history-toolbar {
     margin-block-end: 16px;
   }

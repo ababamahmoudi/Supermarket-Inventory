@@ -163,7 +163,7 @@ for (const language of ["en", "fa"] as const) {
     await button(dialog, "Start sale", "شروع حراج").click();
     await expect(
       dialog.getByRole("alert", {
-        name: exact("What's missing", "چه چیزی کم است"),
+        name: exact("What's missing", "موارد ناقص"),
       }),
     ).toContainText(language === "en" ? "must be lower" : "باید کمتر");
     expect((await readC8State(page)).sales).toEqual(before.sales);
@@ -417,7 +417,7 @@ for (const language of ["en", "fa"] as const) {
     await button(card, "Approve", "تأیید").click();
     await expect(
       card.getByRole("alert", {
-        name: exact("What's missing", "چه چیزی کم است"),
+        name: exact("What's missing", "موارد ناقص"),
       }),
     ).toBeVisible();
     expect(

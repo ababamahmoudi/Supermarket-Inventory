@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import Decimal from "decimal.js";
 import {
   appearance,
   button,
@@ -347,6 +348,10 @@ for (const language of ["en", "fa"] as const) {
   test(`C8 New order uses filled inputs and headers, units and totals share their real columns (${language})`, async ({
     page,
   }) => {
+    // Use the required wide review context for the full seven-column proof;
+    // the phone project retains its actual 390px field and containment guards.
+    if ((page.viewportSize()?.width ?? 0) >= 760)
+      await page.setViewportSize({ width: 1440, height: 1080 });
     await signIn(page, "Supervisor");
     await setBranch(page, "Branch 1");
     const before = await readC8State(page);
@@ -365,6 +370,25 @@ for (const language of ["en", "fa"] as const) {
     await expect(cost).toHaveValue("18.40");
     await expect(first).toContainText("$18.40");
     await expect(first).not.toContainText("$18.4000");
+    const second = form.locator(".order-items-table tbody > tr").nth(1);
+    await expect(second.locator("td").nth(3)).toContainText(
+      language === "en" ? "= 24 units" : "= 24 واحد",
+    );
+    const secondCost = second.getByRole("textbox", {
+      name: /^(Expected unit cost|هزینهٔ مورد انتظار واحد) —/,
+    });
+    const lineAmount = new Decimal(await cost.inputValue()).times(48);
+    const grandAmount = lineAmount.plus(
+      new Decimal(await secondCost.inputValue()).times(24),
+    );
+    expect(lineAmount.toFixed(2)).toBe("883.20");
+    expect(grandAmount.toFixed(2)).toBe("933.60");
+    await expect(first.locator("td").last()).toHaveText(
+      "$" + lineAmount.toFixed(2),
+    );
+    await expect(form.locator(".order-total strong")).toHaveText(
+      "$" + grandAmount.toFixed(2),
+    );
     const inputs = await form
       .locator(".order-items-table input")
       .evaluateAll((elements) =>
@@ -408,7 +432,9 @@ for (const language of ["en", "fa"] as const) {
       const cells = Array.from(row.querySelectorAll(":scope > td"));
       const total = element.querySelector(".order-total");
       const value = total?.querySelector("strong");
-      const lastMoney = cells.at(-1)?.querySelector(".money");
+      // This cell contains the real formatted total; pseudo-labels are not
+      // text nodes, so its Range measures only the complete amount glyphs.
+      const lastMoney = cells.at(-1);
       const edge = (node: Element | null | undefined) => {
         if (!node) return null;
         const range = document.createRange();

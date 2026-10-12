@@ -119,7 +119,7 @@ export async function setupC8Scene(page, scene, { costOriginal } = {}) {
           await tracking.click();
         await button(dialog, "Save product", "ذخیرهٔ محصول").click();
         const missing = dialog.getByRole("alert", {
-          name: exact("What's missing", "چه چیزی کم است"),
+          name: exact("What's missing", "موارد ناقص"),
         });
         await expect(missing).toBeVisible();
         await expect(

@@ -1,4 +1,11 @@
 @media screen {
+  :root .payables-ledger-table .payables-document-reference {
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
   .payables-supplier-link {
     display: flex;
     align-items: center;
@@ -48,5 +55,10 @@
     color: var(--text-muted);
     font-size: var(--font-size-caption);
     line-height: var(--line-height-caption);
+  }
+  @media (max-width: 760px) {
+    :root .payables-ledger-table tbody tr td.payables-ledger-reference {
+      grid-column: 1 / -1;
+    }
   }
 }

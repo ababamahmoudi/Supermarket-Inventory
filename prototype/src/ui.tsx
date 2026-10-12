@@ -1215,6 +1215,7 @@ type ControlAttributes = Pick<
 export type SelectOption = {
   value: string;
   label: string;
+  content?: ReactNode;
   disabled?: boolean;
   count?: number;
 };
@@ -1455,7 +1456,9 @@ export function Select({
         ))}
         <span className={selected ? undefined : "muted"}>
           <bdi dir="auto">
-            {selected?.label ?? t("Choose an option", "یک گزینه انتخاب کنید")}
+            {selected?.content ??
+              selected?.label ??
+              t("Choose an option", "یک گزینه انتخاب کنید")}
           </bdi>
         </span>
         <ChevronDown size={18} strokeWidth={1.5} aria-hidden="true" />
@@ -1511,6 +1514,9 @@ export function Select({
                   id={`${listId}-${options.findIndex((item) => item.value === option.value)}`}
                   type="button"
                   role="option"
+                  aria-label={
+                    option.content === undefined ? undefined : option.label
+                  }
                   aria-selected={option.value === value}
                   aria-disabled={option.disabled || undefined}
                   disabled={option.disabled}
@@ -1524,7 +1530,7 @@ export function Select({
                   onClick={() => choose(option)}
                 >
                   <span>
-                    <bdi dir="auto">{option.label}</bdi>
+                    <bdi dir="auto">{option.content ?? option.label}</bdi>
                   </span>
                   {option.value === value && (
                     <Check size={16} strokeWidth={1.5} aria-hidden="true" />

@@ -893,12 +893,43 @@ export default function Suppliers() {
         )}
         {effectiveTab === "shorts" && (
           <DataTable
+            className="supplier-shorts-table"
             columns={[
-              { width: "260px" },
-              { width: "110px" },
-              { width: "160px" },
-              { width: "120px" },
-              { width: "100px", align: "end" },
+              {
+                key: "product",
+                minWidth: 180,
+                priority: 1,
+                mobilePrimary: true,
+              },
+              {
+                key: "code",
+                width: 110,
+                minWidth: 104,
+                priority: 3,
+                mobilePrimary: false,
+              },
+              {
+                key: "invoice",
+                width: 220,
+                minWidth: 220,
+                priority: 2,
+                mobilePrimary: true,
+              },
+              {
+                key: "location",
+                width: 144,
+                minWidth: 144,
+                priority: 5,
+                mobilePrimary: false,
+              },
+              {
+                key: "quantity",
+                width: 124,
+                minWidth: 124,
+                priority: 4,
+                mobilePrimary: true,
+                align: "end",
+              },
             ]}
           >
             <thead>
@@ -919,8 +950,10 @@ export default function Suppliers() {
                   <td>
                     <LtrText>{short.product_code}</LtrText>
                   </td>
-                  <td>
-                    <LtrText>{short.invoice}</LtrText>
+                  <td className="supplier-short-reference">
+                    <LtrText className="supplier-document-reference">
+                      {short.invoice}
+                    </LtrText>
                   </td>
                   <td>{branchName(short.branch)}</td>
                   <td>{short.quantity}</td>

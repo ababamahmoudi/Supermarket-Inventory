@@ -1381,8 +1381,10 @@ export function Payables() {
                             {typeLabel(row.type)}
                           </Badge>
                         </td>
-                        <td>
-                          <LtrText>{row.reference}</LtrText>
+                        <td className="payables-ledger-reference">
+                          <LtrText className="payables-document-reference">
+                            {row.reference}
+                          </LtrText>
                           {row.note && <div className="muted">{row.note}</div>}
                           {row.dispute_note && (
                             <p className="muted">{row.dispute_note}</p>

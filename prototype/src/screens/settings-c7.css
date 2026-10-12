@@ -73,6 +73,22 @@
     gap: 8px;
   }
   @media (max-width: 759px) {
+    :root
+      .settings-pricing-table.is-mobile
+      tbody
+      tr:not(.table-expanded-row)
+      > th[scope="row"] {
+      display: block;
+      grid-column: 1 / -1;
+      min-inline-size: 0;
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: normal;
+      word-break: normal;
+      hyphens: none;
+      background: var(--color-clear);
+      text-align: start;
+    }
     :root .settings-group-menu {
       position: static;
     }

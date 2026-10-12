@@ -59,7 +59,7 @@ function useReceivedColumns() {
     {
       key: "invoice",
       priority: 4,
-      minWidth: 145,
+      minWidth: 200,
       label: t("Invoice number", "شماره فاکتور"),
       width: "14%",
     },
@@ -198,7 +198,9 @@ export function ReceivedTable({
                         )
                       }
                     >
-                      <LtrText>{receipt.invoice_number}</LtrText>
+                      <LtrText className="received-invoice-reference">
+                        {receipt.invoice_number}
+                      </LtrText>
                     </a>
                   ) : (
                     <span className="muted">—</span>

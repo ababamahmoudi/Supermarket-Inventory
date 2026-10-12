@@ -1684,6 +1684,11 @@ export function demoSaleCostInvoice(
     throw new Error("Choose a permitted invoice location.");
   const now = new Date();
   const invoice = createInvoice(state, branch, true);
+  const supplier = supplierRecords(state).find(
+    (record) =>
+      record.company_id === state.config.company.seed_key &&
+      supplierMatches(record, fixture.supplier),
+  );
   const category = state.config.pricing_categories.find(
     (entry) => entry.key === product.pricing_category,
   )!;
@@ -1691,6 +1696,7 @@ export function demoSaleCostInvoice(
     ...invoice,
     id: fixture.id,
     supplier: fixture.supplier,
+    supplier_confirmed: supplier?.status === "confirmed",
     supplier_invoice_number: fixture.supplier_invoice_number,
     branch,
     handling_branch: branch,

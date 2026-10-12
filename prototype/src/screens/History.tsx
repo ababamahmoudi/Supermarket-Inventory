@@ -171,6 +171,13 @@ export default function History() {
     )
       return <Money value={raw} />;
     if (typeof raw === "string") {
+      const field = patch
+        ? "field" in patch
+          ? patch.field
+          : String(patch.path.at(-1))
+        : undefined;
+      if (field === "supplier_invoice_number" || field === "invoice_number")
+        return <LtrText className="history-invoice-reference">{raw}</LtrText>;
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return <DateText value={raw} />;
       const statuses: Record<string, [string, string]> = {
         active: ["Active", "فعال"],

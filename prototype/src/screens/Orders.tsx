@@ -897,7 +897,7 @@ export default function Orders() {
                         { key: "units", width: 124, align: "end" },
                         { key: "cost", width: 164, align: "end" },
                         { key: "case_cost", width: 112, align: "end" },
-                        { key: "total", width: 136, align: "end" },
+                        { key: "total", width: 168, align: "end" },
                       ]}
                     >
                       <thead>

@@ -73,6 +73,7 @@ import {
   Money,
   ProductName,
   UnitSize,
+  UnitText,
 } from "../presentation";
 import "./invoice-settings-labels.css";
 import "./invoice-a2.css";
@@ -155,11 +156,37 @@ import type {
   DemoInvoice,
   DemoState,
   InvoiceLine,
+  Language,
+  Product,
   Role,
   SupplierRecord,
 } from "../types";
 
 type Translate = (en: string, fa: string) => string;
+function invoiceProductOption(
+  item: Pick<Product, "code" | "name_en" | "name_fa">,
+  language: Language,
+) {
+  const label = `\u2066${item.code}\u2069 · ${language === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`;
+  return {
+    value: item.code,
+    label,
+    content: (
+      <>
+        {`\u2066${item.code}\u2069 · `}
+        {language === "fa" ? (
+          <UnitText>{item.name_fa}</UnitText>
+        ) : (
+          <>
+            {"\u2066"}
+            <UnitText>{item.name_en}</UnitText>
+            {"\u2069"}
+          </>
+        )}
+      </>
+    ),
+  };
+}
 type InvoiceTab =
   | "drafts"
   | "processing"
@@ -3376,10 +3403,9 @@ export default function Invoices() {
                                                   invoice.company_id &&
                                                 item.status !== "archived",
                                             )
-                                            .map((item) => ({
-                                              value: item.code,
-                                              label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
-                                            })),
+                                            .map((item) =>
+                                              invoiceProductOption(item, lang),
+                                            ),
                                         ]}
                                       />
                                     </Field>
@@ -3932,10 +3958,7 @@ export default function Invoices() {
                                   item.company_id === invoice.company_id &&
                                   item.status !== "archived",
                               )
-                              .map((item) => ({
-                                value: item.code,
-                                label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
-                              })),
+                              .map((item) => invoiceProductOption(item, lang)),
                             {
                               value: "__add_product",
                               label: t(

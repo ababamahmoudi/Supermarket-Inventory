@@ -1,5 +1,12 @@
 /* Supplier and delivery presentation uses the shared Klead primitives. */
 @media screen {
+  :root .supplier-shorts-table .supplier-document-reference {
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
   :root .suppliers-table .table-identity,
   :root .supplier-tab-card .table-identity,
   :root .received-table .table-identity {
@@ -133,6 +140,11 @@
     font-size: var(--font-size-body);
     line-height: var(--line-height-body);
     font-weight: var(--font-weight-caption);
+  }
+  @media (max-width: 760px) {
+    :root .supplier-shorts-table tbody tr td.supplier-short-reference {
+      grid-column: 1 / -1;
+    }
   }
   @media (max-width: 759px) {
     :root .supplier-contact-grid {

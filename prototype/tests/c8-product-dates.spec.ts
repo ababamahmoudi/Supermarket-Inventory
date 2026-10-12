@@ -95,7 +95,7 @@ for (const language of ["en", "fa"] as const) {
         .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       const missing = dialog.getByRole("alert", {
-        name: exact("What's missing", "چه چیزی کم است"),
+        name: exact("What's missing", "موارد ناقص"),
       });
       await expect(missing).toBeVisible();
       const link = missing.getByRole("link", {
@@ -197,7 +197,9 @@ for (const language of ["en", "fa"] as const) {
       language +
       ")",
     async ({ page }) => {
-      await prepare(page, language);
+      // Select the actual location with the existing English shell helper, then
+      // exercise the editor and every Save guard in the requested language.
+      await prepare(page, "en");
       const before = await readC8State(page);
       const elsewhere = openDates(before, "0006");
       expect(elsewhere.length).toBeGreaterThan(0);
@@ -205,6 +207,7 @@ for (const language of ["en", "fa"] as const) {
         true,
       );
       await setBranch(page, "Branch 2");
+      await setLanguage(page, language);
       const dialog = await openC8ProductEditor(page, "0006");
       await expect(dialog.locator(".product-editor-date-row")).toHaveCount(0);
       const tracking = dialog.getByRole("switch", {
@@ -267,7 +270,7 @@ for (const language of ["en", "fa"] as const) {
       const date = inline.getByLabel(exact("Date", "تاریخ"), { exact: true });
       await expect(
         dialog.getByRole("alert", {
-          name: exact("What's missing", "چه چیزی کم است"),
+          name: exact("What's missing", "موارد ناقص"),
         }),
       ).toBeVisible();
       await expect(date).toHaveAttribute("aria-invalid", "true");
@@ -284,7 +287,7 @@ for (const language of ["en", "fa"] as const) {
       await expect(quantity).toHaveAttribute("aria-invalid", "true");
       await expect(
         dialog.getByRole("alert", {
-          name: exact("What's missing", "چه چیزی کم است"),
+          name: exact("What's missing", "موارد ناقص"),
         }),
       ).toBeVisible();
       expect(business(await readC8State(page))).toBe(business(before));
