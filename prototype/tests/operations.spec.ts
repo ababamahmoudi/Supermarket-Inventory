@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
-import { chooseOption, signIn, visitPage } from "./helpers";
+import { chooseOption, signIn, visitPage, setLanguage } from "./helpers";
 
 test.setTimeout(60000);
 
@@ -195,20 +195,21 @@ test("date removal, notes store-use, and unread Supervisor actions survive refre
     .fill("Fictional supervisor check requested");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Mark seen", exact: true }),
+    page.getByRole("button", { name: "More actions", exact: true }),
   ).toHaveCount(0);
   await signIn(page, "Supervisor");
   await visit(page, "Notes");
   await page.getByRole("tab", { name: /For Supervisor/ }).click();
   await expect(
-    page.getByRole("button", { name: "Mark seen", exact: true }),
+    page.getByRole("button", { name: "More actions", exact: true }),
   ).toHaveCount(2);
   await page
-    .getByRole("button", { name: "Mark seen", exact: true })
+    .getByRole("button", { name: "More actions", exact: true })
     .first()
     .click();
+  await page.getByRole("menuitem", { name: "Mark seen", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Mark seen", exact: true }),
+    page.getByRole("button", { name: "More actions", exact: true }),
   ).toHaveCount(1);
   await page
     .getByRole("button", { name: "Mark done", exact: true })
@@ -391,9 +392,7 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   await expect(
     page.getByRole("heading", { name: "Date tracking", exact: true, level: 1 }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "پیگیری تاریخ", exact: true, level: 1 }),

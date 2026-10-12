@@ -83,9 +83,10 @@
   gap: 20px;
 }
 .return-detail .return-detail-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: var(--font-size-large-title);
+  font-weight: var(--font-weight-large-title);
+  line-height: var(--line-height-large-title);
+  letter-spacing: var(--tracking-large-title);
 }
 .return-detail-header p {
   margin-block-start: 8px;
@@ -225,7 +226,7 @@
 }
 .return-item-form {
   padding: 20px;
-  background: var(--surface-soft);
+  background: var(--klead-hover);
   border-radius: var(--radius-card);
   min-inline-size: 0;
 }
@@ -255,4 +256,18 @@
 }
 .return-action-card form > .actions {
   margin-block-start: 24px;
+}
+.return-action-caption {
+  margin-block: 8px 24px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.return-item-form h4 {
+  font-size: var(--font-size-headline);
+  line-height: var(--line-height-headline);
+  font-weight: var(--font-weight-headline);
+}
+.return-item-form > .muted {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
 }

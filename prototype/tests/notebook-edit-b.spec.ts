@@ -30,11 +30,12 @@ test("a worker corrects their own note within ten seconds, the original author w
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   const original = await storedEntry(page, "Afternoon fridge check");
   const card = page.locator(`[data-notebook-entry="${original.id}"]`);
+  await card.getByRole("button", { name: "More actions", exact: true }).click();
   await expect(
-    card.getByRole("button", { name: "Edit note", exact: true }),
+    page.getByRole("menuitem", { name: "Edit note", exact: true }),
   ).toBeVisible();
   await page.clock.runFor(9000);
-  await card.getByRole("button", { name: "Edit note", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Edit note", exact: true }).click();
   const editor = page.getByRole("form", { name: "Edit note", exact: true });
   await editor
     .getByLabel("Note", { exact: true })
@@ -57,12 +58,13 @@ test("a worker corrects their own note within ten seconds, the original author w
   });
   await page.clock.runFor(1001);
   await expect(
-    card.getByRole("button", { name: "Edit note", exact: true }),
+    card.getByRole("button", { name: "More actions", exact: true }),
   ).toHaveCount(0);
 
   await signIn(page, "Supervisor");
   await deliTab(page);
-  await card.getByRole("button", { name: "Edit note", exact: true }).click();
+  await card.getByRole("button", { name: "More actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Edit note", exact: true }).click();
   await page
     .getByRole("form", { name: "Edit note", exact: true })
     .getByLabel("Note", { exact: true })
@@ -118,8 +120,9 @@ test("an already-open worker editor expires after ten seconds and Cancel keeps t
   const original = await storedEntry(page, "Unchanged saved check");
   await page
     .locator(`[data-notebook-entry="${original.id}"]`)
-    .getByRole("button", { name: "Edit note", exact: true })
+    .getByRole("button", { name: "More actions", exact: true })
     .click();
+  await page.getByRole("menuitem", { name: "Edit note", exact: true }).click();
   const editor = page.getByRole("form", { name: "Edit note", exact: true });
   await editor.getByLabel("Note", { exact: true }).fill("Unsaved correction");
   await page.clock.runFor(10001);

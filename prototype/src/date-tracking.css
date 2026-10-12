@@ -28,7 +28,7 @@
 }
 .next-tracked-date {
   margin-block-start: 8px;
-  font-size: var(--text-small, 12px);
+  font-size: var(--font-size-caption);
   min-inline-size: 0;
 }
 .next-tracked-date .badge {
@@ -37,7 +37,7 @@
   overflow-wrap: anywhere;
 }
 .date-tracking-page .expiry-table .ltr-fragment {
-  white-space: normal;
+  white-space: nowrap;
 }
 .date-tracking-page .expiry-table th,
 .date-tracking-page .expiry-table td {
@@ -46,7 +46,7 @@
 .date-entry-evidence {
   margin-block-start: 6px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   overflow-wrap: anywhere;
 }
 .date-quick-card {
@@ -143,7 +143,7 @@
 }
 .date-quick-feedback {
   margin-block-start: 16px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text);
 }
 .date-filter-result-actions {
@@ -170,12 +170,12 @@
   margin-block-end: 16px;
 }
 .product-dates-header h3 {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-caption);
 }
 .product-dates-header p {
   margin-block-start: 4px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
 }
 .product-open-dates {
   list-style: none;
@@ -194,11 +194,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 .product-no-dates {
   margin-block-end: 16px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
 }
 .date-quick-add-inline .date-quick-main {
   grid-template-columns: 168px max-content;

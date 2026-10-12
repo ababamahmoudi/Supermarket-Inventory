@@ -1,0 +1,1302 @@
+{
+  "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+  "variant": "phone-dark",
+  "reviewer": "/root/c7_final_qa",
+  "reviewedAt": "2026-10-12T13:09:15.762417+00:00",
+  "verdict": "PASS",
+  "overallStatus": "passed",
+  "reviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "realFailures": [],
+  "realFailureCount": 0,
+  "captureManifestSha256": "e6f1a9ad05ff5c067e76be5e32bc6160875601d44e245e9cc98be47773b2ebad",
+  "sourceManifestSha256": "8273e9d01a3283dcb09f2b0df2da5ed88f7b070900de9a7e12d37f1624fc74cd",
+  "productionFingerprint": "5f1150cf962cbe50f4b4418da570f5163ff6188ba9b875068af25c92d5cbd665",
+  "sourceSnapshot": "/tmp/c7-source-final9",
+  "originalReferenceContext": "All 19 retained original images were personally opened afresh by this reviewer during this turn; no earlier screenshot-review flags were reused.",
+  "originalReferences": [
+    {
+      "path": "docs/design-references/klead-v1/1-components-and-tokens.png",
+      "source_name": "1-components-and-tokens.png",
+      "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf",
+      "bytes": 672206,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Buttons/fields/choices/status/Undo/missing/table/type/color requirements personally read; semantic context and theme adaptation compared across the phone scenes."
+    },
+    {
+      "path": "docs/design-references/klead-v1/2-lookup.png",
+      "source_name": "2-lookup.png",
+      "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94",
+      "bytes": 413573,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Personally read name/secondary name/code, large price with adjacent offer, read-only dates, calm result rows and shell hierarchy."
+    },
+    {
+      "path": "docs/design-references/klead-v1/3-date-tracking.png",
+      "source_name": "3-date-tracking.png",
+      "sha256": "94bad568825c9351cc63dc9b5cc54d84cfeff57fefe1ef2b64a519095a42bfae",
+      "bytes": 431131,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Personally read quick entry, optional facts, whole units/dates, calm rows and separate Keep/Clear menu semantics."
+    },
+    {
+      "path": "docs/design-references/klead-v1/4-edit-product.png",
+      "source_name": "4-edit-product.png",
+      "sha256": "7e972d6d45bcbc84ed73f2e674d4e74ccbbc6c35088b5cbe2fd0f07c1d1425c6",
+      "bytes": 210147,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Personally read inset title/caption, grouped names/pricing/details/date tracking, nested reminder 30, date controls and neutral Cancel footer."
+    },
+    {
+      "path": "docs/design-references/klead-v1/5-phone-dark.png",
+      "source_name": "5-phone-dark.png",
+      "sha256": "ed480b2513fcce07cb0ecd23692ba0b65c313b9c866c6f2611a3258b62bfcf95",
+      "bytes": 106212,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Personally read priority top bar, dark surfaces, large whole price, offer beside price, expiry row and phone controls."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/DateTracking bug 1.png",
+      "source_name": "DateTracking bug 1.png",
+      "sha256": "55cf9bad8be9e45c019f555b61b10616c5a4346aa747ca38552cc65de5d1e262",
+      "bytes": 529786,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Tracking-off with retained date annotation read; still-visible dates may be retained by Keep. Active-list removal is behavioral evidence, not inferred from this static review."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.50.27 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.50.27 PM.png",
+      "sha256": "54e2836e159db3d5565226e5d727403d14293992b38d670de1e3423d0cf83954",
+      "bytes": 267758,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "900px topbar collision note read; phone priority topbar is separately inspected, and 900px proof belongs to its own view/tests."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.57.32 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.57.32 PM.png",
+      "sha256": "e5fdaa14c224cf33245fff6cce792363972c258df6ea8ef775ff378f180501ae",
+      "bytes": 726872,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Stopped-tracking row and Undo annotation read; removal/retention semantics require retained workflow tests, while whole date/list geometry is inspected here."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.05.57 PM.png",
+      "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432",
+      "bytes": 571927,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Split headings/unit words/dates and overlapping status/actions note read; phone adaptive rows inspected for whole text and containment."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.07.45 PM.png",
+      "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f",
+      "bytes": 425821,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Unnecessary Lookup date tracking controls note read; fresh Lookup is read-only and editor owns the date group."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.10.23 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.10.23 PM.png",
+      "sha256": "864a711f668db6c8cfe3872615453e0775f3c3c410f78173f4cbc2c30b667e26",
+      "bytes": 536594,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Invoice reference/supplier/status overlap note read; fresh adaptive phone invoice rows inspected."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.17.16 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.17.16 PM.png",
+      "sha256": "670590f23178d4feb55e78d8ef6e35a7ef890b0f66f0a145375de0dae6491038",
+      "bytes": 498604,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Received UTC date/time, computed editable total and unnecessary stacked Edit draft Undo notifications note read; fresh local labels, whole values and unobstructed footer inspected, behavior left to retained tests."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.20.12 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.20.12 PM.png",
+      "sha256": "0e2ec2473f0806dc2e86c14b640cd443e9ec02c6a810628689202887a8e92fd9",
+      "bytes": 642675,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Cannot remove line and original/confirmation/date blockers note read; fresh red Remove line, matching missing links/messages and footer inspected, Remove/Undo checked in rendered tests."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.26.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.26.04 PM.png",
+      "sha256": "1551ab3cd0516ce0cd9bd0cfe238f4f72d91d03f1a58f1727c4c2f5a846b6276",
+      "bytes": 537493,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Optional same-supplier facts and closeable Undo notification note read; fresh optional line fields and unobstructed footer inspected, notification mechanics require retained tests."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.04 PM.png",
+      "sha256": "b7a9e1e055f01098d9712225ce4b8ebc52f74e92ebcbcc93a075a3d0d2f713fe",
+      "bytes": 804514,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Duplicate unlabelled dates and whole received units note read; fresh single From/To range and atomic units inspected."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.47 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.47 PM.png",
+      "sha256": "2544afda3f9661e9a803ed076f13a19f0a873c4dbe713e6fafc587ae5218f3bc",
+      "bytes": 460442,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Returns split headings/overlap note read; fresh adaptive statuses and next actions inspected."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.32.08 PM.png",
+      "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68",
+      "bytes": 438533,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Actual pickup quantities and optional labeling note read; fresh shortfall and partial-resolution scenes inspected."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.34.15 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.34.15 PM.png",
+      "sha256": "019eb0ec8bcbfa2fe47edf7e2dad3f889b8de00200841a6008d394fac52a794b",
+      "bytes": 389005,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "English default and document-layout note read; fresh English RM-0001 sheet, totals/evidence/signatures and Print inspected."
+    },
+    {
+      "path": "docs/design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.54.59 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.54.59 PM.png",
+      "sha256": "3bb95c54b5999edd8ad5ae56596f87bc60e20043b1adadc676e35629295e5fb4",
+      "bytes": 512792,
+      "openedIndividually": true,
+      "viewMethod": "view_image of the original file; each image was separately returned as an image block in this review turn",
+      "referenceManifestMatched": true,
+      "sourceManifestMatched": true,
+      "observedReferenceNotes": "Payables split date/reference/money and Columns placement note read; fresh phone ledger inspected for atomic values and contained actions."
+    }
+  ],
+  "summary": {
+    "reviewStatus": "passed",
+    "reviewPassed": true,
+    "imagesOpenedIndividually": 17,
+    "originalReferencesOpenedIndividually": 19,
+    "referencesRehashedAndMatched": 19,
+    "realFailureCount": 0,
+    "realFailures": [],
+    "recordedPhoneGeometryFailures": 0,
+    "scope": "Fresh 390px English dark captures only; visible Persian secondary names and atomic English money/unit fragments inspected. Persian RTL shell/decimal placement is separately tested, not claimed as a personal phone-FA image review.",
+    "phoneControlReview": "Visible text controls were compared with the phone control hierarchy in the retouches and design language; the separately recorded topbar measurements are 36px, while ordinary phone text actions visually retain the larger 44px treatment. No new browser measurements were launched for this visual-only task."
+  },
+  "deliberateDifferences": [
+    "Actual permitted demo records, dates, approved prices and lifecycle values remain authoritative; sample reference records/artwork were not copied.",
+    "Dark theme adapts surface/field/button tokens; nested surface fields are dark rather than literal white. Outside-card neutral controls retain the theme surface and hairline.",
+    "The contrast-adjusted green token differs minimally from the reference green, supported by the final composited contrast suite.",
+    "Dark primary blue with white text remains the documented provisional accessible choice pending the owner answer; this review does not resolve that choice.",
+    "Phone adaptive rows show identifying facts and disclose lower-priority fields. Whole-row dividers replace per-cell underlines.",
+    "The phone topbar relocates the existing account to a single initials control and exposes remaining actions through More."
+  ],
+  "supportingEvidence": [
+    {
+      "purpose": "Rendered styles/geometries and actual Remove/Undo, ledger, reference and footer contexts; measurements are distinct from personal image observation",
+      "path": "/tmp/c7-final-verification/c7-ef4dfcc-klead-positive/summary.json",
+      "sha256": "f248f848c66b9aa1343098250754716461b00a3218dac938c6d6d1a1573a8587",
+      "casesPassed": 32,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0
+    },
+    {
+      "purpose": "EN/FA adaptive layouts, Persian decimal visual order and composited text contrast; this does not claim personal FA PNG viewing or replace the individual visual review",
+      "path": "/tmp/c7-final-verification/c7-ef4dfcc-responsive-contrast/summary.json",
+      "sha256": "a9a32e8b70ffb9b3a7fd11fb31b26038d321a160916f096883109df56bbc9045",
+      "casesPassed": 72,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "contrastSamples": 35166,
+      "minimumContrast": 4.5626,
+      "contrastFailures": 0
+    }
+  ],
+  "reviews": [
+    {
+      "filename": "topbar-phone-dark.png",
+      "scene": "topbar",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "be85f0a7bcf90d76ffa8b7af21ddb86f843ebee425835490e79f44ada1febd28",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Phone priority bar contains sidebar toggle, North York, notifications, exactly one initials account control and More without collisions.",
+        "Dark-page header surfaces are calm; controls stay in one row."
+      ],
+      "framingNotes": [
+        "Element-only capture shows the top bar, not the page or the opened More/account menus.",
+        "The original 900px breadcrumb/search collision annotation applies to the separate mid-900 view and responsive tests."
+      ],
+      "captureMode": "element",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "100 گرمی",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "900 g",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "filename": "lookup-clearance-dates-phone-dark.png",
+      "scene": "lookup-clearance-dates",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "55c3e5b54b354e70d0fa8924cfa298f76a8c269d28ad227488c6775986907727",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Round category pills have quiet hairlines; All uses the selected blue tint.",
+        "Sour Cherry Juice 1 L, its Persian secondary name, product code and 1 L unit remain whole and contained.",
+        "Large $2.99 price, 2 for $5 offer beside the price and $2.49 clearance price remain atomic.",
+        "Two current-location expiry rows and last-received facts are read-only; no tracking switch/date-entry fields appear in Lookup.",
+        "Edit is a calm neutral action inside the card."
+      ],
+      "framingNotes": [
+        "The searched fixture contains one result and two real expiry records; the reference shows a different unfiltered result list and sample dates.",
+        "This image does not establish Keep/Clear removal behavior or opening Edit; those require the existing workflow tests."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "filename": "date-tracking-phone-dark.png",
+      "scene": "date-tracking",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "e0d69efe66552daf9de7ae5c1d12d8d63ce6c2f223dfbb1d8c526a6f451632dd",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Quick Add date form shows product/date/location, then expanded optional type, quantity, lot and note fields without overlap.",
+        "Due soon/All dates/Removed choices, filters and count with Columns remain contained.",
+        "Lavash Bread 500 g and Sour Cherry Juice 1 L rows keep names, Persian secondary text, dates and units whole.",
+        "Remove text is red and More is a quiet icon; there are no per-cell underline boxes.",
+        "Dates do not prove stock and do not change stock or balances disclaimer remains visible."
+      ],
+      "framingNotes": [
+        "Expanded More options and actual current records differ from the reference collapsed quick form.",
+        "Static capture does not prove Stop Keep/Clear or Undo transitions; retained workflow/domain tests provide that evidence."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "20 units",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "edit-product-dates-phone-dark.png",
+      "scene": "edit-product-dates",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "c868a0b928326859cbb4a10e362ff9e02387520d3f70564cf885f5a490aea290",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Edit product title and Lavash Bread 500 g / Product Code 0006 caption share the inset with the body.",
+        "Date tracking is grouped on a soft surface with a distinct nested reminder value 30 and current-location date rows.",
+        "Whole expiry dates, quantities/lot code, type/date/quantity/lot controls and Add fit within the group.",
+        "The complete footer is visible: Cancel uses the gray neutral fill without a resting border/glow; Save product is primary.",
+        "No footer clipping or overlap is visible."
+      ],
+      "framingNotes": [
+        "The native product dialog is scrolled to the date group. Names/pricing/details above this group are outside this framing and are not approved from this crop.",
+        "Actual two retained dates differ from the sample retouch. Focus/error and both Lookup/header-entry Cancel contexts have separate rendered tests."
+      ],
+      "captureMode": "viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "20 units",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "invoices-list-phone-dark.png",
+      "scene": "invoices-list",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "c362e475f99f2c295a05f53cad85ecceabe864a9922a42448a2530be27fde7e2",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Posted invoices uses compact Columns within the card title, whole invoice codes and readable supplier names/statuses.",
+        "Adaptive phone rows show identifying references plus supplier/status and disclosure controls without collisions.",
+        "Plain row navigation chevrons replace the old boxed View/reference actions."
+      ],
+      "framingNotes": [
+        "Branch/date fields omitted at this width remain available through disclosure; the collapsed screenshot does not show those details.",
+        "Phone card rows intentionally replace the wide desktop table framing of the annotated original."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": []
+    },
+    {
+      "filename": "manual-invoice-missing-phone-dark.png",
+      "scene": "manual-invoice-missing",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "fcf21a3bcb0f0e5cadf10290e1fed85b054e4995e86daf1cca964e91f635ede4",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "The full page shows the actual Post-triggered What’s missing block with links to original/confirmation/date issues and matching inline errors.",
+        "DEMO-C6-MISSING is whole in the draft row, details and input; the code does not split after its hyphens.",
+        "The New invoice header neutral control has the dark surface and a hairline outside cards.",
+        "Received date and 08:55 time are bounded and identified as store-local 24-hour time.",
+        "Expanded invoice input/select resting surfaces have no unwanted thin outlines; the invalid date retains a red cue.",
+        "Invoiced and Delivered values, $0.98 line total, $1.49 approved/selling price and summary amounts are whole.",
+        "Remove line uses red text on the neutral table-row context; no unwanted red outline or white text is visible.",
+        "Optional line facts, confirmation, Add line and the final Save as draft / Post invoice footer are visible and contained.",
+        "No stack of Edit draft Undo toasts obscures the footer."
+      ],
+      "framingNotes": [
+        "The blue outline around What’s missing is the focused navigation target after Post, not a resting field border.",
+        "Static image cannot prove Remove/Undo restoration, computed total editing, posting permissions or money invariants; the retained tests provide those checks.",
+        "This is the actual missing-original fixture, so posted-state/attachment success cannot be inferred."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "400 g",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "filename": "products-phone-dark.png",
+      "scene": "products",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "31ff9957b84b5d4cbc4b33601915a909f5494a7b113761a8acc30c39f7c94a2e",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Whole product names, Persian secondary names, unit sizes and approved prices fit the adaptive rows.",
+        "4.5 kg, 450 g, 400 g, 100 g, 900 g and 6 x 355 ml stay together; bulk $7.49/lb and $16.51/kg remain atomic.",
+        "Unapproved Dried Barberries retains the dash rather than an invented approved price.",
+        "Compact disclosure/Edit/More actions and count with page Columns remain contained."
+      ],
+      "framingNotes": [
+        "First page of two is shown; remaining catalog rows are not visible in this image.",
+        "Hidden detail columns remain in adaptive disclosure and are exercised separately."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "۴٫۵ کیلوگرمی",
+          "lines": 1
+        },
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۵۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "100 گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "900 g",
+          "lines": 1
+        },
+        {
+          "text": "۹۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "900 g",
+          "lines": 1
+        },
+        {
+          "text": "355 ml",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "filename": "received-range-phone-dark.png",
+      "scene": "received-range",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "fe2bce8b7b4d5d2be739862ffca9734e3b1d1f1b25c08dc2668573cd4f3d2630",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "One From 2026-10-01 / To 2026-10-31 range replaces the ambiguous duplicate date fields.",
+        "Filters and compact count/Columns are contained.",
+        "Each row keeps product and Persian secondary names with whole size-unit fragments, dates and cases/units without collision.",
+        "Whole-row dividers have no separate per-cell rules."
+      ],
+      "framingNotes": [
+        "The range menu/quick choices and hidden invoice/supplier details are not opened in this capture; existing tests verify their controls."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "100 گرمی",
+          "lines": 1
+        },
+        {
+          "text": "150 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۵۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "۴٫۵ کیلوگرمی",
+          "lines": 1
+        },
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "۴٫۵ کیلوگرمی",
+          "lines": 1
+        },
+        {
+          "text": "900 g",
+          "lines": 1
+        },
+        {
+          "text": "۹۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۵۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۵۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "2 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "24 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 case",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "12 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "2 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "20 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "3 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "36 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 case",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "6 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 case",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "12 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 unit",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "7.5 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "30 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "3.3333 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "40 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "2.6667 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "16 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "2 cases",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "12 units",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 case",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "6 units",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "returns-list-phone-dark.png",
+      "scene": "returns-list",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "2f2baf697b560be5c14aa99330b21eb9159444a2aab0a231993ba1af0396f85a",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Open/History choices and filters are contained with readable whole labels.",
+        "Both return IDs, supplier/branch facts, Waiting for pickup / Waiting for credit statuses and next actions fit without collision.",
+        "Record pickup / Record resolution are quiet row navigation actions with chevrons."
+      ],
+      "framingNotes": [
+        "Progress/created fields hidden at phone width remain in the disclosure; collapsed rows do not show every lifecycle detail."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": []
+    },
+    {
+      "filename": "pickup-shortfall-phone-dark.png",
+      "scene": "pickup-shortfall",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "f3efaff0d52a23c80c793d0a2ef36868ca83c38d102ba5605abd3882d1d0ac3b",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Return #1 and status remain whole; header actions sit at the logical end of the card.",
+        "Actual pickup quantity 2 is distinct from return quantity 3; shortfall reason and Keep for next pickup outcome are visible.",
+        "Nested quantity/reason/outcome controls use the distinct surface inside the soft item group.",
+        "Supplier representative and whole C6-SIGNED-PAPER-001 input fit; optional Item photo and Note labels follow label (optional) wording.",
+        "Close and Record pickup footer controls are fully visible with calm neutral and primary tones.",
+        "Destructive Cancel return has a semantic red tint."
+      ],
+      "framingNotes": [
+        "This capture is before pickup submission and explicitly shows No additional events yet; it does not prove locked signed history.",
+        "Long single-line shortfall input text is horizontally displayed within the native input; the full stored value requires field/workflow evidence."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "partial-resolution-phone-dark.png",
+      "scene": "partial-resolution",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "d2e093e68c4d437f88c2a3078aeaee26f512513e147e1f78d72754ba3404c6e9",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Picked up 3, Resolved 1 and Still outstanding 2 remain readable and whole.",
+        "Replacement received feedback is a separate readable block and explicitly says no amount was added to Payables.",
+        "Nested outcome, Expected date and optional note fit the item group; Expected date is bounded.",
+        "Header actions and Close / Record resolution footer are contained.",
+        "The signed pickup summary and history retain whole C6-SIGNED-PAPER-001.",
+        "Received replacement history retains whole C6-ACTUAL-REPLACEMENT-001 on one line within the paragraph and card. Neither code splits after C6-.",
+        "Timestamp/actor may wrap at a word boundary, while the complete document reference moves together to the next line.",
+        "Actual replacement detail keeps 0003 x 1 L atomic."
+      ],
+      "framingNotes": [
+        "The actual capture fixture reference ends in -001. It is not -0001; no screenshot or data was altered to change that value.",
+        "Static image supports visible progress/evidence, while the retained workflow and ledger guards prove actual pickup/resolution behavior."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "1 L",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "return-memo-phone-dark.png",
+      "scene": "return-memo",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "d332c2d5536b63536f88948eecd48f4caef6cdc6d72901e761ba8c9f12079976",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Return memo dialog shows actual RM-0001 and the whole English supplier document on a white sheet.",
+        "Supplier/date/product code/quantity/unit cost/expected credit, total, signed evidence, driver/store staff and signatures remain visible.",
+        "The pending-claim disclaimer remains in the document.",
+        "Print is tinted secondary inside the dark dialog; no footer clipping or collision is visible."
+      ],
+      "framingNotes": [
+        "The A4 sheet is scaled to fit the phone preview; the small document type is print artwork, not the surrounding UI body type.",
+        "Screen preview does not establish physical-printer alignment or Safari execution. Separate retained PDF/print geometry evidence is required."
+      ],
+      "captureMode": "viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "payables-ledger-phone-dark.png",
+      "scene": "payables-ledger",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "4a63756d7473cdf5074129474b8b6b26597fe246e831b3fff9c60fbc806498cf",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Supplier balances and overdue amounts stay whole, including $1,260.00; no prices/dates split internally.",
+        "Count with outside-card Columns and card-title Supplier ledger Columns have their context-appropriate surfaces.",
+        "Whole FV-20296-PAYMENT / FV-20390-PAYMENT references, negative payment amounts and dates remain contained in the ledger.",
+        "Supplier balance, open invoices, overdue and unapplied credit use the calm hierarchy.",
+        "Record dispute actions and outstanding invoice due dates fit without overlap or inner sideways table scrolling."
+      ],
+      "framingNotes": [
+        "Phone rows disclose lower-priority ledger/outstanding fields; those fields are not all visible while collapsed.",
+        "Caption and larger amount type are vertically centered by row, rather than forced to identical glyph tops; rendered geometry tests preserve the 2px alignment tolerance."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": []
+    },
+    {
+      "filename": "supplier-cards-phone-dark.png",
+      "scene": "supplier-cards",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "4ce3668fd9e64a0da5b488041e8ab28b9d1991eb959e2557da6ab194af3a6c6d",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Fresh Valley Foods page header Edit and More both use the surface with hairline outside the card.",
+        "Supplier contact facts, email, payment terms and Confirmed state remain readable and contained.",
+        "Last delivery/date, this-month deliveries and open returns use linked cards/arrow cues; Balance stays a static money fact without an invented navigation arrow.",
+        "Supplier tabs and overview values fit the phone width with whole dates and amounts."
+      ],
+      "framingNotes": [
+        "This is Overview; invoice/received/returns tab contents and card navigation destinations are checked in separate tests."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": []
+    },
+    {
+      "filename": "dashboard-phone-dark.png",
+      "scene": "dashboard",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "60bb45bb53017d9587e59590f14dd4474892f87e9b91ccd6a3703cadd53ef404",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Four metric cards show retained actual counts with calm blue/dark surfaces and icons.",
+        "Approvals and alerts keep names/unit fragments, prices/statuses and their actions contained; More icons have no unwanted resting border/outline.",
+        "Recent invoices, Returns, Supplier balances, both purchase charts, weekly empty states, Notes and Activity remain present in the phone stack.",
+        "Plain row chevrons replace obsolete View buttons.",
+        "Activity keeps Black Tea 450 g and Dried Red Kidney Beans 900 g whole.",
+        "Charts and cards preserve the actual records and values instead of copying reference artwork."
+      ],
+      "framingNotes": [
+        "The desktop Recent invoices / Returns 8+4 grid intentionally becomes a vertical phone stack.",
+        "Empty weekly sections reflect the actual capture date and data. This view does not prove action handlers."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "100 گرمی",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "4.5 kg",
+          "lines": 1
+        },
+        {
+          "text": "450 g",
+          "lines": 1
+        },
+        {
+          "text": "900 g",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "filename": "approvals-phone-dark.png",
+      "scene": "approvals",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "d8cc4702e39c79250612a0776dfdf5d776697239a5d475e60234f07c9f055da3",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Retained approval cards keep names/Persian secondary names, whole product codes, old/new prices, unit costs and margins contained.",
+        "Pending/Price change/New product statuses use calm pills; Approve uses primary and Reject semantic red tint.",
+        "Tabs and both approval action rows fit without collisions."
+      ],
+      "framingNotes": [
+        "Static pending cards do not establish role-based approval authority or price mutation; the retained guards and business tests do."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": [
+        {
+          "text": "500 g",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "100 g",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "100 گرمی",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ]
+    },
+    {
+      "filename": "settings-phone-dark.png",
+      "scene": "settings",
+      "sourceCommit": "ef4dfcc01172f4c7122c940139339fae4d228f5e",
+      "sha256": "035062738d179eb746900e6207fca77a246160f5929317df8b0171aaa872f139",
+      "openedIndividually": true,
+      "viewMethod": "view_image of this exact fresh PNG, returned individually as its own image block; tall pages were opened at original detail",
+      "reviewStatus": "passed",
+      "reviewPassed": true,
+      "realFailures": [],
+      "referenceChecks": [
+        "Date reminder 30 and waiting-credit reminder 14 remain visible, with both supplier-document language choices set independently to English only.",
+        "Label waitlist fields/languages, optional choices and template dimensions remain readable and contained.",
+        "Print test alignment page is tinted, Archive template destructive, and Save actions primary.",
+        "Template slot preview and complete action area remain visible without footer overlap."
+      ],
+      "framingNotes": [
+        "The selected Returns/date tracking/labels tab is visible in a horizontally scrollable tab strip; neighboring tabs are partly outside that strip framing.",
+        "Screen preview does not prove physical printed alignment or saved-setting persistence."
+      ],
+      "captureMode": "page",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "capturedLanguage": "en",
+      "automatedGeometryFailures": [],
+      "unitFragments": []
+    }
+  ]
+}

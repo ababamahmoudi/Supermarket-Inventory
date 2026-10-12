@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { invoiceImage, setBranch, signIn } from "./helpers";
+import { invoiceImage, openShellAction, setBranch, signIn } from "./helpers";
 
 const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
@@ -85,7 +85,7 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await expect(
     page.getByLabel("Upload a PDF or photo", { exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Demo", exact: true }).click();
+  await (await openShellAction(page, "Demo")).click();
   await page
     .getByRole("menuitem", { name: "Use fictional demo answer", exact: true })
     .click();

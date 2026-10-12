@@ -22,6 +22,7 @@ import {
   DataTable,
   DateField,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -45,7 +46,7 @@ function InvoiceVersionLinks({ entry }: { entry: Activity }) {
   const route = `#invoices?id=${encodeURIComponent(entry.entity_id)}&version=`;
   return (
     <div className="actions history-invoice-version-links">
-      <Button asChild variant="secondary" size="sm">
+      <Button asChild variant="plain" size="sm">
         <a href={`${route}${encodeURIComponent(after.version_id)}`}>
           {t("View corrected", "نمایش اصلاح‌شده")}
         </a>
@@ -324,7 +325,7 @@ export default function History() {
           onChange={setTo}
         />
         <Button
-          variant="ghost"
+          variant="plain"
           onClick={() => {
             setPerson("all");
             setBranch("all");
@@ -420,7 +421,7 @@ export default function History() {
                       <InvoiceVersionLinks entry={entry} />
                     ) : canReverse(state, entry, historyContext, "revert") ? (
                       <Button
-                        variant="secondary"
+                        variant="neutral"
                         size="sm"
                         onClick={() => {
                           setSelected(entry.id);
@@ -453,12 +454,16 @@ export default function History() {
           }
         }}
         title={t("Revert change", "بازگردانی تغییر")}
+        description={
+          selectedEntry
+            ? historyActionLabel(selectedEntry.action, lang)
+            : undefined
+        }
         className="history-revert-dialog"
       >
         {selectedEntry && (
           <>
             <div className="history-revert-context">
-              <strong>{historyActionLabel(selectedEntry.action, lang)}</strong>
               <span>
                 {demoUserLabel(selectedEntry.by, lang)} ·{" "}
                 {branchLabel(state.config, selectedEntry.branch, lang)} ·{" "}
@@ -512,9 +517,9 @@ export default function History() {
                   )}
               </p>
             )}
-            <div className="actions c3-dialog-actions">
+            <DialogActions>
               <Button
-                variant="secondary"
+                variant="neutral"
                 onClick={() => {
                   setSelected(null);
                   setError("");
@@ -536,7 +541,7 @@ export default function History() {
               >
                 {t("Revert change", "بازگردانی تغییر")}
               </Button>
-            </div>
+            </DialogActions>
           </>
         )}
       </Dialog>

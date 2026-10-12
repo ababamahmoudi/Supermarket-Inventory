@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, signIn, visitPage, resetDemo } from "./helpers";
+import {
+  chooseOption,
+  signIn,
+  visitPage,
+  resetDemo,
+  setLanguage,
+} from "./helpers";
 
 async function openSettings(page: Page) {
   await signIn(page, "Supervisor");
@@ -77,9 +83,7 @@ test("Rice uses unrounded raw and the same result renders in Persian RTL", async
   await cost.fill("3.1921");
   await expect(sandbox.getByText("3.99", { exact: true })).toBeVisible();
   await expect(sandbox.getByText("$4.99", { exact: true })).toBeVisible();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "آزمایش قیمت", exact: true }),

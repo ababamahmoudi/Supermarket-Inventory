@@ -24,6 +24,72 @@ def url(path: Path, base: Path) -> str:
 def load(path: Path):
     return json.loads(path.read_text(encoding='utf-8'))
 
+def review_failure_signals(record, label):
+    """Read explicit outcomes, not intentional differences or framing prose.
+
+    The five reviewers use several JSON schemas. An empty per-image
+    realFailures array cannot override a failed report-level verdict or a
+    positive visual-failure count. Only the report/entry and its summary are
+    inspected; reference notes and historical failure-resolution records are
+    not current failure verdicts.
+    """
+    if not isinstance(record, dict):
+        return [f'{label}: review record is not an object']
+    signals=[]
+    pass_flags=('reviewPassed','overallReviewPassed','visualPass','visualPassed',
+                'overallPassed','passed','strictGalleryEligible')
+    failure_flags=('diagnostic','failed','hasFailures','hasVisualFailures')
+    failure_payloads=('realFailures','visualFailures','actualVisualFailures',
+                      'presentationIssues','geometry_failures',
+                      'capture_state_failures','business_failures_observed',
+                      'observed_business_or_overlap_failures',
+                      'trueFunctionalOrGeometryFailuresObserved',
+                      'actualCopyIssues','automatedGeometryFailures',
+                      'browserErrors','browser_errors')
+    failure_counts=('realFailureCount','totalVisualFailures',
+                    'totalAutomatedFailures','screensWithVisualFailures')
+    failed_statuses={'failed','fail','failure','rejected','blocked','diagnostic',
+                     'not passed','not final proof','needs correction',
+                     'needs corrections','visual corrections required'}
+    def normalized(value):
+        return re.sub(r'[\s_-]+',' ',value.strip().lower())
+    containers=[(label,record)]
+    if 'summary' in record:
+        if not isinstance(record['summary'],dict):
+            signals.append(f'{label}.summary: not an object')
+        else:
+            containers.append((label+'.summary',record['summary']))
+    for location,value in containers:
+        for key in pass_flags:
+            flag=value.get(key)
+            if flag is False or (isinstance(flag,str) and
+                                 normalized(flag) in failed_statuses|{'false'}):
+                signals.append(f'{location}.{key}: explicit failed verdict')
+        for key in failure_flags:
+            flag=value.get(key)
+            if flag is True or (isinstance(flag,str) and
+                                normalized(flag) in failed_statuses|{'true'}):
+                signals.append(f'{location}.{key}: failed/diagnostic verdict')
+        for key in failure_payloads:
+            if value.get(key):
+                signals.append(f'{location}.{key}: unresolved failures recorded')
+        for key in failure_counts:
+            count=value.get(key)
+            if count is not None and (not isinstance(count,(int,float)) or
+                                      isinstance(count,bool) or count<0):
+                signals.append(f'{location}.{key}: invalid failure count')
+            elif count:
+                signals.append(f'{location}.{key}: {count} unresolved failures')
+        for key in ('status','reviewStatus','overallStatus','reviewResult'):
+            status=value.get(key)
+            if isinstance(status,str):
+                verdict=normalized(status)
+                if verdict in failed_statuses or any(
+                    verdict.startswith(failed+':') for failed in failed_statuses
+                ):
+                    signals.append(f'{location}.{key}: {status}')
+    return signals
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--stage',choices=['c6','c7'],required=True)
@@ -78,21 +144,24 @@ def main():
         path=docs/r['path'];sha=digest(path)
         if sha!=r.get('sha256') or path.stat().st_size!=r.get('bytes'):raise ValueError(f'Reference hash/size mismatch: {path}')
         refs.append({**r,'url':url(path,base),'kind':'Klead retouch' if '/klead-v1/' in r['path'] else 'Owner bug note'})
-    reviews={}
+    reviews={};review_outcomes=[]
     for path in a.visual_review:
         d=load(path)
         if d.get('sourceCommit')!=a.source_commit:raise ValueError(f'Wrong individual-review source: {path}')
+        review_outcomes+=review_failure_signals(d,path.name)
+        if not isinstance(d.get('reviews'),list):raise ValueError(f'Individual review entries must be an array: {path}')
         for r in d.get('reviews',[]):
+            if not isinstance(r,dict):raise ValueError(f'Individual review entry must be an object: {path}')
             filename=r.get('filename');s=next((s for s in screens if s['filename']==filename),None)
             if r.get('sourceCommit',a.source_commit)!=a.source_commit:raise ValueError(f'Review entry source mismatch: {filename}')
             if not s or r.get('sha256')!=s['sha256']:raise ValueError(f'Review image identity mismatch: {filename}')
             if filename in reviews:raise ValueError(f'Duplicate review: {filename}')
             reviews[filename]=r
+            review_outcomes+=review_failure_signals(r,filename)
     for s in screens:s['individualReview']=reviews.get(s['filename'])
-    review_count=sum(bool(s['individualReview'] and s['individualReview'].get('openedIndividually')) for s in screens)
+    review_count=sum(bool(s['individualReview'] and s['individualReview'].get('openedIndividually') is True) for s in screens)
     if review_count!=len(screens):warnings.append(f'Individual review records supplied for {review_count}/{len(screens)} images; capture/hash verification is not visual approval.')
-    review_failures=[s['filename'] for s in screens if s['individualReview'] and s['individualReview'].get('realFailures')]
-    if review_failures:warnings.append(f'{len(review_failures)} individual reviews record unresolved real failures.')
+    if review_outcomes:warnings.append('Review outcome gate failed: '+'; '.join(review_outcomes)+'.')
     if warnings and not a.diagnostic:raise ValueError('Final gallery gate failed: '+' '.join(warnings))
     differences=load(a.differences_json) if a.differences_json else []
     if not isinstance(differences,list):raise ValueError('Differences JSON must be an array of explicit notes')

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signIn, resetDemo } from "./helpers";
+import { signIn, resetDemo, openShellAction } from "./helpers";
 
 test("username sign-in, correct role menu, RTL and offline operation", async ({
   page,
@@ -34,13 +34,9 @@ test("username sign-in, correct role menu, RTL and offline operation", async ({
   if (testInfo.project.name === "phone") await page.keyboard.press("Escape");
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await (await openShellAction(page, "Switch to Persian")).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await page
-    .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
-    .click();
+  await (await openShellAction(page, "تغییر به انگلیسی")).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
   await expect(page.locator("body")).toHaveJSProperty(
     "scrollWidth",

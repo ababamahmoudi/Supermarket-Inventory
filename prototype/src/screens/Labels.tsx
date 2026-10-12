@@ -55,6 +55,7 @@ import {
   Checkbox,
   DataTable,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -69,6 +70,7 @@ import "./labels-a2.css";
 import "./labels-b.css";
 import "./labels-c1.css";
 import "./c3-labels-notes-offers.css";
+import "./labels-klead.css";
 const defaultFields = {
   name: true,
   description: true,
@@ -812,6 +814,9 @@ function TemplateDesigner({
       className="labels-template-designer"
       title={t("Templates", "قالب‌ها")}
     >
+      <p className="labels-record-caption muted">
+        <bdi dir="auto">{templateName(draft, t)}</bdi>
+      </p>
       <WhatsMissing
         issues={
           error
@@ -849,7 +854,7 @@ function TemplateDesigner({
             ]}
           />
         </Field>
-        <Button variant="secondary" onClick={() => choose("")}>
+        <Button variant="neutral" onClick={() => choose("")}>
           {t("New template", "قالب جدید")}
         </Button>
         <Checkbox checked={showArchived} onChange={setShowArchived}>
@@ -964,10 +969,9 @@ function TemplateDesigner({
               {t("Template saved.", "قالب ذخیره شد.")}
             </p>
           )}
-          <div className="label-designer-actions">
-            <Button onClick={save}>{t("Save template", "ذخیره قالب")}</Button>
+          <DialogActions className="label-designer-actions">
             <Button
-              variant="secondary"
+              variant="tinted"
               onClick={printAlignment}
               disabled={draft.archived}
             >
@@ -975,7 +979,7 @@ function TemplateDesigner({
             </Button>
             {id && (
               <Button
-                variant="secondary"
+                variant="neutral"
                 onClick={duplicate}
                 disabled={draft.archived}
               >
@@ -985,7 +989,7 @@ function TemplateDesigner({
             {id && (
               <Button
                 id="label-template-restore"
-                variant={draft.archived ? "secondary" : "danger"}
+                variant={draft.archived ? "neutral" : "destructive"}
                 onClick={() => setArchived(!draft.archived)}
               >
                 {draft.archived
@@ -993,7 +997,8 @@ function TemplateDesigner({
                   : t("Archive template", "بایگانی قالب")}
               </Button>
             )}
-          </div>
+            <Button onClick={save}>{t("Save template", "ذخیره قالب")}</Button>
+          </DialogActions>
         </div>
         <SheetPreview
           template={draft}
@@ -1634,6 +1639,7 @@ export function Labels() {
                   />
                 </Field>
                 <Button
+                  variant="tinted"
                   onClick={() => {
                     if (
                       run((next) =>
@@ -1703,7 +1709,7 @@ export function Labels() {
                   )}
                 </span>
                 <Button
-                  variant="danger"
+                  variant="destructive"
                   disabled={waiting.length === 0}
                   onClick={() =>
                     run((next) => clearLabelWaitlist(next, branch, actor))
@@ -1860,7 +1866,7 @@ export function Labels() {
                           </td>
                           <td>
                             <Button
-                              variant="danger"
+                              variant="destructive"
                               size="sm"
                               onClick={() =>
                                 run((next) =>
@@ -1983,8 +1989,9 @@ export function Labels() {
                   )}
                 </p>
               )}
-              <div className="label-designer-actions">
+              <DialogActions className="label-designer-actions">
                 <Button
+                  variant="tinted"
                   disabled={
                     printing ||
                     !template ||
@@ -1995,7 +2002,7 @@ export function Labels() {
                 >
                   {t("Print labels", "چاپ برچسب‌ها")}
                 </Button>
-              </div>
+              </DialogActions>
             </Card>
           </>
         )}
@@ -2036,9 +2043,9 @@ export function Labels() {
             "فقط تعداد چاپ‌شده و تأییدشده از فهرست انتظار خارج می‌شود.",
           )}
         </p>
-        <div className="dialog-actions">
+        <DialogActions>
           <Button
-            variant="secondary"
+            variant="neutral"
             onClick={() => {
               setConfirmationOpen(false);
               setPendingPrint(null);
@@ -2064,7 +2071,7 @@ export function Labels() {
           >
             {t("Yes", "بله")}
           </Button>
-        </div>
+        </DialogActions>
       </Dialog>
     </>
   );

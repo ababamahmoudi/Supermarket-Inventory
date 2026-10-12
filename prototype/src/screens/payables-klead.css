@@ -1,0 +1,52 @@
+@media screen {
+  .payables-supplier-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-inline-size: 0;
+  }
+  .payables-supplier-link > a:first-child,
+  .payables-reference-link {
+    color: var(--text);
+    font-weight: var(--font-weight-body);
+    text-decoration: none;
+  }
+  .payables-supplier-link > a:first-child:hover,
+  .payables-reference-link:hover {
+    color: var(--accent);
+  }
+  .payables-payment-form .form-grid,
+  .payables-entry-form .form-grid {
+    margin-block: 24px;
+  }
+  .payables-payment-form .ui-number,
+  .payables-entry-form .ui-number {
+    max-inline-size: 180px;
+  }
+  .payables-payment-form .form-section {
+    margin-block-start: 24px;
+    padding: 20px;
+    border-radius: var(--radius-search);
+    background: var(--klead-hover);
+  }
+  .payables-payment-form .form-section > h3 {
+    margin-block-end: 20px;
+  }
+  .payables-payment-form .form-section > .field {
+    margin-block-end: 20px;
+  }
+  .payables-report-heading {
+    display: grid;
+    gap: 8px;
+  }
+  .payables-report-heading h2,
+  .payables-report-heading p {
+    margin: 0;
+  }
+  .payables-report-heading p {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+}

@@ -57,6 +57,7 @@
   --shadow-dialog: 0 24px 64px rgba(20, 26, 43, 0.24);
   --shadow-menu: 0 16px 40px rgba(20, 26, 43, 0.16);
   --shadow-row-divider: inset 0 -1px var(--row-divider);
+  --table-row-rule: linear-gradient(var(--row-divider), var(--row-divider));
   --shadow-selected: inset 0 0 0 1px var(--accent);
   --shadow-thumb: 0 1px 3px rgba(20, 26, 43, 0.1);
   --shadow-focus: 0 0 0 4px var(--klead-focus-ring);

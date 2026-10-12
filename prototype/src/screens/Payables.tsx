@@ -31,6 +31,7 @@ import {
   Card,
   Checkbox,
   DataTable,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -40,6 +41,7 @@ import {
   NumberField,
   SummaryTile,
   Tabs,
+  TableRowLink,
   ConfirmDialog,
   useTableColumns,
 } from "../ui";
@@ -55,6 +57,7 @@ import {
 } from "../operations";
 import type { Branch } from "../types";
 import "./filters-a2.css";
+import "./payables-klead.css";
 
 export function Payables() {
   const { state, update, role, branch, setBranch, user, lang, t } = useDemo();
@@ -218,6 +221,13 @@ export function Payables() {
     setOverdueOnly(false);
     setWithBalance(false);
     changeBranch("all", true);
+  };
+  const openSupplier = (name: string) => {
+    setSupplier(name);
+    setPaymentOpen(false);
+    setEntryOpen(false);
+    setAllocations(null);
+    setDisputeId(null);
   };
   const summary = supplierBalanceSummary(
     state,
@@ -614,21 +624,46 @@ export function Payables() {
           </thead>
           <tbody>
             {overview.map((item) => (
-              <tr key={item.supplier}>
+              <tr
+                key={item.supplier}
+                data-row-href="#payables"
+                aria-label={item.supplier}
+                onClick={(event) => {
+                  if (!(event.target as HTMLElement).closest("a,button")) {
+                    event.preventDefault();
+                    openSupplier(item.supplier);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    event.target === event.currentTarget &&
+                    ["Enter", " "].includes(event.key)
+                  ) {
+                    event.preventDefault();
+                    openSupplier(item.supplier);
+                  }
+                }}
+              >
                 <td>
-                  <a
-                    href="#payables"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setSupplier(item.supplier);
-                      setPaymentOpen(false);
-                      setEntryOpen(false);
-                      setAllocations(null);
-                      setDisputeId(null);
-                    }}
-                  >
-                    <LtrText>{item.supplier}</LtrText>
-                  </a>
+                  <div className="payables-supplier-link">
+                    <a
+                      href="#payables"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openSupplier(item.supplier);
+                      }}
+                    >
+                      <LtrText>{item.supplier}</LtrText>
+                    </a>
+                    <TableRowLink
+                      href="#payables"
+                      aria-label={`${t("View", "نمایش")} ${item.supplier}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openSupplier(item.supplier);
+                      }}
+                    />
+                  </div>
                 </td>
                 <td className="branch-label">
                   {configuredBranchLabel(state.config, branch, lang)}
@@ -714,21 +749,21 @@ export function Payables() {
             />
             <div className="actions">
               <Button
-                variant="secondary"
+                variant="tinted"
                 disabled={mode === "month" && !validMonth}
                 onClick={() => window.print()}
               >
                 {t("Print summary", "چاپ خلاصه")}
               </Button>
               <Button
-                variant="secondary"
+                variant="neutral"
                 disabled={mode === "month" && !validMonth}
                 onClick={csv}
               >
                 {t("Export CSV", "خروجی CSV")}
               </Button>
               <Button
-                variant="secondary"
+                variant="neutral"
                 onClick={() => {
                   setEntryOpen(!entryOpen);
                   setPaymentOpen(false);
@@ -740,7 +775,7 @@ export function Payables() {
                 )}
               </Button>
               <Button
-                variant="secondary"
+                variant="plain"
                 onClick={() => {
                   setSupplier("");
                   setPaymentOpen(false);
@@ -806,22 +841,32 @@ export function Payables() {
                   {summary.pending_returns.map((claim) => (
                     <tr key={claim.memo_id}>
                       <td>
-                        <Button asChild variant="secondary" size="sm">
-                          <a
-                            href={`#return?id=${encodeURIComponent(claim.return_id)}`}
-                          >
-                            {t("View return", "نمایش مرجوعی")}
-                          </a>
-                        </Button>
+                        <a
+                          href={`#return?id=${encodeURIComponent(claim.return_id)}`}
+                          aria-label={t("View return", "نمایش مرجوعی")}
+                          className="payables-reference-link"
+                        >
+                          {t("Return", "مرجوعی")}{" "}
+                          <LtrText>
+                            #
+                            {state.returns
+                              .filter(
+                                (item) =>
+                                  item.company_id === context.company_id,
+                              )
+                              .findIndex(
+                                (item) => item.id === claim.return_id,
+                              ) + 1}
+                          </LtrText>
+                        </a>
                       </td>
                       <td>
-                        <Button asChild variant="secondary" size="sm">
-                          <a
-                            href={`#return?id=${encodeURIComponent(claim.return_id)}&memo=${encodeURIComponent(claim.reference)}`}
-                          >
-                            <LtrText>{claim.reference}</LtrText>
-                          </a>
-                        </Button>
+                        <a
+                          href={`#return?id=${encodeURIComponent(claim.return_id)}&memo=${encodeURIComponent(claim.reference)}`}
+                          className="payables-reference-link"
+                        >
+                          <LtrText>{claim.reference}</LtrText>
+                        </a>
                       </td>
                       <td>
                         <Money value={claim.amount} />
@@ -835,7 +880,7 @@ export function Payables() {
           {paymentOpen && (
             <Card
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}
-              className="form-card"
+              className="form-card payables-payment-form"
             >
               <WhatsMissing issues={validationIssues} />
               <p className="muted">
@@ -914,7 +959,7 @@ export function Payables() {
                 </Field>
               </div>
               <Button
-                variant="secondary"
+                variant="neutral"
                 onClick={() => {
                   if (!collectMissing("payment", false, true)) return;
                   try {
@@ -995,14 +1040,16 @@ export function Payables() {
                       )}
                     </p>
                   )}
-                  <Button
-                    onClick={() => {
-                      if (collectMissing("payment", true))
-                        setConfirmMoney("payment");
-                    }}
-                  >
-                    {t("Confirm and record payment", "تأیید و ثبت پرداخت")}
-                  </Button>
+                  <DialogActions>
+                    <Button
+                      onClick={() => {
+                        if (collectMissing("payment", true))
+                          setConfirmMoney("payment");
+                      }}
+                    >
+                      {t("Confirm and record payment", "تأیید و ثبت پرداخت")}
+                    </Button>
+                  </DialogActions>
                 </section>
               )}
             </Card>
@@ -1010,7 +1057,7 @@ export function Payables() {
           {entryOpen && (
             <Card
               title={t("Record ledger entry", "ثبت ردیف دفتر")}
-              className="form-card"
+              className="form-card payables-entry-form"
             >
               <WhatsMissing issues={validationIssues} />
               <div className="form-grid">
@@ -1123,19 +1170,21 @@ export function Payables() {
                   />
                 </Field>
               </div>
-              <Button
-                onClick={() => {
-                  if (collectMissing("entry")) setConfirmMoney("entry");
-                }}
-              >
-                {t("Record ledger entry", "ثبت ردیف دفتر")}
-              </Button>
+              <DialogActions>
+                <Button
+                  onClick={() => {
+                    if (collectMissing("entry")) setConfirmMoney("entry");
+                  }}
+                >
+                  {t("Record ledger entry", "ثبت ردیف دفتر")}
+                </Button>
+              </DialogActions>
             </Card>
           )}
           {disputeId && (
             <Card
               title={t("Record supplier dispute", "ثبت اختلاف تأمین‌کننده")}
-              className="form-card"
+              className="form-card payables-dispute-form"
             >
               <WhatsMissing issues={validationIssues} />
               <Field
@@ -1155,7 +1204,10 @@ export function Payables() {
                   }}
                 />
               </Field>
-              <div className="actions">
+              <DialogActions>
+                <Button variant="neutral" onClick={() => setDisputeId(null)}>
+                  {t("Close", "بستن")}
+                </Button>
                 <Button
                   onClick={() => {
                     if (!collectMissing("dispute")) return;
@@ -1181,10 +1233,7 @@ export function Payables() {
                 >
                   {t("Record dispute", "ثبت اختلاف")}
                 </Button>
-                <Button variant="secondary" onClick={() => setDisputeId(null)}>
-                  {t("Close", "بستن")}
-                </Button>
-              </div>
+              </DialogActions>
             </Card>
           )}
           {branch === "all" && (
@@ -1357,7 +1406,8 @@ export function Payables() {
                         </td>
                         <td className="no-print">
                           <Button
-                            variant="secondary"
+                            variant="neutral"
+                            size="sm"
                             onClick={() => {
                               setPaymentOpen(false);
                               setEntryOpen(false);

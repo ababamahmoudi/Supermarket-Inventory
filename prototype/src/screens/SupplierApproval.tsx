@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 import { branchLabel } from "../settings";
 import { useDemo } from "../store";
 import { demoUserLabel, LtrText } from "../presentation";
@@ -9,8 +10,9 @@ import {
   missingInvoiceSupplierDetails,
 } from "../supplier-editor";
 import type { Approval } from "../types";
-import { Badge, Button, Card, ConfirmDialog } from "../ui";
+import { Badge, Button, Card, ConfirmDialog, Menu, MenuItem } from "../ui";
 import "./supplier-approval.css";
+import "./suppliers-c7.css";
 import { SupplierEditor } from "./SupplierEditor";
 
 /** Shared by the approvals page and the dashboard queue; supplier decisions have no price scope. */
@@ -129,13 +131,24 @@ export function SupplierApproval({
           ? t("Approve", "تأیید")
           : t("Confirm supplier", "تأیید تأمین‌کننده")}
       </Button>
-      <Button
-        size={compact ? "sm" : "default"}
-        variant="secondary"
-        onClick={() => open("reject")}
-      >
-        {t("Reject", "رد کردن")}
-      </Button>
+      {compact ? (
+        <Menu
+          label={t("More", "بیشتر")}
+          icon={<MoreHorizontal size={18} />}
+          iconOnly
+        >
+          <MenuItem
+            className="supplier-destructive-action"
+            onClick={() => open("reject")}
+          >
+            {t("Reject", "رد کردن")}
+          </MenuItem>
+        </Menu>
+      ) : (
+        <Button variant="destructive" onClick={() => open("reject")}>
+          {t("Reject", "رد کردن")}
+        </Button>
+      )}
     </div>
   );
   return (

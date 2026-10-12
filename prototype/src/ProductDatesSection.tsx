@@ -48,7 +48,17 @@ export function ProductDatesSection({ product }: { product: Product }) {
               companyDate(state.config),
             );
             return (
-              <li key={entry.id} className="product-quiet-row">
+              <li
+                key={entry.id}
+                className="product-quiet-row"
+                data-tone={
+                  days < 0
+                    ? "danger"
+                    : days <= productReminderDays(state, product)
+                      ? "pending"
+                      : "neutral"
+                }
+              >
                 <span className="product-quiet-icon">
                   <CalendarClock size={20} aria-hidden="true" />
                 </span>

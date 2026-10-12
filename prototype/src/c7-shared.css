@@ -1,0 +1,509 @@
+/* Klead screen presentation. Printed documents keep their existing physical styles. */
+@media screen {
+  :root .ui-card.card {
+    padding: 24px;
+  }
+  :root .ui-card > h2,
+  :root .card-heading > h2,
+  :root .dashboard-card-header > h2 {
+    margin-block: 0 20px;
+  }
+  :root .field-optional {
+    color: var(--text-muted);
+    font-weight: var(--font-weight-body);
+  }
+  :root .ui-dialog-header > .ui-icon-button {
+    background: var(--neutral-fill);
+  }
+  .ui-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-block-start: 16px;
+    margin-block-start: 24px;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .ui-menu-trigger:not(.ui-icon-button) {
+    background: var(--neutral-fill);
+    color: var(--text);
+  }
+  :root
+    .main-content
+    .page-header:not(:where(.ui-card *, .ui-dialog *))
+    .ui-button.button.button-neutral:not(.ui-icon-button):not(
+      :where(.ui-card *, .ui-dialog *)
+    ) {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+  }
+  :root .ui-menu-item {
+    min-block-size: 40px;
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+    border: 0;
+    border-radius: var(--radius-small);
+    background: var(--color-clear);
+    color: var(--text);
+  }
+  :root .ui-menu-item:hover:not(:disabled),
+  :root .ui-menu-item:focus-visible {
+    background: var(--hover-fill);
+  }
+  .ui-menu-submenu-trigger {
+    display: flex;
+    justify-content: space-between;
+    inline-size: 100%;
+  }
+  .ui-submenu-items {
+    margin-block-start: 8px;
+    padding: 8px;
+    background: var(--surface-soft);
+    border-radius: var(--radius-control);
+  }
+  :root .ui-tabs,
+  :root .ui-segments {
+    border: 0;
+    padding: 4px;
+    gap: 4px;
+    background: var(--segment-track);
+    border-radius: var(--radius-round);
+  }
+  :root .ui-tabs button,
+  :root .ui-segments button {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-caption);
+    border: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root .ui-tabs button[aria-selected="true"],
+  :root .ui-segments button[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-thumb);
+  }
+  :root .filter-toolbar > .ui-select,
+  :root .filter-toolbar > .ui-columns-trigger,
+  :root .filter-toolbar > .button-neutral,
+  :root .filter-toolbar .filter-count .ui-columns-trigger {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+    color: var(--text);
+  }
+  :root .ui-card .filter-toolbar > .ui-select,
+  :root .ui-card .filter-toolbar > .button-neutral {
+    background: var(--field-fill);
+    border: 0;
+  }
+  :root .filter-toolbar .filter-count .ui-button.button.button-neutral {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+  }
+  :root
+    .ui-card
+    .filter-toolbar
+    .filter-count
+    .ui-button.button.button-neutral {
+    background: var(--neutral-fill);
+    border: 0;
+  }
+  :root .ui-card .filter-toolbar .filter-search-pill {
+    background: var(--field-fill);
+    border: 0;
+  }
+  :root .lookup-page .lookup-category-chips .ui-button.filter-chip,
+  :root .lookup-page .lookup-category-more.ui-button.ui-menu-trigger {
+    border: 1px solid var(--page-control-border);
+    border-radius: var(--radius-round);
+    background: var(--surface);
+    color: var(--text);
+  }
+  :root .lookup-page .lookup-category-chips .ui-button.filter-chip.is-selected,
+  :root
+    .lookup-page
+    .lookup-category-more.ui-button.ui-menu-trigger.is-selected {
+    border-color: var(--color-clear);
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+  }
+  :root .ui-card .ui-menu-trigger.ui-icon-button:not(:focus-visible) {
+    border: 0;
+    outline: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root .product-editor-dialog > .dialog-description {
+    padding: 0 24px 16px;
+  }
+  :root .product-date-editor .product-reminder-setting input.ui-number,
+  :root .product-date-editor > .field .ui-input,
+  :root .return-item-form .ui-input,
+  :root .return-item-form .field input:not([type="file"]),
+  :root .return-item-form .field textarea {
+    background: var(--surface);
+  }
+  :root .return-item-form .ui-date {
+    inline-size: min(100%, 280px);
+    max-inline-size: 280px;
+  }
+  :root .return-lines-card > .banner.info {
+    display: block;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: var(--line-height-body);
+  }
+  :root .return-evidence-card .history-row > p {
+    max-inline-size: 100%;
+  }
+  :root .return-evidence-card .return-evidence-reference {
+    display: inline-block;
+    white-space: nowrap;
+    max-inline-size: 100%;
+  }
+  :root .ui-data-table tbody tr:not(.table-expanded-row):nth-child(n) {
+    background-color: var(--color-clear);
+    background-image: var(--table-row-rule);
+    background-size: calc(100% - 32px) 1px;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    block-size: 64px;
+  }
+  :root
+    .ui-data-table.table-wrap.is-responsive
+    > table
+    > tbody
+    > tr:not(.table-expanded-row):nth-child(n) {
+    background-image: var(--table-row-rule);
+    background-size: calc(100% - 32px) 1px;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+  }
+  :root .ui-data-table tbody tr:not(.table-expanded-row):hover {
+    background-color: var(--hover-fill);
+  }
+  :root .ui-data-table tbody tr.is-selected,
+  :root .ui-data-table tbody tr[aria-selected="true"] {
+    background-color: var(--accent-soft);
+  }
+  :root .ui-data-table td,
+  :root .ui-data-table th {
+    background: var(--color-clear);
+    border: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root
+    .ui-data-table.is-responsive
+    > table
+    > tbody
+    > tr:not(.table-expanded-row)
+    > td {
+    border: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root .ui-data-table:not(.is-mobile) .ui-badge.badge:not(.offer-pill) {
+    padding: 0;
+    background: var(--color-clear);
+  }
+  :root .ui-badge .ui-status-dot {
+    display: none;
+  }
+  :root
+    .ui-data-table:not(.is-mobile)
+    .ui-badge:not(.offer-pill)
+    .ui-status-dot {
+    display: inline-block;
+    inline-size: 6px;
+    block-size: 6px;
+    flex: 0 0 6px;
+  }
+  :root .ui-data-table .ui-badge.pending {
+    color: var(--pending);
+  }
+  :root .ui-data-table .ui-badge.approved {
+    color: var(--approved);
+  }
+  :root .ui-data-table .ui-badge.danger {
+    color: var(--danger);
+  }
+  :root .ui-data-table .ui-badge.neutral {
+    color: var(--neutral);
+  }
+  :root .ui-data-table .ui-badge.info,
+  :root .ui-data-table .ui-badge.progress {
+    color: var(--info);
+  }
+  .ui-badge.info .ui-status-dot,
+  .ui-badge.progress .ui-status-dot {
+    background: var(--accent);
+  }
+  :root .brand-logo-tile {
+    border: 0;
+    box-shadow: var(--shadow-none);
+    background: var(--color-clear);
+  }
+  :root[data-theme="dark"] .brand-logo-tile {
+    background: var(--klead-white);
+  }
+  .sidebar .nav-count {
+    color: var(--text-muted);
+    background: var(--neutral-fill);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-caption);
+  }
+  .sidebar .nav-count.nav-count-attention {
+    color: var(--accent-tint-text);
+    background: var(--accent-soft);
+  }
+  :root .dashboard-layout,
+  :root .dashboard-main,
+  :root .dashboard-row,
+  :root .dashboard-aside {
+    gap: 24px;
+  }
+  :root .dashboard-row {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  :root .dashboard-row > .card:first-child {
+    grid-column: span 8;
+  }
+  :root .dashboard-row > .card:last-child {
+    grid-column: span 4;
+  }
+  :root .dashboard-row.dashboard-row-halves > .card {
+    grid-column: span 6;
+  }
+  :root .dashboard-row > .card {
+    min-inline-size: 0;
+  }
+  :root .dashboard-main {
+    container: none;
+  }
+  :root .dashboard-queue-row:nth-child(n),
+  :root .dashboard-list-row:nth-child(n) {
+    background: var(--color-clear);
+    border-radius: var(--radius-none);
+    border-block-end: 1px solid var(--row-divider);
+    padding: 16px 0;
+  }
+  :root .dashboard-queue-row:last-child,
+  :root .dashboard-list-row:last-child {
+    border-block-end: 0;
+  }
+  :root .dashboard-queue-product .product-name,
+  :root .dashboard-queue-product .product-name strong,
+  :root .dashboard-queue-product .product-name small {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root .dashboard-card-header {
+    flex-wrap: wrap;
+  }
+  :root .dashboard-card-header h2 {
+    margin: 0;
+  }
+  :root .dashboard-list-copy > strong {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .dashboard-list-copy > .muted,
+  :root .dashboard-queue-branch {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .dashboard-list-row {
+    grid-template-areas: "copy action" "pill pill";
+  }
+  :root .dashboard-kpis {
+    gap: 16px;
+  }
+  :root .kpi-card {
+    padding: 20px;
+    min-block-size: 144px;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    text-align: start;
+  }
+  :root .kpi-label {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-caption);
+    line-height: var(--line-height-body);
+    min-block-size: 40px;
+  }
+  :root .kpi-value {
+    font-size: var(--font-size-large-title);
+    font-weight: var(--font-weight-large-title);
+    line-height: var(--line-height-large-title);
+  }
+  :root .kpi-detail {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .dashboard-aside .card {
+    background: var(--surface);
+    padding: 24px;
+  }
+  :root .dashboard-activity-item p {
+    font-size: var(--font-size-body);
+  }
+  :root .dashboard-activity-item time {
+    font-size: var(--font-size-caption);
+  }
+  @media (max-width: 759px) {
+    :root .ui-card.card {
+      padding: 20px;
+    }
+    :root .topbar {
+      block-size: 60px;
+      min-block-size: 60px;
+      max-block-size: 60px;
+      padding: 12px 16px;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .topbar::after {
+      display: none;
+    }
+    :root .topbar > .branch-pill {
+      flex: 1 1 auto;
+      max-inline-size: 180px;
+      min-inline-size: 0;
+      order: 1;
+    }
+    :root .topbar > .notifications-menu {
+      order: 2;
+      margin-inline-start: auto;
+    }
+    :root .topbar > .mobile-account-menu {
+      order: 3;
+    }
+    :root .topbar > .mobile-more-menu {
+      order: 4;
+    }
+    :root .topbar > .mobile-account-menu,
+    :root .topbar > .mobile-more-menu {
+      flex: 0 0 36px;
+      min-inline-size: 36px;
+      inline-size: 36px;
+      block-size: 36px;
+    }
+    .mobile-account-menu .user-chip {
+      padding: 0;
+      gap: 0;
+    }
+    .mobile-account-menu .user-chip-copy {
+      display: none;
+    }
+    .mobile-account-menu .user-avatar {
+      inline-size: 36px;
+      block-size: 36px;
+      background: var(--accent-soft);
+      color: var(--accent-tint-text);
+      font-size: var(--font-size-caption);
+      font-weight: var(--font-weight-caption);
+    }
+    :root .ui-menu-item {
+      min-block-size: 44px;
+    }
+    :root
+      .ui-data-table.is-mobile
+      tbody
+      tr:not(.table-expanded-row):nth-child(n) {
+      block-size: auto;
+      background-color: var(--surface-soft);
+      background-image: var(--table-row-rule);
+      background-size: calc(100% - 32px) 1px;
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      border-radius: var(--radius-control);
+    }
+    :root
+      .ui-data-table.is-mobile.is-responsive
+      > table
+      > tbody
+      > tr:not(.table-expanded-row)
+      > td {
+      border: 0;
+      background-image: none;
+      box-shadow: var(--shadow-none);
+    }
+    :root .product-editor-dialog > .dialog-description {
+      padding-inline: 16px;
+    }
+    :root .dashboard-layout,
+    :root .dashboard-main,
+    :root .dashboard-row,
+    :root .dashboard-aside {
+      gap: 16px;
+    }
+    :root .dashboard-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    :root .dashboard-row > .card:first-child,
+    :root .dashboard-row > .card:last-child,
+    :root .dashboard-row.dashboard-row-halves > .card {
+      grid-column: 1 / -1;
+    }
+    :root .dashboard-inline-actions {
+      flex-wrap: wrap;
+    }
+    :root .kpi-card {
+      padding: 16px;
+    }
+  }
+  @media (max-width: 1279px) {
+    :root .return-detail-header {
+      flex-direction: column;
+    }
+    :root .return-header-actions {
+      inline-size: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+@media screen {
+  .table-row-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    flex: 0 0 36px;
+    border-radius: var(--radius-round);
+    color: var(--text-muted);
+    background: var(--color-clear);
+    text-decoration: none;
+  }
+  .table-row-link:hover {
+    background: var(--neutral-fill);
+  }
+  .table-row-link:focus-visible,
+  .ui-data-table tr.is-navigable:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 0;
+    box-shadow: var(--shadow-focus);
+  }
+  .ui-data-table tr.is-navigable {
+    cursor: pointer;
+  }
+}
+@media screen {
+  :root .dashboard-inline-actions {
+    align-items: center;
+  }
+  .dashboard-list-row.is-navigable {
+    cursor: pointer;
+  }
+  .dashboard-list-row.is-navigable:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-focus);
+  }
+  :root .ui-menu-item.is-destructive,
+  :root .ui-menu-item.danger {
+    color: var(--danger);
+  }
+}

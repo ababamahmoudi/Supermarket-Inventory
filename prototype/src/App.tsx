@@ -13,6 +13,7 @@ import {
   LockKeyhole,
   LogOut,
   MessageSquare,
+  MoreHorizontal,
   MapPin,
   Moon,
   Package,
@@ -80,11 +81,13 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  MenuSubmenu,
   Select,
 } from "./ui";
 import "./c5-shell-controls.css";
 import "./klead-tokens.css";
 import "./c6-shared.css";
+import "./c7-shared.css";
 
 export const pages: {
   key: string;
@@ -273,7 +276,7 @@ function Initials({ name }: { name: string }) {
     <span className="user-avatar" aria-hidden="true">
       {name
         .split(" ")
-        .filter((part) => !["Demo", "دمو"].includes(part))
+        .filter(Boolean)
         .map((part) => part[0])
         .slice(0, 2)
         .join("")}
@@ -668,6 +671,7 @@ export default function App() {
     mustChangePassword,
     branch,
     lang,
+    setLang,
     theme,
     setTheme,
     comfortableText,
@@ -961,6 +965,60 @@ export default function App() {
     Admin: ["Admin", "مدیریت"],
   };
 
+  const accountLabel = (
+    <span className="user-chip">
+      <Initials name={demoUserLabel(user.name, lang)} />
+      <span className="user-chip-copy">
+        <strong>{demoUserLabel(user.name, lang)}</strong>
+        <small>
+          <RoleName role={role} />
+        </small>
+      </span>
+    </span>
+  );
+  const accountItems = (
+    <>
+      <MenuItem onClick={lock}>
+        <LockKeyhole size={20} strokeWidth={1.5} aria-hidden="true" />
+        {t("Lock", "قفل")}
+      </MenuItem>
+      <MenuItem onClick={signOut}>
+        <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
+        {t("Sign out", "خروج")}
+      </MenuItem>
+    </>
+  );
+  const demoItems = (
+    <>
+      <p className="helper">
+        {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
+      </p>
+      {demoUsers.map((candidate) => (
+        <MenuItem
+          key={candidate.username}
+          onClick={() => switchDemoUser(candidate.username)}
+        >
+          {t("Switch to", "تغییر به")} {demoUserLabel(candidate.name, lang)}
+        </MenuItem>
+      ))}
+      {page.key === "invoices" &&
+        state.invoice.status !== "empty" &&
+        state.invoice.status !== "posted" && (
+          <MenuItem
+            onClick={() =>
+              window.dispatchEvent(new Event("arzon:demo-invoice-answer"))
+            }
+          >
+            {t("Use fictional demo answer", "استفاده از پاسخ نمونهٔ خیالی")}
+          </MenuItem>
+        )}
+      <MenuItem onClick={() => setResetOpen(true)}>
+        <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
+        {t("Reset demo", "بازنشانی دمو")}
+      </MenuItem>
+    </>
+  );
+
   return (
     <div
       className={`app-shell ${effectiveCollapsed ? "is-collapsed" : ""} ${menuOpen ? "menu-open" : ""}`}
@@ -1064,13 +1122,17 @@ export default function App() {
                         }
                         onClick={() => setMenuOpen(false)}
                       >
-                        <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                        <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
                         <span className="nav-item-label">
                           {t(item.en, item.fa)}
                         </span>
                         {count > 0 && (
                           <>
-                            <span className="nav-count">{count}</span>
+                            <span
+                              className={`nav-count ${["approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
+                            >
+                              {count}
+                            </span>
                             <span
                               className="nav-count-dot"
                               aria-hidden="true"
@@ -1085,33 +1147,20 @@ export default function App() {
             ) : null;
           })}
         </nav>
-        <div className="sidebar-user">
-          <Menu
-            className="user-menu"
-            showChevron={false}
-            aria-label={t("User menu", "منوی کاربر")}
-            label={
-              <span className="user-chip">
-                <Initials name={demoUserLabel(user.name, lang)} />
-                <span className="user-chip-copy">
-                  <strong>{demoUserLabel(user.name, lang)}</strong>
-                  <small>
-                    <RoleName role={role} />
-                  </small>
-                </span>
-              </span>
-            }
-          >
-            <MenuItem onClick={lock}>
-              <LockKeyhole size={20} strokeWidth={1.5} aria-hidden="true" />
-              {t("Lock", "قفل")}
-            </MenuItem>
-            <MenuItem onClick={signOut}>
-              <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
-              {t("Sign out", "خروج")}
-            </MenuItem>
-          </Menu>
-        </div>
+        {!isMobile && (
+          <>
+            <div className="sidebar-user">
+              <Menu
+                className="user-menu"
+                showChevron={false}
+                aria-label={t("User menu", "منوی کاربر")}
+                label={accountLabel}
+              >
+                {accountItems}
+              </Menu>
+            </div>
+          </>
+        )}
       </aside>
       <div className="workspace">
         <header className="topbar">
@@ -1183,7 +1232,7 @@ export default function App() {
               <kbd aria-hidden="true">/</kbd>
             </form>
           )}
-          {(isMobile || compactWidth) && (
+          {!isMobile && compactWidth && (
             <IconButton
               className="topbar-search-icon"
               aria-label={t("Search all products", "جست‌وجوی همهٔ محصولات")}
@@ -1215,33 +1264,37 @@ export default function App() {
               {branchLabel(state.config, branch, lang)}
             </span>
           )}
-          <LanguageToggle />
-          <IconButton
-            className="theme-toggle"
-            aria-label={
-              theme === "light"
-                ? t("Switch to dark theme", "تغییر به تم تیره")
-                : t("Switch to light theme", "تغییر به تم روشن")
-            }
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          >
-            {theme === "light" ? (
-              <Moon size={20} strokeWidth={1.5} />
-            ) : (
-              <Sun size={20} strokeWidth={1.5} />
-            )}
-          </IconButton>
-          <IconButton
-            className="text-size-toggle"
-            title={t("Comfortable text size", "اندازهٔ متن راحت")}
-            aria-label={t("Comfortable text size", "اندازهٔ متن راحت")}
-            aria-pressed={comfortableText}
-            onClick={() => setComfortableText(!comfortableText)}
-          >
-            <span className="text-size-glyph" aria-hidden="true">
-              Aa
-            </span>
-          </IconButton>
+          {!isMobile && (
+            <>
+              <LanguageToggle />
+              <IconButton
+                className="theme-toggle"
+                aria-label={
+                  theme === "light"
+                    ? t("Switch to dark theme", "تغییر به تم تیره")
+                    : t("Switch to light theme", "تغییر به تم روشن")
+                }
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                {theme === "light" ? (
+                  <Moon size={20} strokeWidth={1.5} />
+                ) : (
+                  <Sun size={20} strokeWidth={1.5} />
+                )}
+              </IconButton>
+              <IconButton
+                className="text-size-toggle"
+                title={t("Comfortable text size", "اندازهٔ متن راحت")}
+                aria-label={t("Comfortable text size", "اندازهٔ متن راحت")}
+                aria-pressed={comfortableText}
+                onClick={() => setComfortableText(!comfortableText)}
+              >
+                <span className="text-size-glyph" aria-hidden="true">
+                  Aa
+                </span>
+              </IconButton>
+            </>
+          )}
           <Menu
             className="notifications-menu"
             iconOnly
@@ -1289,38 +1342,71 @@ export default function App() {
               </p>
             )}
           </Menu>
-          <Menu className="demo-menu" label={t("Demo", "دمو")}>
-            <p className="helper">
-              {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
-            </p>
-            {demoUsers.map((candidate) => (
-              <MenuItem
-                key={candidate.username}
-                onClick={() => switchDemoUser(candidate.username)}
+          {!isMobile && (
+            <Menu className="demo-menu" label={t("Demo", "دمو")}>
+              {demoItems}
+            </Menu>
+          )}
+          {isMobile && (
+            <>
+              <Menu
+                className="mobile-account-menu"
+                iconOnly
+                showChevron={false}
+                aria-label={t("User menu", "منوی کاربر")}
+                label={accountLabel}
               >
-                {t("Switch to", "تغییر به")}{" "}
-                {demoUserLabel(candidate.name, lang)}
-              </MenuItem>
-            ))}
-            {page.key === "invoices" &&
-              state.invoice.status !== "empty" &&
-              state.invoice.status !== "posted" && (
+                {accountItems}
+              </Menu>
+              <Menu
+                className="mobile-more-menu"
+                minWidth={296}
+                iconOnly
+                showChevron={false}
+                label={t("More", "بیشتر")}
+                icon={
+                  <MoreHorizontal
+                    size={20}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                }
+              >
                 <MenuItem
-                  onClick={() =>
-                    window.dispatchEvent(new Event("arzon:demo-invoice-answer"))
-                  }
+                  className="mobile-search-action"
+                  onClick={() => setSearchOpen(true)}
                 >
-                  {t(
-                    "Use fictional demo answer",
-                    "استفاده از پاسخ نمونهٔ خیالی",
-                  )}
+                  <Search size={20} aria-hidden="true" />
+                  {t("Search all products", "جست‌وجوی همهٔ محصولات")}
                 </MenuItem>
-              )}
-            <MenuItem onClick={() => setResetOpen(true)}>
-              <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
-              {t("Reset demo", "بازنشانی دمو")}
-            </MenuItem>
-          </Menu>
+                {state.config.company.ui_languages.includes(
+                  lang === "en" ? "fa" : "en",
+                ) && (
+                  <MenuItem
+                    onClick={() => setLang(lang === "en" ? "fa" : "en")}
+                  >
+                    {lang === "en"
+                      ? t("Switch to Persian", "تغییر به فارسی")
+                      : t("Switch to English", "تغییر به انگلیسی")}
+                  </MenuItem>
+                )}
+                <MenuItem
+                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                >
+                  {theme === "light"
+                    ? t("Switch to dark theme", "تغییر به تم تیره")
+                    : t("Switch to light theme", "تغییر به تم روشن")}
+                </MenuItem>
+                <MenuItem
+                  aria-pressed={comfortableText}
+                  onClick={() => setComfortableText(!comfortableText)}
+                >
+                  {t("Comfortable text size", "اندازهٔ متن راحت")}
+                </MenuItem>
+                <MenuSubmenu label={t("Demo", "دمو")}>{demoItems}</MenuSubmenu>
+              </Menu>
+            </>
+          )}
         </header>
         <main
           id="main-content"

@@ -1,0 +1,9 @@
+[
+  "The original company logo, fictional seed records, product prices and chart data remain the app\u2019s own. Reference logos, names, avatars, illustrations and figures were not copied.",
+  "Reference green #1A7F45 on its supplied tint falls below 4.5:1. The documented minimal #197D44 adjustment passes; rendered final checks have a minimum 4.5626:1.",
+  "Dark Primary uses the accessible interim #2B59C3 with white text. The owner\u2019s darker-blue/white versus lighter-blue/ink choice remains pending; the lighter-blue/white pairing is not accepted as an accessibility exception.",
+  "A drawn Print label action does not invent a new Lookup workflow. Existing label printing and Add to waitlist remain in Labels.",
+  "Editor screenshots scroll to the Date tracking group, including Add and footer actions; upper product fields are outside that viewport. Tall page originals and sidebar/topbar captures retain their explicit framing.",
+  "Screenshots show actual demo UI states and cannot independently prove permissions, calculations, persistence, Undo timing, keyboard behavior or physical printer alignment. The separate unit/browser/source checks supply that evidence; actual Safari and a physical printer were not exercised.",
+  "Final Source9 resolves the earlier field/chip/divider/header/reference defects and the Source8 dialog Cancel selector leak. Earlier failed source/review sets are excluded from final proof. Both PRs remain unmerged for joint owner review."
+]

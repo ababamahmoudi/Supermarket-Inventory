@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Archive, RotateCcw, Pencil } from "lucide-react";
+import { Plus, Archive, RotateCcw, Pencil, MoreHorizontal } from "lucide-react";
 import { useDemo } from "../store";
 import { WhatsMissing } from "../WhatsMissing";
 import {
@@ -9,9 +9,12 @@ import {
   Checkbox,
   ConfirmDialog,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   Select,
+  Menu,
+  MenuItem,
 } from "../ui";
 import { demoUserLabel, LtrText } from "../presentation";
 import { companyTimestamp } from "../operations";
@@ -110,6 +113,16 @@ export function NotebookEditor({
           : t("New notebook", "دفترچه جدید")
       }
       className="notebook-editor-dialog"
+      description={
+        notebook
+          ? lang === "fa"
+            ? notebook.name_fa
+            : notebook.name_en
+          : t(
+              "Custom notebooks, permissions and entry fields.",
+              "دفترهای سفارشی، مجوزها و فیلدهای ثبت یادداشت.",
+            )
+      }
     >
       <form
         noValidate
@@ -298,16 +311,16 @@ export function NotebookEditor({
               {error}
             </p>
           )}
-        <div className="actions">
+        <DialogActions>
           <Button
             type="button"
-            variant="secondary"
+            variant="neutral"
             onClick={() => onOpenChange(false)}
           >
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit">{t("Save notebook", "ذخیره دفترچه")}</Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );
@@ -407,40 +420,45 @@ export function NotebookSettings() {
                     : t("Active", "فعال")}
                 </Badge>
                 <Button
-                  variant="secondary"
+                  variant="neutral"
                   size="sm"
                   onClick={() => setEditor(item)}
                 >
                   <Pencil size={14} aria-hidden="true" />
                   {t("Edit notebook", "ویرایش دفترچه")}
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    if (!item.archived) {
-                      setArchive(item);
-                      return;
-                    }
-                    try {
-                      update((draft) =>
-                        archiveNotebook(draft, context, item.id, false),
-                      );
-                      setError("");
-                    } catch (caught) {
-                      setError(notebookError(caught, t));
-                    }
-                  }}
+                <Menu
+                  label={t("More actions", "کارهای بیشتر")}
+                  icon={<MoreHorizontal size={18} aria-hidden="true" />}
+                  iconOnly
                 >
-                  {item.archived ? (
-                    <RotateCcw size={14} aria-hidden="true" />
-                  ) : (
-                    <Archive size={14} aria-hidden="true" />
-                  )}
-                  {item.archived
-                    ? t("Restore notebook", "بازیابی دفترچه")
-                    : t("Archive notebook", "بایگانی دفترچه")}
-                </Button>
+                  <MenuItem
+                    className={item.archived ? undefined : "menu-item-danger"}
+                    onClick={() => {
+                      if (!item.archived) {
+                        setArchive(item);
+                        return;
+                      }
+                      try {
+                        update((draft) =>
+                          archiveNotebook(draft, context, item.id, false),
+                        );
+                        setError("");
+                      } catch (caught) {
+                        setError(notebookError(caught, t));
+                      }
+                    }}
+                  >
+                    {item.archived ? (
+                      <RotateCcw size={14} aria-hidden="true" />
+                    ) : (
+                      <Archive size={14} aria-hidden="true" />
+                    )}
+                    {item.archived
+                      ? t("Restore notebook", "بازیابی دفترچه")
+                      : t("Archive notebook", "بایگانی دفترچه")}
+                  </MenuItem>
+                </Menu>
               </div>
             </article>
           ))}

@@ -63,7 +63,7 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Short", exact: true }).click();
   await page.getByLabel("Quantity being sent", { exact: true }).fill("1");
@@ -77,7 +77,7 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Missing", exact: true }).click();
   await page.getByLabel("Quantity arrived", { exact: true }).fill("0");
@@ -151,8 +151,8 @@ test("C5 conditional label selection, template restore, and print confirmation",
   await page
     .getByRole("button", { name: "Restore template", exact: true })
     .click();
-  // The recent template actions have real, temporary Undo toasts. Leave their
-  // hover area and wait for expiry before the lower product action is clicked.
+  // Archive can create one temporary Undo capsule. Leave its hover area and
+  // wait for expiry before clicking the lower product action.
   await page.mouse.move(0, 0);
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible({
     timeout: 20000,
@@ -198,7 +198,9 @@ test("C5 conditional note editing and seen/done/open actions", async ({
     .locator("[data-notebook-entry]")
     .filter({ hasText: "C5 conditional presentation review note" });
   await measure(page, "Notebook entry Edit note action");
-  await card.getByRole("button", { name: "Edit note", exact: true }).click();
+  await card.getByRole("button", { name: "More actions", exact: true }).click();
+  await measure(page, "Notebook entry More actions menu");
+  await page.getByRole("menuitem", { name: "Edit note", exact: true }).click();
   await measure(page, "Edit notebook entry form");
   await page
     .getByRole("form", { name: "Edit note", exact: true })
@@ -206,13 +208,26 @@ test("C5 conditional note editing and seen/done/open actions", async ({
     .click();
   await page.getByRole("tab", { name: /For Supervisor/ }).click();
   await measure(page, "Supervisor note Mark seen and Mark done actions");
-  await page
-    .getByRole("button", { name: "Mark seen", exact: true })
-    .first()
+  const supervisorNote = page
+    .locator(".notebook-entry-card")
+    .filter({
+      has: page.getByRole("button", { name: "More actions", exact: true }),
+    })
+    .first();
+  const supervisorNoteText = await supervisorNote
+    .locator(".row-between > strong")
+    .innerText();
+  const retainedSupervisorNote = page
+    .locator(".notebook-entry-card")
+    .filter({ hasText: supervisorNoteText });
+  await supervisorNote
+    .getByRole("button", { name: "More actions", exact: true })
     .click();
-  await page
+  await measure(page, "Supervisor note More actions menu");
+  await page.getByRole("menuitem", { name: "Mark seen", exact: true }).click();
+  await expect(retainedSupervisorNote.locator(".badge")).toHaveText("Seen");
+  await retainedSupervisorNote
     .getByRole("button", { name: "Mark done", exact: true })
-    .first()
     .click();
   await page
     .getByRole("checkbox", {
@@ -220,7 +235,17 @@ test("C5 conditional note editing and seen/done/open actions", async ({
       exact: true,
     })
     .check();
+  await expect(retainedSupervisorNote.locator(".badge")).toHaveText("Done");
   await measure(page, "Completed notebook entry Mark open action");
+  await page.getByRole("tab", { name: /^Deli temperatures(?: \d+)?$/ }).click();
+  await card.getByRole("button", { name: "Mark done", exact: true }).click();
+  await card.getByRole("button", { name: "More actions", exact: true }).click();
+  await expect(
+    page.getByRole("menuitem", { name: "Mark open", exact: true }),
+  ).toBeVisible();
+  await measure(page, "Completed notebook entry More actions menu");
+  await page.getByRole("menuitem", { name: "Mark open", exact: true }).click();
+  await expect(card.locator(".badge")).toHaveText("Open");
 });
 
 test("C5 conditional saved order and print/cancel dialogs", async ({

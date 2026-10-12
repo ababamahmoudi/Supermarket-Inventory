@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Decimal from "decimal.js";
 import { WhatsMissing } from "../WhatsMissing";
-import { Plus, Pencil, Archive } from "lucide-react";
+import { Plus, Pencil, Archive, MoreHorizontal } from "lucide-react";
 import { useDemo } from "../store";
 import {
   Badge,
@@ -11,9 +11,12 @@ import {
   ConfirmDialog,
   DateField,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
+  Menu,
+  MenuItem,
   NumberField,
   PageHeader,
   Select,
@@ -284,7 +287,7 @@ export function Notes() {
               </Button>
             )}
             {role === "supervisor" && (
-              <Button variant="secondary" onClick={() => setEditor("new")}>
+              <Button variant="neutral" onClick={() => setEditor("new")}>
                 <Plus size={16} aria-hidden="true" />
                 {t("New notebook", "دفترچه جدید")}
               </Button>
@@ -323,11 +326,11 @@ export function Notes() {
       />
       {notebook && role === "supervisor" && (
         <div className="actions notebook-manage-actions">
-          <Button variant="secondary" onClick={() => setEditor(notebook)}>
+          <Button variant="neutral" onClick={() => setEditor(notebook)}>
             <Pencil size={16} aria-hidden="true" />
             {t("Edit notebook", "ویرایش دفترچه")}
           </Button>
-          <Button variant="secondary" onClick={() => setArchiving(notebook)}>
+          <Button variant="destructive" onClick={() => setArchiving(notebook)}>
             <Archive size={16} aria-hidden="true" />
             {t("Archive notebook", "بایگانی دفترچه")}
           </Button>
@@ -351,6 +354,7 @@ export function Notes() {
               ? t("Edit note", "ویرایش یادداشت")
               : t("Add note", "افزودن یادداشت")
           }
+          description={tabs.find((item) => item.key === activeTab)?.label}
           className="c3-operation-dialog notebook-entry-dialog"
         >
           <form
@@ -617,9 +621,9 @@ export function Notes() {
                 {error}
               </div>
             )}
-            <div className="dialog-actions">
+            <DialogActions>
               <Button
-                variant="secondary"
+                variant="neutral"
                 onClick={() => {
                   setEntryOpen(false);
                   clearEntryForm();
@@ -633,7 +637,7 @@ export function Notes() {
                   ? t("Save changes", "ذخیره تغییرات")
                   : t("Save note", "ذخیره یادداشت")}
               </Button>
-            </div>
+            </DialogActions>
             {editing && !canSaveEdit && (
               <p className="muted" role="status">
                 {t(
@@ -695,7 +699,7 @@ export function Notes() {
           )}
         </Checkbox>
         <Button
-          variant="ghost"
+          variant="plain"
           onClick={() => {
             setSearch("");
             setShowDone(false);
@@ -778,25 +782,37 @@ export function Notes() {
             {item.status === "open" &&
               item.type === "note_to_supervisor" &&
               role === "supervisor" && (
-                <Button
-                  variant="secondary"
-                  disabled={branch === "all"}
-                  onClick={() =>
-                    run(
-                      (draft) =>
-                        updateNoteStatus(draft, context, item.id, "read"),
-                      ["Marked seen.", "دیده‌شده علامت‌گذاری شد."],
-                    )
+                <Menu
+                  icon={
+                    <MoreHorizontal
+                      size={16}
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
                   }
+                  iconOnly
+                  label={t("More actions", "کارهای بیشتر")}
                 >
-                  {t("Mark seen", "علامت دیده‌شده")}
-                </Button>
+                  <MenuItem
+                    disabled={branch === "all"}
+                    onClick={() =>
+                      run(
+                        (draft) =>
+                          updateNoteStatus(draft, context, item.id, "read"),
+                        ["Marked seen.", "دیده‌شده علامت‌گذاری شد."],
+                      )
+                    }
+                  >
+                    {t("Mark seen", "علامت دیده‌شده")}
+                  </MenuItem>
+                </Menu>
               )}
             {item.status !== "resolved" &&
               item.status !== "ordered" &&
               (item.type !== "note_to_supervisor" || role === "supervisor") && (
                 <Button
-                  variant="secondary"
+                  variant="neutral"
+                  size="sm"
                   disabled={branch === "all"}
                   onClick={() =>
                     run(
@@ -889,35 +905,12 @@ export function Notes() {
               (owner.status_enabled &&
                 canAddNotebookEntry(owner, context))) && (
               <div className="actions">
-                {canEditNotebookEntry(state, context, item.id) && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setEditing({
-                        entry: structuredClone(item),
-                        snapshot: JSON.stringify(item),
-                      });
-                      setTab(item.notebook_id);
-                      setSearch("");
-                      setText(item.text);
-                      setProduct(item.product_code ?? "");
-                      setQty(item.qty === undefined ? "" : String(item.qty));
-                      setDate(item.date ?? "");
-                      setMeasurement(item.measurement ?? "");
-                      setError("");
-                      setMessage(null);
-                      setFieldErrors({});
-                      setEntryOpen(true);
-                    }}
-                  >
-                    <Pencil size={16} aria-hidden="true" />
-                    {t("Edit note", "ویرایش یادداشت")}
-                  </Button>
-                )}
                 {owner.status_enabled &&
-                  canAddNotebookEntry(owner, context) && (
+                  canAddNotebookEntry(owner, context) &&
+                  item.status !== "done" && (
                     <Button
-                      variant="secondary"
+                      variant="neutral"
+                      size="sm"
                       onClick={() =>
                         run(
                           (draft) =>
@@ -925,20 +918,79 @@ export function Notes() {
                               draft,
                               context,
                               item.id,
-                              item.status === "done" ? "open" : "done",
+                              "done",
                             ),
-                          item.status === "done"
-                            ? ["Marked open.", "باز علامت‌گذاری شد."]
-                            : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
+                          ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
                           true,
                         )
                       }
                     >
-                      {item.status === "done"
-                        ? t("Mark open", "علامت باز")
-                        : t("Mark done", "علامت انجام‌شده")}
+                      {t("Mark done", "علامت انجام‌شده")}
                     </Button>
                   )}
+                {(canEditNotebookEntry(state, context, item.id) ||
+                  (owner.status_enabled &&
+                    canAddNotebookEntry(owner, context) &&
+                    item.status === "done")) && (
+                  <Menu
+                    icon={
+                      <MoreHorizontal
+                        size={16}
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                    }
+                    iconOnly
+                    label={t("More actions", "کارهای بیشتر")}
+                  >
+                    {canEditNotebookEntry(state, context, item.id) && (
+                      <MenuItem
+                        onClick={() => {
+                          setEditing({
+                            entry: structuredClone(item),
+                            snapshot: JSON.stringify(item),
+                          });
+                          setTab(item.notebook_id);
+                          setSearch("");
+                          setText(item.text);
+                          setProduct(item.product_code ?? "");
+                          setQty(
+                            item.qty === undefined ? "" : String(item.qty),
+                          );
+                          setDate(item.date ?? "");
+                          setMeasurement(item.measurement ?? "");
+                          setError("");
+                          setMessage(null);
+                          setFieldErrors({});
+                          setEntryOpen(true);
+                        }}
+                      >
+                        {t("Edit note", "ویرایش یادداشت")}
+                      </MenuItem>
+                    )}
+                    {owner.status_enabled &&
+                      canAddNotebookEntry(owner, context) &&
+                      item.status === "done" && (
+                        <MenuItem
+                          onClick={() =>
+                            run(
+                              (draft) =>
+                                updateNotebookEntryStatus(
+                                  draft,
+                                  context,
+                                  item.id,
+                                  "open",
+                                ),
+                              ["Marked open.", "باز علامت‌گذاری شد."],
+                              true,
+                            )
+                          }
+                        >
+                          {t("Mark open", "علامت باز")}
+                        </MenuItem>
+                      )}
+                  </Menu>
+                )}
               </div>
             )}
           </Card>

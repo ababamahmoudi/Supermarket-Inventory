@@ -158,7 +158,7 @@ test("request detail Back and browser Back retain tab and search, with actionabl
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   const crumbs = page.getByRole("navigation", {
     name: "Breadcrumbs",

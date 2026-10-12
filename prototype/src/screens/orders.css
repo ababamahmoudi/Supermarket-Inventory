@@ -2,6 +2,20 @@
   display: grid;
   gap: 20px;
 }
+.order-reference-link {
+  color: var(--text);
+  font-weight: var(--font-weight-headline);
+  text-decoration: none;
+}
+.order-reference-link:hover {
+  color: var(--accent);
+}
+.order-status-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 :root .orders-list-table.ui-data-table th[data-column-key="total"] {
   white-space: normal;
   overflow-wrap: normal;
@@ -106,7 +120,7 @@
 .order-source-note {
   padding: 16px;
   border-radius: var(--radius-search);
-  background: var(--surface-soft);
+  background: var(--klead-hover);
 }
 .order-source-note > .row-between {
   align-items: flex-start;

@@ -184,7 +184,7 @@ export function Expiry() {
           "تاریخ انقضا و بهترین زمان مصرف را بررسی کنید.",
         )}
       />
-      <Card className="date-quick-card">
+      <Card className="date-quick-card" title={t("Add date", "افزودن تاریخ")}>
         <DateQuickAdd
           key={requestedProduct ?? ""}
           productCode={requestedProduct ?? undefined}

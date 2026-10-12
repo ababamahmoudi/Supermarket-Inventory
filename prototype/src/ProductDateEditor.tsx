@@ -23,6 +23,7 @@ import {
   Button,
   DateField,
   Field,
+  IconButton,
   NumberField,
   Select,
   Switch,
@@ -388,6 +389,7 @@ export function ProductDateEditor({
                       </button>
                       {days !== null && (
                         <Badge
+                          className="product-editor-date-status"
                           tone={
                             days < 0
                               ? "danger"
@@ -400,8 +402,7 @@ export function ProductDateEditor({
                           {t(days === 1 ? "day" : "days", "روز")}
                         </Badge>
                       )}
-                      <Button
-                        variant="neutral"
+                      <IconButton
                         className="product-editor-remove-date"
                         aria-label={t(
                           `Remove date ${row.date}`,
@@ -416,7 +417,7 @@ export function ProductDateEditor({
                         }}
                       >
                         <X size={18} aria-hidden="true" />
-                      </Button>
+                      </IconButton>
                     </>
                   )}
                 </div>

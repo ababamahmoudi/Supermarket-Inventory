@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { setBranch, signIn } from "./helpers";
+import { openShellAction, setBranch, signIn } from "./helpers";
 import {
   appearance,
   button,
@@ -46,10 +46,92 @@ async function assertContract(
     proof.buttons.length,
     `${scene}: real controls measured`,
   ).toBeGreaterThan(2);
-  expect(
-    proof.topbar.length,
-    `${scene}: all topbar controls measured`,
-  ).toBeGreaterThanOrEqual(7);
+  if (proof.viewport.width < 760) {
+    expect(
+      proof.topbar.length,
+      `${scene}: all five priority-bar controls measured`,
+    ).toBe(5);
+    expect(
+      await page
+        .locator(".topbar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+      `${scene}: the phone priority bar stays on one 60px row`,
+    ).toBeCloseTo(60, 0);
+    for (const selector of [
+      "#menu-toggle",
+      ".branch-pill",
+      ".notifications-menu",
+      ".mobile-account-menu",
+      ".mobile-more-menu",
+    ])
+      await expect(page.locator(`.topbar ${selector}`)).toBeVisible();
+    expect(
+      await page
+        .locator(
+          'button[aria-label="User menu"], button[aria-label="منوی کاربر"]',
+        )
+        .evaluateAll(
+          (controls) =>
+            controls.filter((control) => {
+              const rect = control.getBoundingClientRect();
+              return (
+                rect.width > 0 &&
+                rect.height > 0 &&
+                getComputedStyle(control).visibility !== "hidden"
+              );
+            }).length,
+        ),
+      `${scene}: exactly one account is visible, including behind a modal`,
+    ).toBe(1);
+    // The top bar is deliberately inert while a modal is open. Exercise the
+    // collapsed controls in every ordinary screen instead of counting hidden
+    // desktop buttons as phone controls.
+    if (!(await page.locator("dialog[open]").count())) {
+      const persian =
+        (await page.locator("html").getAttribute("lang")) === "fa";
+      const dark =
+        (await page.locator("html").getAttribute("data-theme")) === "dark";
+      const more = page.locator(".mobile-more-menu");
+      if ((await more.getAttribute("aria-expanded")) !== "true")
+        await more.click();
+      for (const name of [
+        persian ? "جست‌وجوی همهٔ محصولات" : "Search all products",
+        persian ? "تغییر به انگلیسی" : "Switch to Persian",
+        persian
+          ? dark
+            ? "تغییر به تم روشن"
+            : "تغییر به تم تیره"
+          : dark
+            ? "Switch to light theme"
+            : "Switch to dark theme",
+        persian ? "اندازهٔ متن راحت" : "Comfortable text size",
+        persian ? "دمو" : "Demo",
+      ])
+        await expect(
+          page.getByRole("menuitem", { name, exact: true }),
+        ).toBeVisible();
+      const demo = page.getByRole("menuitem", {
+        name: persian ? "دمو" : "Demo",
+        exact: true,
+      });
+      await demo.click();
+      await expect(
+        page.getByRole("menuitem", {
+          name: persian ? "بازنشانی دمو" : "Reset demo",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(demo).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(more).toBeFocused();
+    }
+  } else {
+    expect(
+      proof.topbar.length,
+      `${scene}: all desktop topbar controls measured`,
+    ).toBeGreaterThanOrEqual(7);
+  }
   expect(proof.failures, scene).toEqual([]);
   return proof;
 }
@@ -170,15 +252,29 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     for (const label of [...new Set(statuses.map((status) => status.label))]) {
       const colors = statuses
         .filter((status) => status.label === label)
-        .map((status) => `${status.color}/${status.background}`);
-      expect(new Set(colors).size, `Same visible status: ${label}`).toBe(1);
+        .map((status) => status.color);
+      expect(new Set(colors).size, `Same status foreground: ${label}`).toBe(1);
+      const pillBackgrounds = statuses
+        .filter(
+          (status) =>
+            status.label === label && status.background !== "rgba(0, 0, 0, 0)",
+        )
+        .map((status) => status.background);
+      expect(
+        new Set(pillBackgrounds).size,
+        `Same filled status pill: ${label}`,
+      ).toBeLessThanOrEqual(1);
     }
-    const language = page.getByRole("button", {
-      name: variant === "fa-light" ? "تغییر به انگلیسی" : "Switch to Persian",
-      exact: true,
-    });
-    await expect(language).toHaveText(variant === "fa-light" ? "EN" : "فا");
-    await expect(page.locator(".topbar .language-toggle")).toHaveCount(1);
+    const languageName =
+      variant === "fa-light" ? "تغییر به انگلیسی" : "Switch to Persian";
+    const language = await openShellAction(page, languageName);
+    if (await page.locator(".mobile-more-menu").isVisible()) {
+      await expect(language).toHaveText(languageName);
+      await expect(page.locator(".topbar .language-toggle")).toHaveCount(0);
+    } else {
+      await expect(language).toHaveText(variant === "fa-light" ? "EN" : "فا");
+      await expect(page.locator(".topbar .language-toggle")).toHaveCount(1);
+    }
     await language.click();
     await expect(page.locator("html")).toHaveAttribute(
       "lang",
@@ -213,6 +309,18 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     ).toBeLessThanOrEqual(2);
     const totals = page.locator(".posted-invoice-totals > div");
     await expect(totals).toHaveCount(5);
+    await expect(totals.locator("dt")).toHaveText(
+      variant === "fa-light"
+        ? ["جمع پیش از مالیات", "مالیات", "جمع فاکتور", "کسورات", "قابل پرداخت"]
+        : ["Subtotal", "Tax", "Invoice total", "Deductions", "Payable"],
+    );
+    await expect(totals.locator("dd")).toHaveText([
+      "$178.72",
+      "$2.50",
+      "$181.22",
+      "$0.00",
+      "$181.22",
+    ]);
     const totalRows = await totals.evaluateAll((rows) =>
       rows.map((row) => {
         const textBounds = (element: Element) => {
@@ -220,18 +328,110 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
           range.selectNodeContents(element);
           return range.getBoundingClientRect();
         };
-        const term = textBounds(row.querySelector("dt")!);
-        const amount = textBounds(row.querySelector("dd")!);
+        const termElement = row.querySelector("dt")!;
+        const amountElement = row.querySelector("dd")!;
+        const term = textBounds(termElement);
+        const amount = textBounds(amountElement);
+        const termBox = termElement.getBoundingClientRect();
+        const amountBox = amountElement.getBoundingClientRect();
+        const bounds = row.getBoundingClientRect();
+        const rowStyle = getComputedStyle(row);
+        const column = rowStyle.flexDirection === "column";
+        const rtl = rowStyle.direction === "rtl";
+        // Phone Payable aligns different-size caption/value line boxes at the end.
+        const alignmentError = column
+          ? Math.abs(rtl ? term.left - amount.left : term.right - amount.right)
+          : Math.abs(termBox.bottom - amountBox.bottom);
+        const walker = window.document.createTreeWalker(
+          amountElement,
+          NodeFilter.SHOW_TEXT,
+        );
+        const moneyTops: number[] = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.textContent?.trim()) continue;
+          const range = window.document.createRange();
+          range.selectNodeContents(node);
+          for (const rect of range.getClientRects())
+            if (rect.width > 0 && rect.height > 0) moneyTops.push(rect.top);
+        }
         return {
-          sameLine: Math.abs(term.top - amount.top) <= 2,
-          gap: Math.min(
-            Math.abs(amount.left - term.right),
-            Math.abs(term.left - amount.right),
+          label: termElement.textContent,
+          amount: amountElement.textContent,
+          column,
+          alignItems: rowStyle.alignItems,
+          alignmentError,
+          lineBoxes: {
+            termTop: termBox.top,
+            termBottom: termBox.bottom,
+            amountTop: amountBox.top,
+            amountBottom: amountBox.bottom,
+          },
+          contained: [term, amount].every(
+            (rect) =>
+              rect.left >= bounds.left - 2 &&
+              rect.right <= bounds.right + 2 &&
+              rect.top >= bounds.top - 2 &&
+              rect.bottom <= bounds.bottom + 2,
           ),
+          separated: column
+            ? amount.top >= term.bottom - 2
+            : Math.min(term.right, amount.right) -
+                Math.max(term.left, amount.left) <=
+              0,
+          endAligned: alignmentError <= 2,
+          moneyWhole:
+            moneyTops.length > 0 &&
+            Math.max(...moneyTops) - Math.min(...moneyTops) <= 2,
+          bounds: {
+            left: bounds.left,
+            right: bounds.right,
+            top: bounds.top,
+            bottom: bounds.bottom,
+          },
         };
       }),
     );
-    expect(totalRows.every((row) => row.sameLine && row.gap <= 40)).toBe(true);
+    await info.attach(`posted-totals-${variant}.json`, {
+      body: JSON.stringify(totalRows, null, 2),
+      contentType: "application/json",
+    });
+    // Klead replaces the old label/value rows with adjacent end-aligned totals.
+    // At phone width Payable becomes one full-width label/value row.
+    for (const row of totalRows) {
+      expect(
+        row.contained,
+        `${row.label}: label/value stay in their total`,
+      ).toBe(true);
+      expect(row.separated, `${row.label}: label/value do not overlap`).toBe(
+        true,
+      );
+      if (!row.column)
+        expect(
+          row.alignItems,
+          `${row.label}: row uses the same end alignment for both line boxes`,
+        ).toBe("flex-end");
+      expect(row.endAligned, `${row.label}: totals remain end-aligned`).toBe(
+        true,
+      );
+      expect(row.moneyWhole, `${row.label}: money stays on one line`).toBe(
+        true,
+      );
+    }
+    for (let index = 0; index < totalRows.length; index++)
+      for (const next of totalRows.slice(index + 1)) {
+        const bounds = totalRows[index].bounds;
+        const width =
+          Math.min(bounds.right, next.bounds.right) -
+          Math.max(bounds.left, next.bounds.left);
+        const height =
+          Math.min(bounds.bottom, next.bounds.bottom) -
+          Math.max(bounds.top, next.bounds.top);
+        expect(
+          width > 1 && height > 1,
+          `${totalRows[index].label}/${next.label}: total groups do not overlap`,
+        ).toBe(false);
+      }
     const media = page.locator(".invoice-original-media");
     const image = media.locator("img");
     await expect(image).toBeVisible();
@@ -313,8 +513,14 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       ).toBeGreaterThanOrEqual(620);
     await expect(
       button(policy, "Download full policy", "دانلود سیاست کامل"),
-    ).toHaveClass(/button-secondary/);
-    await expect(button(policy, "Close", "بستن")).toHaveClass(/button-primary/);
+    ).toHaveClass(/button-tinted/);
+    await expect(button(policy, "Close", "بستن")).toHaveClass(/button-neutral/);
+    await expect(
+      policy.locator(".ui-dialog-actions").getByRole("button"),
+    ).toHaveText([
+      variant === "fa-light" ? "بستن" : "Close",
+      variant === "fa-light" ? "دانلود سیاست کامل" : "Download full policy",
+    ]);
     const policyProof = await assertContract(page, "Return policy", variant);
     await info.attach(`c5-documents-${variant}.json`, {
       body: JSON.stringify({ posted, policy: policyProof, contrast }, null, 2),

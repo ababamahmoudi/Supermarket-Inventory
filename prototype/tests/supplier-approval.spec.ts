@@ -130,7 +130,8 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   await expect(
     card.getByText("Supplier waiting for confirmation", { exact: true }),
   ).toBeVisible();
-  await card.getByRole("button", { name: "Reject", exact: true }).click();
+  await card.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Reject", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Reject proposal", exact: true })
     .getByRole("button", { name: "Reject proposal", exact: true })

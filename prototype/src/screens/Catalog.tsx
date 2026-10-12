@@ -72,6 +72,7 @@ import { productCostHistory, productStoreCost } from "../product-costs";
 import { lastReceivedByLocation } from "../received";
 import "./manual-entry.css";
 import "./c5-catalog-offers.css";
+import "../catalog-c7.css";
 import type { Branch, Product } from "../types";
 import {
   productEditSnapshot,
@@ -90,6 +91,8 @@ import {
   EmptyState,
   Field,
   Dialog,
+  DialogActions,
+  TableRowLink,
   PageHeader,
   FilterToolbar,
   Select,
@@ -412,6 +415,15 @@ export function ProductEditor({
           ? t("Add product", "افزودن محصول")
           : t("Edit product", "ویرایش محصول")
       }
+      description={
+        <span className="product-editor-caption">
+          <bdi dir={lang === "fa" && values.name_fa ? "rtl" : "ltr"}>
+            {lang === "fa" ? values.name_fa || values.name_en : values.name_en}
+          </bdi>
+          {" · "}
+          {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
+        </span>
+      }
       className={
         isNew
           ? "product-editor-dialog manual-entry-dialog"
@@ -635,236 +647,267 @@ export function ProductEditor({
       >
         <div className="product-editor-body">
           <WhatsMissing issues={issues} />
-          <p className="helper">
-            {t("Product Code", "کد محصول")}: <LtrText>{product.code}</LtrText>
-          </p>
-          <div className="form-grid product-editor-fields">
-            <Field
-              label={t("English name", "نام انگلیسی")}
-              error={
-                fieldIssue("name_en") ??
-                (error === "name_en" ? editorError(error, t) : undefined)
-              }
-            >
-              <input
-                autoFocus
-                id={`${formId}-name_en`}
-                dir="ltr"
-                value={values.name_en}
-                onChange={(event) => {
-                  patch("name_en", event.target.value);
-                  setSimilarConfirmed(false);
-                }}
-              />
-            </Field>
-            <Field
-              label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
-              error={error === "name_fa" ? editorError(error, t) : undefined}
-            >
-              <input
-                dir="rtl"
-                value={values.name_fa}
-                onChange={(event) => patch("name_fa", event.target.value)}
-              />
-            </Field>
-            <Field
-              label={t(
-                "Description (English) (optional)",
-                "توضیحات (انگلیسی) (اختیاری)",
-              )}
-            >
-              <textarea
-                dir="ltr"
-                value={values.description_en}
-                onChange={(event) =>
-                  patch("description_en", event.target.value)
-                }
-                rows={2}
-              />
-            </Field>
-            <Field
-              label={t(
-                "Description (Persian) (optional)",
-                "توضیحات (فارسی) (اختیاری)",
-              )}
-            >
-              <textarea
-                dir="rtl"
-                value={values.description_fa}
-                onChange={(event) =>
-                  patch("description_fa", event.target.value)
-                }
-                rows={2}
-              />
-            </Field>
-            <Field
-              label={t("Unit size", "اندازهٔ واحد")}
-              error={
-                fieldIssue("unit_size") ??
-                (error === "unit_size" ? editorError(error, t) : undefined)
-              }
-            >
-              <input
-                id={`${formId}-unit_size`}
-                dir="ltr"
-                value={values.unit_size}
-                onChange={(event) => patch("unit_size", event.target.value)}
-              />
-            </Field>
-            <Field label={t("Sold by", "روش فروش")}>
-              <Select
-                value={values.sold_by ?? "each"}
-                onChange={(value) => {
-                  patch("sold_by", value as "each" | "weight");
-                  setSellingPrice(
-                    value === "weight" && startingPrice
-                      ? weightPriceDisplay(startingPrice, state.config).main
-                          .amount
-                      : startingPrice,
-                  );
-                  setManualPrice(false);
-                  setMarginConfirmed(false);
-                }}
-                options={[
-                  { value: "each", label: t("Each", "عدد") },
-                  { value: "weight", label: t("Weight", "وزن") },
-                ]}
-              />
-            </Field>
-            <Field
-              label={t("Category (optional)", "دسته (اختیاری)")}
-              error={error === "category" ? editorError(error, t) : undefined}
-            >
-              <Select
-                value={values.ai_category}
-                onChange={(value) => patch("ai_category", value)}
-                options={[
-                  { value: "", label: t("No category", "بدون دسته") },
-                  ...categories.map((value) => ({
-                    value,
-                    label: categoryLabel(value, lang),
-                  })),
-                ]}
-              />
-            </Field>
-            <Field
-              label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-              error={
-                fieldIssue("pricing_category") ??
-                (error === "pricing_category"
-                  ? editorError(error, t)
-                  : undefined)
-              }
-            >
-              <Select
-                id={`${formId}-pricing_category`}
-                value={values.pricing_category}
-                onChange={(value) => patch("pricing_category", value)}
-                options={activePricingCategories(state.config).map((item) => ({
-                  value: item.key,
-                  label: categoryLabel(item.label, lang),
-                }))}
-              />
-            </Field>
-            <Field
-              label={t("Supplier", "تأمین‌کننده")}
-              error={
-                fieldIssue("main_supplier") ??
-                (error === "supplier" ? editorError(error, t) : undefined)
-              }
-            >
-              <Select
-                id={`${formId}-main_supplier`}
-                value={values.main_supplier}
-                onChange={(value) => patch("main_supplier", value)}
-                options={suppliers.map((value) => ({ value, label: value }))}
-              />
-            </Field>
-            <Field
-              label={t("Barcode", "بارکد")}
-              error={
-                error === "barcode_conflict" ? editorError(error, t) : undefined
-              }
-            >
-              <input
-                id={`${formId}-barcode`}
-                dir="ltr"
-                value={values.barcode}
-                onChange={(event) => patch("barcode", event.target.value)}
-              />
-            </Field>
-            {isNew && (
+          <section
+            className="product-editor-section"
+            aria-label={t("Names", "نام‌ها")}
+          >
+            <h3 className="product-editor-section-title">
+              {t("Names", "نام‌ها")}
+            </h3>
+            <div className="form-grid product-editor-fields">
               <Field
-                label={t(
-                  "Last unit cost before tax",
-                  "آخرین هزینهٔ واحد پیش از مالیات",
-                )}
+                label={t("English name", "نام انگلیسی")}
                 error={
-                  fieldIssue("cost") ??
-                  (error === "cost" ? editorError(error, t) : undefined)
+                  fieldIssue("name_en") ??
+                  (error === "name_en" ? editorError(error, t) : undefined)
                 }
               >
                 <input
-                  id={`${formId}-cost`}
+                  autoFocus
+                  id={`${formId}-name_en`}
                   dir="ltr"
-                  inputMode="decimal"
-                  className="control-narrow"
-                  value={cost}
+                  value={values.name_en}
                   onChange={(event) => {
-                    setCost(event.target.value);
-                    clearIssue(`${formId}-cost`);
-                    setMarginConfirmed(false);
-                    if (error === "cost" || error === "margin") setError(null);
+                    patch("name_en", event.target.value);
+                    setSimilarConfirmed(false);
                   }}
                 />
               </Field>
-            )}
-            {isNew && weightProduct && (
-              <Field label={t("Cost unit", "واحد هزینه")}>
+              <Field
+                label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
+                error={error === "name_fa" ? editorError(error, t) : undefined}
+              >
+                <input
+                  dir="rtl"
+                  value={values.name_fa}
+                  onChange={(event) => patch("name_fa", event.target.value)}
+                />
+              </Field>
+            </div>
+          </section>
+          <section
+            className="product-editor-section"
+            aria-label={t("Pricing", "قیمت‌گذاری")}
+          >
+            <h3 className="product-editor-section-title">
+              {t("Pricing", "قیمت‌گذاری")}
+            </h3>
+            <div className="form-grid product-editor-fields">
+              <Field
+                label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+                error={
+                  fieldIssue("pricing_category") ??
+                  (error === "pricing_category"
+                    ? editorError(error, t)
+                    : undefined)
+                }
+              >
                 <Select
-                  value={costUnit}
-                  onChange={(value) => {
-                    setCostUnit(value as WeightUnit);
+                  id={`${formId}-pricing_category`}
+                  value={values.pricing_category}
+                  onChange={(value) => patch("pricing_category", value)}
+                  options={activePricingCategories(state.config).map(
+                    (item) => ({
+                      value: item.key,
+                      label: categoryLabel(item.label, lang),
+                    }),
+                  )}
+                />
+              </Field>
+              {isNew && (
+                <Field
+                  label={t(
+                    "Last unit cost before tax",
+                    "آخرین هزینهٔ واحد پیش از مالیات",
+                  )}
+                  error={
+                    fieldIssue("cost") ??
+                    (error === "cost" ? editorError(error, t) : undefined)
+                  }
+                >
+                  <input
+                    id={`${formId}-cost`}
+                    dir="ltr"
+                    inputMode="decimal"
+                    className="control-narrow"
+                    value={cost}
+                    onChange={(event) => {
+                      setCost(event.target.value);
+                      clearIssue(`${formId}-cost`);
+                      setMarginConfirmed(false);
+                      if (error === "cost" || error === "margin")
+                        setError(null);
+                    }}
+                  />
+                </Field>
+              )}
+              {isNew && weightProduct && (
+                <Field label={t("Cost unit", "واحد هزینه")}>
+                  <Select
+                    value={costUnit}
+                    onChange={(value) => {
+                      setCostUnit(value as WeightUnit);
+                      setMarginConfirmed(false);
+                      if (error === "cost" || error === "margin")
+                        setError(null);
+                    }}
+                    options={[
+                      { value: "lb", label: "lb" },
+                      { value: "kg", label: "kg" },
+                    ]}
+                  />
+                </Field>
+              )}
+              <Field
+                label={
+                  weightProduct
+                    ? displayUnit === "lb"
+                      ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                      : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+                    : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
+                }
+                error={
+                  fieldIssue("price") ??
+                  (error === "price" ? editorError(error, t) : undefined)
+                }
+                className="short-field"
+              >
+                <input
+                  id={`${formId}-price`}
+                  dir="ltr"
+                  inputMode="decimal"
+                  value={effectiveSellingPrice}
+                  readOnly={isNew && role !== "supervisor"}
+                  onChange={(event) => {
+                    setSellingPrice(event.target.value);
+                    clearIssue(`${formId}-price`);
+                    setManualPrice(true);
                     setMarginConfirmed(false);
-                    if (error === "cost" || error === "margin") setError(null);
+                    if (error === "price" || error === "margin") setError(null);
+                  }}
+                />
+              </Field>
+            </div>
+          </section>
+          <section
+            className="product-editor-section"
+            aria-label={t("Details", "جزئیات")}
+          >
+            <h3 className="product-editor-section-title">
+              {t("Details", "جزئیات")}
+            </h3>
+            <div className="form-grid product-editor-fields">
+              <Field
+                label={t("Unit size", "اندازهٔ واحد")}
+                error={
+                  fieldIssue("unit_size") ??
+                  (error === "unit_size" ? editorError(error, t) : undefined)
+                }
+              >
+                <input
+                  id={`${formId}-unit_size`}
+                  dir="ltr"
+                  value={values.unit_size}
+                  onChange={(event) => patch("unit_size", event.target.value)}
+                />
+              </Field>
+              <Field label={t("Sold by", "روش فروش")}>
+                <Select
+                  value={values.sold_by ?? "each"}
+                  onChange={(value) => {
+                    patch("sold_by", value as "each" | "weight");
+                    setSellingPrice(
+                      value === "weight" && startingPrice
+                        ? weightPriceDisplay(startingPrice, state.config).main
+                            .amount
+                        : startingPrice,
+                    );
+                    setManualPrice(false);
+                    setMarginConfirmed(false);
                   }}
                   options={[
-                    { value: "lb", label: "lb" },
-                    { value: "kg", label: "kg" },
+                    { value: "each", label: t("Each", "عدد") },
+                    { value: "weight", label: t("Weight", "وزن") },
                   ]}
                 />
               </Field>
-            )}
-            <Field
-              label={
-                weightProduct
-                  ? displayUnit === "lb"
-                    ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                    : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-                  : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
-              }
-              error={
-                fieldIssue("price") ??
-                (error === "price" ? editorError(error, t) : undefined)
-              }
-              className="short-field"
-            >
-              <input
-                id={`${formId}-price`}
-                dir="ltr"
-                inputMode="decimal"
-                value={effectiveSellingPrice}
-                readOnly={isNew && role !== "supervisor"}
-                onChange={(event) => {
-                  setSellingPrice(event.target.value);
-                  clearIssue(`${formId}-price`);
-                  setManualPrice(true);
-                  setMarginConfirmed(false);
-                  if (error === "price" || error === "margin") setError(null);
-                }}
-              />
-            </Field>
-          </div>
+              <Field
+                label={t("Category (optional)", "دسته (اختیاری)")}
+                error={error === "category" ? editorError(error, t) : undefined}
+              >
+                <Select
+                  value={values.ai_category}
+                  onChange={(value) => patch("ai_category", value)}
+                  options={[
+                    { value: "", label: t("No category", "بدون دسته") },
+                    ...categories.map((value) => ({
+                      value,
+                      label: categoryLabel(value, lang),
+                    })),
+                  ]}
+                />
+              </Field>
+              <Field
+                label={t("Supplier", "تأمین‌کننده")}
+                error={
+                  fieldIssue("main_supplier") ??
+                  (error === "supplier" ? editorError(error, t) : undefined)
+                }
+              >
+                <Select
+                  id={`${formId}-main_supplier`}
+                  value={values.main_supplier}
+                  onChange={(value) => patch("main_supplier", value)}
+                  options={suppliers.map((value) => ({ value, label: value }))}
+                />
+              </Field>
+              <Field
+                label={t("Barcode", "بارکد")}
+                error={
+                  error === "barcode_conflict"
+                    ? editorError(error, t)
+                    : undefined
+                }
+              >
+                <input
+                  id={`${formId}-barcode`}
+                  dir="ltr"
+                  value={values.barcode}
+                  onChange={(event) => patch("barcode", event.target.value)}
+                />
+              </Field>
+              <Field
+                label={t(
+                  "Description (English) (optional)",
+                  "توضیحات (انگلیسی) (اختیاری)",
+                )}
+              >
+                <textarea
+                  dir="ltr"
+                  value={values.description_en}
+                  onChange={(event) =>
+                    patch("description_en", event.target.value)
+                  }
+                  rows={2}
+                />
+              </Field>
+              <Field
+                label={t(
+                  "Description (Persian) (optional)",
+                  "توضیحات (فارسی) (اختیاری)",
+                )}
+              >
+                <textarea
+                  dir="rtl"
+                  value={values.description_fa}
+                  onChange={(event) =>
+                    patch("description_fa", event.target.value)
+                  }
+                  rows={2}
+                />
+              </Field>
+            </div>
+          </section>
           <ProductDateEditor
             productCode={product.code}
             location={dateLocation}
@@ -1049,8 +1092,8 @@ export function ProductEditor({
               </p>
             )}
         </div>
-        <div className="actions product-editor-actions">
-          <Button variant="secondary" onClick={onClose}>
+        <DialogActions className="product-editor-actions">
+          <Button variant="neutral" onClick={onClose}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit">
@@ -1058,7 +1101,7 @@ export function ProductEditor({
               ? t("Add product", "افزودن محصول")
               : t("Save product", "ذخیرهٔ محصول")}
           </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );
@@ -1077,7 +1120,7 @@ function ProductEditButton({
   return (
     <>
       <Button
-        variant="secondary"
+        variant="neutral"
         size={row ? "sm" : "default"}
         aria-label={t(
           `Edit ${product.name_en}`,
@@ -1626,7 +1669,7 @@ function LookupProductDetail({ product }: { product: Product }) {
       <div className="lookup-detail-header">
         <div>
           <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
-            <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+            <bdi dir={lang === "fa" && product.name_fa ? "rtl" : "ltr"}>
               <UnitText>
                 {lang === "fa"
                   ? product.name_fa || product.name_en
@@ -1634,13 +1677,15 @@ function LookupProductDetail({ product }: { product: Product }) {
               </UnitText>
             </bdi>
           </h2>
-          <p className="muted" lang={lang === "fa" ? "en" : "fa"}>
-            <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              <UnitText>
-                {lang === "fa" ? product.name_en : product.name_fa}
-              </UnitText>
-            </bdi>
-          </p>
+          {product.name_fa && (
+            <p className="muted" lang={lang === "fa" ? "en" : "fa"}>
+              <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+                <UnitText>
+                  {lang === "fa" ? product.name_en : product.name_fa}
+                </UnitText>
+              </bdi>
+            </p>
+          )}
           <p className="lookup-product-meta muted">
             <span>
               {t(state.config.terminology.product_code, "کد محصول")}{" "}
@@ -1660,19 +1705,6 @@ function LookupProductDetail({ product }: { product: Product }) {
       <ProductProvenance product={product} />
       <div className="lookup-price-block">
         <div className="lookup-approved-price">
-          <p className="muted">
-            {product.sold_by === "weight"
-              ? weighedSettings(state.config).main_display_unit === "lb"
-                ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-              : t(
-                  state.config.terminology.selling_price.replace(
-                    /^Selling Price$/,
-                    "Selling price",
-                  ),
-                  "قیمت فروش",
-                )}
-          </p>
           {approved ? (
             <strong className="price" dir="ltr">
               <SellingPrice
@@ -1686,8 +1718,28 @@ function LookupProductDetail({ product }: { product: Product }) {
               {t("No approved price yet", "هنوز قیمت تأییدشده‌ای وجود ندارد")}
             </p>
           )}
-          <p className="helper">{t("Before tax", "پیش از مالیات")}</p>
-          <ManualPricePill product={product} />
+          <div className="lookup-price-context">
+            <p className="muted">
+              {product.sold_by === "weight"
+                ? weighedSettings(state.config).main_display_unit === "lb"
+                  ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                  : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+                : t(
+                    state.config.terminology.selling_price.replace(
+                      /^Selling Price$/,
+                      "Selling price",
+                    ),
+                    "قیمت فروش",
+                  )}
+            </p>
+            {offer && (
+              <Badge tone="info" className="offer-pill">
+                <OfferLabel label={offer.label} language={lang} />
+              </Badge>
+            )}
+            <p className="helper">{t("Before tax", "پیش از مالیات")}</p>
+            <ManualPricePill product={product} />
+          </div>
         </div>
         {pending && (
           <div className="lookup-pending-price">
@@ -1722,21 +1774,11 @@ function LookupProductDetail({ product }: { product: Product }) {
         </div>
       ))}
       <ProductDates product={product} />
-      {(profile?.taxable || offer) && (
+      {profile?.taxable && (
         <div className="lookup-price-tags actions">
-          {profile?.taxable && (
-            <Badge tone="info">
-              {t(
-                state.config.tax.label_text_en,
-                state.config.tax.label_text_fa,
-              )}
-            </Badge>
-          )}
-          {offer && (
-            <Badge tone="info" className="offer-pill">
-              <OfferLabel label={offer.label} language={lang} />
-            </Badge>
-          )}
+          <Badge tone="info">
+            {t(state.config.tax.label_text_en, state.config.tax.label_text_fa)}
+          </Badge>
         </div>
       )}
       {pending && (
@@ -1930,6 +1972,7 @@ export function Lookup() {
                     : t("More", "بیشتر")
                 }
                 aria-label={t("More categories", "دسته‌های بیشتر")}
+                className={`lookup-category-more${categories.slice(3).includes(category) ? " is-selected" : ""}`}
               >
                 {categories.slice(3).map((value) => (
                   <MenuItem
@@ -2038,7 +2081,9 @@ export function Lookup() {
                       dir={lang === "fa" ? "rtl" : "ltr"}
                     >
                       <strong lang={lang}>
-                        <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                        <bdi
+                          dir={lang === "fa" && product.name_fa ? "rtl" : "ltr"}
+                        >
                           <UnitText>
                             {lang === "fa"
                               ? product.name_fa || product.name_en
@@ -2047,15 +2092,19 @@ export function Lookup() {
                         </bdi>
                       </strong>
                       <span className="lookup-result-secondary muted">
-                        <bdi
-                          className="lookup-secondary-name"
-                          lang={lang === "fa" ? "en" : "fa"}
-                          dir={lang === "fa" ? "ltr" : "rtl"}
-                        >
-                          <UnitText>
-                            {lang === "fa" ? product.name_en : product.name_fa}
-                          </UnitText>
-                        </bdi>
+                        {product.name_fa && (
+                          <bdi
+                            className="lookup-secondary-name"
+                            lang={lang === "fa" ? "en" : "fa"}
+                            dir={lang === "fa" ? "ltr" : "rtl"}
+                          >
+                            <UnitText>
+                              {lang === "fa"
+                                ? product.name_en
+                                : product.name_fa}
+                            </UnitText>
+                          </bdi>
+                        )}
                         <span className="lookup-result-meta">
                           {t(state.config.terminology.product_code, "کد محصول")}{" "}
                           <LtrText>{product.code}</LtrText>
@@ -2185,11 +2234,11 @@ export function Products() {
     {
       key: "actions",
       label: t("Details", "جزئیات"),
-      width: 112,
+      width: 172,
       align: "end",
       actions: true,
       priority: 0,
-      minWidth: 120,
+      minWidth: 172,
     },
   ]);
   if (role === "cashier") return <Lookup />;
@@ -2533,7 +2582,10 @@ export function Products() {
                   );
                   const margin = cost ? sellingMargin(price, cost) : null;
                   return (
-                    <tr key={product.code}>
+                    <tr
+                      key={product.code}
+                      data-row-href={`#product?code=${encodeURIComponent(product.code)}`}
+                    >
                       <td>
                         <a
                           className="catalog-product-link"
@@ -2644,6 +2696,13 @@ export function Products() {
                       </td>
                       <td>
                         <div className="actions catalog-row-actions">
+                          <TableRowLink
+                            href={`#product?code=${encodeURIComponent(product.code)}`}
+                            aria-label={t(
+                              `Open ${product.name_en}`,
+                              `باز کردن ${product.name_fa || product.name_en}`,
+                            )}
+                          />
                           <ProductEditButton product={product} row />
                           {product.status === "active" && (
                             <Menu

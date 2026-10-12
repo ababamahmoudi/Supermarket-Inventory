@@ -243,7 +243,7 @@ it("keeps status beside the return title, metadata below and policy as five clea
   const trigger = screen.getByRole("button", {
     name: "Return policy",
   });
-  expect(trigger).toHaveClass("button-secondary");
+  expect(trigger).toHaveClass("button-neutral");
   expect(screen.getByRole("button", { name: "Record pickup" })).toHaveClass(
     "button-primary",
   );
@@ -258,7 +258,7 @@ it("keeps status beside the return title, metadata below and policy as five clea
   expect(dialog.querySelector(".card")).toBeNull();
   expect(
     within(dialog).getByRole("button", { name: "Download full policy" }),
-  ).toHaveClass("button-secondary");
+  ).toHaveClass("button-tinted");
   await user.click(
     within(dialog).getAllByRole("button", { name: "Close" }).at(-1)!,
   );

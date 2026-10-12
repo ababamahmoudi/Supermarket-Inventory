@@ -76,7 +76,10 @@ for (const width of [1280, 1440, 1920])
         page.locator(".supplier-items-table tbody tr").first(),
       ).toBeVisible();
       await prove("supplier items");
-      await page.locator(".supplier-item-history-row").first().click();
+      const historyRow = page.locator(".supplier-item-history-row").first();
+      await historyRow.focus();
+      await expect(historyRow).toBeFocused();
+      await historyRow.press("Enter");
       await expect(page.getByRole("dialog")).toBeVisible();
       await prove("supplier price history");
       await page.keyboard.press("Escape");

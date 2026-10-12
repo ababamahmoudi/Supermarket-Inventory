@@ -8,6 +8,7 @@ import {
   ConfirmDialog,
   DateField,
   Dropzone,
+  DialogActions,
   Field,
   NumberField,
   Select,
@@ -34,6 +35,8 @@ import {
   type ItemResolutionKind,
 } from "../return-item-resolutions";
 import type { ReturnLine } from "../types";
+import { LtrText } from "../presentation";
+import { branchLabel } from "../settings";
 
 type ShortfallOutcome = NonNullable<ReturnLine["pickup_shortfall"]>["outcome"];
 type ItemDraft = {
@@ -517,6 +520,10 @@ export function ReturnActionForms({
   return (
     <Card className="return-action-card form-section">
       <h3>{title}</h3>
+      <p className="return-action-caption muted">
+        <LtrText>{record.supplier}</LtrText> ·{" "}
+        {branchLabel(state.config, record.branch, lang)}
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -537,7 +544,9 @@ export function ReturnActionForms({
             <div className="return-item-form-list">
               {record.lines.map((line) => (
                 <section className="return-item-form" key={line.product_code}>
-                  <h4>{name(line.product_code)}</h4>
+                  <h4>
+                    <bdi dir="auto">{name(line.product_code)}</bdi>
+                  </h4>
                   <p className="muted">
                     {t("Return quantity", "تعداد مرجوعی")}:{" "}
                     <bdi>
@@ -574,6 +583,7 @@ export function ReturnActionForms({
                         )}
                       >
                         <input
+                          dir="auto"
                           id={fieldId(line.product_code, "shortfall-reason")}
                           value={shortfalls[line.product_code]?.reason ?? ""}
                           onChange={(event) => {
@@ -743,7 +753,9 @@ export function ReturnActionForms({
                   progress = returnItemProgress(record, line);
                 return (
                   <section className="return-item-form" key={code}>
-                    <h4>{name(code)}</h4>
+                    <h4>
+                      <bdi dir="auto">{name(code)}</bdi>
+                    </h4>
                     <p className="muted">
                       {t("Picked up", "جمع‌آوری‌شده")}:{" "}
                       <bdi>{progress.picked_up}</bdi> ·{" "}
@@ -1055,6 +1067,7 @@ export function ReturnActionForms({
                           error={fieldError(fieldId(code, "note"))}
                         >
                           <textarea
+                            dir="auto"
                             id={fieldId(code, "note")}
                             value={item.note}
                             onChange={(event) =>
@@ -1079,7 +1092,10 @@ export function ReturnActionForms({
             </div>
           </>
         )}
-        <div className="actions">
+        <DialogActions>
+          <Button type="button" variant="neutral" onClick={onClose}>
+            {t("Close", "بستن")}
+          </Button>
           <Button type="submit">
             {mode === "pickup"
               ? t("Record pickup", "ثبت جمع‌آوری")
@@ -1087,10 +1103,7 @@ export function ReturnActionForms({
                 ? t("Review correction", "بررسی اصلاح")
                 : t("Record resolution", "ثبت حل‌وفصل")}
           </Button>
-          <Button type="button" variant="neutral" onClick={onClose}>
-            {t("Close", "بستن")}
-          </Button>
-        </div>
+        </DialogActions>
       </form>
       <ConfirmDialog
         open={review}
@@ -1264,7 +1277,9 @@ export function ReturnCancellationForm({
               : line.product_code;
             return (
               <section className="return-item-form" key={line.product_code}>
-                <h4>{name}</h4>
+                <h4>
+                  <bdi dir="auto">{name}</bdi>
+                </h4>
                 <div className="form-grid">
                   <Field
                     className="field-short"
@@ -1346,6 +1361,7 @@ export function ReturnCancellationForm({
           error={errorFor("return-cancel-reason")}
         >
           <textarea
+            dir="auto"
             id="return-cancel-reason"
             value={reason}
             onChange={(event) => {
@@ -1372,14 +1388,14 @@ export function ReturnCancellationForm({
             )}
           </Checkbox>
         </Field>
-        <div className="actions">
-          <Button type="submit">
-            {t("Record cancellation disposition", "ثبت وضعیت لغو")}
-          </Button>
+        <DialogActions>
           <Button type="button" variant="neutral" onClick={onClose}>
             {t("Close", "بستن")}
           </Button>
-        </div>
+          <Button type="submit">
+            {t("Record cancellation disposition", "ثبت وضعیت لغو")}
+          </Button>
+        </DialogActions>
       </form>
     </Card>
   );

@@ -144,7 +144,11 @@ test("archive retains authorized search results, restore keeps entries, and work
     .locator(".notebook-definition-row")
     .filter({ hasText: "Cleaning log" });
   await definition
-    .getByRole("button", { name: "Restore notebook", exact: true })
+    .getByRole("button", { name: "More actions", exact: true })
+    .click();
+  await page
+    .getByRole("menu", { name: "More actions", exact: true })
+    .getByRole("menuitem", { name: "Restore notebook", exact: true })
     .click();
   await page.goto("/#notes");
   await notebookTab(page, "Cleaning log");

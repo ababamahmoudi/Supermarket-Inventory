@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
+import {
+  chooseOption,
+  openShellAction,
+  setBranch,
+  setLanguage,
+  signIn,
+} from "./helpers";
 
 test("request catalog cases and free text; fulfil at Warehouse, receive Missing, close and copy residual once", async ({
   page,
@@ -63,7 +69,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Mark as sent", exact: true }).click();
   await expect(
@@ -119,7 +125,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page
     .locator(".request-checklist-item")
@@ -229,7 +235,7 @@ for (const language of ["en", "fa"] as const) {
     await page
       .getByRole("row")
       .filter({ hasText: "REQ-PRINT" })
-      .getByRole("button", { name: "Open", exact: true })
+      .getByRole("button", { name: "REQ-PRINT", exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: "Mark as sent", exact: true }),
@@ -243,9 +249,7 @@ for (const language of ["en", "fa"] as const) {
       page.getByRole("button", { name: "Mark as sent", exact: true }),
     ).toBeVisible();
     if (language === "en")
-      await page
-        .getByRole("button", { name: "Switch to dark theme", exact: true })
-        .click();
+      await (await openShellAction(page, "Switch to dark theme")).click();
     if (language === "fa") await setLanguage(page, "fa");
     await page
       .getByRole("button", {

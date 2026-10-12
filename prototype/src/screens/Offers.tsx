@@ -43,6 +43,7 @@ import {
   ConfirmDialog,
   DataTable,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -421,7 +422,7 @@ export function Offers() {
                 })),
               ]}
             />
-            <Button variant="ghost" onClick={clearFilters}>
+            <Button variant="plain" onClick={clearFilters}>
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
           </FilterToolbar>
@@ -538,7 +539,7 @@ export function Offers() {
                       <p className="muted">{readyMessage(readiness)}</p>
                       <div className="actions">
                         <Button
-                          variant="secondary"
+                          variant="primary"
                           disabled={readiness !== "ready"}
                           onClick={() => activate(task)}
                         >
@@ -546,7 +547,7 @@ export function Offers() {
                           {offerLabel(offer.label)}
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant="neutral"
                           onClick={() => stop(offer.id, true)}
                         >
                           {t("Dismiss", "کنار گذاشتن")}
@@ -699,7 +700,7 @@ export function Offers() {
                           <td>
                             {group.length === 1 ? (
                               <Button
-                                variant="danger"
+                                variant="destructive"
                                 size="sm"
                                 onClick={() => setStopId(first.id)}
                               >
@@ -832,6 +833,22 @@ export function Offers() {
           if (!open) setMessage(null);
         }}
         title={t("Create offer", "ایجاد پیشنهاد")}
+        description={
+          selected ? (
+            <>
+              <ProductName product={selected} language={lang} />
+              {" · "}
+              {scope === "branch"
+                ? branchName(viewBranch)
+                : t("Company default price", "قیمت پیش‌فرض شرکت")}
+            </>
+          ) : (
+            t(
+              "Choose a product with an approved price to create an offer.",
+              "برای ایجاد پیشنهاد، کالایی با قیمت تأییدشده انتخاب کنید.",
+            )
+          )
+        }
         className="c3-operation-dialog offers-create-dialog"
       >
         <form
@@ -929,20 +946,15 @@ export function Offers() {
                 "This approved price has no configured offer. Choose another product or change the mapping in Settings.",
                 "این قیمت تأییدشده پیشنهاد تنظیم‌شده ندارد. کالای دیگری انتخاب کنید یا نگاشت را در تنظیمات تغییر دهید.",
               )
-            ) : (
-              t(
-                "Choose a product with an approved price to create an offer.",
-                "برای ایجاد پیشنهاد، کالایی با قیمت تأییدشده انتخاب کنید.",
-              )
-            )}
+            ) : null}
           </p>
           {candidate && (
             <p className="muted">
               {readyMessage(offerReadiness(state, candidate))}
             </p>
           )}
-          <div className="dialog-actions">
-            <Button variant="secondary" onClick={() => setCreateOpen(false)}>
+          <DialogActions>
+            <Button variant="neutral" onClick={() => setCreateOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
             <Button
@@ -953,7 +965,7 @@ export function Offers() {
             >
               {t("Create offer", "ایجاد پیشنهاد")}
             </Button>
-          </div>
+          </DialogActions>
         </form>
       </Dialog>
       {stopId && (

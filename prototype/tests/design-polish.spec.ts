@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { setLanguage, signIn, uploadInvoice } from "./helpers";
+import { setLanguage, signIn, uploadInvoice, openShellAction } from "./helpers";
 
 const routes = [
   "dashboard",
@@ -92,9 +92,7 @@ for (const variant of ["light", "dark", "Persian"] as const) {
     await assertPresentation(page);
     await signIn(page, "Supervisor");
     if (variant === "dark")
-      await page
-        .getByRole("button", { name: "Switch to dark theme", exact: true })
-        .click();
+      await (await openShellAction(page, "Switch to dark theme")).click();
     if (variant === "Persian") await setLanguage(page, "fa");
     for (const route of routes) {
       await page.goto(`/#${route}`);
@@ -171,9 +169,7 @@ test("invoice review retains styled controls after simulated extraction", async 
   await page.goto("/#invoices");
   await uploadInvoice(page);
   await assertPresentation(page);
-  await page
-    .getByRole("button", { name: "Switch to dark theme", exact: true })
-    .click();
+  await (await openShellAction(page, "Switch to dark theme")).click();
   await assertPresentation(page);
   await setLanguage(page, "fa");
   await assertPresentation(page);
