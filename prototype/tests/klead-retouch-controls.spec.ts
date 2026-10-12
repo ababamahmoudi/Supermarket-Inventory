@@ -243,6 +243,11 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, info) => {
     await manual(page, language);
+    await button(page, "Post invoice", "ثبت فاکتور").click();
+    await expect(
+      page.getByRole("alert", { name: exact("What's missing", "موارد ناقص") }),
+    ).toBeVisible();
+    await settled(page);
     const reference = page.locator(
       ".invoice-draft-list tbody td:first-child .ltr-fragment",
     );
