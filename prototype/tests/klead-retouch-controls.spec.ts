@@ -404,37 +404,95 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, info) => {
     await start(page, language);
-    const dialog = await editor(page);
-    const geometry = await dialog.evaluate((element) => {
-      const title = element
-        .querySelector(".ui-dialog-header h2")!
-        .getBoundingClientRect();
-      const description = element.querySelector(".dialog-description")!;
-      const caption = description.getBoundingClientRect();
-      const style = getComputedStyle(description);
-      const body = element
-        .querySelector(".product-editor-section-title")!
-        .getBoundingClientRect();
-      const rtl = getComputedStyle(element).direction === "rtl";
-      const captionStart = rtl
-        ? caption.right - parseFloat(style.paddingRight)
-        : caption.left + parseFloat(style.paddingLeft);
-      return {
-        titleDifference: Math.abs(
-          captionStart - (rtl ? title.right : title.left),
-        ),
-        bodyDifference: Math.abs(captionStart - (rtl ? body.right : body.left)),
-      };
-    });
-    await expect(dialog.locator(".product-editor-caption")).toContainText(
-      "0001",
-    );
+    const report = [];
+    for (const theme of ["light", "dark"] as const) {
+      if (theme === "dark") await dark(page, language);
+      for (const entry of ["lookup", "product-detail"] as const) {
+        let dialog: Locator;
+        if (entry === "lookup") {
+          dialog = await editor(page);
+        } else {
+          await page.goto("/#product?code=0001");
+          const product = await page.evaluate(() => {
+            const saved = JSON.parse(
+              localStorage.getItem("supermarket-prototype-v1")!,
+            );
+            return saved.products.find(
+              (item: { code: string }) => item.code === "0001",
+            ) as { name_en: string; name_fa: string };
+          });
+          await page
+            .locator(".page-header")
+            .getByRole("button", {
+              name: exact(
+                `Edit ${product.name_en}`,
+                `ویرایش ${product.name_fa || product.name_en}`,
+              ),
+            })
+            .click();
+          dialog = page.locator(".product-editor-dialog[open]");
+          await expect(dialog).toBeVisible();
+          expect(
+            await dialog.evaluate(
+              (element) => !!element.closest(".page-header"),
+            ),
+          ).toBe(true);
+        }
+        await dialog.locator(".ui-dialog-header h2").click();
+        await page.mouse.move(0, 0);
+        await settled(page);
+        const geometry = await dialog.evaluate((element) => {
+          const title = element
+            .querySelector(".ui-dialog-header h2")!
+            .getBoundingClientRect();
+          const description = element.querySelector(".dialog-description")!;
+          const caption = description.getBoundingClientRect();
+          const style = getComputedStyle(description);
+          const body = element
+            .querySelector(".product-editor-section-title")!
+            .getBoundingClientRect();
+          const rtl = getComputedStyle(element).direction === "rtl";
+          const captionStart = rtl
+            ? caption.right - parseFloat(style.paddingRight)
+            : caption.left + parseFloat(style.paddingLeft);
+          return {
+            titleDifference: Math.abs(
+              captionStart - (rtl ? title.right : title.left),
+            ),
+            bodyDifference: Math.abs(
+              captionStart - (rtl ? body.right : body.left),
+            ),
+          };
+        });
+        await expect(dialog.locator(".product-editor-caption")).toContainText(
+          "0001",
+        );
+        expect.soft(geometry.titleDifference).toBeLessThanOrEqual(2);
+        expect.soft(geometry.bodyDifference).toBeLessThanOrEqual(2);
+        const cancel = button(dialog, "Cancel", "انصراف");
+        const style = await appearance(cancel);
+        report.push({ theme, entry, geometry, cancel: style });
+        expect
+          .soft(style.background, "dialog Cancel keeps its neutral fill")
+          .toBe(style.tokens.neutral);
+        expect.soft(style.colour).toBe(style.tokens.text);
+        expect
+          .soft(
+            style.borderVisible,
+            "page-header hairline stays outside the dialog",
+          )
+          .toBe(false);
+        expect.soft(style.outlineVisible).toBe(false);
+        expect.soft(style.shadow).toBe("none");
+        expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
+        await cancel.click();
+        await expect(dialog).not.toBeVisible();
+      }
+    }
     await info.attach("Product caption inset", {
-      body: JSON.stringify(geometry),
+      body: JSON.stringify(report, null, 2),
       contentType: "application/json",
     });
-    expect.soft(geometry.titleDifference).toBeLessThanOrEqual(2);
-    expect.soft(geometry.bodyDifference).toBeLessThanOrEqual(2);
   });
 
   test(`Klead retouch: reminder days remain a surface field inside the soft tracking group (${language})`, async ({

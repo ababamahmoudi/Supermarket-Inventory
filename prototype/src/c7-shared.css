@@ -32,7 +32,9 @@
   :root
     .main-content
     .page-header:not(:where(.ui-card *, .ui-dialog *))
-    .ui-button.button.button-neutral:not(.ui-icon-button) {
+    .ui-button.button.button-neutral:not(.ui-icon-button):not(
+      :where(.ui-card *, .ui-dialog *)
+    ) {
     background: var(--surface);
     border: 1px solid var(--page-control-border);
   }
