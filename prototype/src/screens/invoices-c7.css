@@ -20,10 +20,26 @@
   :root .invoice-workspace .field > .ui-number-field,
   :root .invoice-workspace .field > .ui-date-field,
   :root .invoice-workspace .field > .invoice-payment-terms {
-    max-inline-size: 320px;
+    max-inline-size: min(100%, 320px);
   }
   :root .invoice-workspace .field > textarea {
-    max-inline-size: 600px;
+    max-inline-size: min(100%, 600px);
+  }
+  :root .invoice-review-pane .invoice-order-table th,
+  :root .invoice-review-pane .invoice-order-table th *,
+  :root .invoice-review-pane .posted-invoice-lines th,
+  :root .invoice-review-pane .posted-invoice-lines th * {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+  :root .invoice-review-pane .posted-invoice-lines td.numeric {
+    white-space: normal;
+  }
+  :root .invoice-review-pane .posted-invoice-lines .ltr-fragment,
+  :root .invoice-review-pane .posted-invoice-lines td.numeric > span.muted {
+    white-space: nowrap;
   }
   :root .invoice-summary-grid {
     gap: 16px;
@@ -269,6 +285,14 @@
     }
   }
   @container invoice-review (max-width: 760px) {
+    :root .invoice-workspace .invoice-line-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    :root .invoice-line-form .ui-select > span:not(.select-sizing) {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
     :root .invoice-summary-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

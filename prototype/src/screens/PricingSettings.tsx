@@ -482,39 +482,41 @@ export default function PricingSettings() {
                   </bdi>
                 </td>
                 <td className="actions-column">
-                  <Button
-                    variant="neutral"
-                    size="sm"
-                    onClick={() => editCategory(category)}
-                  >
-                    {t("Edit", "ویرایش")}
-                  </Button>
-                  <Menu
-                    label={t("More actions", "کارهای بیشتر")}
-                    icon={<MoreHorizontal size={18} aria-hidden="true" />}
-                    iconOnly
-                  >
-                    <MenuItem
-                      className={
-                        category.archived ? undefined : "menu-item-danger"
-                      }
-                      onClick={() =>
-                        setDraft((previous) => ({
-                          ...previous,
-                          pricing_categories: previous.pricing_categories.map(
-                            (item) =>
-                              item.key === category.key
-                                ? { ...item, archived: !item.archived }
-                                : item,
-                          ),
-                        }))
-                      }
+                  <div className="actions">
+                    <Button
+                      variant="neutral"
+                      size="sm"
+                      onClick={() => editCategory(category)}
                     >
-                      {category.archived
-                        ? t("Restore", "بازگردانی")
-                        : t("Archive", "بایگانی")}
-                    </MenuItem>
-                  </Menu>
+                      {t("Edit", "ویرایش")}
+                    </Button>
+                    <Menu
+                      label={t("More actions", "کارهای بیشتر")}
+                      icon={<MoreHorizontal size={18} aria-hidden="true" />}
+                      iconOnly
+                    >
+                      <MenuItem
+                        className={
+                          category.archived ? undefined : "menu-item-danger"
+                        }
+                        onClick={() =>
+                          setDraft((previous) => ({
+                            ...previous,
+                            pricing_categories: previous.pricing_categories.map(
+                              (item) =>
+                                item.key === category.key
+                                  ? { ...item, archived: !item.archived }
+                                  : item,
+                            ),
+                          }))
+                        }
+                      >
+                        {category.archived
+                          ? t("Restore", "بازگردانی")
+                          : t("Archive", "بایگانی")}
+                      </MenuItem>
+                    </Menu>
+                  </div>
                 </td>
               </tr>
             ))}

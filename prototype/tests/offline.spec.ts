@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signIn } from "./helpers";
+import { signIn, setLanguage } from "./helpers";
 
 const screens = [
   ["lookup", "Cashier lookup", "جست‌وجوی صندوق‌دار"],
@@ -32,10 +32,7 @@ test("all screens and both languages work offline with no console errors", async
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
   for (const language of ["en", "fa"]) {
-    if (language === "fa")
-      await page
-        .getByRole("button", { name: "Switch to Persian", exact: true })
-        .click();
+    if (language === "fa") await setLanguage(page, "fa");
     await expect(page.locator("html")).toHaveAttribute(
       "dir",
       language === "fa" ? "rtl" : "ltr",

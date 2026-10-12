@@ -167,9 +167,9 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   await undo.click();
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.locator(".lookup-price-tags .offer-pill")).toContainText(
-    "2 for $5",
-  );
+  await expect(
+    page.locator(".lookup-approved-price .offer-pill"),
+  ).toContainText("2 for $5");
   const saved = await page.evaluate(
     () =>
       JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity,

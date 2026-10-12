@@ -341,7 +341,7 @@ test("browser Back restores the Products search and Orders status without mutati
     .click();
   await chooseOption(page, page.getByLabel("Status", { exact: true }), "Draft");
   const order = page.locator(".orders-list-table tbody tr").first();
-  await order.getByRole("button").first().click();
+  await order.locator(".order-reference-link").click();
   await expect(page).toHaveURL(/#orders\?id=/);
   await page.goBack();
   await expect(page.getByLabel("Status", { exact: true })).toHaveText("Draft");

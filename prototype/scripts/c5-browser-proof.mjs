@@ -78,7 +78,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           rect.height > 2 &&
           style.visibility !== "hidden" &&
           style.clipPath === "none" &&
-          !element.closest("[hidden], [aria-hidden=true]")
+          // aria-hidden removes decorative dots/icons from the accessibility
+          // tree; it does not hide their rendered pixels. Measure CSS visibility.
+          !element.closest("[hidden]")
         );
       };
       const tidy = (value) =>

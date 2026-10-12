@@ -702,42 +702,48 @@ function BranchSettings() {
                   </Badge>
                 </td>
                 <td>
-                  <Button
-                    size="sm"
-                    variant="neutral"
-                    onClick={() => {
-                      setSellingEdited(branch.sells_to_customers !== undefined);
-                      setEditing({
-                        ...structuredClone(branch),
-                        id: branchId(branch, index),
-                        name_en: branch.name_en.replace(
-                          /\s*\(PLACEHOLDER.*$/i,
-                          "",
-                        ),
-                      });
-                      setError(undefined);
-                    }}
-                  >
-                    {t("Edit", "ویرایش")}
-                  </Button>
-                  <Menu
-                    label={t("More actions", "کارهای بیشتر")}
-                    icon={<MoreHorizontal size={18} aria-hidden="true" />}
-                    iconOnly
-                  >
-                    <MenuItem
-                      className={
-                        branch.active === false ? undefined : "menu-item-danger"
-                      }
-                      onClick={() =>
-                        active(branch.code, branch.active === false)
-                      }
+                  <div className="actions">
+                    <Button
+                      size="sm"
+                      variant="neutral"
+                      onClick={() => {
+                        setSellingEdited(
+                          branch.sells_to_customers !== undefined,
+                        );
+                        setEditing({
+                          ...structuredClone(branch),
+                          id: branchId(branch, index),
+                          name_en: branch.name_en.replace(
+                            /\s*\(PLACEHOLDER.*$/i,
+                            "",
+                          ),
+                        });
+                        setError(undefined);
+                      }}
                     >
-                      {branch.active === false
-                        ? t("Reactivate", "فعال‌سازی دوباره")
-                        : t("Deactivate", "غیرفعال کردن")}
-                    </MenuItem>
-                  </Menu>
+                      {t("Edit", "ویرایش")}
+                    </Button>
+                    <Menu
+                      label={t("More actions", "کارهای بیشتر")}
+                      icon={<MoreHorizontal size={18} aria-hidden="true" />}
+                      iconOnly
+                    >
+                      <MenuItem
+                        className={
+                          branch.active === false
+                            ? undefined
+                            : "menu-item-danger"
+                        }
+                        onClick={() =>
+                          active(branch.code, branch.active === false)
+                        }
+                      >
+                        {branch.active === false
+                          ? t("Reactivate", "فعال‌سازی دوباره")
+                          : t("Deactivate", "غیرفعال کردن")}
+                      </MenuItem>
+                    </Menu>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -431,10 +431,7 @@ test("dashboard approvals and notes have actions that change the actual records 
       exact: true,
     }),
   });
-  await notes
-    .getByRole("button", { name: "View", exact: true })
-    .first()
-    .click();
+  await notes.getByRole("link", { name: "View", exact: true }).first().click();
   await expect(
     page.getByRole("heading", { name: "Notes", exact: true, level: 1 }),
   ).toBeVisible();

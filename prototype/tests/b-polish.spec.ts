@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { setLanguage, signIn, uploadInvoice } from "./helpers";
+import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
+import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 
 async function visibleGeometry(page: Page, route: string) {
   await page.goto(`/#${route}`);
@@ -140,17 +142,40 @@ for (const language of ["en", "fa"] as const) {
       }
     }
     await page.goto("/#products");
-    const gap = await page
+    await expect(page.locator(".catalog-products-table")).toBeVisible();
+    await settled(page);
+    const spacing = await page
       .locator(".catalog-filter-toolbar")
-      .evaluate(
-        (toolbar) =>
-          document
-            .querySelector(".catalog-products-table")!
-            .getBoundingClientRect().top -
-          toolbar.getBoundingClientRect().bottom,
-      );
-    expect(gap).toBeGreaterThanOrEqual(0);
-    expect(gap).toBeLessThanOrEqual(24);
+      .evaluate((toolbar) => {
+        const table = document.querySelector(".catalog-products-table")!;
+        const card = table.closest(".ui-card")!;
+        return {
+          // Section spacing excludes the card's required internal padding.
+          gap:
+            card.getBoundingClientRect().top -
+            toolbar.getBoundingClientRect().bottom,
+          tableInset:
+            table.getBoundingClientRect().top -
+            card.getBoundingClientRect().top,
+          cardPadding: parseFloat(getComputedStyle(card).paddingBlockStart),
+        };
+      });
+    expect(spacing.gap).toBeGreaterThanOrEqual(0);
+    expect(spacing.gap).toBeLessThanOrEqual(isMobile ? 16 : 24);
+    expect(spacing.tableInset).toBeCloseTo(spacing.cardPadding, 0);
+    const { toolbarGroups } = await inspect(page, "Products", language);
+    expect(toolbarGroups).toHaveLength(1);
+    for (const group of toolbarGroups) {
+      expect(
+        group.gap,
+        `${language}: count beside Columns`,
+      ).toBeGreaterThanOrEqual(-0.5);
+      expect(
+        group.gap,
+        `${language}: count beside Columns`,
+      ).toBeLessThanOrEqual(16.5);
+      expect(group.centerDifference).toBeLessThanOrEqual(1);
+    }
   });
 }
 
@@ -160,6 +185,8 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   await signIn(page, "Supervisor");
   for (const route of ["expiry", "dashboard"]) {
     await page.goto(`/#${route}`);
+    await expect(page.locator("main h1")).toBeVisible();
+    await settled(page);
     const pills = await page.locator("main .ui-badge").evaluateAll((elements) =>
       elements.map((element) => ({
         text: element.textContent,
@@ -169,32 +196,40 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
     for (const pill of pills)
       expect(pill.whiteSpace, pill.text ?? "pill").toBe("nowrap");
   }
+  const invoices = page.locator(".dashboard-invoices");
+  await expect(invoices.locator("tbody tr").first()).toBeVisible();
+  // Responsive tables expose width-hidden Branch values in expanded details.
+  for (const toggle of await invoices.locator(".table-details-toggle").all())
+    await toggle.click();
   const branchCells = await page
-    .locator(".dashboard-invoices tbody tr")
-    .evaluateAll((rows) =>
-      rows
-        .map((row) =>
-          [...row.querySelectorAll("td")].find((cell) =>
-            /North York|Richmond Hill|Newmarket|Warehouse/.test(
-              cell.textContent ?? "",
-            ),
-          ),
-        )
-        .filter(Boolean)
-        .map((cell) => {
-          const range = document.createRange();
-          range.selectNodeContents(cell!);
-          return {
-            text: cell!.textContent,
-            lineCount: new Set(
-              [...range.getClientRects()].map((rect) => Math.round(rect.top)),
-            ).size,
-          };
-        }),
-    );
+    .locator(".dashboard-invoices")
+    .evaluate((card) => {
+      const values = [
+        ...card.querySelectorAll('tbody td[data-column-key="branch"]'),
+        ...[...card.querySelectorAll(".table-expanded-row dl > div")]
+          .filter(
+            (group) => group.querySelector("dt")?.textContent === "Branch",
+          )
+          .map((group) => group.querySelector("dd")!),
+      ];
+      return values.map((cell) => {
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        return {
+          text: cell.textContent,
+          lineCount: new Set(
+            [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+          ).size,
+        };
+      });
+    });
   expect(branchCells.length).toBeGreaterThan(0);
-  for (const cell of branchCells)
+  for (const cell of branchCells) {
+    expect(configuration.branches.map((branch) => branch.name)).toContain(
+      cell.text?.trim(),
+    );
     expect(cell.lineCount, cell.text ?? "branch").toBeLessThanOrEqual(1);
+  }
 });
 
 test("Part 1 invoice names and approved-price notes fit on one line", async ({
@@ -289,11 +324,15 @@ test("Part 1 Open return exposes pickup and cancellation, then resolution after 
   await expect(
     detail.getByRole("button", { name: "Record resolution", exact: true }),
   ).toHaveCount(0);
-  expect(
-    await detail
-      .locator("h1")
-      .evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
-  ).toBe(24);
+  const titleStyle = await detail.locator("h1").evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      size: parseFloat(style.fontSize),
+      lineHeight: parseFloat(style.lineHeight),
+      weight: Number(style.fontWeight),
+    };
+  });
+  expect(titleStyle).toEqual({ size: 30, lineHeight: 36, weight: 800 });
   await detail
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
@@ -406,7 +445,7 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
       /Fictional branch supplier balances|Nothing is paid through this demo|Demo suggestions|No real AI is running/,
     );
   }
-  await page.getByRole("button", { name: "Demo", exact: true }).click();
+  await (await openShellAction(page, "Demo")).click();
   await expect(page.getByRole("menu")).toContainText(
     "Demo with fictional data",
   );

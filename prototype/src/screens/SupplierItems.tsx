@@ -249,12 +249,24 @@ export default function SupplierItems({
                           {t("Edit", "ویرایش")}
                         </Button>
                       )}
-                      <ChevronRight
-                        size={16}
-                        strokeWidth={1.5}
-                        className="row-chevron"
-                        aria-hidden="true"
-                      />
+                      <Button
+                        variant="plain"
+                        size="sm"
+                        className="ui-icon-button table-row-link"
+                        data-control-kind="disclosure"
+                        aria-label={t("Price history", "تاریخچه قیمت")}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setHistoryId(row.id);
+                        }}
+                      >
+                        <ChevronRight
+                          size={16}
+                          strokeWidth={1.5}
+                          className="row-chevron directional"
+                          aria-hidden="true"
+                        />
+                      </Button>
                     </div>
                   </td>
                 )}

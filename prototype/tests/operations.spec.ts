@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
-import { chooseOption, signIn, visitPage } from "./helpers";
+import { chooseOption, signIn, visitPage, setLanguage } from "./helpers";
 
 test.setTimeout(60000);
 
@@ -392,9 +392,7 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   await expect(
     page.getByRole("heading", { name: "Date tracking", exact: true, level: 1 }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "پیگیری تاریخ", exact: true, level: 1 }),

@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, signIn, setBranch, resetDemo } from "./helpers";
+import {
+  chooseOption,
+  signIn,
+  setBranch,
+  setLanguage,
+  resetDemo,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -165,9 +171,7 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
         .getByRole("cell")
         .filter({ has: page.getByText(product, { exact: true }) }),
     ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "گروه‌های ترکیبی", exact: true }),

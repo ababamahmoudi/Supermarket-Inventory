@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, setBranch } from "./helpers";
+import { signIn, setBranch, setLanguage } from "./helpers";
 import { addSelectedLabels, waitlistCopies } from "./label-selection";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 
@@ -108,9 +108,7 @@ test("validates A4 dimensions and Persian labels without external requests", asy
     .getByRole("button", { name: "Save template", exact: true })
     .click();
   await addProducts(page, ["0003"]);
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("button", { name: "چاپ برچسب‌ها" }),
@@ -145,17 +143,13 @@ test("requires one branch and prints its approved price instead of a pending pro
   await expect(
     page.getByRole("button", { name: "Print labels", exact: true }),
   ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(
     page.getByText(
       "پیش از انتخاب یا چاپ برچسب‌ها، یک شعبه را در بالا انتخاب کنید. برچسب‌ها قیمت‌ها و پیشنهادهای تأییدشدهٔ همان شعبه را نشان می‌دهند.",
     ),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
-    .click();
+  await setLanguage(page, "en");
   await setBranch(page, "Branch 2");
   await addProducts(page, ["0004", "0006"]);
   const teaLabel = page

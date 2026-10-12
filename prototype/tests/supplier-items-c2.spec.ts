@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
+import {
+  chooseOption,
+  openShellAction,
+  setBranch,
+  setLanguage,
+  signIn,
+} from "./helpers";
 
 async function expandDetails(scope: import("@playwright/test").Locator) {
   const buttons = scope.getByRole("button", {
@@ -218,10 +224,7 @@ test("remembered pack and supplier code edits preserve posted history and remain
     storage,
   );
   expect(after).toEqual(original);
-  await page
-    .locator(".topbar")
-    .getByRole("button", { name: "Switch to dark theme", exact: true })
-    .click();
+  await (await openShellAction(page, "Switch to dark theme")).click();
   await setLanguage(page, "fa");
   await expect(edited).toContainText("C2-PACK");
   await edited.focus();
