@@ -446,9 +446,9 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
     );
   }
   await (await openShellAction(page, "Demo")).click();
-  await expect(page.getByRole("menu")).toContainText(
-    "Demo with fictional data",
-  );
+  await expect(
+    page.getByRole("menu", { name: "Demo", exact: true }),
+  ).toContainText("Demo with fictional data");
   await page.keyboard.press("Escape");
   await expect(page.locator("main")).not.toContainText(
     "Demo with fictional data",

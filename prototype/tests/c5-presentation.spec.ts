@@ -332,9 +332,16 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         const amountElement = row.querySelector("dd")!;
         const term = textBounds(termElement);
         const amount = textBounds(amountElement);
+        const termBox = termElement.getBoundingClientRect();
+        const amountBox = amountElement.getBoundingClientRect();
         const bounds = row.getBoundingClientRect();
-        const column = getComputedStyle(row).flexDirection === "column";
-        const rtl = getComputedStyle(row).direction === "rtl";
+        const rowStyle = getComputedStyle(row);
+        const column = rowStyle.flexDirection === "column";
+        const rtl = rowStyle.direction === "rtl";
+        // Phone Payable aligns different-size caption/value line boxes at the end.
+        const alignmentError = column
+          ? Math.abs(rtl ? term.left - amount.left : term.right - amount.right)
+          : Math.abs(termBox.bottom - amountBox.bottom);
         const walker = window.document.createTreeWalker(
           amountElement,
           NodeFilter.SHOW_TEXT,
@@ -352,6 +359,14 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
           label: termElement.textContent,
           amount: amountElement.textContent,
           column,
+          alignItems: rowStyle.alignItems,
+          alignmentError,
+          lineBoxes: {
+            termTop: termBox.top,
+            termBottom: termBox.bottom,
+            amountTop: amountBox.top,
+            amountBottom: amountBox.bottom,
+          },
           contained: [term, amount].every(
             (rect) =>
               rect.left >= bounds.left - 2 &&
@@ -364,11 +379,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
             : Math.min(term.right, amount.right) -
                 Math.max(term.left, amount.left) <=
               0,
-          endAligned: column
-            ? Math.abs(
-                rtl ? term.left - amount.left : term.right - amount.right,
-              ) <= 2
-            : Math.abs(term.top - amount.top) <= 2,
+          endAligned: alignmentError <= 2,
           moneyWhole:
             moneyTops.length > 0 &&
             Math.max(...moneyTops) - Math.min(...moneyTops) <= 2,
@@ -395,6 +406,11 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       expect(row.separated, `${row.label}: label/value do not overlap`).toBe(
         true,
       );
+      if (!row.column)
+        expect(
+          row.alignItems,
+          `${row.label}: row uses the same end alignment for both line boxes`,
+        ).toBe("flex-end");
       expect(row.endAligned, `${row.label}: totals remain end-aligned`).toBe(
         true,
       );
@@ -499,7 +515,9 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       button(policy, "Download full policy", "دانلود سیاست کامل"),
     ).toHaveClass(/button-tinted/);
     await expect(button(policy, "Close", "بستن")).toHaveClass(/button-neutral/);
-    await expect(policy.locator(".dialog-actions > button")).toHaveText([
+    await expect(
+      policy.locator(".ui-dialog-actions").getByRole("button"),
+    ).toHaveText([
       variant === "fa-light" ? "بستن" : "Close",
       variant === "fa-light" ? "دانلود سیاست کامل" : "Download full policy",
     ]);
