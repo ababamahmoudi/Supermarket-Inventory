@@ -331,3 +331,11 @@
   display: block;
   margin-block-start: 4px;
 }
+
+@media screen {
+  :root .dashboard-layout .dashboard-invoice-reference {
+    display: inline-block;
+    white-space: nowrap;
+    max-inline-size: 100%;
+  }
+}

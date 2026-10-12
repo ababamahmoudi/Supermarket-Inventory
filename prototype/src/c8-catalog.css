@@ -425,3 +425,26 @@
     block-size: 100dvh;
   }
 }
+
+@media screen {
+  :root .catalog-products-table .catalog-charge-and-request {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root
+    .catalog-products-table
+    .catalog-charge-and-request
+    :is(.pending-sale-status, .sale-status) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    inline-size: 100%;
+    white-space: normal;
+    text-align: start;
+  }
+  :root .catalog-products-table .catalog-charge-and-request .sale-request-pill {
+    white-space: normal;
+  }
+}

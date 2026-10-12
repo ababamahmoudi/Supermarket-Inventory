@@ -1,6 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { setBranch, setLanguage, signIn } from "./helpers";
+import Decimal from "decimal.js";
+import { invoiceImage, setBranch, setLanguage, signIn } from "./helpers";
 import { button, choose, field } from "../scripts/c5-browser-proof.mjs";
 import {
   inspectC8Layout,
@@ -42,6 +43,89 @@ const pages = [
   { route: "settings?group=notes", table: false },
   { route: "settings?group=modules", table: false },
 ] as const;
+
+async function prepareSupplierShorts(page: Page) {
+  const before = await readC8State(page);
+  await prepareC8ManualInvoice(page);
+  await field(page, "Supplier invoice number (optional)").fill(
+    "C8-QA-SHORT-LAYOUT",
+  );
+  // A real manual fixture carries its own clearly fictional original and passes
+  // the normal receiving gates. No saved invoice or stock record is injected.
+  await field(page, "Upload a PDF or photo").setInputFiles({
+    ...invoiceImage,
+    name: "fictional-c8-short-layout.png",
+  });
+  const line = page.locator(".invoice-line");
+  await expect(line).toHaveCount(1);
+  await expect(line).toContainText("0002");
+  await choose(page, field(line, "Quantity unit"), "Units");
+  const cost = (await readC8State(page)).invoice.lines[0].unit_cost_before_tax;
+  await field(line, "Invoiced").fill("6");
+  await field(line, "Delivered").fill("2");
+  await expect(
+    line.getByRole("checkbox", { name: "Mark as short", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await button(line, "No").click();
+  await line
+    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .click();
+  await expect(line).toHaveAttribute("data-expanded", "false");
+  await expect
+    .poll(
+      async () => (await readC8State(page)).invoice.lines[0].review_confirmed,
+    )
+    .toBe(true);
+  await expect
+    .poll(async () => (await readC8State(page)).invoice.file_data)
+    .toMatch(/^idb-file:v1:/);
+  const draft = (await readC8State(page)).invoice;
+  expect(draft).toMatchObject({
+    supplier: "Fresh Valley Foods",
+    supplier_invoice_number: "C8-QA-SHORT-LAYOUT",
+    branch: "Branch 1",
+    file_name: "fictional-c8-short-layout.png",
+    final_total: new Decimal(cost).times(6).toFixed(2),
+  });
+  expect(draft.lines[0]).toMatchObject({
+    product_code: "0002",
+    qty_invoiced: 6,
+    qty_received_at_posting: 2,
+  });
+  expect((await readC8State(page)).ledger).toEqual(before.ledger);
+  expect((await readC8State(page)).stock_movements).toEqual(
+    before.stock_movements,
+  );
+  await button(page, "Post invoice").click();
+  const confirmation = page.getByRole("dialog", {
+    name: "Post invoice",
+    exact: true,
+  });
+  await expect(confirmation).toBeVisible();
+  await button(confirmation, "Post invoice").click();
+  await expect
+    .poll(
+      async () =>
+        (await readC8State(page)).invoices?.find(
+          (invoice) => invoice.id === draft.id,
+        )?.status,
+    )
+    .toBe("posted");
+  const after = await readC8State(page);
+  expect(after.stock["Branch 1:0002"]).toBe(
+    (before.stock["Branch 1:0002"] ?? 0) + 2,
+  );
+  expect(
+    after.stock_movements?.filter((entry) => entry.invoice_id === draft.id),
+  ).toMatchObject([{ product_code: "0002", qty: 2, type: "received" }]);
+  expect(
+    after.ledger.filter((entry) => entry.invoice_id === draft.id),
+  ).toMatchObject([
+    { type: "invoice", amount: new Decimal(cost).times(6).toFixed(2) },
+    { type: "short_deduction", amount: new Decimal(cost).times(-4).toFixed(2) },
+  ]);
+  return draft.supplier_invoice_number;
+}
 
 for (const language of ["en", "fa"] as const)
   for (const width of [390, 900, 1440])
@@ -101,11 +185,16 @@ for (const language of ["en", "fa"] as const)
           beforeRequest.stock_movements,
         );
         expect(requested.invoices).toEqual(beforeRequest.invoices);
+        const shortReference = await prepareSupplierShorts(page);
         await setLanguage(page, language);
         const reports: Awaited<ReturnType<typeof inspectC8Layout>>[] = [];
         const inspect = async (scene: string, needsRows = false) => {
           const proof = await inspectC8Layout(page, scene, language, width);
           reports.push(proof);
+          await info.attach("C8 actual layout: " + scene, {
+            body: JSON.stringify(proof, null, 2),
+            contentType: "application/json",
+          });
           expect(proof.actualWidth).toBe(width);
           expect(proof.words, scene + ": actual text measured").toBeGreaterThan(
             0,
@@ -191,6 +280,12 @@ for (const language of ["en", "fa"] as const)
                   exact: true,
                 })
                 .click();
+              if (en === "Shorts")
+                await expect(
+                  page
+                    .locator(".supplier-tab-card .ui-data-table tbody > tr")
+                    .filter({ hasText: shortReference }),
+                ).toHaveCount(1);
               await inspect("supplier:" + en, needsRows);
             }
           }

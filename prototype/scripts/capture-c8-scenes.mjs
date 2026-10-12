@@ -117,7 +117,7 @@ export async function setupC8Scene(page, scene, { costOriginal } = {}) {
         });
         if ((await tracking.getAttribute("aria-checked")) !== "true")
           await tracking.click();
-        await button(dialog, "Save product", "ذخیره کالا").click();
+        await button(dialog, "Save product", "ذخیرهٔ محصول").click();
         const missing = dialog.getByRole("alert", {
           name: exact("What's missing", "چه چیزی کم است"),
         });
@@ -139,19 +139,41 @@ export async function setupC8Scene(page, scene, { costOriginal } = {}) {
   }
   if (scene === "labels-products") {
     await visitC8(page, "labels");
-    await expect(page.locator(".labels-product-table tbody tr")).toHaveCount(
-      current.products.filter(
-        (product) =>
-          product.company_id === current.config.company.seed_key &&
-          product.status === "active",
-      ).length,
+    // The public Labels list includes pending products; only selection requires
+    // an active product with an approved price. Measure the full visible list.
+    const listed = current.products.filter(
+      (product) =>
+        product.company_id === current.config.company.seed_key &&
+        product.status !== "archived",
     );
+    const rows = page.locator(".labels-product-table tbody tr");
+    await expect(rows).toHaveCount(listed.length);
+    // The code cell can move into disclosure details at narrow widths. The
+    // actual selection control retains its accessible product identifier.
+    const names = await rows
+      .getByRole("checkbox")
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute("aria-label") ?? ""),
+      );
+    const codes = names.map((value) =>
+      value.replace(/^(?:Select product|انتخاب کالای) /, ""),
+    );
+    expect(codes.sort()).toEqual(listed.map((product) => product.code).sort());
+    for (const product of listed.filter((entry) => entry.status !== "active"))
+      await expect(
+        rows.getByRole("checkbox", {
+          name: exact(
+            "Select product " + product.code,
+            "انتخاب کالای " + product.code,
+          ),
+        }),
+      ).toBeDisabled();
     return {
       selector: ".labels-product-table",
       capture: "page",
       evidence: {
         source:
-          "Full uncapped approved product list; every table row measured against its card",
+          "Full uncapped nonarchived product list, with pending selections disabled; every table row measured against its card",
       },
     };
   }

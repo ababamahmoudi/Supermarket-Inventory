@@ -107,6 +107,12 @@
   align-self: start;
   inline-size: fit-content;
 }
+:root .current-offers-table .sale-request-offer-badge.ui-badge {
+  flex-wrap: wrap;
+  white-space: normal;
+  text-wrap: wrap;
+  max-inline-size: 100%;
+}
 .current-offers-table .product-name strong,
 .current-offers-table .product-name small {
   overflow-wrap: normal;

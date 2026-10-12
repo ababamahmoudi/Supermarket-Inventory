@@ -3043,16 +3043,18 @@ export function Products() {
                           </>
                         )}
                         <td className="numeric">
-                          {price ? (
-                            <SalePrice product={product} stacked />
-                          ) : (
-                            "—"
-                          )}
+                          <div className="catalog-charge-and-request">
+                            {price ? (
+                              <SalePrice product={product} stacked />
+                            ) : (
+                              "—"
+                            )}
+                            <SaleStatus product={product} compact />
+                            <PendingSalePill product={product} />
+                          </div>
                         </td>
                         <td>
                           <div className="actions">
-                            <SaleStatus product={product} compact />
-                            <PendingSalePill product={product} />
                             <ManualPricePill product={product} />
                             {pending && (
                               <Badge tone="pending">

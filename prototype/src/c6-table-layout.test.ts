@@ -66,3 +66,39 @@ describe("responsive column priorities", () => {
     ).toBe(4);
   });
 });
+
+it("honors opt-in fixed outer widths and keeps omitted fields available without changing column preferences", () => {
+  const configured = [
+    {
+      key: "selection",
+      label: "Select",
+      width: 48,
+      fixedWidth: true,
+      required: true,
+    },
+    {
+      key: "product",
+      label: "Product",
+      minWidth: 180,
+      required: true,
+      priority: 1,
+    },
+    { key: "code", label: "Code", width: 104, fixedWidth: true, priority: 3 },
+    { key: "offer", label: "Offer", width: 150, fixedWidth: true, priority: 4 },
+    { key: "price", label: "Price", width: 156, fixedWidth: true, priority: 2 },
+  ];
+  const before = structuredClone(configured);
+  const full = allocateTableColumns(configured, 724, false);
+  expect(full.minimums).toEqual([48, 180, 104, 150, 156]);
+  expect(full.visible).toEqual([0, 1, 2, 3, 4]);
+  expect(full.collapsed).toEqual([]);
+  const narrow = allocateTableColumns(configured, 460, false);
+  expect(narrow.visible).toEqual([0, 1, 4]);
+  expect(narrow.collapsed).toEqual([2, 3]);
+  expect(configured).toEqual(before);
+  // A numeric width alone remains the old flexible hint.
+  expect(
+    allocateTableColumns([{ key: "selection", width: 48 }], 724, false)
+      .minimums,
+  ).toEqual([180]);
+});

@@ -43,6 +43,7 @@ import { useDemo } from "./store";
 import { translate } from "./i18n";
 import {
   allocateTableColumns,
+  fixedColumnWidth,
   tableResponsiveDefinition,
   type ResponsiveColumn,
 } from "./c6-table-layout";
@@ -493,7 +494,11 @@ export function DataTable({
   const separateDetailsWidth = separateDetailsColumn ? 36 : 0;
   const flexibleMinimum = layout.visible.reduce(
     (total, index) =>
-      total + (resolvedColumns[index].actions ? 0 : layout.minimums[index]),
+      total +
+      (resolvedColumns[index].actions ||
+      fixedColumnWidth(resolvedColumns[index]) !== null
+        ? 0
+        : layout.minimums[index]),
     0,
   );
   const columnWeight = (column: (typeof resolvedColumns)[number]): number => {
@@ -510,16 +515,21 @@ export function DataTable({
   );
   const columnId = (column: (typeof resolvedColumns)[number]) =>
     column.key ?? String(resolvedColumns.indexOf(column));
-  const fixedActionWidth = visibleColumns.reduce(
+  const reservedWidth = visibleColumns.reduce(
     (total, column) =>
       total +
-      (column.actions
-        ? (actionWidths[columnId(column)] ?? columnWeight(column))
-        : 0),
+      (fixedColumnWidth(column) ??
+        (column.actions
+          ? (actionWidths[columnId(column)] ?? columnWeight(column))
+          : 0)),
     0,
   );
   const flexibleWeight = visibleColumns.reduce(
-    (total, column) => total + (column.actions ? 0 : columnWeight(column)),
+    (total, column) =>
+      total +
+      (column.actions || fixedColumnWidth(column) !== null
+        ? 0
+        : columnWeight(column)),
     0,
   );
   // Reserve only the real action controls, including translated labels. Chromium
@@ -845,7 +855,7 @@ export function DataTable({
         data-visible-column-count={visibleColumns.length}
         style={
           {
-            "--table-min-width": `${Math.ceil((flexibleWeight + fixedActionWidth || totalWeight) + separateDetailsWidth)}px`,
+            "--table-min-width": `${Math.ceil((flexibleWeight + reservedWidth || totalWeight) + separateDetailsWidth)}px`,
           } as CSSProperties
         }
       >
@@ -855,15 +865,18 @@ export function DataTable({
               key={column.key ?? index}
               data-action-column={column.actions || undefined}
               style={{
-                width: column.actions
-                  ? `${actionWidths[columnId(column)] ?? columnWeight(column)}px`
-                  : responsive && availableWidth
-                    ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - fixedActionWidth - separateDetailsWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
-                    : flexibleWeight
-                      ? availableWidth
-                        ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
-                        : `${(columnWeight(column) / totalWeight) * 100}%`
-                      : undefined,
+                width:
+                  fixedColumnWidth(column) !== null
+                    ? `${fixedColumnWidth(column)}px`
+                    : column.actions
+                      ? `${actionWidths[columnId(column)] ?? columnWeight(column)}px`
+                      : responsive && availableWidth
+                        ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - reservedWidth - separateDetailsWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
+                        : flexibleWeight
+                          ? availableWidth
+                            ? `${(Math.max(0, availableWidth - reservedWidth) * columnWeight(column)) / flexibleWeight}px`
+                            : `${(columnWeight(column) / totalWeight) * 100}%`
+                          : undefined,
               }}
             />
           ))}

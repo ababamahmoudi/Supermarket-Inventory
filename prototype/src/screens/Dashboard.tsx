@@ -934,7 +934,9 @@ export function Dashboard() {
                         data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
                       >
                         <td>
-                          <bdi>{invoice.supplier_invoice_number || "—"}</bdi>
+                          <LtrText className="dashboard-invoice-reference">
+                            {invoice.supplier_invoice_number || "—"}
+                          </LtrText>
                         </td>
                         <td>
                           <LtrText>{invoice.supplier}</LtrText>
@@ -1328,7 +1330,9 @@ export function Dashboard() {
                         <>
                           {branchName(item.branch)} ·{" "}
                           <DateText value={item.date} /> ·{" "}
-                          <LtrText>{item.invoice_number}</LtrText>
+                          <LtrText className="dashboard-invoice-reference">
+                            {item.invoice_number}
+                          </LtrText>
                         </>
                       }
                       pill={

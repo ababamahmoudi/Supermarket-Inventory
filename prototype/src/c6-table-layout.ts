@@ -80,10 +80,21 @@ export function tableResponsiveDefinition(
   };
 }
 
+export function fixedColumnWidth(column: ResponsiveColumn): number | null {
+  return column.fixedWidth &&
+    typeof column.width === "number" &&
+    Number.isFinite(column.width) &&
+    column.width > 0
+    ? column.width
+    : null;
+}
+
 export function columnMinimumWidth(
   column: ResponsiveColumn,
   index: number,
 ): number {
+  const fixed = fixedColumnWidth(column);
+  if (fixed !== null) return fixed;
   if (column.minWidth !== undefined) return Math.max(48, column.minWidth);
   if (column.actions) return 140;
   const key = column.key ?? "";
@@ -111,13 +122,15 @@ export function allocateTableColumns(
   mobile: boolean,
   measuredMinimums: readonly number[] = [],
 ): { visible: number[]; collapsed: number[]; minimums: number[] } {
-  const minimums = columns.map((column, index) =>
-    column.actions && (measuredMinimums[index] ?? 0) > 0
-      ? measuredMinimums[index]
-      : Math.max(
-          columnMinimumWidth(column, index),
-          measuredMinimums[index] ?? 0,
-        ),
+  const minimums = columns.map(
+    (column, index) =>
+      fixedColumnWidth(column) ??
+      (column.actions && (measuredMinimums[index] ?? 0) > 0
+        ? measuredMinimums[index]
+        : Math.max(
+            columnMinimumWidth(column, index),
+            measuredMinimums[index] ?? 0,
+          )),
   );
   let visible = columns.flatMap((column, index) =>
     column.hidden ? [] : [index],

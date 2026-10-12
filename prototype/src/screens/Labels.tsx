@@ -1627,11 +1627,45 @@ export function Labels() {
             <DataTable
               className="labels-product-table"
               columns={[
-                { width: 48 },
-                {},
-                { width: 104 },
-                { width: 150 },
-                { width: 132, align: "end" },
+                {
+                  key: "selection",
+                  width: 48,
+                  minWidth: 48,
+                  fixedWidth: true,
+                  required: true,
+                  mobilePrimary: true,
+                },
+                {
+                  key: "product",
+                  minWidth: 180,
+                  priority: 1,
+                  mobilePrimary: true,
+                },
+                {
+                  key: "code",
+                  width: 104,
+                  minWidth: 104,
+                  fixedWidth: true,
+                  priority: 3,
+                  mobilePrimary: false,
+                },
+                {
+                  key: "offer",
+                  width: 150,
+                  minWidth: 150,
+                  fixedWidth: true,
+                  priority: 4,
+                  mobilePrimary: false,
+                },
+                {
+                  key: "price",
+                  width: 156,
+                  minWidth: 156,
+                  fixedWidth: true,
+                  priority: 2,
+                  mobilePrimary: true,
+                  align: "end",
+                },
               ]}
             >
               <thead>
@@ -1708,7 +1742,7 @@ export function Labels() {
                           <ManualPricePill product={product} branch={branch} />
                         </div>
                       ) : (
-                        <span className="muted">
+                        <span className="muted label-price-unavailable">
                           {t(
                             "No approved price yet",
                             "هنوز قیمت تأییدشده ندارد",

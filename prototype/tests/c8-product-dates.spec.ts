@@ -92,7 +92,7 @@ for (const language of ["en", "fa"] as const) {
       if ((await tracking.getAttribute("aria-checked")) !== "true")
         await tracking.click();
       await dialog
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       const missing = dialog.getByRole("alert", {
         name: exact("What's missing", "چه چیزی کم است"),
@@ -165,7 +165,7 @@ for (const language of ["en", "fa"] as const) {
       await expect(dialog.locator(".product-editor-date-row")).toHaveCount(0);
       expect(openDates(await readC8State(page), "0004")).toHaveLength(0);
       await dialog
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       await expect(dialog).toBeHidden();
       await expect
@@ -185,7 +185,7 @@ for (const language of ["en", "fa"] as const) {
       const reopened = await openC8ProductEditor(page, "0004");
       await expect(reopened.locator(".product-editor-date-row")).toHaveCount(1);
       await reopened
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       await expect(reopened).toBeHidden();
       expect(openDates(await readC8State(page), "0004")).toHaveLength(1);
@@ -216,7 +216,7 @@ for (const language of ["en", "fa"] as const) {
         .getByLabel(exact("English name", "نام انگلیسی"), { exact: true })
         .fill("C8 date retained at original store");
       await dialog
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       await expect(dialog).toBeHidden();
       await expect
@@ -262,7 +262,7 @@ for (const language of ["en", "fa"] as const) {
         })
         .fill("2");
       await dialog
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       const date = inline.getByLabel(exact("Date", "تاریخ"), { exact: true });
       await expect(
@@ -279,7 +279,7 @@ for (const language of ["en", "fa"] as const) {
       );
       await quantity.fill("-1");
       await dialog
-        .getByRole("button", { name: exact("Save product", "ذخیره کالا") })
+        .getByRole("button", { name: exact("Save product", "ذخیرهٔ محصول") })
         .click();
       await expect(quantity).toHaveAttribute("aria-invalid", "true");
       await expect(

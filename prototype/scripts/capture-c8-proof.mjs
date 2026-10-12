@@ -308,7 +308,18 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     .getByRole("checkbox", {
       name: /^(Confirm this invoice line|تأیید این ردیف فاکتور)$/,
     })
-    .check();
+    .click();
+  // Confirmation collapses this real line and removes its checkbox. Verify
+  // the resulting UI and durable fact rather than re-querying that old control.
+  await expect(page.locator(".invoice-line")).toHaveAttribute(
+    "data-expanded",
+    "false",
+  );
+  await expect
+    .poll(
+      async () => (await readC8State(page)).invoice.lines[0].review_confirmed,
+    )
+    .toBe(true);
   await button(page, "Post invoice", "ثبت فاکتور").click();
   const confirmation = page.getByRole("dialog", {
     name: /^(Post invoice|ثبت فاکتور)$/,

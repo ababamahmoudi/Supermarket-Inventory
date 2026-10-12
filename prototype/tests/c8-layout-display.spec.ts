@@ -137,9 +137,11 @@ for (const language of ["en", "fa"] as const) {
       .click();
     await expect(line).toHaveAttribute("data-expanded", "false");
     await setLanguage(page, language);
-    await expect(
-      line.locator(".invoice-line-summary > td:nth-child(3) .money"),
-    ).toHaveText("$1.5525");
+    const displayedCost = line
+      .locator(".invoice-line-summary > td:nth-child(3)")
+      .getByText("$1.5525", { exact: true });
+    await expect(displayedCost).toBeVisible();
+    await expect(displayedCost).toHaveText("$1.5525");
     await expect
       .poll(
         async () => (await saved(page)).invoice.lines[0].unit_cost_before_tax,
@@ -150,9 +152,8 @@ for (const language of ["en", "fa"] as const) {
     expect(after.invoices).toEqual(before.invoices);
     expect(after.invoice.file_data).toBe(before.invoice.file_data);
     await page.reload();
-    await expect(
-      line.locator(".invoice-line-summary > td:nth-child(3) .money"),
-    ).toHaveText("$1.5525");
+    await expect(displayedCost).toBeVisible();
+    await expect(displayedCost).toHaveText("$1.5525");
   });
 
   test(`C8 Received uses whole cases and retained loose units (${language})`, async ({
@@ -224,9 +225,105 @@ for (const language of ["en", "fa"] as const) {
     }
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/#suppliers");
+    const suppliersTable = page.locator(".suppliers-table");
+    const supplierRow = suppliersTable
+      .locator("tbody > tr[data-row-href]")
+      .filter({ hasText: "Fresh Valley Foods" });
+    await expect(supplierRow).toHaveCount(1);
+    const visibleValues = await supplierRow
+      .locator("td[data-column-key]")
+      .evaluateAll((cells) =>
+        Object.fromEntries(
+          cells.map((cell) => [
+            cell.getAttribute("data-column-key")!,
+            cell.textContent?.trim() ?? "",
+          ]),
+        ),
+      );
+    const before = await saved(page);
+    const supplier = before.suppliers!.find(
+      (item) => item.name === "Fresh Valley Foods",
+    )!;
+    expect(supplier).toBeDefined();
+    await page
+      .getByRole("button", {
+        name: copy(language, "Columns", "ستون‌ها"),
+        exact: true,
+      })
+      .click();
+    const columns = page.getByRole("dialog", {
+      name: copy(language, "Columns", "ستون‌ها"),
+      exact: true,
+    });
+    for (const [en, fa] of [
+      ["Payment terms", "شرایط پرداخت"],
+      ["Sales rep and phone", "نماینده فروش و تلفن"],
+      ["Next due date", "سررسید بعدی"],
+    ]) {
+      const option = columns.getByRole("checkbox", {
+        name: copy(language, en, fa),
+        exact: true,
+      });
+      await expect(option).not.toBeChecked();
+      await option.click();
+      await expect(option).toBeChecked();
+    }
+    await columns
+      .getByRole("button", {
+        name: copy(language, "Close", "بستن"),
+        exact: true,
+      })
+      .click();
+    for (const [key, en, fa] of [
+      ["name", "Supplier", "تأمین‌کننده"],
+      ["status", "Status", "وضعیت"],
+      ["last_delivery", "Last delivery", "آخرین تحویل"],
+      ["deliveries", "Deliveries", "تحویل‌ها"],
+      ["returns", "Open returns", "مرجوعی‌های باز"],
+      ["shorts", "Open shorts", "کسری‌های باز"],
+      ["terms", "Payment terms", "شرایط پرداخت"],
+      ["contact", "Sales rep and phone", "نماینده فروش و تلفن"],
+      ["balance", "Balance", "مانده"],
+      ["overdue", "Overdue", "سررسید گذشته"],
+      ["due", "Next due date", "سررسید بعدی"],
+      ["actions", "Action", "عملیات"],
+    ]) {
+      const header = suppliersTable.locator(
+        `thead th[data-column-key="${key}"]`,
+      );
+      await expect(header).toBeVisible();
+      await expect(header).toContainText(copy(language, en, fa));
+      await expect(
+        supplierRow.locator(`td[data-column-key="${key}"]`),
+      ).toBeVisible();
+    }
+    for (const [key, value] of Object.entries(visibleValues))
+      await expect(
+        supplierRow.locator(`td[data-column-key="${key}"]`),
+      ).toHaveText(value);
+    await expect(supplierRow.locator('td[data-column-key="terms"]')).toHaveText(
+      supplier.payment_terms ?? "—",
+    );
     await expect(
-      page.locator(".suppliers-table .table-details-toggle"),
-    ).toHaveCount(0);
+      supplierRow.locator('td[data-column-key="contact"]'),
+    ).toContainText(supplier.sales_rep_name ?? "—");
+    await expect(
+      supplierRow.locator('td[data-column-key="contact"]'),
+    ).toContainText(supplier.sales_rep_phone ?? "—");
+    await expect(supplierRow.locator('td[data-column-key="due"]')).toHaveText(
+      /^(?:\d{4}-\d{2}-\d{2}|—)$/,
+    );
+    await expect(suppliersTable).toHaveAttribute(
+      "data-width-hidden-column-count",
+      "0",
+    );
+    await expect(suppliersTable.locator(".table-details-toggle")).toHaveCount(
+      0,
+    );
+    const after = await saved(page);
+    expect(after.suppliers).toEqual(before.suppliers);
+    expect(after.invoices).toEqual(before.invoices);
+    expect(after.ledger).toEqual(before.ledger);
   });
 
   test(`C8 Payables filters share their list card and preserve scoped rows (${language})`, async ({

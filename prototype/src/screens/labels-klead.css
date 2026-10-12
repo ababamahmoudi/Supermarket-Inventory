@@ -17,6 +17,14 @@
     padding-inline-end: 0;
     text-align: end;
   }
+  :root .labels-products-card .labels-product-table .label-price-unavailable {
+    display: block;
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
   @media (min-width: 761px) {
     .labels-products-card .labels-product-table thead {
       position: sticky;

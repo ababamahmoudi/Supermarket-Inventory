@@ -181,7 +181,7 @@ export function SalesOfferRow({
             <strong>
               <SalePrice product={row.product} branch={row.request.branch} />
             </strong>
-            <Badge tone="pending">
+            <Badge tone="pending" className="sale-request-offer-badge">
               {salesText(t, "requested")}{" "}
               <RecordedSalePrice
                 state={state}
