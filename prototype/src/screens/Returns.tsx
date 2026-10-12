@@ -1434,7 +1434,9 @@ export function Returns() {
                           {companyTimestamp(state.config, event.at)}
                         </LtrText>{" "}
                         · {demoUserLabel(event.by, lang)} ·{" "}
-                        <LtrText>{event.document}</LtrText>
+                        <LtrText className="return-evidence-reference">
+                          {event.document}
+                        </LtrText>
                       </p>
                       {event.note && <p>{event.note}</p>}
                       {event.photo && (

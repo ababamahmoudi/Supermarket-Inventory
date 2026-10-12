@@ -699,6 +699,74 @@ describe("styled Menu", () => {
     ).toBeVisible();
   });
 
+  it("closes a just-opened nested menu before its focus frame without closing the parent", () => {
+    const frames = new Map<number, FrameRequestCallback>();
+    let nextFrame = 0;
+    const request = vi
+      .spyOn(globalThis, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        const id = ++nextFrame;
+        frames.set(id, callback);
+        return id;
+      });
+    const cancel = vi
+      .spyOn(globalThis, "cancelAnimationFrame")
+      .mockImplementation((id) => {
+        frames.delete(id);
+      });
+    try {
+      for (const direction of ["ltr", "rtl"] as const) {
+        for (const closeKey of [
+          "Escape",
+          direction === "rtl" ? "ArrowRight" : "ArrowLeft",
+        ]) {
+          const action = vi.fn();
+          const view = show(
+            <Menu label="More">
+              <MenuItem onClick={vi.fn()}>Search</MenuItem>
+              <MenuSubmenu label="Demo">
+                <MenuItem onClick={action}>Reset demo</MenuItem>
+              </MenuSubmenu>
+            </Menu>,
+          );
+          document.documentElement.dir = direction;
+          const trigger = screen.getByRole("button", { name: "More" });
+          fireEvent.click(trigger);
+          const [outerId, outerFocus] = [...frames.entries()][0];
+          frames.delete(outerId);
+          act(() => outerFocus(0));
+          const demo = screen.getByRole("menuitem", { name: /^Demo$/ });
+          demo.focus();
+          fireEvent.click(demo);
+          expect(
+            screen.getByRole("menuitem", { name: "Reset demo" }),
+          ).toBeVisible();
+          expect(demo).toHaveFocus();
+          const [nestedId, lateFocus] = [...frames.entries()][0];
+          fireEvent.keyDown(demo, { key: closeKey });
+          expect(cancel).toHaveBeenCalledWith(nestedId);
+          expect(demo).toHaveFocus();
+          expect(demo).toHaveAttribute("aria-expanded", "false");
+          expect(
+            screen.queryByRole("menuitem", { name: "Reset demo" }),
+          ).not.toBeInTheDocument();
+          expect(screen.getByRole("menu", { name: "More" })).toBeVisible();
+          act(() => lateFocus(0));
+          expect(demo).toHaveFocus();
+          expect(action).not.toHaveBeenCalled();
+          fireEvent.keyDown(demo, { key: "Escape" });
+          expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+          expect(trigger).toHaveFocus();
+          view.unmount();
+        }
+      }
+    } finally {
+      document.documentElement.dir = "ltr";
+      request.mockRestore();
+      cancel.mockRestore();
+    }
+  });
+
   for (const direction of ["ltr", "rtl"] as const)
     it(`keeps nested Demo navigation at its own level and restores focus (${direction})`, async () => {
       const user = userEvent.setup();

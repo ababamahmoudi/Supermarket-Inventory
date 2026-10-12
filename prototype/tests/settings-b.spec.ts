@@ -307,6 +307,26 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
   });
   await expect(tester.getByText("$1.99", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  // Browser file migration precedes the durable business-state write. Verify
+  // the saved category before reloading instead of racing that write.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(
+          localStorage.getItem("supermarket-prototype-v1")!,
+        ).config.pricing_categories.find(
+          (category: { key: string }) => category.key === "bakery",
+        ),
+      ),
+    )
+    .toEqual(
+      expect.objectContaining({
+        key: "bakery",
+        label: "Bakery",
+        label_fa: "نانوایی",
+        cost_divisor: "0.50",
+      }),
+    );
   await page.reload();
   await group(page, "Catalog");
   const divisor = page.getByLabel("Cost divisor for Bakery", { exact: true });

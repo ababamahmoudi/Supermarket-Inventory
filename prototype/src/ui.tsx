@@ -2237,16 +2237,35 @@ export function MenuSubmenu({
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const focusFrame = useRef<number | null>(null);
+  const opening = useRef(false);
   const id = useId();
+  const cancelFocus = () => {
+    if (focusFrame.current !== null) cancelAnimationFrame(focusFrame.current);
+    focusFrame.current = null;
+  };
+  useEffect(
+    () => () => {
+      opening.current = false;
+      if (focusFrame.current !== null) cancelAnimationFrame(focusFrame.current);
+    },
+    [],
+  );
   const openMenu = () => {
+    cancelFocus();
+    opening.current = true;
     setOpen(true);
-    requestAnimationFrame(() =>
+    focusFrame.current = requestAnimationFrame(() => {
+      focusFrame.current = null;
+      if (!opening.current) return;
       menu.current
         ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
-        ?.focus(),
-    );
+        ?.focus();
+    });
   };
   const close = () => {
+    opening.current = false;
+    cancelFocus();
     setOpen(false);
     trigger.current?.focus();
   };
@@ -2263,7 +2282,15 @@ export function MenuSubmenu({
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={(event) => {
           const rtl = document.documentElement.dir === "rtl";
-          if (event.key === (rtl ? "ArrowLeft" : "ArrowRight")) {
+          if (
+            open &&
+            (event.key === "Escape" ||
+              event.key === (rtl ? "ArrowRight" : "ArrowLeft"))
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            close();
+          } else if (event.key === (rtl ? "ArrowLeft" : "ArrowRight")) {
             event.preventDefault();
             event.stopPropagation();
             openMenu();

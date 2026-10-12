@@ -29,6 +29,13 @@
     background: var(--neutral-fill);
     color: var(--text);
   }
+  :root
+    .main-content
+    .page-header:not(:where(.ui-card *, .ui-dialog *))
+    .ui-button.button.button-neutral:not(.ui-icon-button) {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+  }
   :root .ui-menu-item {
     min-block-size: 40px;
     font-size: var(--font-size-body);
@@ -144,6 +151,14 @@
     overflow-wrap: normal;
     word-break: normal;
     line-height: var(--line-height-body);
+  }
+  :root .return-evidence-card .history-row > p {
+    max-inline-size: 100%;
+  }
+  :root .return-evidence-card .return-evidence-reference {
+    display: inline-block;
+    white-space: nowrap;
+    max-inline-size: 100%;
   }
   :root .ui-data-table tbody tr:not(.table-expanded-row):nth-child(n) {
     background-color: var(--color-clear);

@@ -168,6 +168,7 @@ async function appearance(control: Locator) {
         hairline: token("--page-control-border"),
       },
       borderColour: style.borderTopColor,
+      borderWidth: style.borderTopWidth,
     };
   });
 }
@@ -507,6 +508,71 @@ for (const language of ["en", "fa"] as const) {
       .soft((await appearance(search.locator("input"))).contrast)
       .toBeGreaterThanOrEqual(4.5);
 
+    const supplierViewport = page.viewportSize()!;
+    if (supplierViewport.width > 760)
+      await page.setViewportSize({
+        width: 900,
+        height: supplierViewport.height,
+      });
+    await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
+    await expect(page.locator(".page-header h1")).toHaveText(
+      "Fresh Valley Foods",
+    );
+    const supplierActions = page.locator(".page-header .actions button");
+    await expect(supplierActions).toHaveCount(2);
+    await expect(
+      button(page.locator(".page-header"), "Edit", "ویرایش"),
+    ).toBeVisible();
+    await expect(
+      button(page.locator(".page-header"), "More", "بیشتر"),
+    ).toBeVisible();
+    await page.mouse.move(0, 0);
+    await settled(page);
+    report.supplierHeader = [];
+    for (const control of await supplierActions.all()) {
+      expect(
+        await control.evaluate((element) => !!element.closest(".ui-card")),
+      ).toBe(false);
+      const style = await appearance(control);
+      (report.supplierHeader as unknown[]).push(style);
+      expect.soft(style.background).toBe(style.tokens.surface);
+      expect.soft(style.colour).toBe(style.tokens.text);
+      expect.soft(style.borderVisible).toBe(true);
+      expect.soft(style.borderWidth).toBe("1px");
+      expect.soft(style.borderColour).toBe(style.tokens.hairline);
+      expect.soft(style.outlineVisible).toBe(false);
+      expect.soft(style.shadow).toBe("none");
+      expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
+    }
+
+    await setLanguage(page, "en");
+    await page.goto("/#invoices");
+    await button(page.locator(".page-header"), "New invoice").click();
+    await button(page, "Manual entry").click();
+    await setLanguage(page, language);
+    const newInvoice = button(
+      page.locator(".page-header"),
+      "New invoice",
+      "فاکتور جدید",
+    );
+    await expect(newInvoice).toHaveClass(/button-neutral/);
+    expect(
+      await newInvoice.evaluate((element) => !!element.closest(".ui-card")),
+    ).toBe(false);
+    await page.locator("main h1").click();
+    await page.mouse.move(0, 0);
+    await settled(page);
+    const invoiceHeader = await appearance(newInvoice);
+    report.manualInvoiceHeader = invoiceHeader;
+    expect.soft(invoiceHeader.background).toBe(invoiceHeader.tokens.surface);
+    expect.soft(invoiceHeader.colour).toBe(invoiceHeader.tokens.text);
+    expect.soft(invoiceHeader.borderVisible).toBe(true);
+    expect.soft(invoiceHeader.borderWidth).toBe("1px");
+    expect.soft(invoiceHeader.borderColour).toBe(invoiceHeader.tokens.hairline);
+    expect.soft(invoiceHeader.outlineVisible).toBe(false);
+    expect.soft(invoiceHeader.shadow).toBe("none");
+    expect.soft(invoiceHeader.contrast).toBeGreaterThanOrEqual(4.5);
+
     await page.goto("/#dashboard");
     const more = page
       .locator(".ui-card .ui-menu-trigger.ui-icon-button")
@@ -645,6 +711,76 @@ for (const language of ["en", "fa"] as const) {
     expect
       .soft((await appearance(feedback)).contrast)
       .toBeGreaterThanOrEqual(4.5);
+
+    const documentReferences = await page.evaluate(() => {
+      const saved = JSON.parse(
+        localStorage.getItem("supermarket-prototype-v1")!,
+      );
+      const record = saved.returns.find(
+        (item: { id: string }) => item.id === "demo-return-1",
+      );
+      return ["pickup", "replacement"].map(
+        (kind) =>
+          record.evidence.find((event: { kind: string }) => event.kind === kind)
+            .document as string,
+      );
+    });
+    expect(documentReferences).toEqual([
+      "C7-SIGNED-PAPER-001",
+      "C7-ACTUAL-REPLACEMENT-001",
+    ]);
+    report.evidenceReferences = [];
+    for (const document of documentReferences) {
+      const reference = page
+        .locator(".return-evidence-card .history-row p .ltr-fragment")
+        .filter({ hasText: exact(document) });
+      await expect(reference).toHaveCount(1);
+      await expect(reference).toHaveText(document);
+      await reference.scrollIntoViewIfNeeded();
+      await settled(page);
+      const geometry = await reference.evaluate((element) => {
+        const walker = globalThis.document.createTreeWalker(
+          element,
+          NodeFilter.SHOW_TEXT,
+        );
+        const characters: DOMRect[] = [];
+        while (walker.nextNode()) {
+          for (
+            let offset = 0;
+            offset < (walker.currentNode.textContent?.length ?? 0);
+            offset++
+          ) {
+            const range = globalThis.document.createRange();
+            range.setStart(walker.currentNode, offset);
+            range.setEnd(walker.currentNode, offset + 1);
+            characters.push(
+              ...[...range.getClientRects()].filter(
+                (rect) => rect.width > 0 && rect.height > 0,
+              ),
+            );
+          }
+        }
+        const paragraph = element.closest("p")!.getBoundingClientRect();
+        const row = element.closest(".history-row")!.getBoundingClientRect();
+        return {
+          text: element.textContent,
+          characterCount: characters.length,
+          lines: new Set(characters.map((rect) => Math.round(rect.top))).size,
+          contained: characters.every(
+            (rect) =>
+              rect.left >= paragraph.left - 2 &&
+              rect.right <= paragraph.right + 2 &&
+              rect.left >= row.left - 2 &&
+              rect.right <= row.right + 2,
+          ),
+        };
+      });
+      (report.evidenceReferences as unknown[]).push(geometry);
+      expect.soft(geometry.text).toBe(document);
+      expect.soft(geometry.characterCount).toBe(document.length);
+      expect.soft(geometry.lines).toBe(1);
+      expect.soft(geometry.contained).toBe(true);
+    }
 
     await button(form, "Close", "بستن").click();
     await page

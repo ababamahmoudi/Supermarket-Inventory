@@ -158,6 +158,21 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
     .getByRole("switch", { name: "Use rounding bands", exact: true })
     .uncheck();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  // Save updates the form before asynchronous file migration/persistence ends.
+  // Require the exact durable configuration before testing reload persistence.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (key) => JSON.parse(localStorage.getItem(key)!).config.weighed_items,
+        STORAGE_KEY,
+      ),
+    )
+    .toEqual({
+      conversion_factor: "2.20462",
+      main_display_unit: "kg",
+      show_second_unit: false,
+      use_rounding_bands: false,
+    });
   await page.reload();
   await expect(
     page.getByLabel("Main display unit", { exact: true }),

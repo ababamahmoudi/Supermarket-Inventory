@@ -89,6 +89,49 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           .replace(/\s+/g, " ")
           .trim();
       const round = (value) => Math.round(value * 100) / 100;
+      const textContrastOf = (element) => {
+        const parse = (color) => {
+          const channels = color.match(/[\d.]+/g)?.map(Number) ?? [];
+          return [channels[0], channels[1], channels[2], channels[3] ?? 1];
+        };
+        const blend = (foreground, background) =>
+          foreground
+            .slice(0, 3)
+            .map(
+              (channel, index) =>
+                channel * foreground[3] +
+                background[index] * (1 - foreground[3]),
+            )
+            .concat(1);
+        const ancestors = [];
+        for (let current = element; current; current = current.parentElement)
+          ancestors.unshift(parse(getComputedStyle(current).backgroundColor));
+        const background = ancestors.reduce(
+          (surface, color) => blend(color, surface),
+          [255, 255, 255, 1],
+        );
+        const foreground = blend(
+          parse(getComputedStyle(element).color),
+          background,
+        );
+        const luminance = (color) =>
+          color
+            .slice(0, 3)
+            .map((channel) => channel / 255)
+            .map((channel) =>
+              channel <= 0.04045
+                ? channel / 12.92
+                : ((channel + 0.055) / 1.055) ** 2.4,
+            )
+            .reduce(
+              (sum, channel, index) =>
+                sum + channel * [0.2126, 0.7152, 0.0722][index],
+              0,
+            );
+        const light = luminance(foreground);
+        const dark = luminance(background);
+        return (Math.max(light, dark) + 0.05) / (Math.min(light, dark) + 0.05);
+      };
       const failures = [];
       const buttons = [];
       const widgetRoles = [
@@ -120,6 +163,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ".notebook-tabs",
       ].join(",");
       const kindOf = (element) => {
+        // Category choices are actual pressed-state chips; their menu trigger
+        // belongs to the same pill group. Keep them measured, with their own
+        // fully-round shape rule, rather than treating them as ordinary actions.
+        if (
+          element.matches(
+            '.filter-chip[aria-pressed], .lookup-category-more.ui-menu-trigger[aria-haspopup="menu"]',
+          )
+        )
+          return "choice";
         const kind = element.getAttribute("data-control-kind");
         if (kind && kind !== "action") return kind;
         const controlRole = element.getAttribute("role");
@@ -156,6 +208,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           element.getAttribute("aria-label") || element.textContent,
         );
         const kind = kindOf(element);
+        const choiceTextContrast =
+          kind === "choice" ? textContrastOf(element) : null;
         const variantClass = [
           "primary",
           "secondary",
@@ -259,16 +313,44 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           border: `${style.borderTopWidth} ${style.borderTopStyle} ${style.borderTopColor}`,
           glow: style.boxShadow,
           className: element.className,
+          ...(kind === "choice"
+            ? { textContrast: round(choiceTextContrast) }
+            : {}),
         };
         buttons.push(entry);
-        if (kind === "action") {
+        if (kind === "action" || kind === "choice") {
           const phone = document.documentElement.clientWidth < 760;
           const small =
             element.classList.contains("button-sm") ||
             element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
           const expectedHeight = phone ? 44 : small ? 32 : 40;
-          if (entry.radii.some((radius) => radius !== expectedRadius))
+          if (kind === "choice") {
+            const requiredRadius = Math.min(rect.width, rect.height) / 2;
+            const fullyRound = entry.radii.every((radius) => {
+              const parts = radius.split(/\s+/);
+              return parts.every((part, index) => {
+                const value = parseFloat(part);
+                const pixels = part.endsWith("%")
+                  ? (value / 100) * (index === 0 ? rect.width : rect.height)
+                  : value;
+                return (
+                  Number.isFinite(pixels) && pixels >= requiredRadius - 0.5
+                );
+              });
+            });
+            if (!fullyRound)
+              failures.push(
+                `Choice pill radius: ${label} (${entry.radii.join("/")})`,
+              );
+            if (
+              !Number.isFinite(choiceTextContrast) ||
+              choiceTextContrast < 4.5
+            )
+              failures.push(
+                `Choice text contrast: ${label} (${round(choiceTextContrast)}:1)`,
+              );
+          } else if (entry.radii.some((radius) => radius !== expectedRadius))
             failures.push(
               `Text action radius: ${label} (${entry.radii.join("/")})`,
             );
@@ -278,6 +360,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
           if (!variantClass) failures.push(`Unstyled text action: ${label}`);
           if (
+            kind === "action" &&
             element.closest(".card, .ui-card, dialog") &&
             parseFloat(style.borderTopWidth) > 0.5 &&
             style.borderTopStyle !== "none"
