@@ -68,10 +68,29 @@ When Ali answers one, update the requirement it affects, record the date here, a
 
 The above are documented company defaults or explicit owner decisions, not new paid resources, production integration or inventory authorization. C3/C4 file scope permits prototype/, docs/ and seed/ demo/config/pricing cases, superseding C1/C2's seed-only-location restriction.
 
-## C5 recorded interaction defaults (2026-10-10)
+## Historical C5 interaction defaults (superseded by C6 for Lookup, tracking-off and Undo) (2026-10-10)
 
 - Quick-add retains chosen date and concrete location between shelf entries; clears product and optional quantity/lot/note and refocuses product. Expiry is the default type; More exposes Best before and optional evidence. These interaction defaults do not invent stock/financial evidence.
 - The owner explicitly allows Supervisor and Floor Worker Lookup On/Off. Off preserves open dates, matching the existing keep-dates default; Supervisor Stop tracking retains its explicit remove-existing choice. Worker switch audits the concrete assigned location. All branches Lookup uses the existing permitted concrete price-preview location and labels it; no entry/audit uses `all` as a physical location.
 - Adding while Off/unset enables the existing company catalog preference together with the new scoped date; one Add date Undo restores both prior preference and entry evidence, with conflict checks. Other catalog fields remain Supervisor-only.
 - One Current row means one product row; permitted distinct default/branch offer scopes are grouped, not erased. An identical active/scheduled submission in its scope reuses the existing record; changed terms create/stop audited versions. Past sorts retained stop/end/creation evidence newest first, falling back to original retained order for legacy records without timestamps.
 - C5 supersedes the full-card Sign in button with the universal intrinsic-width text-action rule. Sorting headers, calendar choices, menus, navigation and clickable result/KPI surfaces remain semantic widgets and are listed separately in the audit; ordinary action buttons are never exempted by relabeling them.
+
+## C6/C7 questions pending an explicit owner answer (2026-10-11)
+
+| Question | Status and safe implementation boundary |
+| --- | --- |
+| Owner/Manager permission for Correct pickup: does existing Supervisor represent them, or is a separate permission required? | Asked; answer pending. Do not silently grant workers permission or introduce new roles. Immutable pickup, partial recording and append-only correction contract may be implemented independently. |
+| Dark Primary `#7397F0` with white fails4.5:1: use darker `#2B59C3` with white, or light blue with ink? | Asked; answer pending. Keep requested lighter dark accent for eligible links/icons, but do not claim an inaccessible white pairing passes. Owner choice recorded here and design-language before final styles. |
+
+## C6 implementation contracts recorded before code
+
+- Per-product reminder days defaults existing configured expiry window30, no second global default. Reminders one per date; stopped products absent from active lists/reminders whether dates kept or cleared. Keep leaves Lookup read-only dates, Clear keeps removed History. Products preference remains Supervisor-only; workers keep authorized quick entry/removal.
+- Receiving may show only same-company/product/supplier dates entered within7days at another location, with location/type/date/optional lot; no other-location costs/quantities/invoice or general read access. This narrow sharing exception is explicit.
+- Lot identity company/product/supplier/location/expiry, one catalog barcode/product, immutable source receipts/costs; optional clearance location/lot-specific, separate from ordinary offers. No on-hand or inferred depletion.
+- Keep for next pickup permits a **new** signed immutable pickup event. Multiple distinct partial credit notes may cover disjoint remaining actual picked-up item quantities, retaining one linked invoice and financial authorization. Existing whole-return one-credit limit is superseded only for these verified non-overlapping item settlements; no duplicate documents or double deduction.
+- Supplier memo/order each en(default)/bilingual setting; internal picking remains bilingual. Local timestamps use config IANA zone, persisted UTC. Final total auto until explicit edit; mismatch warning; term dates editable.
+- IndexedDB company/hash file refs replace inline bytes only after durable read-back/hash verification and backup. Exact invoice originals retained; photos ≤2000 px longest side. Migration failure leaves source evidence recoverable. Twenty3MBphotos is required proof, not production unlimited-storage guarantee.
+- C6 replaces stacked10second Undo with one about 8-second message, ×/replacement/reserved action-bar space, no field edits/autosave. C7 styles all existing screens using the already-replaced Klead source.
+
+**C6 new-write guard:** New resolutions, credits and replacements require actual retained signed pickup evidence and remaining actual picked-up quantity coverage. Legacy imported settlements stay readable and unchanged; they do not authorize a new no-pickup settlement.
