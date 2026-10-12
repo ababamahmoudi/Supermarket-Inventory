@@ -3,6 +3,7 @@ import { demoSeed } from "./config";
 import { effectiveApprovalLocation } from "./received";
 import { branchSellsToCustomers } from "./settings";
 import type { Branch, DemoState, Offer, Product } from "./types";
+import { activeSaleAt, saleCanonicalPrice } from "./sales";
 
 /** The all-branches lookup previews the first configured demo branch. */
 export function lookupBranch(branch: Branch): Branch {
@@ -27,7 +28,7 @@ function resolveProduct(
 }
 
 /** Approved branch prices win; pending proposals never become the register price. */
-export function effectivePrice(
+export function regularPrice(
   state: DemoState,
   productOrCode: Product | string,
   branch: Branch,
@@ -39,6 +40,19 @@ export function effectivePrice(
     product.selling_price ||
     null
   );
+}
+
+/** Temporary sale overlays never mutate the approved regular basis. */
+export function effectivePrice(
+  state: DemoState,
+  productOrCode: Product | string,
+  branch: Branch,
+  now = new Date(),
+): string | null {
+  const regular = regularPrice(state, productOrCode, branch);
+  if (!regular) return null;
+  const sale = activeSaleAt(state, productOrCode, lookupBranch(branch), now);
+  return sale ? saleCanonicalPrice(sale, state.config) : regular;
 }
 
 export function isOfferScheduledNow(
@@ -66,13 +80,15 @@ export function effectiveOffer(
   state: DemoState,
   productOrCode: Product | string,
   branch: Branch,
+  now = new Date(),
 ): Offer | null {
   const product = resolveProduct(state, productOrCode);
   if (!product) return null;
-  const price = effectivePrice(state, product, branch);
+  const price = effectivePrice(state, product, branch, now);
   if (!price) return null;
   const selectedBranch = lookupBranch(branch);
   if (!branchSellsToCustomers(state.config, selectedBranch)) return null;
+  if (activeSaleAt(state, product, selectedBranch, now)) return null;
   const eligible = state.offers.filter(
     (offer) =>
       offer.company_id === product.company_id &&
@@ -81,7 +97,7 @@ export function effectiveOffer(
       !offer.lot_id &&
       offer.status === "active" &&
       offer.currency === state.config.company.currency &&
-      isOfferScheduledNow(offer, state.config.company.timezone) &&
+      isOfferScheduledNow(offer, state.config.company.timezone, now) &&
       new Decimal(offer.price).equals(price) &&
       ((offer.scope === "branch" && offer.branch === selectedBranch) ||
         (offer.scope === "all" && offer.branch === "all")),

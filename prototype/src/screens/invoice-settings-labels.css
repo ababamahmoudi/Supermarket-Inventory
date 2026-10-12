@@ -31,10 +31,6 @@
   text-align: start;
   align-items: center;
 }
-.labels-product-table {
-  max-block-size: 480px;
-  overflow: auto;
-}
 .labels-controls .card:last-child > p {
   margin-block-start: 20px;
 }

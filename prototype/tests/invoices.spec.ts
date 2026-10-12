@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, chooseOption, setLanguage } from "./helpers";
+import {
+  signIn,
+  chooseOption,
+  setLanguage,
+  openInvoiceUpload,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -15,13 +20,13 @@ async function signInWorker(page: Page) {
   ).toBeVisible();
 }
 async function upload(page: Page) {
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles({
-      name: "fictional-supplier-invoice.png",
-      mimeType: "image/png",
-      buffer: pixel,
-    });
+  await (
+    await openInvoiceUpload(page)
+  ).setInputFiles({
+    name: "fictional-supplier-invoice.png",
+    mimeType: "image/png",
+    buffer: pixel,
+  });
   await expect(
     page.getByRole("status").filter({ hasText: "Reading invoice…" }),
   ).toBeVisible();

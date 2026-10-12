@@ -119,6 +119,7 @@ export function Payables() {
       key: "supplier",
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
+      minWidth: 240,
       width: "30%",
     },
     { key: "branch", label: t("Branch", "شعبه"), width: "17%" },
@@ -135,6 +136,15 @@ export function Payables() {
       align: "end",
     },
     { key: "due", label: t("Next due date", "سررسید بعدی"), width: "15%" },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 60,
+      actions: true,
+      priority: 0,
+      required: true,
+      align: "end",
+    },
   ]);
   const ledgerColumns = useTableColumns("payables.ledger", [
     { key: "date", label: t("Date", "تاریخ"), width: 124 },
@@ -545,70 +555,71 @@ export function Payables() {
           (issue) => issue.fieldId === "payables-search",
         )}
       />
-      <FilterToolbar
-        className="payables-filters no-print"
-        aria-label={t("Payables filters", "فیلترهای پرداختنی‌ها")}
-        search={
-          <input
-            id="payables-search"
-            className="ui-input"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              clearValidation("payables-search");
-            }}
-            aria-label={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
-            placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
-          />
-        }
-        count={
-          <span className="filter-toolbar-end">
-            <span>
-              {translateCount(
-                "{{count}} supplier",
-                "{{count}} suppliers",
-                "{{count}} تأمین‌کننده",
-                "{{count}} تأمین‌کننده",
-                overview.length,
-                lang,
-              )}
-            </span>
-            {tableColumns.chooser}
-          </span>
-        }
-      >
-        <Select
-          id="payables-branch"
-          aria-invalid={Boolean(validationError("payables-branch"))}
-          aria-label={t("Payables branch", "شعبه پرداختنی‌ها")}
-          value={branch}
-          onChange={(value) => {
-            clearValidation("payables-branch");
-            changeBranch(value);
-          }}
-          options={[
-            { value: "all", label: t("All branches", "همه شعبه‌ها") },
-            ...branches.map((value) => ({
-              value,
-              label: configuredBranchLabel(state.config, value, lang),
-            })),
-          ]}
-        />
-        <FieldError>{validationError("payables-branch")}</FieldError>
-        <Checkbox checked={overdueOnly} onChange={setOverdueOnly}>
-          {t("Overdue only", "فقط سررسید گذشته")}
-        </Checkbox>
-        <Checkbox checked={withBalance} onChange={setWithBalance}>
-          {t("With balance", "دارای مانده")}
-        </Checkbox>
-        <Button variant="ghost" onClick={clearFilters}>
-          {t("Clear filters", "پاک کردن فیلترها")}
-        </Button>
-      </FilterToolbar>
+
       <Card
         title={t("Suppliers", "تأمین‌کنندگان")}
         className="payables-overview"
       >
+        <FilterToolbar
+          className="payables-filters no-print"
+          aria-label={t("Payables filters", "فیلترهای پرداختنی‌ها")}
+          search={
+            <input
+              id="payables-search"
+              className="ui-input"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                clearValidation("payables-search");
+              }}
+              aria-label={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
+              placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
+            />
+          }
+          count={
+            <span className="filter-toolbar-end">
+              <span>
+                {translateCount(
+                  "{{count}} supplier",
+                  "{{count}} suppliers",
+                  "{{count}} تأمین‌کننده",
+                  "{{count}} تأمین‌کننده",
+                  overview.length,
+                  lang,
+                )}
+              </span>
+              {tableColumns.chooser}
+            </span>
+          }
+        >
+          <Select
+            id="payables-branch"
+            aria-invalid={Boolean(validationError("payables-branch"))}
+            aria-label={t("Payables branch", "شعبه پرداختنی‌ها")}
+            value={branch}
+            onChange={(value) => {
+              clearValidation("payables-branch");
+              changeBranch(value);
+            }}
+            options={[
+              { value: "all", label: t("All branches", "همه شعبه‌ها") },
+              ...branches.map((value) => ({
+                value,
+                label: configuredBranchLabel(state.config, value, lang),
+              })),
+            ]}
+          />
+          <FieldError>{validationError("payables-branch")}</FieldError>
+          <Checkbox checked={overdueOnly} onChange={setOverdueOnly}>
+            {t("Overdue only", "فقط سررسید گذشته")}
+          </Checkbox>
+          <Checkbox checked={withBalance} onChange={setWithBalance}>
+            {t("With balance", "دارای مانده")}
+          </Checkbox>
+          <Button variant="ghost" onClick={clearFilters}>
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        </FilterToolbar>
         <DataTable
           className="payables-overview-table"
           columns={tableColumns.columns}
@@ -620,6 +631,7 @@ export function Payables() {
               <th className="numeric">{t("Balance", "مانده")}</th>
               <th className="numeric">{t("Overdue", "سررسید گذشته")}</th>
               <th>{t("Next due date", "سررسید بعدی")}</th>
+              <th>{t("Action", "عملیات")}</th>
             </tr>
           </thead>
           <tbody>
@@ -655,14 +667,6 @@ export function Payables() {
                     >
                       <LtrText>{item.supplier}</LtrText>
                     </a>
-                    <TableRowLink
-                      href="#payables"
-                      aria-label={`${t("View", "نمایش")} ${item.supplier}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        openSupplier(item.supplier);
-                      }}
-                    />
                   </div>
                 </td>
                 <td className="branch-label">
@@ -683,11 +687,21 @@ export function Payables() {
                 <td>
                   <DateText value={item.next_due_date} />
                 </td>
+                <td className="action-cell">
+                  <TableRowLink
+                    href="#payables"
+                    aria-label={`${t("View", "نمایش")} ${item.supplier}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      openSupplier(item.supplier);
+                    }}
+                  />
+                </td>
               </tr>
             ))}
             {overview.length === 0 && (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={6}>
                   <EmptyState>
                     {t(
                       "No suppliers match these filters. Clear filters to see all suppliers.",

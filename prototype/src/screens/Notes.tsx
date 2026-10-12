@@ -737,7 +737,7 @@ export function Notes() {
                           "Customer asked about the tea glass set price; please confirm.",
                           "مشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.",
                         )
-                      : item.text}
+                      : t(item.text, item.text_fa ?? item.text)}
               </bdi>
             </strong>
             <Badge

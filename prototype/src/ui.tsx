@@ -216,7 +216,6 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "waiting for pickup",
         "new product",
         "price change",
-        "taxable",
         "intentional",
         "manual price",
         "ordered",
@@ -226,7 +225,6 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "در انتظار جمع‌آوری",
         "کالای جدید",
         "تغییر قیمت",
-        "مشمول مالیات",
         "عمدی",
         "قیمت دستی",
       ],
@@ -234,6 +232,8 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
     [
       "neutral",
       [
+        "taxable",
+        "مشمول مالیات",
         "draft",
         "cancelled",
         "rejected",
@@ -437,7 +437,7 @@ export function DataTable({
   const headerCells = isValidElement<{ children?: ReactNode }>(headerRow)
     ? cells(headerRow.props.children)
     : [];
-  const resolvedColumns: ResponsiveColumn[] =
+  const declaredColumns: ResponsiveColumn[] =
     columns ??
     (isValidElement<{ children?: ReactNode }>(headerRow)
       ? cells(headerRow.props.children).map((cell) => {
@@ -460,6 +460,13 @@ export function DataTable({
           };
         })
       : []);
+  const resolvedColumns = declaredColumns.map((column) =>
+    window.innerWidth >= 1440 &&
+    !column.actions &&
+    /^(name|product|supplier)$/.test(column.key ?? "")
+      ? { ...column, minWidth: Math.max(240, column.minWidth ?? 0) }
+      : column,
+  );
   const layout = responsive
     ? allocateTableColumns(
         resolvedColumns,
@@ -478,6 +485,12 @@ export function DataTable({
       };
   const visibleIndexes = new Set(layout.visible);
   const visibleColumns = layout.visible.map((index) => resolvedColumns[index]);
+  const endActionsIndex = layout.visible
+    .filter((index) => resolvedColumns[index].actions)
+    .at(-1);
+  const separateDetailsColumn =
+    responsive && layout.collapsed.length > 0 && endActionsIndex === undefined;
+  const separateDetailsWidth = separateDetailsColumn ? 36 : 0;
   const flexibleMinimum = layout.visible.reduce(
     (total, index) =>
       total + (resolvedColumns[index].actions ? 0 : layout.minimums[index]),
@@ -561,7 +574,7 @@ export function DataTable({
             cell.querySelector<HTMLElement>(":scope > .actions") ?? cell;
           const controls = Array.from(
             group.querySelectorAll<HTMLElement>(
-              ":scope > .ui-button, :scope > .ui-menu-trigger, :scope > .table-row-link",
+              ":scope > .ui-button, :scope > .ui-menu-trigger, :scope > .table-row-link, :scope > .product-row-menu-placeholder",
             ),
           );
           if (!controls.length) continue;
@@ -630,6 +643,28 @@ export function DataTable({
           responsive && bodyRow && !fullRow && layout.collapsed.length > 0;
         const expanded = expandedRows.includes(rowKey);
         const rowId = `${detailsId}-${encodeURIComponent(rowKey)}`;
+        const disclosure = canExpand ? (
+          <IconButton
+            className="table-details-toggle"
+            aria-label={
+              expanded
+                ? translate("Hide details", "پنهان کردن جزئیات")
+                : translate("Show details", "نمایش جزئیات")
+            }
+            aria-expanded={expanded}
+            aria-controls={rowId}
+            onClick={(event) => {
+              event.stopPropagation();
+              setExpandedRows((previous) =>
+                expanded
+                  ? previous.filter((key) => key !== rowKey)
+                  : [...previous, rowKey],
+              );
+            }}
+          >
+            <ChevronDown size={16} aria-hidden="true" />
+          </IconButton>
+        ) : null;
         const decoratedRow = cloneElement(node, {
           ...(href
             ? {
@@ -659,97 +694,124 @@ export function DataTable({
                 },
               }
             : {}),
-          children: Children.map(cells(node.props.children), (cell) => {
-            if (
-              !isValidElement<{
-                className?: string;
-                style?: CSSProperties;
-                colSpan?: number;
-                "data-column-key"?: string;
-                "data-column-label"?: string;
-              }>(cell)
-            )
-              return cell;
-            const originalIndex = columnIndex;
-            const span = cell.props.colSpan ?? 1;
-            columnIndex += span;
-            const covered = resolvedColumns
-              .slice(originalIndex, originalIndex + span)
-              .filter((_, index) => visibleIndexes.has(originalIndex + index));
-            if (resolvedColumns.length && !covered.length) return null;
-            const column = covered[0];
-            if (!column) return cell;
-            const identity = canExpand && originalIndex === layout.visible[0];
-            const content = isValidElement<{ children?: ReactNode }>(cell)
-              ? cell.props.children
-              : undefined;
-            return cloneElement(cell, {
-              colSpan: span > 1 ? covered.length : cell.props.colSpan,
-              "data-column-key": column.key,
-              "data-column-label":
-                column.label || textOf(headerCells[originalIndex]),
-              className: cn(
-                cell.props.className,
-                column.align === "end" && "numeric",
-                column.actions && "table-actions",
-              ),
-              style: {
-                ...cell.props.style,
-                textAlign: column.actions ? "end" : (column.align ?? "start"),
-              },
-              ...(identity
-                ? {
-                    children: (
-                      <div className="table-identity">
-                        <div className="table-identity-content">{content}</div>
-                        <IconButton
-                          className="table-details-toggle"
-                          aria-label={
-                            expanded
-                              ? translate("Hide details", "پنهان کردن جزئیات")
-                              : translate("Show details", "نمایش جزئیات")
-                          }
-                          aria-expanded={expanded}
-                          aria-controls={rowId}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setExpandedRows((previous) =>
-                              expanded
-                                ? previous.filter((key) => key !== rowKey)
-                                : [...previous, rowKey],
-                            );
-                          }}
-                        >
-                          <ChevronDown size={16} aria-hidden="true" />
-                        </IconButton>
-                      </div>
-                    ),
-                  }
-                : {}),
-            });
-          }),
+          children: (
+            <>
+              {Children.map(cells(node.props.children), (cell) => {
+                if (
+                  !isValidElement<{
+                    className?: string;
+                    style?: CSSProperties;
+                    colSpan?: number;
+                    "data-column-key"?: string;
+                    "data-column-label"?: string;
+                  }>(cell)
+                )
+                  return cell;
+                const originalIndex = columnIndex;
+                const span = cell.props.colSpan ?? 1;
+                columnIndex += span;
+                const covered = resolvedColumns
+                  .slice(originalIndex, originalIndex + span)
+                  .filter((_, index) =>
+                    visibleIndexes.has(originalIndex + index),
+                  );
+                if (resolvedColumns.length && !covered.length) return null;
+                const column = covered[0];
+                if (!column) return cell;
+                const endActions =
+                  canExpand && originalIndex === endActionsIndex;
+                const content = isValidElement<{ children?: ReactNode }>(cell)
+                  ? cell.props.children
+                  : undefined;
+                return cloneElement(cell, {
+                  colSpan: span > 1 ? covered.length : cell.props.colSpan,
+                  "data-column-key": column.key,
+                  "data-column-label":
+                    column.label || textOf(headerCells[originalIndex]),
+                  className: cn(
+                    cell.props.className,
+                    column.align === "end" && "numeric",
+                    column.actions && "table-actions",
+                  ),
+                  style: {
+                    ...cell.props.style,
+                    textAlign: column.actions
+                      ? "end"
+                      : (column.align ?? "start"),
+                  },
+                  ...(endActions
+                    ? {
+                        children:
+                          isValidElement<{
+                            className?: string;
+                            children?: ReactNode;
+                          }>(content) &&
+                          content.props.className
+                            ?.split(" ")
+                            .includes("actions") ? (
+                            cloneElement(content, {
+                              children: (
+                                <>
+                                  {content.props.children}
+                                  {disclosure}
+                                </>
+                              ),
+                            })
+                          ) : (
+                            <div className="actions table-end-controls">
+                              {content}
+                              {disclosure}
+                            </div>
+                          ),
+                      }
+                    : {}),
+                });
+              })}
+              {separateDetailsColumn &&
+                !fullRow &&
+                (bodyRow ? (
+                  <td
+                    className="table-actions table-disclosure-cell"
+                    data-column-label={translate("Details", "جزئیات")}
+                  >
+                    {disclosure}
+                  </td>
+                ) : (
+                  <th
+                    className="table-actions table-disclosure-cell"
+                    aria-label={translate("Details", "جزئیات")}
+                  />
+                ))}
+            </>
+          ),
         });
-        return canExpand && expanded ? (
+        return canExpand ? (
           <Fragment key={rowKey}>
             {decoratedRow}
-            <tr className="table-expanded-row" id={rowId}>
-              <td colSpan={visibleColumns.length}>
-                <dl>
-                  {layout.collapsed.map((index) => {
-                    const cell = rowCells[index];
-                    return isValidElement<{ children?: ReactNode }>(cell) ? (
-                      <div key={resolvedColumns[index].key ?? index}>
-                        <dt>
-                          {resolvedColumns[index].label ||
-                            textOf(headerCells[index])}
-                        </dt>
-                        <dd>{cell.props.children}</dd>
-                      </div>
-                    ) : null;
-                  })}
-                </dl>
-              </td>
-            </tr>
+            {expanded && (
+              <tr className="table-expanded-row" id={rowId}>
+                <td
+                  colSpan={
+                    visibleColumns.length + (separateDetailsColumn ? 1 : 0)
+                  }
+                >
+                  <dl>
+                    {layout.collapsed.map((index) => {
+                      const cell = rowCells[index];
+                      return isValidElement<{ children?: ReactNode }>(cell) ? (
+                        <div key={resolvedColumns[index].key ?? index}>
+                          <dt>
+                            {resolvedColumns[index].label ||
+                              textOf(headerCells[index])}
+                          </dt>
+                          <dd>{cell.props.children}</dd>
+                        </div>
+                      ) : null;
+                    })}
+                  </dl>
+                </td>
+              </tr>
+            )}
           </Fragment>
         ) : (
           decoratedRow
@@ -783,7 +845,7 @@ export function DataTable({
         data-visible-column-count={visibleColumns.length}
         style={
           {
-            "--table-min-width": `${Math.ceil(flexibleWeight + fixedActionWidth || totalWeight)}px`,
+            "--table-min-width": `${Math.ceil((flexibleWeight + fixedActionWidth || totalWeight) + separateDetailsWidth)}px`,
           } as CSSProperties
         }
       >
@@ -796,7 +858,7 @@ export function DataTable({
                 width: column.actions
                   ? `${actionWidths[columnId(column)] ?? columnWeight(column)}px`
                   : responsive && availableWidth
-                    ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - fixedActionWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
+                    ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - fixedActionWidth - separateDetailsWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
                     : flexibleWeight
                       ? availableWidth
                         ? `${(Math.max(0, availableWidth - fixedActionWidth) * columnWeight(column)) / flexibleWeight}px`
@@ -805,6 +867,12 @@ export function DataTable({
               }}
             />
           ))}
+          {separateDetailsColumn && (
+            <col
+              style={{ width: `${separateDetailsWidth}px` }}
+              data-action-column="true"
+            />
+          )}
         </colgroup>
         {decorate(children)}
       </table>

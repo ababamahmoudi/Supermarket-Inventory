@@ -1,11 +1,13 @@
 import { Blob as NodeBlob } from "node:buffer";
 import { createHash, webcrypto } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { decodeHistoryStorage, encodeHistoryStorage } from "./history-storage";
 import {
   archiveFileStorageSnapshot,
   blobDigest,
   inlineFileBlob,
+  INCLUDED_COST_INVOICE_SHA256,
   migrateInlineFiles,
   migrateLegacyFileBackups,
   readFileStorageBackup,
@@ -86,6 +88,97 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("scoped immutable browser evidence", () => {
+  it.each([true, false])(
+    "stores only the exact included invoice SVG and roundtrips its original/preview bytes (native hashing %s)",
+    async (native) => {
+      if (!native) vi.stubGlobal("crypto", {});
+      const bytes = new Uint8Array(
+        readFileSync("public/demo-originals/fictional-hw-5012.svg"),
+      );
+      expect(bytes.byteLength).toBe(3179);
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(
+        INCLUDED_COST_INVOICE_SHA256,
+      );
+      const repository = new MemoryFiles();
+      // A rename does not change whether the exact approved bytes are recognised.
+      const source = Object.assign(
+        new Blob([bytes], { type: "image/svg+xml" }),
+        {
+          name: "renamed-original.svg",
+        },
+      );
+      const saved = await storeUploadedFile(
+        source,
+        company,
+        { purpose: "invoice" },
+        repository,
+      );
+      expect(saved).toEqual({
+        reference: `idb-file:v1:company%3Aone:${INCLUDED_COST_INVOICE_SHA256}`,
+        name: "renamed-original.svg",
+        type: "image/svg+xml",
+        size: 3179,
+      });
+      const reloaded = await readStoredFile(
+        saved.reference,
+        company,
+        repository,
+      );
+      expect(new Uint8Array(await reloaded.source.arrayBuffer())).toEqual(
+        bytes,
+      );
+      expect(new Uint8Array(await reloaded.preview.arrayBuffer())).toEqual(
+        bytes,
+      );
+      expect(reloaded.preview).toBe(reloaded.source);
+      expect(reloaded.sha256).toBe(INCLUDED_COST_INVOICE_SHA256);
+      expect(await blobDigest(reloaded.source)).toBe(
+        INCLUDED_COST_INVOICE_SHA256,
+      );
+      expect(repository.writes).toBe(1);
+      await expect(
+        readStoredFile(saved.reference, "other-company", repository),
+      ).rejects.toMatchObject({ code: "scope" });
+    },
+  );
+  it("rejects unknown SVG with the included filename, a one-byte alteration, and the exact invoice SVG used as a photo or logo", async () => {
+    const bytes = new Uint8Array(
+      readFileSync("public/demo-originals/fictional-hw-5012.svg"),
+    );
+    const altered = bytes.slice();
+    altered[altered.length - 1] ^= 1;
+    const repository = new MemoryFiles();
+    for (const source of [
+      new Blob(
+        [
+          '<svg xmlns="http://www.w3.org/2000/svg"><text>Other original</text></svg>',
+        ],
+        { type: "image/svg+xml" },
+      ),
+      new Blob([altered], { type: "image/svg+xml" }),
+    ])
+      await expect(
+        storeUploadedFile(
+          Object.assign(source, { name: "fictional-hw-5012.svg" }),
+          company,
+          { purpose: "invoice" },
+          repository,
+        ),
+      ).rejects.toMatchObject({ code: "image" });
+    for (const purpose of ["photo", "logo"] as const)
+      await expect(
+        storeUploadedFile(
+          Object.assign(new Blob([bytes], { type: "image/svg+xml" }), {
+            name: "fictional-hw-5012.svg",
+          }),
+          company,
+          { purpose },
+          repository,
+        ),
+      ).rejects.toMatchObject({ code: "image" });
+    expect(repository.writes).toBe(0);
+    expect(repository.files.size).toBe(0);
+  });
   it("keeps native SubtleCrypto hashing when available and propagates its failures", async () => {
     const source = namedPdf();
     const digest = vi.fn((algorithm: string, bytes: ArrayBuffer) =>

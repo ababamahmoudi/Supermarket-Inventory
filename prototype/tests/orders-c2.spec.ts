@@ -120,7 +120,7 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     .getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true })
     .fill("0.5");
   await expandDetails(row);
-  await expect(await columnValue(row, "Units")).toHaveText("6");
+  await expect(await columnValue(row, "Units")).toHaveText("= 6 units");
   await expect(await columnValue(row, "Before-tax total")).toHaveText("$21.30");
   await form
     .getByRole("button", { name: "Save as draft", exact: true })
@@ -425,7 +425,7 @@ test("worker ordering is opt-in and location scoped; switching location discards
     form.getByLabel("Expected unit cost — Sunflower Oil 1.8 L", {
       exact: true,
     }),
-  ).toHaveValue("3.5500");
+  ).toHaveValue("3.55");
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
   await expect(

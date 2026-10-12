@@ -6,6 +6,7 @@ import {
   ChevronRight,
   BadgeCheck,
   CreditCard,
+  Download,
   Eye,
   EyeOff,
   History,
@@ -47,6 +48,9 @@ import {
   visibleNotebooks,
 } from "./notebooks";
 import UndoToasts from "./UndoToasts";
+import { demoSeed } from "./config";
+import { PersonalNotifications } from "./PersonalNotifications";
+import { userNotifications } from "./sales";
 import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
@@ -88,6 +92,7 @@ import "./c5-shell-controls.css";
 import "./klead-tokens.css";
 import "./c6-shared.css";
 import "./c7-shared.css";
+import "./c8-catalog.css";
 
 export const pages: {
   key: string;
@@ -947,17 +952,27 @@ export default function App() {
         note.type === "note_to_supervisor" &&
         note.status === "open",
     ).length + customUnread;
-  const approvalCount = state.approvals
-    .map((record) => ({
-      ...record,
-      branch: effectiveApprovalLocation(state, record),
-    }))
-    .filter((record) => inBranch(record) && record.status === "pending").length;
+  const approvalCount =
+    state.approvals
+      .map((record) => ({
+        ...record,
+        branch: effectiveApprovalLocation(state, record),
+      }))
+      .filter((record) => inBranch(record) && record.status === "pending")
+      .length +
+    (state.sale_requests ?? []).filter(
+      (record) => inBranch(record) && record.status === "pending",
+    ).length;
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
+  const personalNotifications = userNotifications(state, context);
+  const personalUnread = personalNotifications.filter(
+    (record) => !record.read_at,
+  ).length;
   const notifications =
-    role === "supervisor" ? unread + approvalCount + alertCount : 0;
+    personalUnread +
+    (role === "supervisor" ? unread + approvalCount + alertCount : 0);
   const groupNames: Record<string, [string, string]> = {
     Daily: ["Daily", "روزانه"],
     Catalog: ["Catalog", "کاتالوگ"],
@@ -1012,6 +1027,21 @@ export default function App() {
             {t("Use fictional demo answer", "استفاده از پاسخ نمونهٔ خیالی")}
           </MenuItem>
         )}
+      <MenuItem
+        onClick={() => {
+          const original = document.createElement("a");
+          original.href = "/demo-originals/fictional-hw-5012.svg";
+          original.download =
+            demoSeed.sales_demo.cost_increase_invoice.original_file_name;
+          original.click();
+        }}
+      >
+        <Download size={18} strokeWidth={1.5} aria-hidden="true" />
+        {t("Download demo original", "دانلود اصل فاکتور نمونه")} ·{" "}
+        <LtrText>
+          {demoSeed.sales_demo.cost_increase_invoice.supplier_invoice_number}
+        </LtrText>
+      </MenuItem>
       <MenuItem onClick={() => setResetOpen(true)}>
         <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
         {t("Reset demo", "بازنشانی دمو")}
@@ -1068,7 +1098,9 @@ export default function App() {
           {Object.entries(groupNames).map(([group, names]) => {
             const items = allowed.filter((item) => item.group === group);
             const open =
-              !compactGroups || (expandedGroup ?? page.group) === group;
+              (effectiveCollapsed && !menuOpen) ||
+              !compactGroups ||
+              (expandedGroup ?? page.group) === group;
             return items.length > 0 ? (
               <div className="nav-section" key={group}>
                 {compactGroups ? (
@@ -1312,6 +1344,7 @@ export default function App() {
               </span>
             }
           >
+            <PersonalNotifications />
             {role === "supervisor" ? (
               <>
                 <MenuItem
@@ -1336,11 +1369,11 @@ export default function App() {
                   {t("Notes for Supervisor", "یادداشت‌های سرپرست")} · {unread}
                 </MenuItem>
               </>
-            ) : (
+            ) : personalNotifications.length === 0 ? (
               <p className="helper">
                 {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
               </p>
-            )}
+            ) : null}
           </Menu>
           {!isMobile && (
             <Menu className="demo-menu" label={t("Demo", "دمو")}>

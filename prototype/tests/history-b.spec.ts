@@ -26,7 +26,11 @@ async function stopOffer(page: Page, code: string) {
     `.current-offers-table tr[data-product-code="${code}"]`,
   );
   await expect(row).toHaveCount(1);
-  await row.getByRole("button", { name: "Stop offer", exact: true }).click();
+  await expect(
+    row.getByRole("button", { name: "Stop offer", exact: true }),
+  ).toHaveCount(0);
+  await row.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: /Stop offer/ }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
@@ -101,13 +105,24 @@ test("quiet product Save retains append-only History and can be explicitly rever
   await expect(
     page.getByRole("heading", { name: "History", exact: true }),
   ).toBeVisible();
-  for (const label of ["From date", "To date"]) {
-    const geometry = await page
-      .getByRole("button", { name: label, exact: true })
-      .boundingBox();
-    expect(geometry?.width).toBeCloseTo(180, 0);
-    expect(geometry?.height).toBeCloseTo(44, 0);
-  }
+  const range = page.getByRole("button", { name: "Date range", exact: true });
+  await expect(range).toHaveCount(1);
+  await range.click();
+  const rangeDialog = page.getByRole("dialog", {
+    name: "Date range",
+    exact: true,
+  });
+  for (const label of ["Today", "This week", "This month"])
+    await expect(
+      rangeDialog.getByRole("button", { name: label, exact: true }),
+    ).toBeVisible();
+  for (const label of ["From", "To"])
+    await expect(
+      rangeDialog.getByRole("button", { name: label, exact: true }),
+    ).toBeVisible();
+  await rangeDialog
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,

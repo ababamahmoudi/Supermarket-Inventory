@@ -205,7 +205,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
             "Show details",
             "نمایش جزئیات",
           ).click();
-        await expect(cost).toHaveText("$4.99/lb");
+        await expect(cost).toHaveText("$4.9895/lb");
         await expect(cost).toHaveAttribute("dir", "ltr");
         const price = page.locator(".catalog-products-table .weight-price");
         await expect(price.locator(".weight-price-main")).toHaveText(
@@ -295,8 +295,16 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       ".posted-invoice-lines tbody tr > td:nth-child(3)",
     );
     await expect(displayedCosts.first()).toHaveText("$0.98");
-    for (const cost of await displayedCosts.all())
-      await expect(cost).toHaveText(/^\$[\d,]+\.\d{2}$/);
+    // This signed fictional document retains its exact six source costs.
+    // All have cents; the separate weighed fixture above must retain 4.9895.
+    await expect(displayedCosts).toHaveText([
+      "$0.98",
+      "$1.20",
+      "$1.55",
+      "$1.95",
+      "$3.40",
+      "$1.60",
+    ]);
     const title = page.locator(".posted-invoice-title");
     expect(
       await title.evaluate((element) => {

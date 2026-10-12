@@ -1,5 +1,28 @@
 /* Klead presentation only; settings persistence and print styles are unchanged. */
 @media screen {
+  .company-color-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 0;
+  }
+  .company-color-field input {
+    flex: 1;
+    min-inline-size: 0;
+  }
+  .company-color-swatch {
+    flex: 0 0 32px;
+    block-size: 32px;
+    border-radius: var(--radius-control);
+    background: var(--klead-field);
+    box-shadow: var(--shadow-card);
+  }
+  .company-logo-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+  }
   :root .settings-group-menu {
     box-shadow: var(--shadow-card);
     border-radius: var(--radius-card);

@@ -17,17 +17,19 @@ import { hydrateCState, restoreCState } from "./c-state";
 import { hydrateC2State, restoreC2State } from "./c2-state";
 import { hydrateC4State, restoreC4State } from "./c4-state";
 import { hydrateC6State } from "./c6-state";
+import {
+  hydrateSalesState,
+  hydrateSalesDemo,
+  evaluateSales,
+  type SalesContext,
+  type SaleRecipient,
+} from "./sales";
 import { syncReturnCreditAlerts } from "./return-workflow";
 import { syncDateReminderAlerts } from "./date-tracking";
 import { shouldShowUndoNotification } from "./undo-notification-policy";
 import { configuredBranches, branchAllowsRole } from "./settings";
 import { autoAddApprovedLabelChanges } from "./label-workflow";
-import {
-  attachReversals,
-  reverseActivity,
-  HistoryError,
-  type HistoryContext,
-} from "./history";
+import { attachReversals, reverseActivity, HistoryError } from "./history";
 import { createId } from "./ids";
 import {
   archiveFileStorageSnapshot,
@@ -110,7 +112,7 @@ export function initialState(): DemoState {
     company_id,
     code: "0015",
     name_en: newLine.description,
-    name_fa: "زرشک خشک 100 گرمی",
+    name_fa: "زرشک خشک ۱۰۰ گرمی",
     pricing_category: configSeed.pricing_categories.find(
       (category) => category.key === "grocery",
     )!.key,
@@ -275,6 +277,8 @@ export function initialState(): DemoState {
     true,
   );
   hydrateC6State(state);
+  hydrateSalesDemo(state);
+  evaluateSales(state);
   syncReturnCreditAlerts(state);
   syncDateReminderAlerts(state);
   return state;
@@ -349,6 +353,8 @@ function readState(): { state: DemoState; invalidHistoryRaw?: string } {
         if (migrated.prototype_c4_schema === 1)
           syncReturnCreditAlerts(migrated);
         hydrateC6State(migrated);
+        hydrateSalesState(migrated);
+        evaluateSales(migrated);
         syncDateReminderAlerts(migrated);
         return { state: migrated };
       }
@@ -402,7 +408,7 @@ interface DemoContextValue {
   dismissUndo: (id: string) => void;
   undoActivity: (id: string) => void;
   revertActivity: (id: string) => void;
-  historyContext: HistoryContext | null;
+  historyContext: SalesContext | null;
 }
 const DemoContext = createContext<DemoContextValue | null>(null);
 
@@ -467,7 +473,23 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     },
     [commitToasts],
   );
-  const actionContext = useCallback((): HistoryContext | null => {
+  const saleRecipients = useCallback(
+    (): SaleRecipient[] =>
+      demoUsers
+        .filter((candidate) =>
+          Boolean(authRef.current.accounts[candidate.username]),
+        )
+        .map((candidate) => ({
+          username: candidate.username,
+          role: candidate.role,
+          allowed_branches:
+            candidate.role === "supervisor"
+              ? configuredBranches(stateRef.current.config, true)
+              : [candidate.branch],
+        })),
+    [],
+  );
+  const actionContext = useCallback((): SalesContext | null => {
     const actor = demoUsers.find(
       (candidate) => candidate.username === sessionRef.current.username,
     );
@@ -482,13 +504,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       role: actor.role,
       actor: actor.name,
       username: actor.username,
+      notification_recipients: saleRecipients(),
       branch: sessionRef.current.branch,
       allowed_branches:
         actor.role === "supervisor"
           ? configuredBranches(stateRef.current.config, true)
           : [actor.branch],
     };
-  }, []);
+  }, [saleRecipients]);
   const update = useCallback(
     (mutator: (draft: DemoState) => void) => {
       // Validate synchronously so the screen can catch a failed business action.
@@ -515,6 +538,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
         );
       const draft = structuredClone(stateRef.current);
+      evaluateSales(draft, new Date(), saleRecipients());
       mutator(draft);
       syncReturnCreditAlerts(draft);
       const context = actionContext();
@@ -569,15 +593,18 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       // Reminder alerts are a derived projection, not part of an operator's
       // reversible edit. Undo recalculates them from the restored date evidence.
       syncDateReminderAlerts(draft);
+      evaluateSales(draft, new Date(), saleRecipients());
       stateRef.current = draft;
       setState(draft);
     },
-    [actionContext, commitToasts],
+    [actionContext, commitToasts, saleRecipients],
   );
   useEffect(() => {
     const refresh = () => {
       const next = structuredClone(stateRef.current);
-      if (!syncDateReminderAlerts(next)) return;
+      const dateChanged = syncDateReminderAlerts(next);
+      const salesChanged = evaluateSales(next, new Date(), saleRecipients());
+      if (!dateChanged && !salesChanged) return;
       stateRef.current = next;
       setState(next);
     };
@@ -587,7 +614,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       window.clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, []);
+  }, [saleRecipients]);
   useEffect(() => {
     const languages = state.config.company.ui_languages?.length
       ? state.config.company.ui_languages
@@ -682,16 +709,19 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         const encoded = encodeHistoryStorage(migrated.state);
         const serialized = JSON.stringify(encoded);
         let requiresC6Backup = false;
+        let requiresC8Backup = false;
         let requiresHistoryBackup = false;
         if (raw) {
           try {
             const previous = JSON.parse(raw);
             requiresC6Backup = previous.prototype_c6_schema !== 1;
+            requiresC8Backup = previous.prototype_c8_schema !== 1;
             requiresHistoryBackup =
               Object.hasOwn(encoded, "prototype_history_dictionary") &&
               !Object.hasOwn(previous, "prototype_history_dictionary");
           } catch {
             requiresC6Backup = true;
+            requiresC8Backup = true;
           }
         }
         if (recoverySnapshot.current) {
@@ -704,7 +734,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }
         if (
           raw &&
-          (migrated.migrated || requiresC6Backup || requiresHistoryBackup)
+          (migrated.migrated ||
+            requiresC6Backup ||
+            requiresC8Backup ||
+            requiresHistoryBackup)
         )
           await archiveFileStorageSnapshot(STORAGE_KEY, raw, company);
         if (!active || stateRef.current !== state) return;
@@ -797,7 +830,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     state.config.session.idle_lock_minutes,
     lockSession,
   ]);
-  const historyContext = useMemo<HistoryContext | null>(
+  const historyContext = useMemo<SalesContext | null>(
     () =>
       user && role && !session.locked && !mustChangePassword
         ? {
@@ -805,6 +838,16 @@ export function DemoProvider({ children }: { children: ReactNode }) {
             role,
             actor: user.name,
             username: user.username,
+            notification_recipients: demoUsers
+              .filter((candidate) => Boolean(auth.accounts[candidate.username]))
+              .map((candidate) => ({
+                username: candidate.username,
+                role: candidate.role,
+                allowed_branches:
+                  candidate.role === "supervisor"
+                    ? configuredBranches(state.config, true)
+                    : [candidate.branch],
+              })),
             branch: session.branch,
             allowed_branches:
               role === "supervisor"
@@ -819,6 +862,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       session.branch,
       mustChangePassword,
       state.config,
+      auth.accounts,
     ],
   );
   const value = useMemo<DemoContextValue>(

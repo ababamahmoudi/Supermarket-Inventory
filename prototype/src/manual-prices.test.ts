@@ -3,11 +3,8 @@ import { initialState } from "./store";
 import { effectivePrice, pendingPrice } from "./catalog";
 import { configuredBranches } from "./settings";
 import { addProduct, type NewProductEdits } from "./manual-product";
-import {
-  productEditSnapshot,
-  saveProductEdits,
-  type ProductEdits,
-} from "./product-editor";
+import type { ProductEdits } from "./product-editor";
+import { savePriceChange } from "./sales";
 import {
   applyApprovedPrice,
   approvalSnapshot,
@@ -64,14 +61,30 @@ function save(
   scope: "all" | "branch" = "all",
   branch = "Branch 1",
 ) {
-  saveProductEdits(
+  savePriceChange(
     state,
     context(branch),
-    product.code,
-    edits({ selling_price: price, scope }),
-    productEditSnapshot(state, product.code),
+    {
+      product_code: product.code,
+      mode: "regular",
+      scope: scope === "all" ? "all" : "current",
+      price,
+      price_unit: product.sold_by === "weight" ? "lb" : "each",
+      branches:
+        scope === "all"
+          ? configuredBranches(state.config).filter(
+              (location) => location !== "Warehouse",
+            )
+          : [branch],
+      starts_on: "2026-10-09",
+      last_day: null,
+      accept_below_margin: false,
+      below_cost_reason: "",
+      add_labels: false,
+    },
     moment,
   );
+  product = state.products.find((item) => item.code === product.code)!;
 }
 function proposal(patch: Partial<Approval> = {}): Approval {
   const result: Approval = {
@@ -86,6 +99,23 @@ function proposal(patch: Partial<Approval> = {}): Approval {
   };
   state.approvals.push(result);
   return result;
+}
+
+// A retained B snapshot contains an approved manual proposal, unlike a new C8 History-only save.
+function legacySavedBPrice(price: string) {
+  product.selling_price = price;
+  product.branch_prices = {};
+  delete product.manual_prices;
+  proposal({
+    branch: "all",
+    scope: "all",
+    status: "approved",
+    proposed_price: price,
+    manual_override: true,
+    triggered_by: context().actor,
+    created_at: moment.toISOString(),
+    unit_cost: product.last_cost_before_tax,
+  });
 }
 
 describe("manual price provenance", () => {
@@ -130,8 +160,7 @@ describe("manual price provenance", () => {
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("3.29");
   });
   it("preserves other locations' saved B manual provenance during a branch-only rule decision", () => {
-    save("3.29");
-    delete product.manual_prices;
+    legacySavedBPrice("3.29");
     applyApprovedPrice(state, product.code, "2.99", "branch", "Branch 1");
     expect(manualPrice(state, product, "Branch 1")).toBeNull();
     expect(manualPrice(state, product, "Branch 2")?.price).toBe("3.29");
@@ -155,8 +184,7 @@ describe("manual price provenance", () => {
     expect(added.manual_prices?.all.rule_price).toBe(rulePrice(state, added));
   });
   it("restores saved B manual decisions once and never resurrects them after an explicit rule decision", () => {
-    save("3.29");
-    delete product.manual_prices;
+    legacySavedBPrice("3.29");
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("3.29");
     hydrateManualPriceMarkers(state);
     expect(
@@ -189,14 +217,17 @@ describe("manual price provenance", () => {
     expect(state.alerts.find((entry) => entry.id === conflict.id)?.status).toBe(
       "resolved",
     );
-    expect(
-      state.approvals.some(
-        (entry) =>
-          entry.manual_override &&
-          entry.proposed_price === "4.29" &&
-          entry.status === "rejected",
-      ),
-    ).toBe(true);
+    expect(state.activity).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "Set regular price",
+        }),
+        expect.objectContaining({
+          action: "Reverted Set regular price",
+          reversed_activity_id: entries.at(-1)!.id,
+        }),
+      ]),
+    );
   });
   it("rejects a stale Revert after the derived conflict alert was separately resolved", () => {
     save("3.29");

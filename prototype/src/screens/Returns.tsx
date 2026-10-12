@@ -193,6 +193,7 @@ export function Returns() {
     },
     {
       key: "supplier",
+      minWidth: 240,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
       width: 220,

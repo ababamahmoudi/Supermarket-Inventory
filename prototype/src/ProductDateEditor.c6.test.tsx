@@ -129,3 +129,110 @@ it("switching to Worker closes access to a Supervisor's existing catalog form", 
     screen.queryByRole("dialog", { name: "Edit product" }),
   ).not.toBeInTheDocument();
 });
+
+it("C8 Save reports and focuses the missing expiry date instead of silently saving tracking Yes", async () => {
+  const user = await show();
+  const beforeProduct = screen.getByTestId("saved-product").textContent;
+  const beforeDates = screen.getByTestId("saved-dates").textContent;
+  const section = screen.getByRole("region", { name: "Date tracking" });
+  await user.click(
+    within(section).getByRole("switch", { name: "Date tracking" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Save product" }));
+  const missing = screen.getByRole("alert", { name: "What's missing" });
+  const link = within(missing).getByRole("link", {
+    name: "Add an expiry date, or turn off date tracking",
+  });
+  expect(screen.getByTestId("saved-product").textContent).toBe(beforeProduct);
+  expect(screen.getByTestId("saved-dates").textContent).toBe(beforeDates);
+  await user.click(link);
+  expect(within(section).getByRole("button", { name: "Date" })).toHaveFocus();
+  await user.click(within(section).getByRole("button", { name: "Date" }));
+  await user.click(screen.getByRole("button", { name: "Today" }));
+  // The selected date is deliberately not added to the staged rows first.
+  await user.click(screen.getByRole("button", { name: "Save product" }));
+  expect(
+    screen.queryByRole("dialog", { name: "Edit product" }),
+  ).not.toBeInTheDocument();
+  expect(
+    JSON.parse(screen.getByTestId("saved-dates").textContent ?? "[]"),
+  ).toHaveLength(1);
+});
+
+it("C8 invalid unadded date evidence blocks the entire save and stays available to correct", async () => {
+  const user = await show();
+  const before = screen.getByTestId("saved-product").textContent;
+  const section = screen.getByRole("region", { name: "Date tracking" });
+  await user.click(
+    within(section).getByRole("switch", { name: "Date tracking" }),
+  );
+  await user.click(within(section).getByRole("button", { name: "Date" }));
+  await user.click(screen.getByRole("button", { name: "Today" }));
+  const quantity = within(section).getByRole("textbox", {
+    name: "Quantity (optional)",
+  });
+  await user.type(quantity, "-3");
+  await user.click(screen.getByRole("button", { name: "Save product" }));
+  expect(
+    screen.getByRole("alert", { name: "What's missing" }),
+  ).toHaveTextContent("quantity");
+  expect(quantity).toHaveValue("-3");
+  expect(screen.getByTestId("saved-product").textContent).toBe(before);
+  expect(
+    JSON.parse(screen.getByTestId("saved-dates").textContent ?? "[]"),
+  ).toHaveLength(0);
+  await user.clear(quantity);
+  await user.type(quantity, "3");
+  await user.click(screen.getByRole("button", { name: "Save product" }));
+  expect(
+    JSON.parse(screen.getByTestId("saved-dates").textContent ?? "[]"),
+  ).toEqual([expect.objectContaining({ quantity: "3", status: "active" })]);
+});
+
+it("C8 separate price save preserves unsaved catalog fields and lets their later atomic Save use the reviewed snapshot", async () => {
+  const user = await show();
+  const editor = screen.getByRole("dialog", { name: "Edit product" });
+  expect(
+    within(editor).queryByRole("textbox", { name: /Selling price/ }),
+  ).not.toBeInTheDocument();
+  const name = within(editor).getByRole("textbox", { name: "English name" });
+  await user.clear(name);
+  await user.type(name, "Reviewed rice name");
+  await user.click(
+    within(editor).getByRole("button", { name: "Change price" }),
+  );
+  const priceDialog = screen.getByRole("dialog", { name: "Change price" });
+  await user.click(
+    within(priceDialog).getByRole("radio", { name: /^New regular price/ }),
+  );
+  await user.type(
+    within(priceDialog).getByRole("textbox", { name: "Price" }),
+    "24.99",
+  );
+  await user.click(
+    within(priceDialog).getByRole("button", { name: "Save new price" }),
+  );
+  expect(
+    screen.queryByRole("dialog", { name: "Change price" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("dialog", { name: "Edit product" })).toBeVisible();
+  expect(name).toHaveValue("Reviewed rice name");
+  expect(screen.getByTestId("saved-product")).not.toHaveTextContent(
+    '"name_en":"Reviewed rice name"',
+  );
+  expect(screen.getByTestId("saved-product")).toHaveTextContent(
+    '"selling_price":"24.99"',
+  );
+  await user.click(
+    within(editor).getByRole("button", { name: "Save product" }),
+  );
+  expect(
+    screen.queryByRole("dialog", { name: "Edit product" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByTestId("saved-product")).toHaveTextContent(
+    '"name_en":"Reviewed rice name"',
+  );
+  expect(screen.getByTestId("saved-product")).toHaveTextContent(
+    '"selling_price":"24.99"',
+  );
+});

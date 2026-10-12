@@ -1,4 +1,30 @@
 @media screen {
+  :root .labels-products-card .labels-product-table {
+    max-block-size: none;
+    overflow: visible;
+  }
+  .labels-products-card .labels-product-table th:first-child,
+  .labels-products-card .labels-product-table td:first-child {
+    inline-size: 48px;
+    padding-inline: 0;
+  }
+  .labels-products-card .labels-product-table th:nth-child(2),
+  .labels-products-card .labels-product-table td:nth-child(2) {
+    padding-inline-start: 0;
+  }
+  .labels-products-card .labels-product-table th:last-child,
+  .labels-products-card .labels-product-table td:last-child {
+    padding-inline-end: 0;
+    text-align: end;
+  }
+  @media (min-width: 761px) {
+    .labels-products-card .labels-product-table thead {
+      position: sticky;
+      inset-block-start: 60px;
+      z-index: 5;
+      background: var(--surface);
+    }
+  }
   .labels-record-caption {
     margin-block: 8px 24px;
     font-size: var(--font-size-caption);

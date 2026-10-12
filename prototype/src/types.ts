@@ -9,6 +9,15 @@ import type { ReturnMemo, ReturnPickupCorrection } from "./return-workflow";
 import type { ReceiptLot } from "./receipt-lots";
 import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
 import type { InvoiceOrderDifference } from "./invoice-orders";
+import type {
+  SaleSchedule,
+  SaleRequest,
+  SaleLifecycleEvent,
+  NotificationRecord,
+  SaleDeliveryHold,
+  SalesSettings,
+  SalePriceUnit,
+} from "./sales";
 
 export type Role = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
@@ -21,6 +30,7 @@ export type CompanyConfig = Omit<
   | "promotions"
   | "weighed_items"
   | "returns"
+  | "sales"
 > & {
   company: typeof configSeed.company & {
     logo_data?: string;
@@ -37,6 +47,7 @@ export type CompanyConfig = Omit<
     phone?: string;
     opening_hours?: string;
     tax_region?: string;
+    timezone?: string;
     type?: "store" | "warehouse";
     sells_to_customers?: boolean;
   })[];
@@ -62,6 +73,7 @@ export type CompanyConfig = Omit<
     return_memo: "en" | "bilingual";
     supplier_order: "en" | "bilingual";
   };
+  sales?: SalesSettings;
 };
 export interface PriceProvenance {
   invoice_number: string;
@@ -136,11 +148,21 @@ export interface Approval extends ScopedRecord {
   config_version?: string;
   manual_override?: boolean;
   clear_manual_price?: boolean;
+  manual_price_review?: {
+    kept_price: string;
+    calculated_price: string;
+    prior_cost: string;
+    received_cost: string;
+    receiver_recommendation: "keep" | "rule";
+    decision?: "keep" | "rule";
+  };
   source_invoice_id?: string;
   acknowledgment_reason?: string;
   invoice_number?: string;
   triggered_by?: string;
   posted_at?: string;
+  applies_after_sale?: boolean;
+  sale_id?: string;
 }
 export interface Alert extends ScopedRecord {
   id: string;
@@ -152,7 +174,27 @@ export interface Alert extends ScopedRecord {
     | "other_supplier"
     | "order_differences"
     | "return_credit_overdue"
-    | "date_reminder";
+    | "date_reminder"
+    | "sale_cost_increase"
+    | "sale_regular_not_above_sale"
+    | "sale_no_end_reminder"
+    | "sale_delivery_release";
+  sale_id?: string;
+  sale_revision?: number;
+  sale_price?: string;
+  sale_price_unit?: SalePriceUnit;
+  sale_last_day?: string | null;
+  regular_price_before?: string;
+  proposed_regular_price?: string;
+  prior_margin?: string;
+  new_margin?: string;
+  minimum_margin?: string | null;
+  approval_id?: string;
+  invoice_line_index?: number;
+  hold_id?: string;
+  sale_decision?: "keep" | "change" | "end";
+  decided_by?: string;
+  decided_at?: string;
   expiry_id?: string;
   date?: string;
   days_left?: number;
@@ -327,6 +369,10 @@ export interface LabelWaitlistItem extends ScopedRecord {
   copies: number;
   added_by: string;
   added_at: string;
+  preferred_template?: "regular" | "promo";
+  source_event_id?: string;
+  source_reason?:
+    "sale_started" | "sale_changed" | "sale_ended" | "regular_price_changed";
 }
 export interface ReturnLine {
   quantity_unit?: "units" | "lb";
@@ -414,6 +460,9 @@ export interface ExpiryRecord extends ScopedRecord {
 }
 export interface NoteRecord extends ScopedRecord {
   id: string;
+  /** Generated bilingual instruction only; user-entered note text remains original. */
+  text_fa?: string;
+  sale_delivery_hold_id?: string;
   archived?: boolean;
   type: "to_order" | "store_use" | "note_to_supervisor";
   text: string;
@@ -492,6 +541,13 @@ export interface DemoState {
   prototype_c2_schema?: 1;
   prototype_c4_schema?: 1;
   prototype_c6_schema?: 1;
+  prototype_c8_schema?: 1;
+  sales?: SaleSchedule[];
+  sale_requests?: SaleRequest[];
+  sale_events?: SaleLifecycleEvent[];
+  sale_delivery_holds?: SaleDeliveryHold[];
+  notifications?: NotificationRecord[];
+  sale_label_effects?: string[];
   receipt_lots?: ReceiptLot[];
   invoice_content_corrections?: InvoiceContentCorrection[];
   supplier_items?: SupplierItemDefinition[];

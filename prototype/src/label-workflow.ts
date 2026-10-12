@@ -1,5 +1,11 @@
 import Decimal from "decimal.js";
-import { effectiveOffer, effectivePrice, searchProducts } from "./catalog";
+import {
+  effectiveOffer,
+  effectivePrice,
+  regularPrice,
+  searchProducts,
+} from "./catalog";
+import { activeSaleAt, type SaleSchedule } from "./sales";
 import { effectiveClearanceOffers } from "./receipt-lots";
 import { createId } from "./ids";
 import { labelLayout, labelPages } from "./labels";
@@ -313,6 +319,9 @@ export function clearLabelWaitlist(
 export type LabelPrintProduct = Product & {
   label_lot_id?: string;
   label_clearance_offer?: Offer;
+  label_sale?: SaleSchedule | null;
+  label_regular_price?: string | null;
+  label_effective_price?: string | null;
 };
 export interface LabelPrintSnapshot {
   id: string;
@@ -330,6 +339,7 @@ export function prepareLabelPrint(
   template: LabelTemplate,
   startSlot: number,
   actor: LabelActor,
+  entryIds?: string[],
 ): LabelPrintSnapshot {
   permittedBranch(state, branch, actor);
   if (
@@ -338,11 +348,21 @@ export function prepareLabelPrint(
   )
     throw new LabelWorkflowError("template");
   validateLabelTemplate(template, state.label_settings?.fields?.logo !== false);
-  const entries = structuredClone(branchLabelWaitlist(state, branch));
+  const branchEntries = branchLabelWaitlist(state, branch);
+  if (entryIds?.some((id) => !branchEntries.some((entry) => entry.id === id)))
+    throw new LabelWorkflowError("permission");
+  const entries = structuredClone(
+    entryIds
+      ? branchEntries.filter((entry) => entryIds.includes(entry.id))
+      : branchEntries,
+  );
   const products = entries.flatMap((entry) => {
     const product = structuredClone(
       approvedProduct(state, entry.product_code, branch),
     ) as LabelPrintProduct;
+    product.label_sale = structuredClone(activeSaleAt(state, product, branch));
+    product.label_regular_price = regularPrice(state, product, branch);
+    product.label_effective_price = effectivePrice(state, product, branch);
     if (entry.lot_id) {
       const offer = effectiveClearanceOffers(state, product, branch).find(
         (item) => item.lot_id === entry.lot_id,
@@ -391,6 +411,13 @@ export function confirmLabelsPrinted(
       (entry) => entry.id === printed.id,
     );
     if (!current) continue;
+    // A newer sale transition may reuse this ID for a different label intent.
+    // Confirming the older sheet must not mark the newer label as printed.
+    if (
+      current.preferred_template !== printed.preferred_template ||
+      current.source_event_id !== printed.source_event_id
+    )
+      continue;
     current.copies = Math.max(0, current.copies - printed.copies);
   }
   state.label_waitlist = (state.label_waitlist ?? []).filter(
@@ -406,6 +433,9 @@ export function confirmLabelsPrinted(
     items: snapshot.entries.map((item) => ({
       product_code: item.product_code,
       copies: item.copies,
+      preferred_template: item.preferred_template,
+      source_event_id: item.source_event_id,
+      source_reason: item.source_reason,
     })),
   });
 }
@@ -580,6 +610,7 @@ export function filterLabelProducts(
       (!filters.changed || recent) &&
       (!filters.onOffer ||
         Boolean(effectiveOffer(state, product, branch)) ||
+        Boolean(activeSaleAt(state, product, branch, now)) ||
         effectiveClearanceOffers(state, product, branch).length > 0) &&
       (!filters.pricing || product.pricing_category === filters.pricing) &&
       (!filters.category || product.ai_category === filters.category) &&

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type SetStateAction } from "react";
 import Decimal from "decimal.js";
 import { X } from "lucide-react";
 import { useDemo } from "./store";
@@ -30,6 +30,13 @@ import {
 } from "./ui";
 import "./product-dates-c6.css";
 
+export type ProductPendingDate = {
+  date_type: ProductDateDraft["date_type"];
+  date: string;
+  quantity: string;
+  lot_number: string;
+};
+
 export function ProductDateEditor({
   productCode,
   location,
@@ -45,6 +52,8 @@ export function ProductDateEditor({
   idPrefix,
   issues,
   onFieldChange,
+  pendingDate,
+  onPendingDateChange,
 }: {
   productCode: string;
   location: Branch;
@@ -60,16 +69,24 @@ export function ProductDateEditor({
   idPrefix: string;
   issues: ValidationIssue[];
   onFieldChange: (fieldId: string) => void;
+  pendingDate?: ProductPendingDate;
+  onPendingDateChange?: (draft: ProductPendingDate) => void;
 }) {
   const { state, lang, t } = useDemo();
   const [editing, setEditing] = useState<number | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
-  const [add, setAdd] = useState({
-    date_type: "expiry" as const,
+  const [localAdd, setLocalAdd] = useState<ProductPendingDate>({
+    date_type: "expiry",
     date: "",
     quantity: "",
     lot_number: "",
   });
+  const add = pendingDate ?? localAdd;
+  const setAdd = (value: SetStateAction<ProductPendingDate>) => {
+    const next = typeof value === "function" ? value(add) : value;
+    if (onPendingDateChange) onPendingDateChange(next);
+    else setLocalAdd(next);
+  };
   const [addIssues, setAddIssues] = useState<ValidationIssue[]>([]);
   const issue = (field: string) =>
     issues.find((item) => item.fieldId === `${idPrefix}-${field}`)?.message;
@@ -86,6 +103,7 @@ export function ProductDateEditor({
   const patchAdd = (field: keyof typeof add, value: string) => {
     setAdd((previous) => ({ ...previous, [field]: value }));
     setAddIssues((previous) => previous.filter((item) => item.id !== field));
+    onFieldChange(`${idPrefix}-new-${field}`);
   };
   const addRow = () => {
     const missing: ValidationIssue[] = [];
@@ -355,13 +373,17 @@ export function ProductDateEditor({
                           `ویرایش تاریخ ${row.date}`,
                         )}
                       >
+                        <span
+                          className={`product-date-dot ${days !== null && days < 0 ? "danger" : days !== null && days <= Number(reminderDays) ? "pending" : "approved"}`}
+                          aria-hidden="true"
+                        />
                         <strong>
                           {row.date_type === "best_before"
                             ? t("Best before", "بهترین زمان مصرف")
                             : t("Expiry", "انقضا")}{" "}
                           <DateText value={row.date} />
                         </strong>
-                        <span className="muted">
+                        <span className="muted product-date-evidence">
                           {row.quantity && (
                             <LtrText>
                               {formatQuantity(
@@ -395,11 +417,19 @@ export function ProductDateEditor({
                               ? "danger"
                               : days <= Number(reminderDays)
                                 ? "pending"
-                                : "info"
+                                : "approved"
                           }
                         >
-                          <LtrText>{days}</LtrText>{" "}
-                          {t(days === 1 ? "day" : "days", "روز")}
+                          <LtrText>{Math.abs(days)}</LtrText>{" "}
+                          {days < 0
+                            ? t(
+                                Math.abs(days) === 1 ? "day ago" : "days ago",
+                                "روز گذشته",
+                              )
+                            : t(
+                                days === 1 ? "day left" : "days left",
+                                "روز مانده",
+                              )}
                         </Badge>
                       )}
                       <IconButton
@@ -441,7 +471,10 @@ export function ProductDateEditor({
             </Field>
             <Field
               label={t("Date", "تاریخ")}
-              error={addIssues.find((item) => item.id === "date")?.message}
+              error={
+                addIssues.find((item) => item.id === "date")?.message ??
+                issue("new-date")
+              }
             >
               <DateField
                 id={`${idPrefix}-new-date`}
@@ -451,7 +484,10 @@ export function ProductDateEditor({
             </Field>
             <Field
               label={t("Quantity (optional)", "مقدار (اختیاری)")}
-              error={addIssues.find((item) => item.id === "quantity")?.message}
+              error={
+                addIssues.find((item) => item.id === "quantity")?.message ??
+                issue("new-quantity")
+              }
             >
               <NumberField
                 id={`${idPrefix}-new-quantity`}

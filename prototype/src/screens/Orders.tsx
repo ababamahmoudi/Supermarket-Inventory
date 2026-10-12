@@ -14,7 +14,6 @@ import {
   Button,
   Card,
   DataTable,
-  DateField,
   Dialog,
   DialogActions,
   EmptyState,
@@ -51,6 +50,8 @@ import { orderError, orderStatusCopy } from "../c-orders-i18n";
 import { OrderPrintDocument } from "../order-print";
 import { useOperationalPrint } from "../operational-print-hook";
 import { createId } from "../ids";
+import { formatCasesAndUnits, formatQuantity } from "../formatters";
+import { ReceivedDateRange } from "./ReceivedDateRange";
 import type { CompanyConfig, Language } from "../types";
 import "./orders.css";
 
@@ -70,6 +71,9 @@ interface NewOrderItem {
   name_en: string;
   name_fa?: string;
   units_per_case: number | null;
+}
+function orderCostText(value: string): string {
+  return new Decimal(value).toFixed(4).replace(/(\.\d{2,}?)0+$/, "$1");
 }
 function orderQuantitySuffix(line: OrderLine): string {
   return line.quantity_unit === "lb" ||
@@ -198,7 +202,12 @@ export default function Orders() {
       width: "16%",
     },
     { key: "location", label: t("Location", "مکان"), width: "15%" },
-    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "25%" },
+    {
+      key: "supplier",
+      label: t("Supplier", "تأمین‌کننده"),
+      width: "25%",
+      minWidth: 240,
+    },
     { key: "date", label: t("Date", "تاریخ"), width: "13%" },
     {
       key: "total",
@@ -210,7 +219,14 @@ export default function Orders() {
       key: "status",
       label: t("Status", "وضعیت"),
       width: "15%",
-      minWidth: 200,
+      minWidth: 136,
+    },
+    {
+      key: "actions",
+      label: t("Actions", "عملیات"),
+      required: true,
+      actions: true,
+      width: 56,
     },
   ]);
   useEffect(() => {
@@ -275,7 +291,7 @@ export default function Orders() {
     value === null ? (
       <span className="muted">—</span>
     ) : (
-      <Money value={value} currency={currency} decimals={2} />
+      <Money value={value} currency={currency} />
     );
   const run = (mutator: (draft: typeof state) => void, success: string) => {
     try {
@@ -873,24 +889,20 @@ export default function Orders() {
                   ) : (
                     <DataTable
                       className="order-items-table"
+                      responsive={false}
                       columns={[
-                        {},
-                        { width: 144, align: "end" },
-                        { width: 144, align: "end" },
-                        { width: 68, align: "end" },
-                        { width: 144, align: "end" },
-                        { width: 100, align: "end" },
-                        { width: 110, align: "end" },
+                        { key: "product", width: 300, required: true },
+                        { key: "pack", width: 80, align: "end" },
+                        { key: "cases", width: 128, align: "end" },
+                        { key: "units", width: 124, align: "end" },
+                        { key: "cost", width: 164, align: "end" },
+                        { key: "case_cost", width: 112, align: "end" },
+                        { key: "total", width: 136, align: "end" },
                       ]}
                     >
                       <thead>
                         <tr>
-                          <th>
-                            {t(
-                              "Product / supplier code",
-                              "کالا / کد تأمین‌کننده",
-                            )}
-                          </th>
+                          <th>{t("Product", "کالا")}</th>
                           <th>{t("Pack", "بسته")}</th>
                           <th>{t("Cases", "کارتن")}</th>
                           <th>{t("Units", "واحد")}</th>
@@ -906,22 +918,6 @@ export default function Orders() {
                           const row = rowAmounts.find(
                             (amount) => amount.id === item.id,
                           )!;
-                          let costSource = item.expected_cost_source;
-                          const enteredCost = form.costs[item.id];
-                          if (enteredCost !== undefined) {
-                            try {
-                              if (
-                                !/^\d+(\.\d{1,4})?$/.test(enteredCost.trim()) ||
-                                item.expected_unit_cost === null ||
-                                !new Decimal(enteredCost).eq(
-                                  item.expected_unit_cost,
-                                )
-                              )
-                                costSource = null;
-                            } catch {
-                              costSource = null;
-                            }
-                          }
                           const name =
                             lang === "fa"
                               ? item.name_fa || item.name_en
@@ -975,10 +971,11 @@ export default function Orders() {
                                 className="numeric"
                                 data-label={t("Units", "واحد")}
                               >
-                                <LtrText>{row.units ?? "—"}</LtrText>
-                                {item.quantity_unit === "lb" && (
-                                  <LtrText> lb</LtrText>
-                                )}
+                                <LtrText>
+                                  {row.units === null
+                                    ? "—"
+                                    : `= ${formatQuantity(row.units, item.quantity_unit === "lb" ? "lb" : "units", lang)}`}
+                                </LtrText>
                               </td>
                               <td
                                 className="numeric"
@@ -1003,29 +1000,47 @@ export default function Orders() {
                                     aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${name}`}
                                     value={
                                       form.costs[item.id] ??
-                                      item.expected_unit_cost ??
-                                      ""
+                                      (item.expected_unit_cost === null
+                                        ? ""
+                                        : orderCostText(
+                                            item.expected_unit_cost,
+                                          ))
                                     }
                                     onChange={(value) =>
                                       setItemCost(item.id, value)
                                     }
+                                    onBlur={(event) => {
+                                      if (
+                                        form.costs[item.id] !== undefined &&
+                                        /^\d+(\.\d{1,4})?$/.test(
+                                          event.target.value,
+                                        )
+                                      )
+                                        setItemCost(
+                                          item.id,
+                                          orderCostText(event.target.value),
+                                        );
+                                    }}
                                     step="0.0001"
                                     min="0"
                                   />
                                 </Field>
-                                <span className="order-item-caption">
-                                  {costSource === "last_bought"
-                                    ? t("Last bought", "آخرین خرید")
-                                    : costSource === "quoted"
-                                      ? t(
-                                          "Supplier quote",
-                                          "قیمت اعلامی تأمین‌کننده",
-                                        )
-                                      : t(
-                                          "Expected unit cost",
-                                          "هزینهٔ مورد انتظار واحد",
-                                        )}
-                                </span>
+                                {item.expected_unit_cost !== null &&
+                                  item.expected_cost_source && (
+                                    <span className="order-item-caption">
+                                      {item.expected_cost_source ===
+                                      "last_bought"
+                                        ? t("Last bought", "آخرین خرید")
+                                        : t(
+                                            "Supplier quote",
+                                            "قیمت اعلامی تأمین‌کننده",
+                                          )}{" "}
+                                      {money(item.expected_unit_cost)}
+                                      {item.quantity_unit === "lb" && (
+                                        <LtrText>/lb</LtrText>
+                                      )}
+                                    </span>
+                                  )}
                               </td>
                               <td
                                 className="numeric"
@@ -1165,7 +1180,11 @@ export default function Orders() {
                                 className="numeric"
                                 data-label={t("Units", "واحد")}
                               >
-                                <LtrText>{row.units ?? "—"}</LtrText>
+                                <LtrText>
+                                  {row.units === null
+                                    ? "—"
+                                    : `= ${formatQuantity(row.units, "units", lang)}`}
+                                </LtrText>
                               </td>
                               <td
                                 data-label={t(
@@ -1192,6 +1211,17 @@ export default function Orders() {
                                     step="0.0001"
                                     onChange={(value) => {
                                       setItemCost(item.id, value);
+                                    }}
+                                    onBlur={(event) => {
+                                      if (
+                                        /^\d+(\.\d{1,4})?$/.test(
+                                          event.target.value,
+                                        )
+                                      )
+                                        setItemCost(
+                                          item.id,
+                                          orderCostText(event.target.value),
+                                        );
                                     }}
                                   />
                                 </Field>
@@ -1564,7 +1594,18 @@ export default function Orders() {
                       )}
                     </td>
                     <td className="numeric">
-                      <LtrText>{line.ordered_cases}</LtrText>
+                      <LtrText>
+                        {line.quantity_unit !== "lb" &&
+                        line.new_item_association?.quantity_unit !== "lb" &&
+                        line.ordered_units !== null &&
+                        line.units_per_case !== null
+                          ? formatCasesAndUnits(
+                              line.ordered_units,
+                              line.units_per_case,
+                              lang,
+                            )
+                          : line.ordered_cases}
+                      </LtrText>
                     </td>
                     <td className="numeric">
                       <LtrText>
@@ -1719,12 +1760,14 @@ export default function Orders() {
                 />
               </Field>
             )}
-            <Field label={t("From", "از")}>
-              <DateField value={from} onChange={setFrom} />
-            </Field>
-            <Field label={t("To", "تا")}>
-              <DateField value={to} onChange={setTo} />
-            </Field>
+            <ReceivedDateRange
+              from={from}
+              to={to}
+              onChange={(nextFrom, nextTo) => {
+                setFrom(nextFrom);
+                setTo(nextTo);
+              }}
+            />
             <Button
               variant="ghost"
               onClick={() => {
@@ -1764,6 +1807,7 @@ export default function Orders() {
                     )}
                   </th>
                   <th>{t("Status", "وضعیت")}</th>
+                  <th>{t("Actions", "عملیات")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1811,27 +1855,27 @@ export default function Orders() {
                       {money(order.expected_total_before_tax, order.currency)}
                     </td>
                     <td>
-                      <div className="order-status-navigation">
-                        <Badge
-                          tone={
-                            order.status === "received"
-                              ? "approved"
-                              : order.status === "partially_received"
-                                ? "progress"
-                                : "neutral"
-                          }
-                        >
-                          {t(...orderStatusCopy[order.status])}
-                        </Badge>
-                        <TableRowLink
-                          href={`#orders?id=${encodeURIComponent(order.id)}`}
-                          aria-label={`${t("View", "مشاهده")} ${order.reference}`}
-                          onClick={() => {
-                            setError("");
-                            setMessage("");
-                          }}
-                        />
-                      </div>
+                      <Badge
+                        tone={
+                          order.status === "received"
+                            ? "approved"
+                            : order.status === "partially_received"
+                              ? "progress"
+                              : "neutral"
+                        }
+                      >
+                        {t(...orderStatusCopy[order.status])}
+                      </Badge>
+                    </td>
+                    <td>
+                      <TableRowLink
+                        href={`#orders?id=${encodeURIComponent(order.id)}`}
+                        aria-label={`${t("View", "مشاهده")} ${order.reference}`}
+                        onClick={() => {
+                          setError("");
+                          setMessage("");
+                        }}
+                      />
                     </td>
                   </tr>
                 ))}

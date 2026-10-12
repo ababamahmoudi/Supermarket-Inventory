@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import Decimal from "decimal.js";
-import { signIn, setLanguage, openShellAction } from "./helpers";
+import {
+  signIn,
+  setLanguage,
+  openShellAction,
+  openInvoiceUpload,
+} from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
 
@@ -12,13 +17,13 @@ const pixel = Buffer.from(
 async function review(page: import("@playwright/test").Page) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles({
-      name: "fictional-a2-invoice.png",
-      mimeType: "image/png",
-      buffer: pixel,
-    });
+  await (
+    await openInvoiceUpload(page)
+  ).setInputFiles({
+    name: "fictional-a2-invoice.png",
+    mimeType: "image/png",
+    buffer: pixel,
+  });
   await expect(page.locator(".invoice-line")).toHaveCount(6, {
     timeout: 10000,
   });

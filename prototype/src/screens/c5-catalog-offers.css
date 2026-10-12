@@ -53,3 +53,71 @@
     flex-wrap: wrap;
   }
 }
+.offers-empty-suggestions {
+  margin-block: 16px 24px;
+}
+.current-offers-table .offer-entry-pool {
+  display: block;
+  margin-block: 2px 0;
+}
+.current-offers-table .offer-entry-price {
+  margin-block: 2px 0;
+}
+.offer-record {
+  margin-block: 0 24px;
+}
+.offer-record dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--klead-hairline);
+}
+.offer-record dd {
+  margin: 0;
+}
+.current-offers-table .offer-row-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+.offer-more-slot {
+  display: inline-block;
+  flex: 0 0 36px;
+  inline-size: 36px;
+}
+.current-offers-table .sale-offer-price {
+  white-space: normal;
+}
+.current-offers-table .sale-offer-price > strong,
+.current-offers-table .sale-offer-price > del {
+  white-space: normal;
+}
+.current-offers-table .sale-price {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  white-space: normal;
+}
+.current-offers-table .sale-offer-price > .ui-badge {
+  align-self: start;
+  inline-size: fit-content;
+}
+.current-offers-table .product-name strong,
+.current-offers-table .product-name small {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root .current-offers-table table {
+  min-inline-size: 0;
+}
+.offer-record > h3 {
+  margin-block: 24px 12px;
+}
+.offer-record dd {
+  max-inline-size: 100%;
+}

@@ -10,6 +10,7 @@ import { normalizeSearch, lookupBranch } from "./catalog";
 import {
   applyProductDateDrafts,
   validateProductDateDrafts,
+  validateProductTrackingDate,
 } from "./date-tracking";
 import type { DemoState, Product } from "./types";
 import type { ProductEditorContext, ProductEdits } from "./product-editor";
@@ -184,6 +185,13 @@ export function addProduct(
     edits.dates,
     edits.date_reminder_days,
     edits.date_tracking_stop,
+  );
+  validateProductTrackingDate(
+    state,
+    context.company_id,
+    code,
+    edits.date_tracking,
+    edits.dates,
   );
   state.product_code_high_water = Number(code);
   const product: Product = {

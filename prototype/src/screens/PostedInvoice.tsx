@@ -21,11 +21,12 @@ import {
 } from "../presentation";
 import { Badge, Button, Card, DataTable } from "../ui";
 import type { DemoInvoice, InvoiceLine } from "../types";
+import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./invoice-document-c4.css";
 import "./invoices-c7.css";
 
 export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
-  const { t, tCount } = useDemo();
+  const { lang, t, tCount } = useDemo();
   if (line.sold_by === "weight")
     return (
       <>
@@ -53,15 +54,14 @@ export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
       </>
     );
   if ((line.units_per_case ?? 1) > 1) {
-    const cases = new Decimal(line.qty_invoiced)
-      .div(line.units_per_case!)
-      .toDecimalPlaces(4);
     return (
       <>
-        <LtrText>{cases.toString()}</LtrText>{" "}
-        {t(cases.eq(1) ? "case" : "cases", "کارتن")}{" "}
+        <LtrText>
+          {formatCasesAndUnits(line.qty_invoiced, line.units_per_case!, lang)}
+        </LtrText>
         <span className="muted">
-          (<LtrText>{line.qty_invoiced}</LtrText> {t("units", "واحد")})
+          (<LtrText>{formatQuantity(line.qty_invoiced, "units", lang)}</LtrText>
+          )
         </span>
       </>
     );
@@ -305,7 +305,6 @@ export function PostedInvoice({
                               line.unit_cost_before_tax)
                             : line.unit_cost_before_tax
                         }
-                        decimals={2}
                       />
                       {line.sold_by === "weight" &&
                         `/${line.source_cost_unit ?? "lb"}`}

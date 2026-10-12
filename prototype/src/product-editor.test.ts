@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import { effectiveOffer, effectivePrice } from "./catalog";
 import { configuredBranches } from "./settings";
+import { savePriceChange } from "./sales";
 import { resolveApproval } from "./approvals";
 import {
   saveProductEdits,
@@ -56,6 +57,36 @@ function save(
     new Date("2026-10-07T14:00:00Z"),
   );
 }
+function priceChange(
+  price: string,
+  scope: "all" | "branch",
+  actor = context,
+  code = "0009",
+) {
+  return savePriceChange(
+    state,
+    actor,
+    {
+      product_code: code,
+      mode: "regular",
+      scope: scope === "all" ? "all" : "current",
+      price,
+      price_unit: "each",
+      branches:
+        scope === "all"
+          ? configuredBranches(state.config).filter(
+              (branch) => branch !== "Warehouse",
+            )
+          : [actor.branch],
+      starts_on: "2026-10-07",
+      last_day: null,
+      accept_below_margin: false,
+      below_cost_reason: "",
+      add_labels: false,
+    },
+    new Date("2026-10-07T14:00:00Z"),
+  );
+}
 describe("shared Supervisor product editor", () => {
   it("rejects direct worker/cashier calls without changing business records", () => {
     const before = structuredClone(state);
@@ -76,17 +107,11 @@ describe("shared Supervisor product editor", () => {
       ),
     ).toThrow("branch");
     expect(() =>
-      save(
-        { selling_price: "3.29" },
-        { ...context, allowed_branches: ["Branch 1"] },
-      ),
+      save({}, { ...context, branch: "all", allowed_branches: ["Branch 1"] }),
     ).toThrow("branch");
     expect(() =>
-      save(
-        { selling_price: "3.29", scope: "branch" },
-        { ...context, branch: "all" },
-      ),
-    ).toThrow("branch");
+      priceChange("3.29", "branch", { ...context, branch: "all" }),
+    ).toThrow("stores");
     const foreign = {
       ...state.products[0],
       company_id: "foreign",
@@ -98,12 +123,14 @@ describe("shared Supervisor product editor", () => {
     );
   });
   it("changes only the selected branch price and retains invoice calculation and four-decimal cost", () => {
-    const product = state.products.find((item) => item.code === "0009")!;
+    let product = state.products.find((item) => item.code === "0009")!;
     product.last_cost_before_tax = "1.6000";
     product.price_provenance = {
       "Branch 1": { invoice_number: "FV-20417", calculated_price: "2.99" },
     };
-    save({ selling_price: "3.29", scope: "branch", name_en: "Potato Chips" });
+    save({ name_en: "Potato Chips" });
+    priceChange("3.29", "branch");
+    product = state.products.find((item) => item.code === product.code)!;
     expect(effectivePrice(state, "0009", "Branch 1")).toBe("3.29");
     expect(effectivePrice(state, "0009", "Branch 2")).toBe("2.99");
     expect(product.last_cost_before_tax).toBe("1.6000");
@@ -124,36 +151,34 @@ describe("shared Supervisor product editor", () => {
           item.status === "pending",
       ),
     ).toBe(true);
-    expect(state.approvals.at(-1)).toMatchObject({
-      manual_override: true,
-      status: "approved",
-      scope: "branch",
+    expect(state.activity.at(-1)).toMatchObject({
+      action: "Set regular price",
       branch: "Branch 1",
-      triggered_by: context.actor,
+      entity_type: "product",
+      entity_id: product.code,
     });
     expect(state.activity.at(-1)).toMatchObject({
-      action: "Save product",
+      action: "Set regular price",
       by: context.actor,
       reversible: true,
-      scope: "branch",
     });
-    expect(state.activity.at(-1)!.before).toHaveProperty("product.name_en");
+    expect(state.activity.at(-1)!.before).toHaveProperty(
+      "name_en",
+      "Potato Chips",
+    );
     expect(state.activity.at(-1)!.after).toHaveProperty(
-      "product.branch_prices.Branch 1",
+      "branch_prices.Branch 1",
       "3.29",
     );
   });
   it("applies All branches, removes overrides and preserves each branch's invoice provenance", () => {
-    const product = state.products.find((item) => item.code === "0004")!;
+    let product = state.products.find((item) => item.code === "0004")!;
     product.price_provenance = {
       "Branch 1": { invoice_number: "INV-A", calculated_price: "6.49" },
       "Branch 2": { invoice_number: "INV-B", calculated_price: "6.99" },
     };
-    save(
-      { selling_price: "7.29" },
-      { ...context, branch: "all" },
-      product.code,
-    );
+    priceChange("7.29", "all", { ...context, branch: "all" }, product.code);
+    product = state.products.find((item) => item.code === product.code)!;
     for (const branch of context.allowed_branches)
       expect(effectivePrice(state, product, branch)).toBe("7.29");
     expect(product.branch_prices).toEqual({});
@@ -186,6 +211,17 @@ describe("shared Supervisor product editor", () => {
       unit_size: "200 g",
       barcode: "new-barcode",
       date_tracking: true,
+      dates: [
+        {
+          product_code: product.code,
+          branch: "Branch 1",
+          date_type: "expiry",
+          date: "2026-12-01",
+          quantity: "",
+          lot_number: "",
+          note: "",
+        },
+      ],
     });
     expect(product.code).toBe("0009");
     expect(product.name_en).toBe("Chips");

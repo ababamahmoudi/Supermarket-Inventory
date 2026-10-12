@@ -10,15 +10,18 @@ import {
   keepApprovedPrice,
   proposeManualOverride,
   resolveApproval,
+  manualRegularApprovalPreview,
 } from "../approvals";
-import { effectivePrice } from "../catalog";
+import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
-import { demoUserLabel, LtrText, Money, ProductName } from "../presentation";
+import { demoUserLabel, LtrText, ProductName } from "../presentation";
+import { ProductCost, ProductPrice } from "../weight-price-presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
 import { effectiveApprovalLocation } from "../received";
 import { SupplierApproval } from "./SupplierApproval";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
+import { SaleRequestCards } from "./SalesApprovals";
 import type { Approval, Branch } from "../types";
 import {
   Badge,
@@ -36,6 +39,9 @@ export function Approvals() {
   const { state, update, role, branch, lang, t } = useDemo();
   const [filter, setFilter] = useState<Approval["status"]>("pending");
   const [scope, setScope] = useState<"all" | "branch">("all");
+  const [regularDecision, setRegularDecision] = useState<"rule" | "keep">(
+    "rule",
+  );
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -91,6 +97,7 @@ export function Approvals() {
     configuredBranchLabel(state.config, value, lang);
   const openPreview = (item: Approval, decision: "approve" | "reject") => {
     setMessage("");
+    setRegularDecision("rule");
     const target = branchSellsToCustomers(state.config, item.branch)
       ? item.branch
       : branchSellsToCustomers(state.config, branch)
@@ -122,6 +129,20 @@ export function Approvals() {
       );
       return;
     }
+    const manualReview = preview.approval.manual_price_review
+      ? manualRegularApprovalPreview(state, preview.approval, regularDecision)
+      : null;
+    if (
+      preview.decision === "approve" &&
+      (manualReview?.below_minimum_margin || manualReview?.below_cost) &&
+      !reasons[preview.approval.id]?.trim()
+    ) {
+      setReasonErrors((current) => ({
+        ...current,
+        [preview.approval.id]: t("Add a reason.", "یک دلیل اضافه کنید."),
+      }));
+      return;
+    }
     try {
       update((draft) =>
         resolveApproval(
@@ -132,6 +153,7 @@ export function Approvals() {
           preview.target,
           reasons[preview.approval.id],
           preview.snapshot,
+          preview.approval.manual_price_review ? regularDecision : undefined,
         ),
       );
     } catch {
@@ -230,14 +252,24 @@ export function Approvals() {
           {message}
         </div>
       )}
-      {items.length === 0 && (
-        <EmptyState>
-          {t(
-            "No approvals in this view. Receive an invoice to create a proposal.",
-            "در این نما تأییدی وجود ندارد. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
-          )}
-        </EmptyState>
-      )}
+      {filter === "pending" && <SaleRequestCards />}
+      {items.length === 0 &&
+        !(
+          filter === "pending" &&
+          (state.sale_requests ?? []).some(
+            (request) =>
+              request.company_id === company &&
+              request.status === "pending" &&
+              (branch === "all" || request.branch === branch),
+          )
+        ) && (
+          <EmptyState>
+            {t(
+              "No approvals in this view. Receive an invoice to create a proposal.",
+              "در این نما تأییدی وجود ندارد. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
+            )}
+          </EmptyState>
+        )}
       {items.map((item) => {
         if (item.type === "new_supplier")
           return <SupplierApproval key={item.id} approval={item} />;
@@ -249,7 +281,7 @@ export function Approvals() {
         const approved =
           "current_price" in item
             ? item.current_price
-            : effectivePrice(state, product, item.branch);
+            : regularPrice(state, product, item.branch);
         const relatedInvoice = [state.invoice, ...(state.invoices ?? [])].find(
           (invoice) =>
             invoice.company_id === company &&
@@ -340,7 +372,11 @@ export function Approvals() {
                   <span className="muted">{t("Old price", "قیمت قبلی")}</span>
                   {approved !== null && approved !== undefined ? (
                     <strong className="price">
-                      <Money value={approved} />
+                      <ProductPrice
+                        value={approved}
+                        product={product}
+                        config={state.config}
+                      />
                       <ManualPricePill product={product} branch={item.branch} />
                     </strong>
                   ) : (
@@ -352,13 +388,21 @@ export function Approvals() {
                 <div className="approval-value">
                   <span className="muted">{t("New price", "قیمت جدید")}</span>
                   <strong className="price">
-                    <Money value={item.proposed_price} />
+                    <ProductPrice
+                      value={item.proposed_price}
+                      product={product}
+                      config={state.config}
+                    />
                   </strong>
                 </div>
                 <div className="approval-value">
                   <span className="muted">{t("Unit cost", "هزینه واحد")}</span>
                   <strong>
-                    <Money value={unitCost} />
+                    <ProductCost
+                      value={unitCost}
+                      product={product}
+                      config={state.config}
+                    />
                   </strong>
                 </div>
                 <div className="approval-value">
@@ -489,6 +533,11 @@ export function Approvals() {
                 {t("Review reason", "دلیل بررسی")}: {item.acknowledgment_reason}
               </p>
             )}
+            {item.applies_after_sale && (
+              <Badge tone="info">
+                {t("Applies after the sale", "پس از حراج اعمال می‌شود")}
+              </Badge>
+            )}
           </Card>
         );
       })}
@@ -540,6 +589,27 @@ export function Approvals() {
               target={preview.target}
               onScopeChange={setScope}
               showEffects={preview.decision === "approve"}
+              regularDecision={regularDecision}
+              onRegularDecisionChange={(decision) => {
+                setRegularDecision(decision);
+                if (decision === "keep") setScope("branch");
+                setReasonErrors((current) => ({
+                  ...current,
+                  [preview.approval.id]: "",
+                }));
+              }}
+              regularReason={reasons[preview.approval.id] ?? ""}
+              regularReasonError={reasonErrors[preview.approval.id]}
+              onRegularReasonChange={(reason) => {
+                setReasons((current) => ({
+                  ...current,
+                  [preview.approval.id]: reason,
+                }));
+                setReasonErrors((current) => ({
+                  ...current,
+                  [preview.approval.id]: "",
+                }));
+              }}
             />
           )}
         </ConfirmDialog>

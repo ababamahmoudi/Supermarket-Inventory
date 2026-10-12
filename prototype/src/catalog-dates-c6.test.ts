@@ -120,6 +120,8 @@ function lotState(): DemoState {
   const state = initialState();
   state.invoices = [];
   state.invoice.status = "draft";
+  // Isolate this lot-print workflow from the new C8 running-sale demo waitlist.
+  state.label_waitlist = [];
   state.invoices.push(datedInvoice(state, "LOT-1"));
   return state;
 }

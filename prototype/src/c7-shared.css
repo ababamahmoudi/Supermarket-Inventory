@@ -507,3 +507,20 @@
     color: var(--danger);
   }
 }
+.personal-notification-copy {
+  display: grid;
+  gap: 4px;
+  text-align: start;
+  min-inline-size: 0;
+  white-space: normal;
+}
+.personal-notification-copy > strong {
+  font-size: var(--font-size-body);
+}
+.personal-notification-copy > small {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}
+.personal-notification.is-read > .personal-notification-copy > strong {
+  font-weight: var(--font-weight-body);
+}

@@ -27,6 +27,9 @@
   max-inline-size: none;
   inline-size: 100%;
 }
+.order-form-card {
+  container: order-form / inline-size;
+}
 .order-heading-fields {
   display: flex;
   flex-wrap: wrap;
@@ -54,7 +57,8 @@
 .order-items-table .product-name strong,
 .order-items-table .product-name small {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
   overflow: visible;
   text-overflow: clip;
 }
@@ -105,10 +109,14 @@
   justify-content: space-between;
   gap: 20px;
   max-inline-size: 440px;
+  margin-inline-start: auto;
+  text-align: end;
   padding-block: 20px;
+  padding-inline-end: 8px;
 }
 .order-total strong {
   font-size: 24px;
+  white-space: nowrap;
 }
 .order-form-actions {
   margin-block-start: 12px;
@@ -246,6 +254,104 @@
 }
 .order-print-total strong {
   font-size: 18px;
+}
+/* Editable rows keep every field present; they do not hide inputs in the
+   read-only tables' disclosure layout. */
+:root .order-form-card .order-items-table.ui-data-table,
+:root .order-form-card .order-items-table table.has-defined-columns {
+  inline-size: 100%;
+  min-inline-size: 0;
+  overflow: visible;
+  table-layout: fixed;
+}
+:root .order-form-card .order-items-table :is(th, td) {
+  padding-inline: 8px;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  vertical-align: top;
+}
+:root .order-form-card .order-items-table th {
+  white-space: normal;
+}
+:root .order-form-card .order-items-table .field {
+  justify-items: end;
+}
+:root .order-form-card .order-items-table input.ui-number {
+  inline-size: 100%;
+  max-inline-size: 120px;
+  min-inline-size: 0;
+  margin-inline-start: auto;
+  text-align: right;
+  outline: none;
+  border-color: var(--color-clear);
+  background: var(--field-fill);
+  box-shadow: var(--shadow-none);
+}
+:root[dir="rtl"] .order-form-card .order-items-table input.ui-number {
+  text-align: left;
+}
+:root .order-form-card .order-items-table input.ui-number:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-focus);
+}
+:root .order-form-card .order-items-table input.ui-number[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--surface);
+}
+@container order-form (max-width: 1000px) {
+  .order-items-table table,
+  .order-items-table tbody {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .order-items-table colgroup,
+  .order-items-table thead {
+    display: none;
+  }
+  .order-items-table tbody {
+    display: grid;
+    gap: 16px;
+  }
+  .order-items-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+    padding: 16px;
+    border-radius: var(--radius-search);
+    background: var(--surface-soft);
+  }
+  :root .order-form-card .order-items-table tbody td {
+    display: block;
+    min-inline-size: 0;
+    padding: 0;
+    border-radius: var(--radius-none);
+    text-align: start !important;
+    background: var(--color-clear);
+  }
+  .order-items-table tbody td:first-child {
+    grid-column: 1 / -1;
+  }
+  .order-items-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-block-end: 8px;
+    color: var(--text-muted);
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-caption);
+  }
+  .order-items-table td:first-child::before {
+    display: none;
+  }
+  :root .order-form-card .order-items-table .field {
+    justify-items: start;
+  }
+  :root .order-form-card .order-items-table input.ui-number {
+    margin-inline-start: 0;
+    background: var(--surface);
+  }
 }
 @media (max-width: 760px) {
   :root .order-items-table.ui-data-table {

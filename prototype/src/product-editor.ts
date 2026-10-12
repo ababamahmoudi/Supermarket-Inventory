@@ -1,22 +1,16 @@
-import Decimal from "decimal.js";
-import { effectivePrice, lookupBranch, normalizeSearch } from "./catalog";
+import { regularPrice, normalizeSearch } from "./catalog";
 import {
   applyProductDateDrafts,
   validateProductDateDrafts,
+  validateProductTrackingDate,
   DateTrackingError,
   type ProductDateDraft,
   type StopTrackingChoice,
 } from "./date-tracking";
 import { projectExpiryLocation } from "./received";
-import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import { createId } from "./ids";
-import {
-  configuredBranches,
-  sellingBranches,
-  branchSellsToCustomers,
-} from "./settings";
+import { configuredBranches } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
-import { setManualPriceMarker } from "./manual-prices";
 import type { Branch, DemoState, Product, Role } from "./types";
 
 export interface ProductEditorContext {
@@ -167,7 +161,6 @@ export function saveProductEdits(
     )
   )
     fail("barcode_conflict");
-  let price: string | undefined;
   validateProductDateDrafts(
     state,
     context,
@@ -176,38 +169,22 @@ export function saveProductEdits(
     edits.date_reminder_days,
     edits.date_tracking_stop,
   );
+  validateProductTrackingDate(
+    state,
+    context.company_id,
+    code,
+    edits.date_tracking,
+    edits.dates,
+  );
   if (
     edits.date_tracking === false &&
     product.date_tracking !== false &&
     !edits.date_tracking_stop
   )
     throw new DateTrackingError("stop_choice");
-  if (edits.selling_price !== undefined) {
-    if (!/^\d+(\.\d{1,2})?$/.test(edits.selling_price)) fail("price");
-    const amount = new Decimal(edits.selling_price);
-    if (!amount.isFinite() || amount.lte(0)) fail("price");
-    price = amount.toFixed(2);
-    if (edits.scope === "all") {
-      if (!sellingBranches(state.config).length) fail("branch");
-      if (
-        sellingBranches(state.config).some(
-          (branch) => !context.allowed_branches.includes(branch),
-        )
-      )
-        fail("branch");
-    } else if (
-      context.branch === "all" ||
-      !branchSellsToCustomers(state.config, context.branch) ||
-      !context.allowed_branches.includes(context.branch)
-    )
-      fail("branch");
-  }
+  // Existing-product price writes belong to the separately validated price dialog.
+  if (edits.selling_price !== undefined) fail("price");
   const before = snapshot(state, product);
-  const currentPrice = effectivePrice(
-    state,
-    product,
-    lookupBranch(context.branch),
-  );
   Object.assign(product, {
     name_en: edits.name_en.trim(),
     name_fa: edits.name_fa.trim(),
@@ -243,90 +220,10 @@ export function saveProductEdits(
       entry.removed_by = context.actor;
     }
   }
-  if (price !== undefined) {
-    const targetBranch = edits.scope === "all" ? "all" : context.branch;
-    if (edits.scope === "all") {
-      product.selling_price = price;
-      const selling = sellingBranches(state.config);
-      product.branch_prices = Object.fromEntries(
-        Object.entries(product.branch_prices ?? {}).filter(
-          ([location]) => !selling.includes(location),
-        ),
-      );
-    } else
-      product.branch_prices = {
-        ...product.branch_prices,
-        [context.branch]: price,
-      };
-    product.status = "active";
-    setManualPriceMarker(
-      state,
-      product,
-      targetBranch,
-      price,
-      context.actor,
-      now,
-    );
-    const provenance =
-      product.price_provenance?.[context.branch] ??
-      product.price_provenance?.all;
-    if (edits.scope === "all" && product.price_provenance) {
-      // A company price does not create invoice receipts in other branches.
-      // Retain every recorded branch's own source instead of copying one
-      // branch's invoice into a new company-wide source.
-      product.price_provenance = Object.fromEntries(
-        Object.entries(product.price_provenance).map(([key, source]) => [
-          key,
-          key !== "all" && !sellingBranches(state.config).includes(key)
-            ? source
-            : {
-                ...source,
-                changed_price: price,
-                changed_by: context.actor,
-                changed_at: now.toISOString(),
-              },
-        ]),
-      );
-    } else if (provenance) {
-      const changed = {
-        ...provenance,
-        changed_price: price,
-        changed_by: context.actor,
-        changed_at: now.toISOString(),
-      };
-      product.price_provenance = {
-        ...product.price_provenance,
-        [context.branch]: changed,
-      };
-    }
-    state.approvals.push({
-      id: createId("manual-price"),
-      company_id: context.company_id,
-      branch: targetBranch,
-      type: "price_change",
-      product_code: code,
-      status: "approved",
-      proposed_price: price,
-      current_price: currentPrice,
-      scope: edits.scope,
-      manual_override: true,
-      created_at: now.toISOString(),
-      reason: "Supervisor manual price change",
-      unit_cost: product.last_cost_before_tax,
-      triggered_by: context.actor,
-    });
-    reconcileOffers(state, code, context.company_id);
-    syncPriceConflicts(state, code, context.company_id);
-  }
   state.activity.push({
     id: createId("product-edit"),
     company_id: context.company_id,
-    branch:
-      price === undefined
-        ? "all"
-        : edits.scope === "all"
-          ? "all"
-          : context.branch,
+    branch: "all",
     scope: edits.scope,
     product_code: code,
     action: "Save product",
@@ -374,7 +271,7 @@ export function recordProductBarcodeConflict(
     type: "barcode_conflict",
     product_code: code,
     status: "pending",
-    proposed_price: effectivePrice(state, product, context.branch) ?? "",
+    proposed_price: regularPrice(state, product, context.branch) ?? "",
     reason: "Barcode conflict",
     created_at: now.toISOString(),
     triggered_by: context.actor,

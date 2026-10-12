@@ -12,7 +12,7 @@ import {
   searchProducts,
 } from "../catalog";
 import { useDemo } from "../store";
-import { useListState } from "../navigation";
+import { useListState, useRouteParam } from "../navigation";
 import {
   configuredBranches,
   branchLabel as configuredBranchLabel,
@@ -45,7 +45,10 @@ import {
   ProductPrice as SellingPrice,
   ProductCost,
 } from "../weight-price-presentation";
-import { ProductDateEditor } from "../ProductDateEditor";
+import {
+  ProductDateEditor,
+  type ProductPendingDate,
+} from "../ProductDateEditor";
 import { ProductLotsSection } from "../ProductLotsSection";
 import {
   productDateDrafts,
@@ -53,10 +56,15 @@ import {
   DateTrackingError,
   dateTrackingErrorMessage,
   validTrackedDate,
+  validateProductTrackingDate,
   type ProductDateDraft,
   type StopTrackingChoice,
 } from "../date-tracking";
-import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
+import {
+  WhatsMissing,
+  focusValidationField,
+  type ValidationIssue,
+} from "../WhatsMissing";
 import {
   effectiveClearanceOffers,
   firstAddedLocation,
@@ -69,10 +77,20 @@ import {
   ManualPricePill,
 } from "../manual-price-presentation";
 import { productCostHistory, productStoreCost } from "../product-costs";
-import { lastReceivedByLocation } from "../received";
+import { receivedLog } from "../received";
+import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./manual-entry.css";
 import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
+import { ChangePriceDialog } from "../ChangePriceDialog";
+import { SalePrice, SaleStatus, PendingSalePill } from "../sales-presentation";
+import { salesText } from "../sales-locale";
+import {
+  activeSaleAt,
+  pendingSaleRequest,
+  endSale,
+  withdrawSaleRequest,
+} from "../sales";
 import type { Branch, Product } from "../types";
 import {
   productEditSnapshot,
@@ -92,6 +110,7 @@ import {
   Field,
   Dialog,
   DialogActions,
+  ConfirmDialog,
   TableRowLink,
   PageHeader,
   FilterToolbar,
@@ -112,7 +131,7 @@ import {
   UnitText,
 } from "../presentation";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 25;
 
 function ProductProvenance({ product }: { product: Product }) {
   const { branch, t, lang, state } = useDemo();
@@ -275,8 +294,15 @@ export function ProductEditor({
   const [reminderDays, setReminderDays] = useState(() =>
     String(productReminderDays(state, existingProduct)),
   );
+  const [pendingDate, setPendingDate] = useState<ProductPendingDate>({
+    date_type: "expiry",
+    date: "",
+    quantity: "",
+    lot_number: "",
+  });
   const [stopChoice, setStopChoice] = useState<StopTrackingChoice | "">("");
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const clearIssue = (id: string) =>
     setIssues((current) => current.filter((issue) => issue.fieldId !== id));
   const [manualPrice, setManualPrice] = useState(false);
@@ -335,7 +361,7 @@ export function ProductEditor({
     weightProduct && startingPrice
       ? weightPriceDisplay(startingPrice, state.config).main.amount
       : startingPrice;
-  const priceChanged = sellingPrice !== startingDisplayPrice;
+  const priceChanged = isNew && sellingPrice !== startingDisplayPrice;
   const categories = [
     ...new Set(
       state.products
@@ -405,705 +431,814 @@ export function ProductEditor({
     return null;
   if (!isNew && role !== "supervisor") return null;
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-      title={
-        isNew
-          ? t("Add product", "افزودن محصول")
-          : t("Edit product", "ویرایش محصول")
-      }
-      description={
-        <span className="product-editor-caption">
-          <bdi dir={lang === "fa" && values.name_fa ? "rtl" : "ltr"}>
-            {lang === "fa" ? values.name_fa || values.name_en : values.name_en}
-          </bdi>
-          {" · "}
-          {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
-        </span>
-      }
-      className={
-        isNew
-          ? "product-editor-dialog manual-entry-dialog"
-          : "product-editor-dialog"
-      }
-    >
-      <form
-        className="stack product-editor-form"
-        id={`${formId}-form`}
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          setError(null);
-          const missing: ValidationIssue[] = [];
-          const addIssue = (key: string, message: string) =>
-            missing.push({ id: key, fieldId: `${formId}-${key}`, message });
-          if (!values.name_en.trim())
-            addIssue("name_en", editorError("name_en", t));
-          if (!values.unit_size.trim())
-            addIssue("unit_size", editorError("unit_size", t));
-          if (
-            !activePricingCategories(state.config).some(
-              (category) => category.key === values.pricing_category,
-            )
-          )
-            addIssue("pricing_category", editorError("pricing_category", t));
-          if (!values.main_supplier)
-            addIssue("main_supplier", editorError("supplier", t));
-          if (isNew && !/^\d+(\.\d{1,4})?$/.test(cost))
-            addIssue("cost", editorError("cost", t));
-          if (
-            (isNew || priceChanged) &&
-            (!/^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) ||
-              new Decimal(canonicalSellingPrice || 0).lte(0))
-          )
-            addIssue("price", editorError("price", t));
-          if (values.date_tracking) {
+    <>
+      <Dialog
+        open
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        title={
+          isNew
+            ? t("Add product", "افزودن محصول")
+            : t("Edit product", "ویرایش محصول")
+        }
+        description={
+          <span className="product-editor-caption">
+            <bdi dir={lang === "fa" && values.name_fa ? "rtl" : "ltr"}>
+              <UnitText>
+                {lang === "fa"
+                  ? values.name_fa || values.name_en
+                  : values.name_en}
+              </UnitText>
+            </bdi>
+            {" · "}
+            {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
+          </span>
+        }
+        className={
+          isNew
+            ? "product-editor-dialog manual-entry-dialog"
+            : "product-editor-dialog"
+        }
+      >
+        <form
+          className="stack product-editor-form"
+          id={`${formId}-form`}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            setError(null);
+            const missing: ValidationIssue[] = [];
+            const datesToSave = [...dates];
+            const addIssue = (key: string, message: string) =>
+              !missing.some((item) => item.id === key) &&
+              missing.push({ id: key, fieldId: `${formId}-${key}`, message });
+            if (!values.name_en.trim())
+              addIssue("name_en", editorError("name_en", t));
+            if (!values.unit_size.trim())
+              addIssue("unit_size", editorError("unit_size", t));
             if (
-              !/^\d+$/.test(reminderDays) ||
-              !Number.isSafeInteger(Number(reminderDays))
+              !activePricingCategories(state.config).some(
+                (category) => category.key === values.pricing_category,
+              )
             )
-              addIssue(
-                "reminder",
-                dateTrackingErrorMessage(new DateTrackingError("reminder"), t),
+              addIssue("pricing_category", editorError("pricing_category", t));
+            if (!values.main_supplier)
+              addIssue("main_supplier", editorError("supplier", t));
+            if (isNew && !/^\d+(\.\d{1,4})?$/.test(cost))
+              addIssue("cost", editorError("cost", t));
+            if (
+              (isNew || priceChanged) &&
+              (!/^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) ||
+                new Decimal(canonicalSellingPrice || 0).lte(0))
+            )
+              addIssue("price", editorError("price", t));
+            if (values.date_tracking) {
+              const hasPendingDate = Boolean(
+                pendingDate.date.trim() ||
+                pendingDate.quantity.trim() ||
+                pendingDate.lot_number.trim(),
               );
-            dates.forEach((row, index) => {
-              if (row.remove_reason !== undefined) {
-                if (!row.remove_reason)
+              if (hasPendingDate) {
+                if (!validTrackedDate(pendingDate.date))
                   addIssue(
-                    `date-${index}-remove_reason`,
-                    dateTrackingErrorMessage(
-                      new DateTrackingError("reason"),
-                      t,
-                    ),
+                    "new-date",
+                    dateTrackingErrorMessage(new DateTrackingError("date"), t),
                   );
-                return;
+                if (pendingDate.quantity.trim())
+                  try {
+                    const quantity = new Decimal(pendingDate.quantity);
+                    if (!quantity.isFinite() || quantity.lte(0))
+                      throw new Error();
+                  } catch {
+                    addIssue(
+                      "new-quantity",
+                      dateTrackingErrorMessage(
+                        new DateTrackingError("quantity"),
+                        t,
+                      ),
+                    );
+                  }
+                datesToSave.push({
+                  ...pendingDate,
+                  product_code: product.code,
+                  branch: dateLocation,
+                });
               }
-              if (!validTrackedDate(row.date))
-                addIssue(
-                  `date-${index}-date`,
-                  dateTrackingErrorMessage(new DateTrackingError("date"), t),
+              try {
+                validateProductTrackingDate(
+                  state,
+                  product.company_id,
+                  product.code,
+                  true,
+                  datesToSave,
                 );
-              if (row.quantity?.trim())
-                try {
-                  if (
-                    !new Decimal(row.quantity).isFinite() ||
-                    new Decimal(row.quantity).lte(0)
-                  )
-                    throw new Error();
-                } catch {
-                  addIssue(
-                    `date-${index}-quantity`,
-                    dateTrackingErrorMessage(
-                      new DateTrackingError("quantity"),
-                      t,
-                    ),
-                  );
-                }
-            });
-          }
-          if (
-            !isNew &&
-            values.date_tracking === false &&
-            product.date_tracking !== false &&
-            !stopChoice
-          )
-            addIssue(
-              "stop-choice",
-              dateTrackingErrorMessage(new DateTrackingError("stop_choice"), t),
-            );
-          if (missing.length) {
-            setIssues(missing);
-            return;
-          }
-          setIssues([]);
-          const context = {
-            company_id: state.config.company.seed_key,
-            role: role!,
-            actor: user!.name,
-            branch: invoiceQuickAdd
-              ? state.invoice.branch
-              : values.scope === "branch"
-                ? targetBranch
-                : branch,
-            allowed_branches: branches,
-          };
-          try {
-            if (isNew) {
-              let created: Product | undefined;
-              update((draft) => {
-                created = structuredClone(
-                  addProduct(
-                    draft,
-                    context,
-                    {
-                      ...values,
-                      dates,
-                      date_reminder_days: Number(reminderDays),
-                      last_cost_before_tax: cost,
-                      last_cost_unit: costUnit,
-                      selling_price:
-                        isNew && !manualPrice
-                          ? undefined
-                          : canonicalSellingPrice || undefined,
-                      minimum_margin_confirmed: marginConfirmed,
-                      similar_name_confirmed: similarConfirmed,
-                    } as NewProductEdits,
-                    invoiceQuickAdd,
+              } catch (cause) {
+                if (
+                  cause instanceof DateTrackingError &&
+                  cause.code === "required_date"
+                )
+                  addIssue("new-date", dateTrackingErrorMessage(cause, t));
+              }
+              if (
+                !/^\d+$/.test(reminderDays) ||
+                !Number.isSafeInteger(Number(reminderDays))
+              )
+                addIssue(
+                  "reminder",
+                  dateTrackingErrorMessage(
+                    new DateTrackingError("reminder"),
+                    t,
                   ),
                 );
+              dates.forEach((row, index) => {
+                if (row.remove_reason !== undefined) {
+                  if (!row.remove_reason)
+                    addIssue(
+                      `date-${index}-remove_reason`,
+                      dateTrackingErrorMessage(
+                        new DateTrackingError("reason"),
+                        t,
+                      ),
+                    );
+                  return;
+                }
+                if (!validTrackedDate(row.date))
+                  addIssue(
+                    `date-${index}-date`,
+                    dateTrackingErrorMessage(new DateTrackingError("date"), t),
+                  );
+                if (row.quantity?.trim())
+                  try {
+                    if (
+                      !new Decimal(row.quantity).isFinite() ||
+                      new Decimal(row.quantity).lte(0)
+                    )
+                      throw new Error();
+                  } catch {
+                    addIssue(
+                      `date-${index}-quantity`,
+                      dateTrackingErrorMessage(
+                        new DateTrackingError("quantity"),
+                        t,
+                      ),
+                    );
+                  }
               });
-              onCreated?.(created!);
-              onClose();
+            }
+            if (
+              !isNew &&
+              values.date_tracking === false &&
+              product.date_tracking !== false &&
+              !stopChoice
+            )
+              addIssue(
+                "stop-choice",
+                dateTrackingErrorMessage(
+                  new DateTrackingError("stop_choice"),
+                  t,
+                ),
+              );
+            if (missing.length) {
+              setIssues(missing);
+              requestAnimationFrame(() =>
+                focusValidationField(missing[0].fieldId),
+              );
               return;
             }
-            update((draft) =>
-              saveProductEdits(
-                draft,
-                context,
-                product.code,
-                {
-                  ...values,
-                  dates,
-                  date_reminder_days: Number(reminderDays),
-                  date_tracking_stop: stopChoice || undefined,
-                  ...(priceChanged
-                    ? { selling_price: canonicalSellingPrice }
-                    : {}),
-                },
-                expected,
-              ),
-            );
-            onClose();
-          } catch (cause) {
-            if (cause instanceof DateTrackingError) {
-              setIssues([
-                {
-                  id: "dates",
-                  fieldId: `${formId}-dates`,
-                  message: dateTrackingErrorMessage(cause, t),
-                },
-              ]);
-              return;
-            }
-            const code =
-              cause instanceof ProductEditError ||
-              cause instanceof NewProductError
-                ? cause.code
-                : "stale";
-            if (code === "barcode_conflict" && !isNew) {
-              // The rejected catalog draft stays untouched. Its separate
-              // approval is now part of the current editing snapshot, so the
-              // user can correct this field without reopening the dialog.
-              let nextSnapshot = expected;
-              update((draft) => {
-                recordProductBarcodeConflict(
+            setIssues([]);
+            const context = {
+              company_id: state.config.company.seed_key,
+              role: role!,
+              actor: user!.name,
+              branch: invoiceQuickAdd
+                ? state.invoice.branch
+                : values.scope === "branch"
+                  ? targetBranch
+                  : branch,
+              allowed_branches: branches,
+            };
+            try {
+              if (isNew) {
+                let created: Product | undefined;
+                update((draft) => {
+                  created = structuredClone(
+                    addProduct(
+                      draft,
+                      context,
+                      {
+                        ...values,
+                        dates: datesToSave,
+                        date_reminder_days: Number(reminderDays),
+                        last_cost_before_tax: cost,
+                        last_cost_unit: costUnit,
+                        selling_price:
+                          isNew && !manualPrice
+                            ? undefined
+                            : canonicalSellingPrice || undefined,
+                        minimum_margin_confirmed: marginConfirmed,
+                        similar_name_confirmed: similarConfirmed,
+                      } as NewProductEdits,
+                      invoiceQuickAdd,
+                    ),
+                  );
+                });
+                onCreated?.(created!);
+                onClose();
+                return;
+              }
+              update((draft) =>
+                saveProductEdits(
                   draft,
                   context,
                   product.code,
-                  values.barcode,
-                );
-                nextSnapshot = productEditSnapshot(draft, product.code);
-              });
-              setExpected(nextSnapshot);
+                  {
+                    ...values,
+                    dates: datesToSave,
+                    date_reminder_days: Number(reminderDays),
+                    date_tracking_stop: stopChoice || undefined,
+                    ...(priceChanged
+                      ? { selling_price: canonicalSellingPrice }
+                      : {}),
+                  },
+                  expected,
+                ),
+              );
+              onClose();
+            } catch (cause) {
+              if (cause instanceof DateTrackingError) {
+                setIssues([
+                  {
+                    id: "dates",
+                    fieldId: `${formId}-dates`,
+                    message: dateTrackingErrorMessage(cause, t),
+                  },
+                ]);
+                return;
+              }
+              const code =
+                cause instanceof ProductEditError ||
+                cause instanceof NewProductError
+                  ? cause.code
+                  : "stale";
+              if (code === "barcode_conflict" && !isNew) {
+                // The rejected catalog draft stays untouched. Its separate
+                // approval is now part of the current editing snapshot, so the
+                // user can correct this field without reopening the dialog.
+                let nextSnapshot = expected;
+                update((draft) => {
+                  recordProductBarcodeConflict(
+                    draft,
+                    context,
+                    product.code,
+                    values.barcode,
+                  );
+                  nextSnapshot = productEditSnapshot(draft, product.code);
+                });
+                setExpected(nextSnapshot);
+              }
+              setError(code);
+              const key =
+                code === "supplier"
+                  ? "main_supplier"
+                  : code === "barcode_conflict"
+                    ? "barcode"
+                    : code === "category"
+                      ? "ai_category"
+                      : code === "similar"
+                        ? "similar"
+                        : code === "margin"
+                          ? "margin"
+                          : code;
+              if (
+                [
+                  "name_en",
+                  "unit_size",
+                  "pricing_category",
+                  "supplier",
+                  "barcode_conflict",
+                  "cost",
+                  "price",
+                  "similar",
+                  "margin",
+                ].includes(code)
+              )
+                setIssues([
+                  {
+                    id: code,
+                    fieldId: `${formId}-${key}`,
+                    message: editorError(code, t),
+                  },
+                ]);
             }
-            setError(code);
-            const key =
-              code === "supplier"
-                ? "main_supplier"
-                : code === "barcode_conflict"
-                  ? "barcode"
-                  : code === "category"
-                    ? "ai_category"
-                    : code === "similar"
-                      ? "similar"
-                      : code === "margin"
-                        ? "margin"
-                        : code;
-            if (
-              [
-                "name_en",
-                "unit_size",
-                "pricing_category",
-                "supplier",
-                "barcode_conflict",
-                "cost",
-                "price",
-                "similar",
-                "margin",
-              ].includes(code)
-            )
-              setIssues([
-                {
-                  id: code,
-                  fieldId: `${formId}-${key}`,
-                  message: editorError(code, t),
-                },
-              ]);
-          }
-        }}
-      >
-        <div className="product-editor-body">
-          <WhatsMissing issues={issues} />
-          <section
-            className="product-editor-section"
-            aria-label={t("Names", "نام‌ها")}
-          >
-            <h3 className="product-editor-section-title">
-              {t("Names", "نام‌ها")}
-            </h3>
-            <div className="form-grid product-editor-fields">
-              <Field
-                label={t("English name", "نام انگلیسی")}
-                error={
-                  fieldIssue("name_en") ??
-                  (error === "name_en" ? editorError(error, t) : undefined)
-                }
-              >
-                <input
-                  autoFocus
-                  id={`${formId}-name_en`}
-                  dir="ltr"
-                  value={values.name_en}
-                  onChange={(event) => {
-                    patch("name_en", event.target.value);
-                    setSimilarConfirmed(false);
-                  }}
-                />
-              </Field>
-              <Field
-                label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
-                error={error === "name_fa" ? editorError(error, t) : undefined}
-              >
-                <input
-                  dir="rtl"
-                  value={values.name_fa}
-                  onChange={(event) => patch("name_fa", event.target.value)}
-                />
-              </Field>
-            </div>
-          </section>
-          <section
-            className="product-editor-section"
-            aria-label={t("Pricing", "قیمت‌گذاری")}
-          >
-            <h3 className="product-editor-section-title">
-              {t("Pricing", "قیمت‌گذاری")}
-            </h3>
-            <div className="form-grid product-editor-fields">
-              <Field
-                label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-                error={
-                  fieldIssue("pricing_category") ??
-                  (error === "pricing_category"
-                    ? editorError(error, t)
-                    : undefined)
-                }
-              >
-                <Select
-                  id={`${formId}-pricing_category`}
-                  value={values.pricing_category}
-                  onChange={(value) => patch("pricing_category", value)}
-                  options={activePricingCategories(state.config).map(
-                    (item) => ({
-                      value: item.key,
-                      label: categoryLabel(item.label, lang),
-                    }),
-                  )}
-                />
-              </Field>
-              {isNew && (
+          }}
+        >
+          <div className="product-editor-body">
+            <WhatsMissing issues={issues} />
+            <section
+              className="product-editor-section"
+              aria-label={t("Names", "نام‌ها")}
+            >
+              <h3 className="product-editor-section-title">
+                {t("Names", "نام‌ها")}
+              </h3>
+              <div className="form-grid product-editor-fields">
                 <Field
-                  label={t(
-                    "Last unit cost before tax",
-                    "آخرین هزینهٔ واحد پیش از مالیات",
-                  )}
+                  label={t("English name", "نام انگلیسی")}
                   error={
-                    fieldIssue("cost") ??
-                    (error === "cost" ? editorError(error, t) : undefined)
+                    fieldIssue("name_en") ??
+                    (error === "name_en" ? editorError(error, t) : undefined)
                   }
                 >
                   <input
-                    id={`${formId}-cost`}
+                    autoFocus
+                    id={`${formId}-name_en`}
                     dir="ltr"
-                    inputMode="decimal"
-                    className="control-narrow"
-                    value={cost}
+                    value={values.name_en}
                     onChange={(event) => {
-                      setCost(event.target.value);
-                      clearIssue(`${formId}-cost`);
-                      setMarginConfirmed(false);
-                      if (error === "cost" || error === "margin")
-                        setError(null);
+                      patch("name_en", event.target.value);
+                      setSimilarConfirmed(false);
                     }}
                   />
                 </Field>
-              )}
-              {isNew && weightProduct && (
-                <Field label={t("Cost unit", "واحد هزینه")}>
+                <Field
+                  label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
+                  error={
+                    error === "name_fa" ? editorError(error, t) : undefined
+                  }
+                >
+                  <input
+                    dir="rtl"
+                    value={values.name_fa}
+                    onChange={(event) => patch("name_fa", event.target.value)}
+                  />
+                </Field>
+              </div>
+            </section>
+            <section
+              className="product-editor-section"
+              aria-label={t("Pricing", "قیمت‌گذاری")}
+            >
+              <h3 className="product-editor-section-title">
+                {t("Pricing", "قیمت‌گذاری")}
+              </h3>
+              <div className="form-grid product-editor-fields">
+                <Field
+                  label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+                  error={
+                    fieldIssue("pricing_category") ??
+                    (error === "pricing_category"
+                      ? editorError(error, t)
+                      : undefined)
+                  }
+                >
                   <Select
-                    value={costUnit}
+                    id={`${formId}-pricing_category`}
+                    value={values.pricing_category}
+                    onChange={(value) => patch("pricing_category", value)}
+                    options={activePricingCategories(state.config).map(
+                      (item) => ({
+                        value: item.key,
+                        label: categoryLabel(item.label, lang),
+                      }),
+                    )}
+                  />
+                </Field>
+                {isNew && (
+                  <Field
+                    label={t(
+                      "Last unit cost before tax",
+                      "آخرین هزینهٔ واحد پیش از مالیات",
+                    )}
+                    error={
+                      fieldIssue("cost") ??
+                      (error === "cost" ? editorError(error, t) : undefined)
+                    }
+                  >
+                    <input
+                      id={`${formId}-cost`}
+                      dir="ltr"
+                      inputMode="decimal"
+                      className="control-narrow"
+                      value={cost}
+                      onChange={(event) => {
+                        setCost(event.target.value);
+                        clearIssue(`${formId}-cost`);
+                        setMarginConfirmed(false);
+                        if (error === "cost" || error === "margin")
+                          setError(null);
+                      }}
+                    />
+                  </Field>
+                )}
+                {isNew && weightProduct && (
+                  <Field label={t("Cost unit", "واحد هزینه")}>
+                    <Select
+                      value={costUnit}
+                      onChange={(value) => {
+                        setCostUnit(value as WeightUnit);
+                        setMarginConfirmed(false);
+                        if (error === "cost" || error === "margin")
+                          setError(null);
+                      }}
+                      options={[
+                        { value: "lb", label: "lb" },
+                        { value: "kg", label: "kg" },
+                      ]}
+                    />
+                  </Field>
+                )}
+                <Field
+                  label={
+                    weightProduct
+                      ? displayUnit === "lb"
+                        ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                        : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+                      : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
+                  }
+                  error={
+                    fieldIssue("price") ??
+                    (error === "price" ? editorError(error, t) : undefined)
+                  }
+                  className="short-field"
+                >
+                  {isNew ? (
+                    <input
+                      id={`${formId}-price`}
+                      dir="ltr"
+                      inputMode="decimal"
+                      value={effectiveSellingPrice}
+                      readOnly={isNew && role !== "supervisor"}
+                      onChange={(event) => {
+                        setSellingPrice(event.target.value);
+                        clearIssue(`${formId}-price`);
+                        setManualPrice(true);
+                        setMarginConfirmed(false);
+                        if (error === "price" || error === "margin")
+                          setError(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="product-editor-current-price">
+                      <SalePrice product={product} />
+                      <Button
+                        variant="plain"
+                        onClick={() => setPriceDialogOpen(true)}
+                      >
+                        {salesText(t, "change")}
+                      </Button>
+                    </div>
+                  )}
+                </Field>
+              </div>
+            </section>
+            <section
+              className="product-editor-section"
+              aria-label={t("Details", "جزئیات")}
+            >
+              <h3 className="product-editor-section-title">
+                {t("Details", "جزئیات")}
+              </h3>
+              <div className="form-grid product-editor-fields">
+                <Field
+                  label={t("Unit size", "اندازهٔ واحد")}
+                  error={
+                    fieldIssue("unit_size") ??
+                    (error === "unit_size" ? editorError(error, t) : undefined)
+                  }
+                >
+                  <input
+                    id={`${formId}-unit_size`}
+                    dir="ltr"
+                    value={values.unit_size}
+                    onChange={(event) => patch("unit_size", event.target.value)}
+                  />
+                </Field>
+                <Field label={t("Sold by", "روش فروش")}>
+                  <Select
+                    value={values.sold_by ?? "each"}
                     onChange={(value) => {
-                      setCostUnit(value as WeightUnit);
+                      patch("sold_by", value as "each" | "weight");
+                      setSellingPrice(
+                        value === "weight" && startingPrice
+                          ? weightPriceDisplay(startingPrice, state.config).main
+                              .amount
+                          : startingPrice,
+                      );
+                      setManualPrice(false);
                       setMarginConfirmed(false);
-                      if (error === "cost" || error === "margin")
-                        setError(null);
                     }}
                     options={[
-                      { value: "lb", label: "lb" },
-                      { value: "kg", label: "kg" },
+                      { value: "each", label: t("Each", "عدد") },
+                      { value: "weight", label: t("Weight", "وزن") },
                     ]}
                   />
                 </Field>
-              )}
-              <Field
-                label={
-                  weightProduct
-                    ? displayUnit === "lb"
-                      ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                      : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-                    : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
-                }
-                error={
-                  fieldIssue("price") ??
-                  (error === "price" ? editorError(error, t) : undefined)
-                }
-                className="short-field"
-              >
-                <input
-                  id={`${formId}-price`}
-                  dir="ltr"
-                  inputMode="decimal"
-                  value={effectiveSellingPrice}
-                  readOnly={isNew && role !== "supervisor"}
-                  onChange={(event) => {
-                    setSellingPrice(event.target.value);
-                    clearIssue(`${formId}-price`);
-                    setManualPrice(true);
-                    setMarginConfirmed(false);
-                    if (error === "price" || error === "margin") setError(null);
-                  }}
-                />
-              </Field>
-            </div>
-          </section>
-          <section
-            className="product-editor-section"
-            aria-label={t("Details", "جزئیات")}
-          >
-            <h3 className="product-editor-section-title">
-              {t("Details", "جزئیات")}
-            </h3>
-            <div className="form-grid product-editor-fields">
-              <Field
-                label={t("Unit size", "اندازهٔ واحد")}
-                error={
-                  fieldIssue("unit_size") ??
-                  (error === "unit_size" ? editorError(error, t) : undefined)
-                }
-              >
-                <input
-                  id={`${formId}-unit_size`}
-                  dir="ltr"
-                  value={values.unit_size}
-                  onChange={(event) => patch("unit_size", event.target.value)}
-                />
-              </Field>
-              <Field label={t("Sold by", "روش فروش")}>
-                <Select
-                  value={values.sold_by ?? "each"}
-                  onChange={(value) => {
-                    patch("sold_by", value as "each" | "weight");
-                    setSellingPrice(
-                      value === "weight" && startingPrice
-                        ? weightPriceDisplay(startingPrice, state.config).main
-                            .amount
-                        : startingPrice,
-                    );
-                    setManualPrice(false);
-                    setMarginConfirmed(false);
-                  }}
-                  options={[
-                    { value: "each", label: t("Each", "عدد") },
-                    { value: "weight", label: t("Weight", "وزن") },
-                  ]}
-                />
-              </Field>
-              <Field
-                label={t("Category (optional)", "دسته (اختیاری)")}
-                error={error === "category" ? editorError(error, t) : undefined}
-              >
-                <Select
-                  value={values.ai_category}
-                  onChange={(value) => patch("ai_category", value)}
-                  options={[
-                    { value: "", label: t("No category", "بدون دسته") },
-                    ...categories.map((value) => ({
-                      value,
-                      label: categoryLabel(value, lang),
-                    })),
-                  ]}
-                />
-              </Field>
-              <Field
-                label={t("Supplier", "تأمین‌کننده")}
-                error={
-                  fieldIssue("main_supplier") ??
-                  (error === "supplier" ? editorError(error, t) : undefined)
-                }
-              >
-                <Select
-                  id={`${formId}-main_supplier`}
-                  value={values.main_supplier}
-                  onChange={(value) => patch("main_supplier", value)}
-                  options={suppliers.map((value) => ({ value, label: value }))}
-                />
-              </Field>
-              <Field
-                label={t("Barcode", "بارکد")}
-                error={
-                  error === "barcode_conflict"
-                    ? editorError(error, t)
-                    : undefined
-                }
-              >
-                <input
-                  id={`${formId}-barcode`}
-                  dir="ltr"
-                  value={values.barcode}
-                  onChange={(event) => patch("barcode", event.target.value)}
-                />
-              </Field>
-              <Field
-                label={t(
-                  "Description (English) (optional)",
-                  "توضیحات (انگلیسی) (اختیاری)",
-                )}
-              >
-                <textarea
-                  dir="ltr"
-                  value={values.description_en}
-                  onChange={(event) =>
-                    patch("description_en", event.target.value)
+                <Field
+                  label={t("Category (optional)", "دسته (اختیاری)")}
+                  error={
+                    error === "category" ? editorError(error, t) : undefined
                   }
-                  rows={2}
-                />
-              </Field>
-              <Field
-                label={t(
-                  "Description (Persian) (optional)",
-                  "توضیحات (فارسی) (اختیاری)",
-                )}
-              >
-                <textarea
-                  dir="rtl"
-                  value={values.description_fa}
-                  onChange={(event) =>
-                    patch("description_fa", event.target.value)
-                  }
-                  rows={2}
-                />
-              </Field>
-            </div>
-          </section>
-          <ProductDateEditor
-            productCode={product.code}
-            location={dateLocation}
-            enabled={values.date_tracking}
-            onEnabledChange={(value) => patch("date_tracking", value)}
-            dates={dates}
-            onDatesChange={setDates}
-            reminderDays={reminderDays}
-            onReminderDaysChange={setReminderDays}
-            stopRequired={!isNew && product.date_tracking !== false}
-            stopChoice={stopChoice}
-            onStopChoiceChange={setStopChoice}
-            idPrefix={formId}
-            issues={issues}
-            onFieldChange={clearIssue}
-          />
-          {isNew && belowMinimum && role === "supervisor" && (
-            <div className="banner info" id={`${formId}-margin`}>
-              <p>
-                {t(
-                  "This price is below the minimum margin.",
-                  "این قیمت کمتر از حداقل حاشیه است.",
-                )}
-              </p>
-              <Checkbox
-                checked={marginConfirmed}
-                onChange={(value) => {
-                  setMarginConfirmed(value);
-                  clearIssue(`${formId}-margin`);
-                  if (error === "margin") setError(null);
-                }}
-              >
-                {t(
-                  "Confirm price below minimum margin",
-                  "تأیید قیمت زیر حداقل حاشیه",
-                )}
-              </Checkbox>
-            </div>
-          )}
-          {!!similar.length && (
-            <div
-              className="banner info manual-similar-warning"
-              role="status"
-              id={`${formId}-similar`}
-            >
-              <p>
-                {t(
-                  "A similar product already exists.",
-                  "یک محصول مشابه وجود دارد.",
-                )}
-              </p>
-              {similar.map((item) => (
-                <Button
-                  key={item.code}
-                  variant="secondary"
-                  onClick={() => {
-                    onClose();
-                    navigate(`product?code=${item.code}`);
-                  }}
                 >
-                  {lang === "fa" ? (
-                    item.name_fa
-                  ) : (
-                    <LtrText>{item.name_en}</LtrText>
-                  )}
-                </Button>
-              ))}
-              <Checkbox
-                checked={similarConfirmed}
-                onChange={(value) => {
-                  setSimilarConfirmed(value);
-                  clearIssue(`${formId}-similar`);
-                  if (error === "similar") setError(null);
-                }}
-              >
-                {t("Continue with this product name", "ادامه با این نام محصول")}
-              </Checkbox>
-            </div>
-          )}
-          {!isNew && priceChanged && (
-            <div className="stack product-editor-price-scope">
-              <Field label={t("Approval scope", "محدودهٔ تأیید")}>
-                <Select
-                  value={values.scope}
-                  onChange={(value) =>
-                    patch("scope", value as "all" | "branch")
-                  }
-                  options={[
-                    { value: "all", label: t("All branches", "همهٔ شعبه‌ها") },
-                    ...(branch === "all" ||
-                    branchSellsToCustomers(state.config, branch)
-                      ? [
-                          {
-                            value: "branch",
-                            label: t("This branch only", "فقط این شعبه"),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </Field>
-              {values.scope === "branch" && branch === "all" && (
-                <Field label={t("Branch", "شعبه")}>
                   <Select
-                    value={targetBranch}
-                    onChange={(value) => {
-                      setTargetBranch(value as Branch);
-                      if (error === "branch") setError(null);
-                    }}
-                    options={priceLocations.map((value) => ({
+                    value={values.ai_category}
+                    onChange={(value) => patch("ai_category", value)}
+                    options={[
+                      { value: "", label: t("No category", "بدون دسته") },
+                      ...categories.map((value) => ({
+                        value,
+                        label: categoryLabel(value, lang),
+                      })),
+                    ]}
+                  />
+                </Field>
+                <Field
+                  label={t("Supplier", "تأمین‌کننده")}
+                  error={
+                    fieldIssue("main_supplier") ??
+                    (error === "supplier" ? editorError(error, t) : undefined)
+                  }
+                >
+                  <Select
+                    id={`${formId}-main_supplier`}
+                    value={values.main_supplier}
+                    onChange={(value) => patch("main_supplier", value)}
+                    options={suppliers.map((value) => ({
                       value,
-                      label: configuredBranchLabel(state.config, value, lang),
+                      label: value,
                     }))}
                   />
                 </Field>
-              )}
-              <DataTable
-                columns={[
-                  { width: "40%" },
-                  { width: "30%", align: "end" },
-                  { width: "30%", align: "end" },
-                ]}
+                <Field
+                  label={t("Barcode", "بارکد")}
+                  error={
+                    error === "barcode_conflict"
+                      ? editorError(error, t)
+                      : undefined
+                  }
+                >
+                  <input
+                    id={`${formId}-barcode`}
+                    dir="ltr"
+                    value={values.barcode}
+                    onChange={(event) => patch("barcode", event.target.value)}
+                  />
+                </Field>
+                <Field
+                  label={t(
+                    "Description (English) (optional)",
+                    "توضیحات (انگلیسی) (اختیاری)",
+                  )}
+                >
+                  <textarea
+                    dir="ltr"
+                    value={values.description_en}
+                    onChange={(event) =>
+                      patch("description_en", event.target.value)
+                    }
+                    rows={2}
+                  />
+                </Field>
+                <Field
+                  label={t(
+                    "Description (Persian) (optional)",
+                    "توضیحات (فارسی) (اختیاری)",
+                  )}
+                >
+                  <textarea
+                    dir="rtl"
+                    value={values.description_fa}
+                    onChange={(event) =>
+                      patch("description_fa", event.target.value)
+                    }
+                    rows={2}
+                  />
+                </Field>
+              </div>
+            </section>
+            <ProductDateEditor
+              productCode={product.code}
+              location={dateLocation}
+              enabled={values.date_tracking}
+              onEnabledChange={(value) => patch("date_tracking", value)}
+              dates={dates}
+              onDatesChange={setDates}
+              pendingDate={pendingDate}
+              onPendingDateChange={setPendingDate}
+              reminderDays={reminderDays}
+              onReminderDaysChange={setReminderDays}
+              stopRequired={!isNew && product.date_tracking !== false}
+              stopChoice={stopChoice}
+              onStopChoiceChange={setStopChoice}
+              idPrefix={formId}
+              issues={issues}
+              onFieldChange={clearIssue}
+            />
+            {isNew && belowMinimum && role === "supervisor" && (
+              <div className="banner info" id={`${formId}-margin`}>
+                <p>
+                  {t(
+                    "This price is below the minimum margin.",
+                    "این قیمت کمتر از حداقل حاشیه است.",
+                  )}
+                </p>
+                <Checkbox
+                  checked={marginConfirmed}
+                  onChange={(value) => {
+                    setMarginConfirmed(value);
+                    clearIssue(`${formId}-margin`);
+                    if (error === "margin") setError(null);
+                  }}
+                >
+                  {t(
+                    "Confirm price below minimum margin",
+                    "تأیید قیمت زیر حداقل حاشیه",
+                  )}
+                </Checkbox>
+              </div>
+            )}
+            {!!similar.length && (
+              <div
+                className="banner info manual-similar-warning"
+                role="status"
+                id={`${formId}-similar`}
               >
-                <thead>
-                  <tr>
-                    <th>{t("Branch", "شعبه")}</th>
-                    <th>{t("Old", "قبلی")}</th>
-                    <th>{t("New", "جدید")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(values.scope === "all"
-                    ? priceLocations
-                    : [targetBranch]
-                  ).map((item) => (
-                    <tr key={item}>
-                      <td>{configuredBranchLabel(state.config, item, lang)}</td>
-                      <td>
-                        {effectivePrice(state, product, item) ? (
-                          <SellingPrice
-                            value={effectivePrice(state, product, item)!}
-                            product={product}
-                            config={state.config}
-                          />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td>
-                        <LtrText>
-                          {/^\d+(\.\d{1,2})?$/.test(sellingPrice) ? (
+                <p>
+                  {t(
+                    "A similar product already exists.",
+                    "یک محصول مشابه وجود دارد.",
+                  )}
+                </p>
+                {similar.map((item) => (
+                  <Button
+                    key={item.code}
+                    variant="secondary"
+                    onClick={() => {
+                      onClose();
+                      navigate(`product?code=${item.code}`);
+                    }}
+                  >
+                    {lang === "fa" ? (
+                      item.name_fa
+                    ) : (
+                      <LtrText>{item.name_en}</LtrText>
+                    )}
+                  </Button>
+                ))}
+                <Checkbox
+                  checked={similarConfirmed}
+                  onChange={(value) => {
+                    setSimilarConfirmed(value);
+                    clearIssue(`${formId}-similar`);
+                    if (error === "similar") setError(null);
+                  }}
+                >
+                  {t(
+                    "Continue with this product name",
+                    "ادامه با این نام محصول",
+                  )}
+                </Checkbox>
+              </div>
+            )}
+            {!isNew && priceChanged && (
+              <div className="stack product-editor-price-scope">
+                <Field label={t("Approval scope", "محدودهٔ تأیید")}>
+                  <Select
+                    value={values.scope}
+                    onChange={(value) =>
+                      patch("scope", value as "all" | "branch")
+                    }
+                    options={[
+                      {
+                        value: "all",
+                        label: t("All branches", "همهٔ شعبه‌ها"),
+                      },
+                      ...(branch === "all" ||
+                      branchSellsToCustomers(state.config, branch)
+                        ? [
+                            {
+                              value: "branch",
+                              label: t("This branch only", "فقط این شعبه"),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                </Field>
+                {values.scope === "branch" && branch === "all" && (
+                  <Field label={t("Branch", "شعبه")}>
+                    <Select
+                      value={targetBranch}
+                      onChange={(value) => {
+                        setTargetBranch(value as Branch);
+                        if (error === "branch") setError(null);
+                      }}
+                      options={priceLocations.map((value) => ({
+                        value,
+                        label: configuredBranchLabel(state.config, value, lang),
+                      }))}
+                    />
+                  </Field>
+                )}
+                <DataTable
+                  columns={[
+                    { width: "40%" },
+                    { width: "30%", align: "end" },
+                    { width: "30%", align: "end" },
+                  ]}
+                >
+                  <thead>
+                    <tr>
+                      <th>{t("Branch", "شعبه")}</th>
+                      <th>{t("Old", "قبلی")}</th>
+                      <th>{t("New", "جدید")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(values.scope === "all"
+                      ? priceLocations
+                      : [targetBranch]
+                    ).map((item) => (
+                      <tr key={item}>
+                        <td>
+                          {configuredBranchLabel(state.config, item, lang)}
+                        </td>
+                        <td>
+                          {effectivePrice(state, product, item) ? (
                             <SellingPrice
-                              value={canonicalSellingPrice}
-                              product={{ ...product, sold_by: values.sold_by }}
+                              value={effectivePrice(state, product, item)!}
+                              product={product}
                               config={state.config}
                             />
                           ) : (
                             "—"
                           )}
-                        </LtrText>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
-            </div>
-          )}
-          {error &&
-            ![
-              "name_en",
-              "name_fa",
-              "unit_size",
-              "category",
-              "pricing_category",
-              "supplier",
-              "barcode_conflict",
-              "cost",
-              "price",
-            ].includes(error) && (
-              <p className="form-error" role="alert">
-                {editorError(error, t)}
-              </p>
+                        </td>
+                        <td>
+                          <LtrText>
+                            {/^\d+(\.\d{1,2})?$/.test(sellingPrice) ? (
+                              <SellingPrice
+                                value={canonicalSellingPrice}
+                                product={{
+                                  ...product,
+                                  sold_by: values.sold_by,
+                                }}
+                                config={state.config}
+                              />
+                            ) : (
+                              "—"
+                            )}
+                          </LtrText>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
+              </div>
             )}
-        </div>
-        <DialogActions className="product-editor-actions">
-          <Button variant="neutral" onClick={onClose}>
-            {t("Cancel", "انصراف")}
-          </Button>
-          <Button type="submit">
-            {isNew
-              ? t("Add product", "افزودن محصول")
-              : t("Save product", "ذخیرهٔ محصول")}
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+            {error &&
+              ![
+                "name_en",
+                "name_fa",
+                "unit_size",
+                "category",
+                "pricing_category",
+                "supplier",
+                "barcode_conflict",
+                "cost",
+                "price",
+              ].includes(error) && (
+                <p className="form-error" role="alert">
+                  {editorError(error, t)}
+                </p>
+              )}
+          </div>
+          <DialogActions className="product-editor-actions">
+            <Button variant="neutral" onClick={onClose}>
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button type="submit">
+              {isNew
+                ? t("Add product", "افزودن محصول")
+                : t("Save product", "ذخیرهٔ محصول")}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      {priceDialogOpen && (
+        <ChangePriceDialog
+          product_code={product.code}
+          onClose={() => setPriceDialogOpen(false)}
+          onSaved={({ before_product_snapshot, after_product_snapshot }) =>
+            setExpected((previous) =>
+              previous === before_product_snapshot
+                ? after_product_snapshot
+                : previous,
+            )
+          }
+        />
+      )}
+    </>
   );
 }
 
@@ -1137,6 +1272,156 @@ function ProductEditButton({
   );
 }
 
+function ProductActionMenu({
+  product,
+  showChange = true,
+}: {
+  product: Product;
+  showChange?: boolean;
+}) {
+  const { state, branch, role, historyContext, t, navigate, update } =
+    useDemo();
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [confirm, setConfirm] = useState<"end" | "withdraw" | null>(null);
+  const [error, setError] = useState("");
+  const location = lookupBranch(branch);
+  const sale = activeSaleAt(state, product, location);
+  const request = pendingSaleRequest(state, product, location);
+  const ownRequest =
+    request && request.requester_username === historyContext?.username;
+  if (product.status !== "active" || !historyContext || role === "cashier")
+    return <span className="product-row-menu-placeholder" aria-hidden="true" />;
+  return (
+    <>
+      <Menu
+        iconOnly
+        showChevron={false}
+        aria-label={t("Product actions", "اقدامات کالا")}
+        label={
+          <MoreHorizontal size={20} strokeWidth={1.5} aria-hidden="true" />
+        }
+      >
+        {showChange && (
+          <MenuItem onClick={() => setPriceOpen(true)}>
+            {salesText(
+              t,
+              role === "supervisor"
+                ? sale
+                  ? "changeSale"
+                  : "change"
+                : "request",
+            )}
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={() =>
+            navigate(`expiry?product=${encodeURIComponent(product.code)}`)
+          }
+        >
+          {t("Add date", "افزودن تاریخ")}
+        </MenuItem>
+        {role === "supervisor" && sale && (
+          <MenuItem className="danger" onClick={() => setConfirm("end")}>
+            {salesText(t, "endNow")}
+          </MenuItem>
+        )}
+        {role === "floor_worker" && ownRequest && (
+          <MenuItem className="danger" onClick={() => setConfirm("withdraw")}>
+            {salesText(t, "withdraw")}
+          </MenuItem>
+        )}
+      </Menu>
+      {priceOpen && (
+        <ChangePriceDialog
+          product_code={product.code}
+          onClose={() => setPriceOpen(false)}
+        />
+      )}
+      <ConfirmDialog
+        open={confirm !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirm(null);
+        }}
+        title={salesText(t, confirm === "withdraw" ? "withdraw" : "endNow")}
+        description={
+          confirm === "withdraw"
+            ? t("The regular price stays.", "قیمت عادی باقی می‌ماند.")
+            : t(
+                "The current regular price comes back now.",
+                "قیمت عادی فعلی اکنون برمی‌گردد.",
+              )
+        }
+        confirmLabel={salesText(
+          t,
+          confirm === "withdraw" ? "withdraw" : "endNow",
+        )}
+        onConfirm={() => {
+          try {
+            update((next) => {
+              if (confirm === "end" && sale)
+                endSale(next, historyContext, sale.id, {
+                  expected_revision: sale.revision,
+                });
+              else if (confirm === "withdraw" && request)
+                withdrawSaleRequest(
+                  next,
+                  historyContext,
+                  request.id,
+                  request.revision,
+                );
+            });
+            setConfirm(null);
+            setError("");
+          } catch {
+            setError(
+              t(
+                "This sale or request changed. Close and try again.",
+                "این حراج یا درخواست تغییر کرده است. ببندید و دوباره تلاش کنید.",
+              ),
+            );
+          }
+        }}
+      />
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
+  );
+}
+
+function ProductHeaderActions({ product }: { product: Product }) {
+  const { state, branch, role, t } = useDemo();
+  const [priceOpen, setPriceOpen] = useState(false);
+  const sale = activeSaleAt(state, product, lookupBranch(branch));
+  if (role === "cashier") return null;
+  return (
+    <div className="actions product-header-actions">
+      {product.status === "active" && (
+        <Button onClick={() => setPriceOpen(true)}>
+          {salesText(
+            t,
+            role === "supervisor"
+              ? sale
+                ? "changeSale"
+                : "change"
+              : "request",
+          )}
+        </Button>
+      )}
+      <ProductEditButton product={product} />
+      <ProductActionMenu product={product} showChange={false} />
+      {priceOpen && (
+        <ChangePriceDialog
+          product_code={product.code}
+          onClose={() => setPriceOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 function ProductPrice({ product }: { product: Product }) {
   const { state, branch, t, lang } = useDemo();
   const approved = effectivePrice(state, product, branch);
@@ -1160,18 +1445,22 @@ function ProductPrice({ product }: { product: Product }) {
         <div className="actions">
           <strong className="price" dir="ltr">
             {approved || pending ? (
-              <SellingPrice
-                value={approved || pending!}
-                product={product}
-                config={state.config}
-              />
+              approved ? (
+                <SalePrice product={product} />
+              ) : (
+                <SellingPrice
+                  value={pending!}
+                  product={product}
+                  config={state.config}
+                />
+              )
             ) : (
               "—"
             )}
           </strong>
           <ManualPricePill product={product} />
           {profile?.taxable && (
-            <Badge tone="info">
+            <Badge tone="neutral">
               {t(
                 state.config.tax.label_text_en,
                 state.config.tax.label_text_fa,
@@ -1235,420 +1524,511 @@ function ProductDates({ product }: { product: Product }) {
   return <ProductDatesSection product={product} />;
 }
 
-function ProductDetail({
-  product,
-  operational = false,
-  showName = true,
-}: {
-  product: Product;
-  operational?: boolean;
-  showName?: boolean;
-}) {
-  const { state, branch, role, user, lang, t } = useDemo();
+function ProductDetail({ product }: { product: Product }) {
+  const { state, branch, role, user, historyContext, lang, t, navigate } =
+    useDemo();
+  const location = lookupBranch(branch);
+  const context = historyContext ?? {
+    company_id: state.config.company.seed_key,
+    branch,
+    role: role ?? "cashier",
+    actor: user?.name ?? "",
+    allowed_branches: [],
+  };
   const category = state.config.pricing_categories.find(
     (item) => item.key === product.pricing_category,
   );
   const profile = state.config.tax.profiles.find(
     (item) => item.key === product.tax_profile,
   );
-  const canSeeOperations = operational && role !== "cashier";
   const firstAdded = firstAddedLocation(state, product);
-  const branches = configuredBranches(state.config, true);
-  const visibleBranches =
-    role === "supervisor" && branch === "all"
-      ? branches
-      : [lookupBranch(branch)];
-  const context = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-  };
+  const cost =
+    role === "supervisor" ? productStoreCost(state, context, product) : null;
+  const price = effectivePrice(state, product, location);
+  const margin = cost && price ? sellingMargin(price, cost) : null;
+  const deliveries = receivedLog(state, context, { product: product.code });
+  const last = deliveries.find((entry) => entry.branch === location);
   const costs =
     role === "supervisor" ? productCostHistory(state, context, product) : [];
-  const storeCost = productStoreCost(state, context, product);
-  const received = canSeeOperations
-    ? lastReceivedByLocation(state, context, product.code)
-    : [];
-  const title = showName
-    ? lang === "fa"
-      ? product.name_fa || product.name_en
-      : product.name_en
-    : undefined;
-  return (
-    <Card className="product-detail-card product-page-detail">
-      {title && (
-        <h2>
-          <UnitText>{title}</UnitText>
-        </h2>
-      )}
-      <div className="stack">
-        {showName && (
-          <p
-            className="muted product-other-name"
-            lang={lang === "fa" ? "en" : "fa"}
-          >
-            <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              <UnitText>
-                {lang === "fa" ? product.name_en : product.name_fa}
-              </UnitText>
-            </bdi>
-          </p>
-        )}
-        <div className="actions">
+  const locations = sellingBranches(state.config).filter(
+    (item) => role === "supervisor" || item === location,
+  );
+  const activity = state.activity.filter(
+    (entry) =>
+      entry.company_id === product.company_id &&
+      entry.product_code === product.code &&
+      (role === "supervisor" ||
+        (entry.actor_username
+          ? entry.actor_username === historyContext?.username
+          : entry.by === user?.name)),
+  );
+  const facts = [
+    {
+      label: t("Barcode", "بارکد"),
+      value: product.barcode ? (
+        <LtrText>{product.barcode}</LtrText>
+      ) : (
+        t("Not added", "اضافه نشده")
+      ),
+    },
+    {
+      label: t("AI category", "دستهٔ هوش مصنوعی"),
+      value: categoryLabel(product.ai_category, lang),
+    },
+    {
+      label: t("Pricing category", "دستهٔ قیمت‌گذاری"),
+      value: categoryLabel(category?.label ?? product.pricing_category, lang),
+    },
+    {
+      label: t("Tax", "مالیات"),
+      value: profile
+        ? t(profile.label_en, profile.label_fa)
+        : t("Not set", "تنظیم نشده"),
+    },
+    {
+      label: t("Supplier", "تأمین‌کننده"),
+      value: <LtrText>{product.main_supplier}</LtrText>,
+    },
+    {
+      label: t("Sold by", "روش فروش"),
+      value:
+        product.sold_by === "weight" ? t("Weight", "وزن") : t("Each", "عدد"),
+    },
+    {
+      label: t("Unit size", "اندازهٔ واحد"),
+      value:
+        product.sold_by === "weight" ? (
+          t("Sold by weight", "فروش وزنی")
+        ) : (
           <UnitSize value={product.unit_size} />
-          <Badge
-            tone={
-              product.status === "pending_approval"
-                ? "pending"
-                : product.status === "archived"
-                  ? "neutral"
-                  : "approved"
-            }
-          >
-            {product.status === "pending_approval"
-              ? t("Pending", "در انتظار تأیید")
-              : product.status === "archived"
-                ? t("Archived", "بایگانی‌شده")
-                : t("Approved", "تأییدشده")}
-          </Badge>
-        </div>
-        <ProductPrice product={product} />
-        <ProductDates product={product} />
-        <ProductProvenance product={product} />
-        <dl className="form-grid">
-          {firstAdded && (
-            <div>
-              <dt className="muted">
-                {t("First added at", "اولین بار اضافه‌شده در")}
-              </dt>
-              <dd>{configuredBranchLabel(state.config, firstAdded, lang)}</dd>
-            </div>
-          )}
-          <div>
-            <dt className="muted">
-              {t(state.config.terminology.product_code, "کد محصول")}
-            </dt>
-            <dd>
-              <LtrText>{product.code}</LtrText>
-            </dd>
+        ),
+    },
+    {
+      label: t("First added at", "اولین بار اضافه‌شده در"),
+      value: firstAdded
+        ? configuredBranchLabel(state.config, firstAdded, lang)
+        : "—",
+    },
+  ];
+  return (
+    <>
+      <div
+        className={`product-page-top-cards${role !== "supervisor" ? " without-private-cost" : ""}`}
+      >
+        <Card className="product-page-price-card">
+          <h2>
+            {t("Price at", "قیمت در")}{" "}
+            {configuredBranchLabel(state.config, location, lang)}
+          </h2>
+          <ProductPrice product={product} />
+          <SaleStatus product={product} />
+          <PendingSalePill product={product} />
+          <p className="muted">
+            {product.branch_prices?.[location]
+              ? t("This branch only", "فقط این شعبه")
+              : t("Company default", "پیش‌فرض شرکت")}
+          </p>
+          <ProductProvenance product={product} />
+          <div className="product-last-received-summary">
+            <span className="muted">{t("Last received", "آخرین دریافت")}</span>
+            {last ? (
+              <>
+                <DateText value={last.date} />
+                <a href={`#invoices?id=${encodeURIComponent(last.invoice_id)}`}>
+                  <LtrText>{last.invoice_number}</LtrText>
+                </a>
+              </>
+            ) : (
+              <span className="muted">
+                {t("No deliveries yet", "هنوز تحویلی ثبت نشده است")}
+              </span>
+            )}
           </div>
-          <div>
-            <dt className="muted">{t("Barcode", "بارکد")}</dt>
-            <dd>
-              {product.barcode ? (
-                <LtrText>{product.barcode}</LtrText>
-              ) : (
-                t("Not added", "اضافه نشده")
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="muted">{t("AI category", "دستهٔ هوش مصنوعی")}</dt>
-            <dd>{categoryLabel(product.ai_category, lang)}</dd>
-          </div>
-          <div>
-            <dt className="muted">
-              {product.status === "pending_approval"
-                ? t("Proposed tax profile", "وضعیت مالیات پیشنهادی")
-                : t("Approved tax profile", "وضعیت مالیات تأییدشده")}
-            </dt>
-            <dd>
-              {profile
-                ? t(profile.label_en, profile.label_fa)
-                : t("Pending Supervisor review", "در انتظار بررسی سرپرست")}
-              {profile && product.status === "pending_approval" && (
-                <p className="muted">
-                  {t("Pending Supervisor review", "در انتظار بررسی سرپرست")}
-                </p>
-              )}
-            </dd>
-          </div>
-          {(product.description_en || product.description_fa) && (
-            <div>
-              <dt className="muted">{t("Description", "توضیحات")}</dt>
-              <dd>
-                {lang === "fa"
-                  ? product.description_fa || product.description_en
-                  : product.description_en || product.description_fa}
-              </dd>
-            </div>
-          )}
-        </dl>
-        {canSeeOperations && (
-          <>
-            <dl className="form-grid">
+        </Card>
+        {role === "supervisor" && (
+          <Card className="product-page-cost-card">
+            <h2>{t("Cost and margin", "هزینه و حاشیهٔ سود")}</h2>
+            <dl className="product-card-facts">
               <div>
-                <dt className="muted">
-                  {t("Pricing category", "دستهٔ قیمت‌گذاری")}
-                </dt>
+                <dt>{t("Store cost", "هزینهٔ فروشگاه")}</dt>
+                <dd>
+                  {cost ? (
+                    <ProductCost
+                      value={cost}
+                      product={product}
+                      config={state.config}
+                    />
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("Margin %", "حاشیه سود %")}</dt>
+                <dd>{margin !== null ? <LtrText>{margin}%</LtrText> : "—"}</dd>
+              </div>
+              <div>
+                <dt>{t("Pricing category", "دستهٔ قیمت‌گذاری")}</dt>
                 <dd>
                   {categoryLabel(
-                    category?.label || product.pricing_category,
+                    category?.label ?? product.pricing_category,
                     lang,
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="muted">{t("Supplier", "تأمین‌کننده")}</dt>
+                <dt>{t("Cost divisor", "ضریب تقسیم هزینه")}</dt>
                 <dd>
-                  <LtrText>{product.main_supplier}</LtrText>
+                  <LtrText>{category?.cost_divisor ?? "—"}</LtrText>
+                </dd>
+              </div>
+              <div>
+                <dt>{t("Minimum margin", "حداقل حاشیهٔ سود")}</dt>
+                <dd>
+                  {category?.minimum_margin ? (
+                    <LtrText>
+                      {new Decimal(category.minimum_margin)
+                        .times(100)
+                        .toFixed()}
+                      %
+                    </LtrText>
+                  ) : (
+                    t("Not set", "تنظیم نشده")
+                  )}
                 </dd>
               </div>
             </dl>
-            {role === "supervisor" && (
-              <div className="stack">
-                <h3>
-                  {t(
-                    "Approved prices by branch",
-                    "قیمت‌های تأییدشده در شعبه‌ها",
-                  )}
-                </h3>
-                <DataTable
-                  columns={[
-                    { width: "40%" },
-                    { width: "30%", align: "end" },
-                    { width: "30%" },
-                  ]}
+          </Card>
+        )}
+        <Card className="product-page-dates-card">
+          <div className="card-heading">
+            <h2>
+              {t("Dates at", "تاریخ‌ها در")}{" "}
+              {configuredBranchLabel(state.config, location, lang)}
+            </h2>
+            <Button
+              variant="plain"
+              onClick={() =>
+                navigate(`expiry?product=${encodeURIComponent(product.code)}`)
+              }
+            >
+              {t("Add date", "افزودن تاریخ")}
+            </Button>
+          </div>
+          <ProductDatesSection product={product} showReceived={false} />
+        </Card>
+      </div>
+      <Card className="product-page-details-card">
+        <h2>{t("Details", "جزئیات")}</h2>
+        <dl className="product-details-facts">
+          {facts.map((fact) => (
+            <div key={fact.label}>
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {(product.description_en || product.description_fa) && (
+          <div className="product-page-description">
+            <h3>{t("Description", "توضیحات")}</h3>
+            <p>
+              {lang === "fa"
+                ? product.description_fa || product.description_en
+                : product.description_en || product.description_fa}
+            </p>
+          </div>
+        )}
+      </Card>
+      <Card>
+        <h2>{t("Prices by store", "قیمت‌ها در فروشگاه‌ها")}</h2>
+        {locations.length ? (
+          <DataTable
+            columns={[
+              {
+                key: "location",
+                label: t("Location", "مکان"),
+                required: true,
+                priority: 1,
+              },
+              {
+                key: "price",
+                label: t("Selling price", "قیمت فروش"),
+                align: "end",
+                priority: 2,
+              },
+              {
+                key: "scope",
+                label: t("Price scope", "محدودهٔ قیمت"),
+                priority: 3,
+              },
+            ]}
+          >
+            <thead>
+              <tr>
+                <th>{t("Location", "مکان")}</th>
+                <th className="numeric">{t("Selling price", "قیمت فروش")}</th>
+                <th>{t("Price scope", "محدودهٔ قیمت")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {locations.map((store) => (
+                <tr key={store}>
+                  <td>{configuredBranchLabel(state.config, store, lang)}</td>
+                  <td className="numeric">
+                    <SalePrice product={product} branch={store} stacked />
+                    <SaleStatus product={product} branch={store} compact />
+                    <PendingSalePill product={product} branch={store} compact />
+                    <ManualPricePill product={product} branch={store} />
+                  </td>
+                  <td>
+                    {product.branch_prices?.[store]
+                      ? t("This branch only", "فقط این شعبه")
+                      : t("Company default", "پیش‌فرض شرکت")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+        ) : (
+          <p className="muted">
+            {t("No selling stores.", "فروشگاهی برای فروش وجود ندارد.")}
+          </p>
+        )}
+      </Card>
+      <Card>
+        <h2>{t("Deliveries", "تحویل‌ها")}</h2>
+        {deliveries.length ? (
+          <DataTable
+            className="product-last-received-table"
+            columns={[
+              {
+                key: "date",
+                label: t("Date", "تاریخ"),
+                required: true,
+                priority: 1,
+              },
+              { key: "location", label: t("Location", "مکان"), priority: 3 },
+              {
+                key: "quantity",
+                label: t("Cases and units", "کارتن و واحد"),
+                priority: 2,
+              },
+              {
+                key: "supplier",
+                label: t("Supplier", "تأمین‌کننده"),
+                priority: 4,
+              },
+              {
+                key: "invoice",
+                label: t("Invoice number", "شمارهٔ فاکتور"),
+                priority: 5,
+              },
+              {
+                key: "actions",
+                label: t("Details", "جزئیات"),
+                actions: true,
+                priority: 0,
+              },
+            ]}
+          >
+            <thead>
+              <tr>
+                <th>{t("Date", "تاریخ")}</th>
+                <th>{t("Location", "مکان")}</th>
+                <th>{t("Cases and units", "کارتن و واحد")}</th>
+                <th>{t("Supplier", "تأمین‌کننده")}</th>
+                <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
+                <th>{t("Details", "جزئیات")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveries.map((entry) => (
+                <tr
+                  key={entry.id}
+                  data-row-href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
                 >
-                  <thead>
-                    <tr>
-                      <th>{t("Branch", "شعبه")}</th>
-                      <th className="numeric">
-                        {t("Approved price", "قیمت تأییدشده")}
-                      </th>
-                      <th>{t("Price scope", "محدودهٔ قیمت")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sellingBranches(state.config).map((item) => {
-                      const price = effectivePrice(state, product, item);
-                      return (
-                        <tr key={item}>
-                          <td>
-                            {configuredBranchLabel(state.config, item, lang)}
-                          </td>
-                          <td className="numeric">
-                            {price ? (
-                              <SellingPrice
-                                value={price}
-                                product={product}
-                                config={state.config}
-                              />
-                            ) : (
-                              "—"
-                            )}
-                            <ManualPricePill product={product} branch={item} />
-                          </td>
-                          <td>
-                            {product.branch_prices?.[item]
-                              ? t("This branch only", "فقط این شعبه")
-                              : t("Company default", "پیش‌فرض شرکت")}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </DataTable>
-                <p>
-                  {t("Store cost", "هزینهٔ فروشگاه")}:{" "}
-                  <strong>
-                    {storeCost ? (
-                      <ProductCost
-                        value={storeCost}
-                        product={product}
-                        config={state.config}
+                  <td>
+                    <DateText value={entry.date} />
+                  </td>
+                  <td>
+                    {configuredBranchLabel(state.config, entry.branch, lang)}
+                  </td>
+                  <td>
+                    <LtrText>
+                      {entry.sold_by === "weight"
+                        ? formatQuantity(
+                            entry.source_quantity ?? String(entry.units),
+                            entry.source_quantity_unit ?? "lb",
+                            lang,
+                          )
+                        : formatCasesAndUnits(
+                            entry.units,
+                            entry.units_per_case,
+                            lang,
+                          )}
+                    </LtrText>
+                  </td>
+                  <td>
+                    <LtrText>{entry.supplier}</LtrText>
+                  </td>
+                  <td>
+                    <LtrText>{entry.invoice_number}</LtrText>
+                  </td>
+                  <td>
+                    <div className="actions">
+                      <TableRowLink
+                        href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
+                        aria-label={t(
+                          `Open ${entry.invoice_number}`,
+                          `باز کردن ${entry.invoice_number}`,
+                        )}
                       />
-                    ) : (
-                      "—"
-                    )}
-                  </strong>
-                </p>
-                <div className="stack">
-                  <h3>{t("Cost history", "تاریخچهٔ هزینه")}</h3>
-                  {!costs.length ? (
-                    <p className="muted">
-                      {t(
-                        "No recorded cost history.",
-                        "تاریخچهٔ هزینه‌ای ثبت نشده است.",
-                      )}
-                    </p>
-                  ) : (
-                    <DataTable
-                      className="product-cost-history-table"
-                      columns={[
-                        { width: "200px" },
-                        { width: "150px" },
-                        { width: "128px" },
-                        { width: "150px" },
-                        { width: "130px", align: "end" },
-                        { width: "160px" },
-                      ]}
-                    >
-                      <thead>
-                        <tr>
-                          <th>{t("Supplier", "تأمین‌کننده")}</th>
-                          <th>{t("Location", "محل")}</th>
-                          <th>{t("Date", "تاریخ")}</th>
-                          <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
-                          <th>
-                            {t(
-                              "Unit cost before tax",
-                              "هزینهٔ واحد پیش از مالیات",
-                            )}
-                          </th>
-                          <th>{t("Price basis", "مبنای قیمت")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {costs.map((entry) => (
-                          <tr key={entry.id}>
-                            <td>
-                              <bdi dir="auto">{entry.supplier}</bdi>
-                            </td>
-                            <td>
-                              {configuredBranchLabel(
-                                state.config,
-                                entry.branch,
-                                lang,
-                              )}
-                            </td>
-                            <td>
-                              <DateText value={entry.date} />
-                            </td>
-                            <td>
-                              <a
-                                href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
-                              >
-                                <LtrText>{entry.invoice_number}</LtrText>
-                              </a>
-                            </td>
-                            <td>
-                              <ProductCost
-                                value={entry.unit_cost_before_tax}
-                                product={{ sold_by: entry.sold_by }}
-                                config={state.config}
-                              />
-                            </td>
-                            <td>
-                              {entry.short_dated ? (
-                                <Badge tone="pending">
-                                  {t(
-                                    "Short-dated (expiry discount)",
-                                    "تاریخ نزدیک (تخفیف انقضا)",
-                                  )}
-                                </Badge>
-                              ) : (
-                                t("Regular", "عادی")
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </DataTable>
-                  )}
-                </div>
-              </div>
-            )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+        ) : (
+          <p className="muted">
+            {t("No deliveries yet", "هنوز تحویلی ثبت نشده است")}
+          </p>
+        )}
+      </Card>
+      {role === "supervisor" && (
+        <>
+          <Card>
             <ProductLotsSection product={product} />
-            <div className="stack">
-              <h3>{t("Last received", "آخرین دریافت")}</h3>
+          </Card>
+          <Card>
+            <h2>{t("Cost history", "تاریخچهٔ هزینه")}</h2>
+            {costs.length ? (
               <DataTable
-                className="product-last-received-table"
+                className="product-cost-history-table"
                 columns={[
-                  { width: "160px" },
-                  { width: "130px" },
-                  { width: "120px", align: "end" },
-                  { width: "150px" },
+                  {
+                    key: "supplier",
+                    label: t("Supplier", "تأمین‌کننده"),
+                    required: true,
+                    priority: 1,
+                  },
+                  {
+                    key: "location",
+                    label: t("Location", "مکان"),
+                    priority: 5,
+                  },
+                  { key: "date", label: t("Date", "تاریخ"), priority: 3 },
+                  {
+                    key: "invoice",
+                    label: t("Invoice number", "شمارهٔ فاکتور"),
+                    priority: 4,
+                  },
+                  {
+                    key: "cost",
+                    label: t(
+                      "Unit cost before tax",
+                      "هزینهٔ واحد پیش از مالیات",
+                    ),
+                    align: "end",
+                    priority: 2,
+                  },
+                  {
+                    key: "basis",
+                    label: t("Price basis", "مبنای قیمت"),
+                    priority: 6,
+                  },
                 ]}
               >
                 <thead>
                   <tr>
-                    <th>{t("Location", "محل")}</th>
+                    <th>{t("Supplier", "تأمین‌کننده")}</th>
+                    <th>{t("Location", "مکان")}</th>
                     <th>{t("Date", "تاریخ")}</th>
-                    <th>{t("Units", "واحد")}</th>
                     <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
+                    <th className="numeric">
+                      {t("Unit cost before tax", "هزینهٔ واحد پیش از مالیات")}
+                    </th>
+                    <th>{t("Price basis", "مبنای قیمت")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleBranches.map((item) => {
-                    const latest = received.find(
-                      (entry) => entry.branch === item,
-                    );
-                    return (
-                      <tr key={item}>
-                        <td>
-                          {configuredBranchLabel(state.config, item, lang)}
-                        </td>
-                        <td>
-                          {latest ? (
-                            <DateText value={latest.date} />
-                          ) : (
-                            <span className="muted">
-                              {t(
-                                "No deliveries yet",
-                                "هنوز تحویلی ثبت نشده است",
-                              )}
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          {latest ? <LtrText>{latest.units}</LtrText> : "—"}
-                        </td>
-                        <td>
-                          {latest ? (
-                            <a
-                              href={`#invoices?id=${encodeURIComponent(latest.invoice_id)}`}
-                            >
-                              <LtrText>{latest.invoice_number}</LtrText>
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {costs.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>
+                        <bdi dir="auto">{entry.supplier}</bdi>
+                      </td>
+                      <td>
+                        {configuredBranchLabel(
+                          state.config,
+                          entry.branch,
+                          lang,
+                        )}
+                      </td>
+                      <td>
+                        <DateText value={entry.date} />
+                      </td>
+                      <td>
+                        <a
+                          href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
+                        >
+                          <LtrText>{entry.invoice_number}</LtrText>
+                        </a>
+                      </td>
+                      <td className="numeric">
+                        <ProductCost
+                          value={entry.unit_cost_before_tax}
+                          product={{ sold_by: entry.sold_by }}
+                          config={state.config}
+                        />
+                      </td>
+                      <td>
+                        {entry.short_dated ? (
+                          <Badge tone="pending">
+                            {t(
+                              "Short-dated (expiry discount)",
+                              "تاریخ نزدیک (تخفیف انقضا)",
+                            )}
+                          </Badge>
+                        ) : (
+                          t("Regular", "عادی")
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </DataTable>
-            </div>
-            <div className="stack">
-              <h3>{t("History", "تاریخچه")}</h3>
-              {state.activity.filter(
-                (item) =>
-                  item.company_id === product.company_id &&
-                  item.product_code === product.code &&
-                  (branch === "all" ||
-                    item.branch === "all" ||
-                    item.branch === branch),
-              ).length ? (
-                <ul>
-                  {state.activity
-                    .filter(
-                      (item) =>
-                        item.company_id === product.company_id &&
-                        item.product_code === product.code &&
-                        (branch === "all" ||
-                          item.branch === "all" ||
-                          item.branch === branch),
-                    )
-                    .map((item) => (
-                      <li key={item.id}>
-                        {activityLabel(item.action, lang)} ·{" "}
-                        {demoUserLabel(item.by, lang)}
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="muted">
-                  {t("No recorded changes.", "تغییری ثبت نشده است.")}
-                </p>
-              )}
-            </div>
-          </>
+            ) : (
+              <p className="muted">
+                {t(
+                  "No recorded cost history.",
+                  "تاریخچهٔ هزینه‌ای ثبت نشده است.",
+                )}
+              </p>
+            )}
+          </Card>
+        </>
+      )}
+      <Card>
+        <h2>{t("History", "تاریخچه")}</h2>
+        {activity.length ? (
+          <ul className="product-history-list">
+            {activity.map((entry) => (
+              <li key={entry.id}>
+                <span>{activityLabel(entry.action, lang)}</span>
+                <span className="muted">
+                  <bdi dir="auto">{demoUserLabel(entry.by, lang)}</bdi> ·{" "}
+                  <DateText value={entry.at} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">
+            {t("No recorded changes.", "تغییری ثبت نشده است.")}
+          </p>
         )}
-      </div>
-    </Card>
+      </Card>
+    </>
   );
 }
 
@@ -1700,18 +2080,14 @@ function LookupProductDetail({ product }: { product: Product }) {
             </p>
           )}
         </div>
-        <ProductEditButton product={product} />
+        <ProductHeaderActions product={product} />
       </div>
       <ProductProvenance product={product} />
       <div className="lookup-price-block">
         <div className="lookup-approved-price">
           {approved ? (
             <strong className="price" dir="ltr">
-              <SellingPrice
-                value={approved}
-                product={product}
-                config={state.config}
-              />
+              <SalePrice product={product} />
             </strong>
           ) : (
             <p className="muted lookup-missing-price">
@@ -1773,10 +2149,12 @@ function LookupProductDetail({ product }: { product: Product }) {
           </span>
         </div>
       ))}
+      <SaleStatus product={product} />
+      <PendingSalePill product={product} />
       <ProductDates product={product} />
       {profile?.taxable && (
         <div className="lookup-price-tags actions">
-          <Badge tone="info">
+          <Badge tone="neutral">
             {t(state.config.tax.label_text_en, state.config.tax.label_text_fa)}
           </Badge>
         </div>
@@ -2113,11 +2491,7 @@ export function Lookup() {
                     </span>
                     <span className="lookup-result-price">
                       {price ? (
-                        <SellingPrice
-                          value={price}
-                          product={product}
-                          config={state.config}
-                        />
+                        <SalePrice product={product} stacked />
                       ) : (
                         <span className="muted">
                           {t(
@@ -2127,6 +2501,8 @@ export function Lookup() {
                         </span>
                       )}
                       <span className="lookup-result-pills actions">
+                        <SaleStatus product={product} compact />
+                        <PendingSalePill product={product} compact />
                         <ManualPricePill product={product} />
                         {pending && (
                           <Badge tone="pending">
@@ -2134,7 +2510,7 @@ export function Lookup() {
                           </Badge>
                         )}
                         {taxable && (
-                          <Badge tone="info">
+                          <Badge tone="neutral">
                             {t(
                               state.config.tax.label_text_en,
                               state.config.tax.label_text_fa,
@@ -2174,6 +2550,7 @@ export function Products() {
   const [supplier, setSupplier] = useListState("products.supplier", "");
   const [onlyPending, setOnlyPending] = useListState("products.pending", false);
   const [onlyOffers, setOnlyOffers] = useListState("products.offers", false);
+  const [onlySale, setOnlySale] = useListState("products.sale", false);
   const [onlyManual, setOnlyManual] = useListState("products.manual", false);
   const [sort, setSort] = useListState<SortColumn>("products.sort", "name");
   const [ascending, setAscending] = useListState("products.ascending", true);
@@ -2252,11 +2629,15 @@ export function Products() {
         (!aiCategory || product.ai_category === aiCategory) &&
         (!status || product.status === status) &&
         (!supplier || product.main_supplier === supplier) &&
-        (!onlyPending || pendingPrice(state, product, branch)) &&
+        (!onlyPending ||
+          pendingPrice(state, product, branch) ||
+          pendingSaleRequest(state, product, lookupBranch(branch))) &&
         (!onlyOffers ||
           effectiveOffer(state, product, branch) ||
+          activeSaleAt(state, product, lookupBranch(branch)) ||
           effectiveClearanceOffers(state, product, branch).length > 0) &&
-        (!onlyManual || manualPrice(state, product, branch)),
+        (!onlyManual || manualPrice(state, product, branch)) &&
+        (!onlySale || activeSaleAt(state, product, lookupBranch(branch))),
     )
     .sort((left, right) => {
       let comparison = 0;
@@ -2302,6 +2683,7 @@ export function Products() {
     setOnlyPending(false);
     setOnlyOffers(false);
     setOnlyManual(false);
+    setOnlySale(false);
     setPage(0);
   };
   return (
@@ -2334,421 +2716,27 @@ export function Products() {
           )}
         </p>
       )}
-      <FilterToolbar
-        className="catalog-filter-toolbar"
-        search={
-          <input
-            aria-label={t("Search products", "جست‌وجوی محصولات")}
-            type="search"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(0);
-            }}
-            placeholder={t(
-              "Name, Product Code or barcode",
-              "نام، کد محصول یا بارکد",
-            )}
-          />
-        }
-        count={
-          <span className="filter-toolbar-end">
-            <span>
-              {translateCount(
-                "{{count}} product",
-                "{{count}} products",
-                "{{count}} محصول",
-                "{{count}} محصول",
-                results.length,
-                lang,
+      <Card className="c8-products-list-card">
+        <FilterToolbar
+          className="catalog-filter-toolbar"
+          search={
+            <input
+              aria-label={t("Search products", "جست‌وجوی محصولات")}
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(0);
+              }}
+              placeholder={t(
+                "Name, Product Code or barcode",
+                "نام، کد محصول یا بارکد",
               )}
-            </span>
-            {tableColumns.chooser}
-          </span>
-        }
-      >
-        <Select
-          aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-          value={pricingCategory}
-          onChange={(value) => {
-            setPricingCategory(value);
-            setPage(0);
-          }}
-          options={[
-            {
-              value: "",
-              label: t("All pricing categories", "همهٔ دسته‌های قیمت‌گذاری"),
-            },
-            ...state.config.pricing_categories.map((item) => ({
-              value: item.key,
-              label: categoryLabel(item.label, lang),
-            })),
-          ]}
-        />
-        <Select
-          aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
-          value={aiCategory}
-          onChange={(value) => {
-            setAiCategory(value);
-            setPage(0);
-          }}
-          options={[
-            {
-              value: "",
-              label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
-            },
-            ...[...new Set(products.map((product) => product.ai_category))]
-              .sort()
-              .map((value) => ({
-                value,
-                label: categoryLabel(value, lang),
-              })),
-          ]}
-        />
-        <Select
-          aria-label={t("Status", "وضعیت")}
-          value={status}
-          onChange={(value) => {
-            setStatus(value);
-            setPage(0);
-          }}
-          options={[
-            { value: "", label: t("All statuses", "همهٔ وضعیت‌ها") },
-            { value: "active", label: t("Approved", "تأییدشده") },
-            {
-              value: "pending_approval",
-              label: t("Pending", "در انتظار تأیید"),
-            },
-            { value: "archived", label: t("Archived", "بایگانی‌شده") },
-          ]}
-        />
-        <Select
-          aria-label={t("Supplier", "تأمین‌کننده")}
-          value={supplier}
-          onChange={(value) => {
-            setSupplier(value);
-            setPage(0);
-          }}
-          options={[
-            {
-              value: "",
-              label: t("All suppliers", "همهٔ تأمین‌کنندگان"),
-            },
-            ...[...new Set(products.map((product) => product.main_supplier))]
-              .sort()
-              .map((value) => ({
-                value,
-                label: value,
-              })),
-          ]}
-        />
-
-        <Checkbox
-          checked={onlyPending}
-          onChange={(value) => {
-            setOnlyPending(value);
-            setPage(0);
-          }}
-          aria-label={t("Has pending price", "دارای قیمت در انتظار تأیید")}
-        >
-          {t("Has pending price", "دارای قیمت در انتظار تأیید")}
-        </Checkbox>
-        <Checkbox
-          checked={onlyOffers}
-          onChange={(value) => {
-            setOnlyOffers(value);
-            setPage(0);
-          }}
-          aria-label={t("Has offer", "دارای پیشنهاد")}
-        >
-          {t("Has offer", "دارای پیشنهاد")}
-        </Checkbox>
-        <Checkbox
-          checked={onlyManual}
-          onChange={(value) => {
-            setOnlyManual(value);
-            setPage(0);
-          }}
-          aria-label={t("Manual prices", "قیمت‌های دستی")}
-        >
-          {t("Manual prices", "قیمت‌های دستی")}
-        </Checkbox>
-        <Button variant="ghost" onClick={clear}>
-          {t("Clear filters", "پاک کردن فیلترها")}
-        </Button>
-      </FilterToolbar>
-      {!results.length ? (
-        <EmptyState
-          action={
-            <Button variant="secondary" onClick={clear}>
-              {t("Clear filters", "پاک کردن فیلترها")}
-            </Button>
+            />
           }
-        >
-          {t(
-            "No products match these filters. Clear a filter or check the search text.",
-            "محصولی با این فیلترها یافت نشد. فیلتر را پاک کنید یا متن جست‌وجو را بررسی کنید.",
-          )}
-        </EmptyState>
-      ) : (
-        <Card>
-          <div className="stack">
-            <DataTable
-              className={`catalog-products-table${role === "supervisor" ? " with-store-cost" : ""}`}
-              columns={tableColumns.columns}
-            >
-              <thead>
-                <tr>
-                  <th
-                    aria-sort={
-                      sort === "name"
-                        ? ascending
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                  >
-                    <Button
-                      variant="ghost"
-                      data-control-kind="widget"
-                      onClick={() => sortBy("name")}
-                    >
-                      {t("Product", "محصول")}
-                      {sort === "name" ? (ascending ? " ↑" : " ↓") : ""}
-                    </Button>
-                  </th>
-                  <th
-                    className="numeric"
-                    aria-sort={
-                      sort === "code"
-                        ? ascending
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                  >
-                    <Button
-                      variant="ghost"
-                      data-control-kind="widget"
-                      onClick={() => sortBy("code")}
-                    >
-                      {t("Product Code", "کد محصول")}
-                      {sort === "code" ? (ascending ? " ↑" : " ↓") : ""}
-                    </Button>
-                  </th>
-                  {role === "supervisor" && (
-                    <>
-                      <th>{t("Store cost", "هزینهٔ فروشگاه")}</th>
-                      <th>{t("Margin %", "حاشیه سود %")}</th>
-                    </>
-                  )}
-                  <th
-                    className="numeric"
-                    aria-sort={
-                      sort === "price"
-                        ? ascending
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                  >
-                    <Button
-                      variant="ghost"
-                      data-control-kind="widget"
-                      onClick={() => sortBy("price")}
-                    >
-                      {t("Approved price", "قیمت تأییدشده")}
-                      {sort === "price" ? (ascending ? " ↑" : " ↓") : ""}
-                    </Button>
-                  </th>
-                  <th>{t("Status and offer", "وضعیت و پیشنهاد")}</th>
-                  <th>{t("Details", "جزئیات")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageResults.map((product) => {
-                  const price = effectivePrice(state, product, branch);
-                  const pending = pendingPrice(state, product, branch);
-                  const offer = effectiveOffer(state, product, branch);
-                  const cost = productStoreCost(
-                    state,
-                    {
-                      company_id: state.config.company.seed_key,
-                      role: role ?? "cashier",
-                      branch,
-                      actor: "",
-                    },
-                    product,
-                  );
-                  const margin = cost ? sellingMargin(price, cost) : null;
-                  return (
-                    <tr
-                      key={product.code}
-                      data-row-href={`#product?code=${encodeURIComponent(product.code)}`}
-                    >
-                      <td>
-                        <a
-                          className="catalog-product-link"
-                          href={`#product?code=${encodeURIComponent(product.code)}`}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            navigate(
-                              `product?code=${encodeURIComponent(product.code)}`,
-                            );
-                          }}
-                        >
-                          <strong className="catalog-product-name">
-                            <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                              <UnitText>
-                                {lang === "fa"
-                                  ? product.name_fa || product.name_en
-                                  : product.name_en}
-                              </UnitText>
-                            </bdi>
-                          </strong>
-                        </a>
-                        <p className="muted catalog-product-secondary">
-                          <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-                            <UnitText>
-                              {lang === "fa"
-                                ? product.name_en
-                                : product.name_fa}
-                            </UnitText>
-                          </bdi>
-                        </p>
-                        <p className="muted">
-                          {product.sold_by === "weight" ? (
-                            t("Sold by weight", "فروش وزنی")
-                          ) : (
-                            <UnitSize value={product.unit_size} />
-                          )}
-                        </p>
-                      </td>
-                      <td className="numeric">
-                        <LtrText>{product.code}</LtrText>
-                      </td>
-                      {role === "supervisor" && (
-                        <>
-                          <td>
-                            {cost ? (
-                              <ProductCost
-                                value={cost}
-                                product={product}
-                                config={state.config}
-                              />
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td>
-                            {margin !== null ? (
-                              <LtrText>{margin}%</LtrText>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                        </>
-                      )}
-                      <td className="numeric">
-                        {price ? (
-                          <SellingPrice
-                            value={price}
-                            product={product}
-                            config={state.config}
-                            stacked
-                          />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td>
-                        <div className="actions">
-                          <ManualPricePill product={product} />
-                          {pending && (
-                            <Badge tone="pending">
-                              {t("Pending", "در انتظار تأیید")}{" "}
-                              <SellingPrice
-                                value={pending}
-                                product={product}
-                                config={state.config}
-                              />
-                            </Badge>
-                          )}
-                          {!pending && (
-                            <Badge
-                              tone={
-                                product.status === "archived"
-                                  ? "neutral"
-                                  : "approved"
-                              }
-                            >
-                              {product.status === "archived"
-                                ? t("Archived", "بایگانی‌شده")
-                                : t("Approved", "تأییدشده")}
-                            </Badge>
-                          )}
-                          {offer && (
-                            <Badge tone="info" className="offer-pill">
-                              <OfferLabel label={offer.label} language={lang} />
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="actions catalog-row-actions">
-                          <TableRowLink
-                            href={`#product?code=${encodeURIComponent(product.code)}`}
-                            aria-label={t(
-                              `Open ${product.name_en}`,
-                              `باز کردن ${product.name_fa || product.name_en}`,
-                            )}
-                          />
-                          <ProductEditButton product={product} row />
-                          {product.status === "active" && (
-                            <Menu
-                              iconOnly
-                              showChevron={false}
-                              aria-label={t("Product actions", "اقدامات کالا")}
-                              label={
-                                <MoreHorizontal
-                                  size={20}
-                                  strokeWidth={1.5}
-                                  aria-hidden="true"
-                                />
-                              }
-                            >
-                              <MenuItem
-                                onClick={() =>
-                                  navigate(
-                                    `expiry?product=${encodeURIComponent(product.code)}`,
-                                  )
-                                }
-                              >
-                                {t("Add date", "افزودن تاریخ")}
-                              </MenuItem>
-                            </Menu>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </DataTable>
-            <div className="actions">
-              <Button
-                variant="secondary"
-                disabled={currentPage === 0}
-                onClick={() => setPage(currentPage - 1)}
-              >
-                {t("Previous", "قبلی")}
-              </Button>
+          count={
+            <span className="filter-toolbar-end">
               <span>
-                {t(
-                  `Page ${currentPage + 1} of ${pageCount}`,
-                  `صفحهٔ ${currentPage + 1} از ${pageCount}`,
-                )}{" "}
-                ·{" "}
                 {translateCount(
                   "{{count}} product",
                   "{{count}} products",
@@ -2758,25 +2746,407 @@ export function Products() {
                   lang,
                 )}
               </span>
-              <Button
-                variant="secondary"
-                disabled={currentPage >= pageCount - 1}
-                onClick={() => setPage(currentPage + 1)}
-              >
-                {t("Next", "بعدی")}
+              {tableColumns.chooser}
+            </span>
+          }
+        >
+          <Select
+            aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+            value={pricingCategory}
+            onChange={(value) => {
+              setPricingCategory(value);
+              setPage(0);
+            }}
+            options={[
+              {
+                value: "",
+                label: t("All pricing categories", "همهٔ دسته‌های قیمت‌گذاری"),
+              },
+              ...state.config.pricing_categories.map((item) => ({
+                value: item.key,
+                label: categoryLabel(item.label, lang),
+              })),
+            ]}
+          />
+          <Select
+            aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
+            value={aiCategory}
+            onChange={(value) => {
+              setAiCategory(value);
+              setPage(0);
+            }}
+            options={[
+              {
+                value: "",
+                label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
+              },
+              ...[...new Set(products.map((product) => product.ai_category))]
+                .sort()
+                .map((value) => ({
+                  value,
+                  label: categoryLabel(value, lang),
+                })),
+            ]}
+          />
+          <Select
+            aria-label={t("Status", "وضعیت")}
+            value={status}
+            onChange={(value) => {
+              setStatus(value);
+              setPage(0);
+            }}
+            options={[
+              { value: "", label: t("All statuses", "همهٔ وضعیت‌ها") },
+              { value: "active", label: t("Approved", "تأییدشده") },
+              {
+                value: "pending_approval",
+                label: t("Pending", "در انتظار تأیید"),
+              },
+              { value: "archived", label: t("Archived", "بایگانی‌شده") },
+            ]}
+          />
+          <Select
+            aria-label={t("Supplier", "تأمین‌کننده")}
+            value={supplier}
+            onChange={(value) => {
+              setSupplier(value);
+              setPage(0);
+            }}
+            options={[
+              {
+                value: "",
+                label: t("All suppliers", "همهٔ تأمین‌کنندگان"),
+              },
+              ...[...new Set(products.map((product) => product.main_supplier))]
+                .sort()
+                .map((value) => ({
+                  value,
+                  label: value,
+                })),
+            ]}
+          />
+
+          <Checkbox
+            checked={onlyPending}
+            onChange={(value) => {
+              setOnlyPending(value);
+              setPage(0);
+            }}
+            aria-label={t("Has pending price", "دارای قیمت در انتظار تأیید")}
+          >
+            {t("Has pending price", "دارای قیمت در انتظار تأیید")}
+          </Checkbox>
+          <Checkbox
+            checked={onlyOffers}
+            onChange={(value) => {
+              setOnlyOffers(value);
+              setPage(0);
+            }}
+            aria-label={t("Has offer", "دارای پیشنهاد")}
+          >
+            {t("Has offer", "دارای پیشنهاد")}
+          </Checkbox>
+          <Checkbox
+            checked={onlyManual}
+            onChange={(value) => {
+              setOnlyManual(value);
+              setPage(0);
+            }}
+            aria-label={t("Manual prices", "قیمت‌های دستی")}
+          >
+            {t("Manual prices", "قیمت‌های دستی")}
+          </Checkbox>
+          <Checkbox
+            checked={onlySale}
+            onChange={(value) => {
+              setOnlySale(value);
+              setPage(0);
+            }}
+            aria-label={salesText(t, "onSale")}
+          >
+            {salesText(t, "onSale")}
+          </Checkbox>
+          <Button variant="ghost" onClick={clear}>
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        </FilterToolbar>
+        {!results.length ? (
+          <EmptyState
+            action={
+              <Button variant="secondary" onClick={clear}>
+                {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
+            }
+          >
+            {t(
+              "No products match these filters. Clear a filter or check the search text.",
+              "محصولی با این فیلترها یافت نشد. فیلتر را پاک کنید یا متن جست‌وجو را بررسی کنید.",
+            )}
+          </EmptyState>
+        ) : (
+          <div>
+            <div className="stack">
+              <DataTable
+                className={`catalog-products-table${role === "supervisor" ? " with-store-cost" : ""}`}
+                columns={tableColumns.columns}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      aria-sort={
+                        sort === "name"
+                          ? ascending
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
+                    >
+                      <Button
+                        variant="ghost"
+                        data-control-kind="widget"
+                        onClick={() => sortBy("name")}
+                      >
+                        {t("Product", "محصول")}
+                        {sort === "name" ? (ascending ? " ↑" : " ↓") : ""}
+                      </Button>
+                    </th>
+                    <th
+                      className="numeric"
+                      aria-sort={
+                        sort === "code"
+                          ? ascending
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
+                    >
+                      <Button
+                        variant="ghost"
+                        data-control-kind="widget"
+                        onClick={() => sortBy("code")}
+                      >
+                        {t("Product Code", "کد محصول")}
+                        {sort === "code" ? (ascending ? " ↑" : " ↓") : ""}
+                      </Button>
+                    </th>
+                    {role === "supervisor" && (
+                      <>
+                        <th>{t("Store cost", "هزینهٔ فروشگاه")}</th>
+                        <th>{t("Margin %", "حاشیه سود %")}</th>
+                      </>
+                    )}
+                    <th
+                      className="numeric"
+                      aria-sort={
+                        sort === "price"
+                          ? ascending
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
+                    >
+                      <Button
+                        variant="ghost"
+                        data-control-kind="widget"
+                        onClick={() => sortBy("price")}
+                      >
+                        {t("Approved price", "قیمت تأییدشده")}
+                        {sort === "price" ? (ascending ? " ↑" : " ↓") : ""}
+                      </Button>
+                    </th>
+                    <th>{t("Status and offer", "وضعیت و پیشنهاد")}</th>
+                    <th>{t("Details", "جزئیات")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageResults.map((product) => {
+                    const price = effectivePrice(state, product, branch);
+                    const pending = pendingPrice(state, product, branch);
+                    const offer = effectiveOffer(state, product, branch);
+                    const cost = productStoreCost(
+                      state,
+                      {
+                        company_id: state.config.company.seed_key,
+                        role: role ?? "cashier",
+                        branch,
+                        actor: "",
+                      },
+                      product,
+                    );
+                    const margin = cost ? sellingMargin(price, cost) : null;
+                    return (
+                      <tr
+                        key={product.code}
+                        data-row-href={`#product?code=${encodeURIComponent(product.code)}`}
+                      >
+                        <td>
+                          <a
+                            className="catalog-product-link"
+                            href={`#product?code=${encodeURIComponent(product.code)}`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              navigate(
+                                `product?code=${encodeURIComponent(product.code)}`,
+                              );
+                            }}
+                          >
+                            <strong className="catalog-product-name">
+                              <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+                                <UnitText>
+                                  {lang === "fa"
+                                    ? product.name_fa || product.name_en
+                                    : product.name_en}
+                                </UnitText>
+                              </bdi>
+                            </strong>
+                          </a>
+                          <p className="muted catalog-product-secondary">
+                            <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+                              <UnitText>
+                                {lang === "fa"
+                                  ? product.name_en
+                                  : product.name_fa}
+                              </UnitText>
+                            </bdi>
+                          </p>
+                          <p className="muted">
+                            {product.sold_by === "weight" ? (
+                              t("Sold by weight", "فروش وزنی")
+                            ) : (
+                              <UnitSize value={product.unit_size} />
+                            )}
+                          </p>
+                        </td>
+                        <td className="numeric">
+                          <LtrText>{product.code}</LtrText>
+                        </td>
+                        {role === "supervisor" && (
+                          <>
+                            <td>
+                              {cost ? (
+                                <ProductCost
+                                  value={cost}
+                                  product={product}
+                                  config={state.config}
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td>
+                              {margin !== null ? (
+                                <LtrText>{margin}%</LtrText>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          </>
+                        )}
+                        <td className="numeric">
+                          {price ? (
+                            <SalePrice product={product} stacked />
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td>
+                          <div className="actions">
+                            <SaleStatus product={product} compact />
+                            <PendingSalePill product={product} />
+                            <ManualPricePill product={product} />
+                            {pending && (
+                              <Badge tone="pending">
+                                {t("Pending", "در انتظار تأیید")}{" "}
+                                <SellingPrice
+                                  value={pending}
+                                  product={product}
+                                  config={state.config}
+                                />
+                              </Badge>
+                            )}
+                            {!pending && (
+                              <Badge
+                                tone={
+                                  product.status === "archived"
+                                    ? "neutral"
+                                    : "approved"
+                                }
+                              >
+                                {product.status === "archived"
+                                  ? t("Archived", "بایگانی‌شده")
+                                  : t("Approved", "تأییدشده")}
+                              </Badge>
+                            )}
+                            {offer && (
+                              <Badge tone="info" className="offer-pill">
+                                <OfferLabel
+                                  label={offer.label}
+                                  language={lang}
+                                />
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="actions catalog-row-actions">
+                            <ProductEditButton product={product} row />
+                            <ProductActionMenu product={product} />
+                            <TableRowLink
+                              href={`#product?code=${encodeURIComponent(product.code)}`}
+                              aria-label={t(
+                                `Open ${product.name_en}`,
+                                `باز کردن ${product.name_fa || product.name_en}`,
+                              )}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+              <div className="actions">
+                <Button
+                  variant="secondary"
+                  disabled={currentPage === 0}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  {t("Previous", "قبلی")}
+                </Button>
+                <span>
+                  {t(
+                    `Page ${currentPage + 1} of ${pageCount}`,
+                    `صفحهٔ ${currentPage + 1} از ${pageCount}`,
+                  )}{" "}
+                  ·{" "}
+                  {translateCount(
+                    "{{count}} product",
+                    "{{count}} products",
+                    "{{count}} محصول",
+                    "{{count}} محصول",
+                    results.length,
+                    lang,
+                  )}
+                </span>
+                <Button
+                  variant="secondary"
+                  disabled={currentPage >= pageCount - 1}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  {t("Next", "بعدی")}
+                </Button>
+              </div>
             </div>
           </div>
-        </Card>
-      )}
+        )}
+      </Card>
     </div>
   );
 }
 
 export function ProductPage() {
   const { state, role, lang, t } = useDemo();
-  const query = window.location.hash.split("?")[1] ?? "";
-  const code = new URLSearchParams(query).get("code");
+  const code = useRouteParam("code");
   const product = state.products.find(
     (item) =>
       item.code === code && item.company_id === state.config.company.seed_key,
@@ -2797,9 +3167,12 @@ export function ProductPage() {
         {t("Product not found.", "محصول یافت نشد.")}
       </EmptyState>
     );
+  const tax = state.config.tax.profiles.find(
+    (item) => item.key === product.tax_profile,
+  );
   return (
     <div className="stack product-page">
-      <Button className="product-back" variant="ghost" asChild>
+      <Button className="product-back" variant="plain" asChild>
         <a href="#products">
           <ArrowLeft size={16} aria-hidden="true" />
           {t("Back to Products", "بازگشت به محصولات")}
@@ -2808,7 +3181,7 @@ export function ProductPage() {
       <header className="page-header">
         <div>
           <h1>
-            <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
+            <bdi dir={lang === "fa" && product.name_fa ? "rtl" : "ltr"}>
               <UnitText>
                 {lang === "fa"
                   ? product.name_fa || product.name_en
@@ -2816,20 +3189,49 @@ export function ProductPage() {
               </UnitText>
             </bdi>
           </h1>
-          <p className="muted product-other-name">
-            <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-              <UnitText>
-                {lang === "fa" ? product.name_en : product.name_fa}
-              </UnitText>
-            </bdi>
-          </p>
-          <p className="helper">
-            {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
-          </p>
+          {product.name_fa && (
+            <p className="muted product-other-name">
+              <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
+                <UnitText>
+                  {lang === "fa" ? product.name_en : product.name_fa}
+                </UnitText>
+              </bdi>
+            </p>
+          )}
+          <div className="actions product-page-chips">
+            <Badge tone="neutral">
+              {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
+            </Badge>
+            <Badge tone="neutral">
+              {product.sold_by === "weight" ? (
+                t("Sold by weight", "فروش وزنی")
+              ) : (
+                <UnitSize value={product.unit_size} />
+              )}
+            </Badge>
+            {tax && (
+              <Badge tone="neutral">{t(tax.label_en, tax.label_fa)}</Badge>
+            )}
+            <Badge
+              tone={
+                product.status === "pending_approval"
+                  ? "pending"
+                  : product.status === "archived"
+                    ? "neutral"
+                    : "approved"
+              }
+            >
+              {product.status === "pending_approval"
+                ? t("Pending", "در انتظار تأیید")
+                : product.status === "archived"
+                  ? t("Archived", "بایگانی‌شده")
+                  : t("Approved", "تأییدشده")}
+            </Badge>
+          </div>
         </div>
-        <ProductEditButton product={product} />
+        <ProductHeaderActions product={product} />
       </header>
-      <ProductDetail product={product} operational showName={false} />
+      <ProductDetail product={product} />
     </div>
   );
 }

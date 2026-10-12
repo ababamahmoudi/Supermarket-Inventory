@@ -10,7 +10,7 @@ import {
 import { configuredBranches, branchSellsToCustomers } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import {
-  effectivePrice,
+  regularPrice,
   isOfferScheduledNow,
   lookupBranch,
   normalizeSearch,
@@ -414,10 +414,10 @@ export function effectiveClearanceOffers(
     !branchSellsToCustomers(state.config, location)
   )
     return [];
-  let regularPrice: Decimal;
+  let regularAmount: Decimal;
   try {
-    regularPrice = new Decimal(effectivePrice(state, product, location) ?? "0");
-    if (!regularPrice.isFinite() || !regularPrice.gt(0)) return [];
+    regularAmount = new Decimal(regularPrice(state, product, location) ?? "0");
+    if (!regularAmount.isFinite() || !regularAmount.gt(0)) return [];
   } catch {
     return [];
   }
@@ -435,7 +435,7 @@ export function effectiveClearanceOffers(
     .filter((offer) => {
       try {
         const price = new Decimal(offer.price);
-        return price.isFinite() && price.gt(0) && price.lt(regularPrice);
+        return price.isFinite() && price.gt(0) && price.lt(regularAmount);
       } catch {
         return false;
       }
@@ -501,7 +501,7 @@ export function setLotClearance(
     lot.expiry_date < companyDate(state.config, now)
   )
     throw new ClearanceError("lot");
-  const regular = effectivePrice(state, lot.product_code, lot.branch);
+  const regular = regularPrice(state, lot.product_code, lot.branch);
   if (
     !/^\d+(\.\d{1,2})?$/.test(price) ||
     !regular ||
