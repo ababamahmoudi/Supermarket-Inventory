@@ -71,7 +71,11 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await expect(chips.getByText(/Deduction:/)).toContainText("$7.23");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   await chooseOption(
     page,
     page.getByLabel(
@@ -204,14 +208,20 @@ test("manual draft survives a refresh and cannot post without its original", asy
     "data-expanded",
     "false",
   );
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
-    page.getByText("Add the original invoice (PDF or photo) before posting.", {
+    page.getByRole("link", {
+      name: "Add the original invoice (PDF or photo) before posting.",
       exact: true,
     }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   const state = await stored(page);
   expect(state.invoice.status).toBe("draft");
   expect(

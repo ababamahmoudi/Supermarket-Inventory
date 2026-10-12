@@ -2,6 +2,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import type Decimal from "decimal.js";
 import i18n, { translate } from "./i18n";
+import { useConfiguredTimeZone } from "./store";
 import {
   formatDate,
   formatMoney,
@@ -55,12 +56,13 @@ export function DateText({
   className,
   ...props
 }: HTMLAttributes<HTMLElement> & { value: string | Date | null | undefined }) {
+  const timeZone = useConfiguredTimeZone();
   return (
     <LtrText
       {...props}
       className={["date-text", className].filter(Boolean).join(" ")}
     >
-      {formatDate(value)}
+      {formatDate(value, timeZone)}
     </LtrText>
   );
 }
@@ -79,20 +81,26 @@ export function ProductName({
   language?: Language;
   className?: string;
 }) {
-  const primary = language === "fa" ? product.name_fa : product.name_en;
-  const secondary = language === "fa" ? product.name_en : product.name_fa;
+  const hasPersian = Boolean(product.name_fa.trim());
+  const primaryLanguage = language === "fa" && hasPersian ? "fa" : "en";
+  const primary = primaryLanguage === "fa" ? product.name_fa : product.name_en;
+  const secondary =
+    primaryLanguage === "fa" ? product.name_en : product.name_fa;
   return (
     <span className={["product-name", className].filter(Boolean).join(" ")}>
       <strong>
-        <bdi dir={language === "fa" ? "rtl" : "ltr"} lang={language}>
+        <bdi
+          dir={primaryLanguage === "fa" ? "rtl" : "ltr"}
+          lang={primaryLanguage}
+        >
           {primary}
         </bdi>
       </strong>
-      {secondary && (
+      {secondary.trim() && (
         <small>
           <bdi
-            dir={language === "fa" ? "ltr" : "rtl"}
-            lang={language === "fa" ? "en" : "fa"}
+            dir={primaryLanguage === "fa" ? "ltr" : "rtl"}
+            lang={primaryLanguage === "fa" ? "en" : "fa"}
           >
             {secondary}
           </bdi>

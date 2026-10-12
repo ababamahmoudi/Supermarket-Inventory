@@ -21,24 +21,24 @@ Owner specification: C6/C7, 2026-10-11. This document replaces the previous desi
 
 ## Tokens
 
-| Role | Light | Dark |
-| --- | --- | --- |
-| Page | `#F4F5F7` | `#0E1117` |
-| Surface: cards/sidebar/dialogs | `#FFFFFF` | `#181C25` |
-| Field fill | `#F0F1F4` | `#222734` |
-| Neutral button fill | `#EEF0F3` | `#222734` |
-| Hairline | `#E6E7EB` | `rgba(255,255,255,0.08)` |
-| Row divider | `#EEF0F3` | `rgba(255,255,255,0.08)` |
-| Ink | `#141A2B` | `#F3F4F7` |
-| Secondary text | `#5A6070` | `#A4AAB8` |
-| Sidebar group text | `#6B7180` | secondary text, verified on dark surface |
-| Accent | `#2B59C3` | `#7397F0` |
-| Accent tint | `#E9EEF9` | `rgba(115,151,240,0.18)` |
-| Text on tint | `#2B59C3` | `#9DB7F5` |
-| Hover/selected list fill | `#F4F6FA` | derived neutral surface token |
-| Segmented track | `#EBEDF0` | neutral fill token |
-| Page-background control fill/border | `#FFFFFF` / `#E1E3E8` | dark surface / hairline |
-| Keyboard focus ring | `rgba(43,89,195,0.2)` | verified dark accent-ring token |
+| Role                                | Light                 | Dark                                     |
+| ----------------------------------- | --------------------- | ---------------------------------------- |
+| Page                                | `#F4F5F7`             | `#0E1117`                                |
+| Surface: cards/sidebar/dialogs      | `#FFFFFF`             | `#181C25`                                |
+| Field fill                          | `#F0F1F4`             | `#222734`                                |
+| Neutral button fill                 | `#EEF0F3`             | `#222734`                                |
+| Hairline                            | `#E6E7EB`             | `rgba(255,255,255,0.08)`                 |
+| Row divider                         | `#EEF0F3`             | `rgba(255,255,255,0.08)`                 |
+| Ink                                 | `#141A2B`             | `#F3F4F7`                                |
+| Secondary text                      | `#5A6070`             | `#A4AAB8`                                |
+| Sidebar group text                  | `#6B7180`             | secondary text, verified on dark surface |
+| Accent                              | `#2B59C3`             | `#7397F0`                                |
+| Accent tint                         | `#E9EEF9`             | `rgba(115,151,240,0.18)`                 |
+| Text on tint                        | `#2B59C3`             | `#9DB7F5`                                |
+| Hover/selected list fill            | `#F4F6FA`             | derived neutral surface token            |
+| Segmented track                     | `#EBEDF0`             | neutral fill token                       |
+| Page-background control fill/border | `#FFFFFF` / `#E1E3E8` | dark surface / hairline                  |
+| Keyboard focus ring                 | `rgba(43,89,195,0.2)` | verified dark accent-ring token          |
 
 **Pending owner colour decision:** dark accent `#7397F0` with white Primary text fails 4.5:1. Owner chooses darker Primary fill `#2B59C3` with white (retain lighter dark accent for links/icons), or lighter fill with ink text. Do not silently relax contrast or claim unresolved pairing passes. Every status/secondary/selected/hover/disabled text pair is measured on its actual background; inaccessible raw reference combinations require a documented token adjustment.
 
@@ -46,15 +46,15 @@ Owner specification: C6/C7, 2026-10-11. This document replaces the previous desi
 
 English/numbers: **Manrope**, weights 400–800. Persian: **Vazirmatn**. Bundle fonts for offline-after-load use. Prices/table numbers use tabular figures. Rem sizes support the existing comfortable-text preference.
 
-| Role | Size/line-height | Weight | Tracking |
-| --- | --- | --- | --- |
-| Large title | 30/36 | ExtraBold 800 | -0.02em |
-| Title | 20/26 | ExtraBold 800 | normal |
-| Headline | 15/20 | Bold 700 | normal |
-| Body | 14/20 | Medium 500 | normal |
-| Caption | 12/16 | SemiBold 600 | normal |
-| Lookup price | 60/60 | ExtraBold 800 | normal |
-| Field label | 13/readable line-height | SemiBold 600 | normal |
+| Role         | Size/line-height        | Weight        | Tracking |
+| ------------ | ----------------------- | ------------- | -------- |
+| Large title  | 30/36                   | ExtraBold 800 | -0.02em  |
+| Title        | 20/26                   | ExtraBold 800 | normal   |
+| Headline     | 15/20                   | Bold 700      | normal   |
+| Body         | 14/20                   | Medium 500    | normal   |
+| Caption      | 12/16                   | SemiBold 600  | normal   |
+| Lookup price | 60/60                   | ExtraBold 800 | normal   |
+| Field label  | 13/readable line-height | SemiBold 600  | normal   |
 
 ## Shape, depth and spacing
 
@@ -67,13 +67,13 @@ English/numbers: **Manrope**, weights 400–800. Persian: **Vazirmatn**. Bundle 
 
 ## Buttons and fields
 
-| Variant | Treatment | Examples |
-| --- | --- | --- |
-| Primary | Solid Klead blue with approved contrasting text; one per area | Post invoice, Add, Save changes |
-| Secondary/tinted | Blue tint/blue tint text | Print label, Add to waitlist |
-| Neutral | Grey fill/ink | Cancel, Edit, Columns, Move invoice |
-| Plain | Blue text only | Clear filters, + Add date, links |
-| Destructive | Red tint/red text; in rows neutral fill/red text | Remove, Stop, Reject |
+| Variant          | Treatment                                                     | Examples                            |
+| ---------------- | ------------------------------------------------------------- | ----------------------------------- |
+| Primary          | Solid Klead blue with approved contrasting text; one per area | Post invoice, Add, Save changes     |
+| Secondary/tinted | Blue tint/blue tint text                                      | Print label, Add to waitlist        |
+| Neutral          | Grey fill/ink                                                 | Cancel, Edit, Columns, Move invoice |
+| Plain            | Blue text only                                                | Clear filters, + Add date, links    |
+| Destructive      | Red tint/red text; in rows neutral fill/red text              | Remove, Stop, Reject                |
 
 Buttons have **no resting border/glow**. On page background outside cards, neutral buttons/menus/filter search use white fill and 1px page-control border. Hover 4% darker; pressed 8%; keyboard focus 4 px ring. Ordinary: **40 px high, 16 px inline padding, 14 px SemiBold**. Small: **32 px, 12 px padding, 13 px**. Icons: **36 px circles**, transparent, grey hover, accessible name. Top-bar controls 36 px. **Phone text buttons 44 px**. Text never wraps; width intrinsic.
 
@@ -83,12 +83,12 @@ Fields **44 px**, field fill, no resting border. Focus: white/light or dark surf
 
 Segmented controls have a grey track and a white raised selected thumb, fully round: Pending/Approved/Rejected, Open/History, Due soon/All dates/Removed. Filter chips are white with a hairline; the selected chip uses the blue tint and blue text. Toggles are 44 × 26 px, blue when on. Custom checkboxes use the accent.
 
-| Tone | Light text / dot / tint | Dark text |
-| --- | --- | --- |
-| Green | `#1A7F45` / `#1F9D55` / `#E6F4EC` | `#4CC17E` |
-| Amber | `#9A5B00` / `#E08A00` / `#FDF3E2` | `#E9A23B` |
-| Red | `#B42318` / `#D92D20` / `#FCE9E7` | `#F2766A` |
-| Grey | `#5A6070` / `#8A90A0` / `#EEF0F3` | secondary text |
+| Tone        | Light text / dot / tint                 | Dark text        |
+| ----------- | --------------------------------------- | ---------------- |
+| Green       | `#1A7F45` / `#1F9D55` / `#E6F4EC`       | `#4CC17E`        |
+| Amber       | `#9A5B00` / `#E08A00` / `#FDF3E2`       | `#E9A23B`        |
+| Red         | `#B42318` / `#D92D20` / `#FCE9E7`       | `#F2766A`        |
+| Grey        | `#5A6070` / `#8A90A0` / `#EEF0F3`       | secondary text   |
 | Blue / info | accent-tint text / accent / accent tint | accent-tint text |
 
 Dark tints use 12–18%, measured on the actual surface. **Tables use a coloured dot and words; cards and headers use a soft tinted pill.** Never colour alone. Visible label determines tone: Waiting for pickup blue; Waiting for credit, Pending credit and Expiring soon amber; Credited, Replaced, Posted, Approved, Active and Received green; Written off, Cancelled, Rejected, Archived and Stopped grey; Short, Conflict, Expired, Overdue, Failed and Missing red. Other in-progress statuses use blue info. Translation never changes tone and an internal legacy state never overrides the visible lifecycle.
@@ -104,7 +104,7 @@ Dark tints use 12–18%, measured on the actual surface. **Tables use a coloured
 
 ## App shell
 
-**Sidebar:** 248 px, white in light theme or dark surface, hairline at inline end. Own logo directly on white; dark uses a small white tile. Group labels Daily, Catalog, Supervisor and Admin: 12 px SemiBold grey. Items: 34 px high, radius 10, outline 18 px grey icon; active blue tint, blue icon and Bold label. Counts are small grey capsules; Approvals/Alerts use blue tint. The signed-in person sits at the bottom in a soft grey block with Lock/Sign out menu. Below 1280 px use icons only, retaining hover/focus labels and count dots. Never duplicate the account in the top bar or make the sidebar scroll.
+**Sidebar:** 248 px, white in light theme or dark surface, hairline at inline end. Own logo directly on white; dark uses a small white tile. Group labels Daily, Catalog, Supervisor and Admin: 12 px SemiBold grey. Items: 34 px high, radius 10, outline 18 px grey icon; active blue tint, blue icon and Bold label. Counts are small grey capsules; Approvals/Alerts use blue tint. The signed-in person sits at the bottom in a soft grey block with Lock/Sign out menu. Below 1280 px use icons only, retaining hover/focus labels and count dots. Desktop account remains at sidebar bottom. On phones the same initials/account menu may move to the priority top bar, matching the phone reference; hide its sidebar copy while the top-bar version is shown so only one account control is visible. Never make the sidebar scroll.
 
 Groups remain Daily (Lookup, Invoices, Received, Returns, Labels, Date tracking, Notes, Branch requests); Catalog (Products, Offers, Suppliers); Supervisor (Dashboard, Approvals, Alerts, Payables, Orders); Admin (Users and devices, Settings, History). Filter by role and actual implemented destinations; icons remain unique.
 
@@ -159,3 +159,5 @@ Supplier-facing Return memo/Print order default **English only**, with separate 
 ## C6/C7 proof
 
 Retain existing pricing/unit/domain checks. Add all Part 2 tests, twenty 3 MB photo migration/persistence, token-only components and ≥4.5:1 text contrast in both themes. Capture the 17 requested scenes in EN light, EN dark, FA, 900 px and phone, including real clearance/date/pickup/partial-resolution/What's missing states. Individually open each final capture beside all 14 bug notes and five retouches, recording mismatches honestly. C6/C7 are stacked without an intermediate approval stop; neither merges without later approval.
+
+**Klead contrast adjustment (2026-10-11):** The supplied green text `#1A7F45` on `#E6F4EC` measures 4.4451:1, below the owner's mandatory 4.5:1. Use the smallest measured darkening, `#197D44`, giving 4.56258:1 with the same tint. Keep the original reference files unchanged and list this deliberate accessibility difference; all rendered pairs still require actual contrast proof. This does not resolve the separately pending dark Primary choice.

@@ -11,10 +11,33 @@ import {
   supplierChoices,
   supplierRecords,
   supplierMatches,
+  missingInvoiceSupplierDetails,
 } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
+import { PaymentTermsControl } from "./PaymentTermsControl";
+import {
+  companyDateTime,
+  companyLocalToUtc,
+  CompanyLocalTimeError,
+  companyCalendarDate,
+} from "../company-time";
+import {
+  invoiceTotalDiffers,
+  setInvoiceAmount,
+  setInvoicePaymentTerms,
+  refreshInvoiceDueDate,
+} from "../invoice-entry";
+import {
+  WhatsMissing,
+  FieldError,
+  focusValidationField,
+  type ValidationIssue,
+} from "../WhatsMissing";
+import { storeUploadedFile } from "../file-database";
+import { reusableOtherLocationDates } from "../receipt-lots";
 import { ProductEditor } from "./Catalog";
 import "./manual-entry.css";
+import "./invoice-entry-c6.css";
 import "./c5-catalog-offers.css";
 import {
   Badge,
@@ -60,7 +83,7 @@ import {
   validateWeightQuantity,
 } from "../weighed";
 import { ProductPrice } from "../weight-price-presentation";
-import { trackingChoiceForProduct } from "../date-tracking";
+import { trackingChoiceForProduct, validTrackedDate } from "../date-tracking";
 import {
   invoiceVersion,
   invoiceContentVersions,
@@ -88,6 +111,11 @@ import {
   acceptedInvoiceUnits,
   setInvoiceLineQuantity as setEachInvoiceLineQuantity,
   type InvoiceBlocker,
+  validInvoiceLineQuantity,
+  validInvoiceLineReceived,
+  removeInvoiceLine,
+  markInvoiceSupplierReview,
+  confirmInvoiceSupplierReview,
 } from "../invoice";
 import { manualPrice } from "../manual-prices";
 import {
@@ -118,6 +146,7 @@ import type {
   DemoState,
   InvoiceLine,
   Role,
+  SupplierRecord,
 } from "../types";
 
 type Translate = (en: string, fa: string) => string;
@@ -145,6 +174,18 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
     "Choose a supplier before posting.",
     "پیش از ثبت، تأمین‌کننده را انتخاب کنید.",
   ],
+  payment_terms: [
+    "Enter nonnegative whole payment-term days that produce a valid due date.",
+    "روزهای شرایط پرداخت را به صورت عدد صحیح غیرمنفی وارد کنید تا تاریخ سررسید معتبر باشد.",
+  ],
+  supplier_details: [
+    "Complete the supplier’s phone, email, sales representative, representative phone and payment terms.",
+    "تلفن، ایمیل، نماینده فروش، تلفن نماینده و شرایط پرداخت تأمین‌کننده را تکمیل کنید.",
+  ],
+  supplier_review: [
+    "A Supervisor must review and confirm the supplier before posting.",
+    "سرپرست باید پیش از ثبت تأمین‌کننده را بررسی و تأیید کند.",
+  ],
   supplier_pending: [
     "Waiting for Supervisor to confirm supplier.",
     "در انتظار تأیید تأمین‌کننده توسط سرپرست.",
@@ -163,8 +204,8 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
   ],
   lines: ["Add at least one invoice line.", "حداقل یک ردیف فاکتور اضافه کنید."],
   matching: [
-    "Match every line to a product, or give a new product both names.",
-    "هر ردیف را به کالا وصل کنید یا هر دو نام کالای جدید را وارد کنید.",
+    "Match every line to a product, or enter an English name for a new product.",
+    "هر ردیف را به کالا وصل کنید یا نام انگلیسی کالای جدید را وارد کنید.",
   ],
   quantity: [
     "Use positive whole Units, or Cases that convert exactly to whole units; delivered units must be between zero and invoiced units.",
@@ -245,10 +286,24 @@ function retainInvoiceWorkspace(draft: DemoState) {
 }
 
 export default function Invoices() {
-  const { state, update, role, branch, lang, t, money, user, navigate } =
-    useDemo();
+  const {
+    state,
+    update,
+    role,
+    branch,
+    lang,
+    t,
+    tCount,
+    money,
+    user,
+    navigate,
+  } = useDemo();
   const routeId = useRouteParam("id");
   const routeVersion = useRouteParam("version");
+  const supplierFilter = useRouteParam("supplier");
+  const fromFilter = useRouteParam("from");
+  const toFilter = useRouteParam("to");
+  const tabFilter = useRouteParam("tab");
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const originalInput = useRef<HTMLInputElement>(null);
   const postedColumns = useTableColumns("invoices", [
@@ -257,16 +312,52 @@ export default function Invoices() {
       label: t("Invoice", "فاکتور"),
       required: true,
       width: "18%",
+      priority: 1,
+      minWidth: 160,
+      mobilePrimary: true,
     },
-    { key: "supplier", label: t("Supplier", "تأمین‌کننده"), width: "30%" },
-    { key: "branch", label: t("Branch", "شعبه"), width: "20%" },
-    { key: "date", label: t("Date", "تاریخ"), width: "17%" },
-    { key: "status", label: t("Status", "وضعیت"), width: "15%" },
+    {
+      key: "supplier",
+      label: t("Supplier", "تأمین‌کننده"),
+      width: "30%",
+      priority: 3,
+      minWidth: 180,
+    },
+    {
+      key: "branch",
+      label: t("Branch", "شعبه"),
+      width: "20%",
+      priority: 5,
+      minWidth: 130,
+    },
+    {
+      key: "date",
+      label: t("Date", "تاریخ"),
+      width: "17%",
+      priority: 4,
+      minWidth: 122,
+    },
+    {
+      key: "status",
+      label: t("Status", "وضعیت"),
+      width: "15%",
+      priority: 2,
+      minWidth: 110,
+    },
   ]);
   const branches = configuredBranches(state.config);
   const invoiceLocation = effectiveInvoiceLocation(state, state.invoice);
   const locationSuggestion = suggestedInvoiceLocation(state, state.invoice);
   const [supplierEditorOpen, setSupplierEditorOpen] = useState(false);
+  const [supplierToEdit, setSupplierToEdit] = useState<SupplierRecord>();
+  const [attemptedPost, setAttemptedPost] = useState(false);
+  const [receivedEdit, setReceivedEdit] = useState<{
+    invoiceId: string;
+    date: string;
+    time: string;
+  }>();
+  const [receivedError, setReceivedError] =
+    useState<CompanyLocalTimeError["code"]>();
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const invoice = state.invoice;
   const reader = { role, branch: user?.branch };
@@ -301,10 +392,12 @@ export default function Invoices() {
   const [moveTarget, setMoveTarget] = useState("");
   const [moveReason, setMoveReason] = useState("");
   const [moveError, setMoveError] = useState("");
+  const [moveAttempted, setMoveAttempted] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
   const [message, setMessage] = useState("");
   const [postOpen, setPostOpen] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [uploadPending, setUploadPending] = useState(false);
   const [manualCode, setManualCode] = useState("0002");
   const [openLines, setOpenLines] = useState<Record<string, boolean>>({});
   const [deliveryQuantities, setDeliveryQuantities] = useState<
@@ -337,6 +430,10 @@ export default function Invoices() {
     "invoices.list-tab",
     "drafts",
   );
+  useEffect(() => {
+    if (!routeId && tabFilter === "posted" && listTab !== "posted")
+      setListTab("posted");
+  }, [routeId, tabFilter, listTab, setListTab]);
   const tab = routeId
     ? validSelection
       ? selectedView.tab
@@ -384,13 +481,234 @@ export default function Invoices() {
       movePreview = null;
     }
   }
-  const fileSize = invoice.file_data
-    ? Math.floor(
-        ((invoice.file_data.split(",")[1] ?? "").replace(/=+$/, "").length *
-          3) /
-          4,
+  const moveIssues: ValidationIssue[] = moveAttempted
+    ? [
+        ...(!movePreview
+          ? [
+              {
+                id: "invoice-move-location-missing",
+                fieldId: "invoice-move-target",
+                message: t(
+                  "Choose a different allowed location.",
+                  "مکان مجاز دیگری انتخاب کنید.",
+                ),
+              },
+            ]
+          : []),
+        ...(!moveReason.trim()
+          ? [
+              {
+                id: "invoice-move-reason-missing",
+                fieldId: "invoice-move-reason",
+                message: t(
+                  "Enter a reason for moving the invoice.",
+                  "دلیل انتقال فاکتور را وارد کنید.",
+                ),
+              },
+            ]
+          : []),
+      ]
+    : [];
+  const fileSize =
+    invoice.file_size ??
+    (invoice.file_data?.startsWith("data:")
+      ? Math.floor(
+          ((invoice.file_data.split(",")[1] ?? "").replace(/=+$/, "").length *
+            3) /
+            4,
+        )
+      : undefined);
+  const supplierRecord = supplierRecords(state).find(
+    (record) =>
+      record.company_id === invoice.company_id &&
+      supplierMatches(record, invoice.supplier),
+  );
+  const receivedLocal =
+    receivedEdit?.invoiceId === invoice.id
+      ? receivedEdit
+      : companyDateTime(state.config, invoice.received_at);
+  function editReceived(date: string, time: string) {
+    setReceivedEdit({ invoiceId: invoice.id, date, time });
+    try {
+      const instant = companyLocalToUtc(
+        state.config,
+        date,
+        time,
+        invoice.received_at,
+      );
+      setReceivedError(undefined);
+      updateInvoice((draft) => {
+        draft.invoice.received_at = instant;
+      });
+    } catch (cause) {
+      setReceivedError(
+        cause instanceof CompanyLocalTimeError ? cause.code : "time",
+      );
+      updateInvoice((draft) => {
+        draft.invoice.received_at = "";
+      });
+    }
+  }
+  const issueTargets: Record<InvoiceBlocker, string> = {
+    permission: "invoice-location",
+    branch: "invoice-location",
+    company: "invoice-location",
+    payment_terms: "invoice-payment-terms",
+    supplier: "invoice-supplier",
+    supplier_pending: "invoice-supplier",
+    supplier_details: "invoice-supplier",
+    supplier_review: "invoice-supplier",
+    header: !invoice.invoice_date
+      ? "invoice-date"
+      : !invoice.received_at
+        ? "invoice-received-date"
+        : "invoice-employee",
+    money: !/^\d+(?:\.\d{1,2})?$/.test(invoice.subtotal)
+      ? "invoice-subtotal"
+      : !/^\d+(?:\.\d{1,2})?$/.test(invoice.tax)
+        ? "invoice-tax"
+        : "invoice-final-total",
+    file: "invoice-original-field",
+    lines: "invoice-add-product",
+    matching: "invoice-line-0-detail",
+    quantity: "invoice-line-0-detail",
+    cost: "invoice-line-0-detail",
+    review: "invoice-line-0-detail",
+    date: "invoice-line-0-detail",
+    lower_price: "invoice-lower-answer",
+    manual_price: "invoice-line-0-detail",
+    order: "invoice-order-review",
+    order_decisions: "invoice-order-review",
+  };
+  const postIssues: ValidationIssue[] = [];
+  if (attemptedPost) {
+    const lineBlockers = new Set<InvoiceBlocker>([
+      "matching",
+      "quantity",
+      "cost",
+      "review",
+      "date",
+      "manual_price",
+    ]);
+    for (const blocker of blockers) {
+      if (
+        lineBlockers.has(blocker) ||
+        blocker === "money" ||
+        blocker === "header"
       )
-    : undefined;
+        continue;
+      if (
+        (blocker === "supplier_pending" || blocker === "supplier_review") &&
+        blockers.includes("supplier_details")
+      )
+        continue;
+      postIssues.push({
+        id: `invoice-${blocker}-missing`,
+        message: t(...blockerCopy[blocker]),
+        fieldId: issueTargets[blocker],
+      });
+    }
+    for (const [field, label] of [
+      ["subtotal", t("Subtotal", "جمع پیش از مالیات")],
+      ["tax", t("Tax", "مالیات")],
+      ["final_total", t("Final total", "جمع نهایی")],
+    ] as const) {
+      if (!/^\d+(?:\.\d{1,2})?$/.test(invoice[field]))
+        postIssues.push({
+          id: `invoice-${field}-missing`,
+          fieldId: `invoice-${field.replaceAll("_", "-")}`,
+          message: `${label}: ${t(...blockerCopy.money)}`,
+        });
+    }
+    if (!validTrackedDate(invoice.invoice_date ?? ""))
+      postIssues.push({
+        id: "invoice-date-missing",
+        fieldId: "invoice-date",
+        message: t("Choose an invoice date.", "تاریخ فاکتور را انتخاب کنید."),
+      });
+    if (!invoice.received_at || Number.isNaN(Date.parse(invoice.received_at))) {
+      if (!receivedLocal.date || receivedError === "date")
+        postIssues.push({
+          id: "invoice-received-date-missing",
+          fieldId: "invoice-received-date",
+          message: t(
+            "Choose a valid received date.",
+            "تاریخ دریافت معتبر انتخاب کنید.",
+          ),
+        });
+      if (
+        !receivedLocal.time ||
+        receivedError === "time" ||
+        receivedError === "nonexistent"
+      )
+        postIssues.push({
+          id: "invoice-received-time-missing",
+          fieldId: "invoice-received-time",
+          message: t(
+            "Enter a valid store-local time using HH:mm.",
+            "زمان معتبر محلی فروشگاه را به صورت HH:mm وارد کنید.",
+          ),
+        });
+    }
+    if (!invoice.receiving_employee?.trim())
+      postIssues.push({
+        id: "invoice-employee-missing",
+        fieldId: "invoice-employee",
+        message: t(
+          "Choose the receiving employee.",
+          "کارمند دریافت‌کننده را انتخاب کنید.",
+        ),
+      });
+    for (const [index, line] of invoice.lines.entries()) {
+      const product = state.products.find(
+        (item) =>
+          item.company_id === invoice.company_id &&
+          item.code === line.product_code,
+      );
+      const add = (kind: InvoiceBlocker, field: string) =>
+        postIssues.push({
+          id: `invoice-${index}-${kind}-missing`,
+          fieldId: `invoice-line-${index}-${field}`,
+          message: `${t("Line", "ردیف")} ${index + 1}: ${t(...blockerCopy[kind])}`,
+        });
+      if (
+        !product &&
+        !(line.product_code === "NEW" && line.new_name_en?.trim()) &&
+        acceptedInvoiceUnits(line) > 0
+      )
+        add("matching", "matching");
+      if (!validInvoiceLineQuantity(line)) add("quantity", "invoiced");
+      else if (!validInvoiceLineReceived(line)) add("quantity", "delivered");
+      try {
+        invoiceLineCalculation(
+          line,
+          line.pricing_category ?? product?.pricing_category ?? "",
+          state.config,
+        );
+      } catch {
+        add("cost", "cost");
+      }
+      if (!line.review_confirmed) add("review", "confirm");
+      if (!line.date_confirmed) add("date", "track");
+      else if (line.date_tracking && !line.date_value) add("date", "date");
+      if (
+        product &&
+        manualPrice(state, product, invoice.branch) &&
+        acceptedInvoiceUnits(line) > 0 &&
+        !line.short_dated &&
+        !line.manual_price_decision
+      )
+        add("manual_price", "manual");
+    }
+  }
+  const issue = (fieldId: string) =>
+    postIssues.find((item) => item.fieldId === fieldId)?.message;
+  const previewMoney = (value: string) =>
+    /^\d+(?:\.\d{1,2})?$/.test(value) ? (
+      <Money value={value} currency={state.config.company.currency} />
+    ) : (
+      <span className="muted">—</span>
+    );
 
   // Refreshing a processing draft resumes the honest simulated reading state.
   useEffect(() => {
@@ -516,6 +834,9 @@ export default function Invoices() {
     setMessage("");
     setUploadError("");
     setOpenLines({});
+    setAttemptedPost(false);
+    setReceivedEdit(undefined);
+    setReceivedError(undefined);
   }
 
   async function attachFile(file: File) {
@@ -531,25 +852,20 @@ export default function Invoices() {
       );
       return;
     }
-    if (file.size > 2_500_000) {
-      setUploadError(
-        t(
-          "Choose a file smaller than 2.5 MB so the original can be saved.",
-          "برای ذخیره اصل فاکتور در این دموی مرورگر، فایل کوچک‌تر از 2.5 مگابایت انتخاب کنید.",
-        ),
-      );
-      return;
-    }
+    const targetInvoiceId = invoice.id;
+    setUploadPending(true);
     try {
-      const data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const retained = await storeUploadedFile(
+        file,
+        state.config.company.seed_key,
+        { purpose: "invoice" },
+      );
+      const data = retained.reference;
       let attachedId = "";
       updateInvoice((draft) => {
         const existing = draft.invoice;
+        if (existing.id !== targetInvoiceId)
+          throw new Error("The invoice changed while the original was saving.");
         if (existing.status === "posted") {
           attachPostedInvoiceOriginal(
             draft,
@@ -560,7 +876,12 @@ export default function Invoices() {
               actor: user?.name ?? "",
             },
             existing.id,
-            { file_name: file.name, file_type: file.type, file_data: data },
+            {
+              file_name: file.name,
+              file_type: file.type,
+              file_data: data,
+              file_size: retained.size,
+            },
           );
           attachedId = existing.id;
           return;
@@ -580,6 +901,7 @@ export default function Invoices() {
         next.file_name = file.name;
         next.file_type = file.type;
         next.file_data = data;
+        next.file_size = retained.size;
         // Existing manual entries stay intact when their original is attached.
         next.status =
           next.entry_mode === "manual"
@@ -599,10 +921,12 @@ export default function Invoices() {
     } catch {
       setUploadError(
         t(
-          "The file could not be read. Choose it again or save a manual draft.",
-          "فایل خوانده نشد. دوباره انتخاب کنید یا پیش‌نویس دستی ذخیره کنید.",
+          "The original could not be saved. Allow browser storage and try again.",
+          "اصل فایل ذخیره نشد. ذخیره‌سازی مرورگر را فعال کنید و دوباره تلاش کنید.",
         ),
       );
+    } finally {
+      setUploadPending(false);
     }
   }
 
@@ -672,6 +996,8 @@ export default function Invoices() {
 
   function post() {
     if (blockers.length) {
+      setAttemptedPost(true);
+      setDetailsOpen(true);
       setMessage(
         t(
           "Complete the highlighted requirements before posting.",
@@ -804,7 +1130,25 @@ export default function Invoices() {
         item.company_id === state.config.company.seed_key &&
         item.status === "posted" &&
         readableInvoice(item, state.config.company.seed_key, reader, state) &&
-        (branch === "all" || effectiveInvoiceLocation(state, item) === branch),
+        (branch === "all" ||
+          effectiveInvoiceLocation(state, item) === branch) &&
+        (!supplierFilter ||
+          item.supplier === supplierFilter ||
+          supplierRecords(state).some(
+            (record) =>
+              record.name === supplierFilter &&
+              supplierMatches(record, item.supplier),
+          )) &&
+        (!fromFilter ||
+          companyCalendarDate(
+            state.config,
+            item.received_at ?? item.invoice_date,
+          ) >= fromFilter) &&
+        (!toFilter ||
+          companyCalendarDate(
+            state.config,
+            item.received_at ?? item.invoice_date,
+          ) <= toFilter),
     ) ?? [];
   const savedDrafts = [
     ...(state.invoices?.filter(
@@ -1057,13 +1401,24 @@ export default function Invoices() {
       )}
       {supplierEditorOpen && (
         <SupplierEditor
-          invoiceQuickAdd
-          onClose={() => setSupplierEditorOpen(false)}
+          invoiceQuickAdd={!supplierToEdit}
+          supplier={supplierToEdit}
+          completeForInvoice={
+            !!supplierToEdit &&
+            (invoice.entry_mode === "manual" ||
+              !!supplierToEdit.invoice_review_required)
+          }
+          onClose={() => {
+            setSupplierEditorOpen(false);
+            setSupplierToEdit(undefined);
+          }}
           onSaved={(record) =>
             updateInvoice((draft) => {
               draft.invoice.supplier = record.name;
               draft.invoice.supplier_confirmed = record.status === "confirmed";
-              draft.invoice.payment_terms = record.payment_terms;
+              setInvoicePaymentTerms(draft.invoice, record.payment_terms);
+              if (!supplierToEdit)
+                markInvoiceSupplierReview(draft.invoice, record);
               draft.invoice.lower_price_answers = undefined;
             })
           }
@@ -1103,7 +1458,8 @@ export default function Invoices() {
           <Button
             variant={active && !locked ? "secondary" : "primary"}
             onClick={() => start()}
-            disabled={active && !locked}
+            disabled={uploadPending}
+            aria-busy={uploadPending}
           >
             {t("New invoice", "فاکتور جدید")}
           </Button>
@@ -1124,6 +1480,26 @@ export default function Invoices() {
           { value: "cancelled", label: t("Cancelled", "لغوشده") },
         ]}
       />
+      {!routeId && (supplierFilter || fromFilter || toFilter) && (
+        <div className="invoice-list-scope">
+          <span>
+            {supplierFilter && <LtrText>{supplierFilter}</LtrText>}{" "}
+            {fromFilter && (
+              <>
+                {t("From", "از")} <DateText value={fromFilter} />
+              </>
+            )}{" "}
+            {toFilter && (
+              <>
+                {t("To", "تا")} <DateText value={toFilter} />
+              </>
+            )}
+          </span>
+          <Button variant="plain" onClick={() => navigate("invoices")}>
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        </div>
+      )}
       {message && (
         <div role="status" className="banner info">
           {message}
@@ -1332,29 +1708,38 @@ export default function Invoices() {
                         )}
                       </div>
                     )}
-                  <Field
-                    label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
-                    error={uploadError}
-                  >
-                    <Dropzone
-                      accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
-                      fileName={invoice.file_name}
-                      fileSize={fileSize}
-                      onChange={(file) => {
-                        void attachFile(file);
-                      }}
-                      disabled={invoice.status === "reading"}
-                      onRemove={() => {
-                        updateInvoice((draft) => {
-                          if (draft.invoice.status === "posted") return;
-                          draft.invoice.file_name = undefined;
-                          draft.invoice.file_type = undefined;
-                          draft.invoice.file_data = undefined;
-                        });
-                        setUploadError("");
-                      }}
-                    />
-                  </Field>
+                  <div id="invoice-original-field">
+                    <Field
+                      label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
+                      error={uploadError || issue("invoice-original-field")}
+                      hint={
+                        uploadPending
+                          ? t("Saving original…", "در حال ذخیره اصل فایل…")
+                          : undefined
+                      }
+                    >
+                      <Dropzone
+                        id="invoice-original"
+                        accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+                        fileName={invoice.file_name}
+                        fileSize={fileSize}
+                        onChange={(file) => {
+                          void attachFile(file);
+                        }}
+                        disabled={invoice.status === "reading"}
+                        onRemove={() => {
+                          updateInvoice((draft) => {
+                            if (draft.invoice.status === "posted") return;
+                            draft.invoice.file_name = undefined;
+                            draft.invoice.file_type = undefined;
+                            draft.invoice.file_data = undefined;
+                            draft.invoice.file_size = undefined;
+                          });
+                          setUploadError("");
+                        }}
+                      />
+                    </Field>
+                  </div>
                 </>
               )}
               <OriginalInvoice
@@ -1374,6 +1759,9 @@ export default function Invoices() {
             </Card>
           </aside>
           <div className="invoice-review-pane">
+            <div id="invoice-missing-list" tabIndex={-1}>
+              <WhatsMissing issues={postIssues} />
+            </div>
             {invoice.status === "reading" ? (
               <Card className="invoice-reading-state">
                 <p role="status">
@@ -1449,22 +1837,12 @@ export default function Invoices() {
                   >
                     <SummaryTile
                       label={t("Subtotal", "جمع پیش از مالیات")}
-                      value={
-                        <Money
-                          value={invoice.subtotal}
-                          currency={state.config.company.currency}
-                        />
-                      }
+                      value={previewMoney(invoice.subtotal)}
                       tone="lavender"
                     />
                     <SummaryTile
                       label={t("Tax", "مالیات")}
-                      value={
-                        <Money
-                          value={invoice.tax}
-                          currency={state.config.company.currency}
-                        />
-                      }
+                      value={previewMoney(invoice.tax)}
                       tone="sky"
                     />
                     <SummaryTile
@@ -1609,11 +1987,16 @@ export default function Invoices() {
                       disabled={locked}
                       className="form-grid invoice-details-form"
                     >
-                      <Field label={t("Supplier", "تأمین‌کننده")}>
+                      <Field
+                        label={t("Supplier", "تأمین‌کننده")}
+                        error={issue("invoice-supplier")}
+                      >
                         <Select
+                          id="invoice-supplier"
                           value={invoice.supplier}
                           onChange={(value) => {
                             if (value === "__add_supplier") {
+                              setSupplierToEdit(undefined);
                               setSupplierEditorOpen(true);
                               return;
                             }
@@ -1624,12 +2007,21 @@ export default function Invoices() {
                                     draft.config.company.seed_key &&
                                   supplierMatches(record, value),
                               );
+                              const previousSupplier = draft.invoice.supplier;
                               draft.invoice.supplier = value;
                               clearInvoiceOrder(draft.invoice);
                               draft.invoice.supplier_confirmed =
                                 supplier?.status === "confirmed";
-                              draft.invoice.payment_terms =
-                                supplier?.payment_terms ?? "";
+                              setInvoicePaymentTerms(
+                                draft.invoice,
+                                supplier?.payment_terms ?? "",
+                              );
+                              if (supplier)
+                                markInvoiceSupplierReview(
+                                  draft.invoice,
+                                  supplier,
+                                  previousSupplier,
+                                );
                               draft.invoice.lower_price_answers = undefined;
                             });
                           }}
@@ -1685,66 +2077,86 @@ export default function Invoices() {
                           )}
                         />
                       </Field>
-                      <Field label={t("Invoice date", "تاریخ فاکتور")}>
+                      <Field
+                        label={t("Invoice date", "تاریخ فاکتور")}
+                        error={issue("invoice-date")}
+                      >
                         <DateField
+                          id="invoice-date"
                           dir="ltr"
                           value={invoice.invoice_date ?? ""}
                           onChange={(value) =>
                             updateInvoice((draft) => {
                               draft.invoice.invoice_date = value;
+                              refreshInvoiceDueDate(draft.invoice);
                             })
                           }
                         />
                       </Field>
                       <div className="invoice-received-fields">
                         <Field
-                          label={t("Received date (UTC)", "تاریخ دریافت (UTC)")}
+                          label={t("Received date", "تاریخ دریافت")}
+                          error={
+                            receivedError === "date"
+                              ? t(
+                                  "Choose a valid received date.",
+                                  "تاریخ دریافت معتبر انتخاب کنید.",
+                                )
+                              : issue("invoice-received-date")
+                          }
                         >
                           <DateField
-                            value={invoice.received_at?.slice(0, 10) ?? ""}
+                            id="invoice-received-date"
+                            value={receivedLocal.date}
                             disabled={locked}
                             onChange={(value) =>
-                              updateInvoice((draft) => {
-                                const time =
-                                  draft.invoice.received_at?.slice(11, 16) ||
-                                  "00:00";
-                                draft.invoice.received_at = value
-                                  ? `${value}T${time}:00Z`
-                                  : "";
-                              })
+                              editReceived(value, receivedLocal.time)
                             }
                           />
                         </Field>
                         <Field
-                          label={t("Received time (UTC)", "زمان دریافت (UTC)")}
+                          label={t("Received time", "زمان دریافت")}
                           hint={t(
-                            "24-hour time, HH:mm",
-                            "زمان ۲۴ ساعته، HH:mm",
+                            "Store local time, 24-hour HH:mm",
+                            "زمان محلی فروشگاه، ۲۴ ساعته HH:mm",
                           )}
+                          error={
+                            receivedError === "nonexistent"
+                              ? t(
+                                  "This time does not exist when daylight saving starts. Choose another time.",
+                                  "این زمان هنگام شروع ساعت تابستانی وجود ندارد. زمان دیگری انتخاب کنید.",
+                                )
+                              : receivedError === "time"
+                                ? t(
+                                    "Enter a valid time using HH:mm.",
+                                    "زمان معتبر به صورت HH:mm وارد کنید.",
+                                  )
+                                : undefined
+                          }
                         >
                           <input
+                            id="invoice-received-time"
                             className="control-narrow"
                             type="text"
                             dir="ltr"
                             inputMode="numeric"
                             placeholder="HH:mm"
-                            value={invoice.received_at?.slice(11, 16) ?? ""}
+                            value={receivedLocal.time}
                             onChange={(event) =>
-                              updateInvoice((draft) => {
-                                const date =
-                                  draft.invoice.received_at?.slice(0, 10) || "";
-                                draft.invoice.received_at = event.target.value
-                                  ? `${date}T${event.target.value}:00Z`
-                                  : "";
-                              })
+                              editReceived(
+                                receivedLocal.date,
+                                event.target.value,
+                              )
                             }
                           />
                         </Field>
                       </div>
                       <Field
                         label={t("Receiving employee", "کارمند دریافت‌کننده")}
+                        error={issue("invoice-employee")}
                       >
                         <Select
+                          id="invoice-employee"
                           value={invoice.receiving_employee ?? ""}
                           onChange={(value) =>
                             updateInvoice((draft) => {
@@ -1761,8 +2173,12 @@ export default function Invoices() {
                             }))}
                         />
                       </Field>
-                      <Field label={t("Location", "مکان")}>
+                      <Field
+                        label={t("Location", "مکان")}
+                        error={issue("invoice-location")}
+                      >
                         <Select
+                          id="invoice-location"
                           value={invoiceLocation}
                           disabled={locked}
                           onChange={(value) => {
@@ -1799,41 +2215,65 @@ export default function Invoices() {
                           }
                         />
                       </Field>
-                      <Field label={t("Subtotal", "جمع پیش از مالیات")}>
+                      <Field
+                        label={t("Subtotal", "جمع پیش از مالیات")}
+                        error={issue("invoice-subtotal")}
+                      >
                         <input
+                          id="invoice-subtotal"
                           dir="ltr"
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.subtotal}
                           onChange={(event) =>
                             updateInvoice((draft) => {
-                              draft.invoice.subtotal = event.target.value;
+                              setInvoiceAmount(
+                                draft.invoice,
+                                "subtotal",
+                                event.target.value,
+                              );
                             })
                           }
                         />
                       </Field>
-                      <Field label={t("Tax", "مالیات")}>
+                      <Field
+                        label={t("Tax", "مالیات")}
+                        error={issue("invoice-tax")}
+                      >
                         <input
+                          id="invoice-tax"
                           dir="ltr"
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.tax}
                           onChange={(event) =>
                             updateInvoice((draft) => {
-                              draft.invoice.tax = event.target.value;
+                              setInvoiceAmount(
+                                draft.invoice,
+                                "tax",
+                                event.target.value,
+                              );
                             })
                           }
                         />
                       </Field>
-                      <Field label={t("Final total", "جمع نهایی")}>
+                      <Field
+                        label={t("Final total", "جمع نهایی")}
+                        error={issue("invoice-final-total")}
+                      >
                         <input
+                          id="invoice-final-total"
                           dir="ltr"
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.final_total}
                           onChange={(event) =>
                             updateInvoice((draft) => {
-                              draft.invoice.final_total = event.target.value;
+                              setInvoiceAmount(
+                                draft.invoice,
+                                "final_total",
+                                event.target.value,
+                              );
                             })
                           }
                         />
@@ -1850,27 +2290,87 @@ export default function Invoices() {
                           onChange={(value) =>
                             updateInvoice((draft) => {
                               draft.invoice.due_date = value;
+                              draft.invoice.due_date_manual = true;
                             })
                           }
                         />
                       </Field>
-                      <Field
+                      <PaymentTermsControl
+                        key={`${invoice.id}:${invoice.supplier}`}
+                        id="invoice-payment-terms"
+                        error={issue("invoice-payment-terms")}
                         label={t(
                           "Payment terms (optional)",
                           "شرایط پرداخت (اختیاری)",
                         )}
-                      >
-                        <input
-                          value={invoice.payment_terms}
-                          onChange={(event) =>
-                            updateInvoice((draft) => {
-                              draft.invoice.payment_terms = event.target.value;
-                            })
-                          }
-                        />
-                      </Field>
+                        value={invoice.payment_terms ?? ""}
+                        disabled={locked}
+                        onChange={(value) =>
+                          updateInvoice((draft) =>
+                            setInvoicePaymentTerms(draft.invoice, value),
+                          )
+                        }
+                      />
                     </fieldset>
                   )}
+                  {!locked && invoiceTotalDiffers(invoice) && (
+                    <p className="banner pending" role="status">
+                      {t(
+                        "Final total differs from Subtotal + Tax. Check the amount on the original invoice; this warning does not block posting.",
+                        "جمع نهایی با جمع پیش از مالیات و مالیات متفاوت است. مبلغ اصل فاکتور را بررسی کنید؛ این هشدار مانع ثبت نیست.",
+                      )}
+                    </p>
+                  )}
+                  {!locked &&
+                    supplierRecord &&
+                    (blockers.includes("supplier_details") ||
+                      blockers.includes("supplier_pending") ||
+                      blockers.includes("supplier_review")) && (
+                      <div className="invoice-supplier-review">
+                        <p className="muted">
+                          {t(
+                            "Waiting for Supervisor to complete and confirm supplier details.",
+                            "در انتظار تکمیل و تأیید اطلاعات تأمین‌کننده توسط سرپرست.",
+                          )}
+                        </p>
+                        {role === "supervisor" && (
+                          <div className="actions">
+                            <Button
+                              variant="neutral"
+                              onClick={() => {
+                                setSupplierToEdit(supplierRecord);
+                                setSupplierEditorOpen(true);
+                              }}
+                            >
+                              {t("Edit supplier", "ویرایش تأمین‌کننده")}
+                            </Button>
+                            <Button
+                              variant="tinted"
+                              onClick={() => {
+                                if (
+                                  missingInvoiceSupplierDetails(supplierRecord)
+                                    .length
+                                ) {
+                                  setSupplierToEdit(supplierRecord);
+                                  setSupplierEditorOpen(true);
+                                  return;
+                                }
+                                updateInvoice((draft) =>
+                                  confirmInvoiceSupplierReview(draft, {
+                                    company_id: draft.config.company.seed_key,
+                                    role,
+                                    branch,
+                                    actor: user?.name ?? "",
+                                  }),
+                                );
+                              }}
+                            >
+                              {t("Confirm supplier", "تأیید تأمین‌کننده")}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   {invoice.number_is_system_assigned && (
                     <p className="muted">
                       {t(
@@ -1880,7 +2380,9 @@ export default function Invoices() {
                     </p>
                   )}
                 </Card>
-                <InvoiceOrderReview />
+                <div id="invoice-order-review">
+                  <InvoiceOrderReview />
+                </div>
                 <Card
                   title={t("Review invoice lines", "بررسی ردیف‌های فاکتور")}
                   className="invoice-lines-card"
@@ -1901,6 +2403,7 @@ export default function Invoices() {
                   )}
                   <DataTable
                     className="invoice-lines-table"
+                    responsive={false}
                     columns={[
                       { width: "34%" },
                       { width: "18%", align: "end" },
@@ -1964,6 +2467,32 @@ export default function Invoices() {
                             line.new_name_fa ??
                             line.description)
                           : (product?.name_en ?? line.description);
+                      const dateSuggestions =
+                        line.date_tracking && !locked && product
+                          ? reusableOtherLocationDates(
+                              state,
+                              {
+                                company_id: invoice.company_id,
+                                role: role!,
+                                branch,
+                                actor: user?.name ?? "",
+                                username: user?.username,
+                                allowed_branches:
+                                  role === "supervisor"
+                                    ? branches
+                                    : [user?.branch ?? branch],
+                              },
+                              {
+                                product_code: product.code,
+                                supplier: invoice.supplier,
+                                branch: invoiceLocation,
+                              },
+                            ).filter(
+                              (entry) =>
+                                !line.short_dated ||
+                                entry.date_type === "expiry",
+                            )
+                          : [];
                       const lineKey = `${invoice.id}:${index}`;
                       const needsDecision =
                         !locked &&
@@ -2100,12 +2629,13 @@ export default function Invoices() {
                               {expanded && (
                                 <>
                                   <Field
-                                    label={t(
-                                      "Invoiced quantity",
-                                      "تعداد فاکتور",
+                                    label={t("Invoiced", "فاکتور شده")}
+                                    error={issue(
+                                      `invoice-line-${index}-invoiced`,
                                     )}
                                   >
                                     <NumberField
+                                      id={`invoice-line-${index}-invoiced`}
                                       disabled={locked}
                                       className="control-narrow"
 
@@ -2142,12 +2672,13 @@ export default function Invoices() {
                                     />
                                   </Field>{" "}
                                   <Field
-                                    label={t(
-                                      "Delivered quantity",
-                                      "تعداد تحویل‌شده",
+                                    label={t("Delivered", "تحویل شده")}
+                                    error={issue(
+                                      `invoice-line-${index}-delivered`,
                                     )}
                                   >
                                     <NumberField
+                                      id={`invoice-line-${index}-delivered`}
                                       disabled={locked}
                                       className="control-narrow"
 
@@ -2220,6 +2751,7 @@ export default function Invoices() {
                                   }
                                 >
                                   <input
+                                    id={`invoice-line-${index}-cost`}
                                     disabled={locked}
                                     dir="ltr"
                                     className="control-narrow"
@@ -2648,15 +3180,25 @@ export default function Invoices() {
                                             : line.qty_invoiced}
                                       </LtrText>{" "}
                                       {line.sold_by !== "weight" &&
-                                        t("units", "واحد")}
+                                        tCount(
+                                          "unit",
+                                          "units",
+                                          "واحد",
+                                          "واحد",
+                                          line.qty_invoiced,
+                                        )}
                                     </p>
                                     <Field
+                                      error={issue(
+                                        `invoice-line-${index}-matching`,
+                                      )}
                                       label={t(
                                         "Matched product",
                                         "کالای تطبیق‌یافته",
                                       )}
                                     >
                                       <Select
+                                        id={`invoice-line-${index}-matching`}
                                         value={line.product_code}
                                         onChange={(value) =>
                                           editLine(
@@ -2771,8 +3313,8 @@ export default function Invoices() {
                                         </Field>
                                         <Field
                                           label={t(
-                                            "New product name (Persian)",
-                                            "نام کالای جدید (فارسی)",
+                                            "New product name (Persian) (optional)",
+                                            "نام کالای جدید (فارسی) (اختیاری)",
                                           )}
                                         >
                                           <input
@@ -2789,6 +3331,30 @@ export default function Invoices() {
                                       </>
                                     )}
                                   </fieldset>
+                                  {!locked && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => {
+                                        updateInvoice((draft) =>
+                                          removeInvoiceLine(
+                                            draft,
+                                            {
+                                              company_id:
+                                                draft.config.company.seed_key,
+                                              role: role!,
+                                              branch,
+                                              actor: user?.name ?? "",
+                                            },
+                                            index,
+                                          ),
+                                        );
+                                        setOpenLines({});
+                                      }}
+                                    >
+                                      {t("Remove line", "حذف ردیف")}
+                                    </Button>
+                                  )}
                                   {!locked && (
                                     <Checkbox
                                       checked={short.quantity > 0}
@@ -2951,7 +3517,10 @@ export default function Invoices() {
                                       disabled={locked}
                                       className="date-review"
                                     >
-                                      <div className="invoice-date-choice">
+                                      <div
+                                        className="invoice-date-choice"
+                                        id={`invoice-line-${index}-track`}
+                                      >
                                         <span className="field-label">
                                           {t("Track date", "پیگیری تاریخ")}
                                         </span>
@@ -2989,6 +3558,9 @@ export default function Invoices() {
                                           ]}
                                         />
                                       </div>
+                                      <FieldError>
+                                        {issue(`invoice-line-${index}-track`)}
+                                      </FieldError>
                                       {line.date_tracking && (
                                         <div className="form-grid invoice-details-form">
                                           <Field
@@ -3024,9 +3596,15 @@ export default function Invoices() {
                                               ]}
                                             />
                                           </Field>
-                                          <Field label={t("Date", "تاریخ")}>
+                                          <Field
+                                            label={t("Date", "تاریخ")}
+                                            error={issue(
+                                              `invoice-line-${index}-date`,
+                                            )}
+                                          >
                                             <DateField
                                               dir="ltr"
+                                              id={`invoice-line-${index}-date`}
                                               value={line.date_value ?? ""}
                                               min="1900-01-01"
                                               onChange={(value) =>
@@ -3056,15 +3634,77 @@ export default function Invoices() {
                                           </Field>
                                         </div>
                                       )}
+                                      {dateSuggestions.length > 0 && (
+                                        <div className="invoice-date-suggestions">
+                                          {dateSuggestions.map((entry) => (
+                                            <div
+                                              key={entry.id}
+                                              className="invoice-date-suggestion"
+                                            >
+                                              <span>
+                                                {configuredBranchLabel(
+                                                  state.config,
+                                                  entry.branch,
+                                                  lang,
+                                                )}{" "}
+                                                ·{" "}
+                                                {entry.entered_date ===
+                                                companyDate(state.config) ? (
+                                                  t("Today", "امروز")
+                                                ) : (
+                                                  <DateText
+                                                    value={entry.entered_date}
+                                                  />
+                                                )}{" "}
+                                                ·{" "}
+                                                {entry.date_type ===
+                                                "best_before"
+                                                  ? t(
+                                                      "Best before",
+                                                      "بهترین زمان مصرف",
+                                                    )
+                                                  : t("Expires", "انقضا")}{" "}
+                                                <DateText value={entry.date} />
+                                              </span>
+                                              <Button
+                                                variant="plain"
+                                                size="sm"
+                                                onClick={() =>
+                                                  editLine(index, (item) => {
+                                                    item.date_type =
+                                                      entry.date_type;
+                                                    item.date_value =
+                                                      entry.date;
+                                                    item.lot_number =
+                                                      entry.lot_number;
+                                                    item.date_confirmed = true;
+                                                  })
+                                                }
+                                              >
+                                                {t(
+                                                  "Use this date",
+                                                  "استفاده از این تاریخ",
+                                                )}
+                                              </Button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </fieldset>
                                   }
                                   {manual &&
                                     !locked &&
                                     !line.short_dated &&
                                     acceptedInvoiceUnits(line) > 0 && (
-                                      <div className="invoice-manual-choice">
+                                      <div
+                                        className="invoice-manual-choice"
+                                        id={`invoice-line-${index}-manual`}
+                                      >
                                         <Field
                                           label={t("Manual price", "قیمت دستی")}
+                                          error={issue(
+                                            `invoice-line-${index}-manual`,
+                                          )}
                                         >
                                           <SegmentedControl
                                             aria-label={t(
@@ -3101,6 +3741,7 @@ export default function Invoices() {
                                       </div>
                                     )}
                                   <Checkbox
+                                    id={`invoice-line-${index}-confirm`}
                                     disabled={
                                       locked ||
                                       (!!manual &&
@@ -3127,6 +3768,9 @@ export default function Invoices() {
                                       "تأیید این ردیف فاکتور",
                                     )}
                                   </Checkbox>
+                                  <FieldError>
+                                    {issue(`invoice-line-${index}-confirm`)}
+                                  </FieldError>
                                 </div>
                               </td>
                             </tr>
@@ -3144,6 +3788,7 @@ export default function Invoices() {
                         )}
                       >
                         <Select
+                          id="invoice-add-product"
                           value={manualCode}
                           onChange={(value) => {
                             if (value === "__add_product")
@@ -3271,6 +3916,7 @@ export default function Invoices() {
                         )}
                       >
                         <Select
+                          id="invoice-lower-answer"
                           value={invoice.lower_price_answers?.same_expiry ?? ""}
                           onChange={(value) =>
                             updateInvoice((draft) => {
@@ -3421,15 +4067,6 @@ export default function Invoices() {
           </div>
           {active && invoice.status !== "reading" && !locked && (
             <div className="invoice-action-footer">
-              {blockers.length > 0 && (
-                <div className="banner pending invoice-blockers" role="alert">
-                  <ul>
-                    {blockers.map((blocker) => (
-                      <li key={blocker}>{t(...blockerCopy[blocker])}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
               <div className="bottom-bar">
                 <Button
                   variant="secondary"
@@ -3445,8 +4082,15 @@ export default function Invoices() {
                   {t("Save as draft", "ذخیره به عنوان پیش‌نویس")}
                 </Button>
                 <Button
-                  onClick={() => setPostOpen(true)}
-                  disabled={blockers.length > 0}
+                  onClick={() => {
+                    if (blockers.length) {
+                      setAttemptedPost(true);
+                      setDetailsOpen(true);
+                      requestAnimationFrame(() =>
+                        focusValidationField("invoice-missing-list"),
+                      );
+                    } else setPostOpen(true);
+                  }}
                 >
                   {t("Post invoice", "ثبت فاکتور")}
                 </Button>
@@ -3486,8 +4130,16 @@ export default function Invoices() {
         )}
         className="invoice-move-form"
       >
-        <Field label={t("Location", "مکان")}>
+        <WhatsMissing issues={moveIssues} />
+        <Field
+          label={t("Location", "مکان")}
+          error={
+            moveIssues.find((item) => item.fieldId === "invoice-move-target")
+              ?.message
+          }
+        >
           <Select
+            id="invoice-move-target"
             value={moveTarget}
             onChange={(value) => {
               setMoveTarget(value);
@@ -3501,8 +4153,15 @@ export default function Invoices() {
               }))}
           />
         </Field>
-        <Field label={t("Reason", "دلیل")}>
+        <Field
+          label={t("Reason", "دلیل")}
+          error={
+            moveIssues.find((item) => item.fieldId === "invoice-move-reason")
+              ?.message
+          }
+        >
           <textarea
+            id="invoice-move-reason"
             value={moveReason}
             onChange={(event) => {
               setMoveReason(event.target.value);
@@ -3595,9 +4254,9 @@ export default function Invoices() {
             {t("Cancel", "انصراف")}
           </Button>
           <Button
-            disabled={!movePreview || !moveReason.trim()}
             onClick={() => {
-              if (!movePreview) return;
+              setMoveAttempted(true);
+              if (!movePreview || !moveReason.trim()) return;
               try {
                 updateInvoice((draft) =>
                   movePostedInvoice(

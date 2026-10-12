@@ -124,7 +124,7 @@ function Harness({
   );
 }
 
-it("keeps a bilingual retained RM memo available after pickup and shows no Returned to stock column", async () => {
+it("keeps an English-default retained RM memo available after pickup and shows no Returned to stock column", async () => {
   const user = userEvent.setup();
   render(
     <DemoProvider>
@@ -142,8 +142,8 @@ it("keeps a bilingual retained RM memo available after pickup and shows no Retur
   );
   await user.click(screen.getByRole("button", { name: "RM-0001" }));
   const dialog = screen.getByRole("dialog", { name: "Return memo" });
-  expect(within(dialog).getByText("Driver name")).toBeInTheDocument();
-  expect(within(dialog).getByText("نام راننده")).toBeInTheDocument();
+  expect(within(dialog).getByText("Driver")).toBeInTheDocument();
+  expect(within(dialog).queryByText("راننده")).not.toBeInTheDocument();
   expect(within(dialog).getByText("SIGNED-C4-001")).toBeInTheDocument();
   expect(within(dialog).getAllByText("$30.00")).toHaveLength(2);
   expect(screen.getByTestId("ledger-count")).toHaveTextContent("1");
@@ -244,7 +244,7 @@ it("uses Open/History in the supplier return tab and removes all money choices f
   ).not.toBeInTheDocument();
 });
 
-it("renders a memo using frozen bilingual snapshots rather than live catalog names", () => {
+it("renders an English-default memo using frozen snapshots rather than live catalog names", () => {
   const state = returnFixture();
   recordPickup(state, worker, "c4-return", {
     quantities: { "0003": 3 },
@@ -255,11 +255,11 @@ it("renders a memo using frozen bilingual snapshots rather than live catalog nam
   state.products.find((product) => product.code === "0003")!.name_en =
     "Later catalog name";
   render(<ReturnMemoDocument memo={memo} language="fa" />);
-  expect(screen.getByRole("article")).toHaveAttribute("dir", "rtl");
+  expect(screen.getByRole("article")).toHaveAttribute("dir", "ltr");
   expect(screen.getByText("Sour Cherry Juice 1 L")).toBeInTheDocument();
   expect(screen.queryByText("Later catalog name")).not.toBeInTheDocument();
-  expect(screen.getByText("Signature")).toBeInTheDocument();
-  expect(screen.getByText("امضا")).toBeInTheDocument();
+  expect(screen.getAllByText("Signature")).toHaveLength(2);
+  expect(screen.queryByText("امضا")).not.toBeInTheDocument();
 });
 it("clears the reminder field's validation on edit and saves return settings through the guarded action", async () => {
   const user = userEvent.setup();
@@ -276,13 +276,13 @@ it("clears the reminder field's validation on edit and saves return settings thr
   await user.type(days, "0");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(
-    screen.getByText("Enter a positive whole number of days."),
-  ).toBeInTheDocument();
+    screen.getAllByText("Enter a positive whole number of days."),
+  ).toHaveLength(2);
   await user.clear(days);
   await user.type(days, "7");
   expect(
-    screen.queryByText("Enter a positive whole number of days."),
-  ).not.toBeInTheDocument();
+    screen.queryAllByText("Enter a positive whole number of days."),
+  ).toHaveLength(0);
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(screen.getByText("Changes saved.")).toHaveAttribute("role", "status");
   expect(screen.getByRole("link", { name: /Changed by/ })).toHaveAttribute(
@@ -338,14 +338,16 @@ it("accepts explicit three-decimal lb replacements and clears a precision error 
   const items = screen.getByRole("table", { name: "" });
   expect(within(items).getAllByText("0.3 lb")).toHaveLength(2);
   await user.click(screen.getByRole("button", { name: "Record resolution" }));
-  const covered = screen.getByLabelText(
-    /Original units this settlement covers$/,
-  );
+  await user.click(screen.getByRole("combobox", { name: "Outcome" }));
+  await user.click(screen.getByRole("option", { name: "Replaced" }));
+  const covered = screen.getByLabelText("Original quantity covered");
   fireEvent.change(covered, { target: { value: "0.2" } });
   const replacement = screen.getByLabelText("Actual replacement quantity (lb)");
   expect(replacement).toHaveAttribute("step", "0.001");
   expect(replacement).toHaveAttribute("min", "0.001");
   fireEvent.change(replacement, { target: { value: "0.0001" } });
+  await user.click(screen.getByLabelText("Remaining expected date"));
+  await user.click(screen.getByRole("button", { name: "2026-10-23" }));
   await user.type(
     screen.getByLabelText("Supplier representative name"),
     "Demo Driver",
@@ -354,7 +356,9 @@ it("accepts explicit three-decimal lb replacements and clears a precision error 
     screen.getByLabelText("Replacement receipt reference"),
     "WEIGHED-REPLACEMENT-001",
   );
-  await user.click(screen.getByRole("button", { name: "Receive replacement" }));
+  await user.click(
+    screen.getAllByRole("button", { name: "Record resolution" }).at(-1)!,
+  );
   expect(
     screen
       .getAllByRole("alert")
@@ -366,7 +370,9 @@ it("accepts explicit three-decimal lb replacements and clears a precision error 
       .queryAllByRole("alert")
       .some((alert) => alert.textContent?.includes("three decimal places")),
   ).toBe(false);
-  await user.click(screen.getByRole("button", { name: "Receive replacement" }));
+  await user.click(
+    screen.getAllByRole("button", { name: "Record resolution" }).at(-1)!,
+  );
   expect(screen.getByText("Waiting for credit")).toBeInTheDocument();
   expect(within(items).getByText("0.2 lb")).toBeInTheDocument();
   expect(screen.getByTestId("ledger-count")).toHaveTextContent("1");

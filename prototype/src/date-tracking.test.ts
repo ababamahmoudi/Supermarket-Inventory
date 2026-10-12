@@ -204,39 +204,36 @@ describe("inline tracking preference and atomic auto-enable", () => {
       expect(state.stock_movements).toEqual(before.stock_movements);
     },
   );
-  it("a worker can toggle the preference in their location without removing dates, and Undo preserves unrelated edits", () => {
+  it("C6 rejects worker catalog switches while scoped Add still enables tracking", () => {
     const state = initialState();
     const worker = context(state, {
       role: "floor_worker",
       branch: "Branch 1",
       allowed_branches: ["Branch 1"],
-      username: "floorworker",
       actor: "Demo Floor Worker",
+      username: "floorworker",
     });
-    const entry = addTrackedDate(state, worker, input(state));
-    const dates = structuredClone(state.expiry);
+    state.products[0].date_tracking = false;
     const before = structuredClone(state);
-    setProductDateTracking(
-      state,
-      worker,
-      entry.product_code,
-      false,
-      "Branch 1",
-    );
-    expect(state.products[0].date_tracking).toBe(false);
-    expect(state.expiry).toEqual(dates);
+    expect(() =>
+      setProductDateTracking(
+        state,
+        worker,
+        state.products[0].code,
+        true,
+        "Branch 1",
+      ),
+    ).toThrow(new DateTrackingError("permission"));
+    expect(state).toEqual(before);
+    const entry = addTrackedDate(state, worker, input(state));
     const action = attachReversals(before, state, worker)[0];
-    expect(action).toMatchObject({
-      action: "Turn off date tracking",
-      branch: "Branch 1",
-      entity_type: "product",
-      reversible: true,
-    });
     state.products[1].name_en = "Unrelated later name";
     reverseActivity(state, worker, action.id, "undo");
-    expect(state.products[0].date_tracking).toBe(true);
+    expect(state.products[0].date_tracking).toBe(false);
     expect(state.products[1].name_en).toBe("Unrelated later name");
-    expect(state.expiry).toEqual(dates);
+    expect(state.expiry.find((date) => date.id === entry.id)?.status).toBe(
+      "removed",
+    );
   });
   it("rejects foreign companies, forbidden locations, archived products and Cashier toggles atomically", () => {
     const state = initialState();
@@ -275,7 +272,7 @@ describe("inline tracking preference and atomic auto-enable", () => {
     expect(() =>
       setProductDateTracking(
         state,
-        worker,
+        context(state),
         state.products[0].code,
         true,
         "Branch 1",
@@ -344,13 +341,7 @@ describe("inline tracking preference and atomic auto-enable", () => {
       actor: "Demo Floor Worker",
     });
     const before = structuredClone(state);
-    setProductDateTracking(
-      state,
-      worker,
-      state.products[0].code,
-      true,
-      "Branch 1",
-    );
+    addTrackedDate(state, worker, input(state));
     const action = attachReversals(before, state, worker)[0];
     action.reversal!.push({
       path: [
@@ -378,14 +369,9 @@ describe("inline tracking preference and atomic auto-enable", () => {
       username: "floorworker",
       actor: "Demo Floor Worker",
     });
+    state.products[0].date_tracking = false;
     const before = structuredClone(state);
-    setProductDateTracking(
-      state,
-      worker,
-      state.products[0].code,
-      true,
-      "Branch 1",
-    );
+    addTrackedDate(state, worker, input(state));
     const action = attachReversals(before, state, worker)[0];
     const saved = structuredClone(state);
     expect(() =>

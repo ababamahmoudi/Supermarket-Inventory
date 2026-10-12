@@ -19,9 +19,18 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
   await dialog
     .getByLabel("Supplier name", { exact: true })
     .fill("North Orchard Supply");
-  await dialog.getByLabel("Phone", { exact: true }).fill("416-555-0173");
-  await dialog.getByLabel("Email", { exact: true }).fill("orders@example.test");
-  await dialog.getByLabel("Payment terms", { exact: true }).fill("Net 30");
+  await dialog
+    .getByLabel("Phone (optional)", { exact: true })
+    .fill("416-555-0173");
+  await dialog
+    .getByLabel("Email (optional)", { exact: true })
+    .fill("orders@example.test");
+  await chooseOption(
+    page,
+    dialog.getByLabel("Payment terms (optional)", { exact: true }),
+    "30",
+    "Monthly (30 days)",
+  );
   await dialog
     .getByLabel("Opening balance", { exact: true })
     .first()
@@ -91,9 +100,12 @@ test("supplier similarity warning links the existing record and requires explici
   await dialog
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "Review the similar supplier before saving.",
-  );
+  await expect(
+    dialog.getByRole("link", {
+      name: "Review the similar supplier before saving.",
+      exact: true,
+    }),
+  ).toBeVisible();
   await dialog
     .getByRole("checkbox", {
       name: "Continue with this supplier name",
@@ -219,7 +231,11 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
   await expect(dialog).not.toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   const saved = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)!),
     storage,
@@ -264,11 +280,31 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await supplierDialog
     .getByLabel("Supplier name", { exact: true })
     .fill("Manual Invoice Supply");
+  await chooseOption(
+    page,
+    supplierDialog.getByLabel("Payment terms (optional)", { exact: true }),
+    "30",
+    "Monthly (30 days)",
+  );
   await supplierDialog
-    .getByLabel("Payment terms", { exact: true })
-    .fill("Net 30");
+    .getByLabel("Phone (optional)", { exact: true })
+    .fill("416-555-0140");
+  await supplierDialog
+    .getByLabel("Email (optional)", { exact: true })
+    .fill("orders@example.test");
+  await supplierDialog
+    .getByLabel("Sales representative (optional)", { exact: true })
+    .fill("Fictional Representative");
+  await supplierDialog
+    .getByLabel("Sales rep phone (optional)", { exact: true })
+    .fill("416-555-0141");
   await supplierDialog
     .getByRole("button", { name: "Add supplier", exact: true })
+    .click();
+  await expect(page.locator(".invoice-supplier-review")).toBeVisible();
+  await page
+    .locator(".invoice-supplier-review")
+    .getByRole("button", { name: "Confirm supplier", exact: true })
     .click();
   await page
     .getByLabel("Supplier invoice number (optional)", { exact: true })
@@ -306,7 +342,11 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   const line = page.locator(".invoice-line");
   await line.getByRole("button", { name: "No", exact: true }).click();
   await line

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, Archive, RotateCcw, Pencil } from "lucide-react";
 import { useDemo } from "../store";
+import { WhatsMissing } from "../WhatsMissing";
 import {
   Badge,
   Button,
@@ -111,6 +112,7 @@ export function NotebookEditor({
       className="notebook-editor-dialog"
     >
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           try {
@@ -129,6 +131,26 @@ export function NotebookEditor({
           }
         }}
       >
+        <WhatsMissing
+          issues={
+            error
+              ? [
+                  {
+                    id: errorField,
+                    message: error,
+                    fieldId:
+                      errorField === "branch"
+                        ? "notebook-branch"
+                        : errorField === "unit"
+                          ? "notebook-unit"
+                          : errorField === "roles"
+                            ? "notebook-roles"
+                            : "notebook-name",
+                  },
+                ]
+              : []
+          }
+        />
         <div className="form-grid notebook-definition-fields">
           <Field
             label={t("Name (English)", "نام (انگلیسی)")}
@@ -140,13 +162,16 @@ export function NotebookEditor({
             }
           >
             <input
+              id="notebook-name"
               dir="ltr"
               value={form.name_en}
               onChange={(event) => field("name_en", event.target.value)}
               autoFocus
             />
           </Field>
-          <Field label={t("Name (Persian, optional)", "نام (فارسی، اختیاری)")}>
+          <Field
+            label={t("Name (Persian) (optional)", "نام (فارسی) (اختیاری)")}
+          >
             <input
               dir="rtl"
               value={form.name_fa}
@@ -158,6 +183,7 @@ export function NotebookEditor({
             error={errorField === "branch" ? error : undefined}
           >
             <Select
+              id="notebook-branch"
               value={form.branch}
               onChange={(value) => field("branch", value)}
               options={[
@@ -173,7 +199,11 @@ export function NotebookEditor({
             />
           </Field>
         </div>
-        <div className="notebook-permission-grid">
+        <div
+          id="notebook-roles"
+          tabIndex={-1}
+          className="notebook-permission-grid"
+        >
           <fieldset>
             <legend>{t("Who can read", "چه کسی می‌تواند بخواند")}</legend>
             {(["supervisor", "floor_worker", "cashier"] as Role[]).map(
@@ -236,6 +266,7 @@ export function NotebookEditor({
             className="field-short"
           >
             <input
+              id="notebook-unit"
               value={form.fields.measurement_unit}
               placeholder="°C"
               onChange={(event) =>

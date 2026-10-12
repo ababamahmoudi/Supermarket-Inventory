@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { effectiveOffer, effectivePrice, searchProducts } from "./catalog";
+import { effectiveClearanceOffers } from "./receipt-lots";
 import { createId } from "./ids";
 import { labelLayout, labelPages } from "./labels";
 import { configuredBranches } from "./settings";
@@ -9,13 +10,20 @@ import type {
   LabelTemplate,
   LabelWaitlistItem,
   Product,
+  Offer,
   Role,
 } from "./types";
 
 export class LabelWorkflowError extends Error {
   constructor(
     readonly code:
-      "branch" | "permission" | "price" | "copies" | "template" | "logo",
+      | "branch"
+      | "permission"
+      | "price"
+      | "copies"
+      | "template"
+      | "logo"
+      | "lot",
   ) {
     super(code);
   }
@@ -132,12 +140,12 @@ export function addLabelsToWaitlist(
   for (const code of unique)
     copiesValue(
       (branchLabelWaitlist(state, branch).find(
-        (item) => item.product_code === code,
+        (item) => item.product_code === code && !item.lot_id,
       )?.copies ?? 0) + copies,
     );
   for (const code of unique) {
     const item = branchLabelWaitlist(state, branch).find(
-      (entry) => entry.product_code === code,
+      (entry) => entry.product_code === code && !entry.lot_id,
     );
     if (item) item.copies += copies;
     else
@@ -161,6 +169,99 @@ export function addLabelsToWaitlist(
       before,
       structuredClone(branchLabelWaitlist(state, branch)),
     );
+}
+
+/** An explicit clearance label keeps its location/lot, separate from regular copies. */
+export function addClearanceLabelToWaitlist(
+  state: DemoState,
+  productCode: string,
+  lotId: string,
+  copies: number,
+  branch: Branch,
+  actor: LabelActor,
+): void {
+  permittedBranch(state, branch, actor);
+  copiesValue(copies);
+  approvedProduct(state, productCode, branch);
+  const offer = effectiveClearanceOffers(state, productCode, branch).find(
+    (item) => item.lot_id === lotId,
+  );
+  if (!offer) throw new LabelWorkflowError("lot");
+  const existing = branchLabelWaitlist(state, branch).find(
+    (item) => item.product_code === productCode && item.lot_id === lotId,
+  );
+  const total = copiesValue((existing?.copies ?? 0) + copies);
+  const before = structuredClone(branchLabelWaitlist(state, branch));
+  state.label_waitlist ??= [];
+  if (existing) existing.copies = total;
+  else
+    state.label_waitlist.push({
+      id: createId("clearance-label"),
+      company_id: state.config.company.seed_key,
+      branch,
+      branch_id: branch,
+      product_code: productCode,
+      lot_id: lotId,
+      copies: total,
+      added_by: actor.name,
+      added_at: new Date().toISOString(),
+    });
+  record(
+    state,
+    actor,
+    branch,
+    "Add to waitlist",
+    true,
+    before,
+    structuredClone(branchLabelWaitlist(state, branch)),
+  );
+}
+
+export function setLabelWaitlistLot(
+  state: DemoState,
+  id: string,
+  lotId: string | undefined,
+  branch: Branch,
+  actor: LabelActor,
+): void {
+  permittedBranch(state, branch, actor);
+  const item = branchLabelWaitlist(state, branch).find(
+    (entry) => entry.id === id,
+  );
+  if (!item) throw new LabelWorkflowError("lot");
+  if (
+    lotId &&
+    !effectiveClearanceOffers(state, item.product_code, branch).some(
+      (offer) => offer.lot_id === lotId,
+    )
+  )
+    throw new LabelWorkflowError("lot");
+  if (item.lot_id === lotId) return;
+  const duplicate = branchLabelWaitlist(state, branch).find(
+    (entry) =>
+      entry.id !== id &&
+      entry.product_code === item.product_code &&
+      entry.lot_id === lotId,
+  );
+  const copies = duplicate
+    ? copiesValue(duplicate.copies + item.copies)
+    : item.copies;
+  const before = structuredClone(branchLabelWaitlist(state, branch));
+  if (duplicate) {
+    duplicate.copies = copies;
+    state.label_waitlist = state.label_waitlist!.filter(
+      (entry) => entry.id !== id,
+    );
+  } else item.lot_id = lotId;
+  record(
+    state,
+    actor,
+    branch,
+    "Change label lot",
+    true,
+    before,
+    structuredClone(branchLabelWaitlist(state, branch)),
+  );
 }
 
 export function editLabelWaitlist(
@@ -209,6 +310,10 @@ export function clearLabelWaitlist(
     record(state, actor, branch, "Clear waitlist", true, before, []);
 }
 
+export type LabelPrintProduct = Product & {
+  label_lot_id?: string;
+  label_clearance_offer?: Offer;
+};
 export interface LabelPrintSnapshot {
   id: string;
   company_id: string;
@@ -216,8 +321,8 @@ export interface LabelPrintSnapshot {
   template: LabelTemplate;
   startSlot: number;
   entries: LabelWaitlistItem[];
-  products: Product[];
-  pages: (Product | null)[][];
+  products: LabelPrintProduct[];
+  pages: (LabelPrintProduct | null)[][];
 }
 export function prepareLabelPrint(
   state: DemoState,
@@ -234,11 +339,21 @@ export function prepareLabelPrint(
     throw new LabelWorkflowError("template");
   validateLabelTemplate(template, state.label_settings?.fields?.logo !== false);
   const entries = structuredClone(branchLabelWaitlist(state, branch));
-  const products = entries.flatMap((entry) =>
-    Array<Product>(copiesValue(entry.copies)).fill(
-      structuredClone(approvedProduct(state, entry.product_code, branch)),
-    ),
-  );
+  const products = entries.flatMap((entry) => {
+    const product = structuredClone(
+      approvedProduct(state, entry.product_code, branch),
+    ) as LabelPrintProduct;
+    if (entry.lot_id) {
+      const offer = effectiveClearanceOffers(state, product, branch).find(
+        (item) => item.lot_id === entry.lot_id,
+      );
+      if (!offer || template.style !== "promo")
+        throw new LabelWorkflowError("lot");
+      product.label_lot_id = entry.lot_id;
+      product.label_clearance_offer = structuredClone(offer);
+    }
+    return Array<LabelPrintProduct>(copiesValue(entry.copies)).fill(product);
+  });
   return {
     id: createId("label-print"),
     company_id: state.config.company.seed_key,
@@ -463,7 +578,9 @@ export function filterLabelProducts(
     return (
       (!filters.arrived || arrived) &&
       (!filters.changed || recent) &&
-      (!filters.onOffer || Boolean(effectiveOffer(state, product, branch))) &&
+      (!filters.onOffer ||
+        Boolean(effectiveOffer(state, product, branch)) ||
+        effectiveClearanceOffers(state, product, branch).length > 0) &&
       (!filters.pricing || product.pricing_category === filters.pricing) &&
       (!filters.category || product.ai_category === filters.category) &&
       (!filters.supplier || product.main_supplier === filters.supplier)

@@ -1,4 +1,8 @@
 import Decimal from "decimal.js";
+import {
+  signedReturnPickupQuantities,
+  retainedReturnSettlementEvidence,
+} from "./signed-return-pickups";
 import { companyDate } from "./invoice";
 import { configuredBranches } from "./settings";
 import { projectExpiryLocation } from "./received";
@@ -18,6 +22,8 @@ export interface OperationsContext {
   branch: Branch;
   role: Role;
   actor: string;
+  /** Explicit account capability; no role acquires it implicitly. */
+  pickup_correction_authority?: "owner" | "manager";
 }
 export type Disposition =
   "supplier_held" | "unsafe_on_site" | "recovered_sellable";
@@ -35,6 +41,16 @@ export interface EvidenceEvent {
   product_code?: string;
   actual_qty?: number;
   invoice_id?: string;
+  shortfalls?: Record<
+    string,
+    {
+      reason: string;
+      outcome: "keep_for_next_pickup" | "put_back_on_shelf" | "throw_away";
+      quantity: number;
+    }
+  >;
+  corrects_event_id?: string;
+  before_quantities?: Record<string, number>;
 }
 export interface ReturnClaim {
   id: string;
@@ -52,6 +68,7 @@ export interface ReturnClaim {
   submitted_by: string;
   at: string;
   posted_by?: string;
+  item_amounts?: Record<string, string>;
 }
 export type OperationalReturn = ReturnRecord & {
   evidence?: EvidenceEvent[];
@@ -172,11 +189,7 @@ function getReturn(
     (item) => item.id === returnId && belongs(item, context),
   ) as OperationalReturn | undefined;
   if (!record) fail("scope");
-  // Seed replacement evidence is an existing receipt, never receive it again.
-  if (record.replacement_received && record.lines.length === 1) {
-    record.lines[0].settled ??= record.replacement_received.covers_original_qty;
-    record.lines[0].picked_up ??= record.lines[0].qty;
-  }
+  // Retained legacy evidence is read without filling or rewriting its projections.
   return record;
 }
 function audit(
@@ -254,11 +267,51 @@ function history(
     id: id("evidence"),
     at: now(),
     by: context.actor,
-    ...event,
+    ...structuredClone(event),
   });
 }
-function settled(line: ReturnRecord["lines"][number]) {
-  return line.settled ?? line.replaced ?? 0;
+function settled(line: ReturnRecord["lines"][number], record?: ReturnRecord) {
+  return record
+    ? (retainedReturnSettlementEvidence(record).quantities.get(
+        line.product_code,
+      ) ?? 0)
+    : Math.max(line.settled ?? 0, line.replaced ?? 0);
+}
+export function returnUnpickedQuantity(
+  record: ReturnRecord,
+  line: ReturnRecord["lines"][number],
+) {
+  const discarded =
+    line.pickup_shortfall?.outcome === "throw_away"
+      ? line.pickup_shortfall.quantity
+      : 0;
+  return Decimal.max(
+    0,
+    new Decimal(line.qty)
+      .minus(
+        line.picked_up ??
+          (record.replacement_received && record.lines.length === 1
+            ? line.qty
+            : 0),
+      )
+      .minus((record as OperationalReturn).recovered?.[line.product_code] ?? 0)
+      .minus(discarded),
+  ).toNumber();
+}
+function disposedQuantity(line: ReturnRecord["lines"][number]) {
+  return line.pickup_shortfall &&
+    line.pickup_shortfall.outcome !== "keep_for_next_pickup"
+    ? line.pickup_shortfall.quantity
+    : 0;
+}
+function requireSignedPickup(
+  record: OperationalReturn,
+  codes?: readonly string[],
+) {
+  const signed = signedReturnPickupQuantities(record);
+  if (!signed.size || codes?.some((code) => (signed.get(code) ?? 0) <= 0))
+    fail("pickup_required");
+  return signed;
 }
 function validateCoverage(
   state: DemoState,
@@ -266,8 +319,17 @@ function validateCoverage(
   covers: Record<string, number>,
   includePending = true,
 ) {
+  const signed = requireSignedPickup(
+    record,
+    Object.entries(covers)
+      .filter(([, count]) => count > 0)
+      .map(([code]) => code),
+  );
+  const retained = retainedReturnSettlementEvidence(record);
   let total = 0;
   for (const [code, count] of Object.entries(covers)) {
+    if (count > 0 && retained.blocked.has(code))
+      fail("return_settlement_evidence");
     const line = record.lines.find((item) => item.product_code === code);
     if (!line) fail("product");
     returnQuantity(state, line, count, true);
@@ -280,7 +342,12 @@ function validateCoverage(
           )
           .toNumber()
       : 0;
-    if (new Decimal(count).plus(settled(line)).plus(pending).gt(line.qty))
+    if (
+      new Decimal(count)
+        .plus(settled(line, record))
+        .plus(pending)
+        .gt(signed.get(code) ?? 0)
+    )
       fail("coverage");
     total += count;
   }
@@ -291,12 +358,19 @@ function applyCoverage(
   covers: Record<string, number>,
 ) {
   for (const line of record.lines)
-    line.settled = new Decimal(settled(line))
+    line.settled = new Decimal(settled(line, record))
       .plus(covers[line.product_code] ?? 0)
       .toNumber();
-  record.status = record.lines.every((line) => settled(line) >= line.qty)
+  record.status = record.lines.every((line) =>
+    new Decimal(settled(line, record))
+      .plus(disposedQuantity(line))
+      .gte(line.qty),
+  )
     ? "resolved"
-    : "partially_resolved";
+    : record.lines.some((line) => (line.picked_up ?? 0) > 0)
+      ? "partially_resolved"
+      : "open";
+  return record.status;
 }
 export function recordPickup(
   state: DemoState,
@@ -308,10 +382,21 @@ export function recordPickup(
     slip: string;
     photo?: string;
     note?: string;
+    shortfalls?: Record<
+      string,
+      {
+        reason: string;
+        outcome: "keep_for_next_pickup" | "put_back_on_shelf" | "throw_away";
+      }
+    >;
   },
 ) {
   const record = getReturn(state, context, returnId);
-  if (record.status === "cancelled" || record.status === "cancellation_review")
+  if (
+    record.status === "cancelled" ||
+    record.status === "cancellation_review" ||
+    record.status === "resolved"
+  )
     fail("closed");
   if (!input.representative.trim() || !input.slip.trim())
     fail("pickup_evidence");
@@ -326,11 +411,17 @@ export function recordPickup(
     );
     if (
       !sameQuantities ||
-      existingPickup.representative !== input.representative.trim()
+      existingPickup.representative !== input.representative.trim() ||
+      Object.entries(existingPickup.shortfalls ?? {}).some(
+        ([code, decision]) =>
+          input.shortfalls?.[code]?.reason.trim() !== decision.reason ||
+          input.shortfalls?.[code]?.outcome !== decision.outcome,
+      )
     )
       fail("duplicate_document");
     return;
   }
+  const shortfalls: NonNullable<EvidenceEvent["shortfalls"]> = {};
   let total = 0;
   for (const line of record.lines) {
     const count = returnQuantity(
@@ -339,16 +430,28 @@ export function recordPickup(
       input.quantities[line.product_code] ?? 0,
       true,
     );
-    if (
-      new Decimal(count)
-        .plus(line.picked_up ?? 0)
-        .plus(record.recovered?.[line.product_code] ?? 0)
-        .gt(line.qty)
-    )
-      fail("pickup_cap");
+    const remaining = returnUnpickedQuantity(record, line);
+    if (new Decimal(count).gt(remaining)) fail("pickup_cap");
+    const leftover = new Decimal(remaining).minus(count).toNumber();
+    if (leftover > 0) {
+      const decision = input.shortfalls?.[line.product_code];
+      if (!decision?.reason.trim()) fail("pickup_shortfall_reason");
+      if (
+        !decision ||
+        !["keep_for_next_pickup", "put_back_on_shelf", "throw_away"].includes(
+          decision.outcome,
+        )
+      )
+        fail("pickup_shortfall_outcome");
+      shortfalls[line.product_code] = {
+        reason: decision.reason.trim(),
+        outcome: decision.outcome,
+        quantity: leftover,
+      };
+    }
     total += count;
   }
-  if (total === 0) fail("quantity");
+  if (total === 0 && !Object.keys(shortfalls).length) fail("quantity");
   if (
     Object.keys(input.quantities).some(
       (code) => !record.lines.some((line) => line.product_code === code),
@@ -366,12 +469,49 @@ export function recordPickup(
     line.unit_cost ??= memo.lines.find(
       (item) => item.product_code === line.product_code,
     )?.unit_cost;
+    const shortfall = shortfalls[line.product_code];
+    if (shortfall) {
+      line.pickup_shortfall = structuredClone(shortfall);
+      if (shortfall.outcome === "put_back_on_shelf") {
+        stock(
+          state,
+          context,
+          line.product_code,
+          shortfall.quantity,
+          "return_original_recovered",
+          memo.reference,
+          line.quantity_unit,
+        );
+        (record.recovered ??= {})[line.product_code] = new Decimal(
+          record.recovered?.[line.product_code] ?? 0,
+        )
+          .plus(shortfall.quantity)
+          .toNumber();
+        record.original_units_recovered = new Decimal(
+          record.original_units_recovered,
+        )
+          .plus(shortfall.quantity)
+          .toNumber();
+      }
+    } else if (line.pickup_shortfall?.outcome === "keep_for_next_pickup")
+      delete line.pickup_shortfall;
   }
   record.supplier_rep_name = input.representative.trim();
   record.signed_pickup_slip_reference = input.slip.trim();
   (record.pickup_memos ??= []).push(memo);
   record.picked_up_at ??= memo.picked_up_at;
-  if (record.status === "open") record.status = "picked_up";
+  record.pickup_completed = true;
+  if (
+    record.lines.every((line) =>
+      new Decimal(settled(line, record))
+        .plus(disposedQuantity(line))
+        .gte(line.qty),
+    )
+  ) {
+    record.status = "resolved";
+    record.closure_subtype = "written_off";
+  } else if (record.lines.some((line) => (line.picked_up ?? 0) > 0))
+    record.status = "picked_up";
   history(record, context, {
     kind: "pickup",
     document: input.slip.trim(),
@@ -379,8 +519,193 @@ export function recordPickup(
     photo: input.photo,
     note: input.note,
     quantities: input.quantities,
+    shortfalls,
   });
   audit(state, context, "return_pickup");
+  syncReturnCreditAlerts(state);
+}
+export function canCorrectReturnPickup(context: OperationsContext) {
+  return (
+    context.role === "supervisor" &&
+    ["owner", "manager"].includes(context.pickup_correction_authority ?? "")
+  );
+}
+/** Correct only the latest pickup snapshot, retaining its signed original and every posted settlement. */
+export function correctReturnPickup(
+  state: DemoState,
+  context: OperationsContext,
+  returnId: string,
+  input: {
+    memo_id: string;
+    quantities: Record<string, number>;
+    reason: string;
+    shortfalls?: Record<
+      string,
+      {
+        reason: string;
+        outcome: "keep_for_next_pickup" | "put_back_on_shelf" | "throw_away";
+      }
+    >;
+  },
+) {
+  if (!canCorrectReturnPickup(context)) fail("pickup_authority");
+  const record = getReturn(state, context, returnId);
+  if (["cancelled", "cancellation_review"].includes(record.status))
+    fail("closed");
+  if (!input.reason.trim()) fail("reason");
+  const original = record.pickup_memos?.at(-1);
+  if (!original || original.id !== input.memo_id)
+    fail("pickup_correction_conflict");
+  const before: Record<string, number> = {};
+  const after: Record<string, number> = {};
+  const shortfalls: NonNullable<EvidenceEvent["shortfalls"]> = {};
+  const shelfDeltas: Record<string, number> = {};
+  for (const line of record.lines) {
+    const oldCount =
+      original.lines.find((item) => item.product_code === line.product_code)
+        ?.quantity ?? 0;
+    before[line.product_code] = oldCount;
+    const newCount = returnQuantity(
+      state,
+      line,
+      input.quantities[line.product_code] ?? 0,
+      true,
+    );
+    after[line.product_code] = newCount;
+    const oldShortfall = line.pickup_shortfall;
+    const oldShelf =
+      oldShortfall?.outcome === "put_back_on_shelf" ? oldShortfall.quantity : 0;
+    const otherRecovered = new Decimal(
+      record.recovered?.[line.product_code] ?? 0,
+    ).minus(oldShelf);
+    const cumulative = new Decimal(line.picked_up ?? 0)
+      .minus(oldCount)
+      .plus(newCount);
+    const claimed = (record.claims ?? [])
+      .filter((claim) => claim.status === "submitted")
+      .reduce(
+        (total, claim) => total.plus(claim.covers[line.product_code] ?? 0),
+        new Decimal(0),
+      );
+    if (
+      cumulative.lt(new Decimal(settled(line, record)).plus(claimed)) ||
+      cumulative.plus(otherRecovered).gt(line.qty) ||
+      cumulative.lt(0)
+    )
+      fail("pickup_correction_conflict");
+    const leftover = new Decimal(line.qty)
+      .minus(cumulative)
+      .minus(otherRecovered)
+      .toNumber();
+    if (leftover > 0) {
+      const choice = input.shortfalls?.[line.product_code];
+      if (!choice?.reason.trim()) fail("pickup_shortfall_reason");
+      if (
+        !choice ||
+        !["keep_for_next_pickup", "put_back_on_shelf", "throw_away"].includes(
+          choice.outcome,
+        )
+      )
+        fail("pickup_shortfall_outcome");
+      shortfalls[line.product_code] = {
+        reason: choice.reason.trim(),
+        outcome: choice.outcome,
+        quantity: leftover,
+      };
+    }
+    shelfDeltas[line.product_code] = new Decimal(
+      shortfalls[line.product_code]?.outcome === "put_back_on_shelf"
+        ? leftover
+        : 0,
+    )
+      .minus(oldShelf)
+      .toNumber();
+  }
+  if (
+    Object.keys(input.quantities).some(
+      (code) => !record.lines.some((line) => line.product_code === code),
+    )
+  )
+    fail("product");
+  const at = now();
+  const memo = createReturnMemo(
+    state,
+    context,
+    record,
+    {
+      quantities: after,
+      representative: original.representative,
+      slip: original.signed_evidence_reference,
+    },
+    at,
+  );
+  memo.correction_of = original.id;
+  const correction = {
+    id: id("pickup-correction"),
+    company_id: context.company_id,
+    branch: record.branch,
+    return_id: record.id,
+    memo_id: memo.id,
+    previous_memo_id: original.id,
+    reason: input.reason.trim(),
+    by: context.actor,
+    at,
+    before,
+    after,
+  };
+  for (const line of record.lines) {
+    line.picked_up = new Decimal(line.picked_up ?? 0)
+      .minus(before[line.product_code])
+      .plus(after[line.product_code])
+      .toNumber();
+    const delta = shelfDeltas[line.product_code];
+    if (delta) {
+      stock(
+        state,
+        context,
+        line.product_code,
+        delta,
+        "return_pickup_correction",
+        correction.id,
+        line.quantity_unit,
+      );
+      (record.recovered ??= {})[line.product_code] = new Decimal(
+        record.recovered?.[line.product_code] ?? 0,
+      )
+        .plus(delta)
+        .toNumber();
+      record.original_units_recovered = new Decimal(
+        record.original_units_recovered,
+      )
+        .plus(delta)
+        .toNumber();
+    }
+    if (shortfalls[line.product_code])
+      line.pickup_shortfall = structuredClone(shortfalls[line.product_code]);
+    else delete line.pickup_shortfall;
+  }
+  (record.pickup_memos ??= []).push(memo);
+  (record.pickup_corrections ??= []).push(correction);
+  record.status = record.lines.every((line) =>
+    new Decimal(settled(line, record))
+      .plus(disposedQuantity(line))
+      .gte(line.qty),
+  )
+    ? "resolved"
+    : record.lines.some((line) => (line.picked_up ?? 0) > 0)
+      ? "partially_resolved"
+      : "open";
+  if (record.status !== "resolved") delete record.closure_subtype;
+  history(record, context, {
+    kind: "pickup_correction",
+    document: memo.reference,
+    corrects_event_id: original.id,
+    before_quantities: before,
+    quantities: after,
+    shortfalls,
+    note: input.reason.trim(),
+  });
+  audit(state, context, "return_pickup_corrected");
   syncReturnCreditAlerts(state);
 }
 export function receiveReplacement(
@@ -416,11 +741,14 @@ export function receiveReplacement(
     if (
       existingReplacement.product_code !== input.product_code ||
       existingReplacement.actual_qty !== input.qty ||
-      !sameCoverage
+      !sameCoverage ||
+      existingReplacement.representative !== input.representative.trim() ||
+      existingReplacement.received_date !== input.date
     )
       fail("duplicate_document");
     return;
   }
+  if (record.status === "resolved") fail("closed");
   const replacementProduct = state.products.find(
     (item) =>
       item.company_id === context.company_id &&
@@ -457,7 +785,7 @@ export function receiveReplacement(
     input.fully &&
     record.lines.some(
       (line) =>
-        !new Decimal(settled(line))
+        !new Decimal(settled(line, record))
           .plus(input.covers[line.product_code] ?? 0)
           .eq(line.qty),
     )
@@ -472,9 +800,9 @@ export function receiveReplacement(
     input.receipt,
     replacementUnit,
   );
-  applyCoverage(record, input.covers);
+  const coverageStatus = applyCoverage(record, input.covers);
   record.resolution = "replacement_received";
-  if (record.status === "resolved") record.closure_subtype = "replaced";
+  if (coverageStatus === "resolved") record.closure_subtype = "replaced";
   record.replacement_received = {
     product_code: input.product_code,
     qty: input.qty,
@@ -505,7 +833,11 @@ export function submitFinancialClaim(
   input: Omit<ReturnClaim, "id" | "status" | "submitted_by" | "at">,
 ) {
   const record = getReturn(state, context, returnId);
-  if (record.status === "cancelled" || record.status === "cancellation_review")
+  if (
+    record.status === "cancelled" ||
+    record.status === "cancellation_review" ||
+    record.status === "resolved"
+  )
     fail("closed");
   if (input.type === "no_compensation") {
     supervisor(context);
@@ -529,15 +861,14 @@ export function submitFinancialClaim(
       )
     )
       fail("invoice");
-    if (record.linked_invoice && record.linked_invoice !== input.invoice_id)
-      fail("single_invoice");
-    if (
-      (record.claims ?? []).some(
+    const linkedInvoice =
+      record.linked_invoice ??
+      record.claims?.find(
         (claim) =>
           claim.type.startsWith("credit_") && claim.status !== "disputed",
-      )
-    )
-      fail("single_credit");
+      )?.invoice_id;
+    if (linkedInvoice && linkedInvoice !== input.invoice_id)
+      fail("single_invoice");
   }
   if (
     input.document &&
@@ -553,7 +884,7 @@ export function submitFinancialClaim(
     fail("duplicate_document");
   validateCoverage(state, record, input.covers);
   (record.claims ??= []).push({
-    ...input,
+    ...structuredClone(input),
     id: id("claim"),
     status: "submitted",
     submitted_by: context.actor,
@@ -574,13 +905,18 @@ export function postReturnClaim(
   returnId: string,
   claimId: string,
   amountInput?: string,
+  itemAmountsInput?: Record<string, string>,
 ) {
   supervisor(context);
   const record = getReturn(state, context, returnId);
   const claim = record.claims?.find((item) => item.id === claimId);
   if (!claim) fail("claim");
   if (claim.status === "posted") return;
-  if (record.status === "cancelled" || record.status === "cancellation_review")
+  if (
+    record.status === "cancelled" ||
+    record.status === "cancellation_review" ||
+    record.status === "resolved"
+  )
     fail("closed");
   if (claim.status !== "submitted") fail("claim");
   validateCoverage(state, record, claim.covers, false);
@@ -588,6 +924,25 @@ export function postReturnClaim(
     if (!claim.document?.trim()) fail("credit_document");
     const amount = exactMoney(amountInput ?? claim.amount ?? "0");
     if (decimalAmount(amount).lte(0)) fail("amount");
+    const coveredCodes = Object.keys(claim.covers).filter(
+      (code) => claim.covers[code] > 0,
+    );
+    const itemAmounts =
+      itemAmountsInput ??
+      claim.item_amounts ??
+      (coveredCodes.length === 1 ? { [coveredCodes[0]]: amount } : undefined);
+    if (
+      !itemAmounts ||
+      Object.keys(itemAmounts).length !== coveredCodes.length ||
+      coveredCodes.some(
+        (code) => !itemAmounts[code] || decimalAmount(itemAmounts[code]).lte(0),
+      ) ||
+      Object.keys(itemAmounts).some((code) => !coveredCodes.includes(code)) ||
+      !Object.values(itemAmounts)
+        .reduce((sum, value) => sum.plus(exactMoney(value)), new Decimal(0))
+        .eq(amount)
+    )
+      fail("item_credit_amount");
     const credit = claim.type.startsWith("credit_");
     if (
       credit &&
@@ -639,15 +994,16 @@ export function postReturnClaim(
       posted_by: context.actor,
     } as OperationalLedger);
     claim.amount = amount;
+    claim.item_amounts = structuredClone(itemAmounts);
     record.compensation_amount = amount;
     record.credit_document = claim.document;
     if (credit) record.linked_invoice = claim.invoice_id;
   }
+  const coverageStatus = applyCoverage(record, claim.covers);
   claim.status = "posted";
   claim.posted_by = context.actor;
-  applyCoverage(record, claim.covers);
   record.resolution = claim.type;
-  if (record.status === "resolved")
+  if (coverageStatus === "resolved")
     record.closure_subtype =
       claim.type === "no_compensation" ? "written_off" : "credited";
   history(record, context, {
@@ -691,6 +1047,11 @@ export function cancelReturn(
     if (
       new Decimal(count)
         .plus(record.recovered?.[line.product_code] ?? 0)
+        .plus(
+          line.pickup_shortfall?.outcome === "throw_away"
+            ? line.pickup_shortfall.quantity
+            : 0,
+        )
         .gt(line.qty)
     )
       fail("recovery_cap");
@@ -737,7 +1098,7 @@ export function cancelReturn(
   record.cancellation_reason = input.reason.trim();
   record.cancellation_dispositions = input.dispositions;
   const existingSettlement =
-    record.lines.some((line) => settled(line) > 0) ||
+    record.lines.some((line) => settled(line, record) > 0) ||
     !!record.replacement_received ||
     record.claims?.some((claim) => claim.status === "posted");
   record.previous_status = record.status;
@@ -1277,6 +1638,38 @@ export function operationError(
     pickup_cap: [
       "Pickup quantity exceeds the original units still awaiting pickup.",
       "تعداد جمع‌آوری از تعداد اصلی منتظر جمع‌آوری بیشتر است.",
+    ],
+    pickup_required: [
+      "Record the actual pickup and signed paper evidence before recording a resolution.",
+      "پیش از ثبت حل‌وفصل، جمع‌آوری واقعی و مدرک کاغذی امضاشده را ثبت کنید.",
+    ],
+    pickup_shortfall_reason: [
+      "Enter a reason for each quantity not picked up.",
+      "برای هر تعداد جمع‌آوری‌نشده دلیل وارد کنید.",
+    ],
+    pickup_shortfall_outcome: [
+      "Choose what happens to the goods not picked up.",
+      "نتیجه کالای جمع‌آوری‌نشده را انتخاب کنید.",
+    ],
+    pickup_authority: [
+      "Only an authorized Owner or Manager can correct a pickup.",
+      "فقط مالک یا مدیر مجاز می‌تواند جمع‌آوری را اصلاح کند.",
+    ],
+    pickup_correction_conflict: [
+      "This pickup has changed or has settled quantities. Review the current pickup and resolution before correcting it.",
+      "این جمع‌آوری تغییر کرده یا تعداد تسویه‌شده دارد. پیش از اصلاح، جمع‌آوری و حل‌وفصل جاری را بررسی کنید.",
+    ],
+    outstanding_date: [
+      "Enter an expected date for each outstanding item.",
+      "برای هر قلم باقی‌مانده تاریخ مورد انتظار وارد کنید.",
+    ],
+    return_settlement_evidence: [
+      "Review the retained settlement evidence before recording another outcome.",
+      "پیش از ثبت نتیجه دیگر، مدارک تسویه نگهداری‌شده را بررسی کنید.",
+    ],
+    item_credit_amount: [
+      "Enter each item's actual credit amount. Their total must match the verified credit note.",
+      "مبلغ واقعی اعتبار هر قلم را وارد کنید. جمع آن‌ها باید با یادداشت اعتبار تأییدشده برابر باشد.",
     ],
     coverage: [
       "Covered original quantities exceed the unsettled return. Check each line.",

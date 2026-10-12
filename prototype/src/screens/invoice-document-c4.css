@@ -27,7 +27,7 @@
   min-inline-size: 0;
   inline-size: 100%;
   overflow: auto;
-  background: white;
+  background: var(--klead-white);
   block-size: clamp(260px, 60vh, 720px);
 }
 .invoice-original-media img,
@@ -86,7 +86,7 @@
 }
 .invoice-correction-line {
   background: var(--surface-soft);
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   padding: 20px;
 }
 .invoice-correction-line h3 {

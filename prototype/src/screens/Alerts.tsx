@@ -15,6 +15,7 @@ import {
   ProductName,
 } from "../presentation";
 import { branchLabel, sellingBranches } from "../settings";
+import { dateReminderMessage } from "../date-tracking";
 import "./financial-polish.css";
 import {
   Badge,
@@ -148,7 +149,9 @@ export function Alerts() {
                           "Return waiting for credit",
                           "مرجوعی در انتظار اعتبار",
                         )
-                      : t("Barcode conflict", "تداخل بارکد");
+                      : alert.type === "date_reminder"
+                        ? t("Date tracking", "پیگیری تاریخ")
+                        : t("Barcode conflict", "تداخل بارکد");
         return (
           <Card key={alert.id} title={title} className="alert-card">
             <div className="row">
@@ -183,7 +186,18 @@ export function Alerts() {
               </Badge>
             </div>
             <p className="muted alert-branch">{branchName(alert.branch)}</p>
-            {alert.type === "return_credit_overdue" ? (
+            {alert.type === "date_reminder" ? (
+              <>
+                <p>{dateReminderMessage(state, alert, lang)}</p>
+                <Button asChild variant="secondary">
+                  <a
+                    href={`#expiry?product=${encodeURIComponent(alert.product_code)}`}
+                  >
+                    {t("Date tracking", "پیگیری تاریخ")}
+                  </a>
+                </Button>
+              </>
+            ) : alert.type === "return_credit_overdue" ? (
               <>
                 <p>{alert.supplier}</p>
                 <p className="muted">

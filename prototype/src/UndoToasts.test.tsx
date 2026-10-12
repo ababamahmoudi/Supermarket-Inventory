@@ -79,7 +79,7 @@ describe("Undo toast integration", () => {
     fireEvent.blur(undo, {
       relatedTarget: screen.getByText("Change date entry"),
     });
-    act(() => vi.advanceTimersByTime(8999));
+    act(() => vi.advanceTimersByTime(6999));
     expect(screen.getByTestId("undo-toast")).toBeVisible();
     act(() => vi.advanceTimersByTime(1));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
@@ -99,25 +99,23 @@ describe("Undo toast integration", () => {
     );
     await act(async () => fireEvent.click(screen.getByText("Close dialog")));
     expect(screen.getByTestId("undo-toast").closest("dialog")).toBeNull();
-    act(() => vi.advanceTimersByTime(9000));
+    act(() => vi.advanceTimersByTime(7000));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
-  it("resumes a paused item when three newer messages hide it", () => {
+  it("a new eligible action replaces the paused message", () => {
     render(
       <DemoProvider>
         <Harness />
       </DemoProvider>,
     );
     fireEvent.click(screen.getByText("Change date entry"));
-    act(() => vi.advanceTimersByTime(1000));
     const first = screen.getByTestId("undo-toast");
     fireEvent.mouseEnter(first);
-    for (let index = 0; index < 3; index++)
-      fireEvent.click(screen.getByText("Change date entry"));
-    expect(first.hidden).toBe(true);
-    act(() => vi.advanceTimersByTime(9000));
+    fireEvent.click(screen.getByText("Change date entry"));
     expect(first).not.toBeInTheDocument();
-    expect(screen.getAllByTestId("undo-toast")).toHaveLength(3);
+    expect(screen.getAllByTestId("undo-toast")).toHaveLength(1);
+    act(() => vi.advanceTimersByTime(8000));
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
   it("restores through the signed-in domain API and appends the actor's Undone audit", () => {
     render(
@@ -134,43 +132,29 @@ describe("Undo toast integration", () => {
     expect(screen.getByTestId("date-status")).toHaveTextContent("active");
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
-  it("shows three newest toasts plus the extra count and keeps hidden timers running", () => {
+  it("dismisses the message without reversing the action", () => {
     render(
       <DemoProvider>
         <Harness />
       </DemoProvider>,
     );
-    for (let i = 0; i < 5; i++) {
-      fireEvent.click(screen.getByText("Change date entry"));
-      act(() => vi.advanceTimersByTime(500));
-    }
-    expect(
-      screen.getAllByTestId("undo-toast").filter((node) => !node.hidden),
-    ).toHaveLength(3);
-    expect(screen.getByText("+2 more")).toBeVisible();
-    act(() => vi.advanceTimersByTime(7500));
-    expect(screen.getAllByTestId("undo-toast")).toHaveLength(4);
-    act(() => vi.advanceTimersByTime(500));
-    expect(screen.queryByText(/more/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Change date entry"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Dismiss Undo message" }),
+    );
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    expect(screen.getByTestId("date-status")).toHaveTextContent("cleared");
   });
-  it("hovering one toast preserves only its own remaining display time", () => {
+  it("never stacks repeated eligible actions", () => {
     render(
       <DemoProvider>
         <Harness />
       </DemoProvider>,
     );
-    fireEvent.click(screen.getByText("Change date entry"));
-    act(() => vi.advanceTimersByTime(1000));
-    const older = screen.getByTestId("undo-toast");
-    fireEvent.mouseEnter(older);
-    fireEvent.click(screen.getByText("Change date entry"));
-    act(() => vi.advanceTimersByTime(10000));
-    expect(screen.getAllByTestId("undo-toast")).toEqual([older]);
-    fireEvent.mouseLeave(older);
-    act(() => vi.advanceTimersByTime(8999));
-    expect(older).toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(1));
-    expect(older).not.toBeInTheDocument();
+    for (let i = 0; i < 5; i++)
+      fireEvent.click(screen.getByText("Change date entry"));
+    expect(screen.getAllByTestId("undo-toast")).toHaveLength(1);
+    expect(screen.queryByText(/more/)).not.toBeInTheDocument();
   });
   it("Persian localizes Undo and the action without changing timer duration", () => {
     render(
@@ -183,7 +167,7 @@ describe("Undo toast integration", () => {
     fireEvent.click(screen.getByText("Persian"));
     expect(screen.getByRole("button", { name: /^واگرد$/ })).toBeVisible();
     expect(screen.getByTestId("undo-toast")).toHaveTextContent("تاریخ پاک شد");
-    act(() => vi.advanceTimersByTime(9000));
+    act(() => vi.advanceTimersByTime(7000));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
 });

@@ -133,7 +133,13 @@ describe("C4 New item order presentation", () => {
       const { container } = render(
         <OrderPrintDocument
           order={order}
-          config={state.config}
+          config={{
+            ...state.config,
+            supplier_documents: {
+              return_memo: "en",
+              supplier_order: "bilingual",
+            },
+          }}
           language={language}
         />,
       );

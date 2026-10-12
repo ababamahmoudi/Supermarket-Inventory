@@ -21,6 +21,14 @@ function context(
 describe("C1 dashboard uses receiving evidence rather than inventory estimates", () => {
   it("keeps arrivals unchanged when obsolete estimated stock changes", () => {
     const state = initialState();
+    const invoice = structuredClone(state.invoices![0]);
+    state.invoices!.push({
+      ...invoice,
+      id: "current-week-receipt",
+      supplier_invoice_number: "CURRENT-WEEK-RECEIPT",
+      received_at: new Date().toISOString(),
+      posted_at: new Date().toISOString(),
+    });
     const before = dashboardArrivals(state, context(state));
     expect(before.length).toBeGreaterThan(0);
     state.stock = { "Warehouse:0001": 999999, "Branch 1:0001": -999999 };

@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-11 — C5 approval and C6/C7 specifications
+
+- Owner approved C5. Every required check passed before its history-preserving merge at 2dbb64aab13cdbb6ecfe5a540c590ebb32c503ce; C6 starts from that main and C7 stacks on C6 without an intermediate review pause. Neither new PR is automatically merged.
+- Replaced design-language completely with Klead v1 before implementation and updated requirements/model/workflows/screens/policy/questions/decisions. Recorded all 43items: adaptive intermediate layouts, quiet Undo/linked validation, same-form dates/reminders, company product/local lots/clearance, manual invoice defaults/local time, immutable partial returns, supplier-document languages and verified IndexedDB file migration.
+- Preserved all 19original owner reference PNGs unchanged with SHA256 manifest under design-references; added acceptance and screenshot matrix. This entry records completed specifications/merge gate, **not completed implementation or unexecuted test results**. Final test/capture evidence is added after actual verification.
+
 ## 2026-10-10 — C5 implementation and final review evidence
 
 - Restored 12 px/40 px intrinsic text actions, consistent blue/red glow, uniform top-bar controls and a single target-language circle. Integrated Columns with result counts; fixed posted invoice header/totals, whole-page original controls, return header/status/policy and two-line weighed prices while preserving approved dashboard/Approvals layouts.

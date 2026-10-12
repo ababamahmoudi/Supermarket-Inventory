@@ -33,9 +33,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("3");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
@@ -51,12 +49,15 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
   await page
     .getByRole("button", { name: "Record resolution", exact: true })
     .click();
-  await page
-    .getByLabel(
-      "Sour Cherry Juice 1 L · Original units this settlement covers",
-      { exact: true },
-    )
-    .fill("1");
+  await chooseOption(
+    page,
+    page.getByRole("combobox", { name: "Outcome", exact: true }),
+    "replaced",
+    "Replaced",
+  );
+  await page.getByLabel("Original quantity covered", { exact: true }).fill("1");
+  await page.getByLabel("Remaining expected date", { exact: true }).click();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
   await page
     .getByLabel("Actual replacement quantity", { exact: true })
     .fill("2");
@@ -73,10 +74,11 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Replacement receipt reference", { exact: true })
     .fill("DEMO-REPLACE-001");
   await page
-    .getByRole("button", { name: "Receive replacement", exact: true })
+    .locator(".return-action-card")
+    .getByRole("button", { name: "Record resolution", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Pending credit was released",
+    "Recorded item resolutions",
   );
   const after = await stored(page);
   expect(after.ledger).toEqual(before.ledger);
@@ -393,9 +395,7 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("1");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("1");
   const beforePickup = await stored(page);
   await page
     .getByRole("button", { name: "Record pickup", exact: true })

@@ -11,6 +11,11 @@ const actions: Record<string, [string, string]> = {
   "Mark ordered": ["Mark ordered", "علامت سفارش‌داده‌شده"],
   "Save draft": ["Save draft", "ذخیره پیش‌نویس"],
   "Edit draft": ["Edit draft", "ویرایش پیش‌نویس"],
+  "Remove line": ["Remove line", "حذف ردیف"],
+  "Supplier document settings changed": [
+    "Supplier document settings changed",
+    "تنظیمات اسناد تأمین‌کننده تغییر کرد",
+  ],
   "Company settings changed": [
     "Company settings changed",
     "تنظیمات شرکت تغییر کرد",
@@ -39,6 +44,10 @@ const actions: Record<string, [string, string]> = {
   "Return settings changed": [
     "Return settings changed",
     "تنظیمات مرجوعی تغییر کرد",
+  ],
+  "Date tracking settings changed": [
+    "Date tracking settings changed",
+    "تنظیمات پیگیری تاریخ تغییر کرد",
   ],
   "Return memo printed": ["Return memo printed", "رسید مرجوعی چاپ شد"],
   "Order settings changed": [

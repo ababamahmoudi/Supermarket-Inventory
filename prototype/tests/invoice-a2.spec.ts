@@ -42,7 +42,11 @@ test("each invoice line requires one date answer, collapses when confirmed and o
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   const first = lines.first();
   await first
     .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
@@ -238,10 +242,10 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(
     await original.evaluate((image: HTMLImageElement) => image.naturalWidth),
   ).toBeGreaterThan(0);
-  const source = await original.evaluate((image) => {
+  const source = await original.evaluate(async (image) => {
     const data = image.getAttribute("src")!;
     const document = new DOMParser().parseFromString(
-      decodeURIComponent(data.slice(data.indexOf(",") + 1)),
+      await (await fetch(data)).text(),
       "image/svg+xml",
     );
     return {
@@ -279,7 +283,34 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(invoice.supplier_invoice_number).toBe("FV-20390");
   expect(invoice.status).toBe("posted");
   expect(invoice.file_type).toBe("image/svg+xml");
-  expect(source.data).toBe(invoice.file_data);
+  expect(invoice.file_data).toMatch(/^idb-file:v1:/);
+  const retainedSource = await page.evaluate(async (reference: string) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("supermarket-prototype-files-v1", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const record = await new Promise<{ source: Blob }>((resolve, reject) => {
+        const request = database
+          .transaction("files", "readonly")
+          .objectStore("files")
+          .get(reference);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return record.source.text();
+    } finally {
+      database.close();
+    }
+  }, invoice.file_data);
+  expect(retainedSource).toContain("Fresh Valley Foods");
+  expect(retainedSource).toContain(invoice.final_total);
+  expect(retainedSource).toBe(
+    await original.evaluate(async (image) =>
+      (await fetch(image.getAttribute("src")!)).text(),
+    ),
+  );
   expect(source.text).toContain(invoice.final_total);
   const document = page.locator(".posted-invoice-document");
   await expect(document).toContainText("FV-20390");

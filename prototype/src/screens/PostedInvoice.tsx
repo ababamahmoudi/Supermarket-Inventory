@@ -1,3 +1,4 @@
+import { companyTimestampText } from "../company-time";
 import type { ReactNode } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
@@ -153,9 +154,7 @@ export function PostedInvoice({
             <dt>{t("Received at", "زمان دریافت")}</dt>
             <dd>
               <LtrText>
-                {invoice.received_at
-                  ? `${invoice.received_at.slice(0, 10)} ${invoice.received_at.slice(11, 16)}`
-                  : "—"}
+                {companyTimestampText(state.config, invoice.received_at)}
               </LtrText>
             </dd>
           </div>

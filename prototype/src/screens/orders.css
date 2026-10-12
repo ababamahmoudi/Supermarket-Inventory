@@ -99,7 +99,7 @@
 }
 .order-source-note {
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   background: var(--surface-soft);
 }
 .order-source-note > .row-between {
@@ -255,7 +255,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px 12px;
     padding: 16px;
-    border-radius: 16px;
+    border-radius: var(--radius-search);
     background: var(--surface-soft);
   }
   .order-items-table tbody td,
@@ -263,9 +263,9 @@
     display: block;
     min-inline-size: 0;
     padding: 0;
-    border-radius: 0;
+    border-radius: var(--radius-none);
     text-align: start;
-    background: transparent;
+    background: var(--color-clear);
   }
   .order-items-table tbody td:first-child {
     grid-column: 1 / -1;

@@ -78,10 +78,10 @@ The above are documented company defaults or explicit owner decisions, not new p
 
 ## C6/C7 questions pending an explicit owner answer (2026-10-11)
 
-| Question | Status and safe implementation boundary |
-| --- | --- |
-| Owner/Manager permission for Correct pickup: does existing Supervisor represent them, or is a separate permission required? | Asked; answer pending. Do not silently grant workers permission or introduce new roles. Immutable pickup, partial recording and append-only correction contract may be implemented independently. |
-| Dark Primary `#7397F0` with white fails4.5:1: use darker `#2B59C3` with white, or light blue with ink? | Asked; answer pending. Keep requested lighter dark accent for eligible links/icons, but do not claim an inaccessible white pairing passes. Owner choice recorded here and design-language before final styles. |
+| Question                                                                                                                    | Status and safe implementation boundary                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner/Manager permission for Correct pickup: does existing Supervisor represent them, or is a separate permission required? | Asked; answer pending. Do not silently grant workers permission or introduce new roles. Immutable pickup, partial recording and append-only correction contract may be implemented independently.              |
+| Dark Primary `#7397F0` with white fails4.5:1: use darker `#2B59C3` with white, or light blue with ink?                      | Asked; answer pending. Keep requested lighter dark accent for eligible links/icons, but do not claim an inaccessible white pairing passes. Owner choice recorded here and design-language before final styles. |
 
 ## C6 implementation contracts recorded before code
 

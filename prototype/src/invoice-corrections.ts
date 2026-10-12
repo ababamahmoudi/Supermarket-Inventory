@@ -1005,7 +1005,10 @@ export function attachPostedInvoiceOriginal(
   state: DemoState,
   context: OperationsContext,
   id: string,
-  file: Pick<DemoInvoice, "file_name" | "file_type" | "file_data">,
+  file: Pick<
+    DemoInvoice,
+    "file_name" | "file_type" | "file_data" | "file_size"
+  >,
 ): void {
   const original = originalInvoice(state, context, id);
   if (

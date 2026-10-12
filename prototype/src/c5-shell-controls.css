@@ -14,10 +14,10 @@
 :root .ui-select-search input:focus-visible {
   outline: 2px solid var(--secondary-border);
   outline-offset: 2px;
-  box-shadow: 0 2px 12px var(--secondary-glow-hover);
+  box-shadow: var(--shadow-none);
 }
 :root .ui-select {
-  box-shadow: 0 2px 12px var(--secondary-glow);
+  box-shadow: var(--shadow-none);
 }
 :root .ui-input[aria-invalid="true"],
 :root .field input[aria-invalid="true"],
@@ -32,7 +32,7 @@
 :root .filter-toolbar .filter-search-pill input.ui-input,
 :root .lookup-page .lookup-search-pill input.lookup-search {
   border: 0;
-  box-shadow: none;
+  box-shadow: var(--shadow-none);
 }
 
 /* Forty-pixel shell controls share the same resting blue border and glow. */
@@ -47,18 +47,18 @@
   border: 1px solid var(--secondary-border);
   background: var(--secondary-fill);
   color: var(--secondary-text);
-  box-shadow: 0 2px 12px var(--secondary-glow);
+  box-shadow: var(--shadow-none);
 }
 :root .topbar > .ui-icon-button,
 :root .topbar > .notifications-menu {
   inline-size: 40px;
   min-inline-size: 40px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
 }
 :root .topbar > .branch-pill,
 :root .topbar > .topbar-search {
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 :root .topbar > .branch-pill.static {
   display: inline-flex;
@@ -74,15 +74,15 @@
   max-block-size: 38px;
   padding-block: 0;
   border: 0;
-  border-radius: 999px;
-  background: transparent;
-  box-shadow: none;
+  border-radius: var(--radius-round);
+  background: var(--color-clear);
+  box-shadow: var(--shadow-none);
   outline: none;
 }
 :root .topbar-search:focus-within {
   outline: 2px solid var(--secondary-border);
   outline-offset: 2px;
-  box-shadow: 0 3px 18px var(--secondary-glow-hover);
+  box-shadow: var(--shadow-none);
 }
 :root .language-toggle {
   inline-size: 40px;
@@ -101,8 +101,8 @@
   block-size: 40px;
   min-block-size: 40px;
   border: 1px solid var(--secondary-border);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px var(--secondary-glow);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-none);
 }
 :root .sidebar .user-chip {
   padding: 0 8px;
@@ -131,7 +131,7 @@
   padding-inline-end: 52px;
 }
 :root .recent-user.ui-button {
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding-inline: 8px;
 }
 

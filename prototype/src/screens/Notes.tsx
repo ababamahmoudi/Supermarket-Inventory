@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Decimal from "decimal.js";
+import { WhatsMissing } from "../WhatsMissing";
 import { Plus, Pencil, Archive } from "lucide-react";
 import { useDemo } from "../store";
 import {
@@ -40,10 +42,10 @@ import {
   type NotebookDefinition,
   type NotebookContext,
   type NotebookEntry,
+  NOTEBOOK_EDIT_WINDOW,
 } from "../notebooks";
 import { branchLabel, configuredBranches } from "../settings";
 import { translateCount } from "../i18n";
-import { UNDO_DURATION } from "../undo-queue";
 import { notesText } from "../c-notes-i18n";
 import { NotebookEditor } from "./NotebookSettings";
 import type { NoteRecord } from "../types";
@@ -100,7 +102,7 @@ export function Notes() {
     const now = Date.now();
     const deadline = (state.notebook_entries ?? [])
       .filter((entry) => entry.by === context.actor && !entry.archived)
-      .map((entry) => Date.parse(entry.created_at) + UNDO_DURATION)
+      .map((entry) => Date.parse(entry.created_at) + NOTEBOOK_EDIT_WINDOW)
       .filter((time) => Number.isFinite(time) && time > now)
       .sort((left, right) => left - right)[0];
     if (deadline === undefined) return;
@@ -150,13 +152,15 @@ export function Notes() {
   const isBuiltin = !notebook && role !== "cashier";
   const locations = notebook
     ? notebookEntryLocations(state, notebook, context)
-    : [];
+    : configuredBranches(state.config).filter((location) =>
+        context.allowed_branches?.includes(location),
+      );
   const targetLocation = branch === "all" ? entryLocation : branch;
   const canChooseLocation = Boolean(
-    notebook && role === "supervisor" && branch === "all" && locations.length,
+    role === "supervisor" && branch === "all" && locations.length,
   );
   const canAdd = isBuiltin
-    ? branch !== "all"
+    ? locations.includes(targetLocation)
     : Boolean(notebook && locations.includes(targetLocation));
   const canSaveEdit = Boolean(
     editing && canEditNotebookEntry(state, context, editing.entry.id),
@@ -355,8 +359,66 @@ export function Notes() {
                 ? t("Edit note", "ویرایش یادداشت")
                 : t("Add note", "افزودن یادداشت")
             }
+            noValidate
             onSubmit={(event) => {
               event.preventDefault();
+              const missing: Partial<Record<NoteField, string>> = {};
+              if (!text.trim())
+                missing.text = t(
+                  "Enter a note before saving.",
+                  "پیش از ذخیره، یادداشت را وارد کنید.",
+                );
+              if (!editing && !locations.includes(targetLocation))
+                missing.location = notesText(t, "chooseLocation");
+              if (activeTab === "store_use" && !product)
+                missing.product = t(
+                  "Choose a product.",
+                  "یک کالا انتخاب کنید.",
+                );
+              if (
+                (activeTab === "store_use" && !qty) ||
+                (qty &&
+                  (!Number.isFinite(Number(qty)) ||
+                    Number(qty) <= 0 ||
+                    (isBuiltin && !Number.isSafeInteger(Number(qty)))))
+              )
+                missing.qty = isBuiltin
+                  ? t(
+                      "Enter a positive whole quantity.",
+                      "تعداد صحیح و مثبت وارد کنید.",
+                    )
+                  : t(
+                      "Enter a quantity greater than zero.",
+                      "تعداد بزرگ‌تر از صفر وارد کنید.",
+                    );
+              if (
+                notebook?.fields.date &&
+                date &&
+                (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+                  !Number.isFinite(Date.parse(`${date}T12:00:00Z`)) ||
+                  new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) !==
+                    date)
+              )
+                missing.date = t(
+                  "Choose a valid date.",
+                  "تاریخ معتبر انتخاب کنید.",
+                );
+              if (notebook?.fields.measurement && measurement.trim()) {
+                try {
+                  if (!new Decimal(measurement).isFinite())
+                    missing.measurement = t(
+                      "Enter a valid measurement number.",
+                      "عدد اندازه‌گیری معتبر وارد کنید.",
+                    );
+                } catch {
+                  missing.measurement = t(
+                    "Enter a valid measurement number.",
+                    "عدد اندازه‌گیری معتبر وارد کنید.",
+                  );
+                }
+              }
+              setFieldErrors(missing);
+              if (Object.keys(missing).length) return;
               const saved = run(
                 (draft) => {
                   if (editing)
@@ -383,12 +445,16 @@ export function Notes() {
                       measurement: measurement || undefined,
                     });
                   else
-                    addNote(draft, context, {
-                      type: activeTab as NoteRecord["type"],
-                      text,
-                      product_code: product || undefined,
-                      qty: qty ? Number(qty) : undefined,
-                    });
+                    addNote(
+                      draft,
+                      { ...context, branch: targetLocation },
+                      {
+                        type: activeTab as NoteRecord["type"],
+                        text,
+                        product_code: product || undefined,
+                        qty: qty ? Number(qty) : undefined,
+                      },
+                    );
                 },
                 editing
                   ? ["Saved changes.", "تغییرات ذخیره شد."]
@@ -401,6 +467,13 @@ export function Notes() {
               }
             }}
           >
+            <WhatsMissing
+              issues={Object.entries(fieldErrors).map(([field, message]) => ({
+                id: field,
+                fieldId: `note-${field}`,
+                message,
+              }))}
+            />
             <div className="form-grid">
               {!editing && canChooseLocation && (
                 <Field
@@ -408,6 +481,7 @@ export function Notes() {
                   error={fieldErrors.location}
                 >
                   <Select
+                    id="note-location"
                     value={entryLocation}
                     onChange={(value) => {
                       setEntryLocation(value);
@@ -429,6 +503,7 @@ export function Notes() {
                 error={fieldErrors.text}
               >
                 <textarea
+                  id="note-text"
                   value={text}
                   onChange={(event) => {
                     setText(event.target.value);
@@ -450,6 +525,7 @@ export function Notes() {
                   }
                 >
                   <Select
+                    id="note-product"
                     value={product}
                     onChange={(value) => {
                       setProduct(value);
@@ -489,6 +565,7 @@ export function Notes() {
                   }
                 >
                   <NumberField
+                    id="note-qty"
                     min="1"
                     step={isBuiltin ? "1" : "0.01"}
                     value={qty}
@@ -505,6 +582,7 @@ export function Notes() {
                   error={fieldErrors.date}
                 >
                   <DateField
+                    id="note-date"
                     value={date}
                     onChange={(value) => {
                       setDate(value);
@@ -520,6 +598,7 @@ export function Notes() {
                   label={`${t("Measurement", "اندازه‌گیری")} (${editing?.entry.measurement_unit ?? notebook.fields.measurement_unit})`}
                 >
                   <NumberField
+                    id="note-measurement"
                     step="0.1"
                     value={measurement}
                     onChange={(value) => {
@@ -549,7 +628,7 @@ export function Notes() {
               >
                 {t("Cancel", "لغو")}
               </Button>
-              <Button type="submit" disabled={editing ? !canSaveEdit : !canAdd}>
+              <Button type="submit">
                 {editing
                   ? t("Save changes", "ذخیره تغییرات")
                   : t("Save note", "ذخیره یادداشت")}

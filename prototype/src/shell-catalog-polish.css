@@ -44,8 +44,8 @@
 html[data-theme="dark"] .brand-logo-tile,
 html[data-theme="dark"] .signin-logo-tile {
   padding: 8px;
-  background: #fff;
-  border-radius: 12px;
+  background: var(--klead-white);
+  border-radius: var(--radius-control);
 }
 
 .sidebar .brand-logo-tile .brand-logo,
@@ -70,7 +70,7 @@ html[data-theme="dark"] .signin-logo-tile {
 }
 
 .sidebar .user-menu {
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 0;
   min-inline-size: 0;
   justify-content: flex-start;
@@ -78,7 +78,7 @@ html[data-theme="dark"] .signin-logo-tile {
 
 .sidebar .user-chip {
   min-inline-size: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   gap: 8px;
 }
 
@@ -95,7 +95,7 @@ html[data-theme="dark"] .signin-logo-tile {
 }
 
 .sidebar .user-avatar {
-  border-radius: 50%;
+  border-radius: var(--radius-round);
 }
 
 .sidebar nav .nav-count {
@@ -111,7 +111,7 @@ html[data-theme="dark"] .signin-logo-tile {
   display: none;
   inline-size: 6px;
   block-size: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--accent);
   position: absolute;
   inset-block-start: 8px;
@@ -128,7 +128,7 @@ html[data-theme="dark"] .signin-logo-tile {
 }
 
 .sidebar nav a[aria-disabled="true"]:hover {
-  background: transparent;
+  background: var(--color-clear);
 }
 
 .text-size-glyph {
@@ -144,7 +144,7 @@ html[data-theme="dark"] .signin-logo-tile {
   min-inline-size: 40px;
   min-block-size: 40px;
   padding: 10px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   overflow: visible;
 }
 
@@ -177,7 +177,7 @@ html[data-theme="dark"] .signin-logo-tile {
   inline-size: 18px;
   block-size: 18px;
   background: var(--surface);
-  border-radius: 4px;
+  border-radius: var(--radius-keycap);
   font-family: Inter, sans-serif;
   line-height: 1;
 }
@@ -202,8 +202,8 @@ html[data-theme="dark"] .signin-logo-tile {
   flex: 1;
   min-inline-size: 0;
   inline-size: 0;
-  background: transparent;
-  border-radius: 0;
+  background: var(--color-clear);
+  border-radius: var(--radius-none);
   outline: none;
 }
 
@@ -215,7 +215,7 @@ html[data-theme="dark"] .signin-logo-tile {
   block-size: 40px;
   min-block-size: 40px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   background: var(--search-fill);
   color: var(--text);
   cursor: pointer;

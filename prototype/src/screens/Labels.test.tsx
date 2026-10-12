@@ -58,9 +58,13 @@ describe("Label template validation and ordinary HTTP", () => {
     await user.click(screen.getByRole("button", { name: "New template" }));
     await user.clear(screen.getByLabelText("Template name"));
     await user.click(screen.getByRole("button", { name: /^Save template$/ }));
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Enter a template name.",
+    expect(
+      screen.getByRole("alert", { name: "What's missing" }),
+    ).toHaveTextContent("Enter a template name.");
+    await user.click(
+      screen.getByRole("link", { name: "Enter a template name." }),
     );
+    expect(screen.getByLabelText("Template name")).toHaveFocus();
     fireEvent.change(screen.getByLabelText("Template name"), {
       target: { value: "Shelf" },
     });
@@ -68,16 +72,16 @@ describe("Label template validation and ordinary HTTP", () => {
       target: { value: "0" },
     });
     await user.click(screen.getByRole("button", { name: /^Save template$/ }));
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Width must be greater than zero.",
-    );
+    expect(
+      screen.getByRole("alert", { name: "What's missing" }),
+    ).toHaveTextContent("Width must be greater than zero.");
     fireEvent.change(screen.getByLabelText("Width (mm)"), {
       target: { value: "220" },
     });
     await user.click(screen.getByRole("button", { name: /^Save template$/ }));
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Only 0 labels fit on A4.",
-    );
+    expect(
+      screen.getByRole("alert", { name: "What's missing" }),
+    ).toHaveTextContent("Only 0 labels fit on A4.");
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).templates,
     ).toHaveLength(2);
@@ -95,9 +99,17 @@ describe("Label template validation and ordinary HTTP", () => {
     expect(screen.getByLabelText("Height (mm)")).toHaveValue("148.5");
     expect(screen.getByText(/2 labels per sheet/)).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Archive template" }));
+    expect(screen.getByRole("button", { name: "Save template" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Save template" }));
     expect(
-      screen.getByRole("button", { name: "Save template" }),
-    ).toBeDisabled();
+      screen.getByRole("alert", { name: "What's missing" }),
+    ).toHaveTextContent("Restore it before editing or printing.");
+    await user.click(
+      screen.getByRole("link", { name: /This template is archived/ }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Restore template" }),
+    ).toHaveFocus();
     expect(
       JSON.parse(localStorage.getItem(STORAGE_KEY)!).templates,
     ).toHaveLength(2);

@@ -234,9 +234,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .locator(".return-header-card")
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
-  await page
-    .getByLabel("Sour Cherry Juice 1 L · Actual pickup units", { exact: true })
-    .fill("3");
+  await page.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await page
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
@@ -255,12 +253,15 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .locator(".return-header-card")
     .getByRole("button", { name: "Record resolution", exact: true })
     .click();
-  await page
-    .getByLabel(
-      "Sour Cherry Juice 1 L · Original units this settlement covers",
-      { exact: true },
-    )
-    .fill("1");
+  await chooseOption(
+    page,
+    page.getByRole("combobox", { name: "Outcome", exact: true }),
+    "replaced",
+    "Replaced",
+  );
+  await page.getByLabel("Original quantity covered", { exact: true }).fill("1");
+  await page.getByLabel("Remaining expected date", { exact: true }).click();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
   await page
     .getByLabel("Actual replacement quantity", { exact: true })
     .fill("2");
@@ -280,10 +281,11 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByLabel("Replacement receipt reference", { exact: true })
     .fill("A2-REPLACEMENT-001");
   await page
-    .getByRole("button", { name: "Receive replacement", exact: true })
+    .locator(".return-action-card")
+    .getByRole("button", { name: "Record resolution", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Replacement received. Pending credit was released for the covered quantities.",
+    "Recorded item resolutions. Credit claims require Supervisor verification.",
   );
   const received = await snapshot(page);
   expect(received.ledger).toEqual(before.ledger);

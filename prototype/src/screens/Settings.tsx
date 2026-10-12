@@ -1,6 +1,8 @@
 import { useEffect, useState, type SetStateAction } from "react";
 import { History, Plus } from "lucide-react";
 import { useDemo } from "../store";
+import { storeUploadedFile } from "../file-database";
+import { StoredFileImage } from "../stored-file";
 import {
   Badge,
   Button,
@@ -34,6 +36,8 @@ import WeighedItemsSettings from "./WeighedItemsSettings";
 import { NotebookSettings } from "./NotebookSettings";
 import { LabelsSettings } from "./Labels";
 import { ReturnsSettings } from "./ReturnsSettings";
+import { WhatsMissing } from "../WhatsMissing";
+import { DateText } from "../presentation";
 import "./settings-b.css";
 
 type Group =
@@ -325,27 +329,66 @@ function CompanySettings() {
       );
     }
   }
-  function logo(file: File) {
-    if (
-      !/^image\/(png|jpeg|webp)$/.test(file.type) ||
-      file.size > 2 * 1024 * 1024
-    ) {
+  async function logo(file: File) {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
       setErrorField("logo");
       setError(
         t(
-          "Use a PNG, JPEG or WebP logo smaller than 2 MB.",
-          "از نشان PNG، JPEG یا WebP کوچک‌تر از 2 مگابایت استفاده کنید.",
+          "Use a PNG, JPEG or WebP logo.",
+          "از نشان PNG، JPEG یا WebP استفاده کنید.",
         ),
       );
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () =>
-      setDraft((current) => ({ ...current, logo_data: String(reader.result) }));
-    reader.readAsDataURL(file);
+    try {
+      const stored = await storeUploadedFile(
+        file,
+        state.config.company.seed_key,
+        { purpose: "logo" },
+      );
+      setDraft((current) => ({ ...current, logo_data: stored.reference }));
+      setError(undefined);
+      setErrorField(undefined);
+    } catch {
+      setErrorField("logo");
+      setError(
+        t(
+          "The logo could not be saved. Allow browser storage and try again.",
+          "نشان ذخیره نشد. حافظهٔ مرورگر را فعال کنید و دوباره تلاش کنید.",
+        ),
+      );
+    }
   }
   return (
     <>
+      <WhatsMissing
+        issues={
+          error
+            ? [
+                {
+                  id: errorField ?? "company",
+                  message: error,
+                  fieldId:
+                    errorField === "name"
+                      ? !draft.name_en.trim()
+                        ? "company-name-en"
+                        : "company-name-fa"
+                      : errorField === "currency"
+                        ? "company-currency"
+                        : errorField === "timezone"
+                          ? "company-timezone"
+                          : errorField === "color"
+                            ? !/^#[0-9a-f]{6}$/i.test(
+                                draft.branding.primary_color,
+                              )
+                              ? "company-brand"
+                              : "company-dark-brand"
+                            : "company-logo",
+                },
+              ]
+            : []
+        }
+      />
       <Card
         title={t("Company details", "اطلاعات شرکت")}
         className="settings-form-card"
@@ -356,6 +399,7 @@ function CompanySettings() {
             error={!draft.name_en.trim() ? fieldError("name") : undefined}
           >
             <input
+              id="company-name-en"
               value={draft.name_en}
               onChange={(event) =>
                 setDraft({ ...draft, name_en: event.target.value })
@@ -367,6 +411,7 @@ function CompanySettings() {
             error={!draft.name_fa.trim() ? fieldError("name") : undefined}
           >
             <input
+              id="company-name-fa"
               dir="rtl"
               value={draft.name_fa}
               onChange={(event) =>
@@ -376,6 +421,7 @@ function CompanySettings() {
           </Field>
           <Field label={t("Currency", "ارز")} error={fieldError("currency")}>
             <input
+              id="company-currency"
               dir="ltr"
               maxLength={3}
               value={draft.currency}
@@ -392,6 +438,7 @@ function CompanySettings() {
             error={fieldError("timezone")}
           >
             <input
+              id="company-timezone"
               dir="ltr"
               value={draft.timezone}
               onChange={(event) =>
@@ -404,6 +451,7 @@ function CompanySettings() {
             error={fieldError("color")}
           >
             <input
+              id="company-brand"
               dir="ltr"
               value={draft.branding.primary_color}
               onChange={(event) =>
@@ -422,6 +470,7 @@ function CompanySettings() {
             error={fieldError("color")}
           >
             <input
+              id="company-dark-brand"
               dir="ltr"
               value={draft.branding.dark_primary_color}
               onChange={(event) =>
@@ -482,7 +531,12 @@ function CompanySettings() {
           </Switch>
         </div>
       </Card>
-      <Card title={t("Logo", "نشان")} className="settings-form-card">
+      <Card
+        id="company-logo"
+        tabIndex={-1}
+        title={t("Logo", "نشان")}
+        className="settings-form-card"
+      >
         {fieldError("logo") && (
           <p role="alert" className="form-error">
             {error}
@@ -497,9 +551,10 @@ function CompanySettings() {
           onRemove={() => setDraft({ ...draft, logo_data: undefined })}
         />
         {draft.logo_data && (
-          <img
+          <StoredFileImage
             className="settings-logo-preview"
-            src={draft.logo_data}
+            value={draft.logo_data}
+            companyId={state.config.company.seed_key}
             alt={t("Company logo", "نشان شرکت")}
           />
         )}
@@ -698,6 +753,26 @@ function BranchSettings() {
       >
         {editing && (
           <>
+            <WhatsMissing
+              issues={
+                error
+                  ? [
+                      {
+                        id: errorField ?? "branch",
+                        message: error,
+                        fieldId: ["name", "duplicate"].includes(
+                          errorField ?? "",
+                        )
+                          ? !editing.name_en.trim() ||
+                            errorField === "duplicate"
+                            ? "branch-name-en"
+                            : "branch-name-fa"
+                          : "branch-type",
+                      },
+                    ]
+                  : []
+              }
+            />
             <div className="form-grid settings-dialog-fields">
               <Field
                 label={t("Name (English)", "نام (انگلیسی)")}
@@ -709,6 +784,7 @@ function BranchSettings() {
                 }
               >
                 <input
+                  id="branch-name-en"
                   value={editing.name_en}
                   onChange={(event) =>
                     setEditing({ ...editing, name_en: event.target.value })
@@ -724,6 +800,7 @@ function BranchSettings() {
                 }
               >
                 <input
+                  id="branch-name-fa"
                   dir="rtl"
                   value={editing.name_fa}
                   onChange={(event) =>
@@ -741,6 +818,7 @@ function BranchSettings() {
               </Field>
               <Field label={t("Location type", "نوع مکان")}>
                 <Select
+                  id="branch-type"
                   value={editing.type ?? "store"}
                   onChange={(value) =>
                     setEditing({
@@ -849,6 +927,55 @@ function OfferSettings() {
   }
   return (
     <>
+      <WhatsMissing
+        issues={
+          error
+            ? draft.price_to_offer.flatMap((mapping, index) => {
+                const normalize = (price: string) => {
+                  const [whole, fraction = ""] = price
+                    .replace(/^0+(?=\d)/, " ")
+                    .trim()
+                    .split(".");
+                  return `${whole}.${fraction.padEnd(2, "0")}`;
+                };
+                const duplicate =
+                  draft.price_to_offer.filter(
+                    (other) =>
+                      normalize(other.price) === normalize(mapping.price),
+                  ).length > 1;
+                return [
+                  ...(!/^\d+(?:\.\d{1,2})?$/.test(mapping.price) || duplicate
+                    ? [
+                        {
+                          id: `price-${index}`,
+                          message: `${t("Selling price", "قیمت فروش")}: ${error}`,
+                          fieldId: `offer-price-${index}`,
+                        },
+                      ]
+                    : []),
+                  ...(!mapping.offer.trim()
+                    ? [
+                        {
+                          id: `offer-${index}`,
+                          message: `${t("Offer", "پیشنهاد")}: ${error}`,
+                          fieldId: `offer-text-${index}`,
+                        },
+                      ]
+                    : []),
+                  ...(!mapping.mix_and_match_pool.trim()
+                    ? [
+                        {
+                          id: `pool-${index}`,
+                          message: `${t("Mix-and-match pool", "گروه ترکیبی")}: ${error}`,
+                          fieldId: `offer-pool-${index}`,
+                        },
+                      ]
+                    : []),
+                ];
+              })
+            : []
+        }
+      />
       <Card
         title={t("Price-to-offer mappings", "نگاشت قیمت به پیشنهاد")}
         className="settings-form-card"
@@ -865,6 +992,7 @@ function OfferSettings() {
                 }
               >
                 <NumberField
+                  id={`offer-price-${index}`}
                   dir="ltr"
                   value={mapping.price}
                   onChange={(value) =>
@@ -885,6 +1013,7 @@ function OfferSettings() {
                 error={error && !mapping.offer.trim() ? error : undefined}
               >
                 <input
+                  id={`offer-text-${index}`}
                   dir="ltr"
                   value={mapping.offer}
                   onChange={(event) =>
@@ -909,6 +1038,7 @@ function OfferSettings() {
                 }
               >
                 <input
+                  id={`offer-pool-${index}`}
                   dir="ltr"
                   value={mapping.mix_and_match_pool}
                   onChange={(event) =>
@@ -1206,7 +1336,7 @@ export default function Settings() {
           {changed && (
             <p className="settings-changed-line">
               {t("Changed by", "تغییر توسط")} {changed.by} {t("on", "در")}{" "}
-              <bdi dir="ltr">{changed.at.slice(0, 10)}</bdi> ·{" "}
+              <DateText value={changed.at} /> ·{" "}
               <a href="#history">{t("History", "تاریخچه")}</a>
             </p>
           )}

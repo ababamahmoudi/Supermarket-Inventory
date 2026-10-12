@@ -8,44 +8,36 @@ import {
 } from "./undo-queue";
 const add = (queue: UndoToast[], id: string, now: number) =>
   addUndoToast(queue, { id, action: "Stop offer" }, now);
-describe("independently timed ten-second Undo queue", () => {
-  it("new actions do not reset older timers, and newest is first", () => {
-    let queue = add([], "old", 0);
-    queue = add(queue, "new", 2000);
-    expect(queue.map((item) => item.id)).toEqual(["new", "old"]);
-    expect(remainingTime(queue[1], 4000)).toBe(6000);
-    queue = expireUndoToasts(queue, 10000);
+describe("single eight-second Undo display", () => {
+  it("replaces the prior message and gives the new action its own eight seconds", () => {
+    const queue = add(add([], "old", 0), "new", 2000);
     expect(queue.map((item) => item.id)).toEqual(["new"]);
-    expect(remainingTime(queue[0], 10000)).toBe(2000);
+    expect(remainingTime(queue[0], 4000)).toBe(6000);
+    expect(expireUndoToasts(queue, 9999)).toHaveLength(1);
+    expect(expireUndoToasts(queue, 10000)).toEqual([]);
   });
-  it("hover pauses only the targeted toast and resumes its remaining time", () => {
-    let queue = add([], "old", 0);
-    queue = add(queue, "new", 1000);
-    queue = pauseUndoToast(queue, "old", true, 2000);
-    expect(remainingTime(queue[1], 20000)).toBe(8000);
-    queue = expireUndoToasts(queue, 11000);
-    expect(queue.map((item) => item.id)).toEqual(["old"]);
-    queue = pauseUndoToast(queue, "old", false, 20000);
-    expect(expireUndoToasts(queue, 27999)).toHaveLength(1);
-    expect(expireUndoToasts(queue, 28000)).toHaveLength(0);
+  it("pauses the displayed message and resumes the remaining duration", () => {
+    let queue = add([], "one", 0);
+    queue = pauseUndoToast(queue, "one", true, 1000);
+    expect(remainingTime(queue[0], 50000)).toBe(7000);
+    queue = pauseUndoToast(queue, "one", false, 50000);
+    expect(expireUndoToasts(queue, 56999)).toHaveLength(1);
+    expect(expireUndoToasts(queue, 57000)).toEqual([]);
   });
-  it("hidden fourth and later items retain independent timers", () => {
-    let queue: UndoToast[] = [];
-    for (let i = 0; i < 5; i++) queue = add(queue, String(i), i * 500);
-    expect(queue.slice(0, 3).map((item) => item.id)).toEqual(["4", "3", "2"]);
-    expect(queue.length - 3).toBe(2);
-    queue = expireUndoToasts(queue, 10000);
-    expect(queue.map((item) => item.id)).toEqual(["4", "3", "2", "1"]);
-    queue = expireUndoToasts(queue, 10500);
-    expect(queue.map((item) => item.id)).toEqual(["4", "3", "2"]);
+  it("a new action replaces a hovered message instead of retaining a hidden timer", () => {
+    let queue = pauseUndoToast(add([], "old", 0), "old", true, 1000);
+    queue = add(queue, "new", 2000);
+    expect(queue).toHaveLength(1);
+    expect(queue[0].running_since).toBe(2000);
+    expect(expireUndoToasts(queue, 10000)).toEqual([]);
   });
-  it("repeated hover events do not change the remaining duration", () => {
+  it("repeat pause/resume notifications do not extend the display window", () => {
     let queue = add([], "one", 0);
     queue = pauseUndoToast(queue, "one", true, 1000);
     queue = pauseUndoToast(queue, "one", true, 4000);
-    expect(remainingTime(queue[0], 50000)).toBe(9000);
+    expect(remainingTime(queue[0], 50000)).toBe(7000);
     queue = pauseUndoToast(queue, "one", false, 50000);
     queue = pauseUndoToast(queue, "one", false, 51000);
-    expect(remainingTime(queue[0], 53000)).toBe(6000);
+    expect(remainingTime(queue[0], 53000)).toBe(4000);
   });
 });

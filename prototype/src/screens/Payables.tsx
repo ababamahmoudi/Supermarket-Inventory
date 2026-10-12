@@ -6,6 +6,11 @@ import {
 import { translateCount } from "../i18n";
 import { useState } from "react";
 import {
+  WhatsMissing,
+  FieldError,
+  type ValidationIssue,
+} from "../WhatsMissing";
+import {
   useListState,
   navigationKey,
   saveNavigationValue,
@@ -100,6 +105,9 @@ export function Payables() {
   const [error, setError] = useState("");
   const [errorKey, setErrorKey] = useState("");
   const [message, setMessage] = useState("");
+  const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>(
+    [],
+  );
   const [confirmMoney, setConfirmMoney] = useState<"payment" | "entry" | null>(
     null,
   );
@@ -179,6 +187,7 @@ export function Payables() {
     setMessage("");
     setErrorKey("");
     setConfirmMoney(null);
+    setValidationIssues([]);
   };
   const changeBranch = (value: string, clear = false) => {
     // This explicit filter change keeps the other filters and selected report.
@@ -204,6 +213,7 @@ export function Payables() {
     resetEntryForms();
   };
   const clearFilters = () => {
+    setValidationIssues([]);
     setSearch("");
     setOverdueOnly(false);
     setWithBalance(false);
@@ -262,6 +272,158 @@ export function Payables() {
       return false;
     }
   };
+  const validationError = (fieldId: string) =>
+    validationIssues.find((issue) => issue.fieldId === fieldId)?.message;
+  const clearValidation = (fieldId: string) =>
+    setValidationIssues((current) =>
+      current.filter((issue) => issue.fieldId !== fieldId),
+    );
+  const collectMissing = (
+    kind: "payment" | "entry" | "dispute",
+    checkAllocations = false,
+    previewOnly = false,
+  ) => {
+    const issues: ValidationIssue[] = [];
+    const add = (fieldId: string, message: string) => {
+      if (!issues.some((issue) => issue.fieldId === fieldId))
+        issues.push({ id: `${fieldId}-error`, fieldId, message });
+    };
+    if (branch === "all" || !branches.includes(branch))
+      add(
+        "payables-branch",
+        t(
+          "Choose one branch before recording this action.",
+          "پیش از ثبت، یک شعبه انتخاب کنید.",
+        ),
+      );
+    if (!supplier || !suppliers.includes(supplier))
+      add(
+        "payables-supplier",
+        t("Choose a supplier.", "یک تأمین‌کننده انتخاب کنید."),
+      );
+    const money = (value: string) => {
+      try {
+        const number = new Decimal(value);
+        return number.isFinite() && number.eq(number.toDecimalPlaces(2))
+          ? number
+          : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    if (kind === "payment" || kind === "entry") {
+      const value = money(kind === "payment" ? amount : adjustment);
+      const amountId =
+        kind === "payment"
+          ? "payables-payment-amount"
+          : "payables-entry-amount";
+      if (!value || (kind === "payment" ? !value.gt(0) : value.isZero()))
+        add(amountId, operationError("amount", t));
+      if (kind === "entry" && entryType === "credit" && value && value.gte(0))
+        add(amountId, operationError("credit_sign", t));
+      if (
+        !previewOnly &&
+        (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+          Number.isNaN(Date.parse(`${date}T12:00:00Z`)))
+      )
+        add(
+          kind === "payment" ? "payables-payment-date" : "payables-entry-date",
+          t("Enter a valid date.", "تاریخ معتبر وارد کنید."),
+        );
+    }
+    if (kind === "payment") {
+      if (!previewOnly && !receipt.trim())
+        add(
+          "payables-payment-receipt",
+          t(
+            "Enter the payment receipt reference.",
+            "مرجع رسید پرداخت را وارد کنید.",
+          ),
+        );
+      if (
+        state.ledger.some(
+          (row) =>
+            row.company_id === context.company_id &&
+            row.branch === branch &&
+            row.supplier === supplier &&
+            row.type === "payment" &&
+            row.reference === receipt.trim(),
+        )
+      )
+        add(
+          "payables-payment-receipt",
+          operationError("duplicate_document", t),
+        );
+      if (checkAllocations) {
+        const values = allocations ?? [];
+        let sum = new Decimal(0);
+        for (const allocation of values) {
+          const value = money(allocation.amount),
+            invoice = openInvoices.find(
+              (invoice) =>
+                invoice.invoice_id === allocation.invoice_id &&
+                invoice.branch === branch,
+            );
+          if (!value || value.lt(0) || !invoice || value.gt(invoice.amount))
+            add(
+              `payables-allocation-${allocation.invoice_id}`,
+              operationError("allocation", t),
+            );
+          if (value) sum = sum.plus(value);
+        }
+        const total = money(amount);
+        if (total && sum.gt(total))
+          add(
+            values.length
+              ? `payables-allocation-${values[0].invoice_id}`
+              : "payables-payment-amount",
+            operationError("allocation", t),
+          );
+      }
+    } else if (kind === "entry") {
+      if (!entryReference.trim())
+        add(
+          "payables-entry-reference",
+          t("Enter the evidence reference.", "مرجع مدرک را وارد کنید."),
+        );
+      if (!entryNote.trim())
+        add(
+          "payables-entry-note",
+          t(
+            "Enter a reason or dispute note.",
+            "دلیل یا یادداشت اختلاف را وارد کنید.",
+          ),
+        );
+      if (
+        entryType === "opening_balance" &&
+        state.ledger.some(
+          (row) =>
+            row.company_id === context.company_id &&
+            row.branch === branch &&
+            row.supplier === supplier &&
+            row.type === "opening_balance",
+        )
+      )
+        add("payables-entry-type", operationError("opening_exists", t));
+      if (
+        state.ledger.some(
+          (row) =>
+            row.company_id === context.company_id &&
+            row.branch === branch &&
+            row.supplier === supplier &&
+            row.type === entryType &&
+            row.reference === entryReference.trim(),
+        )
+      )
+        add(
+          "payables-entry-reference",
+          operationError("duplicate_document", t),
+        );
+    } else if (!disputeNote.trim())
+      add("payables-dispute-note", operationError("reason", t));
+    setValidationIssues(issues);
+    return issues.length === 0;
+  };
   const clearFieldError = (...keys: string[]) => {
     if (keys.includes(errorKey)) {
       setError("");
@@ -272,6 +434,10 @@ export function Payables() {
     keys.includes(errorKey) ? error : undefined;
   const confirmMoneyRecord = () => {
     const payment = confirmMoney === "payment";
+    if (!collectMissing(payment ? "payment" : "entry", payment)) {
+      setConfirmMoney(null);
+      return;
+    }
     const saved = payment
       ? run(
           (draft) =>
@@ -338,8 +504,21 @@ export function Payables() {
         )}
         actions={
           <Button
-            disabled={overview.length === 0}
             onClick={() => {
+              if (!overview.length) {
+                setValidationIssues([
+                  {
+                    id: "payables-search-error",
+                    fieldId: "payables-search",
+                    message: t(
+                      "No suppliers match these filters. Clear filters to see all suppliers.",
+                      "هیچ تأمین‌کننده‌ای با این فیلترها مطابقت ندارد. برای نمایش همه، فیلترها را پاک کنید.",
+                    ),
+                  },
+                ]);
+                return;
+              }
+              setValidationIssues([]);
               if (!selectedVisible)
                 setSupplier(overview[0]?.supplier ?? suppliers[0] ?? "");
               setPaymentOpen(!paymentOpen);
@@ -351,14 +530,23 @@ export function Payables() {
           </Button>
         }
       />
+      <WhatsMissing
+        issues={validationIssues.filter(
+          (issue) => issue.fieldId === "payables-search",
+        )}
+      />
       <FilterToolbar
         className="payables-filters no-print"
         aria-label={t("Payables filters", "فیلترهای پرداختنی‌ها")}
         search={
           <input
+            id="payables-search"
             className="ui-input"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              clearValidation("payables-search");
+            }}
             aria-label={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
             placeholder={t("Search suppliers", "جستجوی تأمین‌کنندگان")}
           />
@@ -380,9 +568,14 @@ export function Payables() {
         }
       >
         <Select
+          id="payables-branch"
+          aria-invalid={Boolean(validationError("payables-branch"))}
           aria-label={t("Payables branch", "شعبه پرداختنی‌ها")}
           value={branch}
-          onChange={changeBranch}
+          onChange={(value) => {
+            clearValidation("payables-branch");
+            changeBranch(value);
+          }}
           options={[
             { value: "all", label: t("All branches", "همه شعبه‌ها") },
             ...branches.map((value) => ({
@@ -391,6 +584,7 @@ export function Payables() {
             })),
           ]}
         />
+        <FieldError>{validationError("payables-branch")}</FieldError>
         <Checkbox checked={overdueOnly} onChange={setOverdueOnly}>
           {t("Overdue only", "فقط سررسید گذشته")}
         </Checkbox>
@@ -475,8 +669,12 @@ export function Payables() {
         <>
           <Card className="payables-toolbar no-print form-card">
             <div className="form-grid">
-              <Field label={t("Supplier", "تأمین‌کننده")}>
+              <Field
+                label={t("Supplier", "تأمین‌کننده")}
+                error={validationError("payables-supplier")}
+              >
                 <Select
+                  id="payables-supplier"
                   value={supplier}
                   onChange={(value) => {
                     setSupplier(value);
@@ -639,6 +837,7 @@ export function Payables() {
               title={t("Record external payment", "ثبت پرداخت خارج از برنامه")}
               className="form-card"
             >
+              <WhatsMissing issues={validationIssues} />
               <p className="muted">
                 {t(
                   "Enter a payment already made outside this app. Partial payments are allowed; overpayment stays unapplied.",
@@ -648,12 +847,17 @@ export function Payables() {
               <div className="form-grid">
                 <Field
                   label={t("Payment amount", "مبلغ پرداخت")}
-                  error={fieldError("amount")}
+                  error={
+                    fieldError("amount") ||
+                    validationError("payables-payment-amount")
+                  }
                 >
                   <NumberField
+                    id="payables-payment-amount"
                     value={amount}
                     onChange={(value) => {
                       setAmount(value);
+                      clearValidation("payables-payment-amount");
                       setAllocations(null);
                       clearFieldError("amount", "allocation");
                     }}
@@ -661,12 +865,17 @@ export function Payables() {
                 </Field>
                 <Field
                   label={t("Payment date", "تاریخ پرداخت")}
-                  error={fieldError("payment_date")}
+                  error={
+                    fieldError("payment_date") ||
+                    validationError("payables-payment-date")
+                  }
                 >
                   <DateField
+                    id="payables-payment-date"
                     value={date}
                     onChange={(value) => {
                       setDate(value);
+                      clearValidation("payables-payment-date");
                       clearFieldError("payment_date");
                     }}
                   />
@@ -681,12 +890,17 @@ export function Payables() {
                 </Field>
                 <Field
                   label={t("Payment receipt reference", "مرجع رسید پرداخت")}
-                  error={fieldError("payment_receipt", "duplicate_document")}
+                  error={
+                    fieldError("payment_receipt", "duplicate_document") ||
+                    validationError("payables-payment-receipt")
+                  }
                 >
                   <input
+                    id="payables-payment-receipt"
                     value={receipt}
                     onChange={(event) => {
                       setReceipt(event.target.value);
+                      clearValidation("payables-payment-receipt");
                       clearFieldError("payment_receipt", "duplicate_document");
                     }}
                     placeholder="DEMO-PAYMENT-001"
@@ -701,8 +915,8 @@ export function Payables() {
               </div>
               <Button
                 variant="secondary"
-                disabled={branch === "all"}
                 onClick={() => {
+                  if (!collectMissing("payment", false, true)) return;
                   try {
                     setAllocations(
                       suggestAllocations(state, context, supplier, amount),
@@ -739,10 +953,16 @@ export function Payables() {
                     .map((invoice) => (
                       <Field
                         key={invoice.invoice_id}
-                        error={fieldError("allocation")}
+                        error={
+                          fieldError("allocation") ||
+                          validationError(
+                            `payables-allocation-${invoice.invoice_id}`,
+                          )
+                        }
                         label={`⁦${invoice.reference}⁩ · ${t("Outstanding", "مانده")}: ⁦${formatMoney(invoice.amount)}⁩`}
                       >
                         <NumberField
+                          id={`payables-allocation-${invoice.invoice_id}`}
                           value={
                             allocations.find(
                               (item) => item.invoice_id === invoice.invoice_id,
@@ -750,6 +970,9 @@ export function Payables() {
                           }
                           onChange={(value) => {
                             clearFieldError("allocation");
+                            clearValidation(
+                              `payables-allocation-${invoice.invoice_id}`,
+                            );
                             setAllocations((current) => [
                               ...(current ?? []).filter(
                                 (item) =>
@@ -773,8 +996,10 @@ export function Payables() {
                     </p>
                   )}
                   <Button
-                    disabled={branch === "all"}
-                    onClick={() => setConfirmMoney("payment")}
+                    onClick={() => {
+                      if (collectMissing("payment", true))
+                        setConfirmMoney("payment");
+                    }}
                   >
                     {t("Confirm and record payment", "تأیید و ثبت پرداخت")}
                   </Button>
@@ -787,15 +1012,21 @@ export function Payables() {
               title={t("Record ledger entry", "ثبت ردیف دفتر")}
               className="form-card"
             >
+              <WhatsMissing issues={validationIssues} />
               <div className="form-grid">
                 <Field
                   label={t("Entry type", "نوع ردیف")}
-                  error={fieldError("opening_exists")}
+                  error={
+                    fieldError("opening_exists") ||
+                    validationError("payables-entry-type")
+                  }
                 >
                   <Select
+                    id="payables-entry-type"
                     value={entryType}
                     onChange={(value) => {
                       setEntryType(value as typeof entryType);
+                      clearValidation("payables-entry-type");
                       clearFieldError("opening_exists", "credit_sign");
                     }}
                     options={[
@@ -822,59 +1053,80 @@ export function Payables() {
                     "Signed amount (credits are negative)",
                     "مبلغ علامت‌دار (بستانکاری منفی است)",
                   )}
-                  error={fieldError("amount", "credit_sign")}
+                  error={
+                    fieldError("amount", "credit_sign") ||
+                    validationError("payables-entry-amount")
+                  }
                 >
                   <NumberField
+                    id="payables-entry-amount"
                     value={adjustment}
                     onChange={(value) => {
                       setAdjustment(value);
+                      clearValidation("payables-entry-amount");
                       clearFieldError("amount", "credit_sign");
                     }}
                   />
                 </Field>
                 <Field
                   label={t("Date", "تاریخ")}
-                  error={fieldError("entry_date")}
+                  error={
+                    fieldError("entry_date") ||
+                    validationError("payables-entry-date")
+                  }
                 >
                   <DateField
+                    id="payables-entry-date"
                     value={date}
                     onChange={(value) => {
                       setDate(value);
+                      clearValidation("payables-entry-date");
                       clearFieldError("entry_date");
                     }}
                   />
                 </Field>
                 <Field
                   label={t("Evidence reference", "مرجع مدرک")}
-                  error={fieldError("entry_reference", "duplicate_document")}
+                  error={
+                    fieldError("entry_reference", "duplicate_document") ||
+                    validationError("payables-entry-reference")
+                  }
                 >
                   <input
+                    id="payables-entry-reference"
                     value={entryReference}
                     onChange={(event) => {
                       setEntryReference(event.target.value);
+                      clearValidation("payables-entry-reference");
                       clearFieldError("entry_reference", "duplicate_document");
                     }}
                   />
                 </Field>
                 <Field
-                  error={fieldError("entry_note")}
+                  error={
+                    fieldError("entry_note") ||
+                    validationError("payables-entry-note")
+                  }
                   label={t(
                     "Reason / dispute note (required)",
                     "دلیل / یادداشت اختلاف (ضروری)",
                   )}
                 >
                   <textarea
+                    id="payables-entry-note"
                     value={entryNote}
                     onChange={(event) => {
                       setEntryNote(event.target.value);
+                      clearValidation("payables-entry-note");
                       clearFieldError("entry_note");
                     }}
                   />
                 </Field>
               </div>
               <Button
-                disabled={branch === "all"}
-                onClick={() => setConfirmMoney("entry")}
+                onClick={() => {
+                  if (collectMissing("entry")) setConfirmMoney("entry");
+                }}
               >
                 {t("Record ledger entry", "ثبت ردیف دفتر")}
               </Button>
@@ -885,22 +1137,28 @@ export function Payables() {
               title={t("Record supplier dispute", "ثبت اختلاف تأمین‌کننده")}
               className="form-card"
             >
+              <WhatsMissing issues={validationIssues} />
               <Field
                 label={t("Dispute note (required)", "یادداشت اختلاف (ضروری)")}
-                error={fieldError("reason")}
+                error={
+                  fieldError("reason") ||
+                  validationError("payables-dispute-note")
+                }
               >
                 <textarea
+                  id="payables-dispute-note"
                   value={disputeNote}
                   onChange={(event) => {
                     setDisputeNote(event.target.value);
+                    clearValidation("payables-dispute-note");
                     clearFieldError("reason");
                   }}
                 />
               </Field>
               <div className="actions">
                 <Button
-                  disabled={branch === "all"}
                   onClick={() => {
+                    if (!collectMissing("dispute")) return;
                     if (
                       run(
                         (draft) =>
@@ -1008,14 +1266,13 @@ export function Payables() {
                 )}
               </EmptyState>
             ) : (
-              <Card
-                title={
-                  mode === "month"
-                    ? t("Month-end ledger summary", "خلاصه دفتر پایان ماه")
-                    : t("Supplier ledger", "دفتر تأمین‌کننده")
-                }
-              >
-                <div className="table-column-actions">
+              <Card className="payables-ledger-card">
+                <div className="card-heading">
+                  <h2>
+                    {mode === "month"
+                      ? t("Month-end ledger summary", "خلاصه دفتر پایان ماه")
+                      : t("Supplier ledger", "دفتر تأمین‌کننده")}
+                  </h2>
                   {ledgerColumns.chooser}
                 </div>
                 <DataTable
@@ -1101,8 +1358,10 @@ export function Payables() {
                         <td className="no-print">
                           <Button
                             variant="secondary"
-                            disabled={branch === "all"}
                             onClick={() => {
+                              setPaymentOpen(false);
+                              setEntryOpen(false);
+                              setValidationIssues([]);
                               setDisputeId(row.id);
                               setDisputeNote("");
                             }}

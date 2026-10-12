@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   background: var(--search-fill);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding-inline: 14px;
   gap: 8px;
   flex: 1 1 210px;
@@ -17,10 +17,10 @@
   min-inline-size: 0;
 }
 .supplier-search input {
-  background: transparent;
+  background: var(--color-clear);
   inline-size: 100%;
   padding-inline: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 .suppliers-toolbar .ui-select {
   inline-size: 155px;
@@ -29,7 +29,7 @@
 .supplier-filter-chip,
 .supplier-branch-pill {
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 8px 12px;
   background: var(--search-fill);
   color: var(--text);
@@ -45,7 +45,7 @@
   white-space: nowrap;
 }
 .supplier-sort {
-  background: transparent;
+  background: var(--color-clear);
   color: inherit;
   font: inherit;
   border: 0;

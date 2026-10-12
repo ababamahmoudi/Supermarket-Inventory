@@ -68,6 +68,11 @@ function invoiceState() {
       currency: "CAD",
     },
   );
+  recordPickup(state, worker, state.returns[0].id, {
+    quantities: { "0003": 3 },
+    representative: "Fictional Rep",
+    slip: "SIGNED-FINANCIAL-FIXTURE",
+  });
   return state;
 }
 describe("return physical receipts and safe cancellation", () => {
@@ -84,6 +89,12 @@ describe("return physical receipts and safe cancellation", () => {
     ).toThrow("pickup_evidence");
     recordPickup(state, worker, returnId, {
       quantities: { "0003": 2 },
+      shortfalls: {
+        "0003": {
+          reason: "One left for next pickup",
+          outcome: "keep_for_next_pickup",
+        },
+      },
       representative: "Fictional Rep",
       slip: "SIGNED-DEMO-001",
     });
@@ -100,6 +111,11 @@ describe("return physical receipts and safe cancellation", () => {
   it("adds actual substitute units with explicit original coverage without Payables and prevents duplicate receipt", () => {
     const state = initialState();
     const record = state.returns[0];
+    recordPickup(state, worker, record.id, {
+      quantities: { "0003": 3 },
+      representative: "Fictional Rep",
+      slip: "SIGNED-REPLACEMENT-FIXTURE",
+    });
     const stockBefore = state.stock["Branch 1:0002"];
     const ledgerBefore = structuredClone(state.ledger);
     const receipt = {
@@ -138,7 +154,7 @@ describe("return physical receipts and safe cancellation", () => {
         representative: "Fictional Rep",
         receipt: "REPLACE-2",
       }),
-    ).toThrow("coverage");
+    ).toThrow("pickup_required");
     expect(state.stock["Branch 1:0001"]).toBe(stockBefore);
     expect(state.ledger).toEqual(ledgerBefore);
   });
@@ -280,11 +296,11 @@ describe("financial return claims", () => {
     expect(() =>
       submitFinancialClaim(state, worker, record.id, {
         type: "credit_later_invoice",
-        covers: { "0003": 1 },
+        covers: { "0003": 3 },
         invoice_id: state.invoice.id,
         document: "D2",
       }),
-    ).toThrow("single_credit");
+    ).toThrow("coverage");
     expect(() =>
       receiveReplacement(state, worker, record.id, {
         product_code: "0003",
@@ -693,6 +709,12 @@ describe("receipt retries, cancelled claims and historical summaries", () => {
     const record = state.returns[0];
     const pickup = {
       quantities: { "0003": 1 },
+      shortfalls: {
+        "0003": {
+          reason: "Two left for next pickup",
+          outcome: "keep_for_next_pickup" as const,
+        },
+      },
       representative: "Demo Rep",
       slip: " PICKUP-001 ",
     };
@@ -711,6 +733,11 @@ describe("receipt retries, cancelled claims and historical summaries", () => {
   it("preserves actual replacement product, quantities, date and representative while rejecting changed duplicate receipt data", () => {
     const state = initialState();
     const record = state.returns[0] as OperationalReturn;
+    recordPickup(state, worker, record.id, {
+      quantities: { "0003": 3 },
+      representative: "Demo Rep",
+      slip: "SIGNED-REPLACEMENT-DETAIL",
+    });
     const stockBefore = state.stock["Branch 1:0002"];
     const receipt = {
       product_code: "0002",
@@ -721,7 +748,9 @@ describe("receipt retries, cancelled claims and historical summaries", () => {
       receipt: " REPLACEMENT-1 ",
     };
     receiveReplacement(state, worker, record.id, receipt);
-    expect(record.evidence?.[0]).toMatchObject({
+    expect(
+      record.evidence?.find((event) => event.kind === "replacement"),
+    ).toMatchObject({
       product_code: "0002",
       actual_qty: 2,
       received_date: "2026-10-06",

@@ -4,6 +4,7 @@ import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import type { Branch, DemoState, SupplierRecord } from "./types";
 import type { OperationsContext } from "./operations";
+import { paymentTermsDays } from "./invoice-entry";
 
 export interface SupplierEdits {
   name: string;
@@ -61,6 +62,25 @@ export function hydrateSuppliers(state: DemoState): void {
 }
 export function supplierMatches(record: SupplierRecord, name: string): boolean {
   return record.name === name || (record.previous_names ?? []).includes(name);
+}
+export const invoiceSupplierFields = [
+  "phone",
+  "email",
+  "sales_rep_name",
+  "sales_rep_phone",
+  "payment_terms",
+] as const;
+export function missingInvoiceSupplierDetails(
+  record: SupplierRecord,
+): (typeof invoiceSupplierFields)[number][] {
+  return invoiceSupplierFields.filter(
+    (field) =>
+      !record[field]?.trim() ||
+      (field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) ||
+      (field === "payment_terms" &&
+        /^net/i.test(record.payment_terms) &&
+        paymentTermsDays(record.payment_terms) === undefined),
+  );
 }
 export function supplierChoices(state: DemoState): SupplierRecord[] {
   return supplierRecords(state).filter(
@@ -127,10 +147,19 @@ export function saveSupplier(
   state: DemoState,
   context: OperationsContext,
   edits: SupplierEdits,
-  options: { id?: string; invoice_quick_add?: boolean } = {},
+  options: {
+    id?: string;
+    invoice_quick_add?: boolean;
+    complete_invoice_details?: boolean;
+  } = {},
   now = new Date(),
 ): SupplierRecord {
   guard(state, context, !options.id && options.invoice_quick_add);
+  if (
+    options.complete_invoice_details &&
+    invoiceSupplierFields.some((field) => !edits[field].trim())
+  )
+    throw new Error("Complete supplier details before confirming.");
   if (!edits.name.trim()) throw new SupplierEditError("name");
   if (
     edits.email.trim() &&
@@ -192,7 +221,11 @@ export function saveSupplier(
     sales_rep_name: "",
     sales_rep_phone: "",
     payment_terms: "",
-    status: context.role === "supervisor" ? "confirmed" : "proposed",
+    status:
+      context.role === "supervisor" && !options.invoice_quick_add
+        ? "confirmed"
+        : "proposed",
+    invoice_review_required: !!options.invoice_quick_add,
     active: true,
     created_at: now.toISOString(),
     created_by: context.actor,
@@ -300,6 +333,11 @@ export function confirmSupplier(
   );
   if (!record) throw new SupplierEditError("not_found");
   if (!record.active) throw new Error("Supplier is inactive");
+  if (
+    record.invoice_review_required &&
+    missingInvoiceSupplierDetails(record).length
+  )
+    throw new Error("Complete supplier details before confirming.");
   if (record.status === "confirmed") return;
   record.status = "confirmed";
   for (const approval of state.approvals)
@@ -314,8 +352,11 @@ export function confirmSupplier(
     if (
       invoice.company_id === context.company_id &&
       supplierMatches(record, invoice.supplier)
-    )
+    ) {
       invoice.supplier_confirmed = true;
+      if (invoice.status !== "posted" && invoice.supplier_review_required)
+        invoice.supplier_review_confirmed = true;
+    }
   state.activity.push({
     id: createId("supplier-activity"),
     company_id: context.company_id,

@@ -28,6 +28,7 @@ import {
   type WeightUnit,
 } from "../weighed";
 import { ProductPrice } from "../weight-price-presentation";
+import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 
 type Translate = (en: string, fa: string) => string;
 type RuleArea = "bands" | "minimum" | "corrections";
@@ -97,6 +98,7 @@ export default function PricingSettings() {
   const [editing, setEditing] = useState<PricingCategory | null>(null);
   const [newCategory, setNewCategory] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [submitted, setSubmitted] = useState(false);
   const [categoryErrors, setCategoryErrors] = useState<
     Partial<Record<keyof PricingCategory, string>>
   >({});
@@ -220,6 +222,8 @@ export default function PricingSettings() {
       weighedSettings(state.config),
     ]);
   function save() {
+    setSubmitted(true);
+    if (Object.keys(divisorErrors).length) return;
     try {
       validatePricingConfig(draft);
       update((next) =>
@@ -324,7 +328,38 @@ export default function PricingSettings() {
 
   return (
     <>
-      <Card title={t("Pricing categories", "دسته‌های قیمت‌گذاری")}>
+      <WhatsMissing
+        issues={
+          submitted
+            ? [
+                ...Object.entries(divisorErrors).map(([key, code]) => ({
+                  id: `divisor-${key}`,
+                  fieldId: `divisor-${key}`,
+                  message: errorText(code, t),
+                })),
+                ...Object.entries(ruleErrors).map(([key, message]) => ({
+                  id: key,
+                  fieldId: `pricing-${key}`,
+                  message,
+                })),
+                ...(saveError && !editing
+                  ? [
+                      {
+                        id: "pricing-save",
+                        fieldId: "pricing-categories",
+                        message: saveError,
+                      },
+                    ]
+                  : []),
+              ]
+            : []
+        }
+      />
+      <Card
+        id="pricing-categories"
+        tabIndex={-1}
+        title={t("Pricing categories", "دسته‌های قیمت‌گذاری")}
+      >
         <p className="muted">
           {t(
             "Preview pricing rules before saving. Approved selling prices stay unchanged.",
@@ -477,6 +512,8 @@ export default function PricingSettings() {
       </Card>
 
       <Card
+        id="pricing-bands"
+        tabIndex={-1}
         title={t("Rounding rules", "قواعد گرد کردن")}
         className="settings-form-card"
       >
@@ -581,6 +618,7 @@ export default function PricingSettings() {
           error={ruleErrors.minimum}
         >
           <NumberField
+            id="pricing-minimum"
             dir="ltr"
             value={
               draft.rounding_bands
@@ -599,6 +637,8 @@ export default function PricingSettings() {
         </Field>
       </Card>
       <Card
+        id="pricing-corrections"
+        tabIndex={-1}
         title={t("Special corrections", "اصلاح‌های ویژه")}
         className="settings-form-card"
       >
@@ -812,12 +852,7 @@ export default function PricingSettings() {
           >
             {t("Cancel", "لغو")}
           </Button>
-          <Button
-            disabled={Object.keys(divisorErrors).length > 0}
-            onClick={save}
-          >
-            {t("Save changes", "ذخیره تغییرات")}
-          </Button>
+          <Button onClick={save}>{t("Save changes", "ذخیره تغییرات")}</Button>
         </div>
       )}
       <Dialog
@@ -838,12 +873,33 @@ export default function PricingSettings() {
       >
         {editing && (
           <>
+            <WhatsMissing
+              issues={
+                [
+                  ...Object.entries(categoryErrors).map(([key, message]) => ({
+                    id: key,
+                    fieldId: `category-${key}`,
+                    message: message!,
+                  })),
+                  ...(saveError
+                    ? [
+                        {
+                          id: "category-save",
+                          fieldId: "category-label",
+                          message: saveError,
+                        },
+                      ]
+                    : []),
+                ] satisfies ValidationIssue[]
+              }
+            />
             <div className="form-grid settings-dialog-fields">
               <Field
                 label={t("Name (English)", "نام (انگلیسی)")}
                 error={categoryErrors.label}
               >
                 <input
+                  id="category-label"
                   value={editing.label}
                   onChange={(event) =>
                     changeCategory({ label: event.target.value })
@@ -864,6 +920,7 @@ export default function PricingSettings() {
                 error={categoryErrors.cost_divisor}
               >
                 <NumberField
+                  id="category-cost_divisor"
                   dir="ltr"
                   value={editing.cost_divisor}
                   onChange={(value) => changeCategory({ cost_divisor: value })}
@@ -874,6 +931,7 @@ export default function PricingSettings() {
                 error={categoryErrors.rounding}
               >
                 <Select
+                  id="category-rounding"
                   value={editing.rounding}
                   onChange={(value) =>
                     changeCategory({
@@ -902,6 +960,7 @@ export default function PricingSettings() {
                   error={categoryErrors.rounding_ending}
                 >
                   <NumberField
+                    id="category-rounding_ending"
                     dir="ltr"
                     value={editing.rounding_ending ?? "0.99"}
                     onChange={(value) =>
@@ -937,6 +996,7 @@ export default function PricingSettings() {
                 )}
               >
                 <NumberField
+                  id="category-minimum_margin"
                   dir="ltr"
                   value={editing.minimum_margin ?? ""}
                   disabled={editing.minimum_margin === null}

@@ -16,7 +16,10 @@ import { hydrateBState, restoreBState } from "./b-state";
 import { hydrateCState, restoreCState } from "./c-state";
 import { hydrateC2State, restoreC2State } from "./c2-state";
 import { hydrateC4State, restoreC4State } from "./c4-state";
+import { hydrateC6State } from "./c6-state";
 import { syncReturnCreditAlerts } from "./return-workflow";
+import { syncDateReminderAlerts } from "./date-tracking";
+import { shouldShowUndoNotification } from "./undo-notification-policy";
 import { configuredBranches, branchAllowsRole } from "./settings";
 import { autoAddApprovedLabelChanges } from "./label-workflow";
 import {
@@ -26,6 +29,16 @@ import {
   type HistoryContext,
 } from "./history";
 import { createId } from "./ids";
+import {
+  archiveFileStorageSnapshot,
+  migrateInlineFiles,
+  migrateLegacyFileBackups,
+} from "./file-database";
+import {
+  decodeHistoryStorage,
+  encodeHistoryStorage,
+  HistoryStorageError,
+} from "./history-storage";
 import {
   addUndoToast,
   pauseUndoToast,
@@ -261,14 +274,17 @@ export function initialState(): DemoState {
     ),
     true,
   );
+  hydrateC6State(state);
   syncReturnCreditAlerts(state);
+  syncDateReminderAlerts(state);
   return state;
 }
 
-function readState(): DemoState {
+function readState(): { state: DemoState; invalidHistoryRaw?: string } {
+  let rawSaved = "null";
   try {
-    const rawSaved = localStorage.getItem(STORAGE_KEY) ?? "null";
-    const saved: unknown = JSON.parse(rawSaved);
+    rawSaved = localStorage.getItem(STORAGE_KEY) ?? "null";
+    const saved = decodeHistoryStorage(JSON.parse(rawSaved));
     if (
       saved &&
       typeof saved === "object" &&
@@ -332,13 +348,17 @@ function readState(): DemoState {
         );
         if (migrated.prototype_c4_schema === 1)
           syncReturnCreditAlerts(migrated);
-        return migrated;
+        hydrateC6State(migrated);
+        syncDateReminderAlerts(migrated);
+        return { state: migrated };
       }
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof HistoryStorageError)
+      return { state: initialState(), invalidHistoryRaw: rawSaved };
     /* Invalid or unavailable browser storage falls back to the fictional seed. */
   }
-  return initialState();
+  return { state: initialState() };
 }
 interface DemoContextValue {
   state: DemoState;
@@ -379,6 +399,7 @@ interface DemoContextValue {
   resetGeneration: number;
   undoToasts: UndoToast[];
   pauseUndo: (id: string, paused: boolean) => void;
+  dismissUndo: (id: string) => void;
   undoActivity: (id: string) => void;
   revertActivity: (id: string) => void;
   historyContext: HistoryContext | null;
@@ -386,7 +407,13 @@ interface DemoContextValue {
 const DemoContext = createContext<DemoContextValue | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState(readState);
+  const [loaded] = useState(readState);
+  const [state, setState] = useState(loaded.state);
+  const [historyLoadError, setHistoryLoadError] = useState(
+    Boolean(loaded.invalidHistoryRaw),
+  );
+  const invalidHistory = useRef(Boolean(loaded.invalidHistoryRaw));
+  const recoverySnapshot = useRef(loaded.invalidHistoryRaw);
   const stateRef = useRef(state);
   const [session, setSession] = useState(() =>
     readAuthSession(configuredBranches(state.config, true)),
@@ -423,7 +450,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         : state.config.company.text_size === "large",
     };
   }, [auth, session.username, state.config.company.text_size]);
-  const [storageError, setStorageError] = useState(false);
+  const [storageError, setStorageError] = useState(
+    Boolean(loaded.invalidHistoryRaw),
+  );
+  const filePersistence = useRef<Promise<void>>(Promise.resolve());
   const [resetGeneration, setResetGeneration] = useState(0);
   const [undoToasts, setUndoToasts] = useState<UndoToast[]>([]);
   const undoRef = useRef(undoToasts);
@@ -522,7 +552,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
             context.role !== "cashier" &&
             item.reversible &&
             item.reversal?.length &&
-            item.by === context.actor,
+            item.by === context.actor &&
+            shouldShowUndoNotification(item.action),
         ))
           queue = addUndoToast(
             queue,
@@ -535,11 +566,28 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           );
         if (queue !== undoRef.current) commitToasts(queue);
       }
+      // Reminder alerts are a derived projection, not part of an operator's
+      // reversible edit. Undo recalculates them from the restored date evidence.
+      syncDateReminderAlerts(draft);
       stateRef.current = draft;
       setState(draft);
     },
     [actionContext, commitToasts],
   );
+  useEffect(() => {
+    const refresh = () => {
+      const next = structuredClone(stateRef.current);
+      if (!syncDateReminderAlerts(next)) return;
+      stateRef.current = next;
+      setState(next);
+    };
+    const timer = window.setInterval(refresh, 60_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
   useEffect(() => {
     const languages = state.config.company.ui_languages?.length
       ? state.config.company.ui_languages
@@ -576,12 +624,106 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     [actionContext, update, commitToasts],
   );
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      queueMicrotask(() => setStorageError(false));
-    } catch {
-      queueMicrotask(() => setStorageError(true));
+    let active = true;
+    if (invalidHistory.current) {
+      // Never replace a malformed retained dictionary with fictional fallback
+      // data. Archive its exact raw bytes; an explicit Reset is the only release.
+      const raw = recoverySnapshot.current;
+      if (raw)
+        void archiveFileStorageSnapshot(
+          STORAGE_KEY,
+          raw,
+          state.config.company.seed_key,
+        )
+          .then(() => {
+            if (active) recoverySnapshot.current = undefined;
+          })
+          .catch(() => undefined);
+      return () => {
+        active = false;
+      };
     }
+    // jsdom has no file database. Existing synchronous domain/component tests
+    // retain their in-memory storage seam; actual browser checks exercise IDB.
+    if (import.meta.env.MODE === "test" && typeof indexedDB === "undefined") {
+      try {
+        // The same lossless codec is covered in unit and real browser tests.
+        if (recoverySnapshot.current) throw new HistoryStorageError();
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(encodeHistoryStorage(state)),
+        );
+        queueMicrotask(() => {
+          if (active) setStorageError(false);
+        });
+      } catch {
+        queueMicrotask(() => {
+          if (active) setStorageError(true);
+        });
+      }
+      return () => {
+        active = false;
+      };
+    }
+    // Serialize writes and abandon stale snapshots if the user edited/reset
+    // while a legacy upload was being copied. Never republish an old draft.
+    filePersistence.current = filePersistence.current
+      .catch(() => undefined)
+      .then(async () => {
+        if (!active || stateRef.current !== state) return;
+        const company = state.config.company.seed_key;
+        const migrated = await migrateInlineFiles(state, company);
+        if (!active || stateRef.current !== state) return;
+        // Shrinking old same-key backups first frees space even when Safari's
+        // existing text storage is full. Exact backups are verified in IDB.
+        await migrateLegacyFileBackups(localStorage, company);
+        if (!active || stateRef.current !== state) return;
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const encoded = encodeHistoryStorage(migrated.state);
+        const serialized = JSON.stringify(encoded);
+        let requiresC6Backup = false;
+        let requiresHistoryBackup = false;
+        if (raw) {
+          try {
+            const previous = JSON.parse(raw);
+            requiresC6Backup = previous.prototype_c6_schema !== 1;
+            requiresHistoryBackup =
+              Object.hasOwn(encoded, "prototype_history_dictionary") &&
+              !Object.hasOwn(previous, "prototype_history_dictionary");
+          } catch {
+            requiresC6Backup = true;
+          }
+        }
+        if (recoverySnapshot.current) {
+          await archiveFileStorageSnapshot(
+            STORAGE_KEY,
+            recoverySnapshot.current,
+            company,
+          );
+          recoverySnapshot.current = undefined;
+        }
+        if (
+          raw &&
+          (migrated.migrated || requiresC6Backup || requiresHistoryBackup)
+        )
+          await archiveFileStorageSnapshot(STORAGE_KEY, raw, company);
+        if (!active || stateRef.current !== state) return;
+        localStorage.setItem(STORAGE_KEY, serialized);
+        if (localStorage.getItem(STORAGE_KEY) !== serialized)
+          throw new Error("Browser state could not be read back.");
+        setStorageError(false);
+        if (migrated.migrated) {
+          // This is representation migration, never a business edit or Undo.
+          stateRef.current = migrated.state;
+          setState(migrated.state);
+        }
+      })
+      .catch(() => {
+        if (active && stateRef.current === state) setStorageError(true);
+      });
+    return () => {
+      active = false;
+    };
   }, [state]);
   useEffect(() => {
     try {
@@ -686,6 +828,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       undoToasts,
       historyContext,
       pauseUndo,
+      dismissUndo: (id) =>
+        commitToasts(undoRef.current.filter((item) => item.id !== id)),
       undoActivity: (id) => reverse(id, "undo"),
       revertActivity: (id) => reverse(id, "revert"),
       ...session,
@@ -885,6 +1029,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       },
       reset: () => {
         commitToasts([]);
+        invalidHistory.current = false;
+        setHistoryLoadError(false);
         const seed = initialState();
         stateRef.current = seed;
         setState(seed);
@@ -919,8 +1065,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       {storageError && (
         <div className="banner danger" role="status">
           {translate(
-            "Browser storage is full or disabled. Your changes last until this page closes. Reset the demo or allow browser storage.",
-            "حافظهٔ مرورگر پر یا غیرفعال است. تغییرات تا بسته شدن صفحه باقی می‌مانند. دمو را بازنشانی کنید یا حافظهٔ مرورگر را فعال کنید.",
+            historyLoadError
+              ? "Saved history could not be read. Your original data is retained. Reset the demo to start again."
+              : "Browser storage is full or disabled. Your changes last until this page closes. Reset the demo or allow browser storage.",
+            historyLoadError
+              ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. برای شروع دوباره، دمو را بازنشانی کنید."
+              : "حافظهٔ مرورگر پر یا غیرفعال است. تغییرات تا بسته شدن صفحه باقی می‌مانند. دمو را بازنشانی کنید یا حافظهٔ مرورگر را فعال کنید.",
             session.lang,
           )}
         </div>
@@ -933,4 +1083,10 @@ export function useDemo(): DemoContextValue {
   const context = useContext(DemoContext);
   if (!context) throw new Error("useDemo must be used inside DemoProvider");
   return context;
+}
+export function useConfiguredTimeZone(): string {
+  return (
+    useContext(DemoContext)?.state.config.company.timezone ??
+    configSeed.company.timezone
+  );
 }

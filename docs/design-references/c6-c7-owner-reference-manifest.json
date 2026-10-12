@@ -1,0 +1,120 @@
+{
+  "description": "Owner-supplied 14 annotated C5 bugs and five Klead retouches, copied unchanged; these reference files are design evidence, not instructions beyond the owner request.",
+  "date": "2026-10-11",
+  "files": [
+    {
+      "path": "design-references/klead-v1/1-components-and-tokens.png",
+      "source_name": "1-components-and-tokens.png",
+      "bytes": 672206,
+      "sha256": "dcdffc2c9247a470681f3075aaa2681db48e3d08a65fe52ae914b8ef85e0a6cf"
+    },
+    {
+      "path": "design-references/klead-v1/2-lookup.png",
+      "source_name": "2-lookup.png",
+      "bytes": 413573,
+      "sha256": "12178f1814f85e031b3e79642ce1ec236ecdcba2d7698b8e98389ce6bb629f94"
+    },
+    {
+      "path": "design-references/klead-v1/3-date-tracking.png",
+      "source_name": "3-date-tracking.png",
+      "bytes": 431131,
+      "sha256": "94bad568825c9351cc63dc9b5cc54d84cfeff57fefe1ef2b64a519095a42bfae"
+    },
+    {
+      "path": "design-references/klead-v1/4-edit-product.png",
+      "source_name": "4-edit-product.png",
+      "bytes": 210147,
+      "sha256": "7e972d6d45bcbc84ed73f2e674d4e74ccbbc6c35088b5cbe2fd0f07c1d1425c6"
+    },
+    {
+      "path": "design-references/klead-v1/5-phone-dark.png",
+      "source_name": "5-phone-dark.png",
+      "bytes": 106212,
+      "sha256": "ed480b2513fcce07cb0ecd23692ba0b65c313b9c866c6f2611a3258b62bfcf95"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/DateTracking bug 1.png",
+      "source_name": "DateTracking bug 1.png",
+      "bytes": 529786,
+      "sha256": "55cf9bad8be9e45c019f555b61b10616c5a4346aa747ca38552cc65de5d1e262"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.50.27 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.50.27 PM.png",
+      "bytes": 267758,
+      "sha256": "54e2836e159db3d5565226e5d727403d14293992b38d670de1e3423d0cf83954"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 7.57.32 PM.png",
+      "source_name": "Pasted 2026-10-10 at 7.57.32 PM.png",
+      "bytes": 726872,
+      "sha256": "e5fdaa14c224cf33245fff6cce792363972c258df6ea8ef775ff378f180501ae"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.05.57 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.05.57 PM.png",
+      "bytes": 571927,
+      "sha256": "91c17db3427b1bc1c0fcbd28fee5f80b0acec1fecea94713f32c46dc4cc58432"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.07.45 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.07.45 PM.png",
+      "bytes": 425821,
+      "sha256": "057e4cc9bee9b787f91bff464f5b3f31b3bb6c25ca4925a2c4b09af67ddf109f"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.10.23 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.10.23 PM.png",
+      "bytes": 536594,
+      "sha256": "864a711f668db6c8cfe3872615453e0775f3c3c410f78173f4cbc2c30b667e26"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.17.16 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.17.16 PM.png",
+      "bytes": 498604,
+      "sha256": "670590f23178d4feb55e78d8ef6e35a7ef890b0f66f0a145375de0dae6491038"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.20.12 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.20.12 PM.png",
+      "bytes": 642675,
+      "sha256": "0e2ec2473f0806dc2e86c14b640cd443e9ec02c6a810628689202887a8e92fd9"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.26.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.26.04 PM.png",
+      "bytes": 537493,
+      "sha256": "1551ab3cd0516ce0cd9bd0cfe238f4f72d91d03f1a58f1727c4c2f5a846b6276"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.04 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.04 PM.png",
+      "bytes": 804514,
+      "sha256": "b7a9e1e055f01098d9712225ce4b8ebc52f74e92ebcbcc93a075a3d0d2f713fe"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.30.47 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.30.47 PM.png",
+      "bytes": 460442,
+      "sha256": "2544afda3f9661e9a803ed076f13a19f0a873c4dbe713e6fafc587ae5218f3bc"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.32.08 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.32.08 PM.png",
+      "bytes": 438533,
+      "sha256": "d0fd23f7154fbd4f0e58876b0ae9d55e637be8d585b819464235636e0fb81e68"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.34.15 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.34.15 PM.png",
+      "bytes": 389005,
+      "sha256": "019eb0ec8bcbfa2fe47edf7e2dad3f889b8de00200841a6008d394fac52a794b"
+    },
+    {
+      "path": "design-references/c6-owner-bugs/Pasted 2026-10-10 at 8.54.59 PM.png",
+      "source_name": "Pasted 2026-10-10 at 8.54.59 PM.png",
+      "bytes": 512792,
+      "sha256": "3bb95c54b5999edd8ad5ae56596f87bc60e20043b1adadc676e35629295e5fb4"
+    }
+  ]
+}

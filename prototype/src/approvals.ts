@@ -187,7 +187,10 @@ export function reconcileOffers(
   const product = currentProduct(state, productCode);
   const ownOffers = state.offers.filter(
     (offer) =>
-      offer.company_id === companyId && offer.product_code === productCode,
+      offer.company_id === companyId &&
+      offer.product_code === productCode &&
+      !offer.clearance &&
+      !offer.lot_id,
   );
   for (const offer of ownOffers) {
     // Keep historical warehouse offers as evidence, without treating a warehouse
@@ -238,6 +241,8 @@ export function reconcileOffers(
     const existsInScope = state.offers.some(
       (offer) =>
         offer.company_id === companyId &&
+        !offer.clearance &&
+        !offer.lot_id &&
         offer.product_code === productCode &&
         offer.status !== "stopped" &&
         offer.scope === item.scope &&
@@ -622,6 +627,8 @@ export function activateOffer(
   // version. Different terms still replace only this exact price scope.
   const duplicate = state.offers.find(
     (offer) =>
+      !offer.clearance &&
+      !offer.lot_id &&
       offer.status === "active" &&
       offer.company_id === candidate.company_id &&
       offer.product_code === candidate.product_code &&
@@ -656,6 +663,8 @@ export function activateOffer(
   for (const offer of state.offers)
     if (
       (offer.id !== candidate.id || offer.status === "active") &&
+      !offer.clearance &&
+      !offer.lot_id &&
       offer.company_id === candidate.company_id &&
       offer.product_code === candidate.product_code &&
       offer.scope === candidate.scope &&
@@ -723,6 +732,7 @@ export function setAlertStatus(
   );
   if (!alert) return;
   alert.status = status;
+  if (alert.type === "date_reminder") alert.date_suppressed = false;
   if (note?.trim()) alert.note = note.trim();
   recordDemoActivity(
     state,

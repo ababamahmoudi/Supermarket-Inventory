@@ -1,5 +1,5 @@
 .return-memo-table th:first-child {
-  width: 45%;
+  width: 38%;
 }
 .return-memo-table :is(th, td):not(:first-child) {
   text-align: end;
@@ -39,4 +39,47 @@
   left: 0;
   inline-size: 210mm;
   transform-origin: top left;
+}
+
+.return-memo-table th:nth-child(2) {
+  width: 15%;
+}
+.return-memo-table th:nth-child(3) {
+  width: 12%;
+}
+.return-memo-table th:nth-child(4) {
+  width: 16%;
+}
+.return-memo-table th:nth-child(5) {
+  width: 19%;
+}
+.return-memo-document .return-memo-table :is(th, td) {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.return-memo-table :is(th, td):nth-child(n + 2) {
+  white-space: nowrap;
+}
+.return-memo-reference {
+  text-align: end;
+}
+.return-memo-supplier {
+  padding-block: 4mm;
+}
+.return-memo-supplier h2,
+.return-memo-signatures h2 {
+  font-size: 11pt;
+  margin-block-end: 2mm;
+}
+.return-memo-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12mm;
+  margin-block-start: 12mm;
+}
+.return-memo-signatures .return-memo-signature {
+  margin-block: 5mm;
+}
+.return-memo-footnote {
+  margin-block-start: 8mm;
 }

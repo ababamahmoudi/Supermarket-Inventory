@@ -154,8 +154,8 @@ it("clears only edited Add date fields and saves retained evidence using styled 
     '"lot_number":"LOT-45"',
   );
   expect(
-    screen.getByRole("button", { name: "Undo Add date" }),
-  ).toBeInTheDocument();
+    screen.queryByRole("button", { name: "Undo Add date" }),
+  ).not.toBeInTheDocument();
 });
 
 it("Remove requires a reason, retains Removed evidence and offers a working Undo", async () => {
@@ -176,8 +176,7 @@ it("Remove requires a reason, retains Removed evidence and offers a working Undo
     '"removed_reason":"sold_out"',
   );
   expect(screen.queryByText("Checked shelf")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("combobox", { name: "Time window" }));
-  await user.click(screen.getByRole("option", { name: "Removed" }));
+  await user.click(screen.getByRole("tab", { name: "Removed" }));
   const removedRow = screen.getByText("Checked shelf").closest("tr")!;
   expect(within(removedRow).getByText("Sold out")).toBeInTheDocument();
   const removalStatus = within(removedRow).getByRole("cell", {
@@ -191,7 +190,7 @@ it("Remove requires a reason, retains Removed evidence and offers a working Undo
   expect(screen.queryByText("Checked shelf")).not.toBeInTheDocument();
 });
 
-it("Stop asks whether to remove existing dates, defaults to keeping them and can be undone", async () => {
+it("Stop requires an explicit keep or clear choice, hides retained dates, and can be undone", async () => {
   const user = await show();
   await user.click(
     screen.getByRole("button", { name: "Enable product tracking" }),
@@ -205,27 +204,41 @@ it("Stop asks whether to remove existing dates, defaults to keeping them and can
   let dialog = screen.getByRole("dialog", {
     name: "Stop tracking this product",
   });
-  expect(
-    within(dialog).getByRole("checkbox", {
-      name: "Remove existing open dates",
+  await user.click(
+    within(dialog).getByRole("button", { name: "Stop tracking this product" }),
+  );
+  expect(screen.getByTestId("preference")).toHaveTextContent("true");
+  const choice = within(dialog).getByRole("combobox", {
+    name: "Stop tracking",
+  });
+  expect(choice).toHaveAttribute("aria-invalid", "true");
+  await user.click(choice);
+  await user.click(
+    within(dialog).getByRole("option", {
+      name: "Stop tracking, keep the date on the product",
     }),
-  ).toHaveAttribute("aria-checked", "false");
+  );
   await user.click(
     within(dialog).getByRole("button", { name: "Stop tracking this product" }),
   );
   expect(screen.getByTestId("preference")).toHaveTextContent("false");
   expect(screen.getByTestId("dates")).toHaveTextContent('"status":"active"');
+  expect(screen.queryByText("Checked shelf")).not.toBeInTheDocument();
   await user.click(
     screen.getByRole("button", { name: "Undo Stop tracking this product" }),
   );
-  await user.click(within(row).getByRole("button", { name: "More" }));
+  const restoredRow = screen.getByText("Checked shelf").closest("tr")!;
+  await user.click(within(restoredRow).getByRole("button", { name: "More" }));
   await user.click(
     screen.getByRole("menuitem", { name: "Stop tracking this product" }),
   );
   dialog = screen.getByRole("dialog", { name: "Stop tracking this product" });
   await user.click(
-    within(dialog).getByRole("checkbox", {
-      name: "Remove existing open dates",
+    within(dialog).getByRole("combobox", { name: "Stop tracking" }),
+  );
+  await user.click(
+    within(dialog).getByRole("option", {
+      name: "Stop tracking and clear the dates",
     }),
   );
   await user.click(

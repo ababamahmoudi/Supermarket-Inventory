@@ -6,7 +6,7 @@
 .approval-review-summary {
   display: grid;
   gap: 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   background: var(--surface-soft);
   padding: 20px;
 }
@@ -69,7 +69,7 @@
 .approval-effect-list > li {
   display: grid;
   gap: 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 16px;
   background: var(--surface-soft);
   min-inline-size: 0;
@@ -100,7 +100,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--tile-lavender);
   font-size: 0.8125rem;
   line-height: 1.6;

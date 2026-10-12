@@ -84,7 +84,7 @@ test("retained case quote bills exactly, remembers the pack and leaves the poste
     "cases",
     "Cases",
   );
-  await line.getByLabel("Invoiced quantity", { exact: true }).fill("500");
+  await line.getByLabel("Invoiced", { exact: true }).fill("500");
   await line.getByLabel("Case cost before tax", { exact: true }).fill("19.99");
   await expect(
     line.getByLabel("Unit cost before tax", { exact: true }),
@@ -148,7 +148,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const order = before.orders!.at(-1)!;
   expect(order.status).toBe("ordered");
   const line = await manual(page);
-  await line.getByLabel("Invoiced quantity", { exact: true }).fill("18");
+  await line.getByLabel("Invoiced", { exact: true }).fill("18");
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.1000");
   const comparison = page.locator(".invoice-order-card");
   await chooseOption(
@@ -202,7 +202,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const postedLine = page
     .locator(".posted-invoice-document tbody tr")
     .filter({ hasText: "Canned Fava Beans 400 g" });
-  await expect(postedLine).toContainText("Delivered quantity: 12");
+  await expect(postedLine).toContainText("Delivered: 12");
   await expect(postedLine).toContainText(
     "Refused / sent back with the driver · 6 · $6.60",
   );
@@ -256,7 +256,11 @@ test("short-dated expiry discount requires a real date and preserves an existing
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   await expect(
     line.getByRole("button", { name: "Keep manual price", exact: true }),
   ).toHaveCount(0);

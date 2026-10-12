@@ -1,0 +1,104 @@
+.invoice-payment-terms,
+.invoice-date-suggestions,
+.invoice-supplier-review {
+  display: grid;
+  min-inline-size: 0;
+  gap: 16px;
+}
+.invoice-date-suggestion,
+.received-range-quick-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.invoice-date-suggestion {
+  justify-content: space-between;
+}
+.invoice-received-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+.invoice-received-fields .ui-date-field {
+  min-inline-size: 180px;
+  white-space: nowrap;
+}
+.invoice-lines-table .invoice-line-summary .field > label {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  margin: 0 0 8px;
+  overflow: visible;
+  clip-path: none;
+}
+.received-range-trigger {
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+}
+.invoice-list-scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block-end: 24px;
+}
+.invoice-lines-table th,
+.invoice-lines-table td {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.invoice-lines-table .control-narrow,
+.invoice-lines-table .ui-number-field {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.invoice-lines-table .invoice-line-toggle .product-name strong,
+.invoice-lines-table .invoice-line-toggle .product-name small,
+.invoice-lines-table .invoice-line-price > small,
+.invoice-lines-table .invoice-line-price > p {
+  white-space: normal;
+}
+@media (max-width: 759px) {
+  .invoice-received-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .invoice-lines-table table,
+  .invoice-lines-table tbody,
+  .invoice-lines-table tr,
+  .invoice-lines-table td {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .invoice-lines-table thead,
+  .invoice-lines-table colgroup {
+    display: none;
+  }
+  .invoice-lines-table .invoice-line {
+    padding-block: 16px;
+    border-block-end: 1px solid var(--divider);
+  }
+  .invoice-lines-table .invoice-line-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .invoice-line-summary > td:first-child {
+    grid-column: 1 / -1;
+  }
+  .invoice-lines-table .invoice-line-summary > td,
+  .invoice-lines-table .invoice-line-detail > td {
+    padding: 8px 0;
+  }
+  .invoice-line-summary .control-narrow {
+    max-inline-size: 100%;
+  }
+  .invoice-line-toggle .product-name strong,
+  .invoice-line-toggle .product-name small,
+  .invoice-line-price > p,
+  .invoice-line-price > small {
+    white-space: normal;
+  }
+}

@@ -6,14 +6,8 @@ import { useDemo } from "../store";
 import { Button, Card, IconButton } from "../ui";
 import { LtrText } from "../presentation";
 import type { DemoInvoice } from "../types";
+import { useStoredFile } from "../use-stored-file";
 import "./invoice-document-c4.css";
-
-function originalBytes(dataUrl: string): Uint8Array {
-  const [metadata, payload = ""] = dataUrl.split(/,(.*)/s);
-  if (metadata.includes(";base64"))
-    return Uint8Array.from(atob(payload), (value) => value.charCodeAt(0));
-  return new TextEncoder().encode(decodeURIComponent(payload));
-}
 
 export function OriginalInvoice({
   invoice,
@@ -50,6 +44,7 @@ function OriginalInvoiceContent({
   bare: boolean;
 }) {
   const { t } = useDemo();
+  const file = useStoredFile(invoice.file_data, invoice.company_id);
   const media = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(400);
@@ -84,16 +79,15 @@ function OriginalInvoiceContent({
     return () => observer.disconnect();
   }, [invoice.file_data]);
   useEffect(() => {
-    if (!invoice.file_data || invoice.file_type !== "application/pdf") return;
+    if (!file.source || invoice.file_type !== "application/pdf") return;
     let cancelled = false;
     let task: PDFDocumentLoadingTask | undefined;
-    const data = invoice.file_data;
-    void import("pdfjs-dist")
-      .then(({ getDocument, GlobalWorkerOptions }) => {
+    void Promise.all([import("pdfjs-dist"), file.source.arrayBuffer()])
+      .then(([{ getDocument, GlobalWorkerOptions }, bytes]) => {
         if (cancelled) return;
         GlobalWorkerOptions.workerSrc = workerUrl;
         task = getDocument({
-          data: originalBytes(data),
+          data: new Uint8Array(bytes),
           isEvalSupported: false,
         });
         return task.promise;
@@ -114,7 +108,7 @@ function OriginalInvoiceContent({
       cancelled = true;
       void task?.destroy();
     };
-  }, [invoice.file_data, invoice.file_type]);
+  }, [file.source, invoice.file_type]);
   useEffect(() => {
     if (!document || !canvas.current) return;
     let cancelled = false;
@@ -160,11 +154,15 @@ function OriginalInvoiceContent({
     };
   }, [document, page, width, zoom]);
   const download = () => {
-    if (!invoice.file_data) return;
+    if (!file.source) return;
     const anchor = window.document.createElement("a");
-    anchor.href = invoice.file_data;
+    const url = URL.createObjectURL(file.source);
+    anchor.href = url;
     anchor.download = invoice.file_name ?? "invoice";
+    window.document.body.append(anchor);
     anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const content = (
     <>
@@ -213,7 +211,11 @@ function OriginalInvoiceContent({
             <Button variant="secondary" onClick={() => setFit("page")}>
               {t("Fit page", "اندازه صفحه")}
             </Button>
-            <Button variant="secondary" onClick={download}>
+            <Button
+              variant="secondary"
+              onClick={download}
+              disabled={!file.source}
+            >
               <Download size={16} />
               {t("Download", "دانلود")}
             </Button>
@@ -242,17 +244,22 @@ function OriginalInvoiceContent({
               </IconButton>
             </div>
           )}
-          {loading && (
+          {(loading || file.loading) && (
             <p role="status">
               {t("Loading original invoice…", "در حال بارگذاری اصل فاکتور…")}
             </p>
           )}
-          {error && (
+          {(error || file.error) && (
             <p role="alert" className="form-error">
-              {t(
-                "The preview could not be opened. Download the original file.",
-                "پیش‌نمایش باز نشد. فایل اصلی را دانلود کنید.",
-              )}
+              {file.error
+                ? t(
+                    "The original could not be opened. Allow browser storage and reload the page.",
+                    "اصل فایل باز نشد. حافظهٔ مرورگر را فعال کنید و صفحه را دوباره بارگذاری کنید.",
+                  )
+                : t(
+                    "The preview could not be opened. Download the original file.",
+                    "پیش‌نمایش باز نشد. فایل اصلی را دانلود کنید.",
+                  )}
             </p>
           )}
           <div
@@ -269,7 +276,7 @@ function OriginalInvoiceContent({
               />
             ) : invoice.file_type?.startsWith("image/") ? (
               <img
-                src={invoice.file_data}
+                src={file.url}
                 alt={t("Original invoice image", "تصویر اصل فاکتور")}
                 style={{ width: `${zoom * 100}%` }}
                 onLoad={(event) => {

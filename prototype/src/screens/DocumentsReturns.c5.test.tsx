@@ -259,7 +259,9 @@ it("keeps status beside the return title, metadata below and policy as five clea
   expect(
     within(dialog).getByRole("button", { name: "Download full policy" }),
   ).toHaveClass("button-secondary");
-  await user.click(within(dialog).getByRole("button", { name: "Close" }));
+  await user.click(
+    within(dialog).getAllByRole("button", { name: "Close" }).at(-1)!,
+  );
   expect(screen.getByTestId("retained-ledger").textContent).toBe(beforeLedger);
 });
 

@@ -3,7 +3,16 @@ import { configSeed, demoSeed as demo } from "./config";
 import { effectivePrice } from "./catalog";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
-import { supplierRecords, supplierMatches } from "./supplier-editor";
+import {
+  supplierRecords,
+  supplierMatches,
+  missingInvoiceSupplierDetails,
+  confirmSupplier,
+} from "./supplier-editor";
+import { companyCalendarDate } from "./company-time";
+import { invoiceComputedTotal, paymentTermsDays } from "./invoice-entry";
+import { recordInvoiceReceiptLots } from "./receipt-lots";
+import type { OperationsContext } from "./operations";
 import { nextProductCode } from "./manual-product";
 import { manualPrice } from "./manual-prices";
 import { effectiveInvoiceLocation } from "./received";
@@ -34,6 +43,8 @@ import {
   shortOrderReceipt,
   validateShortOrderReceipt,
   applyShortOrderReceipt,
+  invoiceReviewerAllowed,
+  clearInvoiceOrderLine,
 } from "./invoice-orders";
 import type {
   Branch,
@@ -94,6 +105,105 @@ export function companyDate(config: CompanyConfig, now = new Date()): string {
   const get = (name: string) =>
     parts.find((part) => part.type === name)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/** A new/incomplete manual supplier is a review task, never a posting shortcut. */
+export function markInvoiceSupplierReview(
+  invoice: DemoInvoice,
+  supplier: ReturnType<typeof supplierRecords>[number],
+  previousSupplier = invoice.supplier,
+): void {
+  const requiresReview =
+    supplier.status !== "confirmed" ||
+    (invoice.supplier_review_required &&
+      !invoice.supplier_review_confirmed &&
+      supplierMatches(supplier, previousSupplier)) ||
+    (invoice.entry_mode === "manual" &&
+      missingInvoiceSupplierDetails(supplier).length > 0);
+  invoice.supplier_review_required = requiresReview;
+  invoice.supplier_review_confirmed = false;
+  if (requiresReview) invoice.status = "review";
+}
+
+export function confirmInvoiceSupplierReview(
+  state: DemoState,
+  context: OperationsContext,
+  now = new Date(),
+): void {
+  const invoice = state.invoice;
+  if (
+    context.company_id !== state.config.company.seed_key ||
+    context.role !== "supervisor" ||
+    !invoiceReviewerAllowed(state, invoice, context.role, context.branch) ||
+    invoice.status === "posted"
+  )
+    throw new Error("Only a Supervisor can confirm this supplier review.");
+  const supplier = supplierRecords(state).find(
+    (item) =>
+      item.company_id === invoice.company_id &&
+      supplierMatches(item, invoice.supplier),
+  );
+  if (!supplier || !supplier.active)
+    throw new Error("Choose an active supplier.");
+  if (missingInvoiceSupplierDetails(supplier).length)
+    throw new Error("Complete supplier details before confirming.");
+  if (supplier.status !== "confirmed")
+    confirmSupplier(state, context, supplier.id, now);
+  if (invoice.supplier_review_confirmed) return;
+  const before = structuredClone(invoice);
+  invoice.supplier_confirmed = true;
+  invoice.supplier_review_confirmed = true;
+  state.activity.push({
+    id: createId("supplier-review"),
+    company_id: invoice.company_id,
+    branch: invoice.branch,
+    action: "Confirm supplier",
+    by: context.actor,
+    at: now.toISOString(),
+    reversible: false,
+    entity_type: "invoice",
+    entity_id: invoice.id,
+    before,
+    after: structuredClone(invoice),
+  });
+}
+
+export function removeInvoiceLine(
+  state: DemoState,
+  context: OperationsContext,
+  index: number,
+  now = new Date(),
+): void {
+  const invoice = state.invoice;
+  if (
+    context.company_id !== state.config.company.seed_key ||
+    !invoiceReviewerAllowed(state, invoice, context.role, context.branch) ||
+    !["draft", "review"].includes(invoice.status) ||
+    !Number.isSafeInteger(index) ||
+    index < 0 ||
+    index >= invoice.lines.length
+  )
+    throw new Error("Choose a draft invoice line in your allowed location.");
+  const before = structuredClone(invoice);
+  invoice.lines.splice(index, 1);
+  invoice.order_comparison = undefined;
+  invoice.order_missing_decisions = undefined;
+  invoice.lower_price_answers = undefined;
+  for (const line of invoice.lines) clearInvoiceOrderLine(line);
+  recalculateInvoice(invoice, state.config);
+  state.activity.push({
+    id: createId("invoice-line-remove"),
+    company_id: invoice.company_id,
+    branch: invoice.branch,
+    action: "Remove line",
+    by: context.actor,
+    at: now.toISOString(),
+    reversible: true,
+    entity_type: "invoice",
+    entity_id: invoice.id,
+    before,
+    after: structuredClone(invoice),
+  });
 }
 
 /** Remember entry metadata without replacing facts read from the original invoice. */
@@ -366,9 +476,10 @@ export function recalculateInvoice(
   }
   invoice.subtotal = cents(subtotal);
   invoice.tax = cents(tax);
-  invoice.final_total = cents(subtotal.plus(tax));
+  if (!invoice.final_total_manual)
+    invoice.final_total = invoiceComputedTotal(invoice)!;
   invoice.payable_after_open_shorts = cents(
-    new Decimal(invoice.final_total)
+    new Decimal(validMoney(invoice.final_total) ? invoice.final_total : "0")
       .minus(shortTotals(invoice).total)
       .minus(refusedTotals(invoice).total),
   );
@@ -709,6 +820,9 @@ export type InvoiceBlocker =
   | "company"
   | "supplier"
   | "supplier_pending"
+  | "supplier_details"
+  | "supplier_review"
+  | "payment_terms"
   | "header"
   | "money"
   | "file"
@@ -752,8 +866,27 @@ export function invoiceBlockers(
   )
     blockers.push("supplier_pending");
   if (
-    !invoice.invoice_date ||
+    invoice.entry_mode === "manual" &&
+    supplier &&
+    missingInvoiceSupplierDetails(supplier).length
+  )
+    blockers.push("supplier_details");
+  if (invoice.supplier_review_required && !invoice.supplier_review_confirmed)
+    blockers.push("supplier_review");
+  if (
+    invoice.entry_mode === "manual" &&
+    invoice.payment_terms &&
+    ((/^net/i.test(invoice.payment_terms) &&
+      paymentTermsDays(invoice.payment_terms) === undefined) ||
+      (!invoice.due_date_manual &&
+        paymentTermsDays(invoice.payment_terms) !== undefined &&
+        !actualDate(invoice.due_date)))
+  )
+    blockers.push("payment_terms");
+  if (
+    !actualDate(invoice.invoice_date) ||
     !invoice.received_at ||
+    Number.isNaN(Date.parse(invoice.received_at)) ||
     !invoice.receiving_employee?.trim()
   )
     blockers.push("header");
@@ -771,11 +904,7 @@ export function invoiceBlockers(
     if (
       !product &&
       !(line.refused_units && acceptedInvoiceUnits(line) === 0) &&
-      !(
-        line.product_code === "NEW" &&
-        line.new_name_en?.trim() &&
-        line.new_name_fa?.trim()
-      )
+      !(line.product_code === "NEW" && line.new_name_en?.trim())
     )
       blockers.push("matching");
     if (!validInvoiceLineQuantity(line) || !validInvoiceLineReceived(line))
@@ -941,7 +1070,8 @@ export function postInvoice(
         company_id: invoice.company_id,
         code: line.product_code,
         name_en: line.new_name_en!,
-        name_fa: line.new_name_fa!,
+        name_fa: line.new_name_fa?.trim() ?? "",
+        first_added_branch: invoice.branch,
         pricing_category: line.pricing_category ?? "grocery",
         unit_size: line.sold_by === "weight" ? "" : "100 g",
         sold_by: line.sold_by ?? "each",
@@ -1095,6 +1225,7 @@ export function postInvoice(
       line.date_value &&
       acceptedInvoiceUnits(line) > 0
     ) {
+      product.date_tracking = true;
       state.expiry.push({
         id: `${invoice.id}:date:${lineIndex}:${product.code}`,
         company_id: invoice.company_id,
@@ -1102,11 +1233,10 @@ export function postInvoice(
         product_code: product.code,
         invoice_id: invoice.id,
         invoice_number: invoice.supplier_invoice_number,
-        received_date: (
-          invoice.received_at ??
-          invoice.invoice_date ??
-          now
-        ).slice(0, 10),
+        received_date: companyCalendarDate(
+          state.config,
+          invoice.received_at ?? invoice.invoice_date ?? now,
+        ),
         date: line.date_value,
         status: "active",
         source: "invoice",
@@ -1220,6 +1350,7 @@ export function postInvoice(
     new Decimal(invoice.final_total).minus(totals.total).minus(refused.total),
   );
   invoice.status = "posted";
+  recordInvoiceReceiptLots(state, invoice);
   invoice.posted_at = now;
   if (orderComparison) {
     invoice.order_comparison = structuredClone(orderComparison);

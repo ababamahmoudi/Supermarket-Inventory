@@ -7,6 +7,7 @@ import {
   SupplierItemError,
   type SupplierItemRow,
 } from "../supplier-items";
+import { WhatsMissing } from "../WhatsMissing";
 import type { OperationsContext } from "../operations";
 import { branchLabel } from "../settings";
 import {
@@ -424,6 +425,15 @@ function SupplierItemEditor({
     item?.financial?.quoted_unit_cost_before_tax ?? "",
   );
   const [error, setError] = useState<SupplierItemError["code"] | null>(null);
+  const [missing, setMissing] = useState<
+    Partial<Record<"product" | "pack" | "cost" | "code", string>>
+  >({});
+  const clearMissing = (field: "product" | "pack" | "cost" | "code") =>
+    setMissing((previous) => {
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
   const errors: Record<SupplierItemError["code"], string> = {
     permission: t(
       "Only a Supervisor can save supplier items.",
@@ -471,6 +481,26 @@ function SupplierItemEditor({
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
+          const next: typeof missing = {};
+          if (
+            !state.products.some(
+              (record) =>
+                record.company_id === state.config.company.seed_key &&
+                record.code === product &&
+                record.status !== "archived",
+            )
+          )
+            next.product = errors.product;
+          if (
+            !/^\d+$/.test(pack) ||
+            !Number.isSafeInteger(Number(pack)) ||
+            Number(pack) <= 0
+          )
+            next.pack = errors.pack;
+          if (quote && !/^\d+(\.\d{1,4})?$/.test(quote))
+            next.cost = errors.cost;
+          setMissing(next);
+          if (Object.keys(next).length) return;
           try {
             onSave({
               product_code: product,
@@ -480,18 +510,39 @@ function SupplierItemEditor({
             });
             onClose();
           } catch (cause) {
-            setError(cause instanceof SupplierItemError ? cause.code : "scope");
+            const key =
+              cause instanceof SupplierItemError ? cause.code : "scope";
+            if (["product", "pack", "cost", "duplicate"].includes(key)) {
+              const field =
+                key === "duplicate"
+                  ? "code"
+                  : (key as "product" | "pack" | "cost");
+              setMissing({ [field]: errors[key] });
+            } else setError(key);
           }
         }}
       >
+        <WhatsMissing
+          issues={Object.entries(missing).map(([field, message]) => ({
+            id: field,
+            fieldId: `supplier-item-${field}`,
+            message,
+          }))}
+        />
         <Field
           label={t("Product", "کالا")}
-          error={error === "product" ? errors.product : undefined}
+          error={
+            missing.product ??
+            (error === "product" ? errors.product : undefined)
+          }
         >
           <Select
+            id="supplier-item-product"
             value={product}
             onChange={(value) => {
               setProduct(value);
+              clearMissing("product");
+              clearMissing("code");
               if (error === "product") setError(null);
             }}
             searchable
@@ -505,45 +556,59 @@ function SupplierItemEditor({
                 )
                 .map((record) => ({
                   value: record.code,
-                  label: `${record.code} · ${lang === "fa" ? record.name_fa : record.name_en}`,
+                  label: `${record.code} · ${lang === "fa" ? record.name_fa || record.name_en : record.name_en}`,
                 })),
             ]}
           />
         </Field>
-        <Field label={t("Supplier code", "کد تأمین‌کننده")}>
+        <Field
+          label={t("Supplier code (optional)", "کد تأمین‌کننده (اختیاری)")}
+          error={missing.code}
+        >
           <input
+            id="supplier-item-code"
             dir="ltr"
             value={code}
-            onChange={(event) => setCode(event.target.value)}
+            onChange={(event) => {
+              setCode(event.target.value);
+              clearMissing("code");
+            }}
           />
         </Field>
         <div className="supplier-item-editor-values">
           <Field
             label={t("Units per case", "واحد در هر کارتن")}
-            error={error === "pack" ? errors.pack : undefined}
+            error={missing.pack ?? (error === "pack" ? errors.pack : undefined)}
           >
             <input
+              id="supplier-item-pack"
               className="supplier-item-narrow"
               dir="ltr"
               inputMode="numeric"
               value={pack}
               onChange={(event) => {
                 setPack(event.target.value);
+                clearMissing("pack");
                 if (error === "pack" || error === "quantity") setError(null);
               }}
             />
           </Field>
           <Field
-            label={t("Expected unit cost", "هزینه مورد انتظار واحد")}
-            error={error === "cost" ? errors.cost : undefined}
+            label={t(
+              "Expected unit cost (optional)",
+              "هزینه مورد انتظار واحد (اختیاری)",
+            )}
+            error={missing.cost ?? (error === "cost" ? errors.cost : undefined)}
           >
             <input
+              id="supplier-item-cost"
               className="supplier-item-narrow"
               dir="ltr"
               inputMode="decimal"
               value={quote}
               onChange={(event) => {
                 setQuote(event.target.value);
+                clearMissing("cost");
                 if (error === "cost") setError(null);
               }}
             />

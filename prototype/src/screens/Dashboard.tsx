@@ -2,6 +2,7 @@ import {
   branchLabel as configuredBranchLabel,
   branchSellsToCustomers,
   sellingBranches,
+  configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useEffect, useState, type ReactNode } from "react";
@@ -21,8 +22,8 @@ import {
   effectiveInvoiceLocation,
   effectiveApprovalLocation,
   projectInvoiceLocation,
-  projectExpiryLocation,
 } from "../received";
+import { activeTrackedDates, dateIsDueSoon } from "../date-tracking";
 import { approvalSnapshot, resolveApproval } from "../approvals";
 import { effectivePrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
@@ -157,6 +158,7 @@ export function Dashboard() {
     barcode_conflict: 4,
     order_differences: 5,
     return_credit_overdue: 6,
+    date_reminder: 7,
   };
   const alerts = state.alerts
     .filter(
@@ -216,16 +218,11 @@ export function Dashboard() {
         0,
     ),
   );
-  const expiry = scopedRecords(
-    state.expiry.map((entry) => projectExpiryLocation(state, entry)),
-    context,
-  ).filter(
-    (item) =>
-      item.status === "active" &&
-      item.date >= today &&
-      Math.ceil((Date.parse(item.date) - Date.parse(today)) / 86_400_000) <=
-        state.config.expiry.expiring_soon_days,
-  );
+  const expiry = activeTrackedDates(state, {
+    ...context,
+    allowed_branches:
+      role === "supervisor" ? configuredBranches(state.config, true) : [branch],
+  }).filter((item) => dateIsDueSoon(state, item));
   const notes = scopedRecords(state.notes, context)
     .filter(
       (item) =>
@@ -299,6 +296,7 @@ export function Dashboard() {
         "Return waiting for credit",
         "مرجوعی در انتظار اعتبار",
       ),
+      date_reminder: t("Date tracking", "پیگیری تاریخ"),
     })[type];
   const invoiceStatus = (status: DemoInvoice["status"]) =>
     ({
@@ -518,13 +516,9 @@ export function Dashboard() {
     {
       label: t("Expiring soon", "انقضای نزدیک"),
       value: expiry.length,
-      detail: translateCount(
-        "Within {{count}} day",
-        "Within {{count}} days",
-        "در {{count}} روز آینده",
-        "در {{count}} روز آینده",
-        state.config.expiry.expiring_soon_days,
-        lang,
+      detail: t(
+        "Within each product's reminder window",
+        "در بازهٔ یادآوری هر محصول",
       ),
       page: "expiry",
       icon: CalendarClock,

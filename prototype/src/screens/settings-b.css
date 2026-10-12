@@ -8,18 +8,18 @@
   display: grid;
   gap: 4px;
   padding: 8px;
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   background: var(--surface);
   position: sticky;
   inset-block-start: 88px;
 }
 .settings-group-menu button {
   min-block-size: 40px;
-  background: transparent;
+  background: var(--color-clear);
   color: var(--text-muted);
   text-align: start;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 8px 12px;
   font: inherit;
   line-height: 1.35;
@@ -86,7 +86,7 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-search);
   background: var(--surface);
   max-inline-size: 720px;
 }
@@ -126,8 +126,8 @@
   max-block-size: 96px;
   object-fit: contain;
   margin-block-start: 24px;
-  background: white;
-  border-radius: 12px;
+  background: var(--klead-white);
+  border-radius: var(--radius-control);
   padding: 12px;
 }
 .settings-bands,

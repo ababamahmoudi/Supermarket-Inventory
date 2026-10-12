@@ -7,20 +7,26 @@ import {
   similarSupplierNames,
   SupplierEditError,
   type SupplierEdits,
+  invoiceSupplierFields,
 } from "../supplier-editor";
 import type { SupplierRecord } from "../types";
 import { Button, Checkbox, DateField, Dialog, Field } from "../ui";
 import { LtrText } from "../presentation";
 import "./manual-entry.css";
+import { PaymentTermsControl } from "./PaymentTermsControl";
+import { paymentTermsDays } from "../invoice-entry";
+import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 
 export function SupplierEditor({
   supplier,
   invoiceQuickAdd = false,
+  completeForInvoice = false,
   onClose,
   onSaved,
 }: {
   supplier?: SupplierRecord;
   invoiceQuickAdd?: boolean;
+  completeForInvoice?: boolean;
   onClose: () => void;
   onSaved?: (supplier: SupplierRecord) => void;
 }) {
@@ -41,6 +47,7 @@ export function SupplierEditor({
       date: companyDate(state.config),
     })),
   });
+  const [attemptedSave, setAttemptedSave] = useState(false);
   const [error, setError] = useState<SupplierEditError["code"] | null>(null);
   const matches = similarSupplierNames(state, values.name, supplier?.id);
   const patch = (key: keyof SupplierEdits, value: string | boolean) => {
@@ -81,6 +88,80 @@ export function SupplierEditor({
     ),
     not_found: t("Supplier not found.", "تأمین‌کننده پیدا نشد."),
   };
+  const fieldNames: Record<string, [string, string]> = {
+    name: ["Supplier name", "نام تأمین‌کننده"],
+    phone: ["Phone", "تلفن"],
+    email: ["Email", "ایمیل"],
+    sales_rep_name: ["Sales representative", "نماینده فروش"],
+    sales_rep_phone: ["Sales rep phone", "تلفن نماینده فروش"],
+    payment_terms: ["Payment terms", "شرایط پرداخت"],
+  };
+  const missing: ValidationIssue[] = [
+    "name",
+    ...(completeForInvoice ? invoiceSupplierFields : []),
+  ]
+    .filter(
+      (field) => !String(values[field as keyof SupplierEdits] ?? "").trim(),
+    )
+    .map((field) => ({
+      id: `supplier-${field}-missing`,
+      fieldId: `supplier-${field}`,
+      message: `${t("Enter", "وارد کنید:")} ${t(...fieldNames[field])}.`,
+    }));
+  if (
+    values.email.trim() &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())
+  )
+    missing.push({
+      id: "supplier-email-invalid",
+      fieldId: "supplier-email",
+      message: errors.email,
+    });
+  if (
+    values.payment_terms &&
+    /^net/i.test(values.payment_terms) &&
+    paymentTermsDays(values.payment_terms) === undefined
+  )
+    missing.push({
+      id: "supplier-payment-invalid",
+      fieldId: "supplier-payment_terms",
+      message: t(
+        "Enter a nonnegative whole number of days.",
+        "تعداد روزها را به صورت عدد صحیح غیرمنفی وارد کنید.",
+      ),
+    });
+  if (matches.length && !values.similar_name_confirmed)
+    missing.push({
+      id: "supplier-similar-missing",
+      fieldId: "supplier-similar",
+      message: errors.similar,
+    });
+  for (const [index, row] of (supervisor && !supplier
+    ? (values.opening_balances ?? [])
+    : []
+  ).entries()) {
+    if (!row.amount.trim()) continue;
+    if (!/^-?\d+(?:\.\d{1,2})?$/.test(row.amount))
+      missing.push({
+        id: `supplier-balance-${index}-missing`,
+        fieldId: `supplier-balance-${index}`,
+        message: errors.balance,
+      });
+    const date = new Date(`${row.date}T12:00:00Z`);
+    if (
+      !Number.isFinite(date.getTime()) ||
+      date.toISOString().slice(0, 10) !== row.date
+    )
+      missing.push({
+        id: `supplier-balance-date-${index}-missing`,
+        fieldId: `supplier-balance-date-${index}`,
+        message: errors.date,
+      });
+  }
+  const fieldError = (field: string) =>
+    attemptedSave
+      ? missing.find((item) => item.fieldId === `supplier-${field}`)?.message
+      : undefined;
   if (!supervisor && !(role === "floor_worker" && invoiceQuickAdd && !supplier))
     return null;
   return (
@@ -102,6 +183,8 @@ export function SupplierEditor({
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
+          setAttemptedSave(true);
+          if (missing.length) return;
           try {
             let saved: SupplierRecord | undefined;
             update((draft) => {
@@ -119,7 +202,11 @@ export function SupplierEditor({
                     opening_balances:
                       supervisor && !supplier ? values.opening_balances : [],
                   },
-                  { id: supplier?.id, invoice_quick_add: invoiceQuickAdd },
+                  {
+                    id: supplier?.id,
+                    invoice_quick_add: invoiceQuickAdd,
+                    complete_invoice_details: completeForInvoice,
+                  },
                 ),
               );
             });
@@ -130,11 +217,15 @@ export function SupplierEditor({
           }
         }}
       >
+        <WhatsMissing issues={attemptedSave ? missing : []} />
         <Field
           label={t("Supplier name", "نام تأمین‌کننده")}
-          error={error === "name" ? errors.name : undefined}
+          error={
+            fieldError("name") || (error === "name" ? errors.name : undefined)
+          }
         >
           <input
+            id="supplier-name"
             autoFocus
             dir="auto"
             value={values.name}
@@ -142,49 +233,84 @@ export function SupplierEditor({
           />
         </Field>
         <div className="manual-entry-pair">
-          <Field label={t("Phone", "تلفن")}>
+          <Field
+            label={
+              completeForInvoice
+                ? t("Phone", "تلفن")
+                : t("Phone (optional)", "تلفن (اختیاری)")
+            }
+            error={fieldError("phone")}
+          >
             <input
               dir="ltr"
               type="tel"
+              id="supplier-phone"
               value={values.phone}
               onChange={(event) => patch("phone", event.target.value)}
             />
           </Field>
           <Field
-            label={t("Email", "ایمیل")}
-            error={error === "email" ? errors.email : undefined}
+            label={
+              completeForInvoice
+                ? t("Email", "ایمیل")
+                : t("Email (optional)", "ایمیل (اختیاری)")
+            }
+            error={
+              fieldError("email") ||
+              (error === "email" ? errors.email : undefined)
+            }
           >
             <input
               dir="ltr"
               type="email"
+              id="supplier-email"
               value={values.email}
               onChange={(event) => patch("email", event.target.value)}
             />
           </Field>
-          <Field label={t("Sales representative", "نماینده فروش")}>
+          <Field
+            label={
+              completeForInvoice
+                ? t("Sales representative", "نماینده فروش")
+                : t("Sales representative (optional)", "نماینده فروش (اختیاری)")
+            }
+            error={fieldError("sales_rep_name")}
+          >
             <input
               dir="auto"
+              id="supplier-sales_rep_name"
               value={values.sales_rep_name}
               onChange={(event) => patch("sales_rep_name", event.target.value)}
             />
           </Field>
-          <Field label={t("Sales rep phone", "تلفن نماینده فروش")}>
+          <Field
+            label={
+              completeForInvoice
+                ? t("Sales rep phone", "تلفن نماینده فروش")
+                : t("Sales rep phone (optional)", "تلفن نماینده فروش (اختیاری)")
+            }
+            error={fieldError("sales_rep_phone")}
+          >
             <input
               dir="ltr"
               type="tel"
+              id="supplier-sales_rep_phone"
               value={values.sales_rep_phone}
               onChange={(event) => patch("sales_rep_phone", event.target.value)}
             />
           </Field>
         </div>
-        <Field label={t("Payment terms", "شرایط پرداخت")}>
-          <input
-            dir="auto"
-            value={values.payment_terms}
-            onChange={(event) => patch("payment_terms", event.target.value)}
-            placeholder={t("Payment terms", "شرایط پرداخت")}
-          />
-        </Field>
+        <PaymentTermsControl
+          id="supplier-payment_terms"
+          label={
+            completeForInvoice
+              ? t("Payment terms", "شرایط پرداخت")
+              : t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")
+          }
+          value={values.payment_terms}
+          error={fieldError("payment_terms")}
+          onChange={(value) => patch("payment_terms", value)}
+        />
         <Field label={t("Address (optional)", "نشانی (اختیاری)")}>
           <textarea
             rows={2}
@@ -212,14 +338,21 @@ export function SupplierEditor({
                 <Field
                   label={t("Opening balance", "ماندهٔ اولیه")}
                   error={
-                    error === "balance" &&
+                    (attemptedSave
+                      ? missing.find(
+                          (item) =>
+                            item.fieldId === `supplier-balance-${index}`,
+                        )?.message
+                      : undefined) ||
+                    (error === "balance" &&
                     row.amount &&
                     !/^-?\d+(?:\.\d{1,2})?$/.test(row.amount)
                       ? errors.balance
-                      : undefined
+                      : undefined)
                   }
                 >
                   <input
+                    id={`supplier-balance-${index}`}
                     dir="ltr"
                     inputMode="decimal"
                     className="control-narrow"
@@ -240,9 +373,18 @@ export function SupplierEditor({
                 </Field>
                 <Field
                   label={t("As of", "در تاریخ")}
-                  error={error === "date" ? errors.date : undefined}
+                  error={
+                    (attemptedSave
+                      ? missing.find(
+                          (item) =>
+                            item.fieldId === `supplier-balance-date-${index}`,
+                        )?.message
+                      : undefined) ||
+                    (error === "date" ? errors.date : undefined)
+                  }
                 >
                   <DateField
+                    id={`supplier-balance-date-${index}`}
                     value={row.date}
                     onChange={(date) => {
                       if (error === "date") setError(null);
@@ -286,6 +428,7 @@ export function SupplierEditor({
               </Button>
             ))}
             <Checkbox
+              id="supplier-similar"
               checked={!!values.similar_name_confirmed}
               onChange={(checked) => patch("similar_name_confirmed", checked)}
             >

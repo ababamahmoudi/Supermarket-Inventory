@@ -19,9 +19,12 @@ import { RemoveDateDialog, StopTrackingDialog } from "../AddDateDialog";
 import {
   dateRemovalReasonLabel,
   scopedTrackedDates,
+  activeTrackedDates,
+  productReminderDays,
   trackedDateDaysLeft,
 } from "../date-tracking";
 import { DateQuickAdd } from "../DateQuickAdd";
+import { formatQuantity } from "../formatters";
 import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
 import {
   Badge,
@@ -34,6 +37,7 @@ import {
   MenuItem,
   PageHeader,
   Select,
+  Tabs,
   useTableColumns,
 } from "../ui";
 export function Expiry() {
@@ -55,34 +59,71 @@ export function Expiry() {
       label: t("Product", "محصول"),
       required: true,
       width: 220,
+      priority: 1,
+      minWidth: 190,
+      mobilePrimary: true,
     },
-    { key: "location", label: t("Location", "مکان"), width: 112 },
-    { key: "date", label: t("Date", "تاریخ"), width: 128 },
-    { key: "type", label: t("Type", "نوع"), width: 104 },
+    {
+      key: "location",
+      label: t("Location", "مکان"),
+      width: 120,
+      priority: 4,
+      minWidth: 116,
+    },
+    {
+      key: "date",
+      label: t("Date", "تاریخ"),
+      width: 128,
+      priority: 2,
+      minWidth: 120,
+    },
+    {
+      key: "type",
+      label: t("Type", "نوع"),
+      width: 104,
+      priority: 8,
+      minWidth: 102,
+    },
     {
       key: "days",
       label: t("Days left", "روز باقی‌مانده"),
       width: 88,
       align: "end",
+      priority: 3,
+      minWidth: 96,
     },
     {
       key: "supplier",
       label: t("Source / invoice", "منبع / فاکتور"),
       width: 168,
+      priority: 5,
+      minWidth: 165,
     },
-    { key: "status", label: t("Status", "وضعیت"), width: 136 },
+    {
+      key: "status",
+      label: t("Status", "وضعیت"),
+      width: 136,
+      priority: 6,
+      minWidth: 136,
+    },
     {
       key: "actions",
       label: t("Action", "عملیات"),
       width: 160,
       align: "end",
       actions: true,
+      priority: 0,
+      minWidth: 128,
     },
   ]);
   const today = companyDate(state.config);
   const daysLeft = (date: string) => trackedDateDaysLeft(date, today);
   const entries = (
-    historyContext ? scopedTrackedDates(state, historyContext, true) : []
+    historyContext
+      ? window === "removed" || window === "cleared"
+        ? scopedTrackedDates(state, historyContext, true)
+        : activeTrackedDates(state, historyContext)
+      : []
   )
     .filter((entry) => {
       const product = state.products.find(
@@ -96,8 +137,7 @@ export function Expiry() {
           ? entry.status !== "active"
           : entry.status === "active") &&
         (category === "all" || product?.ai_category === category) &&
-        (window !== "soon" ||
-          (days >= 0 && days <= state.config.expiry.expiring_soon_days)) &&
+        (window !== "soon" || days <= productReminderDays(state, product)) &&
         (window !== "expired" || days < 0) &&
         (!search ||
           `${product?.name_en} ${product?.name_fa} ${entry.product_code}`
@@ -210,26 +250,18 @@ export function Expiry() {
           />
         }
       >
-        <Select
+        <Tabs
           aria-label={t("Time window", "بازه زمانی")}
           value={window === "cleared" ? "removed" : window}
           onChange={setWindow}
           options={[
             {
               value: "soon",
-              label: `${t("Expiring soon", "به‌زودی منقضی")} (${translateCount(
-                "{{count}} day",
-                "{{count}} days",
-                "{{count}} روز",
-                "{{count}} روز",
-                state.config.expiry.expiring_soon_days,
-                lang,
-              )})`,
+              label: t("Due soon", "نزدیک موعد"),
             },
-            { value: "expired", label: t("Expired", "منقضی‌شده") },
             {
               value: "active",
-              label: t("All active dates", "همه تاریخ‌های فعال"),
+              label: t("All dates", "همه تاریخ‌ها"),
             },
             {
               value: "removed",
@@ -363,7 +395,15 @@ export function Expiry() {
                           {entry.quantity && (
                             <div>
                               {t("Quantity", "مقدار")}:{" "}
-                              <LtrText>{entry.quantity}</LtrText>
+                              <LtrText>
+                                {formatQuantity(
+                                  entry.quantity,
+                                  product?.sold_by === "weight"
+                                    ? "lb"
+                                    : "units",
+                                  lang,
+                                )}
+                              </LtrText>
                             </div>
                           )}
                           {entry.lot_number && (
@@ -420,7 +460,12 @@ export function Expiry() {
                         )}
                         {entry.source === "manual" && entry.created_at && (
                           <div>
-                            <DateText value={entry.created_at.slice(0, 10)} />
+                            <DateText
+                              value={companyDate(
+                                state.config,
+                                new Date(entry.created_at),
+                              )}
+                            />
                           </div>
                         )}
                       </div>
@@ -432,7 +477,7 @@ export function Expiry() {
                             ? "neutral"
                             : days < 0
                               ? "danger"
-                              : days <= state.config.expiry.expiring_soon_days
+                              : days <= productReminderDays(state, product)
                                 ? "pending"
                                 : "info"
                         }
@@ -441,7 +486,7 @@ export function Expiry() {
                           ? t("Removed", "حذف‌شده")
                           : days < 0
                             ? t("Expired", "منقضی‌شده")
-                            : days <= state.config.expiry.expiring_soon_days
+                            : days <= productReminderDays(state, product)
                               ? t("Expiring soon", "به‌زودی منقضی")
                               : t("Open", "باز")}
                       </Badge>
@@ -469,7 +514,12 @@ export function Expiry() {
                           {entry.removed_by && <div>{entry.removed_by}</div>}
                           {entry.removed_at && (
                             <div>
-                              <DateText value={entry.removed_at.slice(0, 10)} />
+                              <DateText
+                                value={companyDate(
+                                  state.config,
+                                  new Date(entry.removed_at),
+                                )}
+                              />
                             </div>
                           )}
                         </div>

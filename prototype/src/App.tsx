@@ -13,6 +13,7 @@ import {
   LockKeyhole,
   LogOut,
   MessageSquare,
+  MapPin,
   Moon,
   Package,
   PanelLeftClose,
@@ -45,6 +46,7 @@ import {
   visibleNotebooks,
 } from "./notebooks";
 import UndoToasts from "./UndoToasts";
+import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
@@ -81,6 +83,8 @@ import {
   Select,
 } from "./ui";
 import "./c5-shell-controls.css";
+import "./klead-tokens.css";
+import "./c6-shared.css";
 
 export const pages: {
   key: string;
@@ -491,9 +495,10 @@ function AuthLayout({ children }: { children: ReactNode }) {
       <Card className="signin-card">
         <span className="signin-logo-tile">
           <span className="brand-logo-window signin-logo-window">
-            <img
+            <StoredFileImage
               className="signin-logo"
-              src={state.config.company.logo_data ?? logo}
+              value={state.config.company.logo_data ?? logo}
+              companyId={state.config.company.seed_key}
               alt={t(
                 state.config.company.name_en,
                 state.config.company.name_fa,
@@ -680,17 +685,30 @@ export default function App() {
   useNavigationRestoration();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [compactWidth, setCompactWidth] = useState(
+    () => window.innerWidth >= 760 && window.innerWidth < 1280,
+  );
+  const effectiveCollapsed = collapsed || compactWidth;
   const [compactGroups, setCompactGroups] = useState(
     () => window.matchMedia?.("(max-height: 1020px)").matches ?? false,
   );
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia?.("(max-width: 760px)").matches ?? false,
+    () =>
+      window.matchMedia?.("(max-width: 759px)").matches ??
+      window.innerWidth < 760,
   );
   const [resetOpen, setResetOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [, setReauthenticationClock] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const resize = () =>
+      setCompactWidth(window.innerWidth >= 760 && window.innerWidth < 1280);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
   useEffect(() => {
     const media = window.matchMedia?.("(max-height: 1020px)");
     if (!media) return;
@@ -699,7 +717,7 @@ export default function App() {
     return () => media.removeEventListener("change", resize);
   }, []);
   useEffect(() => {
-    const media = window.matchMedia?.("(max-width: 760px)");
+    const media = window.matchMedia?.("(max-width: 759px)");
     if (!media) return;
     const resize = () => setIsMobile(media.matches);
     media.addEventListener("change", resize);
@@ -710,16 +728,18 @@ export default function App() {
       setHash(window.location.hash.slice(1));
       setMenuOpen(false);
       setExpandedGroup(null);
+      setSearchOpen(false);
     };
     const onShortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (
         event.key === "/" &&
         !target?.matches("input, textarea, [contenteditable=true]") &&
-        searchRef.current
+        !target?.closest("dialog[open]")
       ) {
         event.preventDefault();
-        searchRef.current.focus();
+        if (window.innerWidth < 1280) setSearchOpen(true);
+        else searchRef.current?.focus();
       }
     };
     window.addEventListener("hashchange", onHash);
@@ -943,7 +963,7 @@ export default function App() {
 
   return (
     <div
-      className={`app-shell ${collapsed ? "is-collapsed" : ""}`}
+      className={`app-shell ${effectiveCollapsed ? "is-collapsed" : ""} ${menuOpen ? "menu-open" : ""}`}
       dir={lang === "fa" ? "rtl" : "ltr"}
     >
       <a
@@ -971,9 +991,10 @@ export default function App() {
         <div className="sidebar-brand">
           <span className="brand-logo-tile">
             <span className="brand-logo-window">
-              <img
+              <StoredFileImage
                 className="brand-logo"
-                src={state.config.company.logo_data ?? logo}
+                value={state.config.company.logo_data ?? logo}
+                companyId={state.config.company.seed_key}
                 alt={t(
                   state.config.company.name_en,
                   state.config.company.name_fa,
@@ -999,7 +1020,7 @@ export default function App() {
                     className="nav-group-toggle"
                     aria-expanded={open}
                     aria-controls={`nav-group-${group}`}
-                    title={collapsed ? t(...names) : undefined}
+                    title={effectiveCollapsed ? t(...names) : undefined}
                     onClick={() => setExpandedGroup(open ? "" : group)}
                   >
                     <span className="nav-section-label">{t(...names)}</span>
@@ -1034,7 +1055,7 @@ export default function App() {
                         tabIndex={item.disabled ? -1 : undefined}
                         aria-label={t(item.en, item.fa)}
                         title={
-                          collapsed || item.disabled
+                          item.disabled && !effectiveCollapsed
                             ? t(item.en, item.fa)
                             : undefined
                         }
@@ -1098,9 +1119,9 @@ export default function App() {
             id="menu-toggle"
             className="sidebar-toggle"
             aria-controls="app-sidebar"
-            aria-expanded={isMobile ? menuOpen : !collapsed}
+            aria-expanded={isMobile || compactWidth ? menuOpen : !collapsed}
             aria-label={
-              isMobile
+              isMobile || compactWidth
                 ? t(
                     menuOpen ? "Close menu" : "Open menu",
                     menuOpen ? "بستن منو" : "باز کردن منو",
@@ -1111,7 +1132,8 @@ export default function App() {
                   )
             }
             onClick={() => {
-              if (isMobile) setMenuOpen((previous) => !previous);
+              if (isMobile || compactWidth)
+                setMenuOpen((previous) => !previous);
               else setCollapsed((previous) => !previous);
             }}
           >
@@ -1121,11 +1143,12 @@ export default function App() {
             className="breadcrumbs"
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
-            <a href={`#${defaultKey}`}>
+            <a className="breadcrumb-location" href={`#${defaultKey}`}>
               {branchLabel(state.config, branch, lang)}
             </a>
             <ChevronRight size={14} aria-hidden="true" />
             <a
+              className="breadcrumb-page"
               href={`#${page.key}`}
               aria-current={detailBreadcrumb ? undefined : "page"}
             >
@@ -1140,27 +1163,39 @@ export default function App() {
               </>
             )}
           </nav>
-          <form
-            className="topbar-search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              window.location.hash = `lookup?search=${encodeURIComponent(search.trim())}`;
-            }}
-          >
-            <Search size={18} strokeWidth={1.5} aria-hidden="true" />
-            <input
-              ref={searchRef}
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+          {!isMobile && !compactWidth && (
+            <form
+              className="topbar-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                window.location.hash = `lookup?search=${encodeURIComponent(search.trim())}`;
+              }}
+            >
+              <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+              <input
+                ref={searchRef}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label={t("Search all products", "جست‌وجوی همهٔ محصولات")}
+                placeholder={t("Search products", "جست‌وجوی محصولات")}
+              />
+              <kbd aria-hidden="true">/</kbd>
+            </form>
+          )}
+          {(isMobile || compactWidth) && (
+            <IconButton
+              className="topbar-search-icon"
               aria-label={t("Search all products", "جست‌وجوی همهٔ محصولات")}
-              placeholder={t("Search products", "جست‌وجوی محصولات")}
-            />
-            <kbd aria-hidden="true">/</kbd>
-          </form>
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search size={20} strokeWidth={1.5} />
+            </IconButton>
+          )}
           {role === "supervisor" ? (
             <Select
               className="branch-pill"
+              leadingIcon={<MapPin size={18} strokeWidth={1.5} />}
               aria-label={t("Branch", "شعبه")}
               value={branch}
               onChange={(value) => setBranch(value as Branch)}
@@ -1171,11 +1206,18 @@ export default function App() {
             />
           ) : (
             <span className="branch-pill static">
+              <MapPin
+                className="branch-pin-icon"
+                size={18}
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
               {branchLabel(state.config, branch, lang)}
             </span>
           )}
           <LanguageToggle />
           <IconButton
+            className="theme-toggle"
             aria-label={
               theme === "light"
                 ? t("Switch to dark theme", "تغییر به تم تیره")
@@ -1300,6 +1342,35 @@ export default function App() {
           )}
         </main>
       </div>
+      <Dialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        title={t("Search products", "جست‌وجوی محصولات")}
+        className="topbar-search-dialog"
+      >
+        {searchOpen && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              window.location.hash = `lookup?search=${encodeURIComponent(search.trim())}`;
+              setSearchOpen(false);
+            }}
+          >
+            <Field label={t("Search all products", "جست‌وجوی همهٔ محصولات")}>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </Field>
+            <div className="actions">
+              <Button variant="neutral" onClick={() => setSearchOpen(false)}>
+                {t("Cancel", "لغو")}
+              </Button>
+              <Button type="submit">{t("Search", "جست‌وجو")}</Button>
+            </div>
+          </form>
+        )}
+      </Dialog>
       <UndoToasts />
       <ConfirmDialog
         open={resetOpen}

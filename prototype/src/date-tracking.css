@@ -104,7 +104,7 @@
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--secondary-border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 8px;
 }
 .date-product-options p {
@@ -118,9 +118,9 @@
   inline-size: 100%;
   min-block-size: 40px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 8px;
-  background: transparent;
+  background: var(--color-clear);
   color: var(--text);
   text-align: start;
   cursor: pointer;
@@ -188,7 +188,7 @@
   flex-wrap: wrap;
   gap: 8px 16px;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 .product-date-evidence {
   display: flex;

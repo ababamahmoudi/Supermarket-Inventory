@@ -64,7 +64,9 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await button(page.locator(".return-header-card"), "Record pickup").click();
     const pickup = page.locator(".return-action-card");
     await assertContract(page, "Record return pickup form", "en-light");
-    await pickup.getByLabel(/Actual pickup units$/).fill("3");
+    await pickup
+      .getByLabel("Actual pickup quantity", { exact: true })
+      .fill("3");
     await field(pickup, "Supplier representative name").fill("Demo Driver");
     await field(pickup, "Signed paper pickup slip reference").fill(
       "SIGNED-C5-COLOR-001",
@@ -90,7 +92,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     ).toBe(1);
   });
 
-  test(`C5 rounded text actions, intrinsic table actions and uniform topbar (${variant})`, async ({
+  test(`C5 Klead text actions, intrinsic table actions and uniform topbar (${variant})`, async ({
     page,
   }, info) => {
     await signIn(page, "Supervisor");
@@ -268,12 +270,8 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     const contrast = await fieldContrast(page, ".invoice-correction-dialog");
     expect(contrast.length).toBeGreaterThan(5);
     for (const control of contrast) {
-      expect(
-        parseFloat(control.borderWidth),
-        control.label,
-      ).toBeGreaterThanOrEqual(1);
-      expect(control.adjacentContrast, control.label).toBeGreaterThanOrEqual(3);
-      expect(control.interiorContrast, control.label).toBeGreaterThanOrEqual(3);
+      expect(control.textContrast, control.label).toBeGreaterThanOrEqual(4.5);
+      if (!control.focused) expect(control.glow, control.label).toBe("none");
     }
     await assertContract(page, "Correct invoice", variant);
     await page.keyboard.press("Escape");
@@ -467,7 +465,7 @@ test("C5 return evidence, memo, cancellation and settlement forms retain compact
   await button(page.locator(".return-action-card"), "Close").click();
   await button(page.locator(".return-header-card"), "Record pickup").click();
   const pickup = page.locator(".return-action-card");
-  await pickup.getByLabel(/Actual pickup units$/).fill("3");
+  await pickup.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await field(pickup, "Supplier representative name").fill("Demo Driver");
   await field(pickup, "Signed paper pickup slip reference").fill(
     "SIGNED-C5-FORMS-001",
@@ -495,7 +493,7 @@ test("C5 return evidence, memo, cancellation and settlement forms retain compact
       "Cash or other compensation",
       ...(role === "Supervisor" ? ["Written off"] : []),
     ]) {
-      await choose(page, field(card, "Resolution type"), outcome);
+      await choose(page, field(card, "Outcome"), outcome);
       await assertContract(
         page,
         `Return settlement form: ${outcome}`,

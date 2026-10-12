@@ -5,7 +5,8 @@ import type { InvoiceLocationCorrection } from "./received";
 import type { SupplierItemDefinition } from "./supplier-items";
 import type { Order, OrderComparison, InvoiceNewItemMatch } from "./orders";
 import type { InvoiceContentCorrection } from "./invoice-corrections";
-import type { ReturnMemo } from "./return-workflow";
+import type { ReturnMemo, ReturnPickupCorrection } from "./return-workflow";
+import type { ReceiptLot } from "./receipt-lots";
 import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
 import type { InvoiceOrderDifference } from "./invoice-orders";
 
@@ -57,6 +58,10 @@ export type CompanyConfig = Omit<
     deduct_expected_credit_at_pickup: boolean;
     waiting_credit_days: number;
   };
+  supplier_documents?: {
+    return_memo: "en" | "bilingual";
+    supplier_order: "en" | "bilingual";
+  };
 };
 export interface PriceProvenance {
   invoice_number: string;
@@ -89,6 +94,8 @@ export type Product = Omit<
   description_en?: string;
   description_fa?: string;
   date_tracking?: boolean;
+  date_reminder_days?: number;
+  first_added_branch?: Branch;
   sold_by?: "each" | "weight";
   price_provenance?: Record<Branch, PriceProvenance>;
   manual_prices?: Record<
@@ -144,7 +151,12 @@ export interface Alert extends ScopedRecord {
     | "barcode_conflict"
     | "other_supplier"
     | "order_differences"
-    | "return_credit_overdue";
+    | "return_credit_overdue"
+    | "date_reminder";
+  expiry_id?: string;
+  date?: string;
+  days_left?: number;
+  date_suppressed?: boolean;
   return_id?: string;
   product_code: string;
   status: "pending" | "resolved" | "intentional";
@@ -232,6 +244,7 @@ export type DemoInvoice = Omit<
     file_name?: string;
     file_type?: string;
     file_data?: string;
+    file_size?: number;
     original_file_invoice_id?: string;
     demo_original_snapshot?: true;
     legacy_demo_original?: {
@@ -247,6 +260,11 @@ export type DemoInvoice = Omit<
     supplier_confirmed?: boolean;
     entry_mode?: "upload" | "manual";
     payment_terms?: string;
+    payment_term_days?: number;
+    due_date_manual?: boolean;
+    final_total_manual?: boolean;
+    supplier_review_required?: boolean;
+    supplier_review_confirmed?: boolean;
     number_is_system_assigned?: boolean;
     short_receipt_keys?: string[];
     handling_branch?: Branch;
@@ -280,6 +298,9 @@ export interface Offer extends ScopedRecord {
   end_date?: string;
   created_at?: string;
   stopped_at?: string;
+  lot_id?: string;
+  expiry_date?: string;
+  clearance?: boolean;
 }
 export interface LabelTemplate {
   id: string;
@@ -302,6 +323,7 @@ export interface LabelTemplate {
 export interface LabelWaitlistItem extends ScopedRecord {
   id: string;
   product_code: string;
+  lot_id?: string;
   copies: number;
   added_by: string;
   added_at: string;
@@ -316,6 +338,13 @@ export interface ReturnLine {
   picked_up?: number;
   replaced?: number;
   settled?: number;
+  pickup_shortfall?: {
+    reason: string;
+    outcome: "keep_for_next_pickup" | "put_back_on_shelf" | "throw_away";
+    quantity: number;
+  };
+  outstanding_expected_date?: string;
+  outstanding_note?: string;
 }
 export interface ReturnRecord extends ScopedRecord {
   id: string;
@@ -348,6 +377,8 @@ export interface ReturnRecord extends ScopedRecord {
   created_at?: string;
   created_by?: string;
   pickup_memos?: ReturnMemo[];
+  pickup_completed?: boolean;
+  pickup_corrections?: ReturnPickupCorrection[];
   picked_up_at?: string;
   closure_subtype?: "credited" | "replaced" | "written_off";
 }
@@ -375,6 +406,11 @@ export interface ExpiryRecord extends ScopedRecord {
   invoice_id?: string;
   invoice_number?: string;
   received_date?: string;
+  supplier_id?: string;
+  supplier?: string;
+  lot_id?: string;
+  reminder_alert_id?: string;
+  reminded_at?: string;
 }
 export interface NoteRecord extends ScopedRecord {
   id: string;
@@ -435,6 +471,7 @@ export interface SupplierRecord {
   sales_rep_name: string;
   sales_rep_phone: string;
   payment_terms: string;
+  invoice_review_required?: boolean;
   address?: string;
   notes?: string;
   status: "confirmed" | "proposed";
@@ -454,6 +491,8 @@ export interface DemoState {
   prototype_c1_schema?: 1;
   prototype_c2_schema?: 1;
   prototype_c4_schema?: 1;
+  prototype_c6_schema?: 1;
+  receipt_lots?: ReceiptLot[];
   invoice_content_corrections?: InvoiceContentCorrection[];
   supplier_items?: SupplierItemDefinition[];
   orders?: Order[];

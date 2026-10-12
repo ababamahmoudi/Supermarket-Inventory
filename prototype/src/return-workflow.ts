@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { retainedReturnSettlementEvidence } from "./signed-return-pickups";
 import { companyDate } from "./invoice";
 import {
   OperationError,
@@ -39,6 +40,25 @@ export interface ReturnMemo {
   deduct_expected_credit: boolean;
   lines: ReturnMemoLine[];
   expected_credit: string;
+  document_language?: "en" | "bilingual";
+  location_address?: string;
+  supplier_address?: string;
+  supplier_phone?: string;
+  supplier_email?: string;
+  correction_of?: string;
+}
+export interface ReturnPickupCorrection {
+  id: string;
+  company_id: string;
+  branch: string;
+  return_id: string;
+  memo_id: string;
+  previous_memo_id: string;
+  reason: string;
+  by: string;
+  at: string;
+  before: Record<string, number>;
+  after: Record<string, number>;
 }
 export type ReturnUiStatus =
   "waiting_for_pickup" | "waiting_for_credit" | "closed" | "cancelled";
@@ -59,10 +79,7 @@ export function returnUiStatus(record: ReturnRecord): ReturnUiStatus {
   if (record.status === "resolved") return "closed";
   if (
     record.status === "open" &&
-    !(
-      record.pickup_memos?.length ||
-      record.lines.some((line) => (line.picked_up ?? 0) > 0)
-    )
+    !record.lines.some((line) => (line.picked_up ?? 0) > 0)
   )
     return "waiting_for_pickup";
   return "waiting_for_credit";
@@ -71,6 +88,34 @@ export function returnClosureSubtype(
   record: ReturnRecord,
 ): ReturnClosureSubtype | undefined {
   if (record.status !== "resolved") return undefined;
+  const events = (record as OperationalReturn).evidence ?? [];
+  const actualKinds = new Set(
+    events
+      .filter(
+        (event) =>
+          event.kind === "replacement" || event.kind === "claim_posted",
+      )
+      .map((event) =>
+        event.kind === "replacement"
+          ? "replaced"
+          : (record as OperationalReturn).claims?.find(
+                (claim) =>
+                  claim.document === event.document &&
+                  claim.status === "posted",
+              )?.type === "no_compensation"
+            ? "written_off"
+            : "credited",
+      ),
+  );
+  if (
+    record.lines.some(
+      (line) =>
+        line.pickup_shortfall &&
+        line.pickup_shortfall.outcome !== "keep_for_next_pickup",
+    )
+  )
+    actualKinds.add("written_off");
+  if (actualKinds.size > 1) return undefined;
   if (record.closure_subtype) return record.closure_subtype;
   const claims = (record as OperationalReturn).claims ?? [];
   if (
@@ -287,6 +332,15 @@ export function createReturnMemo(
     expected_credit: lines
       .reduce((total, line) => total.plus(line.expected_credit), new Decimal(0))
       .toFixed(2),
+    document_language: state.config.supplier_documents?.return_memo ?? "en",
+    location_address: state.config.branches.find(
+      (branch) =>
+        (branch.id ?? branch.name) === record.branch ||
+        branch.name === record.branch,
+    )?.address,
+    supplier_address: sameSupplier?.address,
+    supplier_phone: sameSupplier?.phone,
+    supplier_email: sameSupplier?.email,
   };
 }
 
@@ -317,11 +371,13 @@ export function pendingReturnCredits(
           (event) =>
             (event.kind === "replacement" ||
               event.kind === "claim_posted" ||
+              event.kind === "pickup_correction" ||
               event.kind.startsWith("cancellation")) &&
             companyDate(state.config, new Date(event.at)) > throughDate,
         );
       if (returnUiStatus(record) !== "waiting_for_credit" && !futureOutcome)
         return [];
+      const retainedSettlements = retainedReturnSettlementEvidence(record);
       const covered = new Map(
         record.lines.map((line) => [
           line.product_code,
@@ -337,11 +393,7 @@ export function pendingReturnCredits(
                     sum + (event.quantities?.[line.product_code] ?? 0),
                   0,
                 )
-            : (line.settled ??
-              line.replaced ??
-              (record.replacement_received && record.lines.length === 1
-                ? record.replacement_received.covers_original_qty
-                : 0)),
+            : (retainedSettlements.quantities.get(line.product_code) ?? 0),
         ]),
       );
       return (record.pickup_memos ?? [])
@@ -351,6 +403,14 @@ export function pendingReturnCredits(
             memo.return_id === record.id &&
             memo.branch === record.branch &&
             memo.currency === state.config.company.currency,
+        )
+        .filter(
+          (memo) =>
+            !(record.pickup_memos ?? []).some(
+              (correction) =>
+                correction.correction_of === memo.id &&
+                (!throughDate || correction.date <= throughDate),
+            ),
         )
         .map((memo) => {
           const amount = memo.lines.reduce((total, line) => {

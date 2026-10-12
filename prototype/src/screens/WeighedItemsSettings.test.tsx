@@ -5,6 +5,7 @@ import { SESSION_KEY } from "../auth";
 import UndoToasts from "../UndoToasts";
 import i18n from "../i18n";
 import WeighedItemsSettings from "./WeighedItemsSettings";
+import History from "./History";
 
 beforeEach(() => {
   localStorage.clear();
@@ -22,11 +23,12 @@ beforeEach(() => {
   );
 });
 
-describe("Weighed items settings and Undo", () => {
-  it("restores the live field values after Undo without changing approved product prices", async () => {
+describe("Weighed items settings and History", () => {
+  it("keeps Save quiet and restores live settings through History without changing approved product prices", async () => {
     render(
       <DemoProvider>
         <WeighedItemsSettings />
+        <History />
         <UndoToasts />
       </DemoProvider>,
     );
@@ -43,7 +45,11 @@ describe("Weighed items settings and Undo", () => {
     expect(
       screen.getByRole("switch", { name: "Show second unit" }),
     ).not.toBeChecked();
-    fireEvent.click(screen.getByRole("button", { name: /^Undo$/ }));
+    expect(
+      screen.queryByRole("button", { name: /^Undo$/ }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Revert$/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Revert change$/ }));
     await waitFor(() =>
       expect(screen.getByLabelText("Main display unit")).toHaveTextContent(
         "lb",
@@ -58,7 +64,7 @@ describe("Weighed items settings and Undo", () => {
     expect(stored().products).toEqual(products);
     expect(
       stored().activity.some(
-        (entry: { reversal_kind?: string }) => entry.reversal_kind === "undo",
+        (entry: { reversal_kind?: string }) => entry.reversal_kind === "revert",
       ),
     ).toBe(true);
   });

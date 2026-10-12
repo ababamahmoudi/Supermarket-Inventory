@@ -45,7 +45,23 @@ import {
   ProductPrice as SellingPrice,
   ProductCost,
 } from "../weight-price-presentation";
-import { AddDateDialog } from "../AddDateDialog";
+import { ProductDateEditor } from "../ProductDateEditor";
+import { ProductLotsSection } from "../ProductLotsSection";
+import {
+  productDateDrafts,
+  productReminderDays,
+  DateTrackingError,
+  dateTrackingErrorMessage,
+  validTrackedDate,
+  type ProductDateDraft,
+  type StopTrackingChoice,
+} from "../date-tracking";
+import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
+import {
+  effectiveClearanceOffers,
+  firstAddedLocation,
+  scopedClearanceOffers,
+} from "../receipt-lots";
 import { ProductDatesSection } from "../ProductDatesSection";
 import { manualPrice, sellingMargin } from "../manual-prices";
 import {
@@ -199,7 +215,17 @@ export function ProductEditor({
   invoiceQuickAdd?: boolean;
   onCreated?: (product: Product) => void;
 }) {
-  const { state, branch, role, user, lang, t, update, navigate } = useDemo();
+  const {
+    state,
+    branch,
+    role,
+    user,
+    historyContext,
+    lang,
+    t,
+    update,
+    navigate,
+  } = useDemo();
   const branches = configuredBranches(state.config);
   const priceLocations = sellingBranches(state.config);
   const isNew = !existingProduct;
@@ -228,8 +254,27 @@ export function ProductEditor({
   };
   const [cost, setCost] = useState("");
   const [costUnit, setCostUnit] = useState<WeightUnit>("lb");
-  const [addDateNow, setAddDateNow] = useState(false);
-  const [dateProduct, setDateProduct] = useState<string>();
+  const formId = useId();
+  const dateLocation = invoiceQuickAdd
+    ? state.invoice.branch
+    : lookupBranch(branch);
+  const [dates, setDates] = useState<ProductDateDraft[]>(() =>
+    existingProduct && historyContext
+      ? productDateDrafts(
+          state,
+          historyContext,
+          existingProduct.code,
+          dateLocation,
+        )
+      : [],
+  );
+  const [reminderDays, setReminderDays] = useState(() =>
+    String(productReminderDays(state, existingProduct)),
+  );
+  const [stopChoice, setStopChoice] = useState<StopTrackingChoice | "">("");
+  const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const clearIssue = (id: string) =>
+    setIssues((current) => current.filter((issue) => issue.fieldId !== id));
   const [manualPrice, setManualPrice] = useState(false);
   const [similarConfirmed, setSimilarConfirmed] = useState(false);
   const [marginConfirmed, setMarginConfirmed] = useState(false);
@@ -262,11 +307,14 @@ export function ProductEditor({
   const [error, setError] = useState<
     ProductEditErrorCode | NewProductError["code"] | null
   >(null);
+  const fieldIssue = (key: string) =>
+    issues.find((issue) => issue.fieldId === `${formId}-${key}`)?.message;
   const patch = <K extends keyof ProductEdits>(
     key: K,
     value: ProductEdits[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
+    clearIssue(`${formId}-${key}`);
     const related =
       error === key ||
       (key === "barcode" && error === "barcode_conflict") ||
@@ -351,17 +399,7 @@ export function ProductEditor({
     !(role === "floor_worker" && invoiceQuickAdd)
   )
     return null;
-  if (dateProduct)
-    return (
-      <AddDateDialog
-        open
-        onOpenChange={(open) => {
-          if (!open) onClose();
-        }}
-        productCode={dateProduct}
-        defaultLocation={lookupBranch(branch)}
-      />
-    );
+  if (!isNew && role !== "supervisor") return null;
   return (
     <Dialog
       open
@@ -381,15 +419,102 @@ export function ProductEditor({
     >
       <form
         className="stack product-editor-form"
+        id={`${formId}-form`}
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
+          const missing: ValidationIssue[] = [];
+          const addIssue = (key: string, message: string) =>
+            missing.push({ id: key, fieldId: `${formId}-${key}`, message });
+          if (!values.name_en.trim())
+            addIssue("name_en", editorError("name_en", t));
+          if (!values.unit_size.trim())
+            addIssue("unit_size", editorError("unit_size", t));
+          if (
+            !activePricingCategories(state.config).some(
+              (category) => category.key === values.pricing_category,
+            )
+          )
+            addIssue("pricing_category", editorError("pricing_category", t));
+          if (!values.main_supplier)
+            addIssue("main_supplier", editorError("supplier", t));
+          if (isNew && !/^\d+(\.\d{1,4})?$/.test(cost))
+            addIssue("cost", editorError("cost", t));
+          if (
+            (isNew || priceChanged) &&
+            (!/^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) ||
+              new Decimal(canonicalSellingPrice || 0).lte(0))
+          )
+            addIssue("price", editorError("price", t));
+          if (values.date_tracking) {
+            if (
+              !/^\d+$/.test(reminderDays) ||
+              !Number.isSafeInteger(Number(reminderDays))
+            )
+              addIssue(
+                "reminder",
+                dateTrackingErrorMessage(new DateTrackingError("reminder"), t),
+              );
+            dates.forEach((row, index) => {
+              if (row.remove_reason !== undefined) {
+                if (!row.remove_reason)
+                  addIssue(
+                    `date-${index}-remove_reason`,
+                    dateTrackingErrorMessage(
+                      new DateTrackingError("reason"),
+                      t,
+                    ),
+                  );
+                return;
+              }
+              if (!validTrackedDate(row.date))
+                addIssue(
+                  `date-${index}-date`,
+                  dateTrackingErrorMessage(new DateTrackingError("date"), t),
+                );
+              if (row.quantity?.trim())
+                try {
+                  if (
+                    !new Decimal(row.quantity).isFinite() ||
+                    new Decimal(row.quantity).lte(0)
+                  )
+                    throw new Error();
+                } catch {
+                  addIssue(
+                    `date-${index}-quantity`,
+                    dateTrackingErrorMessage(
+                      new DateTrackingError("quantity"),
+                      t,
+                    ),
+                  );
+                }
+            });
+          }
+          if (
+            !isNew &&
+            values.date_tracking === false &&
+            product.date_tracking !== false &&
+            !stopChoice
+          )
+            addIssue(
+              "stop-choice",
+              dateTrackingErrorMessage(new DateTrackingError("stop_choice"), t),
+            );
+          if (missing.length) {
+            setIssues(missing);
+            return;
+          }
+          setIssues([]);
           const context = {
             company_id: state.config.company.seed_key,
             role: role!,
             actor: user!.name,
-            branch: values.scope === "branch" ? targetBranch : branch,
+            branch: invoiceQuickAdd
+              ? state.invoice.branch
+              : values.scope === "branch"
+                ? targetBranch
+                : branch,
             allowed_branches: branches,
           };
           try {
@@ -402,6 +527,8 @@ export function ProductEditor({
                     context,
                     {
                       ...values,
+                      dates,
+                      date_reminder_days: Number(reminderDays),
                       last_cost_before_tax: cost,
                       last_cost_unit: costUnit,
                       selling_price:
@@ -416,10 +543,6 @@ export function ProductEditor({
                 );
               });
               onCreated?.(created!);
-              if (addDateNow && values.date_tracking) {
-                setDateProduct(created!.code);
-                return;
-              }
               onClose();
               return;
             }
@@ -430,6 +553,9 @@ export function ProductEditor({
                 product.code,
                 {
                   ...values,
+                  dates,
+                  date_reminder_days: Number(reminderDays),
+                  date_tracking_stop: stopChoice || undefined,
                   ...(priceChanged
                     ? { selling_price: canonicalSellingPrice }
                     : {}),
@@ -437,10 +563,18 @@ export function ProductEditor({
                 expected,
               ),
             );
-            if (addDateNow && values.date_tracking)
-              setDateProduct(product.code);
-            else onClose();
+            onClose();
           } catch (cause) {
+            if (cause instanceof DateTrackingError) {
+              setIssues([
+                {
+                  id: "dates",
+                  fieldId: `${formId}-dates`,
+                  message: dateTrackingErrorMessage(cause, t),
+                },
+              ]);
+              return;
+            }
             const code =
               cause instanceof ProductEditError ||
               cause instanceof NewProductError
@@ -463,332 +597,408 @@ export function ProductEditor({
               setExpected(nextSnapshot);
             }
             setError(code);
+            const key =
+              code === "supplier"
+                ? "main_supplier"
+                : code === "barcode_conflict"
+                  ? "barcode"
+                  : code === "category"
+                    ? "ai_category"
+                    : code === "similar"
+                      ? "similar"
+                      : code === "margin"
+                        ? "margin"
+                        : code;
+            if (
+              [
+                "name_en",
+                "unit_size",
+                "pricing_category",
+                "supplier",
+                "barcode_conflict",
+                "cost",
+                "price",
+                "similar",
+                "margin",
+              ].includes(code)
+            )
+              setIssues([
+                {
+                  id: code,
+                  fieldId: `${formId}-${key}`,
+                  message: editorError(code, t),
+                },
+              ]);
           }
         }}
       >
-        <p className="helper">
-          {t("Product Code", "کد محصول")}: <LtrText>{product.code}</LtrText>
-        </p>
-        <div className="form-grid product-editor-fields">
-          <Field
-            label={t("English name", "نام انگلیسی")}
-            error={error === "name_en" ? editorError(error, t) : undefined}
-          >
-            <input
-              autoFocus
-              dir="ltr"
-              value={values.name_en}
-              onChange={(event) => {
-                patch("name_en", event.target.value);
-                setSimilarConfirmed(false);
-              }}
-            />
-          </Field>
-          <Field
-            label={t("Persian name", "نام فارسی")}
-            error={error === "name_fa" ? editorError(error, t) : undefined}
-          >
-            <input
-              dir="rtl"
-              value={values.name_fa}
-              onChange={(event) => patch("name_fa", event.target.value)}
-            />
-          </Field>
-          <Field label={t("Description (English)", "توضیحات (انگلیسی)")}>
-            <textarea
-              dir="ltr"
-              value={values.description_en}
-              onChange={(event) => patch("description_en", event.target.value)}
-              rows={2}
-            />
-          </Field>
-          <Field label={t("Description (Persian)", "توضیحات (فارسی)")}>
-            <textarea
-              dir="rtl"
-              value={values.description_fa}
-              onChange={(event) => patch("description_fa", event.target.value)}
-              rows={2}
-            />
-          </Field>
-          <Field
-            label={t("Unit size", "اندازهٔ واحد")}
-            error={error === "unit_size" ? editorError(error, t) : undefined}
-          >
-            <input
-              dir="ltr"
-              value={values.unit_size}
-              onChange={(event) => patch("unit_size", event.target.value)}
-            />
-          </Field>
-          <Field label={t("Sold by", "روش فروش")}>
-            <Select
-              value={values.sold_by ?? "each"}
-              onChange={(value) => {
-                patch("sold_by", value as "each" | "weight");
-                setSellingPrice(
-                  value === "weight" && startingPrice
-                    ? weightPriceDisplay(startingPrice, state.config).main
-                        .amount
-                    : startingPrice,
-                );
-                setManualPrice(false);
-                setMarginConfirmed(false);
-              }}
-              options={[
-                { value: "each", label: t("Each", "عدد") },
-                { value: "weight", label: t("Weight", "وزن") },
-              ]}
-            />
-          </Field>
-          <Field
-            label={t("Category", "دسته")}
-            error={error === "category" ? editorError(error, t) : undefined}
-          >
-            <Select
-              value={values.ai_category}
-              onChange={(value) => patch("ai_category", value)}
-              options={categories.map((value) => ({
-                value,
-                label: categoryLabel(value, lang),
-              }))}
-            />
-          </Field>
-          <Field
-            label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-            error={
-              error === "pricing_category" ? editorError(error, t) : undefined
-            }
-          >
-            <Select
-              value={values.pricing_category}
-              onChange={(value) => patch("pricing_category", value)}
-              options={activePricingCategories(state.config).map((item) => ({
-                value: item.key,
-                label: categoryLabel(item.label, lang),
-              }))}
-            />
-          </Field>
-          <Field
-            label={t("Supplier", "تأمین‌کننده")}
-            error={error === "supplier" ? editorError(error, t) : undefined}
-          >
-            <Select
-              value={values.main_supplier}
-              onChange={(value) => patch("main_supplier", value)}
-              options={suppliers.map((value) => ({ value, label: value }))}
-            />
-          </Field>
-          <Field
-            label={t("Barcode", "بارکد")}
-            error={
-              error === "barcode_conflict" ? editorError(error, t) : undefined
-            }
-          >
-            <input
-              dir="ltr"
-              value={values.barcode}
-              onChange={(event) => patch("barcode", event.target.value)}
-            />
-          </Field>
-          {isNew && (
+        <div className="product-editor-body">
+          <WhatsMissing issues={issues} />
+          <p className="helper">
+            {t("Product Code", "کد محصول")}: <LtrText>{product.code}</LtrText>
+          </p>
+          <div className="form-grid product-editor-fields">
             <Field
-              label={t(
-                "Last unit cost before tax",
-                "آخرین هزینهٔ واحد پیش از مالیات",
-              )}
-              error={error === "cost" ? editorError(error, t) : undefined}
+              label={t("English name", "نام انگلیسی")}
+              error={
+                fieldIssue("name_en") ??
+                (error === "name_en" ? editorError(error, t) : undefined)
+              }
             >
               <input
+                autoFocus
+                id={`${formId}-name_en`}
                 dir="ltr"
-                inputMode="decimal"
-                className="control-narrow"
-                value={cost}
+                value={values.name_en}
                 onChange={(event) => {
-                  setCost(event.target.value);
-                  setMarginConfirmed(false);
-                  if (error === "cost" || error === "margin") setError(null);
+                  patch("name_en", event.target.value);
+                  setSimilarConfirmed(false);
                 }}
               />
             </Field>
-          )}
-          {isNew && weightProduct && (
-            <Field label={t("Cost unit", "واحد هزینه")}>
-              <Select
-                value={costUnit}
-                onChange={(value) => {
-                  setCostUnit(value as WeightUnit);
-                  setMarginConfirmed(false);
-                  if (error === "cost" || error === "margin") setError(null);
-                }}
-                options={[
-                  { value: "lb", label: "lb" },
-                  { value: "kg", label: "kg" },
-                ]}
+            <Field
+              label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
+              error={error === "name_fa" ? editorError(error, t) : undefined}
+            >
+              <input
+                dir="rtl"
+                value={values.name_fa}
+                onChange={(event) => patch("name_fa", event.target.value)}
               />
             </Field>
-          )}
-          <Field
-            label={
-              weightProduct
-                ? displayUnit === "lb"
-                  ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                  : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-                : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
-            }
-            error={error === "price" ? editorError(error, t) : undefined}
-            className="short-field"
-          >
-            <input
-              dir="ltr"
-              inputMode="decimal"
-              value={effectiveSellingPrice}
-              readOnly={isNew && role !== "supervisor"}
-              onChange={(event) => {
-                setSellingPrice(event.target.value);
-                setManualPrice(true);
-                setMarginConfirmed(false);
-                if (error === "price" || error === "margin") setError(null);
-              }}
-            />
-          </Field>
-          <Field label={t("Date tracking", "پیگیری تاریخ")}>
-            <Select
-              value={
-                values.date_tracking === undefined
-                  ? "unset"
-                  : values.date_tracking
-                    ? "yes"
-                    : "no"
+            <Field
+              label={t(
+                "Description (English) (optional)",
+                "توضیحات (انگلیسی) (اختیاری)",
+              )}
+            >
+              <textarea
+                dir="ltr"
+                value={values.description_en}
+                onChange={(event) =>
+                  patch("description_en", event.target.value)
+                }
+                rows={2}
+              />
+            </Field>
+            <Field
+              label={t(
+                "Description (Persian) (optional)",
+                "توضیحات (فارسی) (اختیاری)",
+              )}
+            >
+              <textarea
+                dir="rtl"
+                value={values.description_fa}
+                onChange={(event) =>
+                  patch("description_fa", event.target.value)
+                }
+                rows={2}
+              />
+            </Field>
+            <Field
+              label={t("Unit size", "اندازهٔ واحد")}
+              error={
+                fieldIssue("unit_size") ??
+                (error === "unit_size" ? editorError(error, t) : undefined)
               }
-              onChange={(value) => {
-                patch(
-                  "date_tracking",
-                  value === "unset" ? undefined : value === "yes",
-                );
-                if (value !== "yes") setAddDateNow(false);
-              }}
-              options={[
-                { value: "unset", label: t("Not set", "تنظیم نشده") },
-                { value: "yes", label: t("Yes", "بله") },
-                { value: "no", label: t("No", "خیر") },
-              ]}
-            />
-          </Field>
-          {values.date_tracking && !product.date_tracking && (
-            <Checkbox checked={addDateNow} onChange={setAddDateNow}>
-              {t("Add a date now", "اکنون یک تاریخ اضافه کنید")}
-            </Checkbox>
-          )}
-        </div>
-        {isNew && belowMinimum && role === "supervisor" && (
-          <div className="banner info">
-            <p>
-              {t(
-                "This price is below the minimum margin.",
-                "این قیمت کمتر از حداقل حاشیه است.",
-              )}
-            </p>
-            <Checkbox
-              checked={marginConfirmed}
-              onChange={(value) => {
-                setMarginConfirmed(value);
-                if (error === "margin") setError(null);
-              }}
             >
-              {t(
-                "Confirm price below minimum margin",
-                "تأیید قیمت زیر حداقل حاشیه",
-              )}
-            </Checkbox>
-          </div>
-        )}
-        {!!similar.length && (
-          <div className="banner info manual-similar-warning" role="status">
-            <p>
-              {t(
-                "A similar product already exists.",
-                "یک محصول مشابه وجود دارد.",
-              )}
-            </p>
-            {similar.map((item) => (
-              <Button
-                key={item.code}
-                variant="secondary"
-                onClick={() => {
-                  onClose();
-                  navigate(`product?code=${item.code}`);
-                }}
-              >
-                {lang === "fa" ? (
-                  item.name_fa
-                ) : (
-                  <LtrText>{item.name_en}</LtrText>
-                )}
-              </Button>
-            ))}
-            <Checkbox
-              checked={similarConfirmed}
-              onChange={(value) => {
-                setSimilarConfirmed(value);
-                if (error === "similar") setError(null);
-              }}
-            >
-              {t("Continue with this product name", "ادامه با این نام محصول")}
-            </Checkbox>
-          </div>
-        )}
-        {!isNew && priceChanged && (
-          <div className="stack product-editor-price-scope">
-            <Field label={t("Approval scope", "محدودهٔ تأیید")}>
+              <input
+                id={`${formId}-unit_size`}
+                dir="ltr"
+                value={values.unit_size}
+                onChange={(event) => patch("unit_size", event.target.value)}
+              />
+            </Field>
+            <Field label={t("Sold by", "روش فروش")}>
               <Select
-                value={values.scope}
-                onChange={(value) => patch("scope", value as "all" | "branch")}
+                value={values.sold_by ?? "each"}
+                onChange={(value) => {
+                  patch("sold_by", value as "each" | "weight");
+                  setSellingPrice(
+                    value === "weight" && startingPrice
+                      ? weightPriceDisplay(startingPrice, state.config).main
+                          .amount
+                      : startingPrice,
+                  );
+                  setManualPrice(false);
+                  setMarginConfirmed(false);
+                }}
                 options={[
-                  { value: "all", label: t("All branches", "همهٔ شعبه‌ها") },
-                  ...(branch === "all" ||
-                  branchSellsToCustomers(state.config, branch)
-                    ? [
-                        {
-                          value: "branch",
-                          label: t("This branch only", "فقط این شعبه"),
-                        },
-                      ]
-                    : []),
+                  { value: "each", label: t("Each", "عدد") },
+                  { value: "weight", label: t("Weight", "وزن") },
                 ]}
               />
             </Field>
-            {values.scope === "branch" && branch === "all" && (
-              <Field label={t("Branch", "شعبه")}>
-                <Select
-                  value={targetBranch}
-                  onChange={(value) => {
-                    setTargetBranch(value as Branch);
-                    if (error === "branch") setError(null);
-                  }}
-                  options={priceLocations.map((value) => ({
+            <Field
+              label={t("Category (optional)", "دسته (اختیاری)")}
+              error={error === "category" ? editorError(error, t) : undefined}
+            >
+              <Select
+                value={values.ai_category}
+                onChange={(value) => patch("ai_category", value)}
+                options={[
+                  { value: "", label: t("No category", "بدون دسته") },
+                  ...categories.map((value) => ({
                     value,
-                    label: configuredBranchLabel(state.config, value, lang),
-                  }))}
+                    label: categoryLabel(value, lang),
+                  })),
+                ]}
+              />
+            </Field>
+            <Field
+              label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+              error={
+                fieldIssue("pricing_category") ??
+                (error === "pricing_category"
+                  ? editorError(error, t)
+                  : undefined)
+              }
+            >
+              <Select
+                id={`${formId}-pricing_category`}
+                value={values.pricing_category}
+                onChange={(value) => patch("pricing_category", value)}
+                options={activePricingCategories(state.config).map((item) => ({
+                  value: item.key,
+                  label: categoryLabel(item.label, lang),
+                }))}
+              />
+            </Field>
+            <Field
+              label={t("Supplier", "تأمین‌کننده")}
+              error={
+                fieldIssue("main_supplier") ??
+                (error === "supplier" ? editorError(error, t) : undefined)
+              }
+            >
+              <Select
+                id={`${formId}-main_supplier`}
+                value={values.main_supplier}
+                onChange={(value) => patch("main_supplier", value)}
+                options={suppliers.map((value) => ({ value, label: value }))}
+              />
+            </Field>
+            <Field
+              label={t("Barcode", "بارکد")}
+              error={
+                error === "barcode_conflict" ? editorError(error, t) : undefined
+              }
+            >
+              <input
+                id={`${formId}-barcode`}
+                dir="ltr"
+                value={values.barcode}
+                onChange={(event) => patch("barcode", event.target.value)}
+              />
+            </Field>
+            {isNew && (
+              <Field
+                label={t(
+                  "Last unit cost before tax",
+                  "آخرین هزینهٔ واحد پیش از مالیات",
+                )}
+                error={
+                  fieldIssue("cost") ??
+                  (error === "cost" ? editorError(error, t) : undefined)
+                }
+              >
+                <input
+                  id={`${formId}-cost`}
+                  dir="ltr"
+                  inputMode="decimal"
+                  className="control-narrow"
+                  value={cost}
+                  onChange={(event) => {
+                    setCost(event.target.value);
+                    clearIssue(`${formId}-cost`);
+                    setMarginConfirmed(false);
+                    if (error === "cost" || error === "margin") setError(null);
+                  }}
                 />
               </Field>
             )}
-            <DataTable
-              columns={[
-                { width: "40%" },
-                { width: "30%", align: "end" },
-                { width: "30%", align: "end" },
-              ]}
+            {isNew && weightProduct && (
+              <Field label={t("Cost unit", "واحد هزینه")}>
+                <Select
+                  value={costUnit}
+                  onChange={(value) => {
+                    setCostUnit(value as WeightUnit);
+                    setMarginConfirmed(false);
+                    if (error === "cost" || error === "margin") setError(null);
+                  }}
+                  options={[
+                    { value: "lb", label: "lb" },
+                    { value: "kg", label: "kg" },
+                  ]}
+                />
+              </Field>
+            )}
+            <Field
+              label={
+                weightProduct
+                  ? displayUnit === "lb"
+                    ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
+                    : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
+                  : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
+              }
+              error={
+                fieldIssue("price") ??
+                (error === "price" ? editorError(error, t) : undefined)
+              }
+              className="short-field"
             >
-              <thead>
-                <tr>
-                  <th>{t("Branch", "شعبه")}</th>
-                  <th>{t("Old", "قبلی")}</th>
-                  <th>{t("New", "جدید")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(values.scope === "all" ? priceLocations : [targetBranch]).map(
-                  (item) => (
+              <input
+                id={`${formId}-price`}
+                dir="ltr"
+                inputMode="decimal"
+                value={effectiveSellingPrice}
+                readOnly={isNew && role !== "supervisor"}
+                onChange={(event) => {
+                  setSellingPrice(event.target.value);
+                  clearIssue(`${formId}-price`);
+                  setManualPrice(true);
+                  setMarginConfirmed(false);
+                  if (error === "price" || error === "margin") setError(null);
+                }}
+              />
+            </Field>
+          </div>
+          <ProductDateEditor
+            productCode={product.code}
+            location={dateLocation}
+            enabled={values.date_tracking}
+            onEnabledChange={(value) => patch("date_tracking", value)}
+            dates={dates}
+            onDatesChange={setDates}
+            reminderDays={reminderDays}
+            onReminderDaysChange={setReminderDays}
+            stopRequired={!isNew && product.date_tracking !== false}
+            stopChoice={stopChoice}
+            onStopChoiceChange={setStopChoice}
+            idPrefix={formId}
+            issues={issues}
+            onFieldChange={clearIssue}
+          />
+          {isNew && belowMinimum && role === "supervisor" && (
+            <div className="banner info" id={`${formId}-margin`}>
+              <p>
+                {t(
+                  "This price is below the minimum margin.",
+                  "این قیمت کمتر از حداقل حاشیه است.",
+                )}
+              </p>
+              <Checkbox
+                checked={marginConfirmed}
+                onChange={(value) => {
+                  setMarginConfirmed(value);
+                  clearIssue(`${formId}-margin`);
+                  if (error === "margin") setError(null);
+                }}
+              >
+                {t(
+                  "Confirm price below minimum margin",
+                  "تأیید قیمت زیر حداقل حاشیه",
+                )}
+              </Checkbox>
+            </div>
+          )}
+          {!!similar.length && (
+            <div
+              className="banner info manual-similar-warning"
+              role="status"
+              id={`${formId}-similar`}
+            >
+              <p>
+                {t(
+                  "A similar product already exists.",
+                  "یک محصول مشابه وجود دارد.",
+                )}
+              </p>
+              {similar.map((item) => (
+                <Button
+                  key={item.code}
+                  variant="secondary"
+                  onClick={() => {
+                    onClose();
+                    navigate(`product?code=${item.code}`);
+                  }}
+                >
+                  {lang === "fa" ? (
+                    item.name_fa
+                  ) : (
+                    <LtrText>{item.name_en}</LtrText>
+                  )}
+                </Button>
+              ))}
+              <Checkbox
+                checked={similarConfirmed}
+                onChange={(value) => {
+                  setSimilarConfirmed(value);
+                  clearIssue(`${formId}-similar`);
+                  if (error === "similar") setError(null);
+                }}
+              >
+                {t("Continue with this product name", "ادامه با این نام محصول")}
+              </Checkbox>
+            </div>
+          )}
+          {!isNew && priceChanged && (
+            <div className="stack product-editor-price-scope">
+              <Field label={t("Approval scope", "محدودهٔ تأیید")}>
+                <Select
+                  value={values.scope}
+                  onChange={(value) =>
+                    patch("scope", value as "all" | "branch")
+                  }
+                  options={[
+                    { value: "all", label: t("All branches", "همهٔ شعبه‌ها") },
+                    ...(branch === "all" ||
+                    branchSellsToCustomers(state.config, branch)
+                      ? [
+                          {
+                            value: "branch",
+                            label: t("This branch only", "فقط این شعبه"),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </Field>
+              {values.scope === "branch" && branch === "all" && (
+                <Field label={t("Branch", "شعبه")}>
+                  <Select
+                    value={targetBranch}
+                    onChange={(value) => {
+                      setTargetBranch(value as Branch);
+                      if (error === "branch") setError(null);
+                    }}
+                    options={priceLocations.map((value) => ({
+                      value,
+                      label: configuredBranchLabel(state.config, value, lang),
+                    }))}
+                  />
+                </Field>
+              )}
+              <DataTable
+                columns={[
+                  { width: "40%" },
+                  { width: "30%", align: "end" },
+                  { width: "30%", align: "end" },
+                ]}
+              >
+                <thead>
+                  <tr>
+                    <th>{t("Branch", "شعبه")}</th>
+                    <th>{t("Old", "قبلی")}</th>
+                    <th>{t("New", "جدید")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(values.scope === "all"
+                    ? priceLocations
+                    : [targetBranch]
+                  ).map((item) => (
                     <tr key={item}>
                       <td>{configuredBranchLabel(state.config, item, lang)}</td>
                       <td>
@@ -816,28 +1026,28 @@ export function ProductEditor({
                         </LtrText>
                       </td>
                     </tr>
-                  ),
-                )}
-              </tbody>
-            </DataTable>
-          </div>
-        )}
-        {error &&
-          ![
-            "name_en",
-            "name_fa",
-            "unit_size",
-            "category",
-            "pricing_category",
-            "supplier",
-            "barcode_conflict",
-            "cost",
-            "price",
-          ].includes(error) && (
-            <p className="form-error" role="alert">
-              {editorError(error, t)}
-            </p>
+                  ))}
+                </tbody>
+              </DataTable>
+            </div>
           )}
+          {error &&
+            ![
+              "name_en",
+              "name_fa",
+              "unit_size",
+              "category",
+              "pricing_category",
+              "supplier",
+              "barcode_conflict",
+              "cost",
+              "price",
+            ].includes(error) && (
+              <p className="form-error" role="alert">
+                {editorError(error, t)}
+              </p>
+            )}
+        </div>
         <div className="actions product-editor-actions">
           <Button variant="secondary" onClick={onClose}>
             {t("Cancel", "انصراف")}
@@ -868,7 +1078,10 @@ function ProductEditButton({
       <Button
         variant="secondary"
         size={row ? "sm" : "default"}
-        aria-label={t(`Edit ${product.name_en}`, `ویرایش ${product.name_fa}`)}
+        aria-label={t(
+          `Edit ${product.name_en}`,
+          `ویرایش ${product.name_fa || product.name_en}`,
+        )}
         onClick={() => setOpen(true)}
       >
         {t("Edit", "ویرایش")}
@@ -995,6 +1208,7 @@ function ProductDetail({
     (item) => item.key === product.tax_profile,
   );
   const canSeeOperations = operational && role !== "cashier";
+  const firstAdded = firstAddedLocation(state, product);
   const branches = configuredBranches(state.config, true);
   const visibleBranches =
     role === "supervisor" && branch === "all"
@@ -1017,7 +1231,7 @@ function ProductDetail({
       title={
         showName
           ? lang === "fa"
-            ? product.name_fa
+            ? product.name_fa || product.name_en
             : product.name_en
           : undefined
       }
@@ -1056,6 +1270,14 @@ function ProductDetail({
         <ProductDates product={product} />
         <ProductProvenance product={product} />
         <dl className="form-grid">
+          {firstAdded && (
+            <div>
+              <dt className="muted">
+                {t("First added at", "اولین بار اضافه‌شده در")}
+              </dt>
+              <dd>{configuredBranchLabel(state.config, firstAdded, lang)}</dd>
+            </div>
+          )}
           <div>
             <dt className="muted">
               {t(state.config.terminology.product_code, "کد محصول")}
@@ -1281,6 +1503,7 @@ function ProductDetail({
                 </div>
               </div>
             )}
+            <ProductLotsSection product={product} />
             <div className="stack">
               <h3>{t("Last received", "آخرین دریافت")}</h3>
               <DataTable
@@ -1383,10 +1606,14 @@ function ProductDetail({
 }
 
 function LookupProductDetail({ product }: { product: Product }) {
-  const { state, branch, t, lang } = useDemo();
+  const { state, branch, historyContext, t, lang } = useDemo();
   const approved = effectivePrice(state, product, branch);
   const pending = pendingPrice(state, product, branch);
   const offer = effectiveOffer(state, product, branch);
+  const clearances = historyContext
+    ? scopedClearanceOffers(state, historyContext, product.code)
+    : [];
+  const firstAdded = firstAddedLocation(state, product);
   const profile = state.config.tax.profiles.find(
     (item) => item.key === product.tax_profile,
   );
@@ -1396,7 +1623,9 @@ function LookupProductDetail({ product }: { product: Product }) {
         <div>
           <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-              {lang === "fa" ? product.name_fa : product.name_en}
+              {lang === "fa"
+                ? product.name_fa || product.name_en
+                : product.name_en}
             </bdi>
           </h2>
           <p className="muted" lang={lang === "fa" ? "en" : "fa"}>
@@ -1411,6 +1640,12 @@ function LookupProductDetail({ product }: { product: Product }) {
             </span>
             <UnitSize value={product.unit_size} />
           </p>
+          {firstAdded && (
+            <p className="helper">
+              {t("First added at", "نخستین ثبت در")}{" "}
+              {configuredBranchLabel(state.config, firstAdded, lang)}
+            </p>
+          )}
         </div>
         <ProductEditButton product={product} />
       </div>
@@ -1462,6 +1697,22 @@ function LookupProductDetail({ product }: { product: Product }) {
         )}
       </div>
       <ManualPriceDetails product={product} />
+      {clearances.map((clearance) => (
+        <div key={clearance.id} className="lookup-clearance-row">
+          <Badge tone="info">
+            {t("Clearance price", "قیمت فروش ویژه")}{" "}
+            <SellingPrice
+              value={clearance.price}
+              product={product}
+              config={state.config}
+            />
+          </Badge>
+          <span className="muted">
+            {t("Expires", "انقضا")} <DateText value={clearance.expiry_date} /> ·{" "}
+            {configuredBranchLabel(state.config, clearance.branch, lang)}
+          </span>
+        </div>
+      ))}
       <ProductDates product={product} />
       {(profile?.taxable || offer) && (
         <div className="lookup-price-tags actions">
@@ -1535,8 +1786,13 @@ export function Lookup() {
   const active =
     results.find((product) => product.code === activeCode) ?? selected;
   const categories = [
-    ...new Set(products.map((product) => product.ai_category)),
-  ].sort();
+    ...new Set(products.map((product) => product.ai_category).filter(Boolean)),
+  ].sort(
+    (a, b) =>
+      products.filter((product) => product.ai_category === b).length -
+        products.filter((product) => product.ai_category === a).length ||
+      a.localeCompare(b),
+  );
 
   useEffect(() => {
     const syncSearch = () => {
@@ -1638,26 +1894,50 @@ export function Lookup() {
           </button>
         </div>
         <div className="lookup-filterbar filter-toolbar">
-          <Select
-            className="lookup-category"
+          <div
+            className="lookup-category-chips"
+            role="group"
             aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
-            value={category}
-            onChange={(value) => {
-              setCategory(value);
-              setSelectedCode("");
-              setActiveCode("");
-            }}
-            options={[
-              {
-                value: "",
-                label: t("All AI categories", "همهٔ دسته‌های هوش مصنوعی"),
-              },
-              ...categories.map((value) => ({
-                value,
-                label: categoryLabel(value, lang),
-              })),
-            ]}
-          />
+          >
+            {["", ...categories.slice(0, 3)].map((value) => (
+              <Button
+                key={value}
+                variant="neutral"
+                className={`filter-chip${category === value ? " is-selected" : ""}`}
+                aria-pressed={category === value}
+                onClick={() => {
+                  setCategory(value);
+                  setSelectedCode("");
+                  setActiveCode("");
+                }}
+              >
+                {value ? categoryLabel(value, lang) : t("All", "همه")}
+              </Button>
+            ))}
+            {categories.length > 3 && (
+              <Menu
+                label={
+                  categories.slice(3).includes(category)
+                    ? categoryLabel(category, lang)
+                    : t("More", "بیشتر")
+                }
+                aria-label={t("More categories", "دسته‌های بیشتر")}
+              >
+                {categories.slice(3).map((value) => (
+                  <MenuItem
+                    key={value}
+                    onClick={() => {
+                      setCategory(value);
+                      setSelectedCode("");
+                      setActiveCode("");
+                    }}
+                  >
+                    {categoryLabel(value, lang)}
+                  </MenuItem>
+                ))}
+              </Menu>
+            )}
+          </div>
           <span className="filter-count muted">
             {translateCount(
               "{{count}} product",
@@ -1751,7 +2031,9 @@ export function Lookup() {
                     >
                       <strong lang={lang}>
                         <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                          {lang === "fa" ? product.name_fa : product.name_en}
+                          {lang === "fa"
+                            ? product.name_fa || product.name_en
+                            : product.name_en}
                         </bdi>
                       </strong>
                       <span className="lookup-result-secondary muted">
@@ -1836,12 +2118,22 @@ export function Products() {
   const [ascending, setAscending] = useListState("products.ascending", true);
   const [page, setPage] = useListState("products.page", 0);
   const tableColumns = useTableColumns("products", [
-    { key: "name", label: t("Product", "محصول"), required: true, width: 270 },
+    {
+      key: "name",
+      label: t("Product", "محصول"),
+      required: true,
+      width: 270,
+      priority: 1,
+      minWidth: 200,
+      mobilePrimary: true,
+    },
     {
       key: "code",
       label: t("Product Code", "کد محصول"),
       width: 104,
       align: "end",
+      priority: 3,
+      minWidth: 104,
     },
     ...(role === "supervisor"
       ? [
@@ -1850,12 +2142,16 @@ export function Products() {
             label: t("Store cost", "هزینهٔ فروشگاه"),
             width: 104,
             align: "end" as const,
+            priority: 6,
+            minWidth: 110,
           },
           {
             key: "margin",
             label: t("Margin %", "حاشیه سود %"),
             width: 96,
             align: "end" as const,
+            priority: 8,
+            minWidth: 96,
           },
         ]
       : []),
@@ -1864,11 +2160,15 @@ export function Products() {
       label: t("Approved price", "قیمت تأییدشده"),
       width: 112,
       align: "end",
+      priority: 2,
+      minWidth: 112,
     },
     {
       key: "status",
       label: t("Status and offer", "وضعیت و پیشنهاد"),
       width: 240,
+      priority: 4,
+      minWidth: 190,
     },
     {
       key: "actions",
@@ -1876,6 +2176,8 @@ export function Products() {
       width: 112,
       align: "end",
       actions: true,
+      priority: 0,
+      minWidth: 120,
     },
   ]);
   if (role === "cashier") return <Lookup />;
@@ -1890,15 +2192,20 @@ export function Products() {
         (!status || product.status === status) &&
         (!supplier || product.main_supplier === supplier) &&
         (!onlyPending || pendingPrice(state, product, branch)) &&
-        (!onlyOffers || effectiveOffer(state, product, branch)) &&
+        (!onlyOffers ||
+          effectiveOffer(state, product, branch) ||
+          effectiveClearanceOffers(state, product, branch).length > 0) &&
         (!onlyManual || manualPrice(state, product, branch)),
     )
     .sort((left, right) => {
       let comparison = 0;
       if (sort === "name")
         comparison = (
-          lang === "fa" ? left.name_fa : left.name_en
-        ).localeCompare(lang === "fa" ? right.name_fa : right.name_en, lang);
+          lang === "fa" ? left.name_fa || left.name_en : left.name_en
+        ).localeCompare(
+          lang === "fa" ? right.name_fa || right.name_en : right.name_en,
+          lang,
+        );
       if (sort === "code")
         comparison = left.code.localeCompare(right.code, "en");
       if (sort === "price") {
@@ -2229,7 +2536,7 @@ export function Products() {
                           <strong className="catalog-product-name">
                             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
                               {lang === "fa"
-                                ? product.name_fa
+                                ? product.name_fa || product.name_en
                                 : product.name_en}
                             </bdi>
                           </strong>
@@ -2425,7 +2732,9 @@ export function ProductPage() {
         <div>
           <h1>
             <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-              {lang === "fa" ? product.name_fa : product.name_en}
+              {lang === "fa"
+                ? product.name_fa || product.name_en
+                : product.name_en}
             </bdi>
           </h1>
           <p className="muted product-other-name">
