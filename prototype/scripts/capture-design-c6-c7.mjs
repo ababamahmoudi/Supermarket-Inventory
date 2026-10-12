@@ -162,6 +162,21 @@ async function fixture(page, scene) {
     return { selector: ".payables-ledger-card", capture: "page" };
   }
   await visit(page, scene === "topbar" ? "dashboard" : scene);
+  if (scene === "settings")
+    return {
+      selector: "#main-content",
+      capture: "page",
+      afterAppearance: async (currentPage) => {
+        await currentPage
+          .getByRole("button", {
+            name: exact(
+              "Returns/date tracking/labels",
+              "مرجوعی/پیگیری تاریخ/برچسب",
+            ),
+          })
+          .click();
+      },
+    };
   return {
     selector: scene === "topbar" ? ".topbar" : "#main-content",
     capture: scene === "topbar" ? "element" : "page",
@@ -281,6 +296,8 @@ try {
         console.log(
           `${filename}: ${proof.words} measured words, ${proof.failures.length} layout findings`,
         );
+        for (const finding of proof.failures)
+          console.error(`${filename}: ${finding}`);
       } catch (error) {
         errors.push({ scene, variant, message: error.message });
         console.error(`${scene}-${variant}: ${error.message}`);

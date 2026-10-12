@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { setLanguage, signIn, uploadInvoice } from "./helpers";
 
 for (const language of ["en", "fa"] as const) {
-  test(`every table header and body cell aligns within two pixels (${language})`, async ({
+  test(`table columns align and phone cards retain labelled contained values (${language})`, async ({
     page,
   }, testInfo) => {
     await signIn(page, "Supervisor");
@@ -12,6 +12,7 @@ for (const language of ["en", "fa"] as const) {
       tables: number;
       cells: number;
       maxError: number;
+      cards: number;
     }[] = [];
     for (const route of [
       "products",
@@ -56,12 +57,21 @@ for (const language of ["en", "fa"] as const) {
       const metrics = await page.locator("main").evaluate((main) => {
         let cells = 0;
         let maxError = 0;
+        let cards = 0;
         const failures: string[] = [];
         const tables = [...main.querySelectorAll(".ui-data-table table")];
         for (const [tableIndex, table] of tables.entries()) {
           const headers = [
             ...table.querySelectorAll("thead tr:first-child th"),
           ];
+          const stacked =
+            getComputedStyle(table).display !== "table" &&
+            headers.every(
+              (header) => header.getBoundingClientRect().height === 0,
+            );
+          const labelledCard = table.closest(
+            ".ui-data-table.is-mobile.is-responsive",
+          );
           for (const [rowIndex, row] of [
             ...table.querySelectorAll("tbody tr"),
           ].entries()) {
@@ -72,6 +82,78 @@ for (const language of ["en", "fa"] as const) {
               )
             )
               continue;
+            if (stacked) {
+              cards++;
+              const bounds = row.getBoundingClientRect();
+              for (const [columnIndex, cell] of [...row.children].entries()) {
+                const rect = cell.getBoundingClientRect();
+                const error = Math.max(
+                  0,
+                  bounds.left - rect.left,
+                  rect.right - bounds.right,
+                  cell.scrollWidth - cell.clientWidth,
+                );
+                maxError = Math.max(maxError, error);
+                cells++;
+                if (error > 2)
+                  failures.push(
+                    `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: containment ${error}px`,
+                  );
+                const label = cell.getAttribute("data-column-label");
+                const headerLabel = headers[columnIndex].cloneNode(
+                  true,
+                ) as HTMLElement;
+                for (const decoration of headerLabel.querySelectorAll(
+                  '[aria-hidden="true"]',
+                ))
+                  decoration.remove();
+                const expectedLabel = headerLabel.textContent
+                  ?.replace(/\s+/g, " ")
+                  .replace(/\s*[↑↓]$/, "")
+                  .trim();
+                if (expectedLabel && label !== expectedLabel)
+                  failures.push(
+                    `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: label ${label}/${expectedLabel}`,
+                  );
+                if (
+                  columnIndex > 0 &&
+                  label &&
+                  labelledCard &&
+                  getComputedStyle(cell, "::before").content !==
+                    JSON.stringify(label)
+                )
+                  failures.push(
+                    `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: missing visible ${label} label`,
+                  );
+                if (columnIndex > 0 && !labelledCard) {
+                  const captionSelector =
+                    "label,.invoice-line-price,.invoice-line-mobile-caption,.ui-checked-control";
+                  const captions = [
+                    ...(cell.matches(captionSelector) ? [cell] : []),
+                    ...cell.querySelectorAll(captionSelector),
+                  ];
+                  if (
+                    !captions.some(
+                      (caption) => caption.getBoundingClientRect().height > 0,
+                    )
+                  )
+                    failures.push(
+                      `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: missing visible field or price caption`,
+                    );
+                  const totalCaption = cell.querySelector(
+                    ".invoice-line-mobile-caption",
+                  );
+                  if (
+                    totalCaption &&
+                    totalCaption.textContent?.trim() !== expectedLabel
+                  )
+                    failures.push(
+                      `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: caption ${totalCaption.textContent}/${expectedLabel}`,
+                    );
+                }
+              }
+              continue;
+            }
             for (const [columnIndex, header] of headers.entries()) {
               const cell = row.children[columnIndex];
               const h = header.getBoundingClientRect();
@@ -96,7 +178,7 @@ for (const language of ["en", "fa"] as const) {
             }
           }
         }
-        return { tables: tables.length, cells, maxError, failures };
+        return { tables: tables.length, cells, cards, maxError, failures };
       });
       expect(metrics.failures, `${route} (${language})`).toEqual([]);
       expect(metrics.maxError).toBeLessThanOrEqual(2);
@@ -106,11 +188,16 @@ for (const language of ["en", "fa"] as const) {
         tables: metrics.tables,
         cells: metrics.cells,
         maxError: metrics.maxError,
+        cards: metrics.cards,
       });
     }
     expect(report.reduce((sum, item) => sum + item.cells, 0)).toBeGreaterThan(
       100,
     );
+    if (page.viewportSize()!.width < 760)
+      expect(report.reduce((sum, item) => sum + item.cards, 0)).toBeGreaterThan(
+        0,
+      );
     await testInfo.attach(`alignment-${language}.json`, {
       body: JSON.stringify(report, null, 2),
       contentType: "application/json",

@@ -111,8 +111,18 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       await page.goto(`/#${route}`);
       proofs.push(await assertContract(page, route, variant));
       if (route === "products") {
-        await field(page, "Search products", "جست‌وجوی محصولات").fill("0016");
+        await field(
+          page.getByRole("main"),
+          "Search products",
+          "جست‌وجوی محصولات",
+        ).fill("0016");
         const cost = page.locator(".catalog-products-table .weight-cost");
+        if ((await cost.count()) === 0)
+          await button(
+            page.locator(".catalog-products-table tbody tr").first(),
+            "Show details",
+            "نمایش جزئیات",
+          ).click();
         await expect(cost).toHaveText("$4.99/lb");
         await expect(cost).toHaveAttribute("dir", "ltr");
         const price = page.locator(".catalog-products-table .weight-price");
@@ -313,7 +323,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
   });
 }
 
-test("C5 shelf quick-add accepts Enter, resets focus, pins new row and undoes without money changes", async ({
+test("C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Undo preserves money", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -335,69 +345,158 @@ test("C5 shelf quick-add accepts Enter, resets focus, pins new row and undoes wi
   const first = page.locator(".expiry-table tbody tr").first();
   await expect(first).toHaveAttribute("data-new-date", "true");
   await expect(first).toContainText("C5-SHELF-ENTER");
-  await assertContract(page, "New shelf date and Undo", "en-light");
+  await assertContract(page, "New shelf date without an Add toast", "en-light");
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
   await expect(field(quick, "Lot (optional)")).toHaveValue("");
   const after = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
   );
   expect(after.ledger).toEqual(before.ledger);
   expect(after.stock_movements).toEqual(before.stock_movements);
-  const toast = page.getByTestId("undo-toast").filter({ hasText: "Add date" });
-  await button(toast, "Undo").click();
+  await button(first, "Remove").click();
+  const removal = page.getByRole("dialog", {
+    name: "Remove date",
+    exact: true,
+  });
+  await choose(page, field(removal, "Reason"), "Entered by mistake");
+  await button(removal, "Remove").click();
   await expect(
     page
       .locator(".expiry-table tbody tr")
       .filter({ hasText: "C5-SHELF-ENTER" }),
   ).toHaveCount(0);
+  const toast = page
+    .getByTestId("undo-toast")
+    .filter({ hasText: "Remove date" });
+  await button(toast, "Undo").click();
+  await expect(
+    page
+      .locator(".expiry-table tbody tr")
+      .filter({ hasText: "C5-SHELF-ENTER" }),
+  ).toHaveCount(1);
+  const restored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  );
+  expect(restored.ledger).toEqual(before.ledger);
+  expect(restored.stock_movements).toEqual(before.stock_movements);
+  expect(
+    restored.expiry.find(
+      (entry: { lot_number?: string }) => entry.lot_number === "C5-SHELF-ENTER",
+    ),
+  ).toMatchObject({ status: "active", branch: "Branch 1" });
   await expect(
     page.getByRole("dialog", { name: "Add date", exact: true }),
   ).toHaveCount(0);
 });
 
 for (const role of ["Supervisor", "Floor Worker"] as const) {
-  test(`C5 Lookup Dates supports inline entry, automatic On and scoped Undo (${role})`, async ({
+  test(`C6 Lookup dates are readonly; shelf addition enables tracking and local Remove Undo restores evidence (${role})`, async ({
     page,
   }) => {
     await signIn(page, role);
     if (role === "Supervisor") await setBranch(page, "Branch 1");
+    const before = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    );
     await page.goto("/#lookup");
-    await field(page, "Search products").fill("0001");
+    await field(page.locator(".lookup-page"), "Search products").fill("0001");
     const dates = page.locator(".product-dates-section");
     await expect(dates).toBeVisible();
-    const tracking = dates.getByRole("switch", {
-      name: "Date tracking",
-      exact: true,
-    });
-    if ((await tracking.getAttribute("aria-checked")) === "true")
-      await tracking.click();
-    await expect(tracking).toHaveAttribute("aria-checked", "false");
-    const openBefore = await dates
-      .locator(".product-open-dates")
-      .allTextContents();
-    const form = dates.locator(".date-quick-add-inline");
+    await expect(dates.getByRole("switch")).toHaveCount(0);
+    await expect(dates.getByRole("form")).toHaveCount(0);
+    await expect(button(dates, "Add")).toHaveCount(0);
     await assertContract(
       page,
-      "Lookup date tracking Off and inline Add",
+      "Readonly Lookup dates",
       "en-light",
       role === "Supervisor" ? "supervisor" : "floor_worker",
     );
-    await today(page, form);
-    await button(form, "Add").click();
-    await expect(tracking).toHaveAttribute("aria-checked", "true");
-    await expect(form.getByRole("status")).toContainText(
-      "Date added. Date tracking turned on.",
-    );
+    await page.goto("/#expiry?product=0001");
+    const quick = page.locator(".date-quick-card");
+    await expect(field(quick, "Product")).toHaveValue("Basmati Rice 4.5 kg");
+    await today(page, quick);
+    await button(quick, "More").click();
+    const lot = `C6-READONLY-${role}`;
+    await field(quick, "Lot (optional)").fill(lot);
+    await button(quick, "Add").click();
+    await expect(page.getByTestId("undo-toast")).toHaveCount(0);
     await expect(
-      page.getByRole("dialog", { name: "Add date", exact: true }),
-    ).toHaveCount(0);
+      page.locator('.expiry-table tbody tr[data-new-date="true"]'),
+    ).toContainText(lot);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          (value) =>
+            JSON.parse(
+              localStorage.getItem("supermarket-prototype-v1")!,
+            ).expiry.some(
+              (entry: { lot_number?: string }) => entry.lot_number === value,
+            ),
+          lot,
+        ),
+      )
+      .toBe(true);
+    const added = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    );
+    const newDate = added.expiry.find(
+      (entry: { lot_number?: string }) => entry.lot_number === lot,
+    );
+    expect(newDate).toMatchObject({
+      branch: "Branch 1",
+      product_code: "0001",
+      status: "active",
+    });
+    expect(
+      added.products.find(
+        (product: { code: string }) => product.code === "0001",
+      ).date_tracking,
+    ).toBe(true);
+    expect(added.ledger).toEqual(before.ledger);
+    expect(added.stock_movements).toEqual(before.stock_movements);
+    await page.goto("/#lookup");
+    await field(page.locator(".lookup-page"), "Search products").fill("0001");
+    await expect(dates).toContainText(`Expires ${newDate.date}`);
+    await expect(dates).toContainText("North York");
+    await expect(dates.getByRole("switch")).toHaveCount(0);
+    await expect(dates.getByRole("form")).toHaveCount(0);
+    await page.goto("/#expiry");
+    const row = page.locator(".expiry-table tbody tr").filter({ hasText: lot });
+    await button(row, "Remove").click();
+    const removal = page.getByRole("dialog", {
+      name: "Remove date",
+      exact: true,
+    });
+    await choose(page, field(removal, "Reason"), "Entered by mistake");
+    await button(removal, "Remove").click();
+    await expect(row).toHaveCount(0);
     const toast = page
       .getByTestId("undo-toast")
-      .filter({ hasText: "Add date" });
+      .filter({ hasText: "Remove date" });
     await button(toast, "Undo").click();
-    await expect(tracking).toHaveAttribute("aria-checked", "false");
-    await expect
-      .poll(() => dates.locator(".product-open-dates").allTextContents())
-      .toEqual(openBefore);
+    await expect(row).toHaveCount(1);
+    const restored = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    );
+    expect(
+      restored.expiry.find((entry: { id: string }) => entry.id === newDate.id),
+    ).toMatchObject({
+      status: "active",
+      branch: "Branch 1",
+      product_code: "0001",
+      lot_number: lot,
+    });
+    expect(
+      restored.products.find(
+        (product: { code: string }) => product.code === "0001",
+      ).date_tracking,
+    ).toBe(true);
+    expect(restored.ledger).toEqual(before.ledger);
+    expect(restored.stock_movements).toEqual(before.stock_movements);
+    await page.goto("/#lookup");
+    await field(page.locator(".lookup-page"), "Search products").fill("0001");
+    await expect(dates).toContainText(`Expires ${newDate.date}`);
+    await expect(dates.getByRole("switch")).toHaveCount(0);
   });
 }
 
@@ -436,9 +535,19 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   await button(stop, "Stop offer").click();
   await expect(existing).toHaveCount(0);
   await page.getByRole("tab", { name: "Past offers", exact: true }).click();
-  await expect(
-    page.locator('.past-offers-table tr[data-product-code="0003"]'),
-  ).toContainText("Stopped");
+  const pastRow = page.locator(
+    '.past-offers-table tr[data-product-code="0003"]',
+  );
+  await expect(pastRow).toHaveCount(1);
+  const details = button(pastRow, "Show details");
+  if (await details.count()) {
+    const detailsId = await details.getAttribute("aria-controls");
+    expect(detailsId).toBeTruthy();
+    await details.click();
+    await expect(page.locator(`[id="${detailsId}"]`)).toContainText("Stopped");
+  } else {
+    await expect(pastRow).toContainText("Stopped");
+  }
   const toast = page
     .getByTestId("undo-toast")
     .filter({ hasText: "Stop offer" });

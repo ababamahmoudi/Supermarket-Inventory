@@ -943,7 +943,38 @@ export function Dialog({
     <dialog
       ref={ref}
       className={cn("confirm-dialog ui-dialog", className)}
+      tabIndex={-1}
       aria-labelledby={open ? titleId : undefined}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab" || event.defaultPrevented) return;
+        const dialog = event.currentTarget;
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter(
+          (element) =>
+            element.tabIndex >= 0 &&
+            !element.closest(
+              '[hidden],[inert],[aria-hidden="true"],dialog:not([open])',
+            ) &&
+            getComputedStyle(element).visibility !== "hidden" &&
+            element.getClientRects().length > 0,
+        );
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (!first || !last) {
+          event.preventDefault();
+          dialog.focus();
+        } else if (
+          (event.shiftKey && document.activeElement === first) ||
+          (!event.shiftKey && document.activeElement === last) ||
+          !dialog.contains(document.activeElement)
+        ) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onOpenChange(false);

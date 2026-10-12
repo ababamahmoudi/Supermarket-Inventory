@@ -17,7 +17,7 @@ test("English-only notebooks keep their name in Persian and clear only the relat
   const english = dialog.getByLabel("Name (English)", { exact: true });
   await expect(english).toHaveAttribute("aria-invalid", "true");
   await dialog
-    .getByLabel("Name (Persian, optional)", { exact: true })
+    .getByLabel("Name (Persian) (optional)", { exact: true })
     .fill(" ");
   await expect(english).toHaveAttribute("aria-invalid", "true");
   await english.fill("Evening checks");

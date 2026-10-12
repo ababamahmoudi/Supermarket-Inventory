@@ -2796,6 +2796,9 @@ export default function Invoices() {
                               )}
                             </td>
                             <td className="numeric">
+                              <span className="invoice-line-mobile-caption">
+                                {t("Line total", "جمع ردیف")}
+                              </span>
                               <Money
                                 value={line.line_total}
                                 currency={state.config.company.currency}

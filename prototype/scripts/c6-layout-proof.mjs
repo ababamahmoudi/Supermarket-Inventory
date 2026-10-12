@@ -295,6 +295,86 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
           words: formWords,
           controls: controls.length,
         });
+        words += formWords;
+      }
+      // Cards and Lookup contain no table/form. Measure their actual text too,
+      // including KPI graphics, rather than accepting an empty word sample.
+      let contentWords = 0;
+      const main = document.querySelector("main");
+      if (main && !document.querySelector("dialog[open]")) {
+        const controls = [
+          ...main.querySelectorAll(
+            "button,input,textarea,[role=combobox],.ui-kpi-icon,.kpi-icon",
+          ),
+        ].filter(
+          (element) =>
+            visible(element) &&
+            !element.closest(
+              "form,table,.operational-print-document,.return-memo-document,.print-sheet",
+            ),
+        );
+        const wordBounds = [];
+        const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          const element = node.parentElement;
+          if (
+            !element ||
+            !visible(element) ||
+            element.closest(
+              "form,table,svg,.sr-only,[aria-hidden=true],.operational-print-document,.shelf-label,.return-memo-document,.print-sheet",
+            )
+          )
+            continue;
+          const bounds = element.getBoundingClientRect();
+          for (const match of (node.textContent ?? "").matchAll(
+            /[0-9\u0660-\u0669\u06f0-\u06f9]{4}-[0-9\u0660-\u0669\u06f0-\u06f9]{2}-[0-9\u0660-\u0669\u06f0-\u06f9]{2}|\$?\d[\d,]*(?:\.\d+)?(?:\/\w+)?|[A-Za-z\u0600-\u06ff\u200c]+(?:-[A-Za-z]+)*/gu,
+          )) {
+            const range = document.createRange();
+            range.setStart(node, match.index);
+            range.setEnd(node, match.index + match[0].length);
+            const rects = [...range.getClientRects()].filter(
+              (rect) => rect.width > 0.1 && rect.height > 0.1,
+            );
+            if (!rects.length) continue;
+            contentWords++;
+            if (new Set(rects.map((rect) => Math.round(rect.top))).size > 1)
+              failures.push(
+                `${scene}: content word broken in middle: ${match[0]}`,
+              );
+            for (const rect of rects) {
+              if (rect.left < bounds.left - 1 || rect.right > bounds.right + 1)
+                failures.push(
+                  `${scene}: content text leaves container: ${match[0]}`,
+                );
+              wordBounds.push({ element, text: match[0], bounds: rect });
+              for (const control of controls) {
+                if (control.contains(element) || element.contains(control))
+                  continue;
+                if (overlap(rect, control.getBoundingClientRect()))
+                  failures.push(
+                    `${scene}: content text/control overlap: ${match[0]}/${control.getAttribute("aria-label") ?? control.className}`,
+                  );
+              }
+            }
+          }
+        }
+        for (let i = 0; i < wordBounds.length; i++)
+          for (let j = i + 1; j < wordBounds.length; j++) {
+            const a = wordBounds[i],
+              b = wordBounds[j];
+            if (
+              a.element === b.element ||
+              a.element.contains(b.element) ||
+              b.element.contains(a.element)
+            )
+              continue;
+            if (overlap(a.bounds, b.bounds))
+              failures.push(
+                `${scene}: content words overlap: ${a.text}/${b.text}`,
+              );
+          }
+        words += contentWords;
       }
       const topbar = document.querySelector(".topbar");
       const shellControls = topbar
@@ -325,6 +405,7 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         width,
         actualWidth: documentWidth,
         words,
+        contentWords,
         cells,
         tables,
         forms,

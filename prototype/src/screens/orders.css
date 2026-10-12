@@ -2,6 +2,12 @@
   display: grid;
   gap: 20px;
 }
+:root .orders-list-table.ui-data-table th[data-column-key="total"] {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
 .order-form-card,
 .order-notes-card {
   max-inline-size: none;

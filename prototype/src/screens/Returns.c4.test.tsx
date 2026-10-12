@@ -149,6 +149,45 @@ it("keeps an English-default retained RM memo available after pickup and shows n
   expect(screen.getByTestId("ledger-count")).toHaveTextContent("1");
 });
 
+it("renders an already recorded pickup success in Persian after a language change without changing the return", async () => {
+  const user = userEvent.setup();
+  render(
+    <DemoProvider>
+      <Harness />
+    </DemoProvider>,
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Load fictional return" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Record pickup" }));
+  fireEvent.change(screen.getByLabelText("Actual pickup quantity"), {
+    target: { value: "3" },
+  });
+  await user.type(
+    screen.getByLabelText("Supplier representative name"),
+    "Demo Driver",
+  );
+  await user.type(
+    screen.getByLabelText("Signed paper pickup slip reference"),
+    "SIGNED-LANGUAGE-SWITCH",
+  );
+  await user.click(
+    screen.getAllByRole("button", { name: "Record pickup" }).at(-1)!,
+  );
+  const feedback = screen.getByText(
+    "Recorded pickup and retained Return memo.",
+  );
+  expect(feedback).toHaveAttribute("role", "status");
+  const retainedState = localStorage.getItem("supermarket-prototype-v1");
+  await user.click(screen.getByRole("button", { name: "Use Persian" }));
+  expect(feedback).toHaveTextContent(
+    "جمع‌آوری ثبت و یادداشت مرجوعی نگهداری شد.",
+  );
+  expect(feedback).not.toHaveTextContent("Recorded pickup");
+  expect(localStorage.getItem("supermarket-prototype-v1")).toBe(retainedState);
+  expect(screen.getByTestId("ledger-count")).toHaveTextContent("1");
+});
+
 it("requires confirmation for financial posting and blocks a concurrent balance change", async () => {
   const user = userEvent.setup();
   render(

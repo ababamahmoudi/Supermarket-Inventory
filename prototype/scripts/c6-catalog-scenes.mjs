@@ -70,7 +70,16 @@ export async function setupCatalogScene(page, scene, helpers) {
       branch: entry.branch,
     };
     if (scene === "date-tracking")
-      return { selector: ".date-tracking-page", capture: "page", evidence };
+      return {
+        selector: ".date-tracking-page",
+        capture: "page",
+        evidence,
+        afterAppearance: async (currentPage) => {
+          await currentPage
+            .getByRole("tab", { name: exact("Due soon", "نزدیک موعد") })
+            .click();
+        },
+      };
     await visit(page, "product?code=0006");
     const state = await savedState(page);
     const product = state.products.find((item) => item.code === "0006");

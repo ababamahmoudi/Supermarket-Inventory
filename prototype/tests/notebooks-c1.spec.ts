@@ -15,7 +15,7 @@ async function createNotebook(
     .getByLabel("Name (English)", { exact: true })
     .fill("Cleaning log");
   await dialog
-    .getByLabel("Name (Persian, optional)", { exact: true })
+    .getByLabel("Name (Persian) (optional)", { exact: true })
     .fill("دفتر نظافت");
   for (const group of ["Who can read", "Who can add"])
     for (const role of ["Supervisor", "Floor Worker"])
@@ -57,10 +57,12 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await expect(location).toHaveAttribute("role", "combobox");
   await expect(
     form.getByRole("button", { name: "Save note", exact: true }),
-  ).toBeDisabled();
-  await expect(form.getByRole("status")).toHaveText(
-    "Choose a location for this note.",
-  );
+  ).toBeEnabled();
+  await form.getByRole("button", { name: "Save note", exact: true }).click();
+  await expect(
+    form.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Choose a location for this note.");
+  await expect(location).toHaveAttribute("aria-invalid", "true");
   await chooseOption(page, location, "Warehouse");
   await form
     .getByLabel("Note", { exact: true })

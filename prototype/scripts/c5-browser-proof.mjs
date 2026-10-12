@@ -248,9 +248,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (kind === "action") {
           const phone = document.documentElement.clientWidth < 760;
           const small =
-            !phone &&
-            (element.classList.contains("button-sm") ||
-              element.closest(".table-actions, .catalog-row-actions"));
+            element.classList.contains("button-sm") ||
+            element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
           const expectedHeight = phone ? 44 : small ? 32 : 40;
           if (entry.radii.some((radius) => radius !== expectedRadius))
@@ -293,8 +292,20 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             const [first, second] = controls.map((element) =>
               element.getBoundingClientRect(),
             );
-            if (Math.abs(first.top - second.top) > 1)
+            if (
+              Math.abs(
+                first.top + first.height / 2 - second.top - second.height / 2,
+              ) > 1
+            )
               failures.push(`Stacked row actions: ${tidy(cell.textContent)}`);
+            if (
+              Math.min(first.right, second.right) -
+                Math.max(first.left, second.left) >
+              1
+            )
+              failures.push(
+                `Overlapping row actions: ${tidy(cell.textContent)}`,
+              );
           }
         }
       }

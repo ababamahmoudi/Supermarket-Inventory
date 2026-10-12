@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch } from "./helpers";
-import { addSelectedLabels } from "./label-selection";
+import { addSelectedLabels, waitlistCopies } from "./label-selection";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 
 async function addProducts(page: Page, codes: string[], copies = 1) {
@@ -62,19 +62,16 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   await expect(labels.first().locator("img")).toBeVisible();
   for (const product of demoSeed.products)
     await expect(labels.filter({ hasText: product.barcode })).toHaveCount(0);
-  await page.getByLabel("Copies for 0003", { exact: true }).fill("2.7");
+  const copies = await waitlistCopies(page, "0003");
+  await copies.fill("2.7");
   await expect(page.getByRole("alert")).toHaveText(
     "Enter a whole copy count from 1 to 1000.",
   );
-  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
-    "1",
-  );
+  await expect(copies).toHaveValue("1");
   await expect(labels).toHaveCount(3);
-  await page.getByLabel("Copies for 0003", { exact: true }).fill("2");
+  await copies.fill("2");
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveValue(
-    "2",
-  );
+  await expect(copies).toHaveValue("2");
   await expect(labels).toHaveCount(4);
   await expect(labels.filter({ hasText: "Sour Cherry Juice" })).toHaveCount(2);
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
@@ -103,7 +100,9 @@ test("validates A4 dimensions and Persian labels without external requests", asy
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText("fit on an A4 sheet");
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("fit on an A4 sheet");
   await page.getByLabel("Width (mm)", { exact: true }).fill("60");
   await page
     .getByRole("button", { name: "Save template", exact: true })

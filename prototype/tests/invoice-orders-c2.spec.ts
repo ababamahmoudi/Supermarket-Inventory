@@ -140,6 +140,15 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   await form
     .getByRole("textbox", { name: /^Cases — Canned Fava Beans/ })
     .fill("1");
+  const expectedCost = form.getByRole("textbox", {
+    name: /^Expected unit cost — Canned Fava Beans/,
+  });
+  if (!(await expectedCost.count()))
+    await form
+      .locator("tbody tr")
+      .filter({ hasText: "Canned Fava Beans" })
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
   await form
     .getByRole("textbox", { name: /^Expected unit cost — Canned Fava Beans/ })
     .fill("0.9800");
@@ -157,20 +166,29 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     order.id,
     `${order.reference} · ${order.date}`,
   );
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
-    page.getByText(
-      "Choose a decision for every order difference before posting.",
-      { exact: true },
-    ),
+    page.getByRole("link", {
+      name: "Choose a decision for every order difference before posting.",
+      exact: true,
+    }),
   ).toBeVisible();
   const row = comparison.locator('tr[data-invoice-line="0"]');
-  await row
+  const refusal = comparison.getByRole("button", {
+    name: "Refused / sent back with the driver",
+    exact: true,
+  });
+  if (!(await refusal.count()))
+    await row
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+  await comparison
     .getByRole("button", {
       name: "Refused / sent back with the driver",
       exact: true,
     })
     .click();
-  await row
+  await comparison
     .getByRole("button", { name: "Accept new cost", exact: true })
     .click();
   await confirmNoDate(page);
@@ -202,7 +220,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const postedLine = page
     .locator(".posted-invoice-document tbody tr")
     .filter({ hasText: "Canned Fava Beans 400 g" });
-  await expect(postedLine).toContainText("Delivered: 12");
+  await expect(postedLine).toContainText("Delivered quantity: 12");
   await expect(postedLine).toContainText(
     "Refused / sent back with the driver · 6 · $6.60",
   );

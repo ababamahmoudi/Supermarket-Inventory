@@ -152,7 +152,15 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("button", { name: "Add item", exact: true })
         .click();
       await expect(newItem).not.toBeVisible();
-      await expect(page.locator(".order-new-item-row")).toContainText("$30.00");
+      const addedRow = page.locator(".order-new-item-row");
+      if (!(await addedRow.innerText()).includes("$30.00")) {
+        await addedRow
+          .getByRole("button", { name: "Show details", exact: true })
+          .click();
+        await expect(
+          addedRow.locator("xpath=following-sibling::tr[1]"),
+        ).toContainText("$30.00");
+      } else await expect(addedRow).toContainText("$30.00");
       await setLanguage(page, language);
       await check(
         "New order with retained packs and a New item",
@@ -187,7 +195,7 @@ for (const width of [1280, 1440, 1920]) {
         .click();
       await page.getByRole("button", { name: "Add line", exact: true }).click();
       const line = page.locator(".invoice-line").first();
-      const quantity = line.getByLabel("Invoiced quantity", { exact: true });
+      const quantity = line.getByLabel("Invoiced", { exact: true });
       if (!(await quantity.isVisible()))
         await line.locator(".invoice-line-toggle").click();
       await line.getByLabel("Units per case", { exact: true }).fill("12");
@@ -327,7 +335,9 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("button", { name: "Record pickup", exact: true })
         .click();
       const pickup = page.locator(".return-action-card");
-      await pickup.getByLabel(/Actual pickup units$/).fill("3");
+      await pickup
+        .getByLabel("Actual pickup quantity", { exact: true })
+        .fill("3");
       await pickup
         .getByLabel("Supplier representative name", { exact: true })
         .fill("Demo Driver");

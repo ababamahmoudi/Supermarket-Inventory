@@ -31,6 +31,15 @@
   margin: 0 0 8px;
   overflow: visible;
   clip-path: none;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+/* Keep the action row after the form. A bottom-sticky row pulled the footer
+   into the first viewport and painted over the saved-draft table. */
+:root .invoice-workspace .invoice-action-footer,
+:root .invoice-workspace .invoice-action-footer .bottom-bar {
+  position: static;
+  inset-block-end: auto;
 }
 .received-range-trigger {
   max-inline-size: 100%;
@@ -60,7 +69,18 @@
 .invoice-lines-table .invoice-line-price > p {
   white-space: normal;
 }
+.invoice-line-mobile-caption {
+  display: none;
+}
 @media (max-width: 759px) {
+  .invoice-line-mobile-caption {
+    display: block;
+    margin-block-end: 8px;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-caption);
+  }
   .invoice-received-fields {
     grid-template-columns: minmax(0, 1fr);
   }

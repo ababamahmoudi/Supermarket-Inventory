@@ -7,7 +7,10 @@ test("Supervisor product page uses own route, Back link and shared editor", asyn
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#products");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page
+    .getByRole("main")
+    .getByLabel("Search products", { exact: true })
+    .fill("0009");
   await page
     .getByRole("link", { name: "Potato Chips 150 g", exact: true })
     .click();
@@ -30,7 +33,7 @@ test("Supervisor product page uses own route, Back link and shared editor", asyn
     .getByLabel("English name", { exact: true })
     .fill("Potato Chips 150 g edited");
   await editor
-    .getByLabel("Description (English)", { exact: true })
+    .getByLabel("Description (English) (optional)", { exact: true })
     .fill("Crispy potato chips");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
@@ -63,7 +66,10 @@ test("Lookup price editor defaults to all branches and records the signed-in Sup
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page
+    .getByRole("main")
+    .getByLabel("Search products", { exact: true })
+    .fill("0009");
   await page
     .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
     .click();
@@ -103,7 +109,10 @@ test("same editor changes this branch only, and validation stays inside the open
   await signIn(page, "Supervisor");
   await setBranch(page, "Branch 1");
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page
+    .getByRole("main")
+    .getByLabel("Search products", { exact: true })
+    .fill("0009");
   await page
     .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
     .click();
@@ -117,7 +126,9 @@ test("same editor changes this branch only, and validation stays inside the open
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
-  await expect(editor.getByRole("alert")).toContainText("at most two decimals");
+  await expect(
+    editor.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
   await editor
     .getByLabel("Selling price (per unit)", { exact: true })
@@ -159,7 +170,10 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer pi
   page,
 }) => {
   await signIn(page, "Cashier");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page
+    .getByRole("main")
+    .getByLabel("Search products", { exact: true })
+    .fill("0009");
   const row = page.locator(".lookup-result-row.is-selected");
   let geometry = await row.evaluate((element) => {
     const name = element
@@ -183,12 +197,18 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer pi
   });
   expect(geometry.nameX).toBeGreaterThan(geometry.priceX);
   const fills = await row.evaluate((element) => ({
-    row: getComputedStyle(element).backgroundColor,
-    pill: getComputedStyle(element.querySelector(".offer-pill")!)
-      .backgroundColor,
+    rowRadius: getComputedStyle(element).borderRadius,
+    pillRadius: getComputedStyle(element.querySelector(".offer-pill")!)
+      .borderRadius,
+    pillHeight: element.querySelector(".offer-pill")!.getBoundingClientRect()
+      .height,
     bar: getComputedStyle(element, "::before").width,
   }));
-  expect(fills.row).not.toBe(fills.pill);
+  expect(fills.rowRadius).not.toBe(fills.pillRadius);
+  expect(parseFloat(fills.pillRadius)).toBeGreaterThanOrEqual(
+    fills.pillHeight / 2,
+  );
+  await expect(row.locator(".offer-pill")).not.toBeEmpty();
   expect(fills.bar).toBe("3px");
 });
 
@@ -198,7 +218,10 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
   await signIn(page, "Supervisor");
   await setBranch(page, "Branch 1");
   await page.goto("/#products");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page
+    .getByRole("main")
+    .getByLabel("Search products", { exact: true })
+    .fill("0009");
   const before = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)!).products,
     STORAGE_KEY,
@@ -219,9 +242,9 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     await editor
       .getByRole("button", { name: "Save product", exact: true })
       .click();
-    await expect(editor.getByRole("alert")).toContainText(
-      "This barcode belongs to another product",
-    );
+    await expect(
+      editor.getByRole("alert", { name: "What's missing", exact: true }),
+    ).toContainText("This barcode belongs to another product");
   }
   const blocked = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)!),

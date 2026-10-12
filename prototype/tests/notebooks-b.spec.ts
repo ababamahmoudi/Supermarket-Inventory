@@ -20,7 +20,7 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
     .getByLabel("Name (English)", { exact: true })
     .fill("Cleaning log");
   await dialog
-    .getByLabel("Name (Persian, optional)", { exact: true })
+    .getByLabel("Name (Persian) (optional)", { exact: true })
     .fill("دفتر نظافت");
   await chooseOption(
     page,
@@ -43,7 +43,7 @@ async function createCleaningNotebook(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Add note", exact: true }).click();
 }
 
-test("Notes search has a search icon, a placeholder, 44px fields, 40px actions and the singular note count", async ({
+test("Notes search has a search icon, a placeholder, bounded fields and touch actions, and the singular note count", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -66,8 +66,9 @@ test("Notes search has a search icon, a placeholder, 44px fields, 40px actions a
   );
   for (const control of controls) {
     expect(["field", "action", "icon"]).toContain(control.kind);
+    const actionHeight = page.viewportSize()!.width < 760 ? 44 : 40;
     expect(
-      Math.abs(control.height - (control.kind === "field" ? 44 : 40)),
+      Math.abs(control.height - (control.kind === "field" ? 44 : actionHeight)),
     ).toBeLessThanOrEqual(1);
   }
 });

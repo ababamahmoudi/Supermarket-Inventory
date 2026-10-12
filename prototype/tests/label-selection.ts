@@ -1,5 +1,17 @@
 import { expect, type Page } from "@playwright/test";
 
+export async function waitlistCopies(page: Page, code: string) {
+  const copies = page.getByLabel(`Copies for ${code}`, { exact: true });
+  if (!(await copies.count()))
+    await page
+      .locator(".labels-waitlist-table tbody > tr:not(.table-expanded-row)")
+      .filter({ hasText: code })
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+  await expect(copies).toBeVisible();
+  return copies;
+}
+
 export async function addSelectedLabels(
   page: Page,
   codes: string[],

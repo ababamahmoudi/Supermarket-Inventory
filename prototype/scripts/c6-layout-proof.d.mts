@@ -10,6 +10,7 @@ export function inspectResponsiveLayout(
   width: number;
   actualWidth: number;
   words: number;
+  contentWords: number;
   cells: number;
   forms: {
     className: string;

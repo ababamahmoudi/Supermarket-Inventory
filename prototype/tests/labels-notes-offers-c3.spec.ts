@@ -130,13 +130,22 @@ for (const language of ["en", "fa"] as const) {
     await expect(page.locator(".labels-waitlist-table tbody tr")).toHaveCount(
       2,
     );
-    for (const code of ["0004", "0011"])
-      await expect(
-        page.getByLabel(
-          language === "en" ? `Copies for ${code}` : `تعداد ${code}`,
-          { exact: true },
-        ),
-      ).toHaveValue("3");
+    for (const code of ["0004", "0011"]) {
+      const copies = page.getByLabel(
+        language === "en" ? `Copies for ${code}` : `تعداد ${code}`,
+        { exact: true },
+      );
+      if (!(await copies.count()))
+        await page
+          .locator(".labels-waitlist-table tbody > tr:not(.table-expanded-row)")
+          .filter({ hasText: code })
+          .getByRole("button", {
+            name: language === "en" ? "Show details" : "نمایش جزئیات",
+            exact: true,
+          })
+          .click();
+      await expect(copies).toHaveValue("3");
+    }
     const queue = await page.evaluate(
       () =>
         JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
@@ -145,6 +154,14 @@ for (const language of ["en", "fa"] as const) {
     expect(
       queue.map((item: { product_code: string }) => item.product_code).sort(),
     ).toEqual(["0004", "0011"]);
+    await expect(page.locator(".undo-toast")).toHaveCount(0);
+    await page
+      .getByRole("button", {
+        name: language === "en" ? "Clear waitlist" : "پاک کردن فهرست انتظار",
+        exact: true,
+      })
+      .click();
+    await expect(page.locator(".labels-waitlist-table")).toHaveCount(0);
     await page
       .locator(".undo-toast")
       .first()
@@ -153,15 +170,32 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       })
       .click();
-    await expect(page.locator(".labels-waitlist-table")).toHaveCount(0);
+    await expect(page.locator(".labels-waitlist-table tbody tr")).toHaveCount(
+      2,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          JSON.parse(
+            localStorage.getItem("supermarket-prototype-v1")!,
+          ).label_waitlist.sort(
+            (a: { product_code: string }, b: { product_code: string }) =>
+              a.product_code.localeCompare(b.product_code),
+          ),
+        ),
+      )
+      .toEqual(
+        [...queue].sort((a, b) => a.product_code.localeCompare(b.product_code)),
+      );
   });
 }
 
-test("Notes is a list with a focused Add note dialog; field errors clear on edit and saved notes undo", async ({
+test("Notes has a focused validating dialog; Save is quiet and Mark done can be undone", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#notes");
+  await page.getByRole("tab", { name: /^For Supervisor/ }).click();
   await expect(
     page.getByRole("form", { name: "Add note", exact: true }),
   ).toHaveCount(0);
@@ -177,7 +211,7 @@ test("Notes is a list with a focused Add note dialog; field errors clear on edit
   const note = dialog.getByLabel("Note", { exact: true });
   await expect(note).toHaveAttribute("aria-invalid", "true");
   await expect(dialog.locator(".form-error")).toHaveText(
-    "Add a short note before saving.",
+    "Enter a note before saving.",
   );
   await note.fill("Check tomorrow's delivery time");
   await expect(note).toHaveAttribute("aria-invalid", "false");
@@ -188,12 +222,40 @@ test("Notes is a list with a focused Add note dialog; field errors clear on edit
     .locator(".notebook-entry-card")
     .filter({ hasText: "Check tomorrow's delivery time" });
   await expect(entry).toContainText("Demo Supervisor");
+  await expect(page.locator(".undo-toast")).toHaveCount(0);
+  await entry.getByRole("button", { name: "Mark done", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(
+            localStorage.getItem("supermarket-prototype-v1")!,
+          ).notes.find(
+            (item: { text: string }) =>
+              item.text === "Check tomorrow's delivery time",
+          ).status,
+      ),
+    )
+    .toBe("resolved");
   await page
     .locator(".undo-toast")
     .first()
     .getByRole("button", { name: "Undo", exact: true })
     .click();
-  await expect(entry).toHaveCount(0);
+  await expect(entry).toContainText("Check tomorrow's delivery time");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(
+            localStorage.getItem("supermarket-prototype-v1")!,
+          ).notes.find(
+            (item: { text: string }) =>
+              item.text === "Check tomorrow's delivery time",
+          ).status,
+      ),
+    )
+    .toBe("open");
 });
 
 test("Offers creates from the top dialog, keeps pricing unchanged and excludes Warehouse", async ({

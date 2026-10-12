@@ -266,6 +266,41 @@ it("selected product labels follow language changes while typed scanner text sta
   expect(product).toHaveValue("DEMO-600000");
 });
 
+it.each([false, true])(
+  "renders retained quick-add success in the current language without adding another date (tracking already on: %s)",
+  async (trackingAlreadyOn) => {
+    const user = await show();
+    if (trackingAlreadyOn)
+      await user.click(
+        screen.getByRole("button", { name: "Add fixture date" }),
+      );
+    const form = screen.getByRole("form", { name: "Add date" });
+    await user.type(
+      within(form).getByRole("combobox", { name: "Product" }),
+      "0001",
+    );
+    await chooseToday(user, form);
+    await user.click(within(form).getByRole("button", { name: "Add" }));
+    const english = trackingAlreadyOn
+      ? "Date added."
+      : "Date added. Date tracking turned on.";
+    const persian = trackingAlreadyOn
+      ? "تاریخ اضافه شد."
+      : "تاریخ اضافه شد. پیگیری تاریخ روشن شد.";
+    expect(within(form).getByRole("status")).toHaveTextContent(english);
+    const retainedDates = screen.getByTestId("manual-dates").textContent;
+    await user.click(screen.getByRole("button", { name: "Use Persian" }));
+    expect(within(form).getByRole("status")).toHaveTextContent(persian);
+    expect(within(form).getByRole("status")).not.toHaveTextContent(
+      "Date added.",
+    );
+    expect(screen.getByTestId("manual-dates").textContent).toBe(retainedDates);
+    await user.click(screen.getByRole("button", { name: "Use English" }));
+    expect(within(form).getByRole("status")).toHaveTextContent(english);
+    expect(screen.getByTestId("manual-dates").textContent).toBe(retainedDates);
+  },
+);
+
 it("C6 Lookup dates are read-only for every role and kept dates remain visible", async () => {
   const user = await show(true);
   await user.click(screen.getByRole("button", { name: "Add fixture date" }));

@@ -138,7 +138,18 @@ test("Supervisor moves a posted invoice with a reason and retains its original d
   );
   await expect(
     dialog.getByRole("button", { name: "Move invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await dialog
+    .getByRole("button", { name: "Move invoice", exact: true })
+    .click();
+  await expect(
+    dialog.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByLabel("Reason", { exact: true })).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
+  expect((await saved(page)).ledger).toEqual(before.ledger);
   await dialog
     .getByLabel("Reason", { exact: true })
     .fill("Correct the delivery location");
@@ -173,12 +184,13 @@ test("Supervisor moves a posted invoice with a reason and retains its original d
   await page
     .getByRole("textbox", { name: "Search Received", exact: true })
     .fill(source.number);
-  await expect(
-    page
-      .locator(".received-table")
-      .getByText("Warehouse", { exact: true })
-      .first(),
-  ).toBeVisible();
+  const warehouseLocation = page
+    .locator(".received-table")
+    .getByText("Warehouse", { exact: true })
+    .first();
+  if (!(await warehouseLocation.isVisible()))
+    await page.locator(".received-table .table-details-toggle").first().click();
+  await expect(warehouseLocation).toBeVisible();
   await page.reload();
   expect(
     (await saved(page)).invoice_location_corrections?.at(-1)?.to_branch,

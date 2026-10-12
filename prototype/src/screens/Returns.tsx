@@ -54,6 +54,35 @@ import {
   type OperationsContext,
 } from "../operations";
 
+const returnFeedback = {
+  pickup: [
+    "Recorded pickup and retained Return memo.",
+    "جمع‌آوری ثبت و یادداشت مرجوعی نگهداری شد.",
+  ],
+  correct: [
+    "Corrected pickup. The original signed record is retained.",
+    "جمع‌آوری اصلاح شد. سابقه امضاشده اصلی نگهداری می‌شود.",
+  ],
+  resolve: [
+    "Recorded item resolutions. Credit claims require Supervisor verification.",
+    "حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید سرپرست نیاز دارد.",
+  ],
+  cancel: [
+    "Recorded cancellation disposition. Existing compensation remains unchanged.",
+    "وضعیت لغو ثبت شد. جبران قبلی بدون تغییر باقی ماند.",
+  ],
+  posted: ["Verified and posted claim once.", "ادعا تأیید و یک‌بار ثبت شد."],
+  cancellationApproved: [
+    "Approved cancellation; retained existing settlement.",
+    "لغو تأیید شد؛ تسویه قبلی حفظ شد.",
+  ],
+  cancellationDeclined: [
+    "Declined cancellation; preserved return history.",
+    "لغو رد شد؛ سابقه مرجوعی حفظ شد.",
+  ],
+} as const;
+type ReturnFeedbackKey = keyof typeof returnFeedback;
+
 export function Returns() {
   const { state, update, role, user, branch, t, lang } = useDemo();
   const usesPounds = (line: OperationalReturn["lines"][number]) =>
@@ -119,7 +148,7 @@ export function Returns() {
   const [claimIssues, setClaimIssues] = useState<ValidationIssue[]>([]);
   const [error, setError] = useState("");
   const [errorKey, setErrorKey] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState<ReturnFeedbackKey | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
   const [manualMemo, setMemo] = useState<ReturnMemo | null>(null);
@@ -193,7 +222,7 @@ export function Returns() {
       setMemo(null);
       setError("");
       setErrorKey("");
-      setFeedback("");
+      setFeedback(null);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -269,7 +298,10 @@ export function Returns() {
       outcome={returnClosureSubtype(record)}
     />
   );
-  const run = (action: (draft: typeof state) => void, message: string) => {
+  const run = (
+    action: (draft: typeof state) => void,
+    message: ReturnFeedbackKey,
+  ) => {
     try {
       update(action);
       setError("");
@@ -280,7 +312,7 @@ export function Returns() {
       setError(
         operationError(caught instanceof Error ? caught.message : "", t),
       );
-      setFeedback("");
+      setFeedback(null);
     }
   };
   const clearFieldError = (...keys: string[]) => {
@@ -296,7 +328,7 @@ export function Returns() {
     setPanel(nextPanel);
     setError("");
     setErrorKey("");
-    setFeedback("");
+    setFeedback(null);
   };
   if (!role || role === "cashier")
     return (
@@ -631,7 +663,7 @@ export function Returns() {
                 confirmation.amount,
                 confirmation.itemAmounts,
               ),
-            t("Verified and posted claim once.", "ادعا تأیید و یک‌بار ثبت شد."),
+            "posted",
           );
           setConfirmation(null);
           setVerifiedClaims((current) => ({
@@ -731,7 +763,7 @@ export function Returns() {
       )}
       {feedback && (
         <div className="banner approved" role="status">
-          {feedback}
+          {t(returnFeedback[feedback][0], returnFeedback[feedback][1])}
         </div>
       )}
       {returns.map((record) => {
@@ -1053,9 +1085,9 @@ export function Returns() {
                   record={record}
                   context={context}
                   onClose={() => setActive(null)}
-                  onSaved={(message) => {
+                  onSaved={() => {
                     setActive(null);
-                    setFeedback(message);
+                    setFeedback("cancel");
                   }}
                 />
               ) : (
@@ -1065,9 +1097,9 @@ export function Returns() {
                   context={context}
                   mode={panel}
                   onClose={() => setActive(null)}
-                  onSaved={(message) => {
+                  onSaved={() => {
                     setActive(null);
-                    setFeedback(message);
+                    setFeedback(panel);
                   }}
                 />
               ))}
@@ -1318,10 +1350,7 @@ export function Returns() {
                                 settlement_retained: retainSettlement,
                                 note: reviewNote,
                               }),
-                            t(
-                              "Approved cancellation; retained existing settlement.",
-                              "لغو تأیید شد؛ تسویه قبلی حفظ شد.",
-                            ),
+                            "cancellationApproved",
                           )
                         }
                       >
@@ -1338,10 +1367,7 @@ export function Returns() {
                                 settlement_retained: false,
                                 note: reviewNote,
                               }),
-                            t(
-                              "Declined cancellation; preserved return history.",
-                              "لغو رد شد؛ سابقه مرجوعی حفظ شد.",
-                            ),
+                            "cancellationDeclined",
                           )
                         }
                       >

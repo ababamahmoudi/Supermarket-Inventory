@@ -344,6 +344,28 @@ time {
 div.ui-kpi {
   cursor: default;
 }
+.ui-kpi-label {
+  grid-row: 1;
+}
+.ui-kpi-number {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.ui-kpi-icon {
+  grid-row: 1;
+  background: var(--surface-kpi-icon);
+}
+.kpi-icon {
+  background: var(--surface-kpi-icon);
+}
+.lookup-approved-price .price {
+  display: block;
+  line-height: 1.25;
+  margin-block: 4px;
+}
+.dashboard-alerts .dashboard-list-row {
+  grid-template-areas: "copy action" "pill pill";
+}
 div.ui-kpi:hover {
   filter: none;
   box-shadow: var(--shadow-none);
