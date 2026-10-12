@@ -969,7 +969,9 @@ export function Dashboard() {
                             {item.lines.map((line, index) => (
                               <span key={`${line.product_code}:${index}`}>
                                 <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                                  {productName(line.product_code)}
+                                  <UnitText>
+                                    {productName(line.product_code)}
+                                  </UnitText>
                                 </bdi>
                                 {index < item.lines.length - 1 ? "، " : ""}
                               </span>
@@ -1346,7 +1348,7 @@ export function Dashboard() {
                       key={item.id}
                       title={
                         <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                          {productName(item.product_code!)}
+                          <UnitText>{productName(item.product_code!)}</UnitText>
                         </bdi>
                       }
                       secondary={
