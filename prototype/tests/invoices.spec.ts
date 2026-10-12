@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, chooseOption } from "./helpers";
+import { signIn, chooseOption, setLanguage } from "./helpers";
 
 test.setTimeout(60000);
 
@@ -236,9 +236,7 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
 }) => {
   await signInWorker(page);
   await upload(page);
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
     page.getByRole("heading", { name: "بررسی ردیف‌های فاکتور", exact: true }),

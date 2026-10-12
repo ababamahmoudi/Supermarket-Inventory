@@ -12,6 +12,7 @@ import {
   isValidElement,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
+  type AnchorHTMLAttributes,
   type ReactElement,
   type ReactNode,
   type InputHTMLAttributes,
@@ -119,6 +120,26 @@ export function Card({
       {title && <h2>{title}</h2>}
       {children}
     </section>
+  );
+}
+
+/** Route navigation remains separate from a row's hidden-column disclosure. */
+export function TableRowLink({
+  className,
+  children,
+  ...props
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { "aria-label": string }) {
+  return (
+    <a {...props} className={cn("table-row-link", className)}>
+      {children ?? (
+        <ChevronRight
+          className="directional"
+          size={20}
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+      )}
+    </a>
   );
 }
 type BadgeTone =
@@ -237,6 +258,7 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "expired",
         "overdue",
         "failed",
+        "missing",
         "tax discrepancy",
         "کسری",
         "تعارض",
@@ -244,6 +266,8 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "منقضی‌شده",
         "سررسید گذشته",
         "ناموفق",
+        "ناقص",
+        "مفقود",
         "اختلاف مالیات",
         "اختلاف مالیاتی",
       ],
@@ -301,10 +325,17 @@ export function Field({
   const id = child?.props.id ?? generated;
   const labelId = `${id}-label`;
   const descriptionId = `${id}-help`;
+  const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
   return (
     <div className={cn("field", className)}>
       <label id={labelId} htmlFor={id}>
-        {label}
+        {optional ? (
+          <>
+            {optional[1]} <span className="field-optional">{optional[2]}</span>
+          </>
+        ) : (
+          label
+        )}
       </label>
       {child
         ? cloneElement(child, {
@@ -530,7 +561,7 @@ export function DataTable({
             cell.querySelector<HTMLElement>(":scope > .actions") ?? cell;
           const controls = Array.from(
             group.querySelectorAll<HTMLElement>(
-              ":scope > .ui-button, :scope > .ui-menu-trigger",
+              ":scope > .ui-button, :scope > .ui-menu-trigger, :scope > .table-row-link",
             ),
           );
           if (!controls.length) continue;
@@ -580,6 +611,10 @@ export function DataTable({
       )
         return node;
       if (node.type === "tr") {
+        const navigation = node as ReactElement<
+          HTMLAttributes<HTMLTableRowElement> & { "data-row-href"?: string }
+        >;
+        const href = navigation.props["data-row-href"];
         let columnIndex = 0;
         const rowKey = String(node.key ?? `${path}-${nodeIndex}`);
         const rowCells = cells(node.props.children);
@@ -596,6 +631,34 @@ export function DataTable({
         const expanded = expandedRows.includes(rowKey);
         const rowId = `${detailsId}-${encodeURIComponent(rowKey)}`;
         const decoratedRow = cloneElement(node, {
+          ...(href
+            ? {
+                className: cn(node.props.className, "is-navigable"),
+                tabIndex: 0,
+                onClick: (event: React.MouseEvent<HTMLTableRowElement>) => {
+                  navigation.props.onClick?.(event);
+                  if (
+                    !event.defaultPrevented &&
+                    event.target instanceof Element &&
+                    !event.target.closest(
+                      "a,button,input,textarea,select,[role='checkbox'],[role='combobox']",
+                    )
+                  )
+                    window.location.hash = href;
+                },
+                onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
+                  navigation.props.onKeyDown?.(event);
+                  if (
+                    !event.defaultPrevented &&
+                    event.target === event.currentTarget &&
+                    ["Enter", " "].includes(event.key)
+                  ) {
+                    event.preventDefault();
+                    window.location.hash = href;
+                  }
+                },
+              }
+            : {}),
           children: Children.map(cells(node.props.children), (cell) => {
             if (
               !isValidElement<{
@@ -2013,6 +2076,7 @@ export function Menu({
   icon,
   showChevron = true,
   iconOnly = false,
+  minWidth = 224,
   children,
   className,
   ...props
@@ -2021,6 +2085,7 @@ export function Menu({
   icon?: ReactNode;
   showChevron?: boolean;
   iconOnly?: boolean;
+  minWidth?: number;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -2033,14 +2098,18 @@ export function Menu({
     portalTarget,
     triggerRef,
     popupRef,
-  } = usePopover();
+  } = usePopover(minWidth);
   const menuId = useId();
+  const itemsWithin = (menu: HTMLElement | null) =>
+    Array.from(
+      menu?.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]:not(:disabled)',
+      ) ?? [],
+    ).filter((item) => item.closest('[role="menu"]') === menu);
   const focusItem = (edge: "first" | "last") =>
     requestAnimationFrame(() => {
-      const items = popupRef.current?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]:not(:disabled)',
-      );
-      (edge === "last" ? items?.[items.length - 1] : items?.[0])?.focus();
+      const items = itemsWithin(popupRef.current);
+      (edge === "last" ? items.at(-1) : items[0])?.focus();
     });
   const show = (edge: "first" | "last" = "first") => {
     showPopup();
@@ -2053,7 +2122,7 @@ export function Menu({
         ref={triggerRef}
         type="button"
         className={cn(
-          "ui-button button button-secondary ui-menu-trigger",
+          "ui-button button button-neutral ui-menu-trigger",
           { "ui-icon-button": iconOnly },
           className,
         )}
@@ -2102,11 +2171,7 @@ export function Menu({
                   !(event.target instanceof HTMLInputElement)
                 ) {
                   event.preventDefault();
-                  const items = Array.from(
-                    event.currentTarget.querySelectorAll<HTMLButtonElement>(
-                      '[role="menuitem"]:not(:disabled)',
-                    ),
-                  );
+                  const items = itemsWithin(event.currentTarget);
                   const current = items.findIndex(
                     (item) => item === document.activeElement,
                   );
@@ -2136,15 +2201,17 @@ export function MenuItem({
   onClick,
   disabled,
   className,
+  ...props
 }: {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   className?: string;
-}) {
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
   const close = useContext(MenuContext);
   return (
     <button
+      {...props}
       type="button"
       role="menuitem"
       disabled={disabled}
@@ -2157,6 +2224,109 @@ export function MenuItem({
       {children}
     </button>
   );
+}
+
+/** A nested menu remains inside its parent popup and returns focus to its own trigger. */
+export function MenuSubmenu({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const id = useId();
+  const openMenu = () => {
+    setOpen(true);
+    requestAnimationFrame(() =>
+      menu.current
+        ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+        ?.focus(),
+    );
+  };
+  const close = () => {
+    setOpen(false);
+    trigger.current?.focus();
+  };
+  return (
+    <div className="ui-menu-submenu">
+      <button
+        ref={trigger}
+        className="ui-menu-item ui-menu-submenu-trigger"
+        role="menuitem"
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => (open ? close() : openMenu())}
+        onKeyDown={(event) => {
+          const rtl = document.documentElement.dir === "rtl";
+          if (event.key === (rtl ? "ArrowLeft" : "ArrowRight")) {
+            event.preventDefault();
+            event.stopPropagation();
+            openMenu();
+          }
+        }}
+      >
+        {label}
+        <ChevronRight size={16} className="directional" aria-hidden="true" />
+      </button>
+      {open && (
+        <div
+          ref={menu}
+          id={id}
+          role="menu"
+          aria-label={label}
+          className="ui-submenu-items"
+          onKeyDown={(event) => {
+            const rtl = document.documentElement.dir === "rtl";
+            if (
+              event.key === "Escape" ||
+              event.key === (rtl ? "ArrowRight" : "ArrowLeft")
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              close();
+            } else if (
+              ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              const items = Array.from(
+                event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  '[role="menuitem"]:not(:disabled)',
+                ),
+              );
+              const current = items.findIndex(
+                (item) => item === document.activeElement,
+              );
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? items.length - 1
+                    : (current +
+                        (event.key === "ArrowDown" ? 1 : -1) +
+                        items.length) %
+                      items.length;
+              items[next]?.focus();
+            }
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DialogActions({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("ui-dialog-actions", className)} {...props} />;
 }
 
 export function SummaryTile({

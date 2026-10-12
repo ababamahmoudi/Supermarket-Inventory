@@ -1,10 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
-import { chooseOption, setLanguage, signIn, uploadInvoice } from "./helpers";
+import {
+  chooseOption,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+  openShellAction,
+} from "./helpers";
 
 async function userAction(page: Page, action: string) {
-  if (await page.evaluate(() => window.innerWidth <= 760))
-    await page.locator("#menu-toggle").click();
   await page.getByRole("button", { name: "User menu", exact: true }).click();
   await page.getByRole("menuitem", { name: action, exact: true }).click();
   if (await page.locator(".sidebar.is-open").count())
@@ -144,13 +148,13 @@ test("temporary-password users cannot bypass the new password form through route
   await page
     .getByRole("button", { name: "Save password", exact: true })
     .click();
-  await expect(
-    page.getByRole("button", { name: "Demo", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(await openShellAction(page, "Demo")).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.reload();
-  await expect(
-    page.getByRole("button", { name: "Demo", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(await openShellAction(page, "Demo")).toBeVisible();
+  await page.keyboard.press("Escape");
   await userAction(page, "Sign out");
   await page.getByLabel("Username", { exact: true }).fill("newemployee");
   await page.getByLabel("Password", { exact: true }).fill("temp1234");
@@ -203,13 +207,8 @@ test("dark theme, comfortable text and Persian RTL persist when the page reloads
   page,
 }) => {
   await signIn(page, "Cashier");
-  await page
-    .getByRole("button", { name: "Switch to dark theme", exact: true })
-    .click();
-  const textSize = page.getByRole("button", {
-    name: "Comfortable text size",
-    exact: true,
-  });
+  await (await openShellAction(page, "Switch to dark theme")).click();
+  const textSize = await openShellAction(page, "Comfortable text size");
   await expect(textSize).toBeVisible();
   await textSize.click();
   await setLanguage(page, "fa");

@@ -72,7 +72,7 @@
     inline-size: 138px;
   }
   .lookup-page .lookup-result-pills .badge {
-    font-size: 0.6875rem;
+    font-size: var(--font-size-caption);
     padding-inline: 6px;
     white-space: nowrap;
   }
@@ -107,7 +107,7 @@
   text-align: inherit;
 }
 .product-price-provenance {
-  line-height: 1.65;
+  line-height: var(--line-height-body);
 }
 @media (max-width: 480px) {
   .product-editor-fields {

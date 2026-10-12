@@ -1,0 +1,153 @@
+/* Supplier and delivery presentation uses the shared Klead primitives. */
+@media screen {
+  :root .suppliers-table .table-identity,
+  :root .supplier-tab-card .table-identity,
+  :root .received-table .table-identity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  :root .suppliers-table .table-identity > a:first-child,
+  :root .supplier-tab-card .table-identity > a:first-child {
+    min-inline-size: 0;
+    color: var(--text);
+    font-weight: var(--font-weight-caption);
+    text-decoration: none;
+  }
+  :root .suppliers-table .table-identity > a:first-child:hover,
+  :root .supplier-tab-card .table-identity > a:first-child:hover {
+    color: var(--accent);
+  }
+  :root .supplier-contact-grid,
+  :root .supplier-overview-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+    gap: 24px;
+    max-inline-size: 1000px;
+  }
+  :root .supplier-contact-grid dt,
+  :root .supplier-overview-facts dt,
+  :root .supplier-secondary {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-body);
+    color: var(--text-muted);
+  }
+  :root .supplier-contact-grid dd,
+  :root .supplier-overview-facts dd {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root .supplier-header-name {
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .supplier-kpis {
+    gap: 16px;
+    margin-block-end: 24px;
+  }
+  :root .supplier-kpis .kpi-card {
+    min-inline-size: 0;
+  }
+  :root .supplier-kpis .kpi-card:first-child .kpi-value {
+    font-size: var(--font-size-title);
+    line-height: var(--line-height-title);
+  }
+  :root .supplier-tabs {
+    margin-block-end: 24px;
+  }
+  :root .supplier-filter-chip,
+  :root .supplier-branch-pill {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-caption);
+    background: var(--neutral-fill);
+  }
+  :root .supplier-filter-chip {
+    background: var(--surface);
+    border: 1px solid var(--page-control-border);
+  }
+  :root .supplier-filter-chip[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+    border-color: var(--color-clear);
+  }
+  :root .ui-menu-item.supplier-destructive-action {
+    color: var(--danger);
+  }
+  :root .supplier-notes article {
+    padding-block: 16px;
+    border-block-end: 1px solid var(--row-divider);
+  }
+  :root .supplier-notes article:last-child {
+    border-block-end: 0;
+  }
+  :root .received-invoice-link {
+    color: var(--text);
+    font-weight: var(--font-weight-caption);
+    text-decoration: none;
+  }
+  :root .received-invoice-link:hover {
+    color: var(--accent);
+  }
+  :root .supplier-editor-dialog .manual-entry-form {
+    gap: 24px;
+    max-inline-size: 640px;
+  }
+  :root .supplier-editor-dialog .manual-entry-form > .field {
+    max-inline-size: 600px;
+  }
+  :root .supplier-editor-dialog .manual-entry-pair {
+    gap: 24px;
+  }
+  :root .supplier-editor-dialog .manual-entry-pair > .field {
+    max-inline-size: 300px;
+  }
+  :root .supplier-editor-dialog .manual-opening-fields {
+    margin-block: 8px 0;
+    gap: 24px;
+    padding-block-start: 24px;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .supplier-editor-dialog .manual-opening-fields legend {
+    color: var(--group-text);
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .supplier-editor-dialog .ui-dialog-actions {
+    margin-block-start: 0;
+  }
+  :root .supplier-approval-details dt {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-body);
+  }
+  :root .supplier-approval-details dd {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+  }
+  @media (max-width: 759px) {
+    :root .supplier-contact-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+    }
+    :root .supplier-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-block-end: 16px;
+    }
+    :root .supplier-tabs {
+      margin-block-end: 16px;
+    }
+    :root .supplier-editor-dialog .manual-entry-pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

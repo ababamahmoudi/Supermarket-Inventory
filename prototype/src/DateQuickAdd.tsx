@@ -337,21 +337,22 @@ export function DateQuickAdd({
           </Field>
         )}
         <div className="date-quick-actions">
-          {!inline && (
-            <Button
-              variant="secondary"
-              aria-expanded={expanded}
-              aria-controls={moreId}
-              onClick={() => setExpanded(!expanded)}
-            >
-              {t("More", "بیشتر")}
-            </Button>
-          )}
           <Button type="submit" disabled={!historyContext}>
             {t("Add", "افزودن")}
           </Button>
         </div>
       </div>
+      {!inline && (
+        <Button
+          variant="plain"
+          className="date-quick-more-toggle"
+          aria-expanded={expanded}
+          aria-controls={moreId}
+          onClick={() => setExpanded(!expanded)}
+        >
+          {t("More", "بیشتر")}
+        </Button>
+      )}
       {!inline && expanded && (
         <div id={moreId} className="date-quick-more">
           <Field label={t("Type", "نوع")} error={errors.date_type}>

@@ -67,6 +67,13 @@ async function reviewWithComparison(page: Page) {
   await page.getByLabel("Order (optional)", { exact: true }).click();
   await page.getByRole("option", { name: /ORD-C3-LAYOUT/ }).click();
   await expect(page.locator(".invoice-order-table tbody tr")).toHaveCount(6);
+  if (!(await page.locator(".invoice-order-costs").first().isVisible())) {
+    await page
+      .locator(".invoice-order-table tbody tr")
+      .first()
+      .getByRole("button", { name: "Show details", exact: true })
+      .click();
+  }
   await expect(page.locator(".invoice-order-costs").first()).toBeVisible();
   await expect(
     page.locator(".invoice-line-price .badge").first(),
@@ -169,7 +176,13 @@ for (const width of [1280, 1440, 1920]) {
             .getByRole("button", { name: "Switch to dark theme", exact: true })
             .click();
         if (language === "fa") await setLanguage(page, "fa");
-        await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+          window.scrollTo(0, 0);
+          await new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          );
+        });
         expect(await invoiceGeometry(page)).toEqual([]);
         const panes = await page
           .locator(".invoice-workspace")
@@ -180,10 +193,31 @@ for (const width of [1280, 1440, 1920]) {
             const review = element
               .querySelector(".invoice-review-pane")!
               .getBoundingClientRect();
-            return { originalBottom: original.bottom, reviewTop: review.top };
+            const footer = element
+              .querySelector(".invoice-action-footer")!
+              .getBoundingClientRect();
+            return {
+              originalTop: original.top,
+              reviewTop: review.top,
+              originalShare: original.width / (original.width + review.width),
+              originalPosition: getComputedStyle(
+                element.querySelector(".invoice-document-pane")!,
+              ).position,
+              reviewBottom: review.bottom,
+              footerTop: footer.top,
+              footerPosition: getComputedStyle(
+                element.querySelector(".invoice-action-footer")!,
+              ).position,
+            };
           });
-        if (width < 1800)
-          expect(panes.reviewTop).toBeGreaterThanOrEqual(panes.originalBottom);
+        // C7 replaces the old stacked desktop layout with the specified sticky 40% original pane.
+        expect(
+          Math.abs(panes.originalTop - panes.reviewTop),
+        ).toBeLessThanOrEqual(1);
+        expect(panes.originalShare).toBeCloseTo(0.4, 2);
+        expect(panes.originalPosition).toBe("sticky");
+        expect(panes.footerTop).toBeGreaterThanOrEqual(panes.reviewBottom);
+        expect(panes.footerPosition).toBe("static");
       });
     }
   }

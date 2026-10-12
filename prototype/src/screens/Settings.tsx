@@ -1,5 +1,5 @@
 import { useEffect, useState, type SetStateAction } from "react";
-import { History, Plus } from "lucide-react";
+import { History, MoreHorizontal, Plus } from "lucide-react";
 import { useDemo } from "../store";
 import { storeUploadedFile } from "../file-database";
 import { StoredFileImage } from "../stored-file";
@@ -9,10 +9,13 @@ import {
   Card,
   DataTable,
   Dialog,
+  DialogActions,
   Dropzone,
   Field,
   NumberField,
   PageHeader,
+  Menu,
+  MenuItem,
   Select,
   Switch,
 } from "../ui";
@@ -39,6 +42,7 @@ import { ReturnsSettings } from "./ReturnsSettings";
 import { WhatsMissing } from "../WhatsMissing";
 import { DateText } from "../presentation";
 import "./settings-b.css";
+import "./settings-c7.css";
 
 type Group =
   | "company"
@@ -269,7 +273,7 @@ function SaveBar({
   return dirty ? (
     <div className="settings-save-bar">
       <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
-      <Button variant="secondary" onClick={cancel}>
+      <Button variant="neutral" onClick={cancel}>
         {t("Cancel", "لغو")}
       </Button>
       <Button onClick={save}>{t("Save changes", "ذخیره تغییرات")}</Button>
@@ -700,7 +704,7 @@ function BranchSettings() {
                 <td>
                   <Button
                     size="sm"
-                    variant="secondary"
+                    variant="neutral"
                     onClick={() => {
                       setSellingEdited(branch.sells_to_customers !== undefined);
                       setEditing({
@@ -716,15 +720,24 @@ function BranchSettings() {
                   >
                     {t("Edit", "ویرایش")}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant={branch.active === false ? "secondary" : "danger"}
-                    onClick={() => active(branch.code, branch.active === false)}
+                  <Menu
+                    label={t("More actions", "کارهای بیشتر")}
+                    icon={<MoreHorizontal size={18} aria-hidden="true" />}
+                    iconOnly
                   >
-                    {branch.active === false
-                      ? t("Reactivate", "فعال‌سازی دوباره")
-                      : t("Deactivate", "غیرفعال کردن")}
-                  </Button>
+                    <MenuItem
+                      className={
+                        branch.active === false ? undefined : "menu-item-danger"
+                      }
+                      onClick={() =>
+                        active(branch.code, branch.active === false)
+                      }
+                    >
+                      {branch.active === false
+                        ? t("Reactivate", "فعال‌سازی دوباره")
+                        : t("Deactivate", "غیرفعال کردن")}
+                    </MenuItem>
+                  </Menu>
                 </td>
               </tr>
             ))}
@@ -750,6 +763,11 @@ function BranchSettings() {
             : t("Add location", "افزودن مکان")
         }
         className="settings-dialog"
+        description={
+          editing ? (
+            <bdi dir="auto">{editing.name_en || editing.code}</bdi>
+          ) : undefined
+        }
       >
         {editing && (
           <>
@@ -880,15 +898,15 @@ function BranchSettings() {
                 {error}
               </p>
             )}
-            <div className="settings-save-bar">
+            <DialogActions className="settings-save-bar">
               <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
-              <Button variant="secondary" onClick={() => setEditing(null)}>
+              <Button variant="neutral" onClick={() => setEditing(null)}>
                 {t("Cancel", "لغو")}
               </Button>
               <Button onClick={save}>
                 {t("Save changes", "ذخیره تغییرات")}
               </Button>
-            </div>
+            </DialogActions>
           </>
         )}
       </Dialog>
@@ -1058,7 +1076,7 @@ function OfferSettings() {
                 />
               </Field>
               <Button
-                variant="secondary"
+                variant="danger"
                 onClick={() =>
                   setDraft({
                     ...draft,
@@ -1075,7 +1093,7 @@ function OfferSettings() {
         </div>
         <div className="settings-section-actions">
           <Button
-            variant="secondary"
+            variant="neutral"
             onClick={() =>
               setDraft({
                 ...draft,

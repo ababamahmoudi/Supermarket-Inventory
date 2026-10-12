@@ -10,6 +10,16 @@ export type DemoRole =
   | "floor_worker"
   | "supervisor";
 
+export async function openShellAction(page: Page, name: string) {
+  const direct = page.getByRole("button", { name, exact: true });
+  if (await direct.isVisible()) return direct;
+  const item = page.getByRole("menuitem", { name, exact: true });
+  if (!(await item.isVisible()))
+    await page.locator(".mobile-more-menu").click();
+  await expect(item).toBeVisible();
+  return item;
+}
+
 export async function signIn(page: Page, role: DemoRole) {
   const roleKey = {
     Cashier: "cashier",
@@ -20,8 +30,8 @@ export async function signIn(page: Page, role: DemoRole) {
     supervisor: "supervisor",
   }[role];
   const account = demoSeed.demo_users.find((user) => user.role === roleKey)!;
-  if (await page.getByRole("button", { name: "Demo", exact: true }).count()) {
-    await page.getByRole("button", { name: "Demo", exact: true }).click();
+  if (await page.locator(".topbar").count()) {
+    await (await openShellAction(page, "Demo")).click();
     await page
       .getByRole("menuitem", {
         name: `Switch to ${account.name}`,
@@ -36,9 +46,7 @@ export async function signIn(page: Page, role: DemoRole) {
       .fill(account.password ?? "demo1234");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
   }
-  await expect(
-    page.getByRole("button", { name: "Demo", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
   await expect(page.locator(".user-chip-copy strong")).toHaveText(account.name);
   // Initial file migration is asynchronous; fixtures must wait for the real
   // durable snapshot instead of racing its first localStorage write.
@@ -79,16 +87,16 @@ export async function setBranch(page: Page, branch: string) {
 
 export async function setLanguage(page: Page, language: "en" | "fa") {
   if ((await page.locator("html").getAttribute("lang")) === language) return;
-  await page
-    .getByRole("button", {
-      name: language === "fa" ? "Switch to Persian" : "تغییر به انگلیسی",
-      exact: true,
-    })
-    .click();
+  await (
+    await openShellAction(
+      page,
+      language === "fa" ? "Switch to Persian" : "تغییر به انگلیسی",
+    )
+  ).click();
 }
 
 export async function resetDemo(page: Page) {
-  await page.getByRole("button", { name: "Demo", exact: true }).click();
+  await (await openShellAction(page, "Demo")).click();
   await page.getByRole("menuitem", { name: "Reset demo", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Reset demo", exact: true })

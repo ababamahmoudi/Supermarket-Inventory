@@ -231,3 +231,65 @@ it("explains All branches on payment preview and links to the actual branch choo
   ).toHaveFocus();
   expect(screen.getByTestId("ledger-json").textContent).toBe(before);
 });
+
+it("C7 supplier rows open their ledger by keyboard and chevron without posting money", async () => {
+  const user = userEvent.setup();
+  render(
+    <DemoProvider>
+      <Harness page="payables" />
+    </DemoProvider>,
+  );
+  const before = screen.getByTestId("ledger-json").textContent!;
+  const row = screen.getByRole("row", { name: "Fresh Valley Foods" });
+  row.focus();
+  await user.keyboard("{Enter}");
+  expect(
+    screen.getByRole("heading", { name: "Fresh Valley Foods" }),
+  ).toBeVisible();
+  const next = screen.getByRole("row", { name: "Golden Grain Distributors" });
+  await user.click(
+    within(next).getByRole("link", { name: "View Golden Grain Distributors" }),
+  );
+  expect(
+    screen.getByRole("heading", { name: "Golden Grain Distributors" }),
+  ).toBeVisible();
+  expect(screen.getByTestId("ledger-json").textContent).toBe(before);
+});
+
+it("C7 order rows navigate to the saved order by keyboard without replacing its data", async () => {
+  const user = userEvent.setup();
+  window.location.hash = "#orders";
+  render(
+    <DemoProvider>
+      <Harness page="orders" />
+    </DemoProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: "New order" }));
+  await user.click(screen.getByLabelText("Supplier"));
+  await user.click(screen.getByRole("option", { name: "Fresh Valley Foods" }));
+  fireEvent.change(screen.getAllByRole("textbox", { name: /^Cases —/ })[0], {
+    target: { value: "1" },
+  });
+  await user.click(screen.getByRole("button", { name: "Save as draft" }));
+  await waitFor(() => expect(window.location.hash).toMatch(/#orders\?id=/));
+  const retained = screen.getByTestId("orders-json").textContent!;
+  const ledger = screen.getByTestId("ledger-json").textContent!;
+  const order = JSON.parse(retained).at(-1);
+  await user.click(screen.getByRole("button", { name: "Back to Orders" }));
+  const row = await screen.findByRole("row", { name: order.reference });
+  expect(
+    within(row).getByRole("link", { name: `View ${order.reference}` }),
+  ).toBeVisible();
+  expect(
+    within(row).queryByRole("button", { name: order.reference }),
+  ).toBeNull();
+  row.focus();
+  await user.keyboard("{Enter}");
+  await waitFor(() =>
+    expect(window.location.hash).toBe(
+      `#orders?id=${encodeURIComponent(order.id)}`,
+    ),
+  );
+  expect(screen.getByTestId("orders-json").textContent).toBe(retained);
+  expect(screen.getByTestId("ledger-json").textContent).toBe(ledger);
+});

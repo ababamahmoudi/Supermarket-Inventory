@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { setBranch, signIn } from "./helpers";
+import { openShellAction, setBranch, signIn } from "./helpers";
 import {
   appearance,
   button,
@@ -46,10 +46,92 @@ async function assertContract(
     proof.buttons.length,
     `${scene}: real controls measured`,
   ).toBeGreaterThan(2);
-  expect(
-    proof.topbar.length,
-    `${scene}: all topbar controls measured`,
-  ).toBeGreaterThanOrEqual(7);
+  if (proof.viewport.width < 760) {
+    expect(
+      proof.topbar.length,
+      `${scene}: all five priority-bar controls measured`,
+    ).toBe(5);
+    expect(
+      await page
+        .locator(".topbar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+      `${scene}: the phone priority bar stays on one 60px row`,
+    ).toBeCloseTo(60, 0);
+    for (const selector of [
+      "#menu-toggle",
+      ".branch-pill",
+      ".notifications-menu",
+      ".mobile-account-menu",
+      ".mobile-more-menu",
+    ])
+      await expect(page.locator(`.topbar ${selector}`)).toBeVisible();
+    expect(
+      await page
+        .locator(
+          'button[aria-label="User menu"], button[aria-label="منوی کاربر"]',
+        )
+        .evaluateAll(
+          (controls) =>
+            controls.filter((control) => {
+              const rect = control.getBoundingClientRect();
+              return (
+                rect.width > 0 &&
+                rect.height > 0 &&
+                getComputedStyle(control).visibility !== "hidden"
+              );
+            }).length,
+        ),
+      `${scene}: exactly one account is visible, including behind a modal`,
+    ).toBe(1);
+    // The top bar is deliberately inert while a modal is open. Exercise the
+    // collapsed controls in every ordinary screen instead of counting hidden
+    // desktop buttons as phone controls.
+    if (!(await page.locator("dialog[open]").count())) {
+      const persian =
+        (await page.locator("html").getAttribute("lang")) === "fa";
+      const dark =
+        (await page.locator("html").getAttribute("data-theme")) === "dark";
+      const more = page.locator(".mobile-more-menu");
+      if ((await more.getAttribute("aria-expanded")) !== "true")
+        await more.click();
+      for (const name of [
+        persian ? "جست‌وجوی همهٔ محصولات" : "Search all products",
+        persian ? "تغییر به انگلیسی" : "Switch to Persian",
+        persian
+          ? dark
+            ? "تغییر به تم روشن"
+            : "تغییر به تم تیره"
+          : dark
+            ? "Switch to light theme"
+            : "Switch to dark theme",
+        persian ? "اندازهٔ متن راحت" : "Comfortable text size",
+        persian ? "دمو" : "Demo",
+      ])
+        await expect(
+          page.getByRole("menuitem", { name, exact: true }),
+        ).toBeVisible();
+      const demo = page.getByRole("menuitem", {
+        name: persian ? "دمو" : "Demo",
+        exact: true,
+      });
+      await demo.click();
+      await expect(
+        page.getByRole("menuitem", {
+          name: persian ? "بازنشانی دمو" : "Reset demo",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(demo).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(more).toBeFocused();
+    }
+  } else {
+    expect(
+      proof.topbar.length,
+      `${scene}: all desktop topbar controls measured`,
+    ).toBeGreaterThanOrEqual(7);
+  }
   expect(proof.failures, scene).toEqual([]);
   return proof;
 }
@@ -170,15 +252,29 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     for (const label of [...new Set(statuses.map((status) => status.label))]) {
       const colors = statuses
         .filter((status) => status.label === label)
-        .map((status) => `${status.color}/${status.background}`);
-      expect(new Set(colors).size, `Same visible status: ${label}`).toBe(1);
+        .map((status) => status.color);
+      expect(new Set(colors).size, `Same status foreground: ${label}`).toBe(1);
+      const pillBackgrounds = statuses
+        .filter(
+          (status) =>
+            status.label === label && status.background !== "rgba(0, 0, 0, 0)",
+        )
+        .map((status) => status.background);
+      expect(
+        new Set(pillBackgrounds).size,
+        `Same filled status pill: ${label}`,
+      ).toBeLessThanOrEqual(1);
     }
-    const language = page.getByRole("button", {
-      name: variant === "fa-light" ? "تغییر به انگلیسی" : "Switch to Persian",
-      exact: true,
-    });
-    await expect(language).toHaveText(variant === "fa-light" ? "EN" : "فا");
-    await expect(page.locator(".topbar .language-toggle")).toHaveCount(1);
+    const languageName =
+      variant === "fa-light" ? "تغییر به انگلیسی" : "Switch to Persian";
+    const language = await openShellAction(page, languageName);
+    if (await page.locator(".mobile-more-menu").isVisible()) {
+      await expect(language).toHaveText(languageName);
+      await expect(page.locator(".topbar .language-toggle")).toHaveCount(0);
+    } else {
+      await expect(language).toHaveText(variant === "fa-light" ? "EN" : "فا");
+      await expect(page.locator(".topbar .language-toggle")).toHaveCount(1);
+    }
     await language.click();
     await expect(page.locator("html")).toHaveAttribute(
       "lang",
@@ -313,8 +409,12 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       ).toBeGreaterThanOrEqual(620);
     await expect(
       button(policy, "Download full policy", "دانلود سیاست کامل"),
-    ).toHaveClass(/button-secondary/);
-    await expect(button(policy, "Close", "بستن")).toHaveClass(/button-primary/);
+    ).toHaveClass(/button-tinted/);
+    await expect(button(policy, "Close", "بستن")).toHaveClass(/button-neutral/);
+    await expect(policy.locator(".dialog-actions > button")).toHaveText([
+      variant === "fa-light" ? "بستن" : "Close",
+      variant === "fa-light" ? "دانلود سیاست کامل" : "Download full policy",
+    ]);
     const policyProof = await assertContract(page, "Return policy", variant);
     await info.attach(`c5-documents-${variant}.json`, {
       body: JSON.stringify({ posted, policy: policyProof, contrast }, null, 2),

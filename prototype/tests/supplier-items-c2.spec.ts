@@ -78,7 +78,8 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   await expandDetails(item);
   await expect(await columnValue(item, "Date last bought")).toHaveText("—");
   await expect(await columnValue(item, "Last invoice")).toHaveText("—");
-  await item.getByRole("button", { name: "History", exact: true }).click();
+  await item.focus();
+  await page.keyboard.press("Enter");
   const history = page.getByRole("dialog", {
     name: "Price history",
     exact: true,
@@ -223,7 +224,8 @@ test("remembered pack and supplier code edits preserve posted history and remain
     .click();
   await setLanguage(page, "fa");
   await expect(edited).toContainText("C2-PACK");
-  await edited.getByRole("button", { name: "تاریخچه", exact: true }).click();
+  await edited.focus();
+  await page.keyboard.press("Enter");
   await expect(
     page.getByRole("dialog", { name: "تاریخچه قیمت", exact: true }),
   ).toBeVisible();

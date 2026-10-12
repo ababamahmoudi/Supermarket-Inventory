@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import Decimal from "decimal.js";
-import { signIn } from "./helpers";
+import { signIn, setLanguage, openShellAction } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
 
@@ -81,7 +81,7 @@ test("each invoice line requires one date answer, collapses when confirmed and o
             note.previousElementSibling!.getBoundingClientRect().bottom,
         ),
       ),
-  ).toBe(24);
+  ).toBe(16);
 });
 test("Persian signed money, line numbers and deduction parentheses stay isolated", async ({
   page,
@@ -92,9 +92,7 @@ test("Persian signed money, line numbers and deduction parentheses stay isolated
     .nth(5)
     .getByRole("checkbox", { name: "Mark as short", exact: true })
     .check();
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   const deduction = page
     .locator(".invoice-summary-grid .ui-summary-tile")
     .nth(2);
@@ -122,11 +120,19 @@ test("the document sticks beside the review and the action bar has a full surfac
   await review(page);
   await page.evaluate(() => window.scrollTo(0, 450));
   const pane = await page.locator(".invoice-document-pane").boundingBox();
-  expect(pane!.y).toBeGreaterThanOrEqual(86);
-  expect(pane!.y).toBeLessThanOrEqual(90);
-  const workspace = await page.locator(".invoice-workspace").boundingBox();
+  const topbar = await page.locator(".topbar").boundingBox();
+  expect(pane!.y).toBeGreaterThanOrEqual(topbar!.y + topbar!.height + 22);
+  expect(pane!.y).toBeLessThanOrEqual(topbar!.y + topbar!.height + 26);
+  const reviewPane = await page.locator(".invoice-review-pane").boundingBox();
   const footer = await page.locator(".invoice-action-footer").boundingBox();
-  expect(Math.abs(workspace!.width - footer!.width)).toBeLessThanOrEqual(2);
+  // The C7 bar reserves its own row below the review pane instead of stretching across the original.
+  expect(Math.abs(reviewPane!.width - footer!.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(reviewPane!.x - footer!.x)).toBeLessThanOrEqual(2);
+  expect(footer!.y).toBeGreaterThanOrEqual(reviewPane!.y + reviewPane!.height);
+  await expect(page.locator(".invoice-action-footer")).toHaveCSS(
+    "position",
+    "static",
+  );
   expect(
     await page
       .locator(".invoice-action-footer")
@@ -189,7 +195,7 @@ test("fictional invoice answers are available only inside Demo and retain Persia
   await expect(
     page.getByText("Use fictional demo answer", { exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Demo", exact: true }).click();
+  await (await openShellAction(page, "Demo")).click();
   await page
     .getByRole("menuitem", { name: "Use fictional demo answer", exact: true })
     .click();
@@ -204,9 +210,7 @@ test("fictional invoice answers are available only inside Demo and retain Persia
   await expect(
     page.getByText("Use fictional demo answer", { exact: true }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(
     page.getByLabel("آیا تاریخ انقضا با کالاهای موجود در فروشگاه یکسان است؟", {
       exact: true,
@@ -333,9 +337,7 @@ test("Supplier invoice links open the actual posted document and retained origin
   await expect(document).toContainText("FV-20390");
   await expect(document.locator("input,select,textarea")).toHaveCount(0);
   await expect(page.locator(".invoice-preview-text")).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Switch to Persian", exact: true })
-    .click();
+  await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(original).toHaveAttribute("src", source.data);
   await expect(document).toContainText("FV-20390");

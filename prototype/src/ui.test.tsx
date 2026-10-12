@@ -32,6 +32,8 @@ import {
   Field,
   Menu,
   MenuItem,
+  MenuSubmenu,
+  TableRowLink,
   Button,
   NumberField,
   Radio,
@@ -626,7 +628,7 @@ describe("styled Menu", () => {
       </>,
     );
     const trigger = screen.getByRole("button", { name: "More actions" });
-    expect(trigger).toHaveClass("ui-icon-button", "button-secondary");
+    expect(trigger).toHaveClass("ui-icon-button", "button-neutral");
     expect(within(trigger).getByText("More actions")).toHaveClass("sr-only");
     const notifications = screen.getByRole("button", {
       name: "Notifications, 3 unread",
@@ -696,6 +698,101 @@ describe("styled Menu", () => {
       screen.getByRole("menuitem", { name: "Review alert" }),
     ).toBeVisible();
   });
+
+  for (const direction of ["ltr", "rtl"] as const)
+    it(`keeps nested Demo navigation at its own level and restores focus (${direction})`, async () => {
+      const user = userEvent.setup();
+      const action = vi.fn();
+      show(
+        <Menu label="More">
+          <MenuItem onClick={vi.fn()}>Search</MenuItem>
+          <MenuSubmenu label="Demo">
+            <MenuItem onClick={action}>Switch to Demo Supervisor</MenuItem>
+            <MenuItem onClick={vi.fn()}>Reset demo</MenuItem>
+          </MenuSubmenu>
+          <MenuItem onClick={vi.fn()}>Theme</MenuItem>
+        </Menu>,
+      );
+      document.documentElement.dir = direction;
+      const trigger = screen.getByRole("button", { name: "More" });
+      await user.click(trigger);
+      await waitFor(() =>
+        expect(screen.getByRole("menuitem", { name: "Search" })).toHaveFocus(),
+      );
+      await user.keyboard("{ArrowDown}");
+      const demo = screen.getByRole("menuitem", { name: /^Demo$/ });
+      expect(demo).toHaveFocus();
+      await user.keyboard(direction === "rtl" ? "{ArrowLeft}" : "{ArrowRight}");
+      await waitFor(() =>
+        expect(
+          screen.getByRole("menuitem", { name: "Switch to Demo Supervisor" }),
+        ).toHaveFocus(),
+      );
+      await user.keyboard("{ArrowDown}");
+      expect(
+        screen.getByRole("menuitem", { name: "Reset demo" }),
+      ).toHaveFocus();
+      await user.keyboard("{Escape}");
+      expect(demo).toHaveFocus();
+      expect(demo).toHaveAttribute("aria-expanded", "false");
+      expect(screen.getByRole("menu", { name: "More" })).toBeVisible();
+      await user.keyboard("{ArrowDown}");
+      expect(screen.getByRole("menuitem", { name: "Theme" })).toHaveFocus();
+      await user.keyboard("{ArrowUp}{Enter}");
+      await waitFor(() =>
+        expect(
+          screen.getByRole("menuitem", { name: "Switch to Demo Supervisor" }),
+        ).toHaveFocus(),
+      );
+      await user.keyboard("{Enter}");
+      expect(action).toHaveBeenCalledOnce();
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+      document.documentElement.dir = "ltr";
+    });
+});
+
+it("detail-opening rows navigate by click and keyboard while child actions remain independent", async () => {
+  const user = userEvent.setup();
+  const action = vi.fn();
+  show(
+    <DataTable>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-row-href="#return?id=demo-return-1">
+          <td>RM-0001</td>
+          <td>
+            <Button onClick={action}>Record pickup</Button>
+            <TableRowLink
+              href="#return?id=demo-return-1"
+              aria-label="View return"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </DataTable>,
+  );
+  window.location.hash = "#returns";
+  await user.click(screen.getByRole("button", { name: "Record pickup" }));
+  expect(action).toHaveBeenCalledOnce();
+  expect(window.location.hash).toBe("#returns");
+  const row = screen.getByText("RM-0001").closest("tr")!;
+  row.focus();
+  await user.keyboard("{Enter}");
+  expect(window.location.hash).toBe("#return?id=demo-return-1");
+  window.location.hash = "#returns";
+  await user.click(screen.getByText("RM-0001"));
+  expect(window.location.hash).toBe("#return?id=demo-return-1");
+  expect(screen.getByRole("link", { name: "View return" })).toHaveAttribute(
+    "href",
+    "#return?id=demo-return-1",
+  );
+  window.location.hash = "";
 });
 
 describe("shared language and number presentation", () => {

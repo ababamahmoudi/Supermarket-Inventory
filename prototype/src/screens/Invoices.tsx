@@ -51,6 +51,8 @@ import {
   DateField,
   Dropzone,
   Dialog,
+  DialogActions,
+  TableRowLink,
   ConfirmDialog,
   NumberField,
   Select,
@@ -140,6 +142,7 @@ import {
 import { clearInvoiceOrder, clearInvoiceOrderLine } from "../invoice-orders";
 import { InvoiceOrderReview } from "./InvoiceOrderReview";
 import "./invoice-c3.css";
+import "./invoices-c7.css";
 import type {
   Branch,
   DemoInvoice,
@@ -1213,7 +1216,7 @@ export default function Invoices() {
             {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
           </LtrText>
           <LtrText>{saved.supplier}</LtrText>
-          <Button variant="secondary" onClick={() => resume(saved)}>
+          <Button variant="neutral" onClick={() => resume(saved)}>
             {t("Resume draft", "ادامه پیش‌نویس")}
           </Button>
         </div>
@@ -1352,7 +1355,7 @@ export default function Invoices() {
                       </Field>
                     </div>
                     <Button
-                      variant="secondary"
+                      variant="neutral"
                       onClick={() => receive(index)}
                       disabled={branch !== invoiceLocation}
                     >
@@ -1456,7 +1459,7 @@ export default function Invoices() {
         )}
         actions={
           <Button
-            variant={active && !locked ? "secondary" : "primary"}
+            variant={active && !locked ? "neutral" : "primary"}
             onClick={() => start()}
             disabled={uploadPending}
             aria-busy={uploadPending}
@@ -1535,10 +1538,14 @@ export default function Invoices() {
               </thead>
               <tbody>
                 {branchInvoices.map((item) => (
-                  <tr key={item.id}>
+                  <tr
+                    key={item.id}
+                    data-row-href={`#invoices?id=${encodeURIComponent(item.id)}`}
+                  >
                     <td>
-                      <Button variant="secondary" asChild>
+                      <div className="table-identity invoice-list-identity">
                         <a
+                          className="invoice-list-number-link"
                           href={`#invoices?id=${encodeURIComponent(item.id)}`}
                           onClick={(event) => {
                             event.preventDefault();
@@ -1555,7 +1562,11 @@ export default function Invoices() {
                         >
                           <LtrText>{item.supplier_invoice_number}</LtrText>
                         </a>
-                      </Button>
+                        <TableRowLink
+                          href={`#invoices?id=${encodeURIComponent(item.id)}`}
+                          aria-label={`${t("Invoice", "فاکتور")} ${item.supplier_invoice_number}`}
+                        />
+                      </div>
                     </td>
                     <td>
                       <LtrText>{item.supplier}</LtrText>
@@ -1656,7 +1667,7 @@ export default function Invoices() {
         </div>
       ) : (
         <div
-          className={`invoice-workspace${!active || tab === "drafts" ? " invoice-start-stack" : ""}`}
+          className={`invoice-workspace${!active ? " invoice-start-stack" : " invoice-review-workspace"}`}
         >
           <aside
             className="invoice-document-pane"
@@ -1687,7 +1698,7 @@ export default function Invoices() {
                         <Button
                           variant={
                             invoice.entry_mode === "manual"
-                              ? "secondary"
+                              ? "neutral"
                               : "primary"
                           }
                           onClick={() => start(false)}
@@ -1699,7 +1710,7 @@ export default function Invoices() {
                             variant={
                               invoice.entry_mode === "manual"
                                 ? "primary"
-                                : "secondary"
+                                : "neutral"
                             }
                             onClick={() => start(true)}
                           >
@@ -1915,7 +1926,7 @@ export default function Invoices() {
                   {locked && role === "supervisor" && (
                     <div className="invoice-location-correction">
                       <Button
-                        variant="secondary"
+                        variant="neutral"
                         onClick={() => {
                           setMoveTarget(
                             branches.find(
@@ -1947,7 +1958,7 @@ export default function Invoices() {
                           )}
                         </p>
                         <Button
-                          variant="secondary"
+                          variant="neutral"
                           onClick={() =>
                             updateInvoice((draft) =>
                               setInvoiceLocation(
@@ -2616,15 +2627,20 @@ export default function Invoices() {
                             <td className="numeric">
                               {" "}
                               {!expanded && (
-                                <LtrText>
-                                  {line.sold_by === "weight"
-                                    ? line.source_received_quantity
-                                    : line.qty_received_at_posting}{" "}
-                                  /{" "}
-                                  {line.sold_by === "weight"
-                                    ? `${line.source_quantity} ${line.source_quantity_unit}`
-                                    : line.qty_invoiced}
-                                </LtrText>
+                                <>
+                                  <span className="invoice-line-mobile-caption">
+                                    {t("Quantity", "تعداد")}
+                                  </span>
+                                  <LtrText>
+                                    {line.sold_by === "weight"
+                                      ? line.source_received_quantity
+                                      : line.qty_received_at_posting}{" "}
+                                    /{" "}
+                                    {line.sold_by === "weight"
+                                      ? `${line.source_quantity} ${line.source_quantity_unit}`
+                                      : line.qty_invoiced}
+                                  </LtrText>
+                                </>
                               )}
                               {expanded && (
                                 <>
@@ -2720,20 +2736,28 @@ export default function Invoices() {
                             </td>
                             <td className="numeric">
                               {!expanded && (
-                                <LtrText>
-                                  <Money
-                                    value={
-                                      line.sold_by === "weight"
-                                        ? (line.source_cost_before_tax ??
-                                          line.unit_cost_before_tax)
-                                        : line.unit_cost_before_tax
-                                    }
-                                    decimals={2}
-                                    currency={state.config.company.currency}
-                                  />
-                                  {line.sold_by === "weight" &&
-                                    `/${line.source_cost_unit}`}
-                                </LtrText>
+                                <>
+                                  <span className="invoice-line-mobile-caption">
+                                    {t(
+                                      "Unit cost before tax",
+                                      "هزینه هر واحد پیش از مالیات",
+                                    )}
+                                  </span>
+                                  <LtrText>
+                                    <Money
+                                      value={
+                                        line.sold_by === "weight"
+                                          ? (line.source_cost_before_tax ??
+                                            line.unit_cost_before_tax)
+                                          : line.unit_cost_before_tax
+                                      }
+                                      decimals={2}
+                                      currency={state.config.company.currency}
+                                    />
+                                    {line.sold_by === "weight" &&
+                                      `/${line.source_cost_unit}`}
+                                  </LtrText>
+                                </>
                               )}
                               {expanded && (
                                 <Field
@@ -2807,6 +2831,9 @@ export default function Invoices() {
                             <td className="numeric">
                               {" "}
                               <div className="field invoice-line-price">
+                                <span className="invoice-line-mobile-caption">
+                                  {t("Selling price", "قیمت فروش")}
+                                </span>
                                 <strong
                                   className="price-display numeric"
                                   dir="ltr"
@@ -3336,7 +3363,8 @@ export default function Invoices() {
                                   </fieldset>
                                   {!locked && (
                                     <Button
-                                      variant="destructive"
+                                      variant="neutral"
+                                      className="invoice-remove-line"
                                       size="sm"
                                       onClick={() => {
                                         updateInvoice((draft) =>
@@ -3831,7 +3859,7 @@ export default function Invoices() {
                         />
                       </Field>
                       <Button
-                        variant="secondary"
+                        variant="neutral"
                         onClick={() =>
                           updateInvoice((draft) => {
                             const selectedItem = manualCode.startsWith(
@@ -3860,7 +3888,7 @@ export default function Invoices() {
                         {t("Add line", "افزودن ردیف")}
                       </Button>
                       <Button
-                        variant="secondary"
+                        variant="neutral"
                         onClick={() => setProductEditorOpen(true)}
                       >
                         {t("+ Add new product", "+ افزودن کالای جدید")}
@@ -4072,7 +4100,7 @@ export default function Invoices() {
             <div className="invoice-action-footer">
               <div className="bottom-bar">
                 <Button
-                  variant="secondary"
+                  variant="neutral"
                   onClick={() => {
                     updateInvoice((draft) => {
                       draft.invoice.status = "draft";
@@ -4252,8 +4280,8 @@ export default function Invoices() {
             {moveError}
           </p>
         )}
-        <div className="dialog-actions">
-          <Button variant="secondary" onClick={() => setMoveOpen(false)}>
+        <DialogActions>
+          <Button variant="neutral" onClick={() => setMoveOpen(false)}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button
@@ -4295,7 +4323,7 @@ export default function Invoices() {
           >
             {t("Move invoice", "انتقال فاکتور")}
           </Button>
-        </div>
+        </DialogActions>
       </Dialog>
     </>
   );

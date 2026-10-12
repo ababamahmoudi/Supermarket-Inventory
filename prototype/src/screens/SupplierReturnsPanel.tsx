@@ -7,6 +7,7 @@ import type { SupplierReturnRow } from "../suppliers";
 import {
   Button,
   DataTable,
+  TableRowLink,
   EmptyState,
   FilterToolbar,
   Select,
@@ -15,6 +16,7 @@ import {
 } from "../ui";
 import { DateText, LtrText, Money } from "../presentation";
 import { branchLabel } from "../settings";
+import "./suppliers-c7.css";
 
 export function SupplierReturnsPanel({
   rows,
@@ -136,7 +138,7 @@ export function SupplierReturnsPanel({
           ]}
         />
         <Button
-          variant="quiet"
+          variant="plain"
           onClick={() => {
             setSearch("");
             setStatus("all");
@@ -180,12 +182,18 @@ export function SupplierReturnsPanel({
                 }}
               >
                 <td>
-                  <a
-                    className="returns-number-link"
-                    href={`#return?id=${encodeURIComponent(row.id)}`}
-                  >
-                    <LtrText>#{row.number}</LtrText>
-                  </a>
+                  <div className="table-identity">
+                    <a
+                      className="returns-number-link"
+                      href={`#return?id=${encodeURIComponent(row.id)}`}
+                    >
+                      <LtrText>#{row.number}</LtrText>
+                    </a>
+                    <TableRowLink
+                      href={`#return?id=${encodeURIComponent(row.id)}`}
+                      aria-label={`${t("Return", "مرجوعی")} #${row.number}`}
+                    />
+                  </div>
                 </td>
                 <td>{branchLabel(state.config, row.branch, lang)}</td>
                 <td>

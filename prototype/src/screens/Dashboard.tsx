@@ -5,7 +5,7 @@ import {
   configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
-import { useEffect, useState, type ReactNode } from "react";
+import { isValidElement, useEffect, useState, type ReactNode } from "react";
 import Decimal from "decimal.js";
 import { formatMoney } from "../formatters";
 import { historyActionLabel } from "../history-copy";
@@ -15,6 +15,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   PackageMinus,
+  MoreHorizontal,
 } from "lucide-react";
 import { demoUsers, useDemo } from "../store";
 import { companyDate } from "../invoice";
@@ -55,6 +56,9 @@ import {
   DataTable,
   EmptyState,
   PageHeader,
+  Menu,
+  MenuItem,
+  TableRowLink,
 } from "../ui";
 import {
   companyTimestamp,
@@ -81,8 +85,34 @@ function DashboardListRow({
   pill: ReactNode;
   action: ReactNode;
 }) {
+  const href = isValidElement<{ href?: string }>(action)
+    ? action.props.href
+    : undefined;
   return (
-    <div className="dashboard-list-row">
+    <div
+      className={`dashboard-list-row${href ? " is-navigable" : ""}`}
+      tabIndex={href ? 0 : undefined}
+      onClick={(event) => {
+        if (
+          href &&
+          event.target instanceof Element &&
+          !event.target.closest(
+            "a,button,input,textarea,[role='checkbox'],[role='combobox']",
+          )
+        )
+          window.location.hash = href;
+      }}
+      onKeyDown={(event) => {
+        if (
+          href &&
+          event.target === event.currentTarget &&
+          ["Enter", " "].includes(event.key)
+        ) {
+          event.preventDefault();
+          window.location.hash = href;
+        }
+      }}
+    >
       <div className="dashboard-list-copy">
         <strong>{title}</strong>
         <div className="muted">{secondary}</div>
@@ -683,13 +713,24 @@ export function Dashboard() {
                               >
                                 {t("Approve", "تأیید")}
                               </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => openPreview(item, "reject")}
+                              <Menu
+                                label={t("More", "بیشتر")}
+                                iconOnly
+                                icon={
+                                  <MoreHorizontal
+                                    size={20}
+                                    strokeWidth={1.5}
+                                    aria-hidden="true"
+                                  />
+                                }
                               >
-                                {t("Reject", "رد کردن")}
-                              </Button>
+                                <MenuItem
+                                  className="is-destructive"
+                                  onClick={() => openPreview(item, "reject")}
+                                >
+                                  {t("Reject", "رد کردن")}
+                                </MenuItem>
+                              </Menu>
                             </>
                           ) : (
                             <Button
@@ -818,12 +859,19 @@ export function Dashboard() {
               ) : (
                 <DataTable
                   columns={[
-                    { width: "90px" },
-                    { width: "130px" },
-                    { width: "75px" },
-                    { width: "112px" },
-                    { width: "90px" },
-                    { actions: true, width: "70px" },
+                    {
+                      key: "invoice",
+                      width: 112,
+                      priority: 1,
+                      required: true,
+                      mobilePrimary: true,
+                      minWidth: 112,
+                    },
+                    { key: "supplier", width: 144, priority: 3, minWidth: 144 },
+                    { key: "branch", width: 112, priority: 5, minWidth: 112 },
+                    { key: "date", width: 128, priority: 4, minWidth: 128 },
+                    { key: "status", width: 112, priority: 2, minWidth: 112 },
+                    { key: "actions", actions: true, width: 60, priority: 0 },
                   ]}
                 >
                   <thead>
@@ -838,7 +886,10 @@ export function Dashboard() {
                   </thead>
                   <tbody>
                     {recentInvoices.map((invoice) => (
-                      <tr key={invoice.id}>
+                      <tr
+                        key={invoice.id}
+                        data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                      >
                         <td>
                           <bdi>{invoice.supplier_invoice_number || "—"}</bdi>
                         </td>
@@ -863,17 +914,15 @@ export function Dashboard() {
                           </Badge>
                         </td>
                         <td>
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                          <TableRowLink
+                            href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                            aria-label={t("View", "مشاهده")}
                             onClick={() =>
                               navigate(
                                 `invoices?id=${encodeURIComponent(invoice.id)}`,
                               )
                             }
-                          >
-                            {t("View", "مشاهده")}
-                          </Button>
+                          />
                         </td>
                       </tr>
                     ))}
@@ -942,17 +991,15 @@ export function Dashboard() {
                           </Badge>
                         }
                         action={
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                          <TableRowLink
+                            href={`#return?id=${encodeURIComponent(item.id)}`}
+                            aria-label={t("View", "مشاهده")}
                             onClick={() =>
                               navigate(
                                 `return?id=${encodeURIComponent(item.id)}`,
                               )
                             }
-                          >
-                            {t("View", "مشاهده")}
-                          </Button>
+                          />
                         }
                       />
                     );
@@ -975,11 +1022,36 @@ export function Dashboard() {
             ) : (
               <DataTable
                 columns={[
-                  { width: "34%" },
-                  { width: "18%", align: "end" },
-                  { width: "15%", align: "end" },
-                  { width: "18%", align: "end" },
-                  { width: "15%", actions: true },
+                  {
+                    key: "supplier",
+                    width: "34%",
+                    required: true,
+                    mobilePrimary: true,
+                    priority: 1,
+                    minWidth: 176,
+                  },
+                  {
+                    key: "balance",
+                    width: "18%",
+                    align: "end",
+                    priority: 2,
+                    minWidth: 128,
+                  },
+                  {
+                    key: "open_invoices",
+                    width: "15%",
+                    align: "end",
+                    priority: 3,
+                    minWidth: 128,
+                  },
+                  {
+                    key: "overdue",
+                    width: "18%",
+                    align: "end",
+                    priority: 4,
+                    minWidth: 128,
+                  },
+                  { key: "actions", width: 60, actions: true, priority: 0 },
                 ]}
               >
                 <thead>
@@ -995,7 +1067,7 @@ export function Dashboard() {
                 </thead>
                 <tbody>
                   {balances.map((item) => (
-                    <tr key={item.supplier}>
+                    <tr key={item.supplier} data-row-href="#payables">
                       <td>
                         <LtrText>{item.supplier}</LtrText>
                       </td>
@@ -1009,13 +1081,11 @@ export function Dashboard() {
                         <Money value={item.overdue} />
                       </td>
                       <td>
-                        <Button
-                          variant="secondary"
-                          size="sm"
+                        <TableRowLink
+                          href="#payables"
+                          aria-label={t("View", "مشاهده")}
                           onClick={() => navigate("payables")}
-                        >
-                          {t("View", "مشاهده")}
-                        </Button>
+                        />
                       </td>
                     </tr>
                   ))}
@@ -1229,17 +1299,15 @@ export function Dashboard() {
                         </Badge>
                       }
                       action={
-                        <Button
-                          variant="secondary"
-                          size="sm"
+                        <TableRowLink
+                          href={`#received?product=${encodeURIComponent(item.product_code)}`}
+                          aria-label={t("View", "مشاهده")}
                           onClick={() =>
                             navigate(
                               `received?product=${encodeURIComponent(item.product_code)}`,
                             )
                           }
-                        >
-                          {t("View", "مشاهده")}
-                        </Button>
+                        />
                       }
                     />
                   );
@@ -1307,15 +1375,13 @@ export function Dashboard() {
                         </Badge>
                       }
                       action={
-                        <Button
-                          variant="secondary"
-                          size="sm"
+                        <TableRowLink
+                          href={`#product?code=${item.product_code}`}
+                          aria-label={t("View", "مشاهده")}
                           onClick={() =>
                             navigate(`product?code=${item.product_code}`)
                           }
-                        >
-                          {t("View", "مشاهده")}
-                        </Button>
+                        />
                       }
                     />
                   );
@@ -1365,13 +1431,11 @@ export function Dashboard() {
                       </Badge>
                     }
                     action={
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <TableRowLink
+                        href="#notes"
+                        aria-label={t("View", "مشاهده")}
                         onClick={() => navigate("notes")}
-                      >
-                        {t("View", "مشاهده")}
-                      </Button>
+                      />
                     }
                   />
                 ))}

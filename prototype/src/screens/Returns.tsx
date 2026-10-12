@@ -39,6 +39,8 @@ import {
   NumberField,
   PageHeader,
   Select,
+  DialogActions,
+  TableRowLink,
   useTableColumns,
 } from "../ui";
 import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
@@ -486,6 +488,7 @@ export function Returns() {
                   return (
                     <tr
                       key={record.id}
+                      data-row-href={detailHref(record)}
                       className="returns-clickable-row"
                       tabIndex={0}
                       aria-label={`${t("Return", "مرجوعی")} #${returnNumber(record)} · ${record.supplier}`}
@@ -534,12 +537,18 @@ export function Returns() {
                       </td>
                       <td>{returnStatus(record)}</td>
                       <td className="action-cell">
-                        {record.status !== "cancelled" &&
-                          record.status !== "resolved" && (
-                            <Button asChild variant="secondary" size="sm">
-                              <a href={detailHref(record)}>{action}</a>
-                            </Button>
-                          )}
+                        <div className="actions table-actions">
+                          {record.status !== "cancelled" &&
+                            record.status !== "resolved" && (
+                              <Button asChild variant="neutral" size="sm">
+                                <a href={detailHref(record)}>{action}</a>
+                              </Button>
+                            )}
+                          <TableRowLink
+                            href={detailHref(record)}
+                            aria-label={`${t("View", "مشاهده")} ${t("Return", "مرجوعی")} #${returnNumber(record)}`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -732,9 +741,12 @@ export function Returns() {
               </p>
             </li>
           </ol>
-          <div className="actions">
+          <DialogActions>
+            <Button variant="neutral" onClick={() => setPolicyOpen(false)}>
+              {t("Close", "بستن")}
+            </Button>
             <Button
-              variant="secondary"
+              variant="tinted"
               onClick={() => {
                 const url = URL.createObjectURL(
                   new Blob([policySource], {
@@ -750,10 +762,7 @@ export function Returns() {
             >
               {t("Download full policy", "دانلود سیاست کامل")}
             </Button>
-            <Button onClick={() => setPolicyOpen(false)}>
-              {t("Close", "بستن")}
-            </Button>
-          </div>
+          </DialogActions>
         </div>
       </Dialog>
       {error && (
@@ -807,10 +816,7 @@ export function Returns() {
                   </p>
                 </div>
                 <div className="return-header-actions">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPolicyOpen(true)}
-                  >
+                  <Button variant="neutral" onClick={() => setPolicyOpen(true)}>
                     {t("Return policy", "سیاست مرجوعی")}
                   </Button>
                   {record.status !== "cancelled" &&
@@ -852,6 +858,14 @@ export function Returns() {
                   {record.status === "claim_pending" &&
                     role === "supervisor" && (
                       <Button
+                        variant={
+                          record.lines.some(
+                            (line) =>
+                              returnItemProgress(record, line).available > 0,
+                          )
+                            ? "neutral"
+                            : "primary"
+                        }
                         onClick={() =>
                           document
                             .getElementById("return-claims")
@@ -876,7 +890,7 @@ export function Returns() {
                   {record.pickup_memos.map((item) => (
                     <Button
                       key={item.id}
-                      variant="secondary"
+                      variant="tinted"
                       onClick={() => setMemo(item)}
                     >
                       <LtrText>{item.reference}</LtrText>
@@ -1047,7 +1061,7 @@ export function Returns() {
                         (line) => returnUnpickedQuantity(record, line) > 0,
                       ) && (
                         <Button
-                          variant="secondary"
+                          variant="neutral"
                           onClick={() => openPanel(record, "pickup")}
                         >
                           {t("Record pickup", "ثبت جمع‌آوری")}
@@ -1063,7 +1077,7 @@ export function Returns() {
                       </Button>
                     ) : null}
                     <Button
-                      variant="danger"
+                      variant="destructive"
                       onClick={() => openPanel(record, "cancel")}
                     >
                       {record.replacement_received ||
@@ -1357,7 +1371,7 @@ export function Returns() {
                         {t("Approve cancellation", "تأیید لغو")}
                       </Button>
                       <Button
-                        variant="secondary"
+                        variant="destructive"
                         disabled={context.branch === "all"}
                         onClick={() =>
                           run(

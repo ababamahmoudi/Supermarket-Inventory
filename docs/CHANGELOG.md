@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-12 — C7 Klead presentation and combined review guide
+
+- Applied the already-approved Klead design source to shared shell/controls and existing screens: bundled Manrope/Vazirmatn, standalone light/dark tokens, semantic buttons/filled fields, quiet status dots/pills, inset list dividers, labelled row chevrons, keyboard navigation and shared footers. Retained the approved Dashboard structure and existing fictional records.
+- Preserved pricing, role/company/branch guards, signed pickup/partial-resolution evidence, confirmed amounts/allocations, original files and physical document/label geometry. C7 stacks on C6 in `feat/prototype-c7-klead-retouch`; both remain separate reviewable pull requests and neither merges automatically.
+- Added [C7 review guide](PR_C7_REVIEW.md) for all 17 requested scenes, actual click paths, the five-variant screenshot requirement and two pending owner choices. Updated the prototype README with the combined review branch and detailed fresh Ubuntu/Mac commands; Docker is not needed.
+- **Final verification remains PENDING:** this entry does not claim final unit/pricing/browser counts, a completed production build, contrast/token/print audits, 85 final screenshots or latest-head CI. Actual source-head results and remaining mismatches must be added after the coordinated final checks. Correct pickup authority and dark Primary palette still await explicit owner answers.
+
 ## 2026-10-11 — C5 approval and C6/C7 specifications
 
 - Owner approved C5. Every required check passed before its history-preserving merge at 2dbb64aab13cdbb6ecfe5a540c590ebb32c503ce; C6 starts from that main and C7 stacks on C6 without an intermediate review pause. Neither new PR is automatically merged.

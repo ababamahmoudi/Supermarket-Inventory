@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import {
@@ -22,6 +23,7 @@ import {
   Button,
   DataTable,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -96,7 +98,7 @@ export default function SupplierItems({
         }
       >
         {query && (
-          <Button variant="ghost" onClick={() => setQuery("")}>
+          <Button variant="plain" onClick={() => setQuery("")}>
             {t("Clear filters", "پاک کردن فیلترها")}
           </Button>
         )}
@@ -215,7 +217,7 @@ export default function SupplierItems({
                 <td>
                   {row.last_invoice_id ? (
                     <Button
-                      variant="secondary"
+                      variant="plain"
                       size="sm"
                       onClick={(event) => {
                         event.stopPropagation();
@@ -235,19 +237,9 @@ export default function SupplierItems({
                 {supervisor && (
                   <td>
                     <div className="actions supplier-item-actions">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setHistoryId(row.id);
-                        }}
-                      >
-                        {t("History", "تاریخچه")}
-                      </Button>
                       {editable && (
                         <Button
-                          variant="secondary"
+                          variant="neutral"
                           size="sm"
                           onClick={(event) => {
                             event.stopPropagation();
@@ -257,6 +249,12 @@ export default function SupplierItems({
                           {t("Edit", "ویرایش")}
                         </Button>
                       )}
+                      <ChevronRight
+                        size={16}
+                        strokeWidth={1.5}
+                        className="row-chevron"
+                        aria-hidden="true"
+                      />
                     </div>
                   </td>
                 )}
@@ -284,13 +282,19 @@ export default function SupplierItems({
             if (!open) setHistoryId(null);
           }}
           title={t("Price history", "تاریخچه قیمت")}
+          description={
+            <>
+              <ProductName
+                product={history}
+                language={history.name_fa ? lang : "en"}
+              />
+              {" · "}
+              <bdi dir="auto">{supplier}</bdi>
+            </>
+          }
           className="supplier-item-history-dialog"
         >
           <div className="stack">
-            <ProductName
-              product={history}
-              language={history.name_fa ? lang : "en"}
-            />
             <p className="muted">{t("Before tax", "پیش از مالیات")}</p>
             {history.financial.quoted_unit_cost_before_tax !== undefined && (
               <div className="supplier-item-quote">
@@ -340,7 +344,7 @@ export default function SupplierItems({
                       </td>
                       <td>
                         <Button
-                          variant="secondary"
+                          variant="plain"
                           size="sm"
                           onClick={() =>
                             navigate(
@@ -375,11 +379,11 @@ export default function SupplierItems({
                 )}
               </EmptyState>
             )}
-            <div className="actions">
-              <Button variant="secondary" onClick={() => setHistoryId(null)}>
+            <DialogActions>
+              <Button variant="neutral" onClick={() => setHistoryId(null)}>
                 {t("Close", "بستن")}
               </Button>
-            </div>
+            </DialogActions>
           </div>
         </Dialog>
       )}
@@ -625,14 +629,14 @@ function SupplierItemEditor({
             {errors[error]}
           </p>
         )}
-        <div className="actions">
+        <DialogActions>
+          <Button variant="neutral" onClick={onClose}>
+            {t("Cancel", "لغو")}
+          </Button>
           <Button type="submit">
             {item ? t("Save item", "ذخیره کالا") : t("Add item", "افزودن کالا")}
           </Button>
-          <Button variant="secondary" onClick={onClose}>
-            {t("Cancel", "لغو")}
-          </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );

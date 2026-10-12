@@ -1,0 +1,62 @@
+@media screen {
+  .labels-record-caption {
+    margin-block: 8px 24px;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  .labels-template-designer .labels-template-form > .field {
+    max-inline-size: 360px;
+  }
+  .labels-template-designer .label-template-picker,
+  .labels-print-card .label-print-controls {
+    gap: 20px;
+  }
+  .labels-template-designer .labels-dimensions {
+    gap: 20px;
+  }
+  .labels-template-designer .label-designer-grid,
+  .labels-print-card .label-print-preview-grid {
+    gap: 24px;
+  }
+  .labels-waitlist-heading > .muted,
+  .labels-template-designer .label-template-kind,
+  .labels-print-card .label-bilingual-preview > p,
+  .labels-template-designer .label-preview-caption,
+  .labels-print-card .label-preview-caption {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  .labels-template-designer .label-template-kind {
+    margin-block: 0 24px;
+  }
+  .labels-template-designer .label-preview-slot text,
+  .labels-print-card .label-preview-slot text {
+    font-family: var(--font-en);
+  }
+  .app[dir="rtl"] .labels-template-designer .label-preview-slot text,
+  .app[dir="rtl"] .labels-print-card .label-preview-slot text {
+    font-family: var(--font-fa);
+  }
+  .labels-print-card .label-grayscale-caption {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-caption);
+  }
+  .labels-selection-bar {
+    gap: 20px;
+    padding: 20px 24px;
+    background: var(--klead-hover);
+  }
+  .labels-waitlist-table .ui-number {
+    max-inline-size: 120px;
+  }
+  @media (max-width: 760px) {
+    .labels-selection-bar {
+      gap: 16px;
+      padding: 16px;
+    }
+    .labels-template-designer .labels-dimensions {
+      gap: 20px 16px;
+    }
+  }
+}

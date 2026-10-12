@@ -4,7 +4,7 @@ import { signIn, setLanguage } from "./helpers";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 for (const language of ["en", "fa"] as const)
   for (const width of [390, 768, 900, 1024, 1180, 1280, 1440, 1920]) {
-    test(`C6 adaptive tables and shell: ${language} ${width}px`, async ({
+    test(`C7 adaptive tables and shell: ${language} ${width}px`, async ({
       page,
     }, info) => {
       test.setTimeout(180000);
@@ -20,6 +20,7 @@ for (const language of ["en", "fa"] as const)
       }
       const reports = [];
       for (const scene of [
+        "dashboard",
         "returns",
         "expiry",
         "payables",
@@ -39,6 +40,71 @@ for (const language of ["en", "fa"] as const)
         reports.push(proof);
         expect(proof.actualWidth).toBe(width);
         expect(proof.failures, `${scene} ${language} ${width}`).toEqual([]);
+        if (scene === "dashboard") {
+          const actual = await page.evaluate(() => {
+            const rect = (element: Element) => {
+              const value = element.getBoundingClientRect();
+              return {
+                x: value.x,
+                y: value.y,
+                width: value.width,
+                height: value.height,
+                right: value.right,
+                bottom: value.bottom,
+              };
+            };
+            return {
+              topbar: rect(document.querySelector(".topbar")!),
+              accounts: document.querySelectorAll(
+                ".user-menu,.mobile-account-menu",
+              ).length,
+              kpis: [
+                ...document.querySelectorAll(".dashboard-kpis>.kpi-card"),
+              ].map(rect),
+              rows: [...document.querySelectorAll(".dashboard-row")].map(
+                (element) => ({
+                  halves: element.classList.contains("dashboard-row-halves"),
+                  cards: [...element.querySelectorAll(":scope>.card")].map(
+                    rect,
+                  ),
+                }),
+              ),
+              aside: rect(document.querySelector(".dashboard-aside")!),
+            };
+          });
+          await writeFile(
+            info.outputPath("dashboard-geometry.json"),
+            JSON.stringify(actual, null, 2) + "\n",
+          );
+          expect(actual.topbar.height).toBe(60);
+          expect(actual.accounts).toBe(1);
+          expect(actual.kpis).toHaveLength(4);
+          expect(
+            new Set(actual.kpis.map((card) => Math.round(card.y))).size,
+          ).toBe(width < 760 ? 2 : 1);
+          for (const row of actual.rows) {
+            expect(row.cards).toHaveLength(2);
+            const [first, second] = row.cards;
+            if (width < 760) {
+              expect(first.width).toBeCloseTo(second.width, 0);
+              expect(second.y).toBeGreaterThanOrEqual(first.bottom + 15);
+            } else {
+              expect(first.y).toBeCloseTo(second.y, 0);
+              expect(first.height).toBeCloseTo(second.height, 0);
+              const gap =
+                Math.max(first.x, second.x) -
+                Math.min(first.right, second.right);
+              expect(gap).toBeCloseTo(24, 0);
+              // Grid track spans include their internal gutters: adding the
+              // shared gutter proves the actual 8+4 or 6+6 allocation.
+              expect((first.width + gap) / (second.width + gap)).toBeCloseTo(
+                row.halves ? 1 : 2,
+                2,
+              );
+            }
+          }
+          if (width >= 1440) expect(actual.aside.width).toBe(280);
+        }
       }
       await page.goto("/#product?code=0006");
       const editProduct = page

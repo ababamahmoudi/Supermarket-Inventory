@@ -16,12 +16,14 @@ import {
   DataTable,
   DateField,
   Dialog,
+  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
   NumberField,
   PageHeader,
   Select,
+  TableRowLink,
   useTableColumns,
 } from "../ui";
 import { DateText, LtrText, Money, ProductName } from "../presentation";
@@ -204,7 +206,12 @@ export default function Orders() {
       width: "16%",
       align: "end",
     },
-    { key: "status", label: t("Status", "وضعیت"), width: "15%" },
+    {
+      key: "status",
+      label: t("Status", "وضعیت"),
+      width: "15%",
+      minWidth: 200,
+    },
   ]);
   useEffect(() => {
     const leaveForm = () => setForm(null);
@@ -718,6 +725,16 @@ export default function Orders() {
               ? selected.reference
               : t("Orders", "سفارش‌ها")
         }
+        description={
+          branchLabel(
+            state.config,
+            form?.branch || selected?.branch || context.branch,
+            lang,
+          ) +
+          (form?.supplier || selected?.supplier
+            ? ` · \u2066${form?.supplier || selected?.supplier}\u2069`
+            : "")
+        }
         actions={
           form || selected ? (
             <Button variant="ghost" onClick={back}>
@@ -840,7 +857,7 @@ export default function Orders() {
                     className="row-between order-items-heading"
                   >
                     <h2>{t("Supplier items", "کالاهای تأمین‌کننده")}</h2>
-                    <Button variant="secondary" onClick={openNewItem}>
+                    <Button variant="neutral" onClick={openNewItem}>
                       <Plus size={16} />
                       {t("New item", "کالای جدید")}
                     </Button>
@@ -1046,7 +1063,7 @@ export default function Orders() {
                                   {t("New item", "کالای جدید")}
                                 </Badge>
                                 <Button
-                                  variant="danger"
+                                  variant="destructive"
                                   onClick={() => {
                                     clearFieldError(
                                       "item",
@@ -1219,17 +1236,17 @@ export default function Orders() {
                   )}
                 </p>
               )}
-              <div className="actions order-form-actions">
-                <Button type="submit" variant="secondary">
+              <DialogActions className="order-form-actions">
+                <Button variant="neutral" onClick={back}>
+                  {t("Cancel", "انصراف")}
+                </Button>
+                <Button type="submit" variant="neutral">
                   {t("Save as draft", "ذخیره پیش‌نویس")}
                 </Button>
                 <Button onClick={() => save(true)}>
                   {t("Place order", "ثبت سفارش")}
                 </Button>
-                <Button variant="secondary" onClick={back}>
-                  {t("Cancel", "انصراف")}
-                </Button>
-              </div>
+              </DialogActions>
             </form>
           </Card>
           {form.branch && (
@@ -1262,7 +1279,7 @@ export default function Orders() {
                           </span>
                           {added ? (
                             <Button
-                              variant="danger"
+                              variant="destructive"
                               aria-label={t(
                                 "Remove note from order",
                                 "حذف یادداشت از سفارش",
@@ -1286,7 +1303,7 @@ export default function Orders() {
                             </Button>
                           ) : (
                             <Button
-                              variant="secondary"
+                              variant="tinted"
                               onClick={() => addNote(note.id)}
                             >
                               {t("Add to order", "افزودن به سفارش")}
@@ -1369,7 +1386,7 @@ export default function Orders() {
                 {selected.status === "draft" && (
                   <>
                     <Button
-                      variant="secondary"
+                      variant="neutral"
                       onClick={() => editForm(selected)}
                     >
                       {t("Edit draft", "ویرایش پیش‌نویس")}
@@ -1427,7 +1444,7 @@ export default function Orders() {
                   </>
                 )}
                 <Button
-                  variant="secondary"
+                  variant="tinted"
                   onClick={() => setPrintPreview(structuredClone(selected))}
                 >
                   <Printer size={16} />
@@ -1437,7 +1454,7 @@ export default function Orders() {
                   selected.status,
                 ) && (
                   <Button
-                    variant="danger"
+                    variant="destructive"
                     onClick={() => {
                       setCancelId(selected.id);
                       setReason("");
@@ -1593,7 +1610,7 @@ export default function Orders() {
               <div className="actions">
                 {selected.linked_invoice_ids.map((id) => (
                   <Button
-                    variant="secondary"
+                    variant="neutral"
                     key={id}
                     onClick={() =>
                       navigate(`invoices?id=${encodeURIComponent(id)}`)
@@ -1751,18 +1768,37 @@ export default function Orders() {
               </thead>
               <tbody>
                 {visible.map((order) => (
-                  <tr key={order.id}>
+                  <tr
+                    key={order.id}
+                    data-row-href={`#orders?id=${encodeURIComponent(order.id)}`}
+                    aria-label={order.reference}
+                    onClick={(event) => {
+                      if (!(event.target as HTMLElement).closest("a,button")) {
+                        setError("");
+                        setMessage("");
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        ["Enter", " "].includes(event.key)
+                      ) {
+                        setError("");
+                        setMessage("");
+                      }
+                    }}
+                  >
                     <td>
-                      <Button
-                        variant="secondary"
+                      <a
+                        className="order-reference-link"
+                        href={`#orders?id=${encodeURIComponent(order.id)}`}
                         onClick={() => {
-                          navigate(`orders?id=${encodeURIComponent(order.id)}`);
                           setError("");
                           setMessage("");
                         }}
                       >
                         <LtrText>{order.reference}</LtrText>
-                      </Button>
+                      </a>
                     </td>
                     <td>{branchLabel(state.config, order.branch, lang)}</td>
                     <td>
@@ -1775,17 +1811,27 @@ export default function Orders() {
                       {money(order.expected_total_before_tax, order.currency)}
                     </td>
                     <td>
-                      <Badge
-                        tone={
-                          order.status === "received"
-                            ? "approved"
-                            : order.status === "partially_received"
-                              ? "progress"
-                              : "neutral"
-                        }
-                      >
-                        {t(...orderStatusCopy[order.status])}
-                      </Badge>
+                      <div className="order-status-navigation">
+                        <Badge
+                          tone={
+                            order.status === "received"
+                              ? "approved"
+                              : order.status === "partially_received"
+                                ? "progress"
+                                : "neutral"
+                          }
+                        >
+                          {t(...orderStatusCopy[order.status])}
+                        </Badge>
+                        <TableRowLink
+                          href={`#orders?id=${encodeURIComponent(order.id)}`}
+                          aria-label={`${t("View", "مشاهده")} ${order.reference}`}
+                          onClick={() => {
+                            setError("");
+                            setMessage("");
+                          }}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1879,12 +1925,12 @@ export default function Orders() {
               "این کالا موقت است. هنگام رسیدن تحویل، ردیف واقعی آن را در فاکتور انتخاب کنید.",
             )}
           </p>
-          <div className="actions">
-            <Button variant="secondary" onClick={() => setNewItemOpen(false)}>
+          <DialogActions>
+            <Button variant="neutral" onClick={() => setNewItemOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
             <Button type="submit">{t("Add item", "افزودن کالا")}</Button>
-          </div>
+          </DialogActions>
         </form>
       </Dialog>
       <Dialog
@@ -1918,12 +1964,12 @@ export default function Orders() {
             rows={3}
           />
         </Field>
-        <div className="actions">
-          <Button variant="secondary" onClick={() => setCancelId(null)}>
+        <DialogActions>
+          <Button variant="neutral" onClick={() => setCancelId(null)}>
             {t("Keep order", "نگه داشتن سفارش")}
           </Button>
           <Button
-            variant="danger"
+            variant="destructive"
             onClick={() => {
               if (!reason.trim()) {
                 setValidationIssues([
@@ -1954,7 +2000,7 @@ export default function Orders() {
           >
             {t("Cancel order", "لغو سفارش")}
           </Button>
-        </div>
+        </DialogActions>
       </Dialog>
       <Dialog
         open={printPreview !== null}
@@ -1971,11 +2017,12 @@ export default function Orders() {
               config={state.config}
               language={lang}
             />
-            <div className="actions">
-              <Button variant="secondary" onClick={() => setPrintPreview(null)}>
+            <DialogActions>
+              <Button variant="neutral" onClick={() => setPrintPreview(null)}>
                 {t("Close", "بستن")}
               </Button>
               <Button
+                variant="tinted"
                 onClick={() =>
                   printDocument(
                     <OrderPrintDocument
@@ -1989,7 +2036,7 @@ export default function Orders() {
                 <Printer size={16} />
                 {t("Print", "چاپ")}
               </Button>
-            </div>
+            </DialogActions>
           </>
         )}
       </Dialog>

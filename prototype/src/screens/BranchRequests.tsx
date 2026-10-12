@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
-import { Plus, Printer, ArrowLeft } from "lucide-react";
+import { Plus, Printer, ArrowLeft, ChevronRight } from "lucide-react";
 import { useDemo } from "../store";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 import { useListState, useRouteParam } from "../navigation";
@@ -594,7 +594,7 @@ export default function BranchRequests() {
         )}
       {formOpen && (
         <Button
-          variant="quiet"
+          variant="plain"
           onClick={() => {
             setFormOpen(false);
             openRequest(null);
@@ -704,7 +704,7 @@ export default function BranchRequests() {
                     </span>
                     <Button
                       size="sm"
-                      variant="secondary"
+                      variant="plain"
                       onClick={() => {
                         const packs = [
                           ...new Set(
@@ -758,7 +758,7 @@ export default function BranchRequests() {
               />
             </Field>
             <Button
-              variant="secondary"
+              variant="plain"
               onClick={() => {
                 if (!freeText.trim()) {
                   setMissing([
@@ -832,7 +832,7 @@ export default function BranchRequests() {
                       <bdi dir="auto">{line.free_text}</bdi>
                     )}
                     <Button
-                      variant="danger"
+                      variant="destructive"
                       size="sm"
                       onClick={() =>
                         setLines(lines.filter((_, i) => i !== index))
@@ -907,20 +907,20 @@ export default function BranchRequests() {
               );
             })}
           </div>
-          <div className="actions">
-            <Button onClick={() => save(true)}>{t("Send", "ارسال")}</Button>
-            <Button variant="secondary" onClick={() => save(false)}>
-              {t("Save as draft", "ذخیره پیش‌نویس")}
-            </Button>
-            <Button variant="secondary" onClick={() => setFormOpen(false)}>
+          <div className="dialog-actions">
+            <Button variant="neutral" onClick={() => setFormOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
+            <Button variant="neutral" onClick={() => save(false)}>
+              {t("Save as draft", "ذخیره پیش‌نویس")}
+            </Button>
+            <Button onClick={() => save(true)}>{t("Send", "ارسال")}</Button>
           </div>
         </Card>
       ) : request ? (
         <>
           <Button
-            variant="ghost"
+            variant="plain"
             onClick={() => {
               openRequest(null);
               setMessage("");
@@ -944,7 +944,7 @@ export default function BranchRequests() {
                 {translatedStatus(request.status)}
               </Badge>
               <Button
-                variant="secondary"
+                variant="tinted"
                 onClick={() => {
                   try {
                     printDocument(
@@ -997,7 +997,7 @@ export default function BranchRequests() {
               <p className="helper">
                 {t("Copied from", "کپی از")}{" "}
                 <Button
-                  variant="secondary"
+                  variant="plain"
                   size="sm"
                   onClick={() => openRequest(request.source_request_id!)}
                 >
@@ -1148,8 +1148,8 @@ export default function BranchRequests() {
                           variant={
                             current?.decision ===
                             (sendSide ? "short" : "missing")
-                              ? "primary"
-                              : "secondary"
+                              ? "tinted"
+                              : "neutral"
                           }
                           size="sm"
                           onClick={() => {
@@ -1230,10 +1230,7 @@ export default function BranchRequests() {
                   >
                     {t("Send", "ارسال")}
                   </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => openDraft(request)}
-                  >
+                  <Button variant="neutral" onClick={() => openDraft(request)}>
                     {t("Edit draft", "ویرایش پیش‌نویس")}
                   </Button>
                 </>
@@ -1335,7 +1332,7 @@ export default function BranchRequests() {
               {sourceAction &&
                 availableBranchRequestResidual(state, request).length > 0 && (
                   <Button
-                    variant="secondary"
+                    variant="neutral"
                     onClick={() => {
                       let copied: BranchRequest | undefined;
                       run(
@@ -1365,7 +1362,10 @@ export default function BranchRequests() {
                 )}
               {sourceAction &&
                 ["draft", "requested"].includes(request.status) && (
-                  <Button variant="danger" onClick={() => setCancelOpen(true)}>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setCancelOpen(true)}
+                  >
                     {t("Cancel request", "لغو درخواست")}
                   </Button>
                 )}
@@ -1383,7 +1383,7 @@ export default function BranchRequests() {
                   />
                 </Field>
                 <Button
-                  variant="danger"
+                  variant="destructive"
                   onClick={() =>
                     run(
                       (draft) => {
@@ -1463,14 +1463,56 @@ export default function BranchRequests() {
                     <th>{t("Sending location", "محل ارسال‌کننده")}</th>
                     <th>{t("Status", "وضعیت")}</th>
                     <th>{t("Date", "تاریخ")}</th>
-                    <th>{t("Actions", "اقدامات")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {listed.map((item) => (
-                    <tr key={item.id}>
+                    <tr
+                      key={item.id}
+                      className="clickable-row"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        if (
+                          (event.target as HTMLElement).closest(
+                            "button, a, input, select, textarea, [role='menuitem']",
+                          )
+                        )
+                          return;
+                        openRequest(item.id);
+                        setError("");
+                        setMessage("");
+                      }}
+                      onKeyDown={(event) => {
+                        if (
+                          event.target === event.currentTarget &&
+                          (event.key === "Enter" || event.key === " ")
+                        ) {
+                          event.preventDefault();
+                          openRequest(item.id);
+                          setError("");
+                          setMessage("");
+                        }
+                      }}
+                    >
                       <td>
-                        <LtrText>{item.reference}</LtrText>
+                        <Button
+                          variant="plain"
+                          size="sm"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openRequest(item.id);
+                            setError("");
+                            setMessage("");
+                          }}
+                        >
+                          <LtrText>{item.reference}</LtrText>
+                          <ChevronRight
+                            size={16}
+                            strokeWidth={1.5}
+                            className="row-chevron"
+                            aria-hidden="true"
+                          />
+                        </Button>
                         <span className="helper">
                           {t("Items", "موارد")}:{" "}
                           <LtrText>{item.items.length}</LtrText>
@@ -1509,19 +1551,6 @@ export default function BranchRequests() {
                       </td>
                       <td>
                         <DateText value={item.created_at} />
-                      </td>
-                      <td>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            openRequest(item.id);
-                            setError("");
-                            setMessage("");
-                          }}
-                        >
-                          {t("Open", "باز کردن")}
-                        </Button>
                       </td>
                     </tr>
                   ))}

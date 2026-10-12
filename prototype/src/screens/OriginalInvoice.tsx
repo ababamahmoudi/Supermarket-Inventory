@@ -8,6 +8,7 @@ import { LtrText } from "../presentation";
 import type { DemoInvoice } from "../types";
 import { useStoredFile } from "../use-stored-file";
 import "./invoice-document-c4.css";
+import "./invoices-c7.css";
 
 export function OriginalInvoice({
   invoice,
@@ -188,31 +189,34 @@ function OriginalInvoiceContent({
             role="group"
             aria-label={t("Original invoice", "اصل فاکتور")}
           >
-            <IconButton
-              onClick={() => changeZoom(zoom - 0.25)}
-              disabled={zoom <= 0.25}
-              aria-label={t("Zoom out", "کوچک‌نمایی")}
-            >
-              <Minus size={16} />
-            </IconButton>
-            <LtrText className="invoice-original-zoom" aria-live="polite">
-              {Math.round(zoom * 100)}%
-            </LtrText>
-            <IconButton
-              onClick={() => changeZoom(zoom + 0.25)}
-              disabled={zoom >= 4}
-              aria-label={t("Zoom in", "بزرگ‌نمایی")}
-            >
-              <Plus size={16} />
-            </IconButton>
-            <Button variant="secondary" onClick={() => setFit("width")}>
+            <div className="invoice-original-zoom-controls">
+              <IconButton
+                onClick={() => changeZoom(zoom - 0.25)}
+                disabled={zoom <= 0.25}
+                aria-label={t("Zoom out", "کوچک‌نمایی")}
+              >
+                <Minus size={16} />
+              </IconButton>
+              <LtrText className="invoice-original-zoom" aria-live="polite">
+                {Math.round(zoom * 100)}%
+              </LtrText>
+              <IconButton
+                onClick={() => changeZoom(zoom + 0.25)}
+                disabled={zoom >= 4}
+                aria-label={t("Zoom in", "بزرگ‌نمایی")}
+              >
+                <Plus size={16} />
+              </IconButton>
+            </div>
+            <Button variant="neutral" size="sm" onClick={() => setFit("width")}>
               {t("Fit width", "اندازه عرض")}
             </Button>
-            <Button variant="secondary" onClick={() => setFit("page")}>
+            <Button variant="neutral" size="sm" onClick={() => setFit("page")}>
               {t("Fit page", "اندازه صفحه")}
             </Button>
             <Button
-              variant="secondary"
+              variant="neutral"
+              size="sm"
               onClick={download}
               disabled={!file.source}
             >

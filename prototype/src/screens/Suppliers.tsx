@@ -36,6 +36,9 @@ import {
   Button,
   Card,
   DataTable,
+  TableRowLink,
+  Menu,
+  MenuItem,
   EmptyState,
   FilterToolbar,
   KpiCard,
@@ -48,6 +51,7 @@ import {
 import type { OperationsContext } from "../operations";
 import "./suppliers-a2.css";
 import { companyDate, dateAfter } from "../invoice";
+import "./suppliers-c7.css";
 
 type Tab =
   | "overview"
@@ -376,7 +380,7 @@ export default function Suppliers() {
               </button>
             ))}
             <Button
-              variant="ghost"
+              variant="plain"
               size="sm"
               onClick={() => {
                 setQuery("");
@@ -443,22 +447,44 @@ export default function Suppliers() {
                   key={supplier.name}
                   tabIndex={0}
                   className="supplier-overview-row"
-                  onClick={() => openSupplier(supplier.name)}
+                  data-row-href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
+                  onClick={(event) => {
+                    if (
+                      !(event.target as HTMLElement).closest("a,button,input")
+                    )
+                      openSupplier(supplier.name);
+                  }}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter") openSupplier(supplier.name);
+                    if (
+                      event.target === event.currentTarget &&
+                      ["Enter", " "].includes(event.key)
+                    ) {
+                      event.preventDefault();
+                      openSupplier(supplier.name);
+                    }
                   }}
                 >
                   <td>
-                    <a
-                      href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        openSupplier(supplier.name);
-                      }}
-                    >
-                      <LtrText>{supplier.name}</LtrText>
-                    </a>
+                    <div className="table-identity">
+                      <a
+                        href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openSupplier(supplier.name);
+                        }}
+                      >
+                        <LtrText>{supplier.name}</LtrText>
+                      </a>
+                      <TableRowLink
+                        href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
+                        aria-label={`${t("Supplier", "تأمین‌کننده")} ${supplier.name}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          openSupplier(supplier.name);
+                        }}
+                      />
+                    </div>
                   </td>
                   <td>
                     <Badge
@@ -516,7 +542,7 @@ export default function Suppliers() {
   if (!detail || !current)
     return (
       <>
-        <Button variant="ghost" onClick={() => navigate("suppliers")}>
+        <Button variant="plain" onClick={() => navigate("suppliers")}>
           {t("Back to Suppliers", "بازگشت به تأمین‌کنندگان")}
         </Button>
         <EmptyState>
@@ -547,7 +573,7 @@ export default function Suppliers() {
   return (
     <>
       <Button
-        variant="ghost"
+        variant="plain"
         className="supplier-back"
         onClick={() => navigate("suppliers")}
       >
@@ -560,16 +586,18 @@ export default function Suppliers() {
         actions={
           supervisor && current.id ? (
             <div className="actions">
-              <Button variant="secondary" onClick={() => setEditor("edit")}>
+              <Button variant="neutral" onClick={() => setEditor("edit")}>
                 {t("Edit", "ویرایش")}
               </Button>
               {current.active !== false && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setConfirmDeactivate(true)}
-                >
-                  {t("Deactivate", "غیرفعال کردن")}
-                </Button>
+                <Menu label={t("More", "بیشتر")}>
+                  <MenuItem
+                    className="supplier-destructive-action"
+                    onClick={() => setConfirmDeactivate(true)}
+                  >
+                    {t("Deactivate", "غیرفعال کردن")}
+                  </MenuItem>
+                </Menu>
               )}
             </div>
           ) : undefined
@@ -791,11 +819,22 @@ export default function Suppliers() {
             </thead>
             <tbody>
               {detail.invoices.map((invoice) => (
-                <tr key={invoice.id}>
+                <tr
+                  key={invoice.id}
+                  data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                >
                   <td>
-                    <a href={`#invoices?id=${encodeURIComponent(invoice.id)}`}>
-                      <LtrText>{invoice.number}</LtrText>
-                    </a>
+                    <div className="table-identity">
+                      <a
+                        href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                      >
+                        <LtrText>{invoice.number}</LtrText>
+                      </a>
+                      <TableRowLink
+                        href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                        aria-label={`${t("Invoice", "فاکتور")} ${invoice.number}`}
+                      />
+                    </div>
                   </td>
                   <td>
                     <DateText value={invoice.received} />

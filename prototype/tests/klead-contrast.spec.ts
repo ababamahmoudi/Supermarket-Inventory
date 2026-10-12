@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { signIn, setLanguage } from "./helpers";
+import { signIn, setLanguage, openShellAction } from "./helpers";
 import { inspectTextContrast } from "../scripts/klead-contrast-proof.mjs";
 for (const language of ["en", "fa"] as const)
   for (const theme of ["light", "dark"] as const) {
@@ -10,9 +10,7 @@ for (const language of ["en", "fa"] as const)
       test.setTimeout(240000);
       await signIn(page, "Supervisor");
       if (theme === "dark")
-        await page
-          .getByRole("button", { name: "Switch to dark theme", exact: true })
-          .click();
+        await (await openShellAction(page, "Switch to dark theme")).click();
       await setLanguage(page, language);
       const reports = [];
       for (const scene of [

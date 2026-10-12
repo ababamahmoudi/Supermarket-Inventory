@@ -63,7 +63,7 @@ function WeighedSettingsForm() {
       {dirty && (
         <div className="actions settings-section-actions">
           <Button
-            variant="secondary"
+            variant="neutral"
             onClick={() => {
               setDraft(weighedSettings(state.config));
               setError(undefined);

@@ -69,7 +69,11 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
     branch: "Branch 1",
     reference: "Opening balance",
   });
-  await page.getByRole("button", { name: "Deactivate", exact: true }).click();
+  await page
+    .locator(".page-header")
+    .getByRole("button", { name: "More", exact: true })
+    .click();
+  await page.getByRole("menuitem", { name: "Deactivate", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Deactivate supplier", exact: true })
     .getByRole("button", { name: "Deactivate supplier", exact: true })

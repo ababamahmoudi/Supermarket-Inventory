@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   DataTable,
+  TableRowLink,
   EmptyState,
   FilterToolbar,
   PageHeader,
@@ -18,6 +19,7 @@ import {
 import "./received-c.css";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import "./invoice-entry-c6.css";
+import "./suppliers-c7.css";
 
 function useReceivedColumns() {
   const { t } = useDemo();
@@ -116,13 +118,28 @@ export function ReceivedTable({
                 item.code === receipt.product_code,
             );
             return (
-              <tr key={receipt.id}>
+              <tr
+                key={receipt.id}
+                data-row-href={
+                  receipt.invoice_id
+                    ? `#invoices?id=${encodeURIComponent(receipt.invoice_id)}`
+                    : undefined
+                }
+              >
                 <td>
-                  {product ? (
-                    <ProductName product={product} language={lang} />
-                  ) : (
-                    <LtrText>{receipt.product_code}</LtrText>
-                  )}
+                  <div className="table-identity">
+                    {product ? (
+                      <ProductName product={product} language={lang} />
+                    ) : (
+                      <LtrText>{receipt.product_code}</LtrText>
+                    )}
+                    {receipt.invoice_id && (
+                      <TableRowLink
+                        href={`#invoices?id=${encodeURIComponent(receipt.invoice_id)}`}
+                        aria-label={`${t("Invoice", "فاکتور")} ${receipt.invoice_number}`}
+                      />
+                    )}
+                  </div>
                 </td>
                 <td className="numeric">
                   {receipt.sold_by === "weight" ? (
@@ -179,9 +196,9 @@ export function ReceivedTable({
                 </td>
                 <td>
                   {receipt.invoice_id ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    <a
+                      className="received-invoice-link"
+                      href={`#invoices?id=${encodeURIComponent(receipt.invoice_id)}`}
                       onClick={() =>
                         navigate(
                           `invoices?id=${encodeURIComponent(receipt.invoice_id)}`,
@@ -189,7 +206,7 @@ export function ReceivedTable({
                       }
                     >
                       <LtrText>{receipt.invoice_number}</LtrText>
-                    </Button>
+                    </a>
                   ) : (
                     <span className="muted">—</span>
                   )}
@@ -343,7 +360,7 @@ export default function Received({
           ]}
         />
         <Button
-          variant="ghost"
+          variant="plain"
           onClick={() => {
             setFrom("");
             setTo("");

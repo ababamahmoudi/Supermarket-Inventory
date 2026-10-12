@@ -22,6 +22,7 @@ import {
 import { Badge, Button, Card, DataTable } from "../ui";
 import type { DemoInvoice, InvoiceLine } from "../types";
 import "./invoice-document-c4.css";
+import "./invoices-c7.css";
 
 export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
   const { t, tCount } = useDemo();
@@ -118,7 +119,7 @@ export function PostedInvoice({
               <Button onClick={onCorrect}>
                 {t("Correct invoice", "اصلاح فاکتور")}
               </Button>
-              <Button variant="secondary" onClick={onMove}>
+              <Button variant="neutral" onClick={onMove}>
                 {t("Move invoice", "انتقال فاکتور")}
               </Button>
             </div>
@@ -402,7 +403,7 @@ export function PostedInvoice({
         {versions.length > 1 && (
           <div className="posted-invoice-versions">
             {versions.map((version, index) => (
-              <Button key={version.version_id} asChild variant="secondary">
+              <Button key={version.version_id} asChild variant="neutral">
                 <a
                   href={`#invoices?id=${encodeURIComponent(original.id)}&version=${encodeURIComponent(version.version_id)}`}
                 >

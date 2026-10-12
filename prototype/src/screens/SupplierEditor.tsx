@@ -10,12 +10,20 @@ import {
   invoiceSupplierFields,
 } from "../supplier-editor";
 import type { SupplierRecord } from "../types";
-import { Button, Checkbox, DateField, Dialog, Field } from "../ui";
+import {
+  Button,
+  Checkbox,
+  DateField,
+  Dialog,
+  DialogActions,
+  Field,
+} from "../ui";
 import { LtrText } from "../presentation";
 import "./manual-entry.css";
 import { PaymentTermsControl } from "./PaymentTermsControl";
 import { paymentTermsDays } from "../invoice-entry";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
+import "./suppliers-c7.css";
 
 export function SupplierEditor({
   supplier,
@@ -175,7 +183,7 @@ export function SupplierEditor({
           ? t("Edit supplier", "ویرایش تأمین‌کننده")
           : t("Add supplier", "افزودن تأمین‌کننده")
       }
-      className="manual-entry-dialog"
+      className="manual-entry-dialog supplier-editor-dialog"
     >
       <form
         className="stack manual-entry-form"
@@ -418,7 +426,7 @@ export function SupplierEditor({
             {matches.map((record) => (
               <Button
                 key={record.id}
-                variant="secondary"
+                variant="neutral"
                 onClick={() => {
                   onClose();
                   navigate(`suppliers?name=${encodeURIComponent(record.name)}`);
@@ -445,8 +453,8 @@ export function SupplierEditor({
               {errors[error]}
             </p>
           )}
-        <div className="actions">
-          <Button variant="secondary" onClick={onClose}>
+        <DialogActions>
+          <Button variant="neutral" onClick={onClose}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit">
@@ -454,7 +462,7 @@ export function SupplierEditor({
               ? t("Save supplier", "ذخیرهٔ تأمین‌کننده")
               : t("Add supplier", "افزودن تأمین‌کننده")}
           </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );

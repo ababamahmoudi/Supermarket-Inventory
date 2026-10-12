@@ -90,15 +90,24 @@ test("C5 button contract covers Suppliers, every supplier tab and item dialogs",
     await page.getByRole("button", { name: "Add item", exact: true }).click();
     await proof.check("Add supplier item dialog");
     await closeDialog(page);
-    const item = page.locator(".supplier-items-table tbody tr").first();
-    if (await item.count()) {
-      await item.getByRole("button", { name: "History", exact: true }).click();
-      await proof.check("Supplier item price history dialog");
-      await closeDialog(page);
-      await item.getByRole("button", { name: "Edit", exact: true }).click();
-      await proof.check("Edit supplier item dialog");
-      await closeDialog(page);
-    }
+    const item = page
+      .locator(".supplier-items-table tbody tr.supplier-item-history-row")
+      .first();
+    await expect(item).toBeVisible();
+    await expect(item.locator(".row-chevron")).toBeVisible();
+    await item.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("dialog", { name: "Price history", exact: true }),
+    ).toBeVisible();
+    await proof.check("Supplier item price history dialog");
+    await closeDialog(page);
+    await item.getByRole("button", { name: "Edit", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Edit item", exact: true }),
+    ).toBeVisible();
+    await proof.check("Edit supplier item dialog");
+    await closeDialog(page);
     await signIn(page, "Floor Worker");
     await page.goto("/#suppliers");
     await proof.check("Suppliers overview", "floor_worker");

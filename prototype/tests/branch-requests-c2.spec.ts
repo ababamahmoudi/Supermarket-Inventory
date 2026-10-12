@@ -63,7 +63,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Mark as sent", exact: true }).click();
   await expect(
@@ -119,7 +119,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: "Open", exact: true })
+    .getByRole("button", { name: reference, exact: true })
     .click();
   await page
     .locator(".request-checklist-item")
@@ -229,7 +229,7 @@ for (const language of ["en", "fa"] as const) {
     await page
       .getByRole("row")
       .filter({ hasText: "REQ-PRINT" })
-      .getByRole("button", { name: "Open", exact: true })
+      .getByRole("button", { name: "REQ-PRINT", exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: "Mark as sent", exact: true }),

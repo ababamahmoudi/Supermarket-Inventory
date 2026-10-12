@@ -8,6 +8,16 @@ export const button = (scope, en, fa) =>
   scope.getByRole("button", { name: exact(en, fa) });
 export const field = (scope, en, fa) => scope.getByLabel(exact(en, fa));
 
+export async function shellAction(page, en, fa) {
+  const control = button(page, en, fa);
+  if (await control.isVisible()) return control;
+  const item = page.getByRole("menuitem", { name: exact(en, fa) });
+  if (!(await item.isVisible()))
+    await page.locator(".mobile-more-menu").click();
+  await expect(item).toBeVisible();
+  return item;
+}
+
 export async function settled(page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -26,12 +36,16 @@ export async function appearance(page, variant) {
   const language = variant === "fa-light" ? "fa" : "en";
   const theme = variant === "en-dark" ? "dark" : "light";
   if ((await page.locator("html").getAttribute("lang")) !== language)
-    await button(page, "Switch to Persian", "تغییر به انگلیسی").click();
+    await (
+      await shellAction(page, "Switch to Persian", "تغییر به انگلیسی")
+    ).click();
   if ((await page.locator("html").getAttribute("data-theme")) !== theme)
-    await button(
-      page,
-      theme === "dark" ? "Switch to dark theme" : "Switch to light theme",
-      theme === "dark" ? "تغییر به تم تیره" : "تغییر به تم روشن",
+    await (
+      await shellAction(
+        page,
+        theme === "dark" ? "Switch to dark theme" : "Switch to light theme",
+        theme === "dark" ? "تغییر به تم تیره" : "تغییر به تم روشن",
+      )
     ).click();
   await expect(page.locator("html")).toHaveAttribute("lang", language);
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
@@ -261,6 +275,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               `Text action height: ${label} (${round(rect.height)}px)`,
             );
           if (!variantClass) failures.push(`Unstyled text action: ${label}`);
+          if (
+            element.closest(".card, .ui-card, dialog") &&
+            parseFloat(style.borderTopWidth) > 0.5 &&
+            style.borderTopStyle !== "none"
+          )
+            failures.push(`Card/dialog text action resting border: ${label}`);
+          if (style.boxShadow !== "none" && !element.matches(":focus-visible"))
+            failures.push(`Text action resting shadow: ${label}`);
           if (row && rect.width > 200.5)
             failures.push(
               `Table action wider than 200px: ${label} (${round(rect.width)}px)`,
@@ -287,6 +309,20 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           if (controls.length > 2)
             failures.push(
               `More than two row actions: ${tidy(cell.textContent)}`,
+            );
+          if (
+            cell.querySelector(
+              ".table-actions, .catalog-row-actions, .supplier-item-actions",
+            ) &&
+            (controls.filter((element) => kindOf(element) === "action").length >
+              1 ||
+              (controls.length === 2 &&
+                !controls.some((element) =>
+                  element.matches('.ui-menu-trigger[aria-haspopup="menu"]'),
+                )))
+          )
+            failures.push(
+              `Row end actions exceed one small button plus More: ${tidy(cell.textContent)}`,
             );
           if (controls.length === 2) {
             const [first, second] = controls.map((element) =>
@@ -405,6 +441,30 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         .filter(visible)
         .map((element) => {
           const style = getComputedStyle(element);
+          const tableStatus = Boolean(
+            element.closest(".ui-data-table:not(.is-mobile)"),
+          );
+          const sharedStatus =
+            element.classList.contains("ui-badge") &&
+            !element.classList.contains("offer-pill");
+          const presentation = sharedStatus && tableStatus ? "dot" : "pill";
+          if (sharedStatus) {
+            const dot = element.querySelector(".ui-status-dot");
+            if (presentation === "dot") {
+              if (!dot || !visible(dot))
+                failures.push(
+                  `Desktop table status has no visible dot: ${tidy(element.textContent)}`,
+                );
+              if (style.backgroundColor !== "rgba(0, 0, 0, 0)")
+                failures.push(
+                  `Desktop table status retains a pill fill: ${tidy(element.textContent)}`,
+                );
+            } else if (dot && visible(dot)) {
+              failures.push(
+                `Card status retains a table dot: ${tidy(element.textContent)}`,
+              );
+            }
+          }
           return {
             label: tidy(element.textContent),
             color: style.color,
@@ -412,17 +472,23 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             classes: element.className,
             returnStatus: element.getAttribute("data-return-status"),
             outcome: element.getAttribute("data-return-outcome"),
+            presentation,
           };
         });
       for (const [label, values] of Object.entries(
-        Object.groupBy(statuses, (status) => status.label),
+        Object.groupBy(
+          statuses,
+          (status) => `${status.label}/${status.presentation}`,
+        ),
       ))
         if (
           new Set(
             values.map((status) => `${status.color}/${status.background}`),
           ).size > 1
         )
-          failures.push(`Inconsistent status color: ${label}`);
+          failures.push(
+            `Inconsistent status color within presentation: ${label}`,
+          );
       for (const control of document.querySelectorAll(
         'select,input[type="file"],input[type="checkbox"],input[type="radio"],input[type="date"]',
       ))

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
+import { MoreHorizontal } from "lucide-react";
 import { useDemo } from "../store";
 import {
   Badge,
@@ -9,6 +10,9 @@ import {
   Field,
   NumberField,
   Dialog,
+  DialogActions,
+  Menu,
+  MenuItem,
   Select,
   Switch,
 } from "../ui";
@@ -479,31 +483,38 @@ export default function PricingSettings() {
                 </td>
                 <td className="actions-column">
                   <Button
-                    variant="secondary"
+                    variant="neutral"
                     size="sm"
                     onClick={() => editCategory(category)}
                   >
                     {t("Edit", "ویرایش")}
                   </Button>
-                  <Button
-                    variant={category.archived ? "secondary" : "danger"}
-                    size="sm"
-                    onClick={() =>
-                      setDraft((previous) => ({
-                        ...previous,
-                        pricing_categories: previous.pricing_categories.map(
-                          (item) =>
-                            item.key === category.key
-                              ? { ...item, archived: !item.archived }
-                              : item,
-                        ),
-                      }))
-                    }
+                  <Menu
+                    label={t("More actions", "کارهای بیشتر")}
+                    icon={<MoreHorizontal size={18} aria-hidden="true" />}
+                    iconOnly
                   >
-                    {category.archived
-                      ? t("Restore", "بازگردانی")
-                      : t("Archive", "بایگانی")}
-                  </Button>
+                    <MenuItem
+                      className={
+                        category.archived ? undefined : "menu-item-danger"
+                      }
+                      onClick={() =>
+                        setDraft((previous) => ({
+                          ...previous,
+                          pricing_categories: previous.pricing_categories.map(
+                            (item) =>
+                              item.key === category.key
+                                ? { ...item, archived: !item.archived }
+                                : item,
+                          ),
+                        }))
+                      }
+                    >
+                      {category.archived
+                        ? t("Restore", "بازگردانی")
+                        : t("Archive", "بایگانی")}
+                    </MenuItem>
+                  </Menu>
                 </td>
               </tr>
             ))}
@@ -681,7 +692,7 @@ export default function PricingSettings() {
                 />
               </Field>
               <Button
-                variant="secondary"
+                variant="danger"
                 onClick={() =>
                   changeDraft("corrections", (previous) => ({
                     ...previous,
@@ -698,7 +709,7 @@ export default function PricingSettings() {
         </div>
         <div className="settings-section-actions">
           <Button
-            variant="secondary"
+            variant="neutral"
             onClick={() =>
               changeDraft("corrections", (previous) => ({
                 ...previous,
@@ -841,7 +852,7 @@ export default function PricingSettings() {
         <div className="settings-save-bar">
           <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
           <Button
-            variant="secondary"
+            variant="neutral"
             onClick={() => {
               setDraft(structuredClone(state.config));
               setInvalidDivisors({});
@@ -870,6 +881,11 @@ export default function PricingSettings() {
             : t("Edit category", "ویرایش دسته")
         }
         className="settings-dialog"
+        description={
+          editing ? (
+            <bdi dir="auto">{editing.label || editing.key}</bdi>
+          ) : undefined
+        }
       >
         {editing && (
           <>
@@ -1042,14 +1058,14 @@ export default function PricingSettings() {
                 {saveError}
               </p>
             )}
-            <div className="settings-section-actions c3-dialog-actions">
-              <Button variant="secondary" onClick={() => setEditing(null)}>
+            <DialogActions className="settings-section-actions c3-dialog-actions">
+              <Button variant="neutral" onClick={() => setEditing(null)}>
                 {t("Cancel", "لغو")}
               </Button>
               <Button onClick={confirmCategory}>
                 {t("Apply category", "اعمال دسته")}
               </Button>
-            </div>
+            </DialogActions>
           </>
         )}
       </Dialog>

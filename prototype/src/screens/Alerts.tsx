@@ -189,7 +189,7 @@ export function Alerts() {
             {alert.type === "date_reminder" ? (
               <>
                 <p>{dateReminderMessage(state, alert, lang)}</p>
-                <Button asChild variant="secondary">
+                <Button asChild variant="plain">
                   <a
                     href={`#expiry?product=${encodeURIComponent(alert.product_code)}`}
                   >
@@ -206,7 +206,7 @@ export function Alerts() {
                     "مدرک جمع‌آوری نگهداری‌شده را بررسی و نتیجه تأمین‌کننده را ثبت کنید.",
                   )}
                 </p>
-                <Button asChild variant="secondary">
+                <Button asChild variant="plain">
                   <a
                     href={`#return?id=${encodeURIComponent(alert.return_id ?? "")}`}
                   >
@@ -244,7 +244,8 @@ export function Alerts() {
                           <td>
                             {alert.status === "pending" && (
                               <Button
-                                variant="secondary"
+                                variant="neutral"
+                                size="sm"
                                 onClick={() => {
                                   setError(undefined);
                                   setConfirm({
@@ -308,14 +309,14 @@ export function Alerts() {
                 {alert.type === "order_differences" && (
                   <>
                     <div className="actions">
-                      <Button asChild variant="secondary">
+                      <Button asChild variant="plain">
                         <a
                           href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
                         >
                           {t("View invoice", "مشاهده فاکتور")}
                         </a>
                       </Button>
-                      <Button asChild variant="secondary">
+                      <Button asChild variant="plain">
                         <a
                           href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
                         >
@@ -528,7 +529,7 @@ export function Alerts() {
                     {t("Mark as taken care of", "ثبت رسیدگی‌شده")}
                   </Button>
                   <Button
-                    variant="secondary"
+                    variant="neutral"
                     onClick={() => resolve(alert.id, "pending")}
                   >
                     {t("Keep as pending", "حفظ در انتظار")}

@@ -159,7 +159,11 @@ test("new branch configuration works in the live branch switcher and retains his
       name: /^North Market(?: (?:Show|Hide) details)?$/,
     }),
   });
-  await row.getByRole("button", { name: "Deactivate", exact: true }).click();
+  await row.getByRole("button", { name: "More actions", exact: true }).click();
+  await page
+    .getByRole("menu", { name: "More actions", exact: true })
+    .getByRole("menuitem", { name: "Deactivate", exact: true })
+    .click();
   if ((await row.innerText()).includes("Inactive"))
     await expect(row).toContainText("Inactive");
   else {
@@ -257,11 +261,18 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
       tableGeometry.wrapperWidth + 2,
     );
     await expect(pricingTable).toHaveClass(/is-mobile/);
-    const firstArchive = pricingTable
-      .getByRole("button", { name: "Archive", exact: true })
+    const firstMore = pricingTable
+      .getByRole("button", { name: "More actions", exact: true })
       .first();
-    await firstArchive.scrollIntoViewIfNeeded();
+    await firstMore.scrollIntoViewIfNeeded();
+    await expect(firstMore).toBeInViewport();
+    await firstMore.click();
+    const firstArchive = page
+      .getByRole("menu", { name: "More actions", exact: true })
+      .getByRole("menuitem", { name: "Archive", exact: true });
     await expect(firstArchive).toBeInViewport();
+    await page.keyboard.press("Escape");
+    await expect(firstArchive).toHaveCount(0);
   } else {
     expect(tableGeometry.tableContained).toBe(true);
     expect(tableGeometry.scrollWidth).toBeLessThanOrEqual(

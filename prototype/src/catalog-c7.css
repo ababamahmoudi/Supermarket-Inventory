@@ -1,0 +1,529 @@
+/* Catalog presentation only. Dates, prices and saved records keep their C6 handlers. */
+@media screen {
+  :root .lookup-page {
+    max-inline-size: 880px;
+    gap: 24px;
+  }
+  :root .lookup-page .lookup-hero {
+    gap: 20px;
+  }
+  :root .lookup-page .lookup-search-pill {
+    min-block-size: 56px;
+    border: 0;
+    border-radius: var(--radius-search);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+  :root .lookup-page .lookup-search-pill input.lookup-search {
+    block-size: 56px;
+    min-block-size: 56px;
+    border: 0;
+    border-radius: var(--radius-search);
+    background: var(--color-clear);
+    color: var(--text);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-body);
+  }
+  :root .lookup-page .lookup-search-pill > svg {
+    inline-size: 20px;
+    block-size: 20px;
+    margin-inline-start: 20px;
+  }
+  :root .lookup-page .lookup-scan-button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+    inline-size: 40px;
+    block-size: 40px;
+    margin-inline-end: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+    box-shadow: var(--shadow-none);
+  }
+  :root .lookup-page .lookup-search-pill:focus-within {
+    outline: 1px solid var(--accent);
+    box-shadow: var(--shadow-focus);
+  }
+  :root .lookup-page .lookup-search-pill input.lookup-search:focus {
+    outline: 0;
+    box-shadow: var(--shadow-none);
+  }
+  :root .lookup-page .lookup-category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  :root .lookup-page .lookup-category-chips .filter-chip,
+  :root .lookup-page .lookup-category-more.ui-menu-trigger {
+    min-block-size: 32px;
+    padding: 6px 14px;
+    border: 1px solid var(--page-control-border);
+    border-radius: var(--radius-round);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-none);
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .lookup-page .lookup-category-chips .filter-chip.is-selected,
+  :root .lookup-page .lookup-category-more.is-selected.ui-menu-trigger {
+    border-color: var(--color-clear);
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+  }
+  :root .lookup-page .lookup-detail {
+    padding: 24px;
+  }
+  :root .lookup-page .lookup-detail-header {
+    margin-block-end: 16px;
+    align-items: flex-start;
+  }
+  :root .lookup-page .lookup-detail-header h2 {
+    font-size: var(--font-size-title);
+    line-height: var(--line-height-title);
+    font-weight: var(--font-weight-title);
+  }
+  :root .lookup-page .lookup-detail-header p {
+    margin-block-start: 6px;
+  }
+  :root .lookup-page .lookup-product-meta,
+  :root .lookup-page .lookup-detail-header .helper {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .lookup-page .product-price-provenance {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .lookup-price-block {
+    align-items: center;
+    margin-block: 20px;
+  }
+  :root .lookup-page .lookup-approved-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 20px;
+    min-inline-size: 0;
+  }
+  :root .lookup-page .lookup-approved-price .price {
+    font-size: var(--font-size-lookup-price);
+    line-height: var(--line-height-lookup-price);
+    font-weight: var(--font-weight-lookup-price);
+    letter-spacing: var(--tracking-large-title);
+    white-space: nowrap;
+  }
+  :root .lookup-page .lookup-approved-price .weight-price-main {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+  }
+  :root .lookup-page .lookup-approved-price .weight-price-main > .ltr-fragment {
+    font-size: var(--font-size-lookup-price);
+    line-height: var(--line-height-lookup-price);
+  }
+  :root .lookup-page .weight-price-secondary {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-body);
+  }
+  :root .lookup-page .lookup-price-context {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+    min-inline-size: 0;
+  }
+  :root .lookup-page .lookup-price-context p {
+    margin: 0;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .lookup-page .lookup-clearance-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-block: 16px;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .lookup-results-list {
+    gap: 0;
+  }
+  :root .lookup-page .lookup-result-row:nth-child(n) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-block-size: 64px;
+    padding: 16px;
+    gap: 12px 20px;
+    border-radius: var(--radius-control);
+    background: var(--color-clear);
+    background-image: var(--table-row-rule);
+    background-size: calc(100% - 32px) 1px;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    box-shadow: var(--shadow-none);
+  }
+  :root .lookup-page .lookup-result-row:hover {
+    background-color: var(--hover-fill);
+  }
+  :root .lookup-page .lookup-result-row.is-selected,
+  :root .lookup-page .lookup-result-row.is-active {
+    background-color: var(--accent-soft);
+  }
+  :root .lookup-page .lookup-result-name strong {
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .lookup-page .lookup-result-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .lookup-result-price {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    align-self: center;
+    gap: 8px 12px;
+    max-inline-size: 220px;
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .lookup-page .lookup-result-pills {
+    order: -1;
+    inline-size: auto;
+    gap: 6px;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .lookup-result-row.is-selected .offer-pill,
+  :root .lookup-page .lookup-result-row.is-active .offer-pill {
+    background: var(--surface);
+    color: var(--accent-tint-text);
+  }
+  :root .product-editor-caption {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-body);
+  }
+  :root .product-editor-section {
+    display: grid;
+    gap: 16px;
+    min-inline-size: 0;
+  }
+  :root .product-editor-section-title {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .product-editor-section .product-editor-fields {
+    margin: 0;
+    gap: 20px;
+  }
+  :root .product-editor-date-status.ui-badge {
+    padding: 0;
+    background: var(--color-clear);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .product-editor-date-status .ui-status-dot {
+    display: inline-block;
+    inline-size: 6px;
+    block-size: 6px;
+    flex: 0 0 6px;
+  }
+  :root .product-date-editor {
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface-soft);
+    border: 0;
+    border-radius: var(--radius-card);
+    container-type: inline-size;
+  }
+  :root .product-date-editor-heading {
+    gap: 12px;
+  }
+  :root .product-date-editor-heading h3 {
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .product-date-editor-heading p,
+  :root .product-date-editor > .helper {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-body);
+  }
+  :root .product-date-editor h4 {
+    margin: 0;
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-caption);
+  }
+  :root .product-reminder-setting {
+    gap: 8px;
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-body);
+  }
+  :root .product-reminder-setting .ui-number {
+    inline-size: 64px;
+    background: var(--surface);
+    border-radius: var(--radius-control);
+    font-weight: var(--font-weight-headline);
+    text-align: center;
+  }
+  :root .product-editor-date-rows {
+    gap: 8px;
+  }
+  :root .product-editor-date-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 12px;
+    min-block-size: 64px;
+    background: var(--surface);
+  }
+  :root .product-editor-date-value {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    gap: 4px;
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+  }
+  :root .product-editor-date-value strong {
+    font-weight: var(--font-weight-headline);
+  }
+  :root .product-editor-date-value > .muted {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .product-editor-remove-date.ui-icon-button {
+    flex: 0 0 36px;
+    inline-size: 36px;
+    block-size: 36px;
+    min-block-size: 36px;
+    background: var(--color-clear);
+    color: var(--text-muted);
+  }
+  :root .product-editor-remove-date.ui-icon-button:hover {
+    background: var(--neutral-fill);
+    color: var(--danger);
+  }
+  :root .product-editor-date-inline {
+    grid-template-columns:
+      120px minmax(160px, 1fr) minmax(100px, 128px) minmax(100px, 128px)
+      max-content;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+  }
+  :root .product-editor-date-inline .field {
+    gap: 8px;
+  }
+  :root .product-editor-date-inline input,
+  :root .product-editor-date-inline .ui-number,
+  :root .product-editor-date-inline .ui-select,
+  :root .product-editor-date-inline .ui-date {
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+  :root .product-editor-date-row:has(.product-editor-date-fields),
+  :root .product-editor-date-row[data-removed],
+  :root .product-editor-date-row:has(.field) {
+    flex-wrap: wrap;
+  }
+  :root .product-editor-date-fields {
+    gap: 16px;
+  }
+  :root .date-quick-card .date-quick-more-toggle {
+    margin-block-start: 16px;
+    padding-inline: 0;
+    justify-self: start;
+  }
+  :root .date-quick-card .date-quick-actions {
+    padding-block-end: 0;
+  }
+  :root .date-tracking-page .expiry-table th,
+  :root .date-tracking-page .expiry-table td {
+    padding-inline: 16px;
+  }
+  :root .lookup-page .product-dates-readonly {
+    display: grid;
+    gap: 16px;
+    margin-block: 24px 0;
+    padding-block-start: 20px;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .lookup-page .product-open-dates {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+  }
+  :root .lookup-page .product-open-dates .product-quiet-row {
+    padding: 0;
+    min-block-size: 36px;
+    background: var(--color-clear);
+  }
+  :root .lookup-page .product-last-delivery-row {
+    padding-block-start: 0;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .product-last-delivery-row > .muted {
+    margin-inline-start: auto;
+  }
+  :root .lookup-page .product-quiet-icon {
+    flex: 0 0 32px;
+    background: var(--neutral-fill);
+  }
+  :root .lookup-page .product-open-dates .product-quiet-icon {
+    background: var(--pending-bg);
+    color: var(--pending);
+  }
+  :root
+    .lookup-page
+    .product-open-dates
+    [data-tone="neutral"]
+    .product-quiet-icon {
+    background: var(--neutral-fill);
+    color: var(--text-muted);
+  }
+  :root
+    .lookup-page
+    .product-open-dates
+    [data-tone="danger"]
+    .product-quiet-icon {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+  :root .lookup-page .product-quiet-row > .ui-badge {
+    margin-inline-start: auto;
+  }
+}
+@container (max-width: 700px) {
+  :root .product-editor-date-inline {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  :root .product-editor-date-inline > .ui-button {
+    grid-column: 2;
+    inline-size: auto;
+  }
+}
+@media screen and (max-width: 759px) {
+  :root .lookup-page {
+    gap: 16px;
+  }
+  :root .lookup-page .lookup-hero {
+    gap: 16px;
+  }
+  :root .lookup-page .lookup-detail {
+    padding: 20px;
+  }
+  :root .lookup-page .lookup-detail-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  :root .lookup-page .lookup-detail-header > .ui-button {
+    order: 2;
+  }
+  :root .lookup-page .lookup-approved-price {
+    gap: 12px;
+  }
+  :root .lookup-page .lookup-price-context {
+    gap: 4px;
+  }
+  :root .lookup-page .lookup-result-row:nth-child(n) {
+    padding: 12px 8px;
+    gap: 8px 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(80px, 110px);
+  }
+  :root .lookup-page .lookup-result-price {
+    max-inline-size: 110px;
+    gap: 8px;
+  }
+  :root .lookup-page .lookup-result-pills {
+    order: 0;
+  }
+  :root .lookup-page .lookup-result-pills .badge {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .lookup-page .product-dates-readonly {
+    gap: 12px;
+    margin-block-start: 20px;
+    padding-block-start: 16px;
+  }
+  :root[data-theme="dark"]
+    .lookup-page
+    .product-open-dates
+    [data-tone="pending"],
+  :root[data-theme="dark"]
+    .lookup-page
+    .product-open-dates
+    [data-tone="danger"] {
+    padding: 12px;
+    background: var(--pending-bg);
+    border-radius: var(--radius-control);
+  }
+  :root[data-theme="dark"]
+    .lookup-page
+    .product-open-dates
+    [data-tone="danger"] {
+    background: var(--danger-bg);
+  }
+  :root .lookup-page .product-last-delivery-row > .muted {
+    margin-inline-start: 44px;
+    flex-basis: calc(100% - 44px);
+  }
+  :root .product-date-editor {
+    padding: 12px;
+    gap: 12px;
+  }
+  :root .product-date-editor-heading > div:first-child {
+    flex-basis: 160px;
+  }
+  :root .product-date-editor-heading p {
+    margin-block-start: 4px;
+  }
+  :root .product-editor-date-value strong {
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-body);
+  }
+  :root .product-editor-date-row {
+    padding: 8px;
+    gap: 6px;
+  }
+  :root .product-editor-date-status.ui-badge {
+    white-space: nowrap;
+  }
+  :root .product-editor-date-inline {
+    padding: 8px;
+    gap: 12px 8px;
+  }
+  :root .product-editor-date-inline .field > label {
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .product-editor-section .product-editor-fields {
+    gap: 20px 16px;
+  }
+  :root .date-tracking-page .expiry-table th,
+  :root .date-tracking-page .expiry-table td {
+    padding-inline: 0;
+  }
+}

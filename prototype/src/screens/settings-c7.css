@@ -1,0 +1,71 @@
+/* Klead presentation only; settings persistence and print styles are unchanged. */
+@media screen {
+  :root .settings-group-menu {
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-card);
+    inset-block-start: 84px;
+  }
+  :root .settings-group-menu button {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-caption);
+    line-height: var(--line-height-body);
+    border-radius: var(--radius-small);
+    transition: background 160ms ease;
+  }
+  :root .settings-group-menu button.active {
+    background: var(--accent-tint);
+    color: var(--accent-tint-text);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .settings-group-menu button:focus-visible {
+    outline: 1px solid var(--accent);
+    box-shadow: var(--shadow-focus);
+  }
+  :root .settings-group-intro h2 {
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-headline);
+    font-weight: var(--font-weight-headline);
+  }
+  :root .settings-group-content .ui-menu-item.menu-item-danger,
+  :root .ui-menu-item.menu-item-danger {
+    color: var(--danger);
+  }
+  :root .settings-dialog .ui-dialog-actions {
+    max-inline-size: none;
+    border-radius: var(--radius-none);
+    margin-block-start: 24px;
+    padding-block: 16px 0;
+  }
+  :root .settings-dialog .ui-dialog-actions > span {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+  :root .settings-pricing-table table {
+    min-inline-size: 0;
+  }
+  :root .notebook-setting-list > article .actions {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (max-width: 759px) {
+    :root .settings-group-menu {
+      position: static;
+    }
+    :root .settings-group-menu button {
+      min-block-size: 44px;
+    }
+    :root .settings-dialog .ui-dialog-actions > span {
+      flex-basis: 100%;
+    }
+    :root .settings-save-bar {
+      flex-wrap: wrap;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root .settings-group-menu button {
+      transition: none;
+    }
+  }
+}
