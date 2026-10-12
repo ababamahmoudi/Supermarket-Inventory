@@ -131,7 +131,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await dialog
     .getByLabel("English name", { exact: true })
     .fill("Orchard Pears");
-  await dialog.getByLabel("Persian name", { exact: true }).fill("گلابی باغ");
+  await dialog
+    .getByLabel("Persian name (optional)", { exact: true })
+    .fill("گلابی باغ");
   await dialog.getByLabel("Unit size", { exact: true }).fill("500 g");
   await dialog
     .getByLabel("Last unit cost before tax", { exact: true })
@@ -157,9 +159,17 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
     .click();
-  await expect(dialog.getByRole("alert")).toHaveText(
+  await expect(
+    dialog
+      .locator(".field")
+      .filter({ has: page.getByLabel("Barcode", { exact: true }) })
+      .getByRole("alert"),
+  ).toHaveText(
     "This barcode belongs to another product. Use a different barcode.",
   );
+  await expect(
+    dialog.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("This barcode belongs to another product.");
   await dialog.getByLabel("Barcode", { exact: true }).fill("DEMO-ORCHARD-NEW");
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
@@ -320,7 +330,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .getByLabel("English name", { exact: true })
     .fill("Manual Orchard Pears");
   await productDialog
-    .getByLabel("Persian name", { exact: true })
+    .getByLabel("Persian name (optional)", { exact: true })
     .fill("گلابی ورود دستی");
   await productDialog.getByLabel("Unit size", { exact: true }).fill("500 g");
   await productDialog

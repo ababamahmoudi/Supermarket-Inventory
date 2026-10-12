@@ -24,7 +24,9 @@ test("Warehouse is a configured location and retains its type through a Supervis
     .getByRole("button", { name: "Branches", exact: true })
     .click();
   const row = page.getByRole("row").filter({
-    has: page.getByRole("rowheader", { name: "Warehouse", exact: true }),
+    has: page.getByRole("rowheader", {
+      name: /^Warehouse(?: (?:Show|Hide) details)?$/,
+    }),
   });
   await expect(row).toContainText("Warehouse");
   await row.getByRole("button", { name: "Edit", exact: true }).click();
@@ -105,6 +107,21 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
   page,
 }) => {
   await signIn(page, "Supervisor");
+  // An explicit current-week posted receipt keeps this behavior meaningful on Mondays.
+  const receiptFixture = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+    const receipt = saved.invoices.find(
+      (invoice: { status: string; branch: string }) =>
+        invoice.status === "posted" && invoice.branch === "Branch 1",
+    );
+    if (!receipt)
+      throw new Error("The seed must retain a posted North York receipt");
+    receipt.received_at = new Date().toISOString();
+    localStorage.setItem("supermarket-prototype-v1", JSON.stringify(saved));
+    return { id: receipt.id, number: receipt.supplier_invoice_number };
+  });
+  await page.reload();
+  expect(receiptFixture.id).toBeTruthy();
   await expect(
     page.getByRole("heading", { name: "Arrived this week", exact: true }),
   ).toBeVisible();
@@ -120,6 +137,16 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
   await expect(
     page.getByText("No deliveries this week.", { exact: true }),
   ).toHaveCount(0);
+  const arrived = page.locator(".card").filter({
+    has: page.getByRole("heading", {
+      name: "Arrived this week",
+      exact: true,
+    }),
+  });
+  expect(await arrived.locator(".dashboard-list-row").count()).toBeGreaterThan(
+    0,
+  );
+  await expect(arrived).toContainText(receiptFixture.number);
   await expect(
     page.locator("select, input[type=number], input[type=date]"),
   ).toHaveCount(0);

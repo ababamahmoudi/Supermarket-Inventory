@@ -987,12 +987,7 @@ export default function BranchRequests() {
               <div>
                 <dt>{t("Date", "تاریخ")}</dt>
                 <dd>
-                  <DateText
-                    value={(request.requested_at ?? request.created_at).slice(
-                      0,
-                      10,
-                    )}
-                  />
+                  <DateText value={request.requested_at ?? request.created_at} />
                 </dd>
               </div>
             </dl>

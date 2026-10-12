@@ -44,6 +44,14 @@ async function expectStyledControls(page: Page) {
 }
 
 async function expectBorderlessCards(page: Page) {
+  const approvedShadow = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.boxShadow = "var(--shadow-card)";
+    document.body.append(probe);
+    const result = getComputedStyle(probe).boxShadow;
+    probe.remove();
+    return result;
+  });
   const cards = await page.locator(".card").evaluateAll((elements) =>
     elements.map((element) => {
       const style = getComputedStyle(element);
@@ -62,7 +70,7 @@ async function expectBorderlessCards(page: Page) {
   expect(cards.length).toBeGreaterThan(0);
   for (const card of cards) {
     expect(card.border).toBe(0);
-    expect(card.shadow).toBe("none");
+    expect(card.shadow).toBe(approvedShadow);
     expect(card.radius).toBeGreaterThanOrEqual(16);
   }
 }
@@ -378,9 +386,28 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
     .getByLabel("Unit cost before tax", { exact: true })
     .last()
     .scrollIntoViewIfNeeded();
-  await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeInViewport();
+  const post = page.getByRole("button", { name: "Post invoice", exact: true });
+  await post.scrollIntoViewIfNeeded();
+  await expect(post).toBeInViewport();
+  const footerProof = await page
+    .locator(".invoice-action-footer")
+    .evaluate((footer) => {
+      const box = footer.getBoundingClientRect();
+      const content = document
+        .querySelector(".invoice-review-pane")!
+        .getBoundingClientRect();
+      return {
+        top: box.top,
+        bottom: box.bottom,
+        contentBottom: content.bottom,
+        viewport: innerHeight,
+        scrollable: document.documentElement.scrollHeight > innerHeight,
+      };
+    });
+  expect(footerProof.top).toBeGreaterThanOrEqual(0);
+  expect(footerProof.bottom).toBeLessThanOrEqual(footerProof.viewport + 2);
+  expect(footerProof.scrollable).toBe(true);
+  expect(footerProof.contentBottom).toBeLessThanOrEqual(footerProof.top + 2);
 });
 
 test("dashboard approvals and notes have actions that change the actual records and navigate to their lists", async ({

@@ -482,7 +482,7 @@ function editableEntry(
   return { record, notebook, scopedContext };
 }
 
-/** Author edits expire with the original five-second window; edits never reset it. */
+/** Author edits expire with the original ten-second window; edits never reset it. */
 export function canEditNotebookEntry(
   state: DemoState,
   context: NotebookContext,
@@ -694,8 +694,8 @@ export function notebookError(
       "فقط نویسنده یا سرپرست می‌تواند این یادداشت را ویرایش کند.",
     ],
     expired: [
-      "The five-second edit window has ended. Ask the Supervisor to edit this note.",
-      "مهلت پنج‌ثانیه‌ای ویرایش پایان یافته است. از سرپرست بخواهید این یادداشت را ویرایش کند.",
+      "The ten-second edit window has ended. Ask the Supervisor to edit this note.",
+      "مهلت ده‌ثانیه‌ای ویرایش پایان یافته است. از سرپرست بخواهید این یادداشت را ویرایش کند.",
     ],
     stale: [
       "This note changed. Open it again before editing.",

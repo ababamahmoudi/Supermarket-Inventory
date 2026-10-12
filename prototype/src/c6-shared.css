@@ -972,3 +972,16 @@ div.ui-kpi:hover {
   block-size: 36px;
   min-block-size: 36px;
 }
+/* Cost history's long bilingual headings wrap only at word boundaries. */
+@media screen {
+  :root .product-cost-history-table th {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root .order-items-table input.ui-number {
+    inline-size: min(144px, 100%);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+}

@@ -157,14 +157,25 @@ test("built-in templates can be duplicated, edited, archived and restored withou
   await page
     .getByRole("button", { name: "Archive template", exact: true })
     .click();
+  const archivedState = await page.evaluate(() =>
+    localStorage.getItem("supermarket-prototype-v1"),
+  );
+  await page
+    .getByRole("button", { name: "Save template", exact: true })
+    .click();
   await expect(
-    page.getByRole("button", { name: "Save template", exact: true }),
-  ).toBeDisabled();
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Restore");
+  expect(
+    await page.evaluate(() => localStorage.getItem("supermarket-prototype-v1")),
+  ).toBe(archivedState);
   await expect(
-    page.getByText(
-      "This template is archived. Restore it before editing or printing.",
-      { exact: true },
-    ),
+    page
+      .getByRole("status")
+      .filter({
+        hasText:
+          "This template is archived. Restore it before editing or printing.",
+      }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Restore template", exact: true })

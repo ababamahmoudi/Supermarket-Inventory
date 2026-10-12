@@ -231,10 +231,22 @@ test("Supplier invoice links open the actual posted document and retained origin
   await signIn(page, "Supervisor");
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Invoices", exact: true }).click();
-  const row = page
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: "FV-20390", exact: true }) });
-  await row.getByRole("link", { name: "FV-20390", exact: true }).click();
+  const openedSupplierInvoices = page.locator(".supplier-tab-card");
+  const invoiceLink = openedSupplierInvoices.getByRole("link", {
+    name: "FV-20390",
+    exact: true,
+  });
+  if (!(await invoiceLink.isVisible())) {
+    const details = openedSupplierInvoices.getByRole("button", {
+      name: "Show details",
+      exact: true,
+    });
+    for (let index = 0; index < (await details.count()); index += 1) {
+      await details.nth(index).click();
+      if (await invoiceLink.isVisible()) break;
+    }
+  }
+  await invoiceLink.click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   const original = page.locator(".invoice-original-media img");
   await expect(original).toBeVisible();
@@ -244,12 +256,17 @@ test("Supplier invoice links open the actual posted document and retained origin
   ).toBeGreaterThan(0);
   const source = await original.evaluate(async (image) => {
     const data = image.getAttribute("src")!;
+    const bytes = await (await fetch(data)).arrayBuffer();
     const document = new DOMParser().parseFromString(
-      await (await fetch(data)).text(),
+      new TextDecoder().decode(bytes),
       "image/svg+xml",
     );
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
     return {
       data,
+      sha256: Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join(""),
       text: Array.from(document.querySelectorAll("text")).map(
         (entry) => entry.textContent,
       ),
@@ -323,7 +340,31 @@ test("Supplier invoice links open the actual posted document and retained origin
   await expect(original).toHaveAttribute("src", source.data);
   await expect(document).toContainText("FV-20390");
   await page.reload();
-  await expect(original).toHaveAttribute("src", source.data);
   await expect(original).toBeVisible();
+  await expect(original).toHaveJSProperty("complete", true);
+  expect(
+    await original.evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  const reloadedSource = await original.evaluate(async (image) => {
+    const bytes = await (await fetch(image.getAttribute("src")!)).arrayBuffer();
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return {
+      text: new TextDecoder().decode(bytes),
+      sha256: Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join(""),
+    };
+  });
+  expect(reloadedSource.text).toBe(retainedSource);
+  expect(reloadedSource.sha256).toBe(source.sha256);
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice
+          .file_data,
+    ),
+  ).toBe(invoice.file_data);
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(document).toContainText("FV-20390");
   expect(errors).toEqual([]);
 });

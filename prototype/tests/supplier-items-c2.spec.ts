@@ -1,6 +1,25 @@
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
+async function expandDetails(scope: import("@playwright/test").Locator) {
+  const buttons = scope.getByRole("button", {
+    name: /^(Show details|نمایش جزئیات)$/,
+  });
+  while (await buttons.count()) await buttons.first().click();
+}
+async function columnValue(
+  row: import("@playwright/test").Locator,
+  label: string,
+) {
+  const cell = row.locator(`td[data-column-label="${label}"]`);
+  if (await cell.count()) return cell;
+  return row
+    .locator("xpath=following-sibling::tr[1]")
+    .locator("dl > div")
+    .filter({ has: row.page().getByText(label, { exact: true }) })
+    .locator("dd");
+}
+
 test.setTimeout(60000);
 const storage = "supermarket-prototype-v1";
 
@@ -12,12 +31,22 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
   const table = page.locator(".supplier-items-table");
-  await expect(
-    table.getByRole("columnheader", {
-      name: "Last bought / case",
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expandDetails(table);
+  if (
+    await table
+      .getByRole("columnheader", { name: "Last bought / case", exact: true })
+      .count()
+  )
+    await expect(
+      table.getByRole("columnheader", {
+        name: "Last bought / case",
+        exact: true,
+      }),
+    ).toBeVisible();
+  else
+    await expect(
+      table.getByText("Last bought / case", { exact: true }).first(),
+    ).toBeVisible();
   await page.getByRole("button", { name: "Add item", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Add item", exact: true });
   expect(
@@ -29,9 +58,13 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
     "0004",
     "0004 · Black Tea 450 g",
   );
-  await dialog.getByLabel("Supplier code", { exact: true }).fill("C2-TEA");
+  await dialog
+    .getByLabel("Supplier code (optional)", { exact: true })
+    .fill("C2-TEA");
   await dialog.getByLabel("Units per case", { exact: true }).fill("12");
-  await dialog.getByLabel("Expected unit cost", { exact: true }).fill("3.55");
+  await dialog
+    .getByLabel("Expected unit cost (optional)", { exact: true })
+    .fill("3.55");
   expect(
     await dialog
       .getByLabel("Units per case", { exact: true })
@@ -42,8 +75,9 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   const item = table.getByRole("row").filter({ hasText: "C2-TEA" });
   await expect(item).toContainText("Case of 12");
   await expect(item.locator(".money")).toHaveCount(0);
-  await expect(item.locator("td").nth(5)).toHaveText("—");
-  await expect(item.locator("td").nth(6)).toHaveText("—");
+  await expandDetails(item);
+  await expect(await columnValue(item, "Date last bought")).toHaveText("—");
+  await expect(await columnValue(item, "Last invoice")).toHaveText("—");
   await item.getByRole("button", { name: "History", exact: true }).click();
   const history = page.getByRole("dialog", {
     name: "Price history",
@@ -118,7 +152,9 @@ test("remembered pack and supplier code edits preserve posted history and remain
   const row = table.getByRole("row").filter({ hasText: "0002" }).first();
   await row.getByRole("button", { name: "Edit", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
-  await editor.getByLabel("Supplier code", { exact: true }).fill("C2-PACK");
+  await editor
+    .getByLabel("Supplier code (optional)", { exact: true })
+    .fill("C2-PACK");
   await editor.getByLabel("Units per case", { exact: true }).fill("12");
   await editor.getByRole("button", { name: "Save item", exact: true }).click();
   await expect(editor).not.toBeVisible();
@@ -133,6 +169,7 @@ test("remembered pack and supplier code edits preserve posted history and remain
   await expect(
     history.locator(".supplier-item-price-history tbody tr"),
   ).not.toHaveCount(0);
+  await expandDetails(history.locator(".supplier-item-price-history"));
   await expect(history.locator(".supplier-item-price-history")).toContainText(
     "Case of 1",
   );
@@ -190,6 +227,7 @@ test("remembered pack and supplier code edits preserve posted history and remain
   await expect(
     page.getByRole("dialog", { name: "تاریخچه قیمت", exact: true }),
   ).toBeVisible();
+  await expandDetails(page.locator(".supplier-item-price-history"));
   await expect(
     page.locator(".supplier-item-price-history bdi.money").first(),
   ).toHaveAttribute("dir", "ltr");

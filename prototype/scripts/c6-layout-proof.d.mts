@@ -11,6 +11,7 @@ export function inspectResponsiveLayout(
   actualWidth: number;
   words: number;
   contentWords: number;
+  collisionGeometry: string;
   cells: number;
   forms: {
     className: string;

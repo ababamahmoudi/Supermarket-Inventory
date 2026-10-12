@@ -1,5 +1,5 @@
 import { Blob as NodeBlob } from "node:buffer";
-import { webcrypto } from "node:crypto";
+import { createHash, webcrypto } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { decodeHistoryStorage, encodeHistoryStorage } from "./history-storage";
 import {
@@ -86,6 +86,67 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("scoped immutable browser evidence", () => {
+  it("keeps native SubtleCrypto hashing when available and propagates its failures", async () => {
+    const source = namedPdf();
+    const digest = vi.fn((algorithm: string, bytes: ArrayBuffer) =>
+      webcrypto.subtle.digest(algorithm, bytes),
+    );
+    vi.stubGlobal("crypto", { subtle: { digest } });
+    const expected = createHash("sha256")
+      .update(new Uint8Array(await source.arrayBuffer()))
+      .digest("hex");
+    expect(await blobDigest(source)).toBe(expected);
+    expect(digest).toHaveBeenCalledOnce();
+    expect(digest.mock.calls[0][0]).toBe("SHA-256");
+    expect(new Uint8Array(digest.mock.calls[0][1])).toEqual(
+      new Uint8Array(await source.arrayBuffer()),
+    );
+    const failure = new DOMException("Native digest failed", "OperationError");
+    digest.mockRejectedValueOnce(failure);
+    await expect(blobDigest(source)).rejects.toBe(failure);
+  });
+  it("retains exact scoped files and verified backups without SubtleCrypto on HTTP LAN origins", async () => {
+    vi.stubGlobal("crypto", {});
+    const repository = new MemoryFiles();
+    const source = namedPdf();
+    const expected = createHash("sha256")
+      .update(new Uint8Array(await source.arrayBuffer()))
+      .digest("hex");
+    const saved = await storeUploadedFile(
+      source,
+      company,
+      { purpose: "invoice" },
+      repository,
+    );
+    expect(saved.reference).toBe(`idb-file:v1:company%3Aone:${expected}`);
+    expect(
+      await (
+        await readStoredFile(saved.reference, company, repository)
+      ).source.text(),
+    ).toBe(await source.text());
+    const raw = JSON.stringify({ invoice: { file_data: saved.reference } });
+    const backup = await archiveFileStorageSnapshot(
+      "business",
+      raw,
+      company,
+      repository,
+    );
+    expect(await readFileStorageBackup(backup, company, repository)).toBe(raw);
+    expect(repository.backups.get(backup)?.sha256).toBe(
+      createHash("sha256").update(raw).digest("hex"),
+    );
+    const record = repository.files.get(saved.reference)!;
+    repository.files.set(saved.reference, {
+      ...record,
+      source: new Blob(["damaged original"], { type: record.type }),
+    });
+    await expect(
+      readStoredFile(saved.reference, company, repository),
+    ).rejects.toMatchObject({ code: "integrity" });
+    await expect(
+      readFileStorageBackup(backup, "other-company", repository),
+    ).rejects.toMatchObject({ code: "scope" });
+  });
   it("stores exact PDF source bytes, verifies them, deduplicates content and keeps refs small", async () => {
     const repository = new MemoryFiles();
     const source = namedPdf();

@@ -2,6 +2,25 @@ import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
 test.setTimeout(60000);
+async function expandDetails(scope: import("@playwright/test").Locator) {
+  const buttons = scope.getByRole("button", {
+    name: /^(Show details|نمایش جزئیات)$/,
+  });
+  while (await buttons.count()) await buttons.first().click();
+}
+async function columnValue(
+  row: import("@playwright/test").Locator,
+  label: string,
+) {
+  const cell = row.locator(`td[data-column-label="${label}"]`);
+  if (await cell.count()) return cell;
+  return row
+    .locator("xpath=following-sibling::tr[1]")
+    .locator("dl > div")
+    .filter({ has: row.page().getByText(label, { exact: true }) })
+    .locator("dd");
+}
+
 const storage = "supermarket-prototype-v1";
 async function addOilItem(page: Page, quote = "3.55") {
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
@@ -14,10 +33,14 @@ async function addOilItem(page: Page, quote = "3.55") {
     "0008",
     "0008 · Sunflower Oil 1.8 L",
   );
-  await dialog.getByLabel("Supplier code", { exact: true }).fill("ORDER-OIL");
+  await dialog
+    .getByLabel("Supplier code (optional)", { exact: true })
+    .fill("ORDER-OIL");
   await dialog.getByLabel("Units per case", { exact: true }).fill("12");
   if (quote)
-    await dialog.getByLabel("Expected unit cost", { exact: true }).fill(quote);
+    await dialog
+      .getByLabel("Expected unit cost (optional)", { exact: true })
+      .fill(quote);
   await dialog.getByRole("button", { name: "Add item", exact: true }).click();
   await expect(dialog).not.toBeVisible();
 }
@@ -49,6 +72,21 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
 }) => {
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
+  await page.goto("/#settings?group=returns");
+  const supplierLanguage = page.getByLabel("Printed supplier order language", {
+    exact: true,
+  });
+  await chooseOption(
+    page,
+    supplierLanguage,
+    "bilingual",
+    "English and Persian",
+  );
+  await page
+    .locator(".form-card")
+    .filter({ has: supplierLanguage })
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click();
   await addOilItem(page);
   const before = await page.evaluate((key) => {
     const state = JSON.parse(localStorage.getItem(key)!);
@@ -81,8 +119,9 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
   await row
     .getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true })
     .fill("0.5");
-  await expect(row.locator("td").nth(3)).toHaveText("6");
-  await expect(row.locator("td").last()).toHaveText("$21.30");
+  await expandDetails(row);
+  await expect(await columnValue(row, "Units")).toHaveText("6");
+  await expect(await columnValue(row, "Before-tax total")).toHaveText("$21.30");
   await form
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
@@ -156,6 +195,7 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     "Ordered",
   );
   await expect(page.locator(".orders-list-table tbody tr")).toHaveCount(1);
+  await expandDetails(page.locator(".orders-list-table"));
   await expect(page.locator(".orders-list-table")).toContainText("Warehouse");
   await setLanguage(page, "fa");
   await expect(
@@ -223,8 +263,12 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await expect(
     row.getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true }),
   ).toHaveValue("");
+  await expandDetails(row);
+  await expandDetails(form.locator(".order-items-table"));
   await expect(
-    row.getByLabel("Expected unit cost — Sunflower Oil 1.8 L", { exact: true }),
+    form.getByLabel("Expected unit cost — Sunflower Oil 1.8 L", {
+      exact: true,
+    }),
   ).toHaveValue("");
   await form
     .getByRole("button", { name: "Save as draft", exact: true })
@@ -238,6 +282,7 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await editing
     .getByLabel("Cases — Sunflower Oil 1.8 L", { exact: true })
     .fill("0.5");
+  await expandDetails(editing.locator(".order-items-table"));
   await editing
     .getByRole("button", { name: "Place order", exact: true })
     .click();
@@ -332,6 +377,7 @@ test("worker ordering is opt-in and location scoped; switching location discards
     form.getByLabel("Supplier", { exact: true }),
     "Fresh Valley Foods",
   );
+  await expandDetails(form.locator(".order-items-table"));
   await form
     .getByLabel("Expected unit cost — Sunflower Oil 1.8 L", { exact: true })
     .fill("99");
@@ -373,6 +419,8 @@ test("worker ordering is opt-in and location scoped; switching location discards
     form.getByLabel("Supplier", { exact: true }),
     "Fresh Valley Foods",
   );
+  await expandDetails(form.locator(".order-items-table"));
+  await expandDetails(form.locator(".order-items-table"));
   await expect(
     form.getByLabel("Expected unit cost — Sunflower Oil 1.8 L", {
       exact: true,

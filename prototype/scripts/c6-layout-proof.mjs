@@ -197,6 +197,41 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
       const overlap = (a, b) =>
         Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
         Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+      // DOM text ranges include a font's unused ascent/descent. Adjacent
+      // Persian/Latin lines can have overlapping font boxes while their
+      // painted glyphs remain separate. Retain DOM ranges for wrapping and
+      // containment, and use the loaded font's actual ink for collisions.
+      const context = document.createElement("canvas").getContext("2d");
+      const metricCache = new Map();
+      const inkBounds = (element, text, rect) => {
+        if (!context) return rect;
+        const style = getComputedStyle(element);
+        const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const key = `${font}\n${text}`;
+        let metrics = metricCache.get(key);
+        if (!metrics) {
+          context.font = font;
+          metrics = context.measureText(text);
+          metricCache.set(key, metrics);
+        }
+        const fontHeight =
+          metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+        if (
+          !Number.isFinite(fontHeight) ||
+          fontHeight <= 0 ||
+          !Number.isFinite(metrics.actualBoundingBoxAscent) ||
+          !Number.isFinite(metrics.actualBoundingBoxDescent)
+        )
+          return rect;
+        const scale = rect.height / fontHeight;
+        const baseline = rect.top + metrics.fontBoundingBoxAscent * scale;
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: baseline - metrics.actualBoundingBoxAscent * scale,
+          bottom: baseline + metrics.actualBoundingBoxDescent * scale,
+        };
+      };
       for (const form of document.querySelectorAll("dialog[open],main form")) {
         if (!visible(form)) continue;
         for (const container of [
@@ -347,11 +382,16 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
                 failures.push(
                   `${scene}: content text leaves container: ${match[0]}`,
                 );
-              wordBounds.push({ element, text: match[0], bounds: rect });
+              const paintedBounds = inkBounds(element, match[0], rect);
+              wordBounds.push({
+                element,
+                text: match[0],
+                bounds: paintedBounds,
+              });
               for (const control of controls) {
                 if (control.contains(element) || element.contains(control))
                   continue;
-                if (overlap(rect, control.getBoundingClientRect()))
+                if (overlap(paintedBounds, control.getBoundingClientRect()))
                   failures.push(
                     `${scene}: content text/control overlap: ${match[0]}/${control.getAttribute("aria-label") ?? control.className}`,
                   );
@@ -406,6 +446,8 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         actualWidth: documentWidth,
         words,
         contentWords,
+        collisionGeometry:
+          "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
         cells,
         tables,
         forms,

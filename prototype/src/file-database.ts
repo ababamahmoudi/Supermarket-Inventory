@@ -1,6 +1,7 @@
 /** Browser-only evidence storage. Business JSON retains scoped content references,
  * never Blob URLs or base64. Sources are immutable; previews are disposable views. */
 import { decodeHistoryStorage, encodeHistoryStorage } from "./history-storage";
+import { sha256Bytes } from "./sha256";
 export const FILE_DATABASE_NAME = "supermarket-prototype-files-v1";
 export const FILE_DATABASE_VERSION = 1;
 const FILE_PREFIX = "idb-file:v1:";
@@ -144,11 +145,10 @@ function referenceCompany(reference: string): string | null {
   }
 }
 export async function blobDigest(blob: Blob): Promise<string> {
-  if (!globalThis.crypto?.subtle) throw new FileStorageError("unavailable");
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    await blob.arrayBuffer(),
-  );
+  const bytes = await blob.arrayBuffer();
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) return sha256Bytes(new Uint8Array(bytes));
+  const digest = await subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (byte) =>
     byte.toString(16).padStart(2, "0"),
   ).join("");

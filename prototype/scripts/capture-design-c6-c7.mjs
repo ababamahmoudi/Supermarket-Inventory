@@ -215,7 +215,7 @@ try {
         await field(page, "Username").fill(account.username);
         await field(page, "Password").fill(account.password);
         await button(page, "Sign in").click();
-        await expect(button(page, "Demo")).toBeVisible();
+        await expect(page.locator(".topbar")).toBeVisible();
         await expect
           .poll(() =>
             page.evaluate(
