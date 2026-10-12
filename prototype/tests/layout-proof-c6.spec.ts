@@ -78,3 +78,72 @@ for (const language of ["en", "fa"] as const)
       contentType: "application/json",
     });
   });
+
+for (const language of ["en", "fa"] as const)
+  test(`product-name size and unit stay together in ${language}, and a split is detected`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 900, height: 1080 });
+    await signIn(page, "Supervisor");
+    await setLanguage(page, language);
+    await page.goto("/#dashboard");
+    const fragment = page
+      .locator(".dashboard-queue-product .unit-fragment")
+      .first();
+    await expect(fragment).toBeVisible();
+    const clean = await inspectResponsiveLayout(page, "units", language, 900);
+    expect(clean.unitFragments.length).toBeGreaterThan(0);
+    expect(clean.unitFragments.every((value) => value.lines === 1)).toBe(true);
+    expect(clean.failures).toEqual([]);
+    const saved = await fragment.evaluate((element) => {
+      const parent = element.parentElement!;
+      const original = {
+        self: element.getAttribute("style"),
+        parent: parent.getAttribute("style"),
+      };
+      Object.assign((element as HTMLElement).style, {
+        display: "inline",
+        whiteSpace: "normal",
+      });
+      Object.assign(parent.style, {
+        display: "block",
+        width: "18px",
+        whiteSpace: "normal",
+      });
+      return original;
+    });
+    let broken;
+    try {
+      broken = await inspectResponsiveLayout(
+        page,
+        "unit-negative-control",
+        language,
+        900,
+      );
+      expect(
+        broken.failures.some((value) =>
+          value.includes("unit fragment broken across lines"),
+        ),
+      ).toBe(true);
+    } finally {
+      await fragment.evaluate((element, original) => {
+        for (const [node, value] of [
+          [element, original.self],
+          [element.parentElement!, original.parent],
+        ] as const)
+          if (value === null) node.removeAttribute("style");
+          else node.setAttribute("style", value);
+      }, saved);
+    }
+    const restored = await inspectResponsiveLayout(
+      page,
+      "units-restored",
+      language,
+      900,
+    );
+    expect(restored.failures).toEqual([]);
+    await info.attach("Real product-name unit wrapping negative control", {
+      body: JSON.stringify({ clean, broken, restored }, null, 2),
+      contentType: "application/json",
+    });
+  });

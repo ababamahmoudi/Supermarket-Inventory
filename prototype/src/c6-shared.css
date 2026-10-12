@@ -984,4 +984,8 @@ div.ui-kpi:hover {
     max-inline-size: 100%;
     min-inline-size: 0;
   }
+  :root .product-name .unit-fragment {
+    display: inline-block;
+    white-space: nowrap;
+  }
 }

@@ -153,6 +153,7 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   ).toBe("rejected");
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  await page.getByRole("tab", { name: "Needs review", exact: true }).click();
   await page
     .locator(".invoice-saved-drafts .dialog-actions")
     .filter({

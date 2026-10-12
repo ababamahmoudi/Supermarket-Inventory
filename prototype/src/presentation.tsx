@@ -93,7 +93,7 @@ export function ProductName({
           dir={primaryLanguage === "fa" ? "rtl" : "ltr"}
           lang={primaryLanguage}
         >
-          {primary}
+          {productNameUnits(primary)}
         </bdi>
       </strong>
       {secondary.trim() && (
@@ -102,12 +102,30 @@ export function ProductName({
             dir={primaryLanguage === "fa" ? "ltr" : "rtl"}
             lang={primaryLanguage === "fa" ? "en" : "fa"}
           >
-            {secondary}
+            {productNameUnits(secondary)}
           </bdi>
         </small>
       )}
     </span>
   );
+}
+/** Bind an entered size to its unit without changing names or stored data. */
+function productNameUnits(value: string): ReactNode[] {
+  const fragments: ReactNode[] = [];
+  const units =
+    /\p{N}+(?:[.,]\p{N}+)?\s+(?:kg|g|ml|mL|L|lb|lbs|oz|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
+  let start = 0;
+  for (const match of value.matchAll(units)) {
+    fragments.push(value.slice(start, match.index));
+    fragments.push(
+      <span className="unit-fragment" key={match.index}>
+        {match[0]}
+      </span>,
+    );
+    start = match.index + match[0].length;
+  }
+  fragments.push(value.slice(start));
+  return fragments;
 }
 export function OfferLabel({
   label,

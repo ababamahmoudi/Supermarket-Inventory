@@ -21,6 +21,7 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         );
       };
       const failures = [];
+      const unitFragments = [];
       const tables = [];
       const forms = [];
       let words = 0;
@@ -48,6 +49,20 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         failures.push(
           `Page sideways scroll: ${document.documentElement.scrollWidth}/${documentWidth}`,
         );
+      for (const fragment of document.querySelectorAll(".unit-fragment")) {
+        if (!visible(fragment)) continue;
+        const range = document.createRange();
+        range.selectNodeContents(fragment);
+        const rects = [...range.getClientRects()].filter(
+          (rect) => rect.width > 0.1 && rect.height > 0.1,
+        );
+        const lines = new Set(rects.map((rect) => Math.round(rect.top)));
+        unitFragments.push({ text: fragment.textContent, lines: lines.size });
+        if (lines.size > 1)
+          failures.push(
+            `${scene}: unit fragment broken across lines: ${fragment.textContent}`,
+          );
+      }
       for (const wrapper of document.querySelectorAll("main,.ui-data-table")) {
         if (!visible(wrapper)) continue;
         if (wrapper.scrollWidth > wrapper.clientWidth + 1)
@@ -446,6 +461,7 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         actualWidth: documentWidth,
         words,
         contentWords,
+        unitFragments,
         collisionGeometry:
           "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
         cells,
