@@ -54,8 +54,8 @@ Expect branch `feat/prototype-c6-functional-fixes`, successful install/build and
 
 | Check                                                              | Current review status                                                     |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| Full unit suite and all 23 seed pricing cases                      | 931 tests passed across 85 files; all 23 pricing cases included             |
-| Lint, format, TypeScript and production build                      | Passed; final browser snapshot and screenshots still pending               |
+| Full unit suite and all 23 seed pricing cases                      | 931 tests passed across 85 files; all 23 pricing cases included           |
+| Lint, format, TypeScript and production build                      | Passed; final browser snapshot and screenshots still pending              |
 | Existing browser suite plus C6 workflows                           | Pending full final-source run; focused development runs not summed        |
 | Eight widths × EN/FA, actual words/collisions/inner bounds         | Pending complete frozen-source proof                                      |
 | Twenty distinct 3 MB photos, resize/hash/reload/legacy migration   | Pending final real-browser evidence                                       |
