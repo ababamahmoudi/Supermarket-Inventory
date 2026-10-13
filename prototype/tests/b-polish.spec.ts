@@ -313,6 +313,9 @@ test("Part 1 invoice names and approved-price notes fit on one line", async ({
   await page.goto("/#invoices");
   await uploadInvoice(page);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
+  await expect(
+    page.locator(".invoice-line-toggle .product-name strong"),
+  ).toHaveCount(6);
   const names = await page
     .locator(".invoice-line-toggle .product-name strong")
     .evaluateAll((elements) =>

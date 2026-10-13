@@ -25,7 +25,13 @@ import {
   TableRowLink,
   useTableColumns,
 } from "../ui";
-import { DateText, LtrText, Money, ProductName } from "../presentation";
+import {
+  DateText,
+  LtrText,
+  Money,
+  ProductName,
+  UnitText,
+} from "../presentation";
 import { branchLabel, configuredBranches } from "../settings";
 import { supplierRecords, supplierMatches } from "../supplier-editor";
 import { packUnits, costPerCase } from "../supplier-items";
@@ -1559,9 +1565,11 @@ export default function Orders() {
                   <tr key={line.id}>
                     <td>
                       <strong>
-                        {lang === "fa"
-                          ? line.name_fa || line.name_en
-                          : line.name_en}
+                        <UnitText>
+                          {lang === "fa"
+                            ? line.name_fa || line.name_en
+                            : line.name_en}
+                        </UnitText>
                       </strong>
                       <span className="order-item-caption">
                         <LtrText>
