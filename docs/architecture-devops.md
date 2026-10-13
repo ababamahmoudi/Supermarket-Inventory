@@ -77,9 +77,9 @@ Staged path so costs stay low while there is no paying usage:
 ## Security and privacy
 
 - HTTPS only; secure, HTTP-only cookies; CSRF protection; rate limiting and account lockout on failed sign-ins.
-- Accounts are created only by the Supervisor (no self-registration); temporary passwords force a change at first sign-in; passwords hashed with a modern algorithm (Argon2 or Django's default), checked against common/breached lists; no PINs.
-- Each company is served on its own subdomain; usernames are unique per company. Registered-device tokens (for the recent-users list) are revocable by the Supervisor; instant user deactivation.
-- Later, not now: invite-only Google sign-in (OpenID Connect, matched to emails the Supervisor added) and authenticator-app second step for Supervisors.
+- Accounts are created only by Owner/Manager (the platform creates the first Owner; no self-registration); one-time setup codes force personal password choice at first sign-in; passwords hashed with a modern algorithm (Argon2 or Django's default), checked against common/breached lists; no PINs.
+- Each company is served on its own subdomain; usernames are unique per company. Registered-device tokens (for the recent-users list) are revocable by the Owner/Manager; instant user deactivation.
+- Later: invite-only Google sign-in (OpenID Connect, matched to invited emails) and real passkey/authenticator verification. E1 demonstrates mandatory privileged second-step setup/challenge locally, explicitly simulated.
 - Server-side permission checks on every endpoint; company/branch scoping enforced centrally; automated tests for cross-company and cross-branch leakage.
 - Uploads: validate type and size, store privately, serve by short-lived signed URL, never trust file names. Add malware scanning before production.
 - Secrets only in secret stores. No secrets in logs. Audit log for sensitive actions.
@@ -114,8 +114,18 @@ C3/C4 remain frontend-only; changes are limited to prototype/, docs/ and seed/ f
 
 C4 retains original file bytes in browser persistence and previews matching fictional images/actual PDF pages. Posted invoice content corrections append immutable effective versions and compensating references, preserving original invoice/file/payment/allocation/physical evidence. New item order association happens only through explicitly linked reviewed posted lines. Weight quantities retain source kg/lb units and Decimal canonical lb cost; product date preferences/manual entries have scoped audited transitions.
 
-Pickup expected return credits are provisional Supervisor-only balance projections, distinct from confirmed supplier ledger credits; worker pickup never grants financial-posting privilege. Actual settlement/written off needs authorized evidence. Replacement releases its expected projection according to the owner's answer, without a new purchase/credit posting. Phase 1 must enforce these transactions server-side; no backend/schema implementation or paid deployment is authorized here.
+Pickup expected return credits are provisional Owner/Manager-only balance projections, distinct from confirmed supplier ledger credits; worker pickup never grants financial-posting privilege. Actual settlement/written off needs authorized evidence. Replacement releases its expected projection according to the owner's answer, without a new purchase/credit posting. Phase 1 must enforce these transactions server-side; no backend/schema implementation or paid deployment is authorized here.
 
 ## C5 presentation boundary
 
 C5 changes prototype/ and docs/ only, after green history-preserving C3/C4 merges. Shared controls enforce intrinsic12 px/40 px text actions, circular icon widgets and visible bordered fields in both themes. New inline date operations reuse scoped validated audits/Undo; identical current offers reuse their existing record and historical versions remain retained. Seed/pricing/backend/CI configuration and protected money/original evidence are unchanged. Browser proof uses the fresh compiled source, actual computed dimensions and unedited UI screenshots; physical printer calibration remains separate.
+
+## E1 authority and future-server boundary
+
+The current source specification defines five configured roles and a private company-scoped Person/credential/session/device authority repository; implementation remains Planned. Async protected Store.command/query reads current actor/setup/epoch and latest persisted business within the same IndexedDB boundary, commits before React and invokes the same central capability/resource/field evaluator as the UI. Domain APIs derive canonical resource scope, not caller role/branch claims. People safety/version/usable Active Owner checks and revocations commit together; usable means Active with complete password and required second-step setup, while promoted Floor Worker stays Invited until setup completes. Shared-browser invalidation and safe protected authorityHistory projection occur after commit; missed messages cannot authorise later operations.
+
+Credentials/challenges stay separate from ordinary business state, exports and History. Normal verified auth migration preserves legacy identities/passwords/forced setup/preferences; reset alone restores six demo fixtures and the configured fictional computer. Browser-local data is not tamper-proof production authentication or synchronized phone data. Future /api/v1 endpoints resolve an actor from an authenticated server session and use database transactions with these same independent role/field/domain rules. No backend/hosted database/resource/deployment change is authorised here.
+
+### Repository-minted system reconciliation
+
+Clock and derived-event jobs require a private runtime witness minted only inside the synchronous company-scoped repository transaction, bound to the exact current draft, source and directory version. Plain/spread/foreign-draft/wrong-source or retained-after-callback objects fail. No public mint, fabricated Manager, asynchronous side effect or authority fallback is permitted. User decisions still require a current authenticated actor.

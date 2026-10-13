@@ -388,7 +388,9 @@ Every row below requires **English light, English dark, Persian, 900 px and phon
 
 C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing skips are from `8d9e7f9`. All 75 current-source captures and reviews are from `0303445`; its fresh build passed and its separate CI run passed all required steps with 700 browser passes/42 existing skips and zero failed/flaky outcomes. Linked invalid-save boxes above a scrolled dialog, sticky behavior, hidden columns and print behavior require their executed browser checks, not the static images alone. E1 privacy/roles, E2 tasks and E3 phone installation are not claimed by C8.
 
-## E1 — Literal planned role, People and sign-in checklist
+## E1 — Current source contract; implementation and proof Planned
+
+The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses and all E1 statuses as Planned until actual evidence; it does not reinstate the older three-role model.
 
 ### E1-R01 — Planned
 

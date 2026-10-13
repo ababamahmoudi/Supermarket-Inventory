@@ -2,34 +2,34 @@
 
 When Ali answers one, update the requirement it affects, record the date here, and remove the question.
 
-| #   | Question                                                                               | Default to build with                                                                 |
-| --- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1   | Rice with an exact whole-dollar raw price (e.g., 4.00): go up to 4.99 or down to 3.99? | Up: 4.99 ("always round upward")                                                      |
-| 2   | While a new price is pending, what does the cashier charge?                            | Last approved price; new products show the proposed price tagged Pending              |
-| 3   | Minimum margin per category (for the "below minimum margin" approval)                  | `0.25` placeholder; rule inactive if empty                                            |
-| 4   | Tax: rate, jurisdiction, currency, timezone                                            | Placeholders in config; rate is a company setting; prices displayed before tax        |
-| 5   | Is tax on a short deduction included in the deduction?                                 | Yes, proportional tax is deducted with the line                                       |
-| 6   | Price → offer mapping                                                                  | 1.99 → 3 for $5; 2.99 → 2 for $5; 3.99 → 2 for $7 (editable)                          |
-| 8   | Persian digits or Western digits in the Persian UI                                     | Western digits for prices, codes, dates; translations for text                        |
-| 9   | Can cashiers add notes?                                                                | Not to built-in notebooks; yes to a custom notebook if the Supervisor allows it       |
-| 10  | Do Floor Workers see unit cost and margin?                                             | Cost on invoices they handle only; margins hidden                                     |
-| 11  | Units per case: who enters it for a new supplier product?                              | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards |
-| 12  | Expiring-soon entries with no sales data                                               | Manual **Remove** with reason and Undo; removed history retained                      |
-| 13  | Raw price below $0.23 (no "previous .99" exists)                                       | Result 0.49                                                                           |
-| 15  | Which AI provider reads invoices?                                                      | Decide at Phase 5 with cost per invoice; provider-agnostic interface                  |
-| 16  | When exactly is an offer suggestion created?                                           | When the price becomes effective at 1.99/2.99/3.99 with no offer                      |
-| 17  | Automatic supplier invoice number scheme                                               | Sequential per supplier, flagged system-assigned                                      |
-| 18  | Idle-lock time and password re-prompt window                                           | 5 minutes and 15 minutes (settings)                                                   |
-| 19  | Product code start                                                                     | `0001`, zero-padded, five digits after 9999                                           |
-| 20  | Persian terminology for the English terms list                                         | AI drafts; Ali reviews before go-live                                                 |
-| 21  | Official logo files and brand colors                                                   | Use the supplied PNG and sampled colors; replace when received                        |
-| 22  | Username format                                                                        | First name + last initial (e.g., `sara.k`), editable by the Supervisor                |
-| 23  | Google sign-in and a second sign-in step for Supervisors                               | Not in Phase 1; designed so they can be added                                         |
-| 24  | Lockout settings                                                                       | 5 attempts, 15 minutes (settings)                                                     |
-| 25  | Label waitlist auto-add on price approval                                              | Off by default (setting)                                                              |
-| 26  | "Price changed recently" window for labels                                             | 3 days (setting)                                                                      |
-| 28  | Persian wording for offers ("2 for $5")                                                | "۲ عدد $5" style; Ali reviews                                                         |
-| 29  | AI provider for real invoice reading                                                   | Decide at step 0.3 with cost per invoice                                              |
+| #   | Question                                                                               | Default to build with                                                                                           |
+| --- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Rice with an exact whole-dollar raw price (e.g., 4.00): go up to 4.99 or down to 3.99? | Up: 4.99 ("always round upward")                                                                                |
+| 2   | While a new price is pending, what does the cashier charge?                            | Last approved price; new products show the proposed price tagged Pending                                        |
+| 3   | Minimum margin per category (for the "below minimum margin" approval)                  | `0.25` placeholder; rule inactive if empty                                                                      |
+| 4   | Tax: rate, jurisdiction, currency, timezone                                            | Placeholders in config; rate is a company setting; prices displayed before tax                                  |
+| 5   | Is tax on a short deduction included in the deduction?                                 | Yes, proportional tax is deducted with the line                                                                 |
+| 6   | Price → offer mapping                                                                  | 1.99 → 3 for $5; 2.99 → 2 for $5; 3.99 → 2 for $7 (editable)                                                    |
+| 8   | Persian digits or Western digits in the Persian UI                                     | Western digits for prices, codes, dates; translations for text                                                  |
+| 9   | Can cashiers add notes?                                                                | Not to built-in notebooks; yes to a custom notebook if the Supervisor allows it                                 |
+| 10  | Do Floor Workers see unit cost and margin?                                             | Cost on invoices they handle only; margins hidden                                                               |
+| 11  | Units per case: who enters it for a new supplier product?                              | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards                           |
+| 12  | Expiring-soon entries with no sales data                                               | Manual **Remove** with reason and Undo; removed history retained                                                |
+| 13  | Raw price below $0.23 (no "previous .99" exists)                                       | Result 0.49                                                                                                     |
+| 15  | Which AI provider reads invoices?                                                      | Decide at Phase 5 with cost per invoice; provider-agnostic interface                                            |
+| 16  | When exactly is an offer suggestion created?                                           | When the price becomes effective at 1.99/2.99/3.99 with no offer                                                |
+| 17  | Automatic supplier invoice number scheme                                               | Sequential per supplier, flagged system-assigned                                                                |
+| 18  | Idle-lock time and password re-prompt window                                           | 5 minutes and 15 minutes (settings)                                                                             |
+| 19  | Product code start                                                                     | `0001`, zero-padded, five digits after 9999                                                                     |
+| 20  | Persian terminology for the English terms list                                         | AI drafts; Ali reviews before go-live                                                                           |
+| 21  | Official logo files and brand colors                                                   | Use the supplied PNG and sampled colors; replace when received                                                  |
+| 22  | Username format                                                                        | First name + last initial (e.g., `sara.k`), editable by the Supervisor                                          |
+| 23  | Real Google sign-in and real second-step verification                                  | Google remains later; E1 privileged passkey/authenticator flow is simulated; real verification needs the server |
+| 24  | Lockout settings                                                                       | 5 attempts, 15 minutes (settings)                                                                               |
+| 25  | Label waitlist auto-add on price approval                                              | Off by default (setting)                                                                                        |
+| 26  | "Price changed recently" window for labels                                             | 3 days (setting)                                                                                                |
+| 28  | Persian wording for offers ("2 for $5")                                                | "۲ عدد $5" style; Ali reviews                                                                                   |
+| 29  | AI provider for real invoice reading                                                   | Decide at step 0.3 with cost per invoice                                                                        |
 
 ## Resolved by the A2 request (2026-10-07)
 
@@ -107,3 +107,14 @@ Transparent implementation contracts: Add product retains initial pricing; exist
 | Google sign-in                         | Existing later option; E1 authorizes simulated passkey/authenticator for privileged roles, not real external authentication. |
 
 No blocking new business question is assumed. Record or ask about a genuinely missing rule rather than silently changing permissions, quantities or money. E1/E2/E3 are authorized plans, not C8 completion claims.
+
+## E1 source choices recorded before implementation (2026-10-12)
+
+- Five configured roles replace the old three-role authority model. Owner and Manager share company/current/future-location access; non-company roles have explicit nonempty assignments; Cashier never Warehouse. Different roles at different locations remains a later option.
+- Branch Supervisor purchase costs on own invoices/Supplier items/Orders are separate from catalog costs, margins/minimum margins, supplier balances, Payables and approval decisions. Their return grant explicitly stops at recording signed pickup; no Floor Worker replacement hierarchy. Ordinary multi-buy management is not a newly granted Branch Supervisor operation. Labels includes the existing narrow template creation/duplication/edit/archive/restore/calibration operations and does not grant Company Settings. General catalog tracking-preference edits remain managerial; operational quick-add's existing atomic enable exception stays.
+- People is Owner/Manager-only; new person requires phone or email; setup code shown once; password and required simulated second step precede business access. Real invitation delivery/authentication/push/email/remote collaboration remains future server work. Six fixtures may start with completed simulated setup so Demo switching works; invited/custom people cannot use that shortcut.
+- Resolve current actors/epochs at each protected command/query; usable Active Owner safety and session revocation are one IndexedDB transaction. Count only Active Owners with complete password and required second-step setup; promoted Floor Worker stays Invited until required setup finishes. Latest persisted business and authority share the lock and commit before React. Protected authorityHistory returns committed safe audit summaries only, with no generic directory/epoch Undo. Device defaults grant no assignment; rh-supervisor on North York starts at All my locations for Richmond Hill/Newmarket, never a silent first store. Retain existing guarded inactive-origin corrections/settlement and active move destinations.
+- Preserve legacy users/passwords/forced newemployee setup/preferences and original business/file/History evidence during verified normal migration. Old supervisor aliases the same Manager; unknown historical names are not active accounts. Explicit Reset alone restores six demo people and revokes replaced sessions. Separate phones/browser stores remain independent.
+- Registered computers were previously represented by demo recent-user configuration and a People placeholder. E1 specifies actual local device/location entries and a seed-backed fictional North York computer for fresh/reset. Preserve valid migrated registration/current-device mapping. Only Owner/Manager manages these entries; device defaults never broaden person access and cannot select North York for rh-supervisor. This is local browser registration, not discovered real hardware.
+
+These are source contracts and documented implementation boundaries, not test counts or completion claims. All new E1 evidence remains Planned until verified. E2 tasks/notification routing and E3 installation/private-hosting instructions remain Planned separate stages; no further owner approval is required between the already-authorised stacked builds.

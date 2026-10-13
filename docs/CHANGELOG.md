@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-12 — E1 source-first roles, People and authority specification
+
+- Replaced active three-role/single-location rules with five configured roles, company/current/future-location Owner/Manager access, explicit other-role assignments and Store-only Cashier scope. Historical C3–C8 review evidence retains its original wording and authors.
+- Specified independent Branch Supervisor invoice/Supplier items/Orders purchase costs, operational dashboard/pending approvals, requests and delivery-hold instruction, without balances/margins/price decisions/financial settlement or replacement inheritance. Preserved current Floor Worker template creation/calibration/ordinary-offer/replacement operations independently of Company Settings.
+- Specified directory-based username/password/alias, one-time setup codes, forced password and simulated privileged second step, reasoned People edits, active-Owner/self-change protections and atomic IndexedDB authority/session revocation with fresh protected command/query checks.
+- Documented six demo/reset users, stable actor IDs, verified additive legacy identity/auth migration, retained forced newemployee setup/preferences/business/file/History, scoped registered-computer defaults and independent phone/browser data. No remote account/resource, backend, real authentication, invitation delivery or E2/E3 task/installation result is claimed.
+- **Specification only:** implementation/tests/screenshots remain Planned until actual final-source proof. E2/E3 remain authorised Planned stages stacked after E1; no intermediate owner-review pause.
+
 ## 2026-10-13 — C8 implemented and screenshot review complete
 
 - Completed the 22 layout fixes, temporary sales, manual regular prices, worker requests, price approvals, receipt cost alerts, delivery hold/release notes and frozen Promo/Regular label intents.
