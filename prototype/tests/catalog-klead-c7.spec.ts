@@ -73,7 +73,7 @@ for (const width of widths)
       await expect(lookup.locator(".lookup-detail .price")).toHaveText("$2.99");
       await expect(
         lookup.locator(".lookup-price-context .offer-pill"),
-      ).toHaveText(language === "fa" ? "۲ عدد $5" : "2 for $5");
+      ).toHaveText(language === "fa" ? "۲ عدد $5.00" : "2 for $5.00");
       await expect(lookup.locator(".product-dates-readonly")).toBeVisible();
       await expect(
         lookup.locator(".product-dates-readonly").getByRole("switch"),

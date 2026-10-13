@@ -169,6 +169,17 @@
     inline-size: 36px;
     text-align: end;
   }
+  @media (max-width: 760px) {
+    :root
+      .ui-data-table.table-wrap.is-responsive
+      > table
+      > tbody
+      > tr
+      > .table-disclosure-cell {
+      /* Phone cards retain the full translated caption above the 36px icon. */
+      inline-size: auto;
+    }
+  }
   :root .ui-dialog.change-price-dialog {
     inline-size: min(720px, calc(100vw - 32px));
     max-inline-size: 720px;

@@ -229,7 +229,9 @@ for (const language of ["en", "fa"] as const) {
     }
     const inlineProof = await inline.evaluate((element) => {
       const labels = Array.from(
-        element.querySelectorAll(".field > label"),
+        element.querySelectorAll(
+          ".field:not(.product-editor-date-add) > label",
+        ),
         (label) => {
           const range = document.createRange();
           range.selectNodeContents(label);
@@ -245,14 +247,18 @@ for (const language of ["en", "fa"] as const) {
       );
       const controls = Array.from(
         element.querySelectorAll(
-          ".field > input,.field > button,.field > .ui-select,.field > .ui-date",
+          ".field:not(.product-editor-date-add) > input,.field:not(.product-editor-date-add) > button,.field:not(.product-editor-date-add) > .ui-select,.field:not(.product-editor-date-add) > .ui-date",
         ),
         (control) => ({
           height: control.getBoundingClientRect().height,
           bottom: control.getBoundingClientRect().bottom,
         }),
       );
-      const add = element.querySelector(":scope > button")!;
+      const add = element.querySelector(".product-editor-date-add > button");
+      if (!add)
+        throw new Error(
+          "The real Add date button must be inside its aligned field wrapper.",
+        );
       return {
         labels,
         controls,

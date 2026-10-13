@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
-import { addSelectedLabels } from "./label-selection";
+import { addSelectedLabels, selectLabelGroup } from "./label-selection";
 
 for (const language of ["en", "fa"] as const) {
   test(`ready Regular and Promo labels print exact millimetres and truthful monochrome offers in ${language}`, async ({
@@ -11,9 +11,22 @@ for (const language of ["en", "fa"] as const) {
     });
     await signIn(page, "Floor Worker");
     await page.goto("/#labels");
+    const initialQueue = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+          .label_waitlist,
+    );
+    expect(initialQueue).toHaveLength(1);
+    expect(initialQueue[0]).toMatchObject({
+      product_code: "0012",
+      preferred_template: "promo",
+      copies: 1,
+      branch: "Branch 1",
+    });
     await page.getByLabel("Search products", { exact: true }).fill("0003");
     await addSelectedLabels(page, ["0003"]);
     await page.getByRole("tab", { name: /^Waitlist/ }).click();
+    await selectLabelGroup(page, "regular");
     await expect(page.getByLabel("Saved template", { exact: true })).toHaveText(
       "Regular",
     );
@@ -22,7 +35,7 @@ for (const language of ["en", "fa"] as const) {
     ).toBeVisible();
     const shelf = page.locator(".label-bilingual-preview .shelf-label");
     await expect(shelf.locator(".regular-label-special")).toHaveText("SPECIAL");
-    await expect(shelf.locator(".label-offer-badge")).toHaveText("2 for $5");
+    await expect(shelf.locator(".label-offer-badge")).toHaveText("2 for $5.00");
     await page
       .getByRole("button", { name: "Print labels", exact: true })
       .click();
@@ -64,7 +77,7 @@ for (const language of ["en", "fa"] as const) {
       language === "en" ? "SPECIAL" : "ویژه",
     );
     await expect(promo.locator(".promo-label-price")).toHaveText(
-      language === "en" ? "2 for $5" : "۲ عدد $5",
+      language === "en" ? "2 for $5.00" : "۲ عدد $5.00",
     );
     await expect(promo.locator(".promo-label-regular-price")).toHaveText(
       language === "en" ? "Regular $2.99" : "عادی $2.99",
@@ -133,6 +146,17 @@ for (const language of ["en", "fa"] as const) {
       promoMetrics.regularFont * 3,
     );
     expect(promoMetrics.overflow).toBeLessThanOrEqual(0.2);
+    expect(
+      await page.evaluate(
+        (ids) =>
+          JSON.parse(
+            localStorage.getItem("supermarket-prototype-v1")!,
+          ).label_waitlist.filter((item: { id: string }) =>
+            ids.includes(item.id),
+          ),
+        initialQueue.map((item: { id: string }) => item.id),
+      ),
+    ).toEqual(initialQueue);
   });
 }
 
@@ -206,13 +230,37 @@ test("Promo without an active offer never invents SPECIAL or an offer", async ({
 }) => {
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  const initialQueue = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
+  expect(initialQueue).toHaveLength(1);
+  expect(initialQueue[0]).toMatchObject({
+    product_code: "0012",
+    preferred_template: "promo",
+    copies: 1,
+    branch: "Branch 1",
+  });
   await page.getByLabel("Search products", { exact: true }).fill("0004");
   await addSelectedLabels(page, ["0004"]);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular");
   await page.getByLabel("Saved template", { exact: true }).click();
   await page.getByRole("option", { name: "Promo", exact: true }).click();
   const promo = page.locator(".label-bilingual-preview .promo-shelf-label");
   await expect(promo.locator(".promo-label-price")).toHaveText("$6.49");
   await expect(promo.locator(".promo-label-special")).toBeEmpty();
   await expect(promo.locator(".promo-label-regular-price")).toBeEmpty();
+  expect(
+    await page.evaluate(
+      (ids) =>
+        JSON.parse(
+          localStorage.getItem("supermarket-prototype-v1")!,
+        ).label_waitlist.filter((item: { id: string }) =>
+          ids.includes(item.id),
+        ),
+      initialQueue.map((item: { id: string }) => item.id),
+    ),
+  ).toEqual(initialQueue);
 });

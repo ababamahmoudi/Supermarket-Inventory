@@ -379,6 +379,33 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         }
       }
       for (const row of document.querySelectorAll("tbody tr")) {
+        const rowNavigation = [...row.querySelectorAll(".table-row-link")]
+          .filter(visible)
+          .filter((element) => element.closest("tbody tr") === row);
+        const rowDisclosure = [...row.querySelectorAll(".table-details-toggle")]
+          .filter(visible)
+          .filter((element) => element.closest("tbody tr") === row);
+        if (rowNavigation.length > 1)
+          failures.push("Duplicate row navigation chevron");
+        if (rowDisclosure.length > 1)
+          failures.push("Duplicate hidden-column disclosure");
+        for (const control of [...rowNavigation, ...rowDisclosure]) {
+          if (control.closest("td") !== row.lastElementChild)
+            failures.push("Row navigation/disclosure is not at the row end");
+        }
+        for (const disclosure of rowDisclosure) {
+          if (!disclosure.getAttribute("aria-controls"))
+            failures.push("Hidden-column disclosure has no details target");
+          if (disclosure.getAttribute("aria-expanded") === "true") {
+            const detail = document.getElementById(
+              disclosure.getAttribute("aria-controls"),
+            );
+            if (!detail?.querySelector("dl > div > dd"))
+              failures.push(
+                "Expanded disclosure does not retain omitted values",
+              );
+          }
+        }
         for (const cell of row.querySelectorAll("td")) {
           const controls = [...cell.querySelectorAll("button, a.ui-button")]
             .filter(visible)
@@ -390,6 +417,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 element.closest("tbody tr") === row
               );
             })
+            // The C8 details chevron reveals omitted cells; it is not a
+            // business action. Audit that navigation separately below.
+            .filter((element) => !element.matches(".table-details-toggle"))
             .filter((element) => ["action", "icon"].includes(kindOf(element)));
           if (controls.length > 2)
             failures.push(

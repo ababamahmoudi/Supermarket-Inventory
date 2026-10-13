@@ -130,6 +130,17 @@ export async function setupC8Scene(page, scene, { costOriginal } = {}) {
             ),
           }),
         ).toBeVisible();
+        // Capture the complete invalid field, including its existing helper.
+        // Focusing only the date button can place the helper under the phone
+        // action footer even though the dialog remains scrollable.
+        await dialog
+          .locator(
+            ".product-editor-date-inline .field:has(.ui-date[aria-invalid='true'])",
+          )
+          .evaluate((field) => field.scrollIntoView({ block: "center" }));
+        await expect(
+          dialog.locator(".product-editor-date-inline .form-error"),
+        ).toBeVisible();
         const after = await readC8State(page);
         expect(after.products).toEqual(current.products);
         expect(after.expiry).toEqual(current.expiry);

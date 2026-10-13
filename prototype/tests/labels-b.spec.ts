@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { setBranch, signIn } from "./helpers";
-import { addSelectedLabels, waitlistCopies } from "./label-selection";
+import {
+  addSelectedLabels,
+  selectLabelGroup,
+  waitlistCopies,
+} from "./label-selection";
 
 async function saveTemplate(page: Parameters<typeof signIn>[0]) {
   await page
@@ -94,6 +98,18 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  const initialQueue = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
+  expect(initialQueue).toHaveLength(1);
+  expect(initialQueue[0]).toMatchObject({
+    product_code: "0012",
+    preferred_template: "promo",
+    copies: 1,
+    branch: "Branch 1",
+  });
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await saveTemplate(page);
@@ -105,10 +121,17 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   await page.getByLabel("Search products", { exact: true }).fill("0003");
   await addSelectedLabels(page, ["0003"], 20);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular", "Template 1");
+  await page.getByLabel("Starting slot", { exact: true }).fill("5");
   await expect(await waitlistCopies(page, "0003")).toHaveValue("20");
   await expect(
     page.locator(".label-bilingual-preview .print-sheet"),
   ).toHaveCount(2);
+  const queuedBeforePrint = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await expect(page.locator("body")).toHaveAttribute("data-print-calls", "1");
   await expect(
@@ -122,21 +145,37 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
     .getByRole("button", { name: "No", exact: true })
     .click();
   await expect(await waitlistCopies(page, "0003")).toHaveValue("20");
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+          .label_waitlist,
+    ),
+  ).toEqual(queuedBeforePrint);
   await page.reload();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
-  await page.getByLabel("Saved template", { exact: true }).click();
-  await page.getByRole("option", { name: "Template 1", exact: true }).click();
+  await selectLabelGroup(page, "regular", "Template 1");
   await page.getByLabel("Starting slot", { exact: true }).fill("5");
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Yes", exact: true })
     .click();
-  await expect(
-    page.getByText("No labels waiting. Add products from the Products tab.", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  // Printing/removing the Regular intent leaves the original Sale's Promo
+  // record untouched, including its exact identity and copy count.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+            .label_waitlist,
+      ),
+    )
+    .toEqual(initialQueue);
+  await expect(await waitlistCopies(page, "0012")).toHaveValue("1");
+  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveCount(
+    0,
+  );
   const printed = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity.find(
       (item: { action: string }) => item.action === "Print labels",
@@ -145,6 +184,7 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   expect(printed.reversible).toBe(false);
   expect(printed.after.copies).toBe(20);
   expect(printed.after.sheets).toBe(2);
+  expect(printed.after.items).toEqual([{ product_code: "0003", copies: 20 }]);
 });
 
 test("waitlists persist across coworkers and remain isolated by branch", async ({
@@ -152,6 +192,18 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
+  const initialQueue = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
+  expect(initialQueue).toHaveLength(1);
+  expect(initialQueue[0]).toMatchObject({
+    product_code: "0012",
+    preferred_template: "promo",
+    copies: 1,
+    branch: "Branch 1",
+  });
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await saveTemplate(page);
@@ -175,11 +227,22 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular");
   await expect(await waitlistCopies(page, "0003")).toHaveValue("1");
   await page.getByRole("button", { name: "Remove", exact: true }).click();
-  await expect(
-    page.getByText("No labels waiting. Add products from the Products tab.", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  // Printing/removing the Regular intent leaves the original Sale's Promo
+  // record untouched, including its exact identity and copy count.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+            .label_waitlist,
+      ),
+    )
+    .toEqual(initialQueue);
+  await expect(await waitlistCopies(page, "0012")).toHaveValue("1");
+  await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveCount(
+    0,
+  );
 });

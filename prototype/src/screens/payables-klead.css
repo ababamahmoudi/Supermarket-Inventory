@@ -6,6 +6,9 @@
     word-break: normal;
     hyphens: none;
   }
+  :root .payables-overview-table .payables-pending-note {
+    white-space: normal;
+  }
   .payables-supplier-link {
     display: flex;
     align-items: center;

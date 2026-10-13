@@ -546,13 +546,54 @@ for (const language of ["en", "fa"] as const) {
       "ستون‌ها",
     );
     await expect(columns).toBeVisible();
-    const outside = await appearance(columns);
-    report.columns = outside;
-    expect.soft(outside.background).toBe(outside.tokens.surface);
-    expect.soft(outside.borderVisible).toBe(true);
-    expect.soft(outside.borderColour).toBe(outside.tokens.hairline);
-    expect.soft(outside.outlineVisible).toBe(false);
-    expect.soft(outside.contrast).toBeGreaterThanOrEqual(4.5);
+    // C8 puts the complete Products toolbar inside its list card. Its
+    // Columns control uses the inside-card neutral fill; the actual outside
+    // Supplier and Invoice headers below retain their white/hairline checks.
+    const cardColumns = await appearance(columns);
+    const columnsContainment = await columns.evaluate((element) => {
+      const toolbar = element.closest(".catalog-filter-toolbar")!;
+      const card = element.closest(".ui-card")!;
+      const table = card.querySelector(".catalog-products-table")!;
+      const contains = (outer: Element, inner: Element) => {
+        const bounds = outer.getBoundingClientRect();
+        const content = inner.getBoundingClientRect();
+        return (
+          content.left >= bounds.left - 1 &&
+          content.right <= bounds.right + 1 &&
+          content.top >= bounds.top - 1 &&
+          content.bottom <= bounds.bottom + 1
+        );
+      };
+      return {
+        toolbarInsideCard: card.contains(toolbar),
+        controlInsideToolbar: toolbar.contains(element),
+        toolbarContained: contains(card, toolbar),
+        controlContained: contains(toolbar, element),
+        tableContained: contains(card, table),
+        tableGap:
+          table.getBoundingClientRect().top -
+          toolbar.getBoundingClientRect().bottom,
+      };
+    });
+    report.columns = {
+      appearance: cardColumns,
+      containment: columnsContainment,
+    };
+    expect.soft(cardColumns.background).toBe(cardColumns.tokens.neutral);
+    expect.soft(cardColumns.colour).toBe(cardColumns.tokens.text);
+    expect.soft(cardColumns.borderVisible).toBe(false);
+    expect.soft(cardColumns.outlineVisible).toBe(false);
+    expect.soft(cardColumns.shadow).toBe("none");
+    expect.soft(cardColumns.contrast).toBeGreaterThanOrEqual(4.5);
+    expect.soft(columnsContainment.toolbarInsideCard).toBe(true);
+    expect.soft(columnsContainment.controlInsideToolbar).toBe(true);
+    expect.soft(columnsContainment.toolbarContained).toBe(true);
+    expect.soft(columnsContainment.controlContained).toBe(true);
+    expect.soft(columnsContainment.tableContained).toBe(true);
+    expect.soft(columnsContainment.tableGap).toBeGreaterThanOrEqual(0);
+    expect
+      .soft(columnsContainment.tableGap)
+      .toBeLessThanOrEqual(page.viewportSize()!.width < 760 ? 16 : 24);
 
     await page.goto("/#suppliers");
     const search = page.locator(".suppliers-overview .filter-search-pill");

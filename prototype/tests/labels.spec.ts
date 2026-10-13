@@ -1,12 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch, setLanguage } from "./helpers";
-import { addSelectedLabels, waitlistCopies } from "./label-selection";
+import {
+  addSelectedLabels,
+  selectLabelGroup,
+  waitlistCopies,
+} from "./label-selection";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 
 async function addProducts(page: Page, codes: string[], copies = 1) {
   await page.getByRole("tab", { name: "Products", exact: true }).click();
   await addSelectedLabels(page, codes, copies);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular", "Template 1");
+  await page.getByLabel("Starting slot", { exact: true }).fill("5");
 }
 
 test("creates a template, starts after four used slots, and prints bilingual labels", async ({
@@ -19,6 +25,18 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
+  const initialQueue = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
+  expect(initialQueue).toHaveLength(1);
+  expect(initialQueue[0]).toMatchObject({
+    product_code: "0012",
+    preferred_template: "promo",
+    copies: 1,
+    branch: "Branch 1",
+  });
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await expect(
@@ -83,6 +101,19 @@ test("creates a template, starts after four used slots, and prints bilingual lab
     .getByRole("dialog")
     .getByRole("button", { name: "No", exact: true })
     .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (ids) =>
+          JSON.parse(
+            localStorage.getItem("supermarket-prototype-v1")!,
+          ).label_waitlist.filter((item: { id: string }) =>
+            ids.includes(item.id),
+          ),
+        initialQueue.map((item: { id: string }) => item.id),
+      ),
+    )
+    .toEqual(initialQueue);
   await page.reload();
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByLabel("Saved template").click();
@@ -124,6 +155,18 @@ test("requires one branch and prints its approved price instead of a pending pro
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
+  const initialQueue = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+        .label_waitlist,
+  );
+  expect(initialQueue).toHaveLength(1);
+  expect(initialQueue[0]).toMatchObject({
+    product_code: "0012",
+    preferred_template: "promo",
+    copies: 1,
+    branch: "Branch 1",
+  });
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
   await page
@@ -160,13 +203,41 @@ test("requires one branch and prints its approved price instead of a pending pro
     .filter({ hasText: "Lavash Bread 500 g" });
   await expect(teaLabel.locator(".price")).toHaveText("$6.99");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
-  await expect(lavashLabel).toContainText("3 for $5");
+  await expect(lavashLabel).toContainText("3 for $5.00");
+  const branch2Queue = await page.evaluate(() =>
+    JSON.parse(
+      localStorage.getItem("supermarket-prototype-v1")!,
+    ).label_waitlist.filter(
+      (item: { branch: string }) => item.branch === "Branch 2",
+    ),
+  );
+  expect(
+    branch2Queue
+      .map((item: { product_code: string }) => item.product_code)
+      .sort(),
+  ).toEqual(["0004", "0006"]);
   await setBranch(page, "Branch 1");
-  await expect(
-    page.getByText("No labels waiting. Add products from the Products tab.", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  // C8's existing Sale contributes a separate Promo intent in North York.
+  // Richmond Hill's two labels stay scoped to that branch.
+  await expect(await waitlistCopies(page, "0012")).toHaveValue("1");
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(
+        localStorage.getItem("supermarket-prototype-v1")!,
+      ).label_waitlist.filter(
+        (item: { branch: string }) => item.branch === "Branch 1",
+      ),
+    ),
+  ).toEqual(initialQueue);
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(
+        localStorage.getItem("supermarket-prototype-v1")!,
+      ).label_waitlist.filter(
+        (item: { branch: string }) => item.branch === "Branch 2",
+      ),
+    ),
+  ).toEqual(branch2Queue);
   await addProducts(page, ["0004", "0006"]);
   await expect(teaLabel.locator(".price")).toHaveText("$6.49");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");

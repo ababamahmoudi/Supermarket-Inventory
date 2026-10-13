@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
 import {
   signIn,
@@ -26,6 +27,33 @@ async function review(page: import("@playwright/test").Page) {
   });
   await expect(page.locator(".invoice-line")).toHaveCount(6, {
     timeout: 10000,
+  });
+  // Existing seed lines can render before the uploaded original and its
+  // simulated reading transition finish. Geometry and edits must use the
+  // committed upload rather than the previous workspace during that change.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const invoice = JSON.parse(
+          localStorage.getItem("supermarket-prototype-v1")!,
+        ).invoice;
+        return {
+          fileName: invoice.file_name,
+          originalHash: invoice.file_data?.split(":").at(-1),
+          status: invoice.status,
+        };
+      }),
+    )
+    .toEqual({
+      fileName: "fictional-a2-invoice.png",
+      originalHash: createHash("sha256").update(pixel).digest("hex"),
+      status: "review",
+    });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
   });
 }
 test("each invoice line requires one date answer, collapses when confirmed and opens from the row", async ({

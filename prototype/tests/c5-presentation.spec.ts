@@ -743,7 +743,13 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   );
   expect(repeated.offers).toEqual(before.offers);
   expect(repeated.activity).toEqual(before.activity);
-  await button(existing, "Stop offer").click();
+  await existing.getByRole("button", { name: "More", exact: true }).click();
+  const stopExisting = page.getByRole("menuitem", {
+    name: "Stop offer · All branches",
+    exact: true,
+  });
+  await expect(stopExisting).toBeVisible();
+  await stopExisting.click();
   const stop = page.getByRole("dialog", { name: "Stop offer", exact: true });
   await assertContract(page, "Stop offer confirmation", "en-light");
   await button(stop, "Stop offer").click();

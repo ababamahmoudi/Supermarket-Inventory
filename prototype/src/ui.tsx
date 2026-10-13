@@ -585,8 +585,13 @@ export function DataTable({
             cell.querySelector<HTMLElement>(":scope > .actions") ?? cell;
           const controls = Array.from(
             group.querySelectorAll<HTMLElement>(
-              ":scope > .ui-button, :scope > .ui-menu-trigger, :scope > .table-row-link, :scope > .product-row-menu-placeholder",
+              ".ui-button, .ui-menu-trigger, .table-row-link, .product-row-menu-placeholder",
             ),
+          ).filter(
+            (control) =>
+              control.closest("td") === cell &&
+              !control.closest("dialog,[role='menu'],[role='listbox']") &&
+              control.getBoundingClientRect().width > 0,
           );
           if (!controls.length) continue;
           const gap = parseFloat(getComputedStyle(group).columnGap || "0") || 0;
@@ -790,6 +795,7 @@ export function DataTable({
                 ) : (
                   <th
                     className="table-actions table-disclosure-cell"
+                    data-column-label={translate("Details", "جزئیات")}
                     aria-label={translate("Details", "جزئیات")}
                   />
                 ))}
@@ -1234,23 +1240,40 @@ function usePopover(minWidth = 224) {
       Math.max(rect.width, minWidth),
       window.innerWidth - 24,
     );
-    const roomBelow = window.innerHeight - rect.bottom - 16;
-    const above = roomBelow < 240 && rect.top > roomBelow;
     const rtl = document.documentElement.dir === "rtl";
+    const left = Math.max(
+      12,
+      Math.min(
+        rtl ? rect.right - width : rect.left,
+        window.innerWidth - width - 12,
+      ),
+    );
+    // Undo remains above dialogs. Keep an overlapping popup above that live
+    // message as well, so its last option can still receive real pointer clicks.
+    const toast = document
+      .querySelector(".undo-toast-stack")
+      ?.getBoundingClientRect();
+    const overlapsToast =
+      toast &&
+      toast.width > 0 &&
+      toast.height > 0 &&
+      toast.right > left &&
+      toast.left < left + width;
+    const bottomLimit = Math.min(
+      window.innerHeight - 16,
+      overlapsToast ? toast.top - 8 : window.innerHeight - 16,
+    );
+    const roomBelow = bottomLimit - rect.bottom;
+    const aboveBottom = Math.min(rect.top - 8, bottomLimit);
+    const above = roomBelow < 240 && aboveBottom > roomBelow;
     setPosition({
       position: "fixed",
-      left: Math.max(
-        12,
-        Math.min(
-          rtl ? rect.right - width : rect.left,
-          window.innerWidth - width - 12,
-        ),
-      ),
+      left,
       width,
       ...(above
-        ? { bottom: window.innerHeight - rect.top + 8 }
+        ? { bottom: window.innerHeight - aboveBottom }
         : { top: rect.bottom + 8 }),
-      maxHeight: Math.max(120, above ? rect.top - 24 : roomBelow),
+      maxHeight: Math.max(120, above ? aboveBottom - 16 : roomBelow),
     });
   };
   const close = (restoreFocus = false) => {

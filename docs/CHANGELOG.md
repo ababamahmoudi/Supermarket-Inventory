@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-13 — C8 browser compatibility and layout verification in progress
+
+- Kept the new Change price workflow, date-tracking validation, two sale/request demo records, grouped label intents and exact 2–4 decimal display. Updated older browser fixtures and locators to exercise these current requirements while retaining their money, stock, scope, evidence, Undo and geometry checks; all 742 logical browser cases remain.
+- Fixed actual Returns overflow at 768 px, wrapped Payables pending-credit captions, kept product cost and its unit together, measured nested row actions correctly, retained complete phone disclosure captions and moved overlapping menus above the live Undo message. Improved the missing-date phone capture to include the existing validation helper.
+- The full frozen `d14f8a8` diagnostic completed honestly: 546 passed, 154 failed, 42 existing conditional skips, no flaky/interrupted/unrun cases. Every failure has an assigned correction or the repository-supported simulated nonsecure HTTP transport fixture. That record is retained; it is not relabelled as a green run.
+- Corrected targeted checks passed for invoice matrices and stock/cents, shared tables, Labels/print scopes, EN/FA Returns, offer filters and cost/unit rendering. The final source still needs fresh unit/lint/build, complete immutable browser verification, recapture and individual screenshot review before the review PR is ready. E1/E2/E3 remain separate authorised stages; no intermediate owner pause or automatic merge.
+
 ## 2026-10-12 — C6/C7 approval and C8/E specifications
 
 - Owner approved C6/C7. Root verified required green CI and merged them in order with original history before C8 starts from main `3b6da31`. Older pending review/CI entries remain historical checkpoints.
