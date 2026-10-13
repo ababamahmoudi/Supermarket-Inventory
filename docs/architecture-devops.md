@@ -151,3 +151,9 @@ Committed Reset with retirement pending (English): **Demo reset is complete. You
 Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
 
 Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
+
+### E1 durable publication and failed legacy file import
+
+The canonical company `business` IndexedDB transaction is E1's durable business publication. Retired legacy `supermarket-prototype-v1` text remains original evidence; normal commands do not rewrite it or publish a second live state there. Browser migration checks observe the real canonical commit and verify exact retained source/backup/file bytes. Decoded canonical History still supports lossless dictionary encode/decode and its genuine guarded Revert.
+
+A valid legacy file import whose original backup cannot be saved and read back stays blocked before canonical business initialization and before protected rendering. Do not display a protected original through a fabricated session or report migration success. Show the actual storage failure, retain the exact original file/source/backups and leave the canonical company business record absent. This is separate from the verified damaged-History quarantine described above.
