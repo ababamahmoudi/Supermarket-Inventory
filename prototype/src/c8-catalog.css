@@ -105,6 +105,20 @@
     > label {
     white-space: nowrap;
   }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-inline {
+    align-items: start;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-inline
+    > .product-editor-date-add {
+    justify-self: end;
+    align-self: start;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-add > .ui-button {
+    block-size: 44px;
+    min-block-size: 44px;
+  }
   :root
     .ui-dialog.product-editor-dialog
     .product-editor-date-inline
@@ -446,5 +460,15 @@
   }
   :root .catalog-products-table .catalog-charge-and-request .sale-request-pill {
     white-space: normal;
+  }
+}
+
+@container (max-width: 700px) {
+  :root .ui-dialog.product-editor-dialog .product-editor-date-add {
+    grid-column: 2;
+    gap: 0;
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-label-space {
+    display: none;
   }
 }

@@ -14,6 +14,19 @@
 .label-grayscale-preview {
   filter: grayscale(1);
 }
+/* Physical white paper uses ink independently of the app's light/dark tokens. */
+.shelf-label {
+  --text: #000;
+  --text-muted: #000;
+  --card: #fff;
+  color: #000;
+}
+.shelf-label .shelf-label-content .product-name small,
+.shelf-label .shelf-label-code,
+.shelf-label .promo-label-code,
+.shelf-label .label-description {
+  color: #000;
+}
 .shelf-label > .shelf-label-logo img {
   inline-size: 100%;
   block-size: 100%;

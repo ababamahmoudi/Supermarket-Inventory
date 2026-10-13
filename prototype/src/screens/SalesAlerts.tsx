@@ -143,21 +143,23 @@ export function SalesAlerts({
               <>
                 <p>
                   {t("Cost", "هزینه")}:{" "}
-                  {product && alert.previous_cost && (
-                    <ProductCost
-                      value={alert.previous_cost}
-                      product={product}
-                      config={state.config}
-                    />
-                  )}{" "}
-                  →{" "}
-                  {product && alert.new_cost && (
-                    <ProductCost
-                      value={alert.new_cost}
-                      product={product}
-                      config={state.config}
-                    />
-                  )}{" "}
+                  <LtrText>
+                    {product && alert.previous_cost && (
+                      <ProductCost
+                        value={alert.previous_cost}
+                        product={product}
+                        config={state.config}
+                      />
+                    )}{" "}
+                    →{" "}
+                    {product && alert.new_cost && (
+                      <ProductCost
+                        value={alert.new_cost}
+                        product={product}
+                        config={state.config}
+                      />
+                    )}
+                  </LtrText>{" "}
                   · {t("Sale", "حراج")}:{" "}
                   {alert.sale_price && (
                     <LtrText>
@@ -194,21 +196,23 @@ export function SalesAlerts({
                 </p>
                 <p>
                   {t("After the sale", "پس از حراج")}:{" "}
-                  {product && alert.regular_price_before && (
-                    <ProductPrice
-                      value={alert.regular_price_before}
-                      product={product}
-                      config={state.config}
-                    />
-                  )}{" "}
-                  →{" "}
-                  {product && afterSalePrice && (
-                    <ProductPrice
-                      value={afterSalePrice}
-                      product={product}
-                      config={state.config}
-                    />
-                  )}{" "}
+                  <LtrText>
+                    {product && alert.regular_price_before && (
+                      <ProductPrice
+                        value={alert.regular_price_before}
+                        product={product}
+                        config={state.config}
+                      />
+                    )}{" "}
+                    →{" "}
+                    {product && afterSalePrice && (
+                      <ProductPrice
+                        value={afterSalePrice}
+                        product={product}
+                        config={state.config}
+                      />
+                    )}
+                  </LtrText>{" "}
                   ·{" "}
                   {pendingApproval ? (
                     <a

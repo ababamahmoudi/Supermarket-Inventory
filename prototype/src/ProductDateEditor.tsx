@@ -501,7 +501,12 @@ export function ProductDateEditor({
                 onChange={(event) => patchAdd("lot_number", event.target.value)}
               />
             </Field>
-            <Button onClick={addRow}>{t("Add", "افزودن")}</Button>
+            <div className="field product-editor-date-add">
+              <label aria-hidden="true" className="product-date-label-space">
+                {"\u00a0"}
+              </label>
+              <Button onClick={addRow}>{t("Add", "افزودن")}</Button>
+            </div>
           </div>
           <p className="helper">
             {t(

@@ -142,7 +142,10 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
     .locator(".offer-task")
     .filter({ hasText: "Lavash Bread 500 g" });
   await expect(
-    task.getByRole("button", { name: "Confirm offer: 2 for $5", exact: true }),
+    task.getByRole("button", {
+      name: "Confirm offer: 2 for $5.00",
+      exact: true,
+    }),
   ).toBeVisible();
   const toggle = task.getByRole("checkbox", {
     name: "Join the mix-and-match pool",
@@ -153,13 +156,13 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   await expect(toggle).not.toBeChecked();
   await toggle.check();
   await task
-    .getByRole("button", { name: "Confirm offer: 2 for $5", exact: true })
+    .getByRole("button", { name: "Confirm offer: 2 for $5.00", exact: true })
     .click();
   await page
     .getByRole("tab", { name: "Mix-and-match pools", exact: true })
     .click();
   const pool = page.locator("section.card").filter({
-    has: page.getByRole("heading", { name: "2 for $5", exact: true }),
+    has: page.getByRole("heading", { name: "2 for $5.00", exact: true }),
   });
   for (const product of [
     "Sour Cherry Juice 1 L",

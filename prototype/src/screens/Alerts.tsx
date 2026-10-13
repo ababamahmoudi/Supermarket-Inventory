@@ -154,8 +154,7 @@ export function Alerts() {
                         <ProductName product={product} language={lang} />
                       )}
                       <small className="muted">
-                        {dateReminderMessage(state, alert, lang)} ·{" "}
-                        {branchName(alert.branch)}
+                        {dateReminderMessage(state, alert, lang)}
                       </small>
                     </span>
                     <Badge tone={past ? "danger" : "pending"}>

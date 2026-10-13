@@ -126,7 +126,17 @@ for (const language of ["en", "fa"] as const) {
     await signIn(page, "Supervisor");
     await page.goto("/#invoices");
     await uploadInvoice(page);
+    await expect
+      .poll(async () => (await saved(page)).invoice.file_data)
+      .toMatch(/^idb-file:v1:/);
     const before = await saved(page);
+    const originalHash = await retainedOriginalHash(
+      page,
+      before.invoice.file_data!,
+    );
+    expect(originalHash).toBe(
+      createHash("sha256").update(invoiceImage.buffer).digest("hex"),
+    );
     const line = page.locator(".invoice-line").first();
     await line
       .getByLabel("Unit cost before tax", { exact: true })
@@ -151,9 +161,18 @@ for (const language of ["en", "fa"] as const) {
     expect(after.ledger).toEqual(before.ledger);
     expect(after.invoices).toEqual(before.invoices);
     expect(after.invoice.file_data).toBe(before.invoice.file_data);
+    expect(await retainedOriginalHash(page, after.invoice.file_data!)).toBe(
+      originalHash,
+    );
     await page.reload();
     await expect(displayedCost).toBeVisible();
     await expect(displayedCost).toHaveText("$1.5525");
+    expect((await saved(page)).invoice.file_data).toBe(
+      before.invoice.file_data,
+    );
+    expect(await retainedOriginalHash(page, before.invoice.file_data!)).toBe(
+      originalHash,
+    );
   });
 
   test(`C8 Received uses whole cases and retained loose units (${language})`, async ({

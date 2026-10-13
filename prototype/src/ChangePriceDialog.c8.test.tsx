@@ -213,6 +213,30 @@ it("a non-discounting sale stays editable with linked validation and no mutation
   expect(screen.getByTestId("record").textContent).toBe(before);
 });
 
+it("claims savings only for a lower price, including regular-price edits", async () => {
+  const user = await show();
+  const dialog = screen.getByRole("dialog", { name: "Change price" });
+  const price = within(dialog).getByRole("textbox", { name: "Price" });
+  await user.type(price, "3.99");
+  expect(dialog).not.toHaveTextContent("Customers save");
+  await user.click(
+    within(dialog).getByRole("radio", { name: /^New regular price/ }),
+  );
+  expect(dialog).not.toHaveTextContent("Customers save");
+  await user.clear(price);
+  await user.type(price, "2.99");
+  expect(dialog).not.toHaveTextContent("Customers save");
+  await user.clear(price);
+  await user.type(price, "2.79");
+  expect(dialog).toHaveTextContent("Customers save $0.20 (7% off)");
+  await user.clear(price);
+  await user.type(price, "3.49");
+  expect(dialog).not.toHaveTextContent("Customers save");
+  expect(dialog.querySelector(".change-price-summary")).toHaveTextContent(
+    "$3.49 instead of $2.99",
+  );
+});
+
 it("regular weighed summary promises the actual saved canonical conversion while a sale keeps exact entered kilograms", async () => {
   const user = await show("0016");
   await user.click(screen.getByRole("button", { name: "Cancel" }));

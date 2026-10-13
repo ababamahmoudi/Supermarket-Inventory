@@ -550,7 +550,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                 </Button>
               ))}
           </div>
-          {current?.savings && price && (
+          {current?.savings && price && new Decimal(current.savings).gt(0) && (
             <p className="helper">
               {t("Customers save", "صرفه‌جویی مشتریان")}{" "}
               <Money

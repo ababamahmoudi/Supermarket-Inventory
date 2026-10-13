@@ -221,6 +221,7 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
         "manual price",
         "ordered",
         "requested",
+        "درخواست‌شده",
         "sent",
         "باز",
         "در انتظار جمع‌آوری",
