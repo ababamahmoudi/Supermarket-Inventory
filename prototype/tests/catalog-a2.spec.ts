@@ -1,6 +1,31 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 const STORAGE_KEY = "supermarket-prototype-v1";
+
+async function stopTrackingKeepDates(page: Page, editor: Locator) {
+  await editor
+    .getByRole("switch", { name: "Date tracking", exact: true })
+    .uncheck();
+  await chooseOption(
+    page,
+    editor.getByLabel("Stop tracking", { exact: true }),
+    "keep",
+    "Stop tracking, keep the date on the product",
+  );
+}
+
+async function openRegularPrice(page: Page) {
+  await page
+    .locator(".lookup-detail .product-header-actions")
+    .getByRole("button", { name: "Change price", exact: true })
+    .click();
+  const editor = page.getByRole("dialog", {
+    name: "Change price",
+    exact: true,
+  });
+  await editor.getByRole("radio", { name: /^New regular price/ }).click();
+  return editor;
+}
 
 test("Supervisor product page uses own route, Back link and shared editor", async ({
   page,
@@ -35,6 +60,8 @@ test("Supervisor product page uses own route, Back link and shared editor", asyn
   await editor
     .getByLabel("Description (English) (optional)", { exact: true })
     .fill("Crispy potato chips");
+  // Name-only editing must explicitly resolve this undated tracking fixture.
+  await stopTrackingKeepDates(page, editor);
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
@@ -60,7 +87,7 @@ test("Supervisor product page uses own route, Back link and shared editor", asyn
   await expect(page).toHaveURL(/#products$/);
 });
 
-test("Lookup price editor defaults to all branches and records the signed-in Supervisor", async ({
+test("Lookup Change price defaults to all stores and records the signed-in Supervisor", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -70,22 +97,15 @@ test("Lookup price editor defaults to all branches and records the signed-in Sup
     .getByRole("main")
     .getByLabel("Search products", { exact: true })
     .fill("0009");
-  await page
-    .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
-    .click();
-  const editor = page.getByRole("dialog", {
-    name: "Edit product",
-    exact: true,
-  });
+  const editor = await openRegularPrice(page);
+  await editor.getByLabel("Price", { exact: true }).fill("3.29");
+  await expect(
+    editor.getByRole("button", { name: "All stores", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("3.29");
-  await expect(editor.getByLabel("Approval scope", { exact: true })).toHaveText(
-    /All branches/,
-  );
-  await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
+  await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
@@ -94,16 +114,19 @@ test("Lookup price editor defaults to all branches and records the signed-in Sup
     STORAGE_KEY,
   );
   expect(audit).toMatchObject({
-    action: "Save product",
+    action: "Set regular price",
     by: "Demo Supervisor",
+    actor_username: "supervisor",
     reversible: true,
-    scope: "all",
+    branch: "all",
+    entity_type: "product",
+    entity_id: "0009",
   });
-  expect(audit.before.product.selling_price).toBe("2.99");
-  expect(audit.after.product.selling_price).toBe("3.29");
+  expect(audit.before.selling_price).toBe("2.99");
+  expect(audit.after.selling_price).toBe("3.29");
 });
 
-test("same editor changes this branch only, and validation stays inside the open dialog", async ({
+test("Change price changes this store only, and validation stays inside the open dialog", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -113,35 +136,33 @@ test("same editor changes this branch only, and validation stays inside the open
     .getByRole("main")
     .getByLabel("Search products", { exact: true })
     .fill("0009");
-  await page
-    .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
-    .click();
-  const editor = page.getByRole("dialog", {
-    name: "Edit product",
-    exact: true,
-  });
+  const editor = await openRegularPrice(page);
+  const before = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key)!).products,
+    STORAGE_KEY,
+  );
+  await editor.getByLabel("Price", { exact: true }).fill("3.291");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("3.291");
-  await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
   await expect(
     editor.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
+  expect(
+    await page.evaluate(
+      (key) => JSON.parse(localStorage.getItem(key)!).products,
+      STORAGE_KEY,
+    ),
+  ).toEqual(before);
+  await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("3.29");
-  await chooseOption(
-    page,
-    editor.getByLabel("Approval scope", { exact: true }),
-    "branch",
-    "This branch only",
-  );
-  await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Only North York", exact: true })
     .click();
+  await editor
+    .getByRole("button", { name: "Save new price", exact: true })
+    .click();
+  await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
@@ -238,6 +259,8 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
   });
   await editor.getByLabel("English name", { exact: true }).fill("Edited chips");
   await editor.getByLabel("Barcode", { exact: true }).fill(owner.barcode);
+  // Resolve tracking first so this failure proves the barcode business guard.
+  await stopTrackingKeepDates(page, editor);
   for (let attempt = 0; attempt < 2; attempt++) {
     await editor
       .getByRole("button", { name: "Save product", exact: true })

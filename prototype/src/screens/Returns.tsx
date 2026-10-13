@@ -185,6 +185,7 @@ export function Returns() {
   const tableColumns = useTableColumns("returns", [
     {
       key: "reference",
+      minWidth: 108,
       label: t("Return #", "شماره مرجوعی"),
       required: true,
       width: 108,
@@ -193,6 +194,7 @@ export function Returns() {
     },
     {
       key: "supplier",
+      minWidth: 240,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
       width: 220,

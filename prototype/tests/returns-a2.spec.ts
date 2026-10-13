@@ -96,7 +96,33 @@ async function checkAlignment(table: Locator) {
             "button,a,input,[role=combobox],[role=checkbox]",
           ),
         ].filter((control) => control.getClientRects().length);
+        // The separate Details cell intentionally renders an icon control.
+        // Count its real visible accessible name, while keeping every text
+        // fragment, caption and control containment check below.
+        const labelledControls = controls.filter((control) => {
+          const labelledBy = control.getAttribute("aria-labelledby");
+          const name =
+            control.getAttribute("aria-label")?.trim() ||
+            labelledBy
+              ?.split(/\s+/)
+              .map(
+                (id) => document.getElementById(id)?.textContent?.trim() ?? "",
+              )
+              .join(" ")
+              .trim();
+          return (
+            Boolean(name) &&
+            control.checkVisibility({
+              checkOpacity: true,
+              checkVisibilityCSS: true,
+            })
+          );
+        });
         cardCells.push({
+          label,
+          className: cell.className,
+          width: body.width,
+          widestLabelWord,
           matched: Boolean(header),
           labelled:
             index === 0 ||
@@ -105,12 +131,16 @@ async function checkAlignment(table: Locator) {
           captionFits: index === 0 || widestLabelWord <= body.width + 2,
           captionBeforeValue:
             index === 0 ||
-            fragments.every(
+            [
+              ...fragments,
+              ...controls.map((control) => control.getBoundingClientRect()),
+            ].every(
               (fragment) =>
                 fragment.top >=
                 body.top + Number.parseFloat(caption.fontSize) - 2,
             ),
           visibleValueFragments: fragments.length,
+          visibleLabelledControlValues: labelledControls.length,
           rowContained: contains(tableBox, rowBox),
           cellContained: contains(rowBox, body),
           valuesContained: fragments.every((fragment) =>
@@ -146,9 +176,11 @@ async function checkAlignment(table: Locator) {
     for (const cell of geometry.cardCells) {
       expect(cell.matched).toBe(true);
       expect(cell.labelled).toBe(true);
-      expect(cell.captionFits).toBe(true);
+      expect(cell.captionFits, JSON.stringify(cell)).toBe(true);
       expect(cell.captionBeforeValue).toBe(true);
-      expect(cell.visibleValueFragments).toBeGreaterThan(0);
+      expect(
+        cell.visibleValueFragments + cell.visibleLabelledControlValues,
+      ).toBeGreaterThan(0);
       expect(cell.rowContained).toBe(true);
       expect(cell.cellContained).toBe(true);
       expect(cell.valuesContained).toBe(true);

@@ -1,0 +1,289 @@
+{
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "reviewer": "/root/e1_notes_dates",
+  "reviewedCount": 15,
+  "verdict": "PASS",
+  "reviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "realFailures": [],
+  "referenceImages": [
+    {
+      "file": "1.png",
+      "bytes": 662344,
+      "sha256": "a5713ece8ceeda7e65ae3b87adcc4608d09f05e87f4db9b8d1e455605b29e860",
+      "openedIndividually": true,
+      "notes": "Original owner annotation individually reopened for source 0303445. Shared control spacing, grouped information, bounded fields and card/table containment were compared in assigned sale scenes. Feature-specific date editor, Labels, Orders and Product page evidence remains with those scene reviewers."
+    },
+    {
+      "file": "2.png",
+      "bytes": 620459,
+      "sha256": "a39c775e76acc03f6a0fac2311e8adb717554450f4f35c1306a094514ae082ad",
+      "openedIndividually": true,
+      "notes": "Original owner annotation individually reopened for source 0303445. Shared control spacing, grouped information, bounded fields and card/table containment were compared in assigned sale scenes. Feature-specific date editor, Labels, Orders and Product page evidence remains with those scene reviewers."
+    },
+    {
+      "file": "3.png",
+      "bytes": 644837,
+      "sha256": "63ed45dcd87ca9d7526065f09be2ee2bec539c0575f55adaa7de82a06db36df5",
+      "openedIndividually": true,
+      "notes": "Original owner annotation individually reopened for source 0303445. Shared control spacing, grouped information, bounded fields and card/table containment were compared in assigned sale scenes. Feature-specific date editor, Labels, Orders and Product page evidence remains with those scene reviewers."
+    },
+    {
+      "file": "4.png",
+      "bytes": 572152,
+      "sha256": "63c73c79d77d62a3ad581023d7e6aec1eabdabe96b2abb893fdfeecb91566259",
+      "openedIndividually": true,
+      "notes": "Original owner annotation individually reopened for source 0303445. Shared control spacing, grouped information, bounded fields and card/table containment were compared in assigned sale scenes. Feature-specific date editor, Labels, Orders and Product page evidence remains with those scene reviewers."
+    },
+    {
+      "file": "5.png",
+      "bytes": 557581,
+      "sha256": "42fb9b0ef52f9ef2547d8b13d9c045c7efac311de48eb354f334f9c6dfb81a8b",
+      "openedIndividually": true,
+      "notes": "Original owner annotation individually reopened for source 0303445. Shared control spacing, grouped information, bounded fields and card/table containment were compared in assigned sale scenes. Feature-specific date editor, Labels, Orders and Product page evidence remains with those scene reviewers."
+    }
+  ],
+  "reviews": [
+    {
+      "filename": "sale-lookup-en-light.png",
+      "scene": "sale-lookup",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "9e1bacfda90dd5552852df3b963989f6471e4c3f8c50bc2df021dfb5d1a7b823",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Current $16.99 is prominent beside Selling price/Before tax; Regular $20.99 is crossed under blue Sale and Until Oct 23. Product/code/provenance, divider, delivery and Taxable are distinct and contained."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-lookup-en-dark.png",
+      "scene": "sale-lookup",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "cf456ae1f69fafe1862658592b5031859eb0afc6be025196bfb1a46600046524",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Dark page/card separation is clear; full bilingual product title, $16.99, crossed $20.99, Sale/date and Change sale/Edit/More are readable with no overlap."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-lookup-fa-light.png",
+      "scene": "sale-lookup",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "eae545f00f0fd531de990109cc2d891af6d656f9f00c256ad195b00c718ff32e",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "RTL shell and Persian primary title retain distinct English title, code and LTR dollar amounts. Sale/date, divider, last received and supplier/invoice facts fit their card."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-lookup-mid-900.png",
+      "scene": "sale-lookup",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "9a27a0d035754e25b17ced8f5a83dcbbbebdf1462d46a712e88565d77fec2c82",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Compact icon shell/top bar fit. All sale actions, current/regular amounts, date/delivery facts and selected result remain within their respective cards."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-lookup-phone-dark.png",
+      "scene": "sale-lookup",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "0cc080b772f76887778161e2db1c597f0fbffd8b685ba0c4fef5eaadd85f8fce",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "At 390 px, actions wrap above intact $16.99; blue Sale/crossed regular/date stay together. Delivery supplier moves to its own line. Selected result title ellipsis retains the full title in the detail card."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-request-approval-en-light.png",
+      "scene": "sale-request-approval",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "f1aab3a85c0b682ea8db2fbde42ff983de8a6254bd7311d806a418e9fbfe3def",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Sunflower request shows $7.99, North York and Oct 13–26, requester reason and 24% margin. Amber acknowledgement and Approve/Change and approve/Reject fit inside the card; two ordinary approvals remain separate."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-request-approval-en-dark.png",
+      "scene": "sale-request-approval",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "b8f371f57289c8f7ed8d50c9a98382e3dce71611788a8e3453c75bfdc18ee242",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Margin warning, custom checkbox, request facts and three decision actions remain readable in dark theme. Ordinary approval amounts and source lines fit without clipping."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-request-approval-fa-light.png",
+      "scene": "sale-request-approval",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "08c1650b41bc33d754f841d8dddcb1ae1595c8958bb4d906a8d8a79e338cd01f",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Persian request and ordinary approval cards preserve intact LTR $7.99/$1.99/$2.99/$5.49, dates, cost/margin and RTL controls. Amber warning and three actions remain contained."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-request-approval-mid-900.png",
+      "scene": "sale-request-approval",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "10953e5e18eda9d718d63cd5907f60ac0f39a41a31946b956003f75c55b22e03",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Collapsed shell leaves the request facts/warning/actions and all four ordinary approval summary columns within their cards. No split amount or overlapping action observed."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sale-request-approval-phone-dark.png",
+      "scene": "sale-request-approval",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "c8bb814fed72d52aaf3dd2313ff282e1628d447661d9870cd424acac40e5e3d9",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "390 px request date/action rows wrap cleanly; Reject moves to a second row. Amber acknowledgement stays contained; ordinary approvals use two-column amount grids with intact cost/margin/source and actions."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sales-offers-en-light.png",
+      "scene": "sales-offers",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "558adc13f8b027831c679a801d75af6643067d8afb8b6ae8d81d5e5995bea96a",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "All seven rows are inside Current offers: pot sale $16.99 versus regular $20.99, oil current $9.49/requested $7.99, and five multi-buy products. Requested is blue; compound Sale requested is amber. End-row controls align."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sales-offers-en-dark.png",
+      "scene": "sales-offers",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "caac682d63efbd6112be0be02806e2d4a6ea7383b33c4f10f23c79e89a9f99fb",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Seven rows, filters, two sale identities, five multi-buy rows and end-row actions fit in the dark card. Requested stays blue; sale-request message amber; regular comparison is crossed and readable."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sales-offers-fa-light.png",
+      "scene": "sales-offers",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "8baadc5830aa07a5f909f73f9097188637b52da7cfaa10b10ab1e5e72cfb0425",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "RTL seven-row table retains bilingual names and complete dollar amounts. Persian Requested is blue, the same semantics as English; the compound requested-sale amount remains amber. Scope/status/actions stay separate."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sales-offers-mid-900.png",
+      "scene": "sales-offers",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "a55a121375689b7f9cea003d54f0ff8e1820df196d0e57857d8b77c72cddf404",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "900 px table keeps seven real identities and core offer amounts within the card. Omitted Scope/Status use explicit end expansion controls; no overflow or fragmented price observed."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    },
+    {
+      "filename": "sales-offers-phone-dark.png",
+      "scene": "sales-offers",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "558068c6c1a194f154465545112803ffac7eef45a9969456718b22c09de23338",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Opened at original 390-pixel resolution. All seven offer cards fit; bilingual names, current/requested amounts, dates/status and end Action controls wrap intact. The pre-E3 card layout is retained; no clipped currency or control."
+      ],
+      "framingLimits": [
+        "Static visual review only; behavior, permissions, menu interaction and printing require the separate executed checks."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,599 @@
+{
+  "C6": {
+    "verifiedAt": "2026-10-12T20:28:11.068292+00:00",
+    "transport": "live GitHub HTTPS API via configured proxy; no raw credentials requested or printed",
+    "headSHA": "261f544e63f8979f719b7abee1fdf596ad5dcc5c",
+    "runID": 38235989273,
+    "runURL": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38235989273",
+    "runStatus": "completed",
+    "runConclusion": "success",
+    "jobs": [
+      {
+        "id": 114766669739,
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38235989273/job/114766669739",
+        "check_run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/check-runs/114766669739",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Set up Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Prepare the environment",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run lint checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Run unit and integration tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Build the frontend",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Start and check services",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Check hooks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Run browser smoke tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Audit runtime dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Upload browser results",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13
+          },
+          {
+            "name": "Show logs and stop services",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14
+          },
+          {
+            "name": "Post Set up Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27
+          },
+          {
+            "name": "Post Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29
+          }
+        ]
+      },
+      {
+        "id": 114766670101,
+        "name": "Prototype lint, pricing and unit tests, build, and browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38235989273/job/114766670101",
+        "check_run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/check-runs/114766670101",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Read the prototype Node.js requirement",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Set up the prototype Node.js version",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install frozen prototype dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Check prototype lint and formatting",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Run prototype unit tests and every seed pricing case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Build the prototype",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Install Chromium and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Test desktop and phone browser workflows",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Upload prototype browser failures",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11
+          },
+          {
+            "name": "Post Set up the prototype Node.js version",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          },
+          {
+            "name": "Post Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/.github",
+        "start_line": 2,
+        "start_column": null,
+        "end_line": 2,
+        "end_column": null,
+        "annotation_level": "warning",
+        "title": "",
+        "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/.github",
+        "start_line": 1,
+        "start_column": null,
+        "end_line": 1,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/.github",
+        "start_line": 2,
+        "start_column": null,
+        "end_line": 2,
+        "end_column": null,
+        "annotation_level": "warning",
+        "title": "",
+        "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/.github",
+        "start_line": 83,
+        "start_column": null,
+        "end_line": 83,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "\ud83c\udfad Playwright Run Summary",
+        "message": "  1 flaky\n    [desktop] \u203a tests/weighed-c4.spec.ts:131:1 \u203a weighed defaults persist, change only display/rules, and a kg editor save preserves the approved lb amount \n  42 skipped\n  525 passed (13.8m)",
+        "raw_details": ""
+      },
+      {
+        "path": "prototype/tests/weighed-c4.spec.ts",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/prototype/tests/weighed-c4.spec.ts",
+        "start_line": 164,
+        "start_column": 5,
+        "end_line": 164,
+        "end_column": 5,
+        "annotation_level": "failure",
+        "title": "[desktop] \u203a tests/weighed-c4.spec.ts:131:1 \u203a weighed defaults persist",
+        "message": "  1) [desktop] \u203a tests/weighed-c4.spec.ts:131:1 \u203a weighed defaults persist, change only display/rules, and a kg editor save preserves the approved lb amount \n    Error: expect(locator).toHaveText(expected) failed\n\n    Locator:  getByLabel('Main display unit', { exact: true })\n    Expected: \"kg\"\n    Received: \"lb\"\n    Timeout:  5000ms\n\n    Call log:\n      - Expect \"toHaveText\" getByLabel('Main display unit', { exact: true }) with timeout 5000ms\n      - waiting for getByLabel('Main display unit', { exact: true })\n        14 \u00d7 locator resolved to <button id=\"_r_4_\" type=\"button\" role=\"combobox\" aria-invalid=\"false\" aria-expanded=\"false\" aria-controls=\"_r_5_\" aria-haspopup=\"listbox\" class=\"ui-select ui-input\" aria-labelledby=\"_r_4_-label\">\u2026</button>\n           - unexpected value \"lb\"\n\n\n      162 |   await expect(\n      163 |     page.getByLabel(\"Main display unit\", { exact: true }),\n    > 164 |   ).toHaveText(\"kg\");\n          |     ^\n      165 |   await expect(\n      166 |     page.getByRole(\"switch\", { name: \"Show second unit\", exact: true }),\n      167 |   ).not.toBeChecked();\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/weighed-c4.spec.ts:164:5",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/261f544e63f8979f719b7abee1fdf596ad5dcc5c/.github",
+        "start_line": 1,
+        "start_column": null,
+        "end_line": 1,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "raw_details": ""
+      }
+    ],
+    "allRequiredJobsPassed": true
+  },
+  "C7": {
+    "verifiedAt": "2026-10-12T20:30:18.341026+00:00",
+    "transport": "live GitHub HTTPS API via configured proxy; no raw credentials requested or printed",
+    "headSHA": "9fd814fcc71ba0d196719041fe8ce187bbcf45df",
+    "runID": 38255148622,
+    "runURL": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38255148622",
+    "runStatus": "completed",
+    "runConclusion": "success",
+    "jobs": [
+      {
+        "id": 114831175886,
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38255148622/job/114831175886",
+        "check_run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/check-runs/114831175886",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Set up Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Prepare the environment",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run lint checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Run unit and integration tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Build the frontend",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Start and check services",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Check hooks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Run browser smoke tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Audit runtime dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Upload browser results",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13
+          },
+          {
+            "name": "Show logs and stop services",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14
+          },
+          {
+            "name": "Post Set up Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27
+          },
+          {
+            "name": "Post Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29
+          }
+        ]
+      },
+      {
+        "id": 114831176184,
+        "name": "Prototype lint, pricing and unit tests, build, and browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38255148622/job/114831176184",
+        "check_run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/check-runs/114831176184",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Read the prototype Node.js requirement",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Set up the prototype Node.js version",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install frozen prototype dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Check prototype lint and formatting",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Run prototype unit tests and every seed pricing case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Build the prototype",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Install Chromium and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Test desktop and phone browser workflows",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Upload prototype browser failures",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11
+          },
+          {
+            "name": "Post Set up the prototype Node.js version",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          },
+          {
+            "name": "Post Check out repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/9fd814fcc71ba0d196719041fe8ce187bbcf45df/.github",
+        "start_line": 2,
+        "start_column": null,
+        "end_line": 2,
+        "end_column": null,
+        "annotation_level": "warning",
+        "title": "",
+        "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/9fd814fcc71ba0d196719041fe8ce187bbcf45df/.github",
+        "start_line": 1,
+        "start_column": null,
+        "end_line": 1,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/9fd814fcc71ba0d196719041fe8ce187bbcf45df/.github",
+        "start_line": 2,
+        "start_column": null,
+        "end_line": 2,
+        "end_column": null,
+        "annotation_level": "warning",
+        "title": "",
+        "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/9fd814fcc71ba0d196719041fe8ce187bbcf45df/.github",
+        "start_line": 21,
+        "start_column": null,
+        "end_line": 21,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "\ud83c\udfad Playwright Run Summary",
+        "message": "  42 skipped\n  598 passed (15.7m)",
+        "raw_details": ""
+      },
+      {
+        "path": ".github",
+        "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/9fd814fcc71ba0d196719041fe8ce187bbcf45df/.github",
+        "start_line": 1,
+        "start_column": null,
+        "end_line": 1,
+        "end_column": null,
+        "annotation_level": "notice",
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "raw_details": ""
+      }
+    ],
+    "allRequiredJobsPassed": true
+  },
+  "C6_merge": {
+    "sha": "ddadde72076aa0c3f7b90785f587be49312db66a",
+    "merged": true,
+    "message": "Pull Request successfully merged"
+  },
+  "C7_merge": {
+    "sha": "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2",
+    "merged": true,
+    "message": "Pull Request successfully merged"
+  },
+  "history_preserved": true,
+  "main_tree_matches_approved_C7": true,
+  "new_work_base": "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2"
+}

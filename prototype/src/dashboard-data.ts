@@ -137,6 +137,7 @@ export function dashboardPriceChanges(
     "Apply Branch 1 price to all",
     "Apply Branch 2 price to all",
     "Change selling price",
+    "Set regular price",
   ]);
   const isPriceChange = (item: DemoState["activity"][number]) => {
     if (actions.has(item.action)) return true;

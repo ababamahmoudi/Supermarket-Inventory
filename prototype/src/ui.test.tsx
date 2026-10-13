@@ -869,12 +869,12 @@ describe("shared language and number presentation", () => {
     expect(formatMoney("1260", { currency: "CAD" })).toBe("$1,260.00");
     expect(formatMoney("-2.99", { currency: "CAD" })).toBe("-$2.99");
     expect(formatMoney("9007199254740993.005", { currency: "CAD" })).toBe(
-      "$9,007,199,254,740,993.01",
+      "$9,007,199,254,740,993.005",
     );
     expect(formatMoney("1.2345", { currency: "CAD", decimals: 4 })).toBe(
       "$1.2345",
     );
-    expect(formatMoney("5", { currency: "CAD", compact: true })).toBe("$5");
+    expect(formatMoney("5", { currency: "CAD", compact: true })).toBe("$5.00");
     expect(formatMoney("5.49", { currency: "CAD", compact: true })).toBe(
       "$5.49",
     );
@@ -914,8 +914,11 @@ describe("shared language and number presentation", () => {
       "dir",
       "ltr",
     );
-    expect(screen.getByText("$5").closest("bdi")).toHaveAttribute("dir", "ltr");
-    expect(view.container).toHaveTextContent("۲ عدد $5");
+    expect(screen.getByText("$5.00").closest("bdi")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(view.container).toHaveTextContent("۲ عدد $5.00");
   });
 
   it("uses the current language name first and translates branch and demo-user names", () => {
@@ -1017,9 +1020,11 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     .mockImplementation(function (this: HTMLElement) {
       const measuredWidth = this.classList.contains("ui-data-table")
         ? width
-        : this.classList.contains("ui-button")
-          ? 80
-          : 0;
+        : this.classList.contains("table-details-toggle")
+          ? 36
+          : this.classList.contains("ui-button")
+            ? 80
+            : 0;
       return { width: measuredWidth, height: 40 } as DOMRect;
     });
   const contents = (hideSupplier: boolean) => (
@@ -1079,7 +1084,7 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show details" }));
     expect(screen.getByText("Waiting for pickup")).toBeVisible();
-    expect(measured[2]).toBe(104);
+    expect(measured[2]).toBe(140);
     rendered.rerender(<DemoProvider>{contents(true)}</DemoProvider>);
     measured = widths();
     expect(measured).toHaveLength(3);
@@ -1090,7 +1095,7 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     ).not.toBeInTheDocument();
     expect(measured[0]).toBeGreaterThanOrEqual(180);
     expect(measured[1]).toBeGreaterThanOrEqual(160);
-    expect(measured[2]).toBe(104);
+    expect(measured[2]).toBe(140);
     expect(observers.size).toBe(1);
     rendered.unmount();
     expect(observers.size).toBe(0);

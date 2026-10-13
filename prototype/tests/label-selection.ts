@@ -37,3 +37,27 @@ export async function addSelectedLabels(
     .click();
   await expect(bar).toHaveCount(0);
 }
+
+/** Select the actual C8 queue intent before choosing a per-group template. */
+export async function selectLabelGroup(
+  page: Page,
+  style: "regular" | "promo",
+  templateName?: string,
+) {
+  const groups = page.getByRole("tablist", {
+    name: /^(?:Label styles|نوع برچسب)$/,
+  });
+  if (await groups.count()) {
+    const tab = groups.getByRole("tab", {
+      name: style === "regular" ? /^(?:Regular|عادی)/ : /^(?:Promo|ویژه)/,
+    });
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+  }
+  if (templateName) {
+    const template = page.getByLabel(/^(?:Saved template|قالب ذخیره‌شده)$/);
+    await template.click();
+    await page.getByRole("option", { name: templateName, exact: true }).click();
+    await expect(template).toHaveText(templateName);
+  }
+}

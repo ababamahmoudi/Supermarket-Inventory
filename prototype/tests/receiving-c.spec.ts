@@ -9,6 +9,7 @@ import {
 } from "./helpers";
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
 import type { DemoState } from "../src/types";
+import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
 const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
@@ -197,23 +198,30 @@ test("Supervisor moves a posted invoice with a reason and retains its original d
   ).toBe("Warehouse");
 });
 
-test("invoice manual price requires Keep or Use and Keep preserves the approved price on posting", async ({
+test("invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.goto("/#product?code=0002");
-  await page.getByRole("button", { name: /^Edit / }).click();
-  const editor = page.getByRole("dialog", {
-    name: "Edit product",
-    exact: true,
-  });
+  const editor = await openC8PriceDialog(page, "0002");
+  await editor.getByRole("radio", { name: /^New regular price/ }).check();
+  await editor.getByLabel("Price", { exact: true }).fill("2.79");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("2.79");
+    .getByRole("checkbox", {
+      name: "Add regular labels to the label waitlist",
+      exact: true,
+    })
+    .uncheck();
   await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await saved(page)).products.find((entry) => entry.code === "0002")
+          ?.manual_prices?.all.price,
+    )
+    .toBe("2.79");
   await manualInvoice(page);
   const line = page.locator(".invoice-line").first();
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.4000");
@@ -225,10 +233,14 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
       name: "Confirm this invoice line",
       exact: true,
     }),
-  ).toBeDisabled();
-  await line
-    .getByRole("button", { name: "Keep manual price", exact: true })
-    .click();
+  ).toBeEnabled();
+  await expect(
+    line.getByRole("button", {
+      name: "Use the new calculated price $1.99",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await line.getByRole("button", { name: "Keep $2.79", exact: true }).click();
   await line.getByRole("button", { name: "No", exact: true }).click();
   await line
     .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
@@ -242,6 +254,9 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
     .getByRole("dialog", { name: "Post invoice", exact: true })
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
+  await expect
+    .poll(async () => (await saved(page)).invoice.status)
+    .toBe("posted");
   const after = await saved(page);
   const product = after.products.find((product) => product.code === "0002")!;
   expect(product.selling_price).toBe("2.79");
@@ -255,5 +270,19 @@ test("invoice manual price requires Keep or Use and Keep preserves the approved 
     after.approvals.filter(
       (approval) => approval.source_invoice_id === after.invoice.id,
     ),
-  ).toHaveLength(0);
+  ).toEqual([
+    expect.objectContaining({
+      type: "price_change",
+      product_code: "0002",
+      status: "pending",
+      current_price: "2.79",
+      proposed_price: "1.99",
+      unit_cost: "1.4000",
+      manual_price_review: expect.objectContaining({
+        kept_price: "2.79",
+        calculated_price: "1.99",
+        receiver_recommendation: "keep",
+      }),
+    }),
+  ]);
 });

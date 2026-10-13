@@ -4,6 +4,7 @@ import { effectiveExpiryLocation } from "./received";
 import type { Activity, Branch, DemoState, Role } from "./types";
 import type { RequestTransferEvent } from "./branch-requests";
 import Decimal from "decimal.js";
+import { revertSaleLifecycle, SalesError } from "./sales";
 
 export interface HistoryContext {
   company_id: string;
@@ -82,6 +83,8 @@ const safeRoots = new Set([
   "label_settings",
   "orders",
   "branch_requests",
+  "sales",
+  "sale_requests",
 ]);
 const neverUndo =
   /print|posted invoice|invoice_posted|payment|ledger|opening count|opening balance|stock|return_|replacement|received short|new_supplier_confirmed|move invoice|correct invoice|invoice_location_correction|invoice_content_correction/i;
@@ -108,6 +111,8 @@ const simpleActions = new Set([
   "Add date",
   "Remove date",
   "Stop tracking this product",
+  "Set regular price",
+  "Save sales settings",
 ]);
 const requestActions = new Set([
   "Save draft",
@@ -414,6 +419,41 @@ export function attachReversals(
   const entries = after.activity.filter((entry) => !previous.has(entry.id));
   const patches = changedPaths(before, after);
   for (const entry of entries) {
+    if (entry.entity_type === "sale" && entry.reversible) {
+      const selected = after.sales?.find(
+        (item) =>
+          item.id === entry.entity_id && item.company_id === entry.company_id,
+      );
+      const prior = before.sales?.find(
+        (item) =>
+          item.id === entry.entity_id && item.company_id === entry.company_id,
+      );
+      if (!selected) {
+        entry.reversible = false;
+        continue;
+      }
+      entry.reversal = [
+        {
+          path: ["sales", { key: "id", value: selected.id }],
+          before: prior && structuredClone(prior),
+          after: structuredClone(selected),
+          before_exists: Boolean(prior),
+          after_exists: true,
+          creation: prior ? undefined : "stop",
+          guards: [
+            {
+              path: ["sales", { key: "id", value: selected.id }, "revision"],
+              after: selected.revision,
+              exists: true,
+            },
+          ],
+        },
+      ];
+      if (entry.by !== "System") entry.actor_username ??= context.username;
+      entry.device = "Browser";
+      continue;
+    }
+    if (entry.by === "System" && entry.reversible === false) continue;
     entry.by = context.actor;
     entry.actor_username = context.username;
     entry.device = "Browser";
@@ -707,12 +747,37 @@ export function historyChangePreview(
 ): { patch: ReversalPatch; current: unknown; conflict: boolean }[] {
   return (entry.reversal ?? []).map((patch) => {
     const current = readPath(state, patch.path);
+    const saleTerms = (value: unknown) =>
+      own(value)
+        ? Object.fromEntries(
+            [
+              "id",
+              "company_id",
+              "branch",
+              "product_code",
+              "group_id",
+              "sale_price",
+              "price_unit",
+              "starts_on",
+              "last_day",
+              "status",
+              "revision",
+              "add_promo_labels",
+              "minimum_margin_accepted",
+              "below_cost_reason",
+            ].map((key) => [key, value[key]]),
+          )
+        : value;
+    const actual =
+      entry.entity_type === "sale" ? saleTerms(current.value) : current.value;
+    const expected =
+      entry.entity_type === "sale" ? saleTerms(patch.after) : patch.after;
     return {
       patch,
       current: current.value,
       conflict:
         current.exists !== patch.after_exists ||
-        !equal(current.value, patch.after) ||
+        !equal(actual, expected) ||
         Boolean(
           patch.guards?.some((guard) => {
             const value = readPath(state, guard.path);
@@ -740,6 +805,23 @@ export function reverseActivity(
     throw new HistoryError("permission");
   if (!canReverse(state, entry, context, mode))
     throw new HistoryError("irreversible");
+  if (entry.entity_type === "sale") {
+    try {
+      return revertSaleLifecycle(state, context, id, mode, now);
+    } catch (error) {
+      if (error instanceof SalesError)
+        throw new HistoryError(
+          error.code === "elapsed"
+            ? "expired"
+            : error.code === "revision"
+              ? "conflict"
+              : error.code === "permission"
+                ? "permission"
+                : "conflict",
+        );
+      throw error;
+    }
+  }
   const preview = historyChangePreview(state, entry);
   if (preview.some((item) => item.conflict)) throw new HistoryError("conflict");
   for (const { patch } of preview) patchScope(state, patch, context, entry);

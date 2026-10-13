@@ -26,9 +26,10 @@ import {
 } from "../received";
 import { activeTrackedDates, dateIsDueSoon } from "../date-tracking";
 import { approvalSnapshot, resolveApproval } from "../approvals";
-import { effectivePrice } from "../catalog";
+import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
 import { SupplierApproval } from "./SupplierApproval";
+import { SaleRequestCards } from "./SalesApprovals";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import {
   demoUserLabel,
@@ -181,6 +182,10 @@ export function Dashboard() {
     })),
     context,
   ).filter((item) => item.status === "pending");
+  const pendingSaleRequests = scopedRecords(
+    state.sale_requests ?? [],
+    context,
+  ).filter((request) => request.status === "pending");
   const alertPriority: Record<Alert["type"], number> = {
     lower_price: 0,
     price_conflict: 1,
@@ -190,6 +195,10 @@ export function Dashboard() {
     order_differences: 5,
     return_credit_overdue: 6,
     date_reminder: 7,
+    sale_cost_increase: 2,
+    sale_regular_not_above_sale: 2,
+    sale_no_end_reminder: 8,
+    sale_delivery_release: 8,
   };
   const alerts = state.alerts
     .filter(
@@ -328,6 +337,16 @@ export function Dashboard() {
         "مرجوعی در انتظار اعتبار",
       ),
       date_reminder: t("Date tracking", "پیگیری تاریخ"),
+      sale_cost_increase: t(
+        "Cost went up during a sale",
+        "هزینه هنگام تخفیف افزایش یافت",
+      ),
+      sale_regular_not_above_sale: t(
+        "The new regular price would be lower than the sale price",
+        "قیمت عادی جدید کمتر از قیمت تخفیف خواهد بود",
+      ),
+      sale_no_end_reminder: t("Sale", "تخفیف"),
+      sale_delivery_release: t("Sale ended", "تخفیف پایان یافت"),
     })[type];
   const invoiceStatus = (status: DemoInvoice["status"]) =>
     ({
@@ -525,7 +544,7 @@ export function Dashboard() {
   const kpis = [
     {
       label: t("Approvals waiting", "تأییدهای در انتظار"),
-      value: approvals.length,
+      value: approvals.length + pendingSaleRequests.length,
       detail: `${translateCount("{{count}} price change", "{{count}} price changes", "{{count}} تغییر قیمت", "{{count}} تغییر قیمت", priceChanges, lang)} · ${translateCount("{{count}} new product", "{{count}} new products", "{{count}} محصول جدید", "{{count}} محصول جدید", newProducts, lang)}`,
       page: "approvals",
       icon: ClipboardCheck,
@@ -615,12 +634,13 @@ export function Dashboard() {
               title={t("Approvals queue", "صف تأییدها")}
               className="dashboard-approvals"
             >
-              {approvals.length === 0 ? (
+              {approvals.length === 0 && pendingSaleRequests.length === 0 ? (
                 <EmptyState>
                   {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
                 </EmptyState>
               ) : (
                 <div className="dashboard-queue">
+                  <SaleRequestCards compact />
                   {approvals.slice(0, 6).map((item) => {
                     if (item.type === "new_supplier")
                       return (
@@ -636,11 +656,7 @@ export function Dashboard() {
                         value.code === item.product_code,
                     );
                     if (!product) return null;
-                    const approved = effectivePrice(
-                      state,
-                      product,
-                      item.branch,
-                    );
+                    const approved = regularPrice(state, product, item.branch);
                     const inline =
                       !item.manual_override &&
                       (item.type === "new_product" ||
@@ -704,6 +720,14 @@ export function Dashboard() {
                         </span>
                         <span className="dashboard-queue-branch muted">
                           {branchName(item.branch)}
+                          {item.applies_after_sale && (
+                            <small className="dashboard-after-sale-note">
+                              {t(
+                                "Applies after the sale",
+                                "پس از تخفیف اعمال می‌شود",
+                              )}
+                            </small>
+                          )}
                         </span>
                         <div className="dashboard-inline-actions">
                           {inline ? (
@@ -786,6 +810,11 @@ export function Dashboard() {
                             </>
                           )}
                           {branchName(item.branch)}
+                          {item.type.startsWith("sale_") && (
+                            <span className="dashboard-alert-cost">
+                              {alertType(item.type)}
+                            </span>
+                          )}
                           {item.previous_cost && item.new_cost && (
                             <span className="dashboard-alert-cost">
                               {t("Old cost", "هزینه قبلی")}{" "}
@@ -799,15 +828,26 @@ export function Dashboard() {
                       pill={
                         <Badge
                           tone={
-                            item.type === "lower_price" ||
-                            item.type === "other_supplier"
-                              ? "pending"
-                              : "danger"
+                            item.type === "date_reminder"
+                              ? (
+                                  item.date
+                                    ? item.date < today
+                                    : (item.days_left ?? 0) < 0
+                                )
+                                ? "danger"
+                                : "pending"
+                              : item.type === "lower_price" ||
+                                  item.type === "other_supplier" ||
+                                  item.type.startsWith("sale_")
+                                ? "pending"
+                                : "danger"
                           }
                         >
                           {item.type === "price_conflict"
                             ? t("Conflict", "اختلاف")
-                            : alertType(item.type)}
+                            : item.type.startsWith("sale_")
+                              ? t("Pending", "در انتظار")
+                              : alertType(item.type)}
                         </Badge>
                       }
                       action={
@@ -870,7 +910,7 @@ export function Dashboard() {
                       mobilePrimary: true,
                       minWidth: 112,
                     },
-                    { key: "supplier", width: 144, priority: 3, minWidth: 144 },
+                    { key: "supplier", width: 240, priority: 3, minWidth: 240 },
                     { key: "branch", width: 112, priority: 5, minWidth: 112 },
                     { key: "date", width: 128, priority: 4, minWidth: 128 },
                     { key: "status", width: 112, priority: 2, minWidth: 112 },
@@ -894,7 +934,9 @@ export function Dashboard() {
                         data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
                       >
                         <td>
-                          <bdi>{invoice.supplier_invoice_number || "—"}</bdi>
+                          <LtrText className="dashboard-invoice-reference">
+                            {invoice.supplier_invoice_number || "—"}
+                          </LtrText>
                         </td>
                         <td>
                           <LtrText>{invoice.supplier}</LtrText>
@@ -937,7 +979,7 @@ export function Dashboard() {
               <div className="dashboard-card-header">
                 <h2>{t("Returns", "مرجوعی‌ها")}</h2>
                 <Button
-                  variant="secondary"
+                  variant="plain"
                   size="sm"
                   onClick={() => navigate("returns")}
                 >
@@ -1033,7 +1075,7 @@ export function Dashboard() {
                     required: true,
                     mobilePrimary: true,
                     priority: 1,
-                    minWidth: 176,
+                    minWidth: 240,
                   },
                   {
                     key: "balance",
@@ -1288,7 +1330,9 @@ export function Dashboard() {
                         <>
                           {branchName(item.branch)} ·{" "}
                           <DateText value={item.date} /> ·{" "}
-                          <LtrText>{item.invoice_number}</LtrText>
+                          <LtrText className="dashboard-invoice-reference">
+                            {item.invoice_number}
+                          </LtrText>
                         </>
                       }
                       pill={
@@ -1337,7 +1381,7 @@ export function Dashboard() {
                       entry.code === item.product_code,
                   );
                   const price = product
-                    ? effectivePrice(
+                    ? regularPrice(
                         state,
                         product,
                         item.branch === "all" ? branch : item.branch,

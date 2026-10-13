@@ -1,0 +1,39 @@
+{
+  "sourceCommit": "00fc29d6d802a7db14688c1dc78f5fb55f498ee6",
+  "startedAt": "2026-10-13T17:16:15.916Z",
+  "finishedAt": "2026-10-13T18:07:11.708Z",
+  "actualExitCode": 1,
+  "unchanged": true,
+  "retries": 0,
+  "workers": 2,
+  "stats": {
+    "startTime": "2026-10-13T17:16:18.692Z",
+    "duration": 3051879.4820000003,
+    "expected": 699,
+    "skipped": 42,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "failures": [
+    {
+      "title": "product-unit-order-c6.spec.ts / stored Persian decimal retains its actual visual order in en at 390px",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at signIn (/tmp/c8-source-00fc29d/prototype/tests/helpers.ts:62:6)\n    at /tmp/c8-source-00fc29d/prototype/tests/product-unit-order-c6.spec.ts:10:7",
+            "location": {
+              "file": "/tmp/c8-source-00fc29d/prototype/tests/helpers.ts",
+              "column": 6,
+              "line": 62
+            },
+            "snippet": "\u001b[90m   at \u001b[39mhelpers.ts:62\n\n  60 |       }),\n  61 |     )\n> 62 |     .toBe(true);\n     |      ^\n  63 | }\n  64 |\n  65 | export async function chooseOption("
+          }
+        }
+      ]
+    }
+  ]
+}

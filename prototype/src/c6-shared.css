@@ -865,9 +865,20 @@ div.ui-kpi:hover {
     font-size: var(--font-size-caption);
     font-weight: var(--font-weight-caption);
     margin-block-end: 6px;
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
   }
   :root .ui-data-table.is-responsive tbody tr td.numeric {
     align-items: flex-start;
+  }
+  :root[dir="rtl"]
+    .ui-data-table.is-responsive
+    tbody
+    tr
+    td:not(:first-child)::before {
+    font-family: var(--font-fa);
   }
   :root .ui-data-table.is-responsive tbody tr td.table-actions {
     grid-column: 1 / -1;

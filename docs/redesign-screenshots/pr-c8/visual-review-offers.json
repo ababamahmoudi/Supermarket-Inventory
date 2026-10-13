@@ -1,0 +1,297 @@
+{
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "reviewer": "c8_offers",
+  "reviewedAt": "2026-10-13",
+  "diagnostic": false,
+  "verdict": "pass",
+  "reviewPassed": true,
+  "strictGalleryEligible": true,
+  "realFailures": [],
+  "referenceImages": [
+    {
+      "file": "1.png",
+      "sha256": "a5713ece8ceeda7e65ae3b87adcc4608d09f05e87f4db9b8d1e455605b29e860",
+      "openedIndividually": true,
+      "openedDetail": "original"
+    },
+    {
+      "file": "2.png",
+      "sha256": "a39c775e76acc03f6a0fac2311e8adb717554450f4f35c1306a094514ae082ad",
+      "openedIndividually": true,
+      "openedDetail": "original"
+    },
+    {
+      "file": "3.png",
+      "sha256": "63ed45dcd87ca9d7526065f09be2ee2bec539c0575f55adaa7de82a06db36df5",
+      "openedIndividually": true,
+      "openedDetail": "original"
+    },
+    {
+      "file": "4.png",
+      "sha256": "63c73c79d77d62a3ad581023d7e6aec1eabdabe96b2abb893fdfeecb91566259",
+      "openedIndividually": true,
+      "openedDetail": "original"
+    },
+    {
+      "file": "5.png",
+      "sha256": "42fb9b0ef52f9ef2547d8b13d9c045c7efac311de48eb354f334f9c6dfb81a8b",
+      "openedIndividually": true,
+      "openedDetail": "original"
+    }
+  ],
+  "referenceScope": "All five unchanged original owner annotations were opened separately for this current source review: date-row/control alignment, missing tracked-date save rule, Labels containment, order inputs and separation of product information. This assigned three-scene subset assesses visible grouping/containment/physical label presentation and does not claim to verify the other annotated screens.",
+  "reviews": [
+    {
+      "filename": "change-price-sale-en-light.png",
+      "sha256": "e348dc05694efb6d46bd08510463c51b3da1f9406ed0c2ebad10f07bfc91ca65",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Visible Sale mode shows current North York regular $1.49, entered 1.19, positive customer saving $0.30 (20% off) and margin 18%. The bounded price field and distinct custom mode cards stay within the dialog with no visible overlaps.",
+        "Store scope, Start choices and inclusive Last day date 2026-10-26 are visibly grouped; the date control stays in its column and the footer remains separate."
+      ],
+      "framingLimits": [
+        "The initial body viewport stops after the Last day date. Later date quick-picks, pricing warnings, label choice and the lower summary require scrolling and are not fully shown by this image."
+      ]
+    },
+    {
+      "filename": "change-price-sale-en-dark.png",
+      "sha256": "bef2076e84923e4b9a5eb4c21a6bac9da7426c9313ba635a73f1602b2fd42ce7",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Visible Sale mode shows current North York regular $1.49, entered 1.19, positive customer saving $0.30 (20% off) and margin 18%. The bounded price field and distinct custom mode cards stay within the dialog with no visible overlaps.",
+        "Store scope, Start choices and inclusive Last day date 2026-10-26 are visibly grouped; the date control stays in its column and the footer remains separate."
+      ],
+      "framingLimits": [
+        "The initial body viewport stops after the Last day date. Later date quick-picks, pricing warnings, label choice and the lower summary require scrolling and are not fully shown by this image."
+      ]
+    },
+    {
+      "filename": "change-price-sale-fa-light.png",
+      "sha256": "8e2b95ec27cb4f8ef864a209a8556a8ae812a48ae3507854f1f948da8857606a",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Visible Sale mode shows current North York regular $1.49, entered 1.19, positive customer saving $0.30 (20% off) and margin 18%. The bounded price field and distinct custom mode cards stay within the dialog with no visible overlaps.",
+        "Store scope, Start choices and inclusive Last day date 2026-10-26 are visibly grouped; the date control stays in its column and the footer remains separate.",
+        "Persian primary copy and control placement mirror to RTL while currency/numeric fragments stay isolated and readable; the English secondary product name remains intact."
+      ],
+      "framingLimits": [
+        "The initial body viewport stops after the Last day date. Later date quick-picks, pricing warnings, label choice and the lower summary require scrolling and are not fully shown by this image."
+      ]
+    },
+    {
+      "filename": "change-price-sale-mid-900.png",
+      "sha256": "c37440c201096d30266ad0984b6a0bd149d476f8409e00fb6dae481d51c4b047",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Visible Sale mode shows current North York regular $1.49, entered 1.19, positive customer saving $0.30 (20% off) and margin 18%. The bounded price field and distinct custom mode cards stay within the dialog with no visible overlaps.",
+        "Store scope, Start choices and inclusive Last day date 2026-10-26 are visibly grouped; the date control stays in its column and the footer remains separate."
+      ],
+      "framingLimits": [
+        "The initial body viewport stops after the Last day date. Later date quick-picks, pricing warnings, label choice and the lower summary require scrolling and are not fully shown by this image."
+      ]
+    },
+    {
+      "filename": "change-price-sale-phone-dark.png",
+      "sha256": "30998b53cd670437f074cbd82418cc5625ffa749a2ee279482adf7f09abf8841",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Visible Sale mode shows current North York regular $1.49, entered 1.19, positive customer saving $0.30 (20% off) and margin 18%. The bounded price field and distinct custom mode cards stay within the dialog with no visible overlaps.",
+        "The two mode cards stack and the four percentage choices wrap into two rows. All visible numbers and footer buttons remain readable in the narrow dark dialog."
+      ],
+      "framingLimits": [
+        "This initial phone body position ends at the margin. Store/schedule controls, pricing warnings, label choice and lower summary are outside the captured body viewport; no claim is made about their unseen contents or interaction."
+      ]
+    },
+    {
+      "filename": "change-price-regular-en-light.png",
+      "sha256": "442dfa9208b61a34bc8a3488a7bab228af678dacb7876044658fae4f34a7ddc6",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Selected New regular price shows entered 2.29 against current $1.49 and margin 57%, without a false negative customer-saving claim. The bounded price field and two distinct mode cards remain contained.",
+        "The Store scope control, checked regular-label choice and separate summary are visible. The summary retains both product names and readable $2.29/$1.49 comparison with all 3 stores."
+      ],
+      "framingLimits": []
+    },
+    {
+      "filename": "change-price-regular-en-dark.png",
+      "sha256": "6f3cab92d26a7e8d8e1c4e1df15e54ccccdd5eb965856f3dd4fb3208f26c37fb",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Selected New regular price shows entered 2.29 against current $1.49 and margin 57%, without a false negative customer-saving claim. The bounded price field and two distinct mode cards remain contained.",
+        "The Store scope control, checked regular-label choice and separate summary are visible. The summary retains both product names and readable $2.29/$1.49 comparison with all 3 stores."
+      ],
+      "framingLimits": []
+    },
+    {
+      "filename": "change-price-regular-fa-light.png",
+      "sha256": "8d264de09b54ea7df36c5462965f9c5a9ee211832485d074f16198d33e9ffd22",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Selected New regular price shows entered 2.29 against current $1.49 and margin 57%, without a false negative customer-saving claim. The bounded price field and two distinct mode cards remain contained.",
+        "The Store scope control, checked regular-label choice and separate summary are visible. The summary retains both product names and readable $2.29/$1.49 comparison with all 3 stores.",
+        "Persian primary copy and control placement mirror to RTL while currency/numeric fragments stay isolated and readable; the English secondary product name remains intact."
+      ],
+      "framingLimits": []
+    },
+    {
+      "filename": "change-price-regular-mid-900.png",
+      "sha256": "f057bacfd62f9c87a083c6541fb6063b7d058848a78b6024023a09c7034418cf",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Selected New regular price shows entered 2.29 against current $1.49 and margin 57%, without a false negative customer-saving claim. The bounded price field and two distinct mode cards remain contained.",
+        "The Store scope control, checked regular-label choice and separate summary are visible. The summary retains both product names and readable $2.29/$1.49 comparison with all 3 stores."
+      ],
+      "framingLimits": []
+    },
+    {
+      "filename": "change-price-regular-phone-dark.png",
+      "sha256": "1d9f39ad3a67238604cf86abd509c3be07933f372366106a55120e93e0014c8c",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "Selected New regular price shows entered 2.29 against current $1.49 and margin 57%, without a false negative customer-saving claim. The bounded price field and two distinct mode cards remain contained.",
+        "The mode cards stack, percentage choices wrap into two rows, and Save new price stays readable in the separate footer."
+      ],
+      "framingLimits": [
+        "Only the Stores heading is visible at this phone scroll position. Store choices, checked regular-label option and summary are below the captured body viewport."
+      ]
+    },
+    {
+      "filename": "sale-promo-label-en-light.png",
+      "sha256": "423aa74ccd7d325683de12ba5ec7d7a8b9ff9f8650988b73c50afee40ee22436",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "The original-detail physical white Promo sheet contains the black SPECIAL/ویژه band, prominent $16.99 Sale amount, smaller regular $20.99, both configured product names, Product Code 0012, 24 cm and tax text. Visible ink and border remain black and fully contained."
+      ],
+      "framingLimits": [
+        "This is the on-screen grayscale physical-sheet preview. The image alone does not establish printer settings, Print/Confirm interaction or actual printed dimensions."
+      ]
+    },
+    {
+      "filename": "sale-promo-label-en-dark.png",
+      "sha256": "455aad724e1f1ec9ea36b70b840a3d0c4a07abb55e30d8e10c42663bec2568d1",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "The original-detail physical white Promo sheet contains the black SPECIAL/ویژه band, prominent $16.99 Sale amount, smaller regular $20.99, both configured product names, Product Code 0012, 24 cm and tax text. Visible ink and border remain black and fully contained.",
+        "Reopened this same unchanged raw PNG separately at original detail after the multi-image tool preview omitted the ink. The single original-detail open shows complete SPECIAL, price, both names, code/unit and tax content; raw pixel evidence confirms 27,975 dark pixels in the SPECIAL-band region. No source or PNG was modified."
+      ],
+      "framingLimits": [
+        "This is the on-screen grayscale physical-sheet preview. The image alone does not establish printer settings, Print/Confirm interaction or actual printed dimensions."
+      ]
+    },
+    {
+      "filename": "sale-promo-label-fa-light.png",
+      "sha256": "c0614d36a2953f448810948b985740ce223b9d2664e932350f766bc02de22179",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "The original-detail physical white Promo sheet contains the black SPECIAL/ویژه band, prominent $16.99 Sale amount, smaller regular $20.99, both configured product names, Product Code 0012, 24 cm and tax text. Visible ink and border remain black and fully contained.",
+        "Persian primary copy and control placement mirror to RTL while currency/numeric fragments stay isolated and readable; the English secondary product name remains intact."
+      ],
+      "framingLimits": [
+        "This is the on-screen grayscale physical-sheet preview. The image alone does not establish printer settings, Print/Confirm interaction or actual printed dimensions."
+      ]
+    },
+    {
+      "filename": "sale-promo-label-mid-900.png",
+      "sha256": "ba5194f78c1174ff81426a0be412a4b512e73146cc395dec221b384c6459a399",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "The original-detail physical white Promo sheet contains the black SPECIAL/ویژه band, prominent $16.99 Sale amount, smaller regular $20.99, both configured product names, Product Code 0012, 24 cm and tax text. Visible ink and border remain black and fully contained.",
+        "The slot map and physical sheet stack within the page. The full price/name/code/tax content remains present on the small preview without horizontal clipping."
+      ],
+      "framingLimits": [
+        "This is the on-screen grayscale physical-sheet preview. The image alone does not establish printer settings, Print/Confirm interaction or actual printed dimensions."
+      ]
+    },
+    {
+      "filename": "sale-promo-label-phone-dark.png",
+      "sha256": "8fac44a18112a7ce9096e3d67ad6570a1638ee6c48282683c259ab11d47ebe23",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "openedDetail": "original",
+      "verdict": "pass",
+      "realFailures": [],
+      "findings": [
+        "The original-detail physical white Promo sheet contains the black SPECIAL/ویژه band, prominent $16.99 Sale amount, smaller regular $20.99, both configured product names, Product Code 0012, 24 cm and tax text. Visible ink and border remain black and fully contained.",
+        "The slot map and physical sheet stack within the page. The full price/name/code/tax content remains present on the small preview without horizontal clipping."
+      ],
+      "framingLimits": [
+        "This is the on-screen grayscale physical-sheet preview. The image alone does not establish printer settings, Print/Confirm interaction or actual printed dimensions."
+      ]
+    }
+  ],
+  "reviewedCount": 15,
+  "passedCount": 15,
+  "failedCount": 0,
+  "rawPreviewObservation": {
+    "filename": "sale-promo-label-en-dark.png",
+    "sha256": "455aad724e1f1ec9ea36b70b840a3d0c4a07abb55e30d8e10c42663bec2568d1",
+    "multiImageToolPreviewIncomplete": true,
+    "sameRawPNGReopenedSeparatelyAtOriginalDetail": true,
+    "rawSpecialRegion": [
+      710,
+      833,
+      1342,
+      881
+    ],
+    "rawDarkPixels": 27975,
+    "regionPixelCount": 30336,
+    "sourceOrImageModification": false,
+    "productionFailureClaimed": false
+  }
+}

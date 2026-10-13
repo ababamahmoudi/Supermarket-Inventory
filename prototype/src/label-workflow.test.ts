@@ -27,6 +27,13 @@ const worker: LabelActor = {
   role: "floor_worker",
   branch: "Branch 1",
 };
+function emptyManualQueueState() {
+  const state = initialState();
+  // C8 seeds a real Sale-start Promo label. These existing manual-add scenarios
+  // start after the operator clears it through the permitted branch workflow.
+  clearLabelWaitlist(state, "Branch 1", supervisor);
+  return state;
+}
 const template: LabelTemplate = {
   id: "template1",
   company_id: initialState().config.company.seed_key,
@@ -45,7 +52,7 @@ const template: LabelTemplate = {
 
 describe("shared branch label waitlist", () => {
   it("combines copies for shared workers, persists stable IDs, and separates branches", () => {
-    const state = initialState();
+    const state = emptyManualQueueState();
     addLabelsToWaitlist(state, ["0003", "0003"], 2, "Branch 1", worker);
     addLabelsToWaitlist(state, ["0003"], 1, "Branch 1", supervisor);
     addLabelsToWaitlist(state, ["0003"], 4, "Branch 2", supervisor);
@@ -60,7 +67,7 @@ describe("shared branch label waitlist", () => {
     ).toBe(true);
   });
   it("blocks cashiers, cross-branch workers, pending new products and invalid copies atomically", () => {
-    const state = initialState();
+    const state = emptyManualQueueState();
     for (const call of [
       () =>
         addLabelsToWaitlist(state, ["0003"], 1, "Branch 1", {
@@ -78,7 +85,7 @@ describe("shared branch label waitlist", () => {
     ).toHaveLength(0);
   });
   it("uses approved prices and approved offers even when a lower proposal is pending", () => {
-    const state = initialState();
+    const state = emptyManualQueueState();
     state.products.find((item) => item.code === "0003")!.pending_price = "0.99";
     addLabelsToWaitlist(state, ["0003"], 20, "Branch 1", worker);
     const snapshot = prepareLabelPrint(state, "Branch 1", template, 5, worker);
@@ -90,7 +97,7 @@ describe("shared branch label waitlist", () => {
     expect(snapshot.products).toHaveLength(20);
   });
   it("leaves waitlist untouched without explicit confirmation, and confirmed prints preserve concurrent additions", () => {
-    const state = initialState();
+    const state = emptyManualQueueState();
     addLabelsToWaitlist(state, ["0003"], 2, "Branch 1", worker);
     addLabelsToWaitlist(state, ["0005"], 1, "Branch 2", supervisor);
     const snapshot = prepareLabelPrint(state, "Branch 1", template, 1, worker);
@@ -211,7 +218,7 @@ describe("label designer and filters", () => {
     ).toContain("0004");
   });
   it("auto-add is off by default and follows only newly approved branch prices, not proposals", () => {
-    const before = initialState();
+    const before = emptyManualQueueState();
     const next = structuredClone(before);
     next.products.find((item) => item.code === "0003")!.branch_prices = {
       "Branch 2": "3.99",
@@ -305,7 +312,7 @@ describe("built-in label library", () => {
     expect(state).toEqual(before);
   });
   it("prints every Promo copy over exactly two slots per A4 sheet, retaining queue until Yes", () => {
-    const state = initialState();
+    const state = emptyManualQueueState();
     const promo = state.templates.find((item) => item.built_in === "promo")!;
     addLabelsToWaitlist(state, ["0003"], 5, "Branch 1", worker);
     const snapshot = prepareLabelPrint(state, "Branch 1", promo, 1, worker);

@@ -12,11 +12,7 @@ export interface MoneyOptions {
 /** Presentation only: amounts remain Decimal strings in the business model. */
 export function formatMoney(
   value: Decimal.Value,
-  {
-    currency = configSeed.company.currency,
-    decimals = 2,
-    compact = false,
-  }: MoneyOptions = {},
+  { currency = configSeed.company.currency, decimals = 4 }: MoneyOptions = {},
 ): string {
   const amount = new Decimal(value);
   if (!amount.isFinite()) throw new Error("Money must be finite");
@@ -28,8 +24,12 @@ export function formatMoney(
     })
       .formatToParts(0)
       .find((part) => part.type === "currency")?.value ?? currency;
-  let digits = amount.abs().toFixed(decimals, Decimal.ROUND_HALF_UP);
-  if (compact) digits = digits.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  // Currency always retains cents; extra source-cost precision is presentation
+  // evidence, not a new monetary rounding or allocation rule.
+  let digits = amount
+    .abs()
+    .toFixed(Math.min(4, Math.max(2, decimals)), Decimal.ROUND_HALF_UP)
+    .replace(/(\.\d{2,}?)0+$/, "$1");
   const [whole, fraction] = digits.split(".");
   digits =
     whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") +
@@ -79,6 +79,33 @@ export function formatQuantity(
         ? translate(singular ? "case" : "cases", "کارتن", language)
         : unit;
   return `${value} ${label}`;
+}
+
+/** Read-only Each quantities use actual units and their retained integer pack. */
+export function formatCasesAndUnits(
+  units: Decimal.Value,
+  unitsPerCase: Decimal.Value,
+  language: Language,
+): string {
+  const quantity = new Decimal(units);
+  const pack = new Decimal(unitsPerCase);
+  if (
+    !quantity.isFinite() ||
+    !quantity.isInteger() ||
+    quantity.isNegative() ||
+    !pack.isFinite() ||
+    !pack.isInteger() ||
+    pack.lte(1)
+  )
+    return formatQuantity(quantity.toString(), "units", language);
+  const cases = quantity.div(pack).floor();
+  const loose = quantity.mod(pack);
+  if (cases.isZero())
+    return formatQuantity(loose.toString(), "units", language);
+  const fullCases = formatQuantity(cases.toString(), "cases", language);
+  return loose.isZero()
+    ? fullCases
+    : `${fullCases} + ${formatQuantity(loose.toString(), "units", language)}`;
 }
 
 export function branchLabel(branch: string, language: Language): string {

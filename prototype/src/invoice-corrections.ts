@@ -1,6 +1,9 @@
 import Decimal from "decimal.js";
 import { createId } from "./ids";
-import { effectivePrice } from "./catalog";
+import { regularPrice } from "./catalog";
+import { productStoreCost } from "./product-costs";
+import { recordSaleReceiptCost } from "./sales";
+import { demoSeed } from "./config";
 import { manualPrice } from "./manual-prices";
 import { configuredBranches } from "./settings";
 import {
@@ -80,6 +83,8 @@ export interface InvoiceCorrectionPreview {
     unit_cost: string;
     margin: string | null;
     manual: boolean;
+    manual_cost_unchanged?: boolean;
+    manual_price_review?: Approval["manual_price_review"];
     updates_regular_cost: boolean;
     creates_pending_proposal: boolean;
     superseded_approval_ids: string[];
@@ -184,14 +189,18 @@ function correctionProposalDecision(
   branch: string,
   change: Pick<
     InvoiceCorrectionPreview["approval_changes"][number],
-    "product_code" | "selling_price" | "margin"
+    | "product_code"
+    | "selling_price"
+    | "margin"
+    | "manual_cost_unchanged"
+    | "manual_price_review"
   >,
 ) {
   const product = state.products.find(
     (product) =>
       product.company_id === companyId && product.code === change.product_code,
   )!;
-  const current = effectivePrice(state, product, branch);
+  const current = regularPrice(state, product, branch);
   const category = state.config.pricing_categories.find(
     (category) => category.key === product.pricing_category,
   )!;
@@ -200,14 +209,17 @@ function correctionProposalDecision(
     category.minimum_margin !== null &&
     category.minimum_margin !== "" &&
     new Decimal(change.margin).lt(category.minimum_margin);
-  const type: Approval["type"] | null =
-    current !== change.selling_price || below
-      ? current === null
-        ? "new_product"
-        : current === change.selling_price
-          ? "margin_review"
-          : "price_change"
-      : null;
+  const type: Approval["type"] | null = change.manual_cost_unchanged
+    ? null
+    : change.manual_price_review
+      ? "price_change"
+      : current !== change.selling_price || below
+        ? current === null
+          ? "new_product"
+          : current === change.selling_price
+            ? "margin_review"
+            : "price_change"
+        : null;
   return { current, type, threshold: category.minimum_margin };
 }
 
@@ -619,20 +631,45 @@ export function invoiceContentCorrectionPreview(
       state.config,
     );
     const manual = manualPrice(state, product, branch);
+    const priorCost =
+      productStoreCost(
+        state,
+        {
+          company_id: context.company_id,
+          branch,
+          role: "supervisor",
+          actor: context.actor,
+        },
+        product,
+      ) ?? product.last_cost_before_tax;
+    const changedCost = !new Decimal(priorCost).eq(line.unit_cost_before_tax);
+    const manualReview = Boolean(manual && changedCost);
     const change = {
       line_index: index,
       product_code: product.code,
       before_product_code: before.lines[index].product_code,
-      selling_price: manual?.price ?? calculation.selling_price,
+      selling_price: manualReview
+        ? calculation.selling_price
+        : (manual?.price ?? calculation.selling_price),
       unit_cost: line.unit_cost_before_tax,
       margin:
-        manual && new Decimal(manual.price).gt(0)
+        manual && !manualReview && new Decimal(manual.price).gt(0)
           ? new Decimal(manual.price)
               .minus(line.unit_cost_before_tax)
               .div(manual.price)
               .toFixed(8)
           : calculation.margin,
       manual: !!manual,
+      manual_cost_unchanged: Boolean(manual && !changedCost),
+      manual_price_review: manualReview
+        ? {
+            kept_price: manual!.price,
+            calculated_price: calculation.selling_price,
+            prior_cost: new Decimal(priorCost).toFixed(4),
+            received_cost: new Decimal(line.unit_cost_before_tax).toFixed(4),
+            receiver_recommendation: line.manual_price_decision ?? "rule",
+          }
+        : undefined,
       updates_regular_cost: newerAccepted.length === 0,
     };
     return [
@@ -753,6 +790,23 @@ export function correctPostedInvoice(
     );
   if (preview.blockers.length)
     throw new InvoiceCorrectionError("downstream", preview.blockers.join(" "));
+  const priorStoreCosts = new Map(
+    preview.approval_changes.map((change) => {
+      const product = state.products.find(
+        (entry) =>
+          entry.company_id === context.company_id &&
+          entry.code === change.product_code,
+      )!;
+      return [
+        change.product_code,
+        productStoreCost(
+          state,
+          { ...context, branch: preview.branch },
+          product,
+        ) ?? product.last_cost_before_tax,
+      ];
+    }),
+  );
   const correctionId = createId("invoice-content");
   const at = new Date().toISOString();
   const correction: InvoiceContentCorrection = {
@@ -903,6 +957,8 @@ export function correctPostedInvoice(
         created_at: at,
         triggered_by: context.actor,
         correction_id: correctionId,
+        clear_manual_price: Boolean(change.manual_price_review),
+        manual_price_review: change.manual_price_review,
       };
       state.approvals.push(approval);
       correction.approval_ids.push(approval.id);
@@ -974,6 +1030,35 @@ export function correctPostedInvoice(
   }
   state.invoice_content_corrections ??= [];
   state.invoice_content_corrections.push(correction);
+  for (const change of preview.approval_changes) {
+    const product = state.products.find(
+      (entry) =>
+        entry.company_id === context.company_id &&
+        entry.code === change.product_code,
+    )!;
+    recordSaleReceiptCost(
+      state,
+      {
+        invoice_id: id,
+        product_code: change.product_code,
+        line_index: change.line_index,
+        previous_cost: priorStoreCosts.get(change.product_code)!,
+        new_cost: change.unit_cost,
+        regular_price_before:
+          regularPrice(state, product, preview.branch) ?? "0",
+        proposed_regular_price: change.selling_price,
+        source_event_id: correction.id,
+      },
+      new Date(at),
+      demoSeed.demo_users
+        .filter((user) => user.role === "supervisor")
+        .map((user) => ({
+          username: user.username,
+          role: "supervisor",
+          allowed_branches: configuredBranches(state.config, true),
+        })),
+    );
+  }
   state.activity.push({
     id: `${correctionId}:history`,
     company_id: context.company_id,

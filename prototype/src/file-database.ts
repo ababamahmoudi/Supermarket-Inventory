@@ -4,6 +4,9 @@ import { decodeHistoryStorage, encodeHistoryStorage } from "./history-storage";
 import { sha256Bytes } from "./sha256";
 export const FILE_DATABASE_NAME = "supermarket-prototype-files-v1";
 export const FILE_DATABASE_VERSION = 1;
+/** Exact inert original included with the fictional C8 receiving demonstration. */
+export const INCLUDED_COST_INVOICE_SHA256 =
+  "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444";
 const FILE_PREFIX = "idb-file:v1:";
 const PHOTO_MAX_SIDE = 2000;
 
@@ -276,7 +279,12 @@ export async function storeUploadedFile(
     options.purpose === "invoice"
       ? /^(application\/pdf|image\/(png|jpeg|webp|gif))$/
       : /^image\/(png|jpeg|webp|gif)$/;
-  if (!file.size || !allowed.test(file.type))
+  const includedInvoiceOriginal =
+    options.purpose === "invoice" &&
+    file.type === "image/svg+xml" &&
+    sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
+      INCLUDED_COST_INVOICE_SHA256;
+  if (!file.size || (!allowed.test(file.type) && !includedInvoiceOriginal))
     throw new FileStorageError("image");
   const name = file.name ?? "file";
   try {

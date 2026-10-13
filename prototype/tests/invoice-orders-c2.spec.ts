@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import Decimal from "decimal.js";
 import { chooseOption, invoiceImage, signIn } from "./helpers";
 import type { DemoState } from "../src/types";
+import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
 test.setTimeout(60000);
 const stored = (page: Page): Promise<DemoState> =>
@@ -249,19 +250,26 @@ test("short-dated expiry discount requires a real date and preserves an existing
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.goto("/#product?code=0002");
-  await page.getByRole("button", { name: /^Edit / }).click();
-  const editor = page.getByRole("dialog", {
-    name: "Edit product",
-    exact: true,
-  });
+  const editor = await openC8PriceDialog(page, "0002");
+  await editor.getByRole("radio", { name: /^New regular price/ }).check();
+  await editor.getByLabel("Price", { exact: true }).fill("2.49");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("2.49");
+    .getByRole("checkbox", {
+      name: "Add regular labels to the label waitlist",
+      exact: true,
+    })
+    .uncheck();
   await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await stored(page)).products.find((entry) => entry.code === "0002")
+          ?.manual_prices?.all.price,
+    )
+    .toBe("2.49");
   const before = await stored(page);
   const prior = before.products.find((item) => item.code === "0002")!;
   const line = await manual(page);
@@ -280,7 +288,7 @@ test("short-dated expiry discount requires a real date and preserves an existing
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
   await expect(
-    line.getByRole("button", { name: "Keep manual price", exact: true }),
+    line.getByRole("button", { name: "Keep $2.49", exact: true }),
   ).toHaveCount(0);
   await line.getByLabel("Date", { exact: true }).click();
   await page

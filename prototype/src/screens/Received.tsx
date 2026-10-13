@@ -16,6 +16,7 @@ import {
   Select,
   useTableColumns,
 } from "../ui";
+import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./received-c.css";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import "./invoice-entry-c6.css";
@@ -30,7 +31,7 @@ function useReceivedColumns() {
       required: true,
       width: "21%",
       priority: 1,
-      minWidth: 200,
+      minWidth: 240,
       mobilePrimary: true,
     },
     {
@@ -58,7 +59,7 @@ function useReceivedColumns() {
     {
       key: "invoice",
       priority: 4,
-      minWidth: 145,
+      minWidth: 200,
       label: t("Invoice number", "شماره فاکتور"),
       width: "14%",
     },
@@ -76,6 +77,15 @@ function useReceivedColumns() {
       label: t("Received by", "دریافت‌کننده"),
       width: "12%",
     },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 60,
+      actions: true,
+      priority: 0,
+      required: true,
+      align: "end",
+    },
   ]);
 }
 
@@ -86,7 +96,7 @@ export function ReceivedTable({
   rows: DeliveryReceipt[];
   columns: ReturnType<typeof useTableColumns>["columns"];
 }) {
-  const { state, lang, t, tCount, navigate } = useDemo();
+  const { state, lang, t, navigate } = useDemo();
   if (!rows.length)
     return (
       <EmptyState>
@@ -108,6 +118,7 @@ export function ReceivedTable({
             <th>{t("Invoice number", "شماره فاکتور")}</th>
             <th>{t("Date", "تاریخ")}</th>
             <th>{t("Received by", "دریافت‌کننده")}</th>
+            <th>{t("Action", "عملیات")}</th>
           </tr>
         </thead>
         <tbody>
@@ -117,27 +128,19 @@ export function ReceivedTable({
                 item.company_id === receipt.company_id &&
                 item.code === receipt.product_code,
             );
+            const recordHref = receipt.invoice_id
+              ? `#invoices?id=${encodeURIComponent(receipt.invoice_id)}`
+              : receipt.return_id
+                ? `#return?id=${encodeURIComponent(receipt.return_id)}`
+                : undefined;
             return (
-              <tr
-                key={receipt.id}
-                data-row-href={
-                  receipt.invoice_id
-                    ? `#invoices?id=${encodeURIComponent(receipt.invoice_id)}`
-                    : undefined
-                }
-              >
+              <tr key={receipt.id} data-row-href={recordHref}>
                 <td>
                   <div className="table-identity">
                     {product ? (
                       <ProductName product={product} language={lang} />
                     ) : (
                       <LtrText>{receipt.product_code}</LtrText>
-                    )}
-                    {receipt.invoice_id && (
-                      <TableRowLink
-                        href={`#invoices?id=${encodeURIComponent(receipt.invoice_id)}`}
-                        aria-label={`${t("Invoice", "فاکتور")} ${receipt.invoice_number}`}
-                      />
                     )}
                   </div>
                 </td>
@@ -157,35 +160,25 @@ export function ReceivedTable({
                         </small>
                       )}
                     </>
-                  ) : receipt.units_per_case > 1 ? (
-                    <>
-                      {tCount(
-                        "{{count}} case",
-                        "{{count}} cases",
-                        "{{count}} کارتن",
-                        "{{count}} کارتن",
-                        Number(receipt.cases),
-                      )}{" "}
-                      <span className="muted">
-                        (
-                        {tCount(
-                          "{{count}} unit",
-                          "{{count}} units",
-                          "{{count}} واحد",
-                          "{{count}} واحد",
-                          receipt.units,
-                        )}
-                        )
-                      </span>
-                    </>
                   ) : (
-                    tCount(
-                      "{{count}} unit",
-                      "{{count}} units",
-                      "{{count}} واحد",
-                      "{{count}} واحد",
-                      receipt.units,
-                    )
+                    <>
+                      <LtrText>
+                        {formatCasesAndUnits(
+                          receipt.units,
+                          receipt.units_per_case,
+                          lang,
+                        )}
+                      </LtrText>
+                      {receipt.units_per_case > 1 && (
+                        <small className="muted received-units">
+                          (
+                          <LtrText>
+                            {formatQuantity(receipt.units, "units", lang)}
+                          </LtrText>
+                          )
+                        </small>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className="received-location">
@@ -205,7 +198,9 @@ export function ReceivedTable({
                         )
                       }
                     >
-                      <LtrText>{receipt.invoice_number}</LtrText>
+                      <LtrText className="received-invoice-reference">
+                        {receipt.invoice_number}
+                      </LtrText>
                     </a>
                   ) : (
                     <span className="muted">—</span>
@@ -221,6 +216,18 @@ export function ReceivedTable({
                     <span className="muted">
                       {t("Not recorded", "ثبت نشده")}
                     </span>
+                  )}
+                </td>
+                <td className="action-cell">
+                  {recordHref && (
+                    <TableRowLink
+                      href={recordHref}
+                      aria-label={
+                        receipt.invoice_id
+                          ? `${t("Invoice", "فاکتور")} ${receipt.invoice_number}`
+                          : t("Return", "مرجوعی")
+                      }
+                    />
                   )}
                 </td>
               </tr>

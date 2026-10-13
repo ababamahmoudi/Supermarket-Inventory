@@ -9,7 +9,7 @@ import {
   HistoryError,
   type HistoryContext,
 } from "./history";
-import { saveProductEdits, productEditSnapshot } from "./product-editor";
+import { savePriceChange } from "./sales";
 import type { Activity, DemoState } from "./types";
 import { restoreBState, B_BACKUP_KEY } from "./b-state";
 import { saveLabelTemplate } from "./label-workflow";
@@ -547,26 +547,21 @@ describe("History and safe scoped reversal", () => {
     const state = initialState();
     const before = structuredClone(state);
     const product = state.products.find((item) => item.code === "0009")!;
-    saveProductEdits(
-      state,
-      { ...context(state), allowed_branches: context(state).allowed_branches },
-      product.code,
-      {
-        name_en: product.name_en,
-        name_fa: product.name_fa,
-        description_en: "",
-        description_fa: "",
-        unit_size: product.unit_size,
-        ai_category: product.ai_category,
-        pricing_category: product.pricing_category,
-        barcode: product.barcode,
-        main_supplier: product.main_supplier,
-        date_tracking: Boolean(product.date_tracking),
-        selling_price: "3.29",
-        scope: "all",
-      },
-      productEditSnapshot(state, product.code),
-    );
+    savePriceChange(state, context(state), {
+      product_code: product.code,
+      mode: "regular",
+      scope: "all",
+      price: "3.29",
+      price_unit: "each",
+      branches: configuredBranches(state.config).filter(
+        (branch) => branch !== "Warehouse",
+      ),
+      starts_on: new Date().toISOString().slice(0, 10),
+      last_day: null,
+      accept_below_margin: false,
+      below_cost_reason: "",
+      add_labels: false,
+    });
     const [entry] = attachReversals(before, state, context(state));
     const approvedIds = state.approvals.map((item) => item.id);
     reverseActivity(state, context(state), entry.id, "revert");
@@ -574,7 +569,10 @@ describe("History and safe scoped reversal", () => {
       state.products.find((item) => item.code === "0009")!.selling_price,
     ).toBe("2.99");
     expect(state.approvals.map((item) => item.id)).toEqual(approvedIds);
-    expect(state.approvals.at(-1)?.status).toBe("rejected");
+    expect(
+      state.activity.find((record) => record.id === entry.id)?.action,
+    ).toBe("Set regular price");
+    expect(state.activity.at(-1)?.reversed_activity_id).toBe(entry.id);
     expect(
       state.offers.filter(
         (item) => item.product_code === "0009" && item.status === "active",

@@ -19,6 +19,10 @@
 .received-location {
   white-space: nowrap;
 }
+.received-invoice-reference {
+  display: inline-block;
+  white-space: nowrap;
+}
 .invoice-move-form {
   max-inline-size: 720px;
 }

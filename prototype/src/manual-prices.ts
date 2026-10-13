@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { effectivePrice, lookupBranch } from "./catalog";
+import { regularPrice, lookupBranch } from "./catalog";
 import { calculatePrice } from "./pricing";
 import { calculateWeighedPrice } from "./weighed";
 import { sellingBranches } from "./settings";
@@ -43,7 +43,7 @@ function legacyMarker(
   const price =
     branch === "all"
       ? product.selling_price
-      : effectivePrice(state, product, branch);
+      : regularPrice(state, product, branch);
   if (!price) return null;
   const applicable = state.approvals
     .map((approval, index) => ({ approval, index }))
@@ -120,7 +120,7 @@ export function manualPrice(
   product: Product,
   branch: Branch,
 ): ManualPriceMarker | null {
-  const price = effectivePrice(state, product, branch);
+  const price = regularPrice(state, product, branch);
   if (!price) return null;
   const location = lookupBranch(branch);
   const marker =

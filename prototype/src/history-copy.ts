@@ -4,6 +4,21 @@ import { HistoryError } from "./history";
 import type { Language } from "./types";
 
 const actions: Record<string, [string, string]> = {
+  "Schedule sale": ["Schedule sale", "زمان‌بندی تخفیف"],
+  "Start sale": ["Start sale", "شروع تخفیف"],
+  "Change sale": ["Change sale", "تغییر تخفیف"],
+  "End sale": ["End sale", "پایان تخفیف"],
+  "Sale reminder": ["Sale reminder", "یادآوری تخفیف"],
+  "Revert sale": ["Revert sale", "بازگردانی تخفیف"],
+  "Set regular price": ["Set regular price", "تعیین قیمت عادی"],
+  "Request sale": ["Request sale", "درخواست تخفیف"],
+  "Change sale request": ["Change sale request", "تغییر درخواست تخفیف"],
+  "Withdraw sale request": ["Withdraw sale request", "پس گرفتن درخواست تخفیف"],
+  "Approve sale request": ["Approve sale request", "تأیید درخواست تخفیف"],
+  "Reject sale request": ["Reject sale request", "رد درخواست تخفیف"],
+  "Expire sale request": ["Expire sale request", "انقضای درخواست تخفیف"],
+  "Decide sale alert": ["Decide sale alert", "تصمیم درباره هشدار تخفیف"],
+  "Save sales settings": ["Save sales settings", "ذخیره تنظیمات تخفیف‌ها"],
   Undone: ["Undone", "واگرد شد"],
   note_added: ["Add note", "افزودن یادداشت"],
   note_seen: ["Mark seen", "علامت دیده‌شده"],
@@ -135,6 +150,29 @@ export function historyActionLabel(action: string, lang: Language): string {
   return copy ? translate(...copy, lang) : activityLabel(action, lang);
 }
 const fields: Record<string, [string, string]> = {
+  sale_price: ["Sale price", "قیمت تخفیف"],
+  requested_price: ["Sale price", "قیمت تخفیف"],
+  regular_price: ["Regular price", "قیمت عادی"],
+  price_unit: ["Sold by", "نوع فروش"],
+  starts_on: ["Starts", "شروع"],
+  last_day: ["Last day", "آخرین روز"],
+  why: ["Why?", "چرا؟"],
+  default_length_days: [
+    "Default sale length (days)",
+    "مدت پیش‌فرض تخفیف (روز)",
+  ],
+  open_ended_reminder_days: [
+    "Remind me about sales with no end date every (days)",
+    "یادآوری تخفیف بدون تاریخ پایان هر (روز)",
+  ],
+  add_promo_labels_on_start: [
+    "Add Promo labels when a sale starts",
+    "افزودن برچسب ویژه هنگام شروع تخفیف",
+  ],
+  add_regular_labels_on_end: [
+    "Add regular labels when a sale ends",
+    "افزودن برچسب عادی هنگام پایان تخفیف",
+  ],
   branch: ["Location", "مکان"],
   location: ["Location", "مکان"],
   outstanding_amount: ["Outstanding amount", "مبلغ پرداخت‌نشده"],

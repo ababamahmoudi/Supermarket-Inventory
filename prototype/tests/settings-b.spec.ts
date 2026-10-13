@@ -352,7 +352,12 @@ test("offer preferences and module visibility save, while existing records stay 
   await page
     .getByRole("switch", { name: "AI offer suggestions", exact: true })
     .click();
-  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  const offersSave = page
+    .locator(".settings-group-content > .settings-save-bar")
+    .getByRole("button", { name: "Save changes", exact: true });
+  await expect(offersSave).toHaveCount(1);
+  await expect(offersSave).toBeVisible();
+  await offersSave.click();
   expect(
     await page.evaluate(
       () =>

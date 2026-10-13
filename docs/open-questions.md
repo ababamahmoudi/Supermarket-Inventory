@@ -76,12 +76,9 @@ The above are documented company defaults or explicit owner decisions, not new p
 - One Current row means one product row; permitted distinct default/branch offer scopes are grouped, not erased. An identical active/scheduled submission in its scope reuses the existing record; changed terms create/stop audited versions. Past sorts retained stop/end/creation evidence newest first, falling back to original retained order for legacy records without timestamps.
 - C5 supersedes the full-card Sign in button with the universal intrinsic-width text-action rule. Sorting headers, calendar choices, menus, navigation and clickable result/KPI surfaces remain semantic widgets and are listed separately in the audit; ordinary action buttons are never exempted by relabeling them.
 
-## C6/C7 questions pending an explicit owner answer (2026-10-11)
+## C6/C7 owner questions resolved by C8 (2026-10-12)
 
-| Question                                                                                                                    | Status and safe implementation boundary                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Owner/Manager permission for Correct pickup: does existing Supervisor represent them, or is a separate permission required? | Asked; answer pending. Do not silently grant workers permission or introduce new roles. Immutable pickup, partial recording and append-only correction contract may be implemented independently.              |
-| Dark Primary `#7397F0` with white fails4.5:1: use darker `#2B59C3` with white, or light blue with ink?                      | Asked; answer pending. Keep requested lighter dark accent for eligible links/icons, but do not claim an inaccessible white pairing passes. Owner choice recorded here and design-language before final styles. |
+Correct pickup: Owner/Manager only; Supervisor proxy until E1. Dark filled Primary/KPI: #2B59C3 white; #7397F0 only dark links/icons/selected tabs/focus. The detailed answer and later options are in the C8 section below.
 
 ## C6 implementation contracts recorded before code
 
@@ -94,3 +91,19 @@ The above are documented company defaults or explicit owner decisions, not new p
 - C6 replaces stacked10second Undo with one about 8-second message, ×/replacement/reserved action-bar space, no field edits/autosave. C7 styles all existing screens using the already-replaced Klead source.
 
 **C6 new-write guard:** New resolutions, credits and replacements require actual retained signed pickup evidence and remaining actual picked-up quantity coverage. Legacy imported settlements stay readable and unchanged; they do not authorize a new no-pickup settlement.
+
+## C8/E: owner answers and later options (2026-10-12)
+
+The two C7 questions are resolved. Correct pickup is Owner/Manager only, with today's Supervisor representing them until E1. Dark filled Primary/KPI uses #2B59C3 with white; #7397F0 is reserved for dark links/icons/selected tabs/focus. Keep immutable correction and actual contrast guards.
+
+Transparent implementation contracts: Add product retains initial pricing; existing Edit uses Change price. Open date is active/unremoved, even if past, anywhere in the company. Weighed sale retains entered main-unit cents; normalize comparisons without changing that price. Reviewed retail targets and each store's regular/cost/margin matter. Revert checks versions/current clock, never revives elapsed prices. Queue metadata actually selects Regular/Promo and separates future regular intent from active Promo. These contracts implement the authorized flows; they are not invented monetary exceptions.
+
+| Later option                           | Boundary/default now                                                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Several products on sale together      | Later option; C8 handles one product per dialog.                                                                             |
+| Until sold out                         | Phase 2, after stock counts/register integration; never infer depletion.                                                     |
+| Different roles at different locations | Later option; E1 one role/person and assigned locations.                                                                     |
+| Real phone push/email                  | Planned real server/HTTPS-installed app; E2 in-browser notifications only.                                                   |
+| Google sign-in                         | Existing later option; E1 authorizes simulated passkey/authenticator for privileged roles, not real external authentication. |
+
+No blocking new business question is assumed. Record or ask about a genuinely missing rule rather than silently changing permissions, quantities or money. E1/E2/E3 are authorized plans, not C8 completion claims.

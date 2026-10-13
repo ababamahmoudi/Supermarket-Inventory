@@ -448,3 +448,19 @@
     }
   }
 }
+
+/* The selected original's name already appears in its upload control. */
+:root .invoice-document-card .invoice-original-name {
+  display: none;
+}
+
+:root .invoice-line-review .invoice-manual-choice {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+}
+:root .invoice-line-review .invoice-manual-choice .ui-segments {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

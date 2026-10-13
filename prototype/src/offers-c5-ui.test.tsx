@@ -46,7 +46,11 @@ it("retranslates retained offer feedback after switching language without changi
       <Harness />
     </DemoProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Stop offer" }));
+  const offerRow = document.querySelector('tr[data-product-code="0003"]')!;
+  fireEvent.click(
+    within(offerRow as HTMLElement).getByRole("button", { name: "More" }),
+  );
+  fireEvent.click(screen.getByRole("menuitem", { name: /^Stop offer/ }));
   fireEvent.click(
     within(screen.getByRole("dialog", { name: "Stop offer" })).getByRole(
       "button",

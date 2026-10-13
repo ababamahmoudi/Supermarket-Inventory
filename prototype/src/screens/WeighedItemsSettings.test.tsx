@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { DemoProvider, STORAGE_KEY } from "../store";
 import { SESSION_KEY } from "../auth";
@@ -48,7 +54,13 @@ describe("Weighed items settings and History", () => {
     expect(
       screen.queryByRole("button", { name: /^Undo$/ }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^Revert$/ }));
+    const settingsHistoryRow = screen
+      .getByText("Pricing rules changed", { selector: "td" })
+      .closest("tr")!;
+    expect(settingsHistoryRow).toHaveTextContent("Settings");
+    fireEvent.click(
+      within(settingsHistoryRow).getByRole("button", { name: /^Revert$/ }),
+    );
     fireEvent.click(screen.getByRole("button", { name: /^Revert change$/ }));
     await waitFor(() =>
       expect(screen.getByLabelText("Main display unit")).toHaveTextContent(

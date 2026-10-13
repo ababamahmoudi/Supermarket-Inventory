@@ -48,6 +48,7 @@ export type DateTrackingErrorCode =
   | "quantity"
   | "reason"
   | "reminder"
+  | "required_date"
   | "stop_choice"
   | "inactive";
 export class DateTrackingError extends Error {
@@ -381,6 +382,39 @@ export function validateProductDateDrafts(
   }
 }
 
+/** Check the post-save open dates without exposing another location's evidence. */
+export function validateProductTrackingDate(
+  state: DemoState,
+  company: string,
+  productCode: string,
+  enabled: boolean | undefined,
+  drafts: ProductDateDraft[] | undefined,
+): void {
+  if (company !== state.config.company.seed_key)
+    throw new DateTrackingError("scope");
+  if (enabled !== true) return;
+  const removed = new Set(
+    (drafts ?? [])
+      .filter((row) => row.remove_reason !== undefined)
+      .map((row) => row.id),
+  );
+  const retained = state.expiry.some(
+    (entry) =>
+      entry.company_id === company &&
+      entry.product_code === productCode &&
+      entry.status === "active" &&
+      !removed.has(entry.id) &&
+      validTrackedDate(entry.date),
+  );
+  const added = (drafts ?? []).some(
+    (row) =>
+      row.product_code === productCode &&
+      row.remove_reason === undefined &&
+      validTrackedDate(row.date),
+  );
+  if (!retained && !added) throw new DateTrackingError("required_date");
+}
+
 /** Applied only after whole-form validation. Existing source dates are never erased. */
 export function applyProductDateDrafts(
   state: DemoState,
@@ -706,6 +740,10 @@ export function dateTrackingErrorMessage(
     reminder: [
       "Enter a nonnegative whole reminder period in days.",
       "بازهٔ یادآوری را به‌صورت تعداد روز صحیح و نامنفی وارد کنید.",
+    ],
+    required_date: [
+      "Add an expiry date, or turn off date tracking",
+      "یک تاریخ انقضا اضافه کنید، یا پیگیری تاریخ را خاموش کنید",
     ],
     stop_choice: [
       "Choose whether to keep or clear the dates.",

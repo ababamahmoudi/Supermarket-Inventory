@@ -1,0 +1,73 @@
+{
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "precedingTestCommit": "8d9e7f98907335f0cab7436ab233f280f269e6a7",
+  "recordedAt": "2026-10-13T18:27:21.779773+00:00",
+  "currentSource": {
+    "freshBuildExit": 0,
+    "screensCaptured": 75,
+    "screensIndividuallyReviewed": 75,
+    "geometryFailures": 0,
+    "browserErrors": 0,
+    "productionGuards": 150,
+    "githubRun": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38443831934",
+    "ciStatus": "success",
+    "ciBrowserPassed": 700,
+    "ciBrowserSkipped": 42,
+    "ciBrowserFailed": 0,
+    "ciBrowserFlaky": 0,
+    "lintUnitPricingBuild": "GitHub required steps completed successfully on the exact source."
+  },
+  "precedingSource": {
+    "unitPassed": 1124,
+    "unitFailed": 0,
+    "unitPending": 0,
+    "lintExit": 0,
+    "buildExit": 0,
+    "browserPassed": 700,
+    "browserSkipped": 42,
+    "browserFailed": 0,
+    "browserFlaky": 0,
+    "githubRun": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38441051423"
+  },
+  "sourceDifference": "The current source adds Persian mobile caption font-family only. Its production asset hashes differ; previous-source tests are not relabeled as current-source tests.",
+  "priorFailedRuns": [
+    {
+      "sourceCommit": "d14f8a863033dbd5106b1b29fe9912992db7b6f8",
+      "actualExitCode": 1,
+      "stats": {
+        "startTime": "2026-10-13T14:20:43.932Z",
+        "duration": 3584180.799,
+        "expected": 546,
+        "skipped": 42,
+        "unexpected": 154,
+        "flaky": 0
+      }
+    },
+    {
+      "sourceCommit": "28c9447a3e3a98dd6c44c3d180ffd0dc3db9fb09",
+      "actualExitCode": 1,
+      "stats": {
+        "startTime": "2026-10-13T16:25:51.689Z",
+        "duration": 3239304.661,
+        "expected": 689,
+        "skipped": 42,
+        "unexpected": 11,
+        "flaky": 0
+      }
+    },
+    {
+      "sourceCommit": "00fc29d6d802a7db14688c1dc78f5fb55f498ee6",
+      "actualExitCode": 1,
+      "stats": {
+        "startTime": "2026-10-13T17:16:18.692Z",
+        "duration": 3051879.4820000003,
+        "expected": 699,
+        "skipped": 42,
+        "unexpected": 1,
+        "flaky": 0
+      }
+    }
+  ],
+  "reviewApproval": "Owner review remains outstanding; these new PRs are not automatically merged.",
+  "documentationHeadCheck": "Required separately on PR21 after this documentation-only commit; inspect latest checks, not an earlier source run."
+}

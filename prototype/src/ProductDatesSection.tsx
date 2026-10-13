@@ -16,7 +16,13 @@ import type { Product } from "./types";
 import { Badge } from "./ui";
 
 /** Lookup is a reading surface for every role; edits belong to the product form. */
-export function ProductDatesSection({ product }: { product: Product }) {
+export function ProductDatesSection({
+  product,
+  showReceived = true,
+}: {
+  product: Product;
+  showReceived?: boolean;
+}) {
   const { state, branch, historyContext, lang, t } = useDemo();
   const location = lookupBranch(branch);
   const dates = historyContext
@@ -88,25 +94,27 @@ export function ProductDatesSection({ product }: { product: Product }) {
           )}
         </p>
       )}
-      <div className="product-quiet-row product-last-delivery-row">
-        <span className="product-quiet-icon">
-          <Truck size={20} aria-hidden="true" />
-        </span>
-        <span>
-          {t("Last received", "آخرین دریافت")}{" "}
-          {received ? (
-            <DateText value={received.date} />
-          ) : (
-            t("No deliveries yet", "هنوز تحویلی ثبت نشده است")
-          )}
-        </span>
-        {received && (received.supplier || received.invoice_number) && (
-          <span className="muted">
-            <LtrText>{received.supplier}</LtrText> ·{" "}
-            <LtrText>{received.invoice_number}</LtrText>
+      {showReceived && (
+        <div className="product-quiet-row product-last-delivery-row">
+          <span className="product-quiet-icon">
+            <Truck size={20} aria-hidden="true" />
           </span>
-        )}
-      </div>
+          <span>
+            {t("Last received", "آخرین دریافت")}{" "}
+            {received ? (
+              <DateText value={received.date} />
+            ) : (
+              t("No deliveries yet", "هنوز تحویلی ثبت نشده است")
+            )}
+          </span>
+          {received && (received.supplier || received.invoice_number) && (
+            <span className="muted">
+              <LtrText>{received.supplier}</LtrText> ·{" "}
+              <LtrText>{received.invoice_number}</LtrText>
+            </span>
+          )}
+        </div>
+      )}
     </section>
   );
 }

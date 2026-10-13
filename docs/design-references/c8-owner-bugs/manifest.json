@@ -1,0 +1,29 @@
+{
+  "unchanged_uploaded_originals": [
+    {
+      "file": "1.png",
+      "bytes": 662344,
+      "sha256": "a5713ece8ceeda7e65ae3b87adcc4608d09f05e87f4db9b8d1e455605b29e860"
+    },
+    {
+      "file": "2.png",
+      "bytes": 620459,
+      "sha256": "a39c775e76acc03f6a0fac2311e8adb717554450f4f35c1306a094514ae082ad"
+    },
+    {
+      "file": "3.png",
+      "bytes": 644837,
+      "sha256": "63ed45dcd87ca9d7526065f09be2ee2bec539c0575f55adaa7de82a06db36df5"
+    },
+    {
+      "file": "4.png",
+      "bytes": 572152,
+      "sha256": "63c73c79d77d62a3ad581023d7e6aec1eabdabe96b2abb893fdfeecb91566259"
+    },
+    {
+      "file": "5.png",
+      "bytes": 557581,
+      "sha256": "42fb9b0ef52f9ef2547d8b13d9c045c7efac311de48eb354f334f9c6dfb81a8b"
+    }
+  ]
+}

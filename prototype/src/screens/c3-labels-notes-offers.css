@@ -92,11 +92,6 @@
   white-space: nowrap;
 }
 @media (min-width: 761px) {
-  .labels-products-card .labels-product-table {
-    max-block-size: 560px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
   .labels-product-table table,
   .labels-waitlist-table table,
   .current-offers-table table {
@@ -112,9 +107,6 @@
   }
   .labels-selection-bar .ui-button {
     inline-size: 100%;
-  }
-  .labels-product-table table {
-    min-inline-size: 680px;
   }
   .current-offers-table table {
     min-inline-size: 720px;

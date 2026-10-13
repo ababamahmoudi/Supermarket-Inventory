@@ -37,6 +37,7 @@ export function SupplierReturnsPanel({
   const columns = useTableColumns("supplier-returns", [
     {
       key: "reference",
+      minWidth: 110,
       label: t("Return #", "شماره مرجوعی"),
       required: true,
       width: 110,
@@ -69,6 +70,16 @@ export function SupplierReturnsPanel({
           },
         ]
       : []),
+    {
+      key: "actions",
+      label: t("View", "مشاهده"),
+      required: true,
+      width: 36,
+      minWidth: 36,
+      align: "end",
+      actions: true,
+      priority: 0,
+    },
   ]);
   const visible = rows.filter(
     (row) =>
@@ -158,6 +169,9 @@ export function SupplierReturnsPanel({
               <th>{t("Items", "اقلام")}</th>
               <th>{t("Status", "وضعیت")}</th>
               {supervisor && <th>{t("Pending credit", "اعتبار در انتظار")}</th>}
+              <th>
+                <span className="sr-only">{t("View", "مشاهده")}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -189,10 +203,6 @@ export function SupplierReturnsPanel({
                     >
                       <LtrText>#{row.number}</LtrText>
                     </a>
-                    <TableRowLink
-                      href={`#return?id=${encodeURIComponent(row.id)}`}
-                      aria-label={`${t("Return", "مرجوعی")} #${row.number}`}
-                    />
                   </div>
                 </td>
                 <td>{branchLabel(state.config, row.branch, lang)}</td>
@@ -211,6 +221,12 @@ export function SupplierReturnsPanel({
                     <Money value={row.financial?.pending_credit ?? "0.00"} />
                   </td>
                 )}
+                <td>
+                  <TableRowLink
+                    href={`#return?id=${encodeURIComponent(row.id)}`}
+                    aria-label={`${t("Return", "مرجوعی")} #${row.number}`}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>

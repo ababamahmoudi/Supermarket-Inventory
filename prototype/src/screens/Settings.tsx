@@ -1,4 +1,5 @@
-import { useEffect, useState, type SetStateAction } from "react";
+import { useEffect, useRef, useState, type SetStateAction } from "react";
+import companyLogo from "../../../assets/arzon-logo.png?inline";
 import { History, MoreHorizontal, Plus } from "lucide-react";
 import { useDemo } from "../store";
 import { storeUploadedFile } from "../file-database";
@@ -10,7 +11,6 @@ import {
   DataTable,
   Dialog,
   DialogActions,
-  Dropzone,
   Field,
   NumberField,
   PageHeader,
@@ -41,6 +41,7 @@ import { LabelsSettings } from "./Labels";
 import { ReturnsSettings } from "./ReturnsSettings";
 import { WhatsMissing } from "../WhatsMissing";
 import { DateText } from "../presentation";
+import { SalesSettings } from "./SalesSettings";
 import "./settings-b.css";
 import "./settings-c7.css";
 
@@ -282,6 +283,7 @@ function SaveBar({
 }
 function CompanySettings() {
   const { state, update, t, role, user } = useDemo();
+  const logoPicker = useRef<HTMLInputElement>(null);
   const persisted = JSON.stringify(state.config.company);
   const [draft, commitDraft] = useState<CompanyConfig["company"]>(() =>
     structuredClone(state.config.company),
@@ -454,39 +456,65 @@ function CompanySettings() {
             label={t("Brand color", "رنگ برند")}
             error={fieldError("color")}
           >
-            <input
-              id="company-brand"
-              dir="ltr"
-              value={draft.branding.primary_color}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  branding: {
-                    ...draft.branding,
-                    primary_color: event.target.value,
-                  },
-                })
-              }
-            />
+            <div className="company-color-field">
+              <span
+                className="company-color-swatch"
+                aria-hidden="true"
+                style={{
+                  backgroundColor: /^#[0-9a-f]{6}$/i.test(
+                    draft.branding.primary_color,
+                  )
+                    ? draft.branding.primary_color
+                    : undefined,
+                }}
+              />
+              <input
+                id="company-brand"
+                dir="ltr"
+                value={draft.branding.primary_color}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    branding: {
+                      ...draft.branding,
+                      primary_color: event.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
           </Field>
           <Field
             label={t("Dark-theme brand color", "رنگ برند در حالت تیره")}
             error={fieldError("color")}
           >
-            <input
-              id="company-dark-brand"
-              dir="ltr"
-              value={draft.branding.dark_primary_color}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  branding: {
-                    ...draft.branding,
-                    dark_primary_color: event.target.value,
-                  },
-                })
-              }
-            />
+            <div className="company-color-field">
+              <span
+                className="company-color-swatch"
+                aria-hidden="true"
+                style={{
+                  backgroundColor: /^#[0-9a-f]{6}$/i.test(
+                    draft.branding.dark_primary_color,
+                  )
+                    ? draft.branding.dark_primary_color
+                    : undefined,
+                }}
+              />
+              <input
+                id="company-dark-brand"
+                dir="ltr"
+                value={draft.branding.dark_primary_color}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    branding: {
+                      ...draft.branding,
+                      dark_primary_color: event.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
           </Field>
           <Field label={t("Date format", "قالب تاریخ")}>
             <Select
@@ -546,22 +574,29 @@ function CompanySettings() {
             {error}
           </p>
         )}
-        <Dropzone
-          accept="image/png,image/jpeg,image/webp"
-          fileName={
-            draft.logo_data ? t("Company logo", "نشان شرکت") : undefined
-          }
-          onChange={logo}
-          onRemove={() => setDraft({ ...draft, logo_data: undefined })}
-        />
-        {draft.logo_data && (
+        <div className="company-logo-control">
           <StoredFileImage
             className="settings-logo-preview"
-            value={draft.logo_data}
+            value={draft.logo_data || companyLogo}
             companyId={state.config.company.seed_key}
             alt={t("Company logo", "نشان شرکت")}
           />
-        )}
+          <Button variant="neutral" onClick={() => logoPicker.current?.click()}>
+            {t("Replace", "جایگزینی")}
+          </Button>
+          <input
+            ref={logoPicker}
+            type="file"
+            hidden
+            accept="image/png,image/jpeg,image/webp"
+            aria-label={t("Replace logo", "جایگزینی نشان")}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void logo(file);
+              event.target.value = "";
+            }}
+          />
+        </div>
       </Card>
       {error &&
         !["name", "currency", "timezone", "color", "logo"].includes(
@@ -951,6 +986,7 @@ function OfferSettings() {
   }
   return (
     <>
+      <SalesSettings />
       <WhatsMissing
         issues={
           error

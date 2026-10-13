@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
+import { selectLabelGroup } from "./label-selection";
 
 async function assertNoDesktopClipping(page: Page) {
   const failures = await page.evaluate(() => {
@@ -84,6 +85,18 @@ for (const language of ["en", "fa"] as const) {
   }) => {
     await signIn(page, "Floor Worker");
     await page.goto("/#labels");
+    const initialQueue = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+          .label_waitlist,
+    );
+    expect(initialQueue).toHaveLength(1);
+    expect(initialQueue[0]).toMatchObject({
+      product_code: "0012",
+      preferred_template: "promo",
+      copies: 1,
+      branch: "Branch 1",
+    });
     if (language === "fa") await setLanguage(page, "fa");
     const productTable = page.locator(".labels-product-table");
     await expect(productTable.locator(".ui-number-field")).toHaveCount(0);
@@ -127,6 +140,7 @@ for (const language of ["en", "fa"] as const) {
         name: language === "en" ? /^Waitlist/ : /^فهرست انتظار/,
       })
       .click();
+    await selectLabelGroup(page, "regular");
     await expect(page.locator(".labels-waitlist-table tbody tr")).toHaveCount(
       2,
     );
@@ -152,8 +166,21 @@ for (const language of ["en", "fa"] as const) {
           .label_waitlist,
     );
     expect(
-      queue.map((item: { product_code: string }) => item.product_code).sort(),
+      queue
+        .filter(
+          (item: { preferred_template?: string; lot_id?: string }) =>
+            item.preferred_template !== "promo" && !item.lot_id,
+        )
+        .map((item: { product_code: string }) => item.product_code)
+        .sort(),
     ).toEqual(["0004", "0011"]);
+    expect(
+      queue.filter((item: { id: string }) =>
+        initialQueue.some(
+          (original: { id: string }) => original.id === item.id,
+        ),
+      ),
+    ).toEqual(initialQueue);
     await expect(page.locator(".undo-toast")).toHaveCount(0);
     await page
       .getByRole("button", {
@@ -162,6 +189,13 @@ for (const language of ["en", "fa"] as const) {
       })
       .click();
     await expect(page.locator(".labels-waitlist-table")).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+            .label_waitlist,
+      ),
+    ).toEqual([]);
     await page
       .locator(".undo-toast")
       .first()
@@ -170,6 +204,7 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       })
       .click();
+    await selectLabelGroup(page, "regular");
     await expect(page.locator(".labels-waitlist-table tbody tr")).toHaveCount(
       2,
     );

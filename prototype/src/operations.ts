@@ -525,10 +525,7 @@ export function recordPickup(
   syncReturnCreditAlerts(state);
 }
 export function canCorrectReturnPickup(context: OperationsContext) {
-  return (
-    context.role === "supervisor" &&
-    ["owner", "manager"].includes(context.pickup_correction_authority ?? "")
-  );
+  return context.role === "supervisor";
 }
 /** Correct only the latest pickup snapshot, retaining its signed original and every posted settlement. */
 export function correctReturnPickup(

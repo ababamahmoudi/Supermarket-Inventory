@@ -7,7 +7,9 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import logo from "../../../assets/arzon-logo.png?inline";
-import { effectiveOffer, effectivePrice } from "../catalog";
+import { effectiveOffer, effectivePrice, regularPrice } from "../catalog";
+import { activeSaleAt, salePriceDisplay } from "../sales";
+import { SalePrice, SaleStatus } from "../sales-presentation";
 import { effectiveClearanceOffers } from "../receipt-lots";
 import { useRouteParam } from "../navigation";
 import { ProductPrice } from "../weight-price-presentation";
@@ -47,7 +49,13 @@ import { StoredFileImage } from "../stored-file";
 import { isStoredFileReference } from "../file-database";
 import { waitForPrintImages } from "../print-images";
 import { WhatsMissing } from "../WhatsMissing";
-import type { Branch, DemoState, LabelTemplate, Product } from "../types";
+import type {
+  Branch,
+  DemoState,
+  LabelTemplate,
+  LabelWaitlistItem,
+  Product,
+} from "../types";
 import {
   Badge,
   Button,
@@ -64,7 +72,13 @@ import {
   Select,
   Tabs,
 } from "../ui";
-import { LtrText, OfferLabel, ProductName, UnitSize } from "../presentation";
+import {
+  LtrText,
+  Money,
+  OfferLabel,
+  ProductName,
+  UnitSize,
+} from "../presentation";
 import "./invoice-settings-labels.css";
 import "./labels-a2.css";
 import "./labels-b.css";
@@ -187,7 +201,7 @@ function errorText(error: unknown, t: ReturnType<typeof useDemo>["t"]) {
   );
 }
 
-function ShelfLabel({
+export function ShelfLabel({
   product,
   state,
   branch,
@@ -213,6 +227,38 @@ function ShelfLabel({
   );
   const lotOffer = (product as LabelPrintProduct).label_clearance_offer;
   const offer = lotOffer ?? effectiveOffer(state, product, branch);
+  const snapshot = product as LabelPrintProduct;
+  const sale = Object.hasOwn(snapshot, "label_sale")
+    ? snapshot.label_sale
+    : activeSaleAt(state, product, branch);
+  const promotional = Boolean(offer || sale);
+  const regular =
+    snapshot.label_regular_price ?? regularPrice(state, product, branch);
+  const effective =
+    snapshot.label_effective_price ?? effectivePrice(state, product, branch);
+  const saleDisplay = sale ? salePriceDisplay(sale, state.config) : null;
+  const saleAmount = saleDisplay && (
+    <span className={product.sold_by === "weight" ? "weight-price" : undefined}>
+      <LtrText>
+        <Money
+          value={saleDisplay.main.amount}
+          currency={state.config.company.currency}
+        />
+        {saleDisplay.main.unit !== "each" && `/${saleDisplay.main.unit}`}
+      </LtrText>
+      {saleDisplay.secondary && (
+        <LtrText className="weight-price-secondary">
+          {" "}
+          ·{" "}
+          <Money
+            value={saleDisplay.secondary.amount}
+            currency={state.config.company.currency}
+          />
+          /{saleDisplay.secondary.unit}
+        </LtrText>
+      )}
+    </span>
+  );
   const taxable = state.config.tax.profiles.find(
     (profile) => profile.key === product.tax_profile,
   )?.taxable;
@@ -246,7 +292,7 @@ function ShelfLabel({
           />
         </svg>
         <div
-          className={`promo-label-content${offer ? " has-offer" : ""}`}
+          className={`promo-label-content${promotional ? " has-offer" : ""}`}
           dir={lang === "fa" ? "rtl" : "ltr"}
           style={{
             left: promo.left,
@@ -255,10 +301,12 @@ function ShelfLabel({
           }}
         >
           <div className="promo-label-special">
-            {offer && t("SPECIAL", "ویژه")}
+            {promotional && t("SPECIAL", "ویژه")}
           </div>
           <div className="price promo-label-price">
-            {offer ? (
+            {sale && !lotOffer ? (
+              saleAmount
+            ) : offer ? (
               lotOffer ? (
                 <ProductPrice
                   value={lotOffer.price}
@@ -274,18 +322,18 @@ function ShelfLabel({
               )
             ) : (
               <ProductPrice
-                value={effectivePrice(state, product, branch)!}
+                value={effective!}
                 product={product}
                 config={state.config}
               />
             )}
           </div>
           <div className="promo-label-regular-price">
-            {offer && (
+            {promotional && regular && (
               <>
                 {t("Regular", "عادی")}{" "}
                 <ProductPrice
-                  value={effectivePrice(state, product, branch)!}
+                  value={regular}
                   product={product}
                   config={state.config}
                 />
@@ -339,16 +387,19 @@ function ShelfLabel({
         }}
       >
         <span className="price" dir="ltr">
-          {fields.price && (
-            <ProductPrice
-              value={effectivePrice(state, product, branch)!}
-              product={product}
-              config={state.config}
-            />
-          )}
+          {fields.price &&
+            (sale && !lotOffer ? (
+              saleAmount
+            ) : (
+              <ProductPrice
+                value={effective!}
+                product={product}
+                config={state.config}
+              />
+            ))}
         </span>
         <div className="shelf-label-offer">
-          {offer && (
+          {promotional && (
             <span className="regular-label-special">
               {t("SPECIAL", "ویژه")}
             </span>
@@ -372,7 +423,9 @@ function ShelfLabel({
                   lang={languages[0]}
                   dir={languages[0] === "fa" ? "rtl" : "ltr"}
                 >
-                  {languages[0] === "fa" ? product.name_fa : product.name_en}
+                  {languages[0] === "fa"
+                    ? product.name_fa || product.name_en
+                    : product.name_en}
                 </strong>
               </span>
             ))}
@@ -1165,12 +1218,19 @@ export function LabelsSettings() {
 export function Labels() {
   const { state, update, branch, lang, user, t } = useDemo();
   const requestedLot = useRouteParam("lot");
+  const allWaiting = branch === "all" ? [] : branchLabelWaitlist(state, branch);
+  const labelStyle = (item: LabelWaitlistItem) =>
+    item.lot_id ? "promo" : (item.preferred_template ?? "regular");
+  const regularWaiting = allWaiting.filter(
+    (item) => labelStyle(item) === "regular",
+  );
+  const promoWaiting = allWaiting.filter(
+    (item) => labelStyle(item) === "promo",
+  );
   const requestedPromo =
     requestedLot &&
     branch !== "all" &&
-    branchLabelWaitlist(state, branch).some(
-      (item) => item.lot_id === requestedLot,
-    )
+    allWaiting.some((item) => item.lot_id === requestedLot)
       ? state.templates.find(
           (item) =>
             item.company_id === state.config.company.seed_key &&
@@ -1178,6 +1238,30 @@ export function Labels() {
             !item.archived,
         )
       : undefined;
+  const defaultStyle = requestedPromo
+    ? "promo"
+    : allWaiting[0]
+      ? labelStyle(allWaiting[0])
+      : "regular";
+  const groupScope = `${state.config.company.seed_key}:${branch}`;
+  const [selectedGroup, setSelectedGroup] = useState<{
+    scope: string;
+    style: "regular" | "promo";
+  }>({ scope: groupScope, style: defaultStyle });
+  const chosenStyle =
+    selectedGroup.scope === groupScope ? selectedGroup.style : defaultStyle;
+  const groupStyle =
+    chosenStyle === "regular" &&
+    regularWaiting.length === 0 &&
+    promoWaiting.length > 0
+      ? "promo"
+      : chosenStyle === "promo" &&
+          promoWaiting.length === 0 &&
+          regularWaiting.length > 0
+        ? "regular"
+        : chosenStyle;
+  const groupKey = `${groupScope}:${groupStyle}`;
+  const waiting = groupStyle === "promo" ? promoWaiting : regularWaiting;
   const [tab, setTab] = useState(
     requestedPromo
       ? "waitlist"
@@ -1194,16 +1278,12 @@ export function Labels() {
     codes: [],
   });
   const [allCopies, setAllCopies] = useState(1);
-  const [templateId, setTemplateId] = useState(
-    () =>
-      requestedPromo?.id ??
-      state.templates.find(
-        (item) =>
-          item.company_id === state.config.company.seed_key && !item.archived,
-      )?.id ??
-      "",
+  const [templateChoices, setTemplateChoices] = useState<
+    Record<string, string>
+  >({});
+  const [startingSlots, setStartingSlots] = useState<Record<string, number>>(
+    {},
   );
-  const [startSlot, setStartSlot] = useState(1);
   const [error, setError] = useState("");
   const [pendingPrint, setPendingPrint] = useState<LabelPrintSnapshot | null>(
     null,
@@ -1216,8 +1296,24 @@ export function Labels() {
     (item) =>
       item.company_id === state.config.company.seed_key && !item.archived,
   );
+  const matchingTemplates = templates.filter(
+    (item) => (item.style ?? "regular") === groupStyle,
+  );
+  const matchingTemplate =
+    matchingTemplates.find((item) => item.built_in === groupStyle) ??
+    matchingTemplates[0];
+  const explicitTemplateId = templateChoices[groupKey];
+  const templateId =
+    explicitTemplateId === "" ||
+    templates.some((item) => item.id === explicitTemplateId)
+      ? explicitTemplateId
+      : (matchingTemplate?.id ?? "");
+  const setTemplateId = (id: string) =>
+    setTemplateChoices((choices) => ({ ...choices, [groupKey]: id }));
+  const startSlot = startingSlots[groupKey] ?? 1;
+  const setStartSlot = (slot: number) =>
+    setStartingSlots((slots) => ({ ...slots, [groupKey]: slot }));
   const template = templates.find((item) => item.id === templateId);
-  const waiting = branch === "all" ? [] : branchLabelWaitlist(state, branch);
   const products = filterLabelProducts(state, branch, filters);
   const queueProducts = waiting.flatMap((item) => {
     const product = state.products.find(
@@ -1305,6 +1401,7 @@ export function Labels() {
         template,
         startSlot,
         actor,
+        waiting.map((item) => item.id),
       );
       flushSync(() => {
         setPendingPrint(snapshot);
@@ -1347,6 +1444,7 @@ export function Labels() {
         template,
         startSlot,
         actor,
+        waiting.map((item) => item.id),
       ).pages;
     } catch {
       /* Inline preview supplies geometry errors. */
@@ -1382,7 +1480,7 @@ export function Labels() {
           {
             value: "waitlist",
             label: t("Waitlist", "فهرست انتظار"),
-            count: waiting.length,
+            count: allWaiting.length,
           },
           { value: "templates", label: t("Templates", "قالب‌ها") },
         ]}
@@ -1529,11 +1627,45 @@ export function Labels() {
             <DataTable
               className="labels-product-table"
               columns={[
-                { width: 48 },
-                {},
-                { width: 104 },
-                { width: 132, align: "end" },
-                { width: 150 },
+                {
+                  key: "selection",
+                  width: 48,
+                  minWidth: 48,
+                  fixedWidth: true,
+                  required: true,
+                  mobilePrimary: true,
+                },
+                {
+                  key: "product",
+                  minWidth: 180,
+                  priority: 1,
+                  mobilePrimary: true,
+                },
+                {
+                  key: "code",
+                  width: 104,
+                  minWidth: 104,
+                  fixedWidth: true,
+                  priority: 3,
+                  mobilePrimary: false,
+                },
+                {
+                  key: "offer",
+                  width: 150,
+                  minWidth: 150,
+                  fixedWidth: true,
+                  priority: 4,
+                  mobilePrimary: false,
+                },
+                {
+                  key: "price",
+                  width: 156,
+                  minWidth: 156,
+                  fixedWidth: true,
+                  priority: 2,
+                  mobilePrimary: true,
+                  align: "end",
+                },
               ]}
             >
               <thead>
@@ -1546,8 +1678,8 @@ export function Labels() {
                   />
                   <th>{t("Product", "کالا")}</th>
                   <th>{t("Product Code", "کد کالا")}</th>
-                  <th>{t("Selling price", "قیمت فروش")}</th>
                   <th>{t("Offer", "پیشنهاد")}</th>
+                  <th>{t("Selling price", "قیمت فروش")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1580,31 +1712,42 @@ export function Labels() {
                       <LtrText>{product.code}</LtrText>
                     </td>
                     <td>
+                      {activeSaleAt(state, product, branch) ? (
+                        <Badge tone="info">{t("Sale", "حراج")}</Badge>
+                      ) : (
+                        effectiveOffer(state, product, branch) && (
+                          <OfferLabel
+                            label={
+                              effectiveOffer(state, product, branch)!.label
+                            }
+                            language={lang}
+                            currency={state.config.company.currency}
+                          />
+                        )
+                      )}
+                    </td>
+                    <td>
                       {effectivePrice(state, product, branch) ? (
                         <div className="label-price-display">
-                          <ProductPrice
-                            value={effectivePrice(state, product, branch)!}
+                          <SalePrice
                             product={product}
-                            config={state.config}
+                            branch={branch}
+                            stacked
+                          />
+                          <SaleStatus
+                            product={product}
+                            branch={branch}
+                            compact
                           />
                           <ManualPricePill product={product} branch={branch} />
                         </div>
                       ) : (
-                        <span className="muted">
+                        <span className="muted label-price-unavailable">
                           {t(
                             "No approved price yet",
                             "هنوز قیمت تأییدشده ندارد",
                           )}
                         </span>
-                      )}
-                    </td>
-                    <td>
-                      {effectiveOffer(state, product, branch) && (
-                        <OfferLabel
-                          label={effectiveOffer(state, product, branch)!.label}
-                          language={lang}
-                          currency={state.config.company.currency}
-                        />
                       )}
                     </td>
                   </tr>
@@ -1690,10 +1833,43 @@ export function Labels() {
               className="labels-waitlist-card"
               title={t("Waitlist", "فهرست انتظار")}
             >
+              {regularWaiting.length > 0 && promoWaiting.length > 0 && (
+                <Tabs
+                  value={groupStyle}
+                  onChange={(style) => {
+                    setSelectedGroup({
+                      scope: groupScope,
+                      style: style as "regular" | "promo",
+                    });
+                    setError("");
+                    setPendingPrint(null);
+                    setPrintState(null);
+                  }}
+                  aria-label={t("Label styles", "نوع برچسب")}
+                  options={[
+                    {
+                      value: "regular",
+                      label: t("Regular", "عادی"),
+                      count: regularWaiting.reduce(
+                        (total, item) => total + item.copies,
+                        0,
+                      ),
+                    },
+                    {
+                      value: "promo",
+                      label: t("Promo", "ویژه"),
+                      count: promoWaiting.reduce(
+                        (total, item) => total + item.copies,
+                        0,
+                      ),
+                    },
+                  ]}
+                />
+              )}
               <div className="labels-waitlist-heading">
                 <span className="muted">
                   {countText(
-                    waiting.length,
+                    allWaiting.length,
                     "product",
                     "products",
                     "کالا",
@@ -1701,7 +1877,7 @@ export function Labels() {
                   )}{" "}
                   ·{" "}
                   {countText(
-                    waiting.reduce((total, item) => total + item.copies, 0),
+                    allWaiting.reduce((total, item) => total + item.copies, 0),
                     "label",
                     "labels",
                     "برچسب",
@@ -1710,7 +1886,7 @@ export function Labels() {
                 </span>
                 <Button
                   variant="destructive"
-                  disabled={waiting.length === 0}
+                  disabled={allWaiting.length === 0}
                   onClick={() =>
                     run((next) => clearLabelWaitlist(next, branch, actor))
                   }
