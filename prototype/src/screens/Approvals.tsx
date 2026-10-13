@@ -1,3 +1,6 @@
+import { approvalBoard } from "../approval-board";
+import { useProtectedQuery } from "../use-protected-query";
+import { domainScope } from "../domain-authority";
 import {
   branchLabel as configuredBranchLabel,
   branchSellsToCustomers,
@@ -10,7 +13,6 @@ import {
   keepApprovedPrice,
   proposeManualOverride,
   resolveApproval,
-  manualRegularApprovalPreview,
 } from "../approvals";
 import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
@@ -18,7 +20,6 @@ import { demoUserLabel, LtrText, ProductName } from "../presentation";
 import { ProductCost, ProductPrice } from "../weight-price-presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
-import { effectiveApprovalLocation } from "../received";
 import { SupplierApproval } from "./SupplierApproval";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import { SaleRequestCards } from "./SalesApprovals";
@@ -36,7 +37,26 @@ import {
 } from "../ui";
 
 export function Approvals() {
-  const { state, update, role, branch, lang, t } = useDemo();
+  const {
+    state,
+    command,
+    query,
+    actor,
+    can,
+    branch,
+    lang,
+    t,
+    authorityGeneration,
+    authorityDirectoryVersion,
+  } = useDemo();
+  const canDecide = can("approvals.decide");
+  const boardRead = useProtectedQuery(
+    can("approvals.read") ? "approvals.read" : null,
+    domainScope(state),
+    approvalBoard,
+    branch,
+  );
+  const accessKey = `${authorityGeneration}:${authorityDirectoryVersion}:${actor?.user_id}:${actor?.session_id}:${actor?.authority_epoch}:${branch}`;
   const [filter, setFilter] = useState<Approval["status"]>("pending");
   const [scope, setScope] = useState<"all" | "branch">("all");
   const [regularDecision, setRegularDecision] = useState<"rule" | "keep">(
@@ -49,36 +69,27 @@ export function Approvals() {
   const [overrideErrors, setOverrideErrors] = useState<Record<string, string>>(
     {},
   );
-  const [preview, setPreview] = useState<{
+  const [previewState, setPreview] = useState<{
     approval: Approval;
+    accessKey: string;
+    user_id: string;
+    session_id: string;
     decision: "approve" | "reject";
     snapshot: string;
     target: Branch;
     company: string;
     branch: Branch;
   } | null>(null);
+  const preview = previewState?.accessKey === accessKey ? previewState : null;
   const company = state.config.company.seed_key;
   const branches = sellingBranches(state.config);
-  const items = state.approvals
-    .map((item) => ({
-      ...item,
-      branch: effectiveApprovalLocation(state, item),
-    }))
-    .filter(
-      (item) =>
-        item.company_id === company &&
-        item.status === filter &&
-        (branch === "all" || item.branch === branch || item.branch === "all"),
-    );
-  if (role !== "supervisor")
-    return (
-      <EmptyState>
-        {t(
-          "Switch to Supervisor to review approvals.",
-          "برای بررسی تأییدها به سرپرست تغییر دهید.",
-        )}
-      </EmptyState>
-    );
+  const viewStatus = canDecide ? filter : "pending";
+  const rows = (boardRead.data ?? []).filter(
+    (row) => row.approval.status === viewStatus,
+  );
+  const items = rows.map((row) => row.approval);
+  if (!actor || !can("approvals.read"))
+    return <EmptyState>{t("Approvals", "تأییدها")}</EmptyState>;
   const typeName = (item: Approval) =>
     item.manual_override
       ? t("Manual price override", "تغییر دستی قیمت")
@@ -95,7 +106,11 @@ export function Approvals() {
         }[item.type];
   const branchName = (value: Branch) =>
     configuredBranchLabel(state.config, value, lang);
-  const openPreview = (item: Approval, decision: "approve" | "reject") => {
+  const openPreview = async (
+    item: Approval,
+    decision: "approve" | "reject",
+  ) => {
+    if (!canDecide || !actor) return;
     setMessage("");
     setRegularDecision("rule");
     const target = branchSellsToCustomers(state.config, item.branch)
@@ -103,60 +118,75 @@ export function Approvals() {
       : branchSellsToCustomers(state.config, branch)
         ? branch
         : (branches[0] ?? "all");
-    setPreview({
-      approval: item,
-      decision,
-      snapshot: approvalSnapshot(state, item.product_code),
-      target,
-      company,
-      branch,
-    });
+    try {
+      const source = await query(
+        "approvals.decide",
+        domainScope(state, item),
+        (canonical, actualActor) => ({
+          snapshot: approvalSnapshot(canonical, actualActor, item.product_code),
+        }),
+      );
+      setPreview({
+        approval: item,
+        decision,
+        ...source,
+        user_id: actor.user_id,
+        session_id: actor.session_id,
+        target,
+        company,
+        branch,
+        accessKey,
+      });
+    } catch {
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
   };
-  const confirm = () => {
+  const confirm = async () => {
     if (!preview) return;
     if (
       preview.company !== company ||
       preview.branch !== branch ||
-      preview.snapshot !==
-        approvalSnapshot(state, preview.approval.product_code)
+      !canDecide
     ) {
       setPreview(null);
-      setMessage(
-        t(
-          "Prices changed. Open the approval again to review the latest prices before confirming.",
-          "قیمت‌ها تغییر کردند. تأیید را دوباره باز کنید تا پیش از تأیید، تازه‌ترین قیمت‌ها را بررسی کنید.",
-        ),
-      );
-      return;
-    }
-    const manualReview = preview.approval.manual_price_review
-      ? manualRegularApprovalPreview(state, preview.approval, regularDecision)
-      : null;
-    if (
-      preview.decision === "approve" &&
-      (manualReview?.below_minimum_margin || manualReview?.below_cost) &&
-      !reasons[preview.approval.id]?.trim()
-    ) {
-      setReasonErrors((current) => ({
-        ...current,
-        [preview.approval.id]: t("Add a reason.", "یک دلیل اضافه کنید."),
-      }));
       return;
     }
     try {
-      update((draft) =>
-        resolveApproval(
-          draft,
-          preview.approval.id,
-          preview.decision,
-          scope,
-          preview.target,
-          reasons[preview.approval.id],
-          preview.snapshot,
-          preview.approval.manual_price_review ? regularDecision : undefined,
-        ),
+      await command(
+        "approvals.decide",
+        domainScope(state, preview.approval, true),
+        (draft, freshActor) => {
+          if (
+            freshActor.user_id !== preview.user_id ||
+            freshActor.session_id !== preview.session_id
+          )
+            throw new Error("Approval changed. Refresh the preview");
+          resolveApproval(
+            draft,
+            freshActor,
+            preview.approval.id,
+            preview.decision,
+            scope,
+            preview.target,
+            reasons[preview.approval.id],
+            preview.snapshot,
+            preview.approval.manual_price_review ? regularDecision : undefined,
+          );
+        },
       );
-    } catch {
+    } catch (caught) {
+      if (caught instanceof Error && caught.message.includes("reason")) {
+        setReasonErrors((current) => ({
+          ...current,
+          [preview.approval.id]: t("Add a reason.", "یک دلیل اضافه کنید."),
+        }));
+        return;
+      }
       setMessage(
         t(
           "This proposal changed. Open the approval again before confirming.",
@@ -184,7 +214,8 @@ export function Approvals() {
     );
     setPreview(null);
   };
-  const marginAction = (item: Approval, action: "keep" | "override") => {
+  const marginAction = async (item: Approval, action: "keep" | "override") => {
+    if (!canDecide) return;
     const reason = reasons[item.id]?.trim();
     if (!reason) {
       setReasonErrors((current) => ({
@@ -207,11 +238,30 @@ export function Approvals() {
       }));
       return;
     }
-    update((draft) =>
-      action === "keep"
-        ? keepApprovedPrice(draft, item.id, reason)
-        : void proposeManualOverride(draft, item.id, amount, reason),
-    );
+    try {
+      await command(
+        "approvals.decide",
+        domainScope(state, item, true),
+        (draft, freshActor) =>
+          action === "keep"
+            ? keepApprovedPrice(draft, freshActor, item.id, reason)
+            : void proposeManualOverride(
+                draft,
+                freshActor,
+                item.id,
+                amount,
+                reason,
+              ),
+      );
+    } catch {
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+      return;
+    }
     setMessage(
       action === "keep"
         ? t(
@@ -234,28 +284,32 @@ export function Approvals() {
         )}
       />
       <Tabs
-        value={filter}
+        value={viewStatus}
         aria-label={t("Approval status", "وضعیت تأیید")}
         onChange={(value) => {
           setFilter(value as typeof filter);
           setMessage("");
         }}
-        options={[
-          { value: "pending", label: t("Pending", "در انتظار") },
-          { value: "approved", label: t("Approved", "تأییدشده") },
-          { value: "rejected", label: t("Rejected", "ردشده") },
-          { value: "superseded", label: t("Superseded", "جایگزین‌شده") },
-        ]}
+        options={
+          canDecide
+            ? [
+                { value: "pending", label: t("Pending", "در انتظار") },
+                { value: "approved", label: t("Approved", "تأییدشده") },
+                { value: "rejected", label: t("Rejected", "ردشده") },
+                { value: "superseded", label: t("Superseded", "جایگزین‌شده") },
+              ]
+            : [{ value: "pending", label: t("Pending", "در انتظار") }]
+        }
       />
       {message && (
         <div className="banner" role="status">
           {message}
         </div>
       )}
-      {filter === "pending" && <SaleRequestCards />}
+      {viewStatus === "pending" && <SaleRequestCards />}
       {items.length === 0 &&
         !(
-          filter === "pending" &&
+          viewStatus === "pending" &&
           (state.sale_requests ?? []).some(
             (request) =>
               request.company_id === company &&
@@ -272,7 +326,16 @@ export function Approvals() {
         )}
       {items.map((item) => {
         if (item.type === "new_supplier")
-          return <SupplierApproval key={item.id} approval={item} />;
+          return canDecide ? (
+            <SupplierApproval key={item.id} approval={item} />
+          ) : (
+            <Card key={item.id} title={item.supplier_name}>
+              {t(
+                "Supplier waiting for confirmation",
+                "تأمین‌کننده در انتظار تأیید",
+              )}
+            </Card>
+          );
         const product = state.products.find(
           (value) =>
             value.company_id === company && value.code === item.product_code,
@@ -282,33 +345,9 @@ export function Approvals() {
           "current_price" in item
             ? item.current_price
             : regularPrice(state, product, item.branch);
-        const relatedInvoice = [state.invoice, ...(state.invoices ?? [])].find(
-          (invoice) =>
-            invoice.company_id === company &&
-            item.invoice_ids?.includes(invoice.id),
-        );
-        const unitCost = item.unit_cost ?? product.last_cost_before_tax;
-        const margin =
-          item.margin ??
-          (item.proposed_price && new Decimal(item.proposed_price).gt(0)
-            ? new Decimal(item.proposed_price)
-                .minus(unitCost)
-                .div(item.proposed_price)
-                .toFixed(4)
-            : null);
-        const triggeredBy =
-          item.triggered_by ??
-          (item.manual_override
-            ? [...state.activity]
-                .reverse()
-                .find(
-                  (entry) =>
-                    entry.company_id === company &&
-                    entry.product_code === item.product_code &&
-                    entry.branch === item.branch &&
-                    entry.action === "Propose manual override",
-                )?.by
-            : relatedInvoice?.receiving_employee);
+        const details = rows.find((row) => row.approval.id === item.id)!;
+        const { unitCost, margin, triggeredBy } = details;
+        const invoiceNumber = details.invoiceNumber;
 
         return (
           <Card
@@ -395,26 +434,36 @@ export function Approvals() {
                     />
                   </strong>
                 </div>
-                <div className="approval-value">
-                  <span className="muted">{t("Unit cost", "هزینه واحد")}</span>
-                  <strong>
-                    <ProductCost
-                      value={unitCost}
-                      product={product}
-                      config={state.config}
-                    />
-                  </strong>
-                </div>
-                <div className="approval-value">
-                  <span className="muted">{t("Margin", "حاشیه سود")}</span>
-                  <strong>
-                    <bdi dir="ltr">
-                      {margin !== null
-                        ? `${new Decimal(margin).times(100).toFixed(2)}%`
-                        : "—"}
-                    </bdi>
-                  </strong>
-                </div>
+                {canDecide && (
+                  <>
+                    <div className="approval-value">
+                      <span className="muted">
+                        {t("Unit cost", "هزینه واحد")}
+                      </span>
+                      <strong>
+                        {unitCost !== null && unitCost !== undefined ? (
+                          <ProductCost
+                            value={unitCost}
+                            product={product}
+                            config={state.config}
+                          />
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
+                      </strong>
+                    </div>
+                    <div className="approval-value">
+                      <span className="muted">{t("Margin", "حاشیه سود")}</span>
+                      <strong>
+                        <bdi dir="ltr">
+                          {margin !== null
+                            ? `${new Decimal(margin).times(100).toFixed(2)}%`
+                            : "—"}
+                        </bdi>
+                      </strong>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             <div className="approval-meta">
@@ -427,7 +476,7 @@ export function Approvals() {
                   ? demoUserLabel(triggeredBy, lang)
                   : t("Not recorded", "ثبت نشده")}
               </span>
-              {item.threshold && (
+              {canDecide && item.threshold && (
                 <span>
                   {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
                   <bdi dir="ltr">
@@ -436,99 +485,99 @@ export function Approvals() {
                 </span>
               )}
             </div>
-            {item.manual_override && (
+            {canDecide && item.manual_override && (
               <p>
                 {t("Reason", "دلیل")}: {item.reason}
               </p>
             )}
-            {(item.invoice_number || relatedInvoice) && (
+            {invoiceNumber && (
               <p className="muted">
-                {t("Invoice", "فاکتور")}:{" "}
-                <bdi dir="ltr">
-                  {item.invoice_number ??
-                    relatedInvoice?.supplier_invoice_number}
-                </bdi>
+                {t("Invoice", "فاکتور")}: <bdi dir="ltr">{invoiceNumber}</bdi>
               </p>
             )}
-            {item.status === "pending" && item.type === "margin_review" && (
-              <>
-                <p className="muted">
-                  {t(
-                    "Receiving continues. Keep this price with a reason, propose an override, or leave the review pending.",
-                    "دریافت کالا ادامه دارد. قیمت را با دلیل حفظ کنید، تغییر دستی پیشنهاد دهید یا بررسی را در انتظار بگذارید.",
-                  )}
-                </p>
-                <div className="form-grid approval-form">
-                  <Field
-                    label={t("Reason", "دلیل")}
-                    error={reasonErrors[item.id]}
-                  >
-                    <input
-                      value={reasons[item.id] ?? ""}
-                      onChange={(event) => {
-                        setReasons({
-                          ...reasons,
-                          [item.id]: event.target.value,
-                        });
-                        setReasonErrors((current) => ({
-                          ...current,
-                          [item.id]: "",
-                        }));
-                      }}
-                    />
-                  </Field>
-                  <Field
-                    label={t("Manual override price", "قیمت دستی")}
-                    error={overrideErrors[item.id]}
-                  >
-                    <NumberField
-                      value={overrides[item.id] ?? ""}
-                      onChange={(value) => {
-                        setOverrides({ ...overrides, [item.id]: value });
-                        setOverrideErrors((current) => ({
-                          ...current,
-                          [item.id]: "",
-                        }));
-                      }}
-                    />
-                  </Field>
-                </div>
+            {canDecide &&
+              item.status === "pending" &&
+              item.type === "margin_review" && (
+                <>
+                  <p className="muted">
+                    {t(
+                      "Receiving continues. Keep this price with a reason, propose an override, or leave the review pending.",
+                      "دریافت کالا ادامه دارد. قیمت را با دلیل حفظ کنید، تغییر دستی پیشنهاد دهید یا بررسی را در انتظار بگذارید.",
+                    )}
+                  </p>
+                  <div className="form-grid approval-form">
+                    <Field
+                      label={t("Reason", "دلیل")}
+                      error={reasonErrors[item.id]}
+                    >
+                      <input
+                        value={reasons[item.id] ?? ""}
+                        onChange={(event) => {
+                          setReasons({
+                            ...reasons,
+                            [item.id]: event.target.value,
+                          });
+                          setReasonErrors((current) => ({
+                            ...current,
+                            [item.id]: "",
+                          }));
+                        }}
+                      />
+                    </Field>
+                    <Field
+                      label={t("Manual override price", "قیمت دستی")}
+                      error={overrideErrors[item.id]}
+                    >
+                      <NumberField
+                        value={overrides[item.id] ?? ""}
+                        onChange={(value) => {
+                          setOverrides({ ...overrides, [item.id]: value });
+                          setOverrideErrors((current) => ({
+                            ...current,
+                            [item.id]: "",
+                          }));
+                        }}
+                      />
+                    </Field>
+                  </div>
+                  <div className="actions">
+                    <Button onClick={() => marginAction(item, "keep")}>
+                      {t("Keep approved price", "حفظ قیمت تأییدشده")}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => marginAction(item, "override")}
+                    >
+                      {t("Propose manual override", "پیشنهاد تغییر دستی")}
+                    </Button>
+                  </div>
+                </>
+              )}
+            {canDecide &&
+              item.status === "pending" &&
+              item.type !== "margin_review" && (
                 <div className="actions">
-                  <Button onClick={() => marginAction(item, "keep")}>
-                    {t("Keep approved price", "حفظ قیمت تأییدشده")}
+                  <Button
+                    onClick={() => {
+                      setScope("all");
+                      openPreview(item, "approve");
+                    }}
+                  >
+                    {item.type === "barcode_conflict"
+                      ? t("Approve", "تأیید")
+                      : item.type === "new_product"
+                        ? t("Approve product", "تأیید کالا")
+                        : t("Approve price", "تأیید قیمت")}
                   </Button>
                   <Button
-                    variant="secondary"
-                    onClick={() => marginAction(item, "override")}
+                    variant="danger"
+                    onClick={() => openPreview(item, "reject")}
                   >
-                    {t("Propose manual override", "پیشنهاد تغییر دستی")}
+                    {t("Reject", "رد کردن")}
                   </Button>
                 </div>
-              </>
-            )}
-            {item.status === "pending" && item.type !== "margin_review" && (
-              <div className="actions">
-                <Button
-                  onClick={() => {
-                    setScope("all");
-                    openPreview(item, "approve");
-                  }}
-                >
-                  {item.type === "barcode_conflict"
-                    ? t("Approve", "تأیید")
-                    : item.type === "new_product"
-                      ? t("Approve product", "تأیید کالا")
-                      : t("Approve price", "تأیید قیمت")}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => openPreview(item, "reject")}
-                >
-                  {t("Reject", "رد کردن")}
-                </Button>
-              </div>
-            )}
-            {item.acknowledgment_reason && (
+              )}
+            {canDecide && item.acknowledgment_reason && (
               <p>
                 {t("Review reason", "دلیل بررسی")}: {item.acknowledgment_reason}
               </p>
@@ -541,7 +590,7 @@ export function Approvals() {
           </Card>
         );
       })}
-      {preview && (
+      {canDecide && preview && (
         <ConfirmDialog
           open
           onOpenChange={(open) => {

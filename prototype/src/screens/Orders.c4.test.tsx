@@ -1,33 +1,30 @@
 import {
+  cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DemoProvider, STORAGE_KEY, initialState } from "../store";
-import { SESSION_KEY } from "../auth";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DemoProvider, initialState } from "../store";
+import { authenticatedTestActor } from "../authority-test-fixture";
+import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
+import { orderPrintSnapshot } from "../orders-board";
 import i18n from "../i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 import { createOrder } from "../orders";
 import { OrderPrintDocument } from "../order-print";
 import Orders from "./Orders";
 
-beforeEach(() => {
+beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   window.location.hash = "#orders";
-  void i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "Branch 1",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
+  await i18n.changeLanguage("en");
   vi.stubGlobal(
     "ResizeObserver",
     class {
@@ -38,14 +35,31 @@ beforeEach(() => {
   );
 });
 
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  clearRenderedUiReadiness();
+  cleanup();
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+  vi.unstubAllGlobals();
+});
+
 describe("C4 New item order presentation", () => {
   it("keeps New item errors next to fields, clears only the edited field, and places an unknown estimate", async () => {
+    const fixture = await authenticatedProviderFixture({
+      state: initialState(),
+      role: "manager",
+      actorOptions: { locations: ["Branch 1"] },
+    });
+    fixtures.push(fixture);
     render(
-      <DemoProvider>
+      <DemoProvider options={fixture.options}>
         <Orders />
       </DemoProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "New order" }));
+    await renderedUiReady(() =>
+      Boolean(screen.queryByRole("button", { name: "New order" })),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "New order" }));
     fireEvent.click(screen.getByLabelText("Supplier"));
     fireEvent.click(screen.getByRole("option", { name: "Fresh Valley Foods" }));
     fireEvent.click(screen.getByRole("button", { name: "New item" }));
@@ -74,18 +88,28 @@ describe("C4 New item order presentation", () => {
         name: "Expected unit cost — Fictional new order item",
       }),
     ).toHaveValue("");
+    await renderedUiReady(() =>
+      Boolean(
+        screen.queryByText(
+          "Estimate incomplete: some packs or expected costs are not known.",
+        ),
+      ),
+    );
     expect(
       screen.getByText(
         "Estimate incomplete: some packs or expected costs are not known.",
       ),
     ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Place order" }));
-    await waitFor(() =>
-      expect(
-        JSON.parse(localStorage.getItem(STORAGE_KEY)!).orders?.at(-1)?.status,
-      ).toBe("ordered"),
+    await renderedUiReady(() =>
+      Boolean(screen.queryByRole("button", { name: "Print order" })),
     );
-    const order = JSON.parse(localStorage.getItem(STORAGE_KEY)!).orders.at(-1);
+    await waitFor(async () =>
+      expect((await fixture.readCanonical()).orders?.at(-1)?.status).toBe(
+        "ordered",
+      ),
+    );
+    const order = (await fixture.readCanonical()).orders!.at(-1)!;
     expect(order.lines[0]).toMatchObject({
       new_item: true,
       ordered_cases: "2",
@@ -97,44 +121,51 @@ describe("C4 New item order presentation", () => {
       expect(screen.getByRole("button", { name: "Print order" })).toBeVisible(),
     );
     fireEvent.click(screen.getByRole("button", { name: "Print order" }));
-    expect(
-      screen
-        .getByRole("dialog", { name: "Print order" })
-        .querySelector(".order-print-new-item"),
-    ).toHaveTextContent("New item");
+    await renderedUiReady(() =>
+      Boolean(
+        screen
+          .queryByRole("dialog", { name: "Print order" })
+          ?.querySelector(".order-print-new-item")
+          ?.textContent?.includes("New item"),
+      ),
+    );
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole("dialog", { name: "Print order" })
+          .querySelector(".order-print-new-item"),
+      ).toHaveTextContent("New item"),
+    );
   });
 
   it.each(["en", "fa"] as const)(
     "prints aligned bilingual headers and explicit missing estimates in %s",
     (language) => {
       const state = initialState();
-      const order = createOrder(
-        state,
-        {
-          company_id: state.config.company.seed_key,
-          branch: "all",
-          role: "supervisor",
-          actor: "Print reviewer",
-        },
-        {
-          branch: "Branch 1",
-          supplier: "Fresh Valley Foods",
-          lines: [
-            {
-              new_item: {
-                id: "new-print-item",
-                name_en: "Fictional printed item",
-              },
-              cases: "2",
+      const actor = authenticatedTestActor(state, "manager", {
+        locations: ["Branch 1"],
+        name_en: "Print reviewer",
+        selection: { kind: "all_locations" },
+      });
+      const order = createOrder(state, actor, {
+        branch: "Branch 1",
+        supplier: "Fresh Valley Foods",
+        lines: [
+          {
+            new_item: {
+              id: "new-print-item",
+              name_en: "Fictional printed item",
             },
-          ],
-        },
-      );
+            cases: "2",
+          },
+        ],
+      });
+      const print = orderPrintSnapshot(state, actor, order.id, order.version);
       const { container } = render(
         <OrderPrintDocument
-          order={order}
+          order={print.order}
           config={{
-            ...state.config,
+            ...print.config,
             supplier_documents: {
               return_memo: "en",
               supplier_order: "bilingual",

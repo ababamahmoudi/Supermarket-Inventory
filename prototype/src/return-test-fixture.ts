@@ -1,4 +1,4 @@
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 
 /** Explicitly fictional retained-ledger case shared by C4 return tests. */
 export function returnFixture() {

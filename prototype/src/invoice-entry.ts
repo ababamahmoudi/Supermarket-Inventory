@@ -45,7 +45,9 @@ export function setInvoiceAmount(
     invoice.final_total = computed;
 }
 
-export function invoiceTotalDiffers(invoice: DemoInvoice): boolean {
+export function invoiceTotalDiffers(
+  invoice: Pick<DemoInvoice, "subtotal" | "tax" | "final_total">,
+): boolean {
   const computed = invoiceComputedTotal(invoice);
   return (
     computed !== undefined &&

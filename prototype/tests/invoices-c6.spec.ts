@@ -1,13 +1,14 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn, invoiceImage } from "./helpers";
 import type { DemoState } from "../src/types";
 
 const stored = async (page: Page): Promise<DemoState> => {
-  await page.waitForFunction(
-    () => localStorage.getItem("supermarket-prototype-v1") !== null,
-  );
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  await expect
+    .poll(() => readCanonicalBusinessEvidence(page).then(() => true))
+    .toBe(true);
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 };
 async function manual(page: Page) {

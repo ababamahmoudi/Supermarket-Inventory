@@ -1,3 +1,7 @@
+import { useSettingsConfiguration } from "../settings-configuration";
+import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
+import People from "./People";
+import RegisteredComputers from "./RegisteredComputers";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import companyLogo from "../../../assets/arzon-logo.png?inline";
 import { History, MoreHorizontal, Plus } from "lucide-react";
@@ -216,8 +220,8 @@ function requestedGroup(): Group | undefined {
 function settingsError(error: unknown, t: Translate): string {
   const messages: Record<string, [string, string]> = {
     permission: [
-      "Only the Supervisor can change Settings.",
-      "فقط سرپرست می‌تواند تنظیمات را تغییر دهد.",
+      "Only an Owner or Manager can change Settings.",
+      "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
     ],
     company: [
       "This change belongs to another company.",
@@ -282,11 +286,12 @@ function SaveBar({
   ) : null;
 }
 function CompanySettings() {
-  const { state, update, t, role, user } = useDemo();
+  const { command, query, t } = useDemo();
+  const configuration = useSettingsConfiguration();
   const logoPicker = useRef<HTMLInputElement>(null);
-  const persisted = JSON.stringify(state.config.company);
+  const persisted = JSON.stringify(configuration.company);
   const [draft, commitDraft] = useState<CompanyConfig["company"]>(() =>
-    structuredClone(state.config.company),
+    structuredClone(configuration.company),
   );
   const [error, setError] = useState<string>();
   const [errorField, setErrorField] = useState<string>();
@@ -312,20 +317,16 @@ function CompanySettings() {
   }
   const fieldError = (field: string) =>
     errorField === field ? error : undefined;
-  function save() {
+  async function save() {
     try {
-      const check = structuredClone(state);
-      saveCompanySettings(check, draft, {
-        role: role ?? "cashier",
-        company_id: state.config.company.seed_key,
-        by: user?.name ?? "",
-      });
-      update((next) =>
-        saveCompanySettings(next, draft, {
-          role: role ?? "cashier",
-          company_id: state.config.company.seed_key,
-          by: user?.name ?? "",
-        }),
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (next, freshActor) => saveCompanySettings(next, draft, freshActor),
       );
       setError(undefined);
     } catch (failure) {
@@ -347,11 +348,17 @@ function CompanySettings() {
       return;
     }
     try {
+      const scope = {
+        company_id: configuration.company.seed_key,
+        kind: "company_shared" as const,
+      };
+      await query("settings.manage", scope, () => undefined);
       const stored = await storeUploadedFile(
         file,
-        state.config.company.seed_key,
+        configuration.company.seed_key,
         { purpose: "logo" },
       );
+      await query("settings.manage", scope, () => undefined);
       setDraft((current) => ({ ...current, logo_data: stored.reference }));
       setError(undefined);
       setErrorField(undefined);
@@ -578,7 +585,7 @@ function CompanySettings() {
           <StoredFileImage
             className="settings-logo-preview"
             value={draft.logo_data || companyLogo}
-            companyId={state.config.company.seed_key}
+            companyId={configuration.company.seed_key}
             alt={t("Company logo", "نشان شرکت")}
           />
           <Button variant="neutral" onClick={() => logoPicker.current?.click()}>
@@ -610,7 +617,7 @@ function CompanySettings() {
         dirty={JSON.stringify(draft) !== persisted}
         save={save}
         cancel={() => {
-          setDraft(structuredClone(state.config.company));
+          setDraft(structuredClone(configuration.company));
           setError(undefined);
         }}
       />
@@ -618,7 +625,8 @@ function CompanySettings() {
   );
 }
 function BranchSettings() {
-  const { state, update, t, role, user, lang } = useDemo();
+  const { command, t, lang } = useDemo();
+  const configuration = useSettingsConfiguration();
   const [editing, commitEditing] = useState<ConfigBranch | null>(null);
   const [error, setError] = useState<string>();
   const [errorField, setErrorField] = useState<string>();
@@ -639,16 +647,18 @@ function BranchSettings() {
     }
     commitEditing(value);
   }
-  const actor = {
-    role: role ?? "cashier",
-    company_id: state.config.company.seed_key,
-    by: user?.name ?? "",
-  };
-  function save() {
+  async function save() {
     if (!editing) return;
     try {
-      saveBranchSettings(structuredClone(state), editing, actor);
-      update((next) => saveBranchSettings(next, editing, actor));
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (next, freshActor) => saveBranchSettings(next, editing, freshActor),
+      );
       setEditing(null);
       setError(undefined);
     } catch (failure) {
@@ -658,10 +668,17 @@ function BranchSettings() {
       );
     }
   }
-  function active(code: string, value: boolean) {
+  async function active(code: string, value: boolean) {
     try {
-      setBranchActive(structuredClone(state), code, value, actor);
-      update((next) => setBranchActive(next, code, value, actor));
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (next, freshActor) => setBranchActive(next, code, value, freshActor),
+      );
       setError(undefined);
     } catch (failure) {
       setError(settingsError(failure, t));
@@ -677,7 +694,7 @@ function BranchSettings() {
           <Button
             onClick={() => {
               setSellingEdited(false);
-              setEditing(newBranch(state.config));
+              setEditing(newBranch(configuration));
               setError(undefined);
             }}
           >
@@ -708,10 +725,10 @@ function BranchSettings() {
             </tr>
           </thead>
           <tbody>
-            {state.config.branches.map((branch, index) => (
+            {configuration.branches.map((branch, index) => (
               <tr key={branch.code}>
                 <th scope="row">
-                  {branchLabel(state.config, branchId(branch, index), lang)}
+                  {branchLabel(configuration, branchId(branch, index), lang)}
                 </th>
                 <td>
                   {branch.type === "warehouse"
@@ -719,7 +736,10 @@ function BranchSettings() {
                     : t("Store", "فروشگاه")}
                 </td>
                 <td>
-                  {branchSellsToCustomers(state.config, branchId(branch, index))
+                  {branchSellsToCustomers(
+                    configuration,
+                    branchId(branch, index),
+                  )
                     ? t("Yes", "بله")
                     : t("No", "خیر")}
                 </td>
@@ -799,7 +819,7 @@ function BranchSettings() {
           }
         }}
         title={
-          state.config.branches.some((branch) => branch.code === editing?.code)
+          configuration.branches.some((branch) => branch.code === editing?.code)
             ? t("Edit branch", "ویرایش شعبه")
             : t("Add location", "افزودن مکان")
         }
@@ -955,10 +975,11 @@ function BranchSettings() {
   );
 }
 function OfferSettings() {
-  const { state, update, t, role, user } = useDemo();
-  const persisted = JSON.stringify(state.config.promotions);
+  const { command, t } = useDemo();
+  const configuration = useSettingsConfiguration();
+  const persisted = JSON.stringify(configuration.promotions);
   const [draft, commitDraft] = useState(() =>
-    structuredClone(state.config.promotions),
+    structuredClone(configuration.promotions),
   );
   const [error, setError] = useState<string>();
   function setDraft(next: SetStateAction<CompanyConfig["promotions"]>) {
@@ -970,15 +991,17 @@ function OfferSettings() {
       setError(undefined);
     commitDraft(value);
   }
-  function save() {
+  async function save() {
     try {
-      const actor = {
-        role: role ?? "cashier",
-        company_id: state.config.company.seed_key,
-        by: user?.name ?? "",
-      };
-      saveOfferSettings(structuredClone(state), draft, actor);
-      update((next) => saveOfferSettings(next, draft, actor));
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (next, freshActor) => saveOfferSettings(next, draft, freshActor),
+      );
       setError(undefined);
     } catch (failure) {
       setError(settingsError(failure, t));
@@ -1183,7 +1206,7 @@ function OfferSettings() {
         dirty={JSON.stringify(draft) !== persisted}
         save={save}
         cancel={() => {
-          setDraft(structuredClone(state.config.promotions));
+          setDraft(structuredClone(configuration.promotions));
           setError(undefined);
         }}
       />
@@ -1200,13 +1223,14 @@ const moduleLabels: [keyof CompanyConfig["modules"], string, string][] = [
   ["payables", "Payables", "حساب‌های پرداختنی"],
 ];
 function ModuleSettings() {
-  const { state, update, t, role, user } = useDemo();
-  const persisted = JSON.stringify(state.config.modules);
+  const { command, t } = useDemo();
+  const configuration = useSettingsConfiguration();
+  const persisted = JSON.stringify(configuration.modules);
   const [draft, setDraft] = useState(() =>
-    structuredClone(state.config.modules),
+    structuredClone(configuration.modules),
   );
   const [allowOrders, setAllowOrders] = useState(
-    state.config.orders?.allow_floor_worker ?? false,
+    configuration.orders?.allow_floor_worker ?? false,
   );
   return (
     <>
@@ -1243,22 +1267,29 @@ function ModuleSettings() {
       <SaveBar
         dirty={
           JSON.stringify(draft) !== persisted ||
-          allowOrders !== (state.config.orders?.allow_floor_worker ?? false)
+          allowOrders !== (configuration.orders?.allow_floor_worker ?? false)
         }
-        save={() =>
-          update((next) => {
-            const actor = {
-              role: role ?? "cashier",
-              company_id: state.config.company.seed_key,
-              by: user?.name ?? "",
-            };
-            saveModuleSettings(next, draft, actor);
-            saveOrderSettings(next, { allow_floor_worker: allowOrders }, actor);
-          })
-        }
+        save={async () => {
+          await command(
+            "settings.manage",
+            {
+              company_id: configuration.company.seed_key,
+              kind: "company_shared",
+              mutation: true,
+            },
+            (next, freshActor) => {
+              saveModuleSettings(next, draft, freshActor);
+              saveOrderSettings(
+                next,
+                { allow_floor_worker: allowOrders },
+                freshActor,
+              );
+            },
+          );
+        }}
         cancel={() => {
-          setDraft(structuredClone(state.config.modules));
-          setAllowOrders(state.config.orders?.allow_floor_worker ?? false);
+          setDraft(structuredClone(configuration.modules));
+          setAllowOrders(configuration.orders?.allow_floor_worker ?? false);
         }}
       />
     </>
@@ -1296,8 +1327,9 @@ function PlannedSettings({ group }: { group: (typeof groups)[number] }) {
     </Card>
   );
 }
-export default function Settings() {
-  const { state, t, role } = useDemo();
+function SettingsContent() {
+  const { state, t, can } = useDemo();
+  const configuration = useSettingsConfiguration();
   const [selected, setSelected] = useState<Group>(() => {
     const requested = requestedGroup();
     if (requested) return requested;
@@ -1318,7 +1350,7 @@ export default function Settings() {
     return () => window.removeEventListener("hashchange", changed);
   }, []);
   const group = groups.find((entry) => entry.key === selected)!;
-  if (role !== "supervisor") return null;
+  if (!can("settings.manage")) return null;
   const changed = state.activity.find(
     (activity) =>
       activity.entity_type === "settings" &&
@@ -1358,15 +1390,20 @@ export default function Settings() {
             <p className="muted">{t(...group.description)}</p>
           </div>
           {selected === "company" ? (
-            <CompanySettings key={JSON.stringify(state.config.company)} />
+            <CompanySettings key={JSON.stringify(configuration.company)} />
           ) : selected === "branches" ? (
             <BranchSettings />
+          ) : selected === "people" ? (
+            <>
+              <People />
+              <RegisteredComputers />
+            </>
           ) : selected === "catalog" ? (
             <PricingSettings
               key={JSON.stringify([
-                state.config.pricing_categories,
-                state.config.rounding_bands,
-                state.config.special_corrections,
+                configuration.pricing_categories,
+                configuration.rounding_bands,
+                configuration.special_corrections,
               ])}
             />
           ) : selected === "pricing" ? (
@@ -1375,7 +1412,7 @@ export default function Settings() {
               <PlannedSettings group={group} />
             </>
           ) : selected === "offers" ? (
-            <OfferSettings key={JSON.stringify(state.config.promotions)} />
+            <OfferSettings key={JSON.stringify(configuration.promotions)} />
           ) : selected === "notes" ? (
             <NotebookSettings />
           ) : selected === "returns" ? (
@@ -1386,8 +1423,8 @@ export default function Settings() {
           ) : selected === "modules" ? (
             <ModuleSettings
               key={JSON.stringify({
-                modules: state.config.modules,
-                orders: state.config.orders,
+                modules: configuration.modules,
+                orders: configuration.orders,
               })}
             />
           ) : (
@@ -1403,5 +1440,13 @@ export default function Settings() {
         </section>
       </div>
     </>
+  );
+}
+
+export default function Settings() {
+  return (
+    <SettingsConfigurationGate>
+      <SettingsContent />
+    </SettingsConfigurationGate>
   );
 }

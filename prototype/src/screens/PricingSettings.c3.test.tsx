@@ -1,7 +1,16 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
-import { DemoProvider, useDemo } from "../store";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DemoProvider, initialState } from "../store";
+import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
+import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
+import { useSettingsConfiguration } from "../settings-configuration";
 import i18n from "../i18n";
 import PricingSettings from "./PricingSettings";
 
@@ -11,16 +20,20 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
 });
 
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  cleanup();
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+  vi.unstubAllGlobals();
+});
+
 function Harness() {
-  const { switchDemoUser, state } = useDemo();
+  const configuration = useSettingsConfiguration();
   return (
     <>
-      <button onClick={() => switchDemoUser("supervisor")}>
-        Use Supervisor
-      </button>
       <PricingSettings />
       <output data-testid="saved-categories">
-        {state.config.pricing_categories
+        {configuration.pricing_categories
           .map((category) => category.label)
           .join(",")}
       </output>
@@ -29,13 +42,20 @@ function Harness() {
 }
 
 async function show() {
+  const fixture = await authenticatedProviderFixture({
+    state: initialState,
+    role: "manager",
+  });
+  fixtures.push(fixture);
   const user = userEvent.setup();
   render(
-    <DemoProvider>
-      <Harness />
+    <DemoProvider options={fixture.options}>
+      <SettingsConfigurationGate>
+        <Harness />
+      </SettingsConfigurationGate>
     </DemoProvider>,
   );
-  await user.click(screen.getByRole("button", { name: "Use Supervisor" }));
+  await screen.findByRole("button", { name: "Add category" });
   return user;
 }
 
@@ -79,12 +99,16 @@ describe("Pricing field validation", () => {
       within(dialog).getByRole("button", { name: "Apply category" }),
     );
     await user.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(screen.getByTestId("saved-categories")).toHaveTextContent(
-      "Frozen food premium",
+    await waitFor(() =>
+      expect(screen.getByTestId("saved-categories")).toHaveTextContent(
+        "Frozen food premium",
+      ),
     );
-    expect(
-      screen.queryByRole("button", { name: "Save changes" }),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Save changes" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("keeps a rounding error beside its fields, without blaming cost, until those fields change", async () => {
@@ -116,9 +140,11 @@ describe("Pricing field validation", () => {
     expect(from).toHaveAttribute("aria-invalid", "false");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(
-      screen.queryByRole("button", { name: "Save changes" }),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Save changes" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("places a minimum-price error beside Minimum result and clears it on editing that value", async () => {

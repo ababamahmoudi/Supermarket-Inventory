@@ -32,11 +32,8 @@ import {
   NewProductError,
   type NewProductEdits,
 } from "../manual-product";
-import { calculatePrice } from "../pricing";
 import {
   approvedWeightPricePerLb,
-  calculateWeighedPrice,
-  weightCostPerLb,
   weightPriceDisplay,
   weighedSettings,
   type WeightUnit,
@@ -65,18 +62,13 @@ import {
   focusValidationField,
   type ValidationIssue,
 } from "../WhatsMissing";
-import {
-  effectiveClearanceOffers,
-  firstAddedLocation,
-  scopedClearanceOffers,
-} from "../receipt-lots";
+import { effectiveProjectedClearanceOffers } from "../receipt-lots";
 import { ProductDatesSection } from "../ProductDatesSection";
-import { manualPrice, sellingMargin } from "../manual-prices";
+import { sellingMargin } from "../manual-prices";
 import {
   ManualPriceDetails,
   ManualPricePill,
 } from "../manual-price-presentation";
-import { productCostHistory, productStoreCost } from "../product-costs";
 import { receivedLog } from "../received";
 import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./manual-entry.css";
@@ -91,7 +83,16 @@ import {
   endSale,
   withdrawSaleRequest,
 } from "../sales";
-import type { Branch, Product } from "../types";
+import type { Branch } from "../types";
+import { configuredRoleLabel } from "../role-config";
+import type { ProductReadDTO as Product } from "../catalog-read-model";
+import { projectProductReadDTO } from "../catalog-read-model";
+import type { ResourceScope } from "../authority-types";
+import {
+  useCatalogQuery,
+  productFinancialSnapshot,
+  newProductPricePreview,
+} from "../catalog-query";
 import {
   productEditSnapshot,
   saveProductEdits,
@@ -135,9 +136,19 @@ const PAGE_SIZE = 25;
 
 function ProductProvenance({ product }: { product: Product }) {
   const { branch, t, lang, state } = useDemo();
+  const financial = useCatalogQuery(
+    "catalog.cost_read",
+    {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    },
+    product.code,
+    (draft, actor) => productFinancialSnapshot(draft, actor, product.code),
+  );
   const source =
-    product.price_provenance?.[lookupBranch(branch)] ??
-    product.price_provenance?.all;
+    financial.data?.price_provenance?.[lookupBranch(branch)] ??
+    financial.data?.price_provenance?.all;
   if (!source) return null;
   return (
     <p className="helper product-price-provenance">
@@ -190,8 +201,8 @@ function editorError(
       "ثبت موجودی اولیه در دسترس نیست. تحویل را از طریق فاکتور ثبت کنید.",
     ],
     permission: [
-      "Only a Supervisor can edit products.",
-      "فقط سرپرست می‌تواند محصول را ویرایش کند.",
+      "You do not have permission for this action.",
+      "اجازهٔ انجام این کار را ندارید.",
     ],
     company: [
       "This product belongs to another company.",
@@ -238,19 +249,14 @@ export function ProductEditor({
   invoiceQuickAdd?: boolean;
   onCreated?: (product: Product) => void;
 }) {
-  const {
-    state,
-    branch,
-    role,
-    user,
-    historyContext,
-    lang,
-    t,
-    update,
-    navigate,
-  } = useDemo();
-  const branches = configuredBranches(state.config);
-  const priceLocations = sellingBranches(state.config);
+  const { state, branch, actor, can, command, query, lang, t, navigate } =
+    useDemo();
+  const branches = configuredBranches(state.config).filter((id) =>
+    actor?.allowed_branches.includes(id),
+  );
+  const priceLocations = sellingBranches(state.config).filter((id) =>
+    actor?.allowed_branches.includes(id),
+  );
   const isNew = !existingProduct;
   const product: Product = existingProduct ?? {
     company_id: state.config.company.seed_key,
@@ -265,32 +271,68 @@ export function ProductEditor({
       )?.ai_category ?? "",
     barcode: "",
     main_supplier: invoiceQuickAdd
-      ? state.invoice.supplier
+      ? (state.invoice?.supplier ?? "")
       : (supplierChoices(state)[0]?.name ?? ""),
-    last_cost_before_tax: "",
     selling_price: "",
     offer: null,
     taxable: false,
     status: "active",
     tax_profile: "",
     date_tracking: false,
+    manual_price_scopes: [],
   };
   const [cost, setCost] = useState("");
   const [costUnit, setCostUnit] = useState<WeightUnit>("lb");
   const formId = useId();
   const dateLocation = invoiceQuickAdd
-    ? state.invoice.branch
+    ? (state.invoice?.branch ?? branch)
     : lookupBranch(branch);
-  const [dates, setDates] = useState<ProductDateDraft[]>(() =>
-    existingProduct && historyContext
-      ? productDateDrafts(
-          state,
-          historyContext,
-          existingProduct.code,
-          dateLocation,
-        )
-      : [],
+  const [chosenDateLocation, setChosenDateLocation] = useState("");
+  const pendingDateLocation =
+    dateLocation === "all" ? chosenDateLocation : dateLocation;
+  const editorScope: ResourceScope = invoiceQuickAdd
+    ? {
+        company_id: product.company_id,
+        location_ids: [dateLocation],
+        kind: "location_record",
+        entity_id: state.invoice?.id,
+      }
+    : {
+        company_id: product.company_id,
+        kind: "company_shared",
+        entity_id: existingProduct?.code,
+      };
+  const editorCapability = isNew
+    ? invoiceQuickAdd
+      ? "invoices.product_propose"
+      : "catalog.create_active"
+    : "catalog.edit";
+  const mayEdit = can(editorCapability, editorScope);
+  const mayOverridePrice = can("catalog.create_active", {
+    company_id: product.company_id,
+    kind: "company_shared",
+  });
+  const editorBoot = useCatalogQuery(
+    editorCapability,
+    editorScope,
+    existingProduct?.code ?? "new",
+    (draft, freshActor) => ({
+      expected: existingProduct
+        ? productEditSnapshot(draft, freshActor, existingProduct.code)
+        : "",
+      dates: existingProduct
+        ? productDateDrafts(
+            draft,
+            freshActor,
+            existingProduct.code,
+            dateLocation,
+          )
+        : [],
+    }),
   );
+  const [dates, setDates] = useState<ProductDateDraft[]>([]);
+  const initializedBoot = useRef("");
+  const initializationKey = `${actor?.user_id ?? ""}:${existingProduct?.code ?? "new"}:${dateLocation}`;
   const [reminderDays, setReminderDays] = useState(() =>
     String(productReminderDays(state, existingProduct)),
   );
@@ -331,9 +373,14 @@ export function ProductEditor({
   const [targetBranch, setTargetBranch] = useState<Branch>(
     lookupBranch(branch),
   );
-  const [expected, setExpected] = useState(() =>
-    isNew ? "" : productEditSnapshot(state, product.code),
-  );
+  const [expected, setExpected] = useState("");
+  useEffect(() => {
+    if (!editorBoot.data || initializedBoot.current === initializationKey)
+      return;
+    initializedBoot.current = initializationKey;
+    setDates(editorBoot.data.dates);
+    setExpected(editorBoot.data.expected);
+  }, [editorBoot.data, initializationKey]);
   const [error, setError] = useState<
     ProductEditErrorCode | NewProductError["code"] | null
   >(null);
@@ -377,26 +424,22 @@ export function ProductEditor({
     )
   )
     suppliers.push(values.main_supplier);
-  let calculatedPrice = "";
-  let canonicalCost = cost;
-  try {
-    const calculation = weightProduct
-      ? calculateWeighedPrice(
-          cost,
-          costUnit,
-          values.pricing_category,
-          state.config,
-        )
-      : calculatePrice(cost, values.pricing_category, state.config);
-    calculatedPrice = weightProduct
-      ? weightPriceDisplay(calculation.selling_price, state.config).main.amount
-      : calculation.selling_price;
-    canonicalCost = weightProduct
-      ? weightCostPerLb(cost, costUnit, state.config)
-      : cost;
-  } catch {
-    /* Invalid draft cost is explained on Save. */
-  }
+  const pricingInput = {
+    cost,
+    costUnit,
+    soldBy: values.sold_by,
+    category: values.pricing_category,
+    sellingPrice,
+    manualPrice,
+  };
+  const pricePreview = useCatalogQuery(
+    editorCapability,
+    editorScope,
+    JSON.stringify(pricingInput),
+    (draft, freshActor) =>
+      newProductPricePreview(draft, freshActor, pricingInput, invoiceQuickAdd),
+  );
+  const calculatedPrice = pricePreview.data?.displayCalculatedPrice ?? "";
   const effectiveSellingPrice =
     isNew && !manualPrice ? calculatedPrice : sellingPrice;
   let canonicalSellingPrice = effectiveSellingPrice;
@@ -408,28 +451,11 @@ export function ProductEditor({
         state.config,
       );
   } catch {
-    /* Save validates the same draft field. */
+    /* Save validates this draft field. */
   }
-  const minimum = state.config.pricing_categories.find(
-    (item) => item.key === values.pricing_category,
-  )?.minimum_margin;
-  const belowMinimum =
-    isNew &&
-    /^\d+(\.\d{1,4})?$/.test(cost) &&
-    /^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) &&
-    minimum !== null &&
-    minimum !== undefined &&
-    new Decimal(canonicalSellingPrice)
-      .minus(canonicalCost)
-      .lt(new Decimal(canonicalSellingPrice).times(minimum));
+  const belowMinimum = isNew && pricePreview.data?.belowMinimum === true;
   const similar = isNew ? similarProductNames(state, values.name_en) : [];
-  if (
-    isNew &&
-    role !== "supervisor" &&
-    !(role === "floor_worker" && invoiceQuickAdd)
-  )
-    return null;
-  if (!isNew && role !== "supervisor") return null;
+  if (!actor || !mayEdit) return null;
   return (
     <>
       <Dialog
@@ -465,7 +491,7 @@ export function ProductEditor({
           className="stack product-editor-form"
           id={`${formId}-form`}
           noValidate
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
             setError(null);
             const missing: ValidationIssue[] = [];
@@ -500,6 +526,11 @@ export function ProductEditor({
                 pendingDate.lot_number.trim(),
               );
               if (hasPendingDate) {
+                if (!pendingDateLocation)
+                  addIssue(
+                    "date-location",
+                    t("Choose location", "انتخاب مکان"),
+                  );
                 if (!validTrackedDate(pendingDate.date))
                   addIssue(
                     "new-date",
@@ -522,16 +553,18 @@ export function ProductEditor({
                 datesToSave.push({
                   ...pendingDate,
                   product_code: product.code,
-                  branch: dateLocation,
+                  branch: pendingDateLocation,
                 });
               }
               try {
-                validateProductTrackingDate(
-                  state,
-                  product.company_id,
-                  product.code,
-                  true,
-                  datesToSave,
+                await query(editorCapability, editorScope, (draft) =>
+                  validateProductTrackingDate(
+                    draft,
+                    product.company_id,
+                    product.code,
+                    true,
+                    datesToSave,
+                  ),
                 );
               } catch (cause) {
                 if (
@@ -607,50 +640,41 @@ export function ProductEditor({
               return;
             }
             setIssues([]);
-            const context = {
-              company_id: state.config.company.seed_key,
-              role: role!,
-              actor: user!.name,
-              branch: invoiceQuickAdd
-                ? state.invoice.branch
-                : values.scope === "branch"
-                  ? targetBranch
-                  : branch,
-              allowed_branches: branches,
-            };
+            const writeScope = { ...editorScope, mutation: true };
             try {
               if (isNew) {
-                let created: Product | undefined;
-                update((draft) => {
-                  created = structuredClone(
-                    addProduct(
+                const created = await command(
+                  editorCapability,
+                  writeScope,
+                  (draft, freshActor) => {
+                    const result = addProduct(
                       draft,
-                      context,
+                      freshActor,
                       {
                         ...values,
                         dates: datesToSave,
                         date_reminder_days: Number(reminderDays),
                         last_cost_before_tax: cost,
                         last_cost_unit: costUnit,
-                        selling_price:
-                          isNew && !manualPrice
-                            ? undefined
-                            : canonicalSellingPrice || undefined,
+                        selling_price: !manualPrice
+                          ? undefined
+                          : canonicalSellingPrice || undefined,
                         minimum_margin_confirmed: marginConfirmed,
                         similar_name_confirmed: similarConfirmed,
-                      } as NewProductEdits,
+                      } satisfies NewProductEdits,
                       invoiceQuickAdd,
-                    ),
-                  );
-                });
-                onCreated?.(created!);
+                    );
+                    return projectProductReadDTO(draft, freshActor, result);
+                  },
+                );
+                onCreated?.(created);
                 onClose();
                 return;
               }
-              update((draft) =>
+              await command(editorCapability, writeScope, (draft, freshActor) =>
                 saveProductEdits(
                   draft,
-                  context,
+                  freshActor,
                   product.code,
                   {
                     ...values,
@@ -685,16 +709,19 @@ export function ProductEditor({
                 // The rejected catalog draft stays untouched. Its separate
                 // approval is now part of the current editing snapshot, so the
                 // user can correct this field without reopening the dialog.
-                let nextSnapshot = expected;
-                update((draft) => {
-                  recordProductBarcodeConflict(
-                    draft,
-                    context,
-                    product.code,
-                    values.barcode,
-                  );
-                  nextSnapshot = productEditSnapshot(draft, product.code);
-                });
+                const nextSnapshot = await command(
+                  "catalog.edit",
+                  writeScope,
+                  (draft, freshActor) => {
+                    recordProductBarcodeConflict(
+                      draft,
+                      freshActor,
+                      product.code,
+                      values.barcode,
+                    );
+                    return productEditSnapshot(draft, freshActor, product.code);
+                  },
+                );
                 setExpected(nextSnapshot);
               }
               setError(code);
@@ -868,7 +895,7 @@ export function ProductEditor({
                       dir="ltr"
                       inputMode="decimal"
                       value={effectiveSellingPrice}
-                      readOnly={isNew && role !== "supervisor"}
+                      readOnly={isNew && !mayOverridePrice}
                       onChange={(event) => {
                         setSellingPrice(event.target.value);
                         clearIssue(`${formId}-price`);
@@ -1016,9 +1043,31 @@ export function ProductEditor({
                 </Field>
               </div>
             </section>
+            {values.date_tracking && dateLocation === "all" && (
+              <Field
+                label={t("Location", "مکان")}
+                error={fieldIssue("date-location")}
+              >
+                <Select
+                  id={`${formId}-date-location`}
+                  value={chosenDateLocation}
+                  onChange={(value) => {
+                    setChosenDateLocation(value);
+                    clearIssue(`${formId}-date-location`);
+                  }}
+                  options={[
+                    { value: "", label: t("Choose location", "انتخاب مکان") },
+                    ...branches.map((value) => ({
+                      value,
+                      label: configuredBranchLabel(state.config, value, lang),
+                    })),
+                  ]}
+                />
+              </Field>
+            )}
             <ProductDateEditor
               productCode={product.code}
-              location={dateLocation}
+              location={pendingDateLocation}
               enabled={values.date_tracking}
               onEnabledChange={(value) => patch("date_tracking", value)}
               dates={dates}
@@ -1034,7 +1083,7 @@ export function ProductEditor({
               issues={issues}
               onFieldChange={clearIssue}
             />
-            {isNew && belowMinimum && role === "supervisor" && (
+            {isNew && belowMinimum && mayOverridePrice && (
               <div className="banner info" id={`${formId}-margin`}>
                 <p>
                   {t(
@@ -1217,7 +1266,10 @@ export function ProductEditor({
             <Button variant="neutral" onClick={onClose}>
               {t("Cancel", "انصراف")}
             </Button>
-            <Button type="submit">
+            <Button
+              type="submit"
+              disabled={!editorBoot.ready || (isNew && !pricePreview.ready)}
+            >
               {isNew
                 ? t("Add product", "افزودن محصول")
                 : t("Save product", "ذخیرهٔ محصول")}
@@ -1249,9 +1301,16 @@ function ProductEditButton({
   product: Product;
   row?: boolean;
 }) {
-  const { role, t } = useDemo();
+  const { can, t } = useDemo();
   const [open, setOpen] = useState(false);
-  if (role !== "supervisor") return null;
+  if (
+    !can("catalog.edit", {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    })
+  )
+    return null;
   return (
     <>
       <Button
@@ -1279,17 +1338,36 @@ function ProductActionMenu({
   product: Product;
   showChange?: boolean;
 }) {
-  const { state, branch, role, historyContext, t, navigate, update } =
-    useDemo();
+  const { state, branch, actor, can, command, t, navigate } = useDemo();
   const [priceOpen, setPriceOpen] = useState(false);
   const [confirm, setConfirm] = useState<"end" | "withdraw" | null>(null);
   const [error, setError] = useState("");
   const location = lookupBranch(branch);
   const sale = activeSaleAt(state, product, location);
   const request = pendingSaleRequest(state, product, location);
+  const scope: ResourceScope = {
+    company_id: product.company_id,
+    kind: "location_record",
+    location_ids: location === "all" ? [] : [location],
+    entity_id: product.code,
+  };
+  const mayManagePrice =
+    can("pricing.regular_manage", scope) || can("sales.manage", scope);
+  const mayRequestPrice =
+    can("pricing.propose_manual", scope) || can("sales.request", scope);
+  const mayChange = mayManagePrice || mayRequestPrice;
+  const mayAddDate = can("dates.add", { ...scope, mutation: true });
+  const requestScope: ResourceScope = {
+    ...scope,
+    entity_id: request?.id,
+    owner_user_id: request?.requester_user_id,
+    version: request?.revision,
+  };
   const ownRequest =
-    request && request.requester_username === historyContext?.username;
-  if (product.status !== "active" || !historyContext || role === "cashier")
+    !!request &&
+    request.requester_user_id === actor?.user_id &&
+    can("sales.request_withdraw_own", requestScope);
+  if (product.status !== "active" || !actor || (!mayChange && !mayAddDate))
     return <span className="product-row-menu-placeholder" aria-hidden="true" />;
   return (
     <>
@@ -1301,31 +1379,34 @@ function ProductActionMenu({
           <MoreHorizontal size={20} strokeWidth={1.5} aria-hidden="true" />
         }
       >
-        {showChange && (
+        {showChange && mayChange && (
           <MenuItem onClick={() => setPriceOpen(true)}>
             {salesText(
               t,
-              role === "supervisor"
-                ? sale
-                  ? "changeSale"
-                  : "change"
-                : "request",
+              mayManagePrice ? (sale ? "changeSale" : "change") : "request",
             )}
           </MenuItem>
         )}
-        <MenuItem
-          onClick={() =>
-            navigate(`expiry?product=${encodeURIComponent(product.code)}`)
-          }
-        >
-          {t("Add date", "افزودن تاریخ")}
-        </MenuItem>
-        {role === "supervisor" && sale && (
-          <MenuItem className="danger" onClick={() => setConfirm("end")}>
-            {salesText(t, "endNow")}
+        {mayAddDate && (
+          <MenuItem
+            onClick={() =>
+              navigate(`expiry?product=${encodeURIComponent(product.code)}`)
+            }
+          >
+            {t("Add date", "افزودن تاریخ")}
           </MenuItem>
         )}
-        {role === "floor_worker" && ownRequest && (
+        {sale &&
+          can("sales.manage", {
+            ...scope,
+            entity_id: sale.id,
+            version: sale.revision,
+          }) && (
+            <MenuItem className="danger" onClick={() => setConfirm("end")}>
+              {salesText(t, "endNow")}
+            </MenuItem>
+          )}
+        {ownRequest && (
           <MenuItem className="danger" onClick={() => setConfirm("withdraw")}>
             {salesText(t, "withdraw")}
           </MenuItem>
@@ -1355,21 +1436,34 @@ function ProductActionMenu({
           t,
           confirm === "withdraw" ? "withdraw" : "endNow",
         )}
-        onConfirm={() => {
+        onConfirm={async () => {
           try {
-            update((next) => {
-              if (confirm === "end" && sale)
-                endSale(next, historyContext, sale.id, {
-                  expected_revision: sale.revision,
-                });
-              else if (confirm === "withdraw" && request)
-                withdrawSaleRequest(
-                  next,
-                  historyContext,
-                  request.id,
-                  request.revision,
-                );
-            });
+            if (confirm === "end" && sale)
+              await command(
+                "sales.manage",
+                {
+                  ...scope,
+                  entity_id: sale.id,
+                  version: sale.revision,
+                  mutation: true,
+                },
+                (next, freshActor) =>
+                  endSale(next, freshActor, sale.id, {
+                    expected_revision: sale.revision,
+                  }),
+              );
+            else if (confirm === "withdraw" && request)
+              await command(
+                "sales.request_withdraw_own",
+                { ...requestScope, mutation: true },
+                (next, freshActor) =>
+                  withdrawSaleRequest(
+                    next,
+                    freshActor,
+                    request.id,
+                    request.revision,
+                  ),
+              );
             setConfirm(null);
             setError("");
           } catch {
@@ -1392,21 +1486,38 @@ function ProductActionMenu({
 }
 
 function ProductHeaderActions({ product }: { product: Product }) {
-  const { state, branch, role, t } = useDemo();
+  const { state, branch, can, t } = useDemo();
   const [priceOpen, setPriceOpen] = useState(false);
   const sale = activeSaleAt(state, product, lookupBranch(branch));
-  if (role === "cashier") return null;
+  const scope: ResourceScope = {
+    company_id: product.company_id,
+    kind: "location_record",
+    location_ids: branch === "all" ? [] : [branch],
+    entity_id: product.code,
+  };
+  const mayManagePrice =
+    can("pricing.regular_manage", scope) || can("sales.manage", scope);
+  const mayChange =
+    mayManagePrice ||
+    can("pricing.propose_manual", scope) ||
+    can("sales.request", scope);
+  if (
+    !mayChange &&
+    !can("catalog.edit", {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    }) &&
+    !can("dates.add", { ...scope, mutation: true })
+  )
+    return null;
   return (
     <div className="actions product-header-actions">
-      {product.status === "active" && (
+      {product.status === "active" && mayChange && (
         <Button onClick={() => setPriceOpen(true)}>
           {salesText(
             t,
-            role === "supervisor"
-              ? sale
-                ? "changeSale"
-                : "change"
-              : "request",
+            mayManagePrice ? (sale ? "changeSale" : "change") : "request",
           )}
         </Button>
       )}
@@ -1501,8 +1612,8 @@ function ProductPrice({ product }: { product: Product }) {
           ) : (
             <span>
               {t(
-                "Pending: confirm with a Supervisor before selling",
-                "در انتظار تأیید: پیش از فروش با سرپرست تأیید کنید",
+                `Pending: confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling`,
+                `در انتظار تأیید: پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید`,
               )}
             </span>
           )}
@@ -1511,8 +1622,8 @@ function ProductPrice({ product }: { product: Product }) {
       {!approved && !pending && (
         <div className="banner pending">
           {t(
-            "No approved price in this branch. Confirm with a Supervisor before selling.",
-            "در این شعبه قیمت تأییدشده‌ای وجود ندارد. پیش از فروش با سرپرست تأیید کنید.",
+            `No approved price in this branch. Confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling.`,
+            `در این شعبه قیمت تأییدشده‌ای وجود ندارد. پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید.`,
           )}
         </div>
       )}
@@ -1525,42 +1636,55 @@ function ProductDates({ product }: { product: Product }) {
 }
 
 function ProductDetail({ product }: { product: Product }) {
-  const { state, branch, role, user, historyContext, lang, t, navigate } =
-    useDemo();
+  const { state, branch, actor, can, setBranch, lang, t, navigate } = useDemo();
   const location = lookupBranch(branch);
-  const context = historyContext ?? {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-    allowed_branches: [],
-  };
-  const category = state.config.pricing_categories.find(
-    (item) => item.key === product.pricing_category,
+  const financial = useCatalogQuery(
+    "catalog.cost_read",
+    {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    },
+    product.code,
+    (draft, freshActor) =>
+      productFinancialSnapshot(draft, freshActor, product.code),
   );
+  const mayReadCost = financial.allowed;
+  const category =
+    financial.data?.category ??
+    state.config.pricing_categories.find(
+      (item) => item.key === product.pricing_category,
+    );
   const profile = state.config.tax.profiles.find(
     (item) => item.key === product.tax_profile,
   );
-  const firstAdded = firstAddedLocation(state, product);
-  const cost =
-    role === "supervisor" ? productStoreCost(state, context, product) : null;
+  const firstAdded = product.first_added_branch;
+  const cost = financial.data?.cost ?? null;
   const price = effectivePrice(state, product, location);
   const margin = cost && price ? sellingMargin(price, cost) : null;
-  const deliveries = receivedLog(state, context, { product: product.code });
+  const deliveryQuery = useCatalogQuery(
+    "received.read",
+    {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    },
+    product.code,
+    (draft, freshActor) =>
+      receivedLog(draft, freshActor, { product: product.code }),
+  );
+  const deliveries = deliveryQuery.data ?? [];
   const last = deliveries.find((entry) => entry.branch === location);
-  const costs =
-    role === "supervisor" ? productCostHistory(state, context, product) : [];
+  const costs = financial.data?.costs ?? [];
   const locations = sellingBranches(state.config).filter(
-    (item) => role === "supervisor" || item === location,
+    (item) =>
+      actor?.allowed_branches.includes(item) &&
+      (branch === "all" || item === branch),
   );
   const activity = state.activity.filter(
     (entry) =>
       entry.company_id === product.company_id &&
-      entry.product_code === product.code &&
-      (role === "supervisor" ||
-        (entry.actor_username
-          ? entry.actor_username === historyContext?.username
-          : entry.by === user?.name)),
+      entry.product_code === product.code,
   );
   const facts = [
     {
@@ -1613,22 +1737,42 @@ function ProductDetail({ product }: { product: Product }) {
   return (
     <>
       <div
-        className={`product-page-top-cards${role !== "supervisor" ? " without-private-cost" : ""}`}
+        className={`product-page-top-cards${!mayReadCost ? " without-private-cost" : ""}`}
       >
         <Card className="product-page-price-card">
           <h2>
             {t("Price at", "قیمت در")}{" "}
             {configuredBranchLabel(state.config, location, lang)}
           </h2>
-          <ProductPrice product={product} />
-          <SaleStatus product={product} />
-          <PendingSalePill product={product} />
-          <p className="muted">
-            {product.branch_prices?.[location]
-              ? t("This branch only", "فقط این شعبه")
-              : t("Company default", "پیش‌فرض شرکت")}
-          </p>
-          <ProductProvenance product={product} />
+          {location === "all" ? (
+            <Field label={t("Location", "مکان")}>
+              <Select
+                value=""
+                onChange={(value) => {
+                  if (locations.includes(value)) void setBranch(value);
+                }}
+                options={[
+                  { value: "", label: t("Choose location", "انتخاب مکان") },
+                  ...locations.map((value) => ({
+                    value,
+                    label: configuredBranchLabel(state.config, value, lang),
+                  })),
+                ]}
+              />
+            </Field>
+          ) : (
+            <>
+              <ProductPrice product={product} />
+              <SaleStatus product={product} />
+              <PendingSalePill product={product} />
+              <p className="muted">
+                {product.branch_prices?.[location]
+                  ? t("This branch only", "فقط این شعبه")
+                  : t("Company default", "پیش‌فرض شرکت")}
+              </p>
+              <ProductProvenance product={product} />
+            </>
+          )}
           <div className="product-last-received-summary">
             <span className="muted">{t("Last received", "آخرین دریافت")}</span>
             {last ? (
@@ -1645,7 +1789,7 @@ function ProductDetail({ product }: { product: Product }) {
             )}
           </div>
         </Card>
-        {role === "supervisor" && (
+        {mayReadCost && location !== "all" && (
           <Card className="product-page-cost-card">
             <h2>{t("Cost and margin", "هزینه و حاشیهٔ سود")}</h2>
             <dl className="product-card-facts">
@@ -1679,15 +1823,17 @@ function ProductDetail({ product }: { product: Product }) {
               <div>
                 <dt>{t("Cost divisor", "ضریب تقسیم هزینه")}</dt>
                 <dd>
-                  <LtrText>{category?.cost_divisor ?? "—"}</LtrText>
+                  <LtrText>
+                    {financial.data?.category?.cost_divisor ?? "—"}
+                  </LtrText>
                 </dd>
               </div>
               <div>
                 <dt>{t("Minimum margin", "حداقل حاشیهٔ سود")}</dt>
                 <dd>
-                  {category?.minimum_margin ? (
+                  {financial.data?.category?.minimum_margin ? (
                     <LtrText>
-                      {new Decimal(category.minimum_margin)
+                      {new Decimal(financial.data.category.minimum_margin)
                         .times(100)
                         .toFixed()}
                       %
@@ -1706,14 +1852,21 @@ function ProductDetail({ product }: { product: Product }) {
               {t("Dates at", "تاریخ‌ها در")}{" "}
               {configuredBranchLabel(state.config, location, lang)}
             </h2>
-            <Button
-              variant="plain"
-              onClick={() =>
-                navigate(`expiry?product=${encodeURIComponent(product.code)}`)
-              }
-            >
-              {t("Add date", "افزودن تاریخ")}
-            </Button>
+            {can("dates.add", {
+              company_id: product.company_id,
+              kind: "location_record",
+              location_ids: location === "all" ? [] : [location],
+              mutation: true,
+            }) && (
+              <Button
+                variant="plain"
+                onClick={() =>
+                  navigate(`expiry?product=${encodeURIComponent(product.code)}`)
+                }
+              >
+                {t("Add date", "افزودن تاریخ")}
+              </Button>
+            )}
           </div>
           <ProductDatesSection product={product} showReceived={false} />
         </Card>
@@ -1895,7 +2048,7 @@ function ProductDetail({ product }: { product: Product }) {
           </p>
         )}
       </Card>
-      {role === "supervisor" && (
+      {mayReadCost && (
         <>
           <Card>
             <ProductLotsSection product={product} />
@@ -2033,14 +2186,12 @@ function ProductDetail({ product }: { product: Product }) {
 }
 
 function LookupProductDetail({ product }: { product: Product }) {
-  const { state, branch, historyContext, t, lang } = useDemo();
+  const { state, branch, t, lang } = useDemo();
   const approved = effectivePrice(state, product, branch);
   const pending = pendingPrice(state, product, branch);
   const offer = effectiveOffer(state, product, branch);
-  const clearances = historyContext
-    ? scopedClearanceOffers(state, historyContext, product.code)
-    : [];
-  const firstAdded = firstAddedLocation(state, product);
+  const clearances = effectiveProjectedClearanceOffers(state, product, branch);
+  const firstAdded = product.first_added_branch;
   const profile = state.config.tax.profiles.find(
     (item) => item.key === product.tax_profile,
   );
@@ -2167,16 +2318,16 @@ function LookupProductDetail({ product }: { product: Product }) {
                 "تا زمان تأیید، قیمت تأییدشدهٔ بالا را دریافت کنید.",
               )
             : t(
-                "Pending: confirm with a Supervisor before selling",
-                "در انتظار تأیید: پیش از فروش با سرپرست تأیید کنید",
+                `Pending: confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling`,
+                `در انتظار تأیید: پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید`,
               )}
         </p>
       )}
       {!approved && !pending && (
         <p className="helper">
           {t(
-            "Confirm with a Supervisor before selling.",
-            "پیش از فروش با سرپرست تأیید کنید.",
+            `Confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling.`,
+            `پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید.`,
           )}
         </p>
       )}
@@ -2192,7 +2343,10 @@ function searchFromLookupHash() {
 }
 
 export function Lookup() {
-  const { state, branch, t, lang } = useDemo();
+  const { state, branch, actor, setBranch, t, lang } = useDemo();
+  const allowedStores = sellingBranches(state.config).filter((id) =>
+    actor?.allowed_branches.includes(id),
+  );
   const [search, setSearch] = useState(searchFromLookupHash);
   const [category, setCategory] = useState("");
   const [selectedCode, setSelectedCode] = useState("");
@@ -2391,14 +2545,25 @@ export function Lookup() {
         </div>
       </div>
       {branch === "all" && (
-        <p className="muted">
-          {t(
-            `Showing the price to charge in ${configuredBranchLabel(state.config, lookupBranch(branch), "en")}. Choose a branch above to compare.`,
-            `قیمت فروش ${configuredBranchLabel(state.config, lookupBranch(branch), "fa")} نمایش داده می‌شود. برای مقایسه، شعبه را در بالا انتخاب کنید.`,
-          )}
-        </p>
+        <Card>
+          <Field label={t("Location", "مکان")}>
+            <Select
+              value=""
+              onChange={(value) => {
+                if (allowedStores.includes(value)) void setBranch(value);
+              }}
+              options={[
+                { value: "", label: t("Choose location", "انتخاب مکان") },
+                ...allowedStores.map((value) => ({
+                  value,
+                  label: configuredBranchLabel(state.config, value, lang),
+                })),
+              ]}
+            />
+          </Field>
+        </Card>
       )}
-      {!selected ? (
+      {branch === "all" ? null : !selected ? (
         <EmptyState
           action={
             <Button variant="secondary" onClick={clearSearch}>
@@ -2538,7 +2703,25 @@ export function Lookup() {
 type SortColumn = "name" | "code" | "price";
 
 export function Products() {
-  const { state, role, branch, t, lang, navigate } = useDemo();
+  const { state, actor, can, branch, t, lang, navigate } = useDemo();
+  const mayReadCost = can("catalog.cost_read", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+  });
+  const financial = useCatalogQuery(
+    "catalog.cost_read",
+    { company_id: state.config.company.seed_key, kind: "company_shared" },
+    "products",
+    (draft, freshActor) =>
+      Object.fromEntries(
+        draft.products
+          .filter((item) => item.company_id === freshActor.company_id)
+          .map((item) => [
+            item.code,
+            productFinancialSnapshot(draft, freshActor, item.code).cost,
+          ]),
+      ),
+  );
   const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useListState("products.search", "");
   const [pricingCategory, setPricingCategory] = useListState(
@@ -2573,7 +2756,7 @@ export function Products() {
       priority: 3,
       minWidth: 104,
     },
-    ...(role === "supervisor"
+    ...(mayReadCost
       ? [
           {
             key: "cost",
@@ -2618,7 +2801,7 @@ export function Products() {
       minWidth: 172,
     },
   ]);
-  if (role === "cashier") return <Lookup />;
+  if (!can("catalog.read") && can("lookup.read")) return <Lookup />;
   const products = state.products.filter(
     (product) => product.company_id === state.config.company.seed_key,
   );
@@ -2635,8 +2818,15 @@ export function Products() {
         (!onlyOffers ||
           effectiveOffer(state, product, branch) ||
           activeSaleAt(state, product, lookupBranch(branch)) ||
-          effectiveClearanceOffers(state, product, branch).length > 0) &&
-        (!onlyManual || manualPrice(state, product, branch)) &&
+          effectiveProjectedClearanceOffers(state, product, branch).length >
+            0) &&
+        (!onlyManual ||
+          product.manual_price_scopes.some(
+            (scope) =>
+              scope === "all" ||
+              scope === branch ||
+              (branch === "all" && actor?.allowed_branches.includes(scope)),
+          )) &&
         (!onlySale || activeSaleAt(state, product, lookupBranch(branch))),
     )
     .sort((left, right) => {
@@ -2695,7 +2885,10 @@ export function Products() {
           "قیمت‌های تأییدشده، تغییرات در انتظار تأیید و جزئیات شعبه در یک فهرست.",
         )}
         actions={
-          role === "supervisor" ? (
+          can("catalog.create_active", {
+            company_id: state.config.company.seed_key,
+            kind: "company_shared",
+          }) ? (
             <Button onClick={() => setAddOpen(true)}>
               {t("Add product", "افزودن محصول")}
             </Button>
@@ -2707,14 +2900,6 @@ export function Products() {
           onClose={() => setAddOpen(false)}
           onCreated={(product) => navigate(`product?code=${product.code}`)}
         />
-      )}
-      {branch === "all" && (
-        <p className="muted">
-          {t(
-            `Prices and offers below preview ${configuredBranchLabel(state.config, lookupBranch(branch), "en")}. Open product details to compare branch prices, or choose one branch above.`,
-            `قیمت‌ها و پیشنهادهای زیر مربوط به ${configuredBranchLabel(state.config, lookupBranch(branch), "fa")} هستند. برای مقایسهٔ قیمت شعبه‌ها، جزئیات محصول را باز کنید یا یک شعبه را در بالا انتخاب کنید.`,
-          )}
-        </p>
       )}
       <Card className="c8-products-list-card">
         <FilterToolbar
@@ -2887,7 +3072,7 @@ export function Products() {
           <div>
             <div className="stack">
               <DataTable
-                className={`catalog-products-table${role === "supervisor" ? " with-store-cost" : ""}`}
+                className={`catalog-products-table${mayReadCost ? " with-store-cost" : ""}`}
                 columns={tableColumns.columns}
               >
                 <thead>
@@ -2929,7 +3114,7 @@ export function Products() {
                         {sort === "code" ? (ascending ? " ↑" : " ↓") : ""}
                       </Button>
                     </th>
-                    {role === "supervisor" && (
+                    {mayReadCost && (
                       <>
                         <th>{t("Store cost", "هزینهٔ فروشگاه")}</th>
                         <th>{t("Margin %", "حاشیه سود %")}</th>
@@ -2963,16 +3148,7 @@ export function Products() {
                     const price = effectivePrice(state, product, branch);
                     const pending = pendingPrice(state, product, branch);
                     const offer = effectiveOffer(state, product, branch);
-                    const cost = productStoreCost(
-                      state,
-                      {
-                        company_id: state.config.company.seed_key,
-                        role: role ?? "cashier",
-                        branch,
-                        actor: "",
-                      },
-                      product,
-                    );
+                    const cost = financial.data?.[product.code] ?? null;
                     const margin = cost ? sellingMargin(price, cost) : null;
                     return (
                       <tr
@@ -3020,7 +3196,7 @@ export function Products() {
                         <td className="numeric">
                           <LtrText>{product.code}</LtrText>
                         </td>
-                        {role === "supervisor" && (
+                        {mayReadCost && (
                           <>
                             <td>
                               {cost ? (
@@ -3147,13 +3323,13 @@ export function Products() {
 }
 
 export function ProductPage() {
-  const { state, role, lang, t } = useDemo();
+  const { state, can, lang, t } = useDemo();
   const code = useRouteParam("code");
   const product = state.products.find(
     (item) =>
       item.code === code && item.company_id === state.config.company.seed_key,
   );
-  if (role === "cashier") return <Lookup />;
+  if (!can("catalog.read") && can("lookup.read")) return <Lookup />;
   if (!product)
     return (
       <EmptyState

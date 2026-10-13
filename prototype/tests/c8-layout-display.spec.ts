@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -11,11 +12,12 @@ import {
   uploadInvoice,
 } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 const copy = (lang: "en" | "fa", en: string, fa: string) =>
   lang === "fa" ? fa : en;
 const saved = (page: Page): Promise<DemoState> =>
-  page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), storage);
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
+  );
 
 async function retainedOriginalHash(page: Page, reference: string) {
   const bytes = await page.evaluate(async (id) => {

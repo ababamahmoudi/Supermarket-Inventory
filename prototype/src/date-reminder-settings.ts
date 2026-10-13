@@ -1,13 +1,21 @@
 import { createId } from "./ids";
-import { OperationError, type OperationsContext } from "./operations";
+import { OperationError } from "./operations";
 import type { DemoState } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { freshActor } from "./authority";
+import { requireCapability } from "./permissions";
 
 export function saveDateReminderSettings(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   days: number,
 ): void {
-  if (context.role !== "supervisor") throw new OperationError("supervisor");
+  context = freshActor(state, context);
+  requireCapability(state, context, "settings.manage", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
   if (context.company_id !== state.config.company.seed_key)
     throw new OperationError("scope");
   if (!Number.isSafeInteger(days) || days < 0)
@@ -22,6 +30,9 @@ export function saveDateReminderSettings(
     scope: "all",
     action: "Date tracking settings changed",
     by: context.actor,
+    actor_username: context.username,
+    actor_user_id: context.user_id,
+    actor_role: context.role,
     at: new Date().toISOString(),
     reversible: true,
     entity_type: "settings",

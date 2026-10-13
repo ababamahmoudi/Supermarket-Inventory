@@ -1,29 +1,24 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
-import { SESSION_KEY } from "./auth";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import { configuredRoleLabel } from "./role-config";
 import i18n from "./i18n";
-import { DemoProvider, initialState, STORAGE_KEY } from "./store";
+import { DemoProvider, initialState } from "./store";
 import { Approvals } from "./screens/Approvals";
 import { Dashboard } from "./screens/Dashboard";
 
-beforeEach(() => {
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+});
+beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
-  void i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "all",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
+  await i18n.changeLanguage("en");
 });
 
 describe("C3 approval presentation and archived handover notes", () => {
-  it("omits archived notes after Undo while retaining the other handover notes", () => {
+  it("omits archived notes after Undo while retaining the other handover notes", async () => {
     const state = initialState();
     const previous = state.notes.find(
       (note) => note.type === "note_to_supervisor",
@@ -40,22 +35,30 @@ describe("C3 approval presentation and archived handover notes", () => {
       text: "Current handover note",
       archived: false,
     });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const fixture = await authenticatedProviderFixture({
+      state,
+      role: "manager",
+      actorOptions: { selection: { kind: "all_locations" } },
+    });
+    fixtures.push(fixture);
     render(
-      <DemoProvider>
+      <DemoProvider options={fixture.options}>
         <Dashboard />
       </DemoProvider>,
     );
-    const notes = within(
-      screen
-        .getByRole("heading", { name: "Notes for Supervisor" })
-        .closest(".card") as HTMLElement,
+    const heading = await screen.findByRole(
+      "heading",
+      {
+        name: `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,
+      },
+      { timeout: 10000 },
     );
+    const notes = within(heading.closest(".card") as HTMLElement);
     expect(notes.queryByText("Archived handover note")).not.toBeInTheDocument();
     expect(notes.getByText("Current handover note")).toBeVisible();
   });
 
-  it("clears the reason error on editing its field while keeping the review pending", () => {
+  it("clears the reason error on editing its field while keeping the review pending", async () => {
     const state = initialState();
     state.approvals = [
       {
@@ -70,14 +73,19 @@ describe("C3 approval presentation and archived handover notes", () => {
         margin: "0.1457",
       },
     ];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const fixture = await authenticatedProviderFixture({
+      state,
+      role: "manager",
+      actorOptions: { selection: { kind: "all_locations" } },
+    });
+    fixtures.push(fixture);
     render(
-      <DemoProvider>
+      <DemoProvider options={fixture.options}>
         <Approvals />
       </DemoProvider>,
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Keep approved price" }),
+      await screen.findByRole("button", { name: "Keep approved price" }),
     );
     expect(
       screen.getByText(

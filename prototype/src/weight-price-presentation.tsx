@@ -14,7 +14,7 @@ export function ProductPrice({
 }: HTMLAttributes<HTMLElement> & {
   value: string;
   product: Pick<Product, "sold_by">;
-  config: CompanyConfig;
+  config: Pick<CompanyConfig, "company" | "weighed_items">;
   stacked?: boolean;
 }) {
   if (product.sold_by !== "weight")
@@ -59,7 +59,7 @@ export function ProductCost({
 }: {
   value: string;
   product: Pick<Product, "sold_by">;
-  config: CompanyConfig;
+  config: Pick<CompanyConfig, "company" | "weighed_items">;
 }) {
   if (product.sold_by !== "weight")
     return <Money value={value} currency={config.company.currency} />;

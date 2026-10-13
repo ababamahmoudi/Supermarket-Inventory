@@ -15,7 +15,6 @@ import {
   LogOut,
   MessageSquare,
   MoreHorizontal,
-  MapPin,
   Moon,
   Package,
   PanelLeftClose,
@@ -31,26 +30,11 @@ import {
   Truck,
 } from "lucide-react";
 import logo from "../../assets/arzon-logo.png?inline";
-import { demoUserLabel, LtrText } from "./presentation";
-import {
-  branchLabel,
-  configuredBranches,
-  moduleEnabled,
-  branchAllowsRole,
-} from "./settings";
-import {
-  effectiveInvoiceLocation,
-  effectiveApprovalLocation,
-} from "./received";
-import {
-  canAccessNotebooks,
-  readableNotebookEntries,
-  visibleNotebooks,
-} from "./notebooks";
+import { LtrText } from "./presentation";
+import { branchLabel, moduleEnabled } from "./settings";
 import UndoToasts from "./UndoToasts";
 import { demoSeed } from "./config";
 import { PersonalNotifications } from "./PersonalNotifications";
-import { userNotifications } from "./sales";
 import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
@@ -70,12 +54,15 @@ import Suppliers from "./screens/Suppliers";
 import Received from "./screens/Received";
 import Orders from "./screens/Orders";
 import BranchRequests from "./screens/BranchRequests";
-import { branchRequestCount } from "./branch-requests";
 import "./a2-shared.css";
-import { demoUsers, useDemo } from "./store";
+import { useDemo } from "./store";
+import type { Capability, RoleId } from "./authority-types";
+import { configuredRoleLabel } from "./people-presentation.e1";
+import LocationPicker from "./LocationPicker.e1";
+import SecondSignInStep from "./AuthSteps.e1";
+import LocationDashboard from "./screens/LocationDashboard";
 import { useNavigationRestoration } from "./navigation";
-import type { AuthError } from "./auth";
-import type { Branch, Role } from "./types";
+import type { Branch } from "./types";
 import {
   Button,
   Card,
@@ -86,7 +73,6 @@ import {
   Menu,
   MenuItem,
   MenuSubmenu,
-  Select,
 } from "./ui";
 import "./c5-shell-controls.css";
 import "./klead-tokens.css";
@@ -100,7 +86,7 @@ export const pages: {
   fa: string;
   icon: typeof Search;
   group: string;
-  roles: Role[];
+  capabilities: Capability[];
   disabled?: boolean;
 }[] = [
   {
@@ -109,7 +95,7 @@ export const pages: {
     fa: "جست‌وجو",
     icon: Search,
     group: "Daily",
-    roles: ["cashier", "floor_worker", "supervisor"],
+    capabilities: ["lookup.read"],
   },
   {
     key: "invoices",
@@ -117,7 +103,7 @@ export const pages: {
     fa: "فاکتورها",
     icon: Receipt,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["invoices.read"],
   },
   {
     key: "received",
@@ -125,7 +111,7 @@ export const pages: {
     fa: "دریافت‌شده",
     icon: Truck,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["received.read"],
   },
   {
     key: "returns",
@@ -133,7 +119,7 @@ export const pages: {
     fa: "مرجوعی‌ها",
     icon: RotateCcw,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["returns.read"],
   },
   {
     key: "labels",
@@ -141,7 +127,7 @@ export const pages: {
     fa: "برچسب‌ها",
     icon: Tag,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["labels.read"],
   },
   {
     key: "expiry",
@@ -149,7 +135,7 @@ export const pages: {
     fa: "پیگیری تاریخ",
     icon: Archive,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["dates.read"],
   },
   {
     key: "notes",
@@ -157,7 +143,7 @@ export const pages: {
     fa: "یادداشت‌ها",
     icon: MessageSquare,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["notes.read", "notebooks.read"],
   },
   {
     key: "requests",
@@ -165,7 +151,7 @@ export const pages: {
     fa: "درخواست‌های شعب",
     icon: ArrowLeftRight,
     group: "Daily",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["branch_requests.read"],
   },
   {
     key: "products",
@@ -173,7 +159,7 @@ export const pages: {
     fa: "محصولات",
     icon: Package,
     group: "Catalog",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["catalog.read"],
   },
   {
     key: "offers",
@@ -181,7 +167,7 @@ export const pages: {
     fa: "پیشنهادهای فروش",
     icon: Tags,
     group: "Catalog",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["offers.read"],
   },
   {
     key: "suppliers",
@@ -189,47 +175,47 @@ export const pages: {
     fa: "تأمین‌کنندگان",
     icon: Store,
     group: "Catalog",
-    roles: ["floor_worker", "supervisor"],
+    capabilities: ["suppliers.read"],
   },
   {
     key: "dashboard",
     en: "Dashboard",
     fa: "داشبورد",
     icon: LayoutDashboard,
-    group: "Supervisor",
-    roles: ["supervisor"],
+    group: "Management",
+    capabilities: ["dashboard.company", "dashboard.location"],
   },
   {
     key: "approvals",
     en: "Approvals",
     fa: "تأییدها",
     icon: BadgeCheck,
-    group: "Supervisor",
-    roles: ["supervisor"],
+    group: "Management",
+    capabilities: ["approvals.read"],
   },
   {
     key: "alerts",
     en: "Alerts",
     fa: "هشدارها",
     icon: Bell,
-    group: "Supervisor",
-    roles: ["supervisor"],
+    group: "Management",
+    capabilities: ["alerts.read"],
   },
   {
     key: "payables",
     en: "Payables",
     fa: "حساب‌های پرداختنی",
     icon: CreditCard,
-    group: "Supervisor",
-    roles: ["supervisor"],
+    group: "Management",
+    capabilities: ["payables.read"],
   },
   {
     key: "orders",
     en: "Orders",
     fa: "سفارش‌ها",
     icon: ShoppingCart,
-    group: "Supervisor",
-    roles: ["floor_worker", "supervisor"],
+    group: "Management",
+    capabilities: ["orders.read"],
   },
   {
     key: "settings",
@@ -237,7 +223,7 @@ export const pages: {
     fa: "تنظیمات",
     icon: Settings,
     group: "Admin",
-    roles: ["supervisor"],
+    capabilities: ["settings.manage"],
   },
   {
     key: "history",
@@ -245,17 +231,18 @@ export const pages: {
     fa: "تاریخچه",
     icon: History,
     group: "Admin",
-    roles: ["supervisor", "floor_worker"],
+    capabilities: ["history.read_all", "history.read_own"],
   },
 ];
-const roleNames: Record<Role, [string, string]> = {
-  supervisor: ["Supervisor", "سرپرست"],
-  floor_worker: ["Floor Worker", "کارمند فروشگاه"],
-  cashier: ["Cashier", "صندوق‌دار"],
-};
-export function RoleName({ role }: { role: Role }) {
-  const { t } = useDemo();
-  return t(...roleNames[role]);
+export function RoleName({ role }: { role: RoleId }) {
+  const { state, lang } = useDemo();
+  return configuredRoleLabel(state.config, role, lang);
+}
+function personName(
+  person: { name_en: string; name_fa?: string },
+  lang: "en" | "fa",
+) {
+  return lang === "fa" ? person.name_fa || person.name_en : person.name_en;
 }
 function LanguageToggle() {
   const { lang, setLang, t, state } = useDemo();
@@ -347,9 +334,10 @@ function PasswordField({
   );
 }
 function authErrorCopy(
-  error: AuthError | null,
+  error: string | null,
   t: (en: string, fa: string) => string,
-  minLength = 8,
+  policy: { password_min_length: number; lockout_minutes: number },
+  managerLabel: { en: string; fa: string },
 ): string {
   switch (error) {
     case "invalid":
@@ -359,18 +347,18 @@ function authErrorCopy(
       );
     case "locked":
       return t(
-        "Too many attempts. Try again in 15 minutes or ask your Supervisor.",
-        "تلاش‌های ناموفق بیش از حد است. 15 دقیقه دیگر دوباره تلاش کنید یا از سرپرست کمک بخواهید.",
+        `Too many attempts. Try again in ${policy.lockout_minutes} minutes or ask your ${managerLabel.en}.`,
+        `تلاش‌های ناموفق بیش از حد است. ${policy.lockout_minutes} دقیقه دیگر دوباره تلاش کنید یا از ${managerLabel.fa} کمک بخواهید.`,
       );
     case "location":
       return t(
-        "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
-        "این مکان برای نقش شما در دسترس نیست. از سرپرست بخواهید محل تعیین‌شدهٔ شما را بررسی کند.",
+        `This location is unavailable for your role. Ask your ${managerLabel.en} to check your location assignment.`,
+        `این مکان برای نقش شما در دسترس نیست. از ${managerLabel.fa} بخواهید محل تعیین‌شدهٔ شما را بررسی کند.`,
       );
     case "too_short":
       return t(
-        `Use at least ${minLength} characters.`,
-        `حداقل ${minLength} نویسه وارد کنید.`,
+        `Use at least ${policy.password_min_length} characters.`,
+        `حداقل ${policy.password_min_length} نویسه وارد کنید.`,
       );
     case "common":
       return t(
@@ -383,11 +371,26 @@ function authErrorCopy(
         "گذرواژه‌ای متفاوت با گذرواژهٔ موقت انتخاب کنید.",
       );
     default:
-      return "";
+      return error
+        ? t(
+            "Sign-in could not be completed. Try again.",
+            "ورود کامل نشد. دوباره تلاش کنید.",
+          )
+        : "";
   }
 }
+function useAuthErrorCopy() {
+  const { state, t } = useDemo();
+  const managerLabel = {
+    en: configuredRoleLabel(state.config, "manager", "en"),
+    fa: configuredRoleLabel(state.config, "manager", "fa"),
+  };
+  return (error: string | null) =>
+    authErrorCopy(error, t, state.config.session, managerLabel);
+}
 function SignIn() {
-  const { signIn, t, state, recentUsers, lang } = useDemo();
+  const authError = useAuthErrorCopy();
+  const { signIn, t, state, recentUsers, demoUsers, lang } = useDemo();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -413,12 +416,12 @@ function SignIn() {
                   }}
                 >
                   <Initials
-                    name={demoUserLabel(user.name, lang)
+                    name={personName(user, lang)
                       .replace(/^Demo /, "")
                       .replace(/ نمایشی$/, "")}
                   />
                   <span>
-                    {demoUserLabel(user.name, lang)
+                    {personName(user, lang)
                       .replace(/^Demo /, "")
                       .replace(/ نمایشی$/, "")}
                   </span>
@@ -428,22 +431,12 @@ function SignIn() {
           </div>
         )}
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          const result = signIn(username, password);
-          if (result) {
-            setError(authErrorCopy(result, t));
-            return;
-          }
-          const user = demoUsers.find(
-            (candidate) => candidate.username === username.trim().toLowerCase(),
-          )!;
-          window.location.hash =
-            user.role === "supervisor"
-              ? "dashboard"
-              : user.role === "floor_worker"
-                ? "invoices"
-                : "lookup";
+          void signIn(username, password).then((result) => {
+            if (result) setError(authError(result));
+          });
         }}
       >
         <Field label={t("Username", "نام کاربری")}>
@@ -476,20 +469,19 @@ function SignIn() {
       </form>
       <p className="helper signin-help">
         {t(
-          "Forgot your password? Ask your Supervisor to reset it.",
-          "گذرواژه را فراموش کرده‌اید؟ از سرپرست بخواهید آن را بازنشانی کند.",
+          "Forgot your password? Ask a person who manages accounts to reset it.",
+          "گذرواژه را فراموش کرده‌اید؟ از مسئول حساب‌ها بخواهید آن را بازنشانی کند.",
         )}
       </p>
-      <p className="helper demo-account-hint">
-        {t("Demo accounts:", "حساب‌های دمو:")}{" "}
-        <LtrText>supervisor, floorworker, cashier</LtrText>
-        {" / "}
-        {t("password", "گذرواژه")} <LtrText>demo1234</LtrText>
-        {". "}
-        {t("New employee:", "کارمند جدید:")} <LtrText>newemployee</LtrText>
-        {" / "}
-        {t("temporary password", "گذرواژهٔ موقت")} <LtrText>temp1234</LtrText>.
-      </p>
+      {demoUsers.length > 0 && (
+        <p className="helper demo-account-hint">
+          {t("Demo accounts:", "حساب‌های دمو:")}{" "}
+          <LtrText>{demoUsers.map((user) => user.username).join(", ")}</LtrText>
+          {" / "}
+          {t("Fresh demo password", "گذرواژهٔ دموی تازه")}{" "}
+          <LtrText>demo1234</LtrText>
+        </p>
+      )}
     </AuthLayout>
   );
 }
@@ -520,6 +512,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
   );
 }
 function ChoosePassword() {
+  const authError = useAuthErrorCopy();
   const { choosePassword, signOut, state, t } = useDemo();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -534,6 +527,7 @@ function ChoosePassword() {
         )}
       </p>
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           if (password !== confirmation) {
@@ -546,9 +540,7 @@ function ChoosePassword() {
             return;
           }
           const result = choosePassword(password);
-          setError(
-            authErrorCopy(result, t, state.config.session.password_min_length),
-          );
+          void result.then((error) => setError(authError(error)));
         }}
       >
         <PasswordField
@@ -576,18 +568,20 @@ function ChoosePassword() {
   );
 }
 function LockScreen() {
+  const authError = useAuthErrorCopy();
   const { user, unlock, signOut, t, lang } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   return (
     <AuthLayout>
-      <Initials name={demoUserLabel(user!.name, lang)} />
+      <Initials name={personName(user!, lang)} />
       <h1>{t("Screen locked", "صفحه قفل شده است")}</h1>
-      <p>{demoUserLabel(user!.name, lang)}</p>
+      <p>{personName(user!, lang)}</p>
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          setError(authErrorCopy(unlock(password), t));
+          void unlock(password).then((error) => setError(authError(error)));
         }}
       >
         <PasswordField
@@ -608,6 +602,7 @@ function LockScreen() {
   );
 }
 function Reauthenticate() {
+  const authError = useAuthErrorCopy();
   const { reauthenticate, navigate, t } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -622,9 +617,12 @@ function Reauthenticate() {
       )}
     >
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          setError(authErrorCopy(reauthenticate(password), t));
+          void reauthenticate(password).then((error) =>
+            setError(authError(error)),
+          );
         }}
       >
         <PasswordField
@@ -642,6 +640,20 @@ function Reauthenticate() {
         </div>
       </form>
     </Dialog>
+  );
+}
+function LocationUnavailable() {
+  const { signOut, t } = useDemo();
+  const authError = useAuthErrorCopy();
+  return (
+    <AuthLayout>
+      <p className="form-error" role="alert">
+        {authError("location")}
+      </p>
+      <Button variant="neutral" onClick={() => void signOut()}>
+        {t("Sign out", "خروج")}
+      </Button>
+    </AuthLayout>
   );
 }
 const screenRegistry: Record<string, ReactNode> = {
@@ -668,7 +680,14 @@ const screenRegistry: Record<string, ReactNode> = {
 };
 export default function App() {
   const {
+    demoUsers,
     state,
+    actor,
+    can,
+    permission,
+    authStage,
+    locationIds,
+    locationSelection,
     role,
     user,
     locked,
@@ -681,7 +700,6 @@ export default function App() {
     setTheme,
     comfortableText,
     setComfortableText,
-    setBranch,
     signOut,
     lock,
     switchDemoUser,
@@ -787,7 +805,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", handle);
   }, [menuOpen]);
   useEffect(() => {
-    if (role !== "supervisor" || locked || mustChangePassword) return;
+    if (!actor || locked || mustChangePassword) return;
     const wait =
       authenticatedAt +
       state.config.session.reprompt_password_after_minutes * 60_000 -
@@ -800,58 +818,48 @@ export default function App() {
     );
     return () => window.clearTimeout(timer);
   }, [
-    role,
+    actor,
     locked,
     mustChangePassword,
     authenticatedAt,
     state.config.session.reprompt_password_after_minutes,
   ]);
-  useEffect(() => {
-    if (
-      role === "supervisor" &&
-      branch !== "all" &&
-      !branchAllowsRole(state.config, branch, role)
-    )
-      setBranch("all");
-  }, [role, branch, state.config, setBranch]);
-  if (!role || !user) return <SignIn />;
-  if (mustChangePassword) return <ChoosePassword />;
-  if (locked) return <LockScreen />;
-  if (role !== "supervisor" && !branchAllowsRole(state.config, branch, role))
+  if (authStage === "loading")
     return (
-      <Card>
-        <p>
-          {t(
-            "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
-            "این مکان برای نقش شما در دسترس نیست. از سرپرست بخواهید محل تعیین‌شدهٔ شما را بررسی کند.",
-          )}
-        </p>
-        <Button onClick={signOut}>{t("Sign out", "خروج از حساب")}</Button>
-      </Card>
+      <AuthLayout>
+        <p role="status">{t("Loading…", "در حال بارگذاری…")}</p>
+      </AuthLayout>
     );
-  const context = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role,
-    actor: user.name,
-    username: user.username,
-    device: "Prototype browser",
-    allowed_branches:
-      role === "supervisor" ? configuredBranches(state.config) : [user.branch],
-  };
-  const branches = configuredBranches(state.config);
+  if (authStage === "password") return <ChoosePassword />;
+  if (
+    authStage === "second_step_setup" ||
+    authStage === "second_step_challenge"
+  )
+    return (
+      <AuthLayout>
+        <SecondSignInStep />
+      </AuthLayout>
+    );
+  if (authStage === "locked") return <LockScreen />;
+  if (authStage === "location") return <LocationUnavailable />;
+  if (!actor || !role || !user) return <SignIn />;
   const allowed = pages.filter(
     (page) =>
       moduleEnabled(state.config, page.key) &&
-      (page.key !== "orders" ||
-        role === "supervisor" ||
-        (role === "floor_worker" &&
-          state.config.orders?.allow_floor_worker === true)) &&
-      (page.roles.includes(role) ||
-        (page.key === "notes" && canAccessNotebooks(state, context))),
+      (role !== "cashier" || page.key === "lookup") &&
+      page.capabilities.some((capability) => {
+        const decision = permission(capability);
+        // A recent-password requirement keeps the permitted route visible.
+        // Its data remains protected; the route renders Reauthenticate below.
+        return decision.allowed || decision.reason === "freshness";
+      }) &&
+      (page.key !== "dashboard" ||
+        can("dashboard.company") ||
+        role === "branch_supervisor") &&
+      (page.key !== "notes" || state.notebooks?.length || can("notes.read")),
   );
   const defaultKey =
-    role === "supervisor"
+    can("dashboard.company") || role === "branch_supervisor"
       ? "dashboard"
       : role === "floor_worker"
         ? "invoices"
@@ -891,15 +899,29 @@ export default function App() {
     ) ??
     allowed.find((candidate) => candidate.key === defaultKey) ??
     allowed[0];
+  if (!page)
+    return (
+      <Card>
+        <p>
+          {t(
+            "You do not have permission for this action.",
+            "اجازهٔ انجام این کار را ندارید.",
+          )}
+        </p>
+        <Button onClick={() => void signOut()}>{t("Sign out", "خروج")}</Button>
+      </Card>
+    );
   const routeDetailId = routeParams.get("id");
   const detailInvoice =
     page.key === "invoices" && routeDetailId
-      ? [state.invoice, ...(state.invoices ?? [])].find(
+      ? [
+          ...(state.invoice ? [state.invoice] : []),
+          ...(state.invoices ?? []),
+        ].find(
           (item) =>
             item.id === routeDetailId &&
-            item.company_id === context.company_id &&
-            (role === "supervisor" ||
-              effectiveInvoiceLocation(state, item) === user.branch),
+            item.company_id === actor.company_id &&
+            locationIds.includes(item.branch),
         )
       : undefined;
   const detailOrder =
@@ -907,8 +929,8 @@ export default function App() {
       ? state.orders?.find(
           (item) =>
             item.id === routeDetailId &&
-            item.company_id === context.company_id &&
-            (role === "supervisor" || item.branch === user.branch),
+            item.company_id === actor.company_id &&
+            locationIds.includes(item.branch),
         )
       : undefined;
   const detailRequest =
@@ -916,10 +938,9 @@ export default function App() {
       ? state.branch_requests?.find(
           (item) =>
             item.id === routeDetailId &&
-            item.company_id === context.company_id &&
-            (role === "supervisor" ||
-              item.from_branch === user.branch ||
-              item.to_branch === user.branch),
+            item.company_id === actor.company_id &&
+            (locationIds.includes(item.from_branch) ||
+              locationIds.includes(item.to_branch)),
         )
       : undefined;
   const detailBreadcrumb = currentProduct
@@ -934,15 +955,9 @@ export default function App() {
         detailRequest?.reference);
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
-    (branch === "all" || record.branch === branch || record.branch === "all");
-  const activeNotebookIds = new Set(
-    visibleNotebooks(state, context).map((notebook) => notebook.id),
-  );
-  const customUnread = readableNotebookEntries(state, context).filter(
-    (entry) =>
-      activeNotebookIds.has(entry.notebook_id) &&
-      entry.notify_supervisor &&
-      entry.status === "open",
+    (record.branch === "all" || locationIds.includes(record.branch));
+  const customUnread = (state.notebook_entries ?? []).filter(
+    (entry) => entry.notify_supervisor && entry.status === "open",
   ).length;
   const unread =
     state.notes.filter(
@@ -953,38 +968,37 @@ export default function App() {
         note.status === "open",
     ).length + customUnread;
   const approvalCount =
-    state.approvals
-      .map((record) => ({
-        ...record,
-        branch: effectiveApprovalLocation(state, record),
-      }))
-      .filter((record) => inBranch(record) && record.status === "pending")
-      .length +
+    state.approvals.filter(
+      (record) => inBranch(record) && record.status === "pending",
+    ).length +
     (state.sale_requests ?? []).filter(
       (record) => inBranch(record) && record.status === "pending",
     ).length;
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
-  const personalNotifications = userNotifications(state, context);
+  const personalNotifications = state.notifications ?? [];
   const personalUnread = personalNotifications.filter(
     (record) => !record.read_at,
   ).length;
   const notifications =
     personalUnread +
-    (role === "supervisor" ? unread + approvalCount + alertCount : 0);
+    (can("dashboard.company") ? unread + approvalCount + alertCount : 0);
   const groupNames: Record<string, [string, string]> = {
     Daily: ["Daily", "روزانه"],
     Catalog: ["Catalog", "کاتالوگ"],
-    Supervisor: ["Supervisor", "سرپرست"],
+    Management: [
+      configuredRoleLabel(state.config, "manager", "en"),
+      configuredRoleLabel(state.config, "manager", "fa"),
+    ],
     Admin: ["Admin", "مدیریت"],
   };
 
   const accountLabel = (
     <span className="user-chip">
-      <Initials name={demoUserLabel(user.name, lang)} />
+      <Initials name={personName(user, lang)} />
       <span className="user-chip-copy">
-        <strong>{demoUserLabel(user.name, lang)}</strong>
+        <strong>{personName(user, lang)}</strong>
         <small>
           <RoleName role={role} />
         </small>
@@ -1013,10 +1027,11 @@ export default function App() {
           key={candidate.username}
           onClick={() => switchDemoUser(candidate.username)}
         >
-          {t("Switch to", "تغییر به")} {demoUserLabel(candidate.name, lang)}
+          {t("Switch to", "تغییر به")} {personName(candidate, lang)}
         </MenuItem>
       ))}
       {page.key === "invoices" &&
+        state.invoice !== null &&
         state.invoice.status !== "empty" &&
         state.invoice.status !== "posted" && (
           <MenuItem
@@ -1042,10 +1057,12 @@ export default function App() {
           {demoSeed.sales_demo.cost_increase_invoice.supplier_invoice_number}
         </LtrText>
       </MenuItem>
-      <MenuItem onClick={() => setResetOpen(true)}>
-        <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
-        {t("Reset demo", "بازنشانی دمو")}
-      </MenuItem>
+      {can("demo.reset") && (
+        <MenuItem onClick={() => setResetOpen(true)}>
+          <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
+          {t("Reset demo", "بازنشانی دمو")}
+        </MenuItem>
+      )}
     </>
   );
 
@@ -1098,7 +1115,7 @@ export default function App() {
           {Object.entries(groupNames).map(([group, names]) => {
             const items = allowed.filter((item) => item.group === group);
             const open =
-              (effectiveCollapsed && !menuOpen) ||
+              effectiveCollapsed ||
               !compactGroups ||
               (expandedGroup ?? page.group) === group;
             return items.length > 0 ? (
@@ -1127,10 +1144,14 @@ export default function App() {
                   {items.map((item) => {
                     const Icon = item.icon;
                     const count =
-                      item.key === "notes" && role === "supervisor"
+                      item.key === "notes" && can("notes.status_manage")
                         ? unread
                         : item.key === "requests"
-                          ? branchRequestCount(state, context)
+                          ? (state.branch_requests ?? []).filter(
+                              (request) =>
+                                request.status !== "closed" &&
+                                request.status !== "cancelled",
+                            ).length
                           : item.key === "approvals"
                             ? approvalCount
                             : item.key === "alerts"
@@ -1225,7 +1246,11 @@ export default function App() {
             aria-label={t("Breadcrumbs", "مسیر صفحه")}
           >
             <a className="breadcrumb-location" href={`#${defaultKey}`}>
-              {branchLabel(state.config, branch, lang)}
+              {locationSelection?.kind === "all_my_locations"
+                ? t("All my locations", "همه مکان‌های من")
+                : locationSelection?.kind === "all_locations"
+                  ? t("All locations", "همه مکان‌ها")
+                  : branchLabel(state.config, branch, lang)}
             </a>
             <ChevronRight size={14} aria-hidden="true" />
             <a
@@ -1273,29 +1298,7 @@ export default function App() {
               <Search size={20} strokeWidth={1.5} />
             </IconButton>
           )}
-          {role === "supervisor" ? (
-            <Select
-              className="branch-pill"
-              leadingIcon={<MapPin size={18} strokeWidth={1.5} />}
-              aria-label={t("Branch", "شعبه")}
-              value={branch}
-              onChange={(value) => setBranch(value as Branch)}
-              options={[...branches, "all" as const].map((value) => ({
-                value,
-                label: branchLabel(state.config, value, lang),
-              }))}
-            />
-          ) : (
-            <span className="branch-pill static">
-              <MapPin
-                className="branch-pin-icon"
-                size={18}
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-              {branchLabel(state.config, branch, lang)}
-            </span>
-          )}
+          <LocationPicker />
           {!isMobile && (
             <>
               <LanguageToggle />
@@ -1345,7 +1348,7 @@ export default function App() {
             }
           >
             <PersonalNotifications />
-            {role === "supervisor" ? (
+            {can("dashboard.company") ? (
               <>
                 <MenuItem
                   onClick={() => {
@@ -1447,8 +1450,26 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {needsReauthentication(page.key) ? (
+          {parentKey &&
+          pages.some((candidate) => candidate.key === parentKey) &&
+          !allowed.some((candidate) => candidate.key === parentKey) ? (
+            <Card>
+              <p>
+                {parentKey === "settings"
+                  ? t(
+                      "Only an Owner or Manager can change Settings.",
+                      "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
+                    )
+                  : t(
+                      "You do not have permission for this action.",
+                      "اجازهٔ انجام این کار را ندارید.",
+                    )}
+              </p>
+            </Card>
+          ) : needsReauthentication(page.key) ? (
             <Reauthenticate />
+          ) : page.key === "dashboard" && !can("dashboard.company") ? (
+            <LocationDashboard />
           ) : (
             (screenRegistry[
               allowed.some(
@@ -1496,8 +1517,8 @@ export default function App() {
         onOpenChange={setResetOpen}
         title={t("Reset demo", "بازنشانی دمو")}
         description={t(
-          "Restore the fictional seed data and clear business changes made in this browser. Your account, preferences, and language stay the same.",
-          "داده‌های خیالی اولیه بازیابی و تغییرات این مرورگر پاک می‌شوند. حساب، تنظیمات شخصی و زبان شما حفظ می‌شوند.",
+          "Restore the fictional business data and the six demo people. People changes and business changes made in this browser are cleared. Your preferences and language stay the same.",
+          "داده‌های کسب‌وکار خیالی و شش کاربر دمو بازیابی می‌شوند. تغییرات کاربران و کسب‌وکار این مرورگر پاک می‌شوند. تنظیمات شخصی و زبان شما حفظ می‌شوند.",
         )}
         confirmLabel={t("Reset demo", "بازنشانی دمو")}
         onConfirm={reset}

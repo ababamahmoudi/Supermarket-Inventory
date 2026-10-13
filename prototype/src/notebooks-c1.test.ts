@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState as pureInitialState } from "./notes-dates-fixture.e1";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation, inheritAuthoritySnapshot } from "./authority";
 import { branchId, newBranch, saveBranchSettings } from "./settings";
 import {
   addNotebookEntry,
@@ -12,20 +14,56 @@ import {
   type NotebookContext,
 } from "./notebooks";
 
-const supervisor: NotebookContext = {
-  company_id: "super-arzon",
-  branch: "all",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-};
-const worker: NotebookContext = {
-  ...supervisor,
-  branch: "Branch 1",
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
-  allowed_branches: ["Branch 1"],
-};
+let supervisor: NotebookContext;
+let worker: NotebookContext;
+let cashier: NotebookContext;
+function foreignActor(state: ReturnType<typeof pureInitialState>) {
+  const foreign = structuredClone(state);
+  foreign.config.company.seed_key = "foreign-company";
+  return authenticatedTestActor(foreign, "manager", {
+    selection: { kind: "all_locations" },
+  });
+}
+function locationWorker(
+  state: ReturnType<typeof pureInitialState>,
+  location: string,
+  userId = `test-worker-${location}`,
+) {
+  return authenticatedTestActor(state, "floor_worker", {
+    user_id: userId,
+    locations: [location],
+    selection: { kind: "location", location_id: location },
+    name_en: "Demo Floor Worker",
+  });
+}
+function aggregateWorker(state: ReturnType<typeof pureInitialState>) {
+  return authenticatedTestActor(state, "floor_worker", {
+    user_id: "test-aggregate-worker",
+    locations: ["Branch 1", "Branch 2"],
+    selection: { kind: "all_my_locations" },
+    name_en: "Demo Floor Worker",
+  });
+}
+function initialState() {
+  const state = pureInitialState();
+  supervisor = authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    username: "supervisor",
+    locations: ["Branch 1", "Branch 2", "Branch 3"],
+    selection: { kind: "all_locations" },
+  });
+  worker = authenticatedTestActor(state, "floor_worker", {
+    name_en: "Demo Floor Worker",
+    username: "floorworker",
+    locations: ["Branch 1"],
+  });
+  cashier = authenticatedTestActor(state, "cashier", {
+    name_en: "Demo Cashier",
+    username: "cashier",
+    locations: ["Branch 1"],
+  });
+  return state;
+}
 
 function setup(branch = "all") {
   const state = initialState();
@@ -41,7 +79,12 @@ function setup(branch = "all") {
 describe("C1 custom notebook entry location", () => {
   it("lets Supervisor in All branches explicitly choose an allowed location and retains concrete entry/history scope", () => {
     const { state, notebook } = setup();
-    expect(canAddNotebookEntry(notebook, supervisor)).toBe(false);
+    // This retained case describes a company with three configured stores.
+    // Company roles now get their scope from that configuration, not a fake role proxy.
+    state.config.branches = state.config.branches.filter(
+      (location) => location.id !== "Warehouse",
+    );
+    expect(canAddNotebookEntry(state, notebook, supervisor)).toBe(false);
     expect(notebookEntryLocations(state, notebook, supervisor)).toEqual([
       "Branch 1",
       "Branch 2",
@@ -64,12 +107,17 @@ describe("C1 custom notebook entry location", () => {
       by: supervisor.actor,
       after: entry,
     });
+    const branchTwoWorker = locationWorker(
+      state,
+      "Branch 2",
+      "test-branch-two-worker",
+    );
+    const restored = inheritAuthoritySnapshot(
+      state,
+      JSON.parse(JSON.stringify(state)),
+    );
     expect(
-      readableNotebookEntries(JSON.parse(JSON.stringify(state)), {
-        ...worker,
-        branch: "Branch 2",
-        allowed_branches: ["Branch 2"],
-      }).map((item) => item.id),
+      readableNotebookEntries(restored, branchTwoWorker).map((item) => item.id),
     ).toContain(entry.id);
     expect(
       readableNotebookEntries(state, worker).map((item) => item.id),
@@ -78,7 +126,10 @@ describe("C1 custom notebook entry location", () => {
 
   it("retains default Supervisor/Floor Worker contribution at a normal location without granting Cashier", () => {
     const { state, notebook } = setup();
-    for (const context of [worker, { ...supervisor, branch: "Branch 1" }]) {
+    for (const context of [
+      worker,
+      actorAtLocation(state, supervisor, "Branch 1"),
+    ]) {
       expect(
         addNotebookEntry(state, context, notebook.id, {
           text: `${context.actor} check`,
@@ -87,7 +138,7 @@ describe("C1 custom notebook entry location", () => {
     }
     const before = structuredClone(state);
     expect(() =>
-      addNotebookEntry(state, { ...worker, role: "cashier" }, notebook.id, {
+      addNotebookEntry(state, cashier, notebook.id, {
         text: "Not granted",
       }),
     ).toThrow("add_permission");
@@ -99,15 +150,10 @@ describe("C1 custom notebook entry location", () => {
     const cases: Array<[NotebookContext, string | undefined, string]> = [
       [supervisor, undefined, "branch"],
       [supervisor, "all", "branch"],
-      [
-        { ...supervisor, allowed_branches: undefined },
-        "Foreign",
-        "location_unavailable",
-      ],
-      [{ ...supervisor, allowed_branches: ["Branch 1"] }, "Branch 2", "scope"],
+      [supervisor, "Foreign", "scope"],
       [worker, "Branch 2", "scope"],
-      [{ ...worker, branch: "all" }, "Branch 1", "add_permission"],
-      [{ ...supervisor, company_id: "foreign-company" }, "Branch 1", "scope"],
+      [aggregateWorker(state), undefined, "branch"],
+      [foreignActor(state), "Branch 1", "company"],
     ];
     for (const [context, branch, error] of cases) {
       const before = structuredClone(state);
@@ -152,7 +198,7 @@ describe("C1 custom notebook entry location", () => {
         branch: "Branch 2",
         text: "Inactive check",
       }),
-    ).toThrow("location_unavailable");
+    ).toThrow("location");
     expect(state).toEqual(before);
     expect(readableNotebookEntries(state, supervisor)).toContainEqual(entry);
     editNotebookEntry(state, supervisor, entry.id, {
@@ -167,16 +213,12 @@ describe("C1 custom notebook entry location", () => {
     location.type = "warehouse";
     location.name_en = "Receiving warehouse";
     location.name_fa = "انبار دریافت";
-    saveBranchSettings(state, location, {
-      role: "supervisor",
-      company_id: supervisor.company_id,
-      by: supervisor.actor,
-    });
+    saveBranchSettings(state, location, supervisor);
     const id = branchId(location);
-    const actor = {
-      ...supervisor,
-      allowed_branches: [...supervisor.allowed_branches!, id],
-    };
+    const actor = authenticatedTestActor(state, "manager", {
+      name_en: supervisor.actor,
+      selection: { kind: "all_locations" },
+    });
     expect(notebookEntryLocations(state, notebook, actor)).toContain(id);
     const entry = addNotebookEntry(state, actor, notebook.id, {
       branch: id,

@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 
@@ -8,13 +9,12 @@ async function deliTab(page: Page) {
   await page.getByRole("tab", { name: /^Deli temperatures(?: \d+)?$/ }).click();
 }
 async function storedEntry(page: Page, text: string) {
-  return page.evaluate(
-    ({ key, text }) =>
-      JSON.parse(localStorage.getItem(key)!).notebook_entries.find(
-        (entry: { text: string }) => entry.text === text,
-      ),
-    { key: storage, text },
-  );
+  return readCanonicalBusinessEvidence(page).then((canonicalState) => {
+    const canonicalEvidenceInput = { key: storage, text };
+    return JSON.parse(JSON.stringify(canonicalState)!).notebook_entries.find(
+      (entry: { text: string }) => entry.text === canonicalEvidenceInput.text,
+    );
+  });
 }
 
 test("a worker corrects their own note within ten seconds, the original author window expires, and the Supervisor can edit later", async ({
@@ -84,13 +84,12 @@ test("a worker corrects their own note within ten seconds, the original author w
     measurement: "3.6",
     measurement_unit: "°C",
   });
-  const audit = await page.evaluate(
-    (key) =>
-      JSON.parse(localStorage.getItem(key)!).activity.filter(
+  const audit = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).activity.filter(
         (entry: { action: string }) =>
           entry.action === "notebook_entry_updated",
       ),
-    storage,
   );
   expect(audit).toHaveLength(2);
   expect(audit[0]).toMatchObject({

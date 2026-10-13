@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./notes-dates-fixture.e1";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import { configuredBranches } from "./settings";
 import {
   availableBranchRequestResidual,
@@ -16,19 +17,26 @@ import {
   type BranchRequestContext,
   type BranchRequestDraftInput,
 } from "./branch-requests";
+function workerAt(state: ReturnType<typeof initialState>, branch: string) {
+  return authenticatedTestActor(state, "floor_worker", {
+    user_id: `worker-${branch}`,
+    locations: [branch],
+    selection: { kind: "location", location_id: branch },
+  });
+}
 function fixture() {
   const state = initialState();
   state.branch_requests = [];
   state.request_transfer_events = [];
   const locations = configuredBranches(state.config);
-  const worker = (branch: string): BranchRequestContext => ({
-    company_id: state.config.company.seed_key,
-    role: "floor_worker",
-    branch,
-    allowed_branches: [branch],
-    actor: `Worker ${branch}`,
-    username: "worker",
-  });
+  const worker = (branch: string): BranchRequestContext =>
+    authenticatedTestActor(state, "floor_worker", {
+      user_id: `worker-${branch}`,
+      username: branch === locations[1] ? "worker" : `worker-${branch}`,
+      name_en: `Worker ${branch}`,
+      locations: [branch],
+      selection: { kind: "location", location_id: branch },
+    });
   const source = worker(locations[0]),
     target = worker(locations[1]);
   const input: BranchRequestDraftInput = {
@@ -318,15 +326,11 @@ describe("retained, endpoint-scoped Branch requests", () => {
     const { state, source, target, input, locations } = fixture();
     const request = saveBranchRequestDraft(state, source, input);
     sendBranchRequest(state, source, request.id, 1);
-    const unrelated = {
-      ...source,
-      branch: locations[2],
-      allowed_branches: [locations[2]],
-    };
+    const unrelated = workerAt(state, locations[2]);
     for (const context of [
       unrelated,
       { ...source, company_id: "foreign" },
-      { ...source, role: "cashier" as const },
+      authenticatedTestActor(state, "cashier", { locations: [source.branch] }),
     ]) {
       expect(listBranchRequests(state, context)).toEqual([]);
       expect(branchRequestCount(state, context)).toBe(0);
@@ -337,12 +341,12 @@ describe("retained, endpoint-scoped Branch requests", () => {
     expect(() =>
       markBranchRequestSent(state, source, request.id, 2, []),
     ).toThrow("location");
-    const all = {
-      ...source,
-      role: "supervisor" as const,
-      branch: "all",
-      allowed_branches: locations,
-    };
+    const all = authenticatedTestActor(state, "manager", {
+      name_en: "Demo Supervisor",
+      username: "supervisor",
+      locations,
+      selection: { kind: "all_locations" },
+    });
     expect(listBranchRequests(state, all)).toHaveLength(1);
     expect(branchRequestCount(state, all)).toBe(1);
     expect(() => markBranchRequestSent(state, all, request.id, 2, [])).toThrow(

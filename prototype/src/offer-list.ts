@@ -1,16 +1,67 @@
 import { businessDate } from "./approvals";
 import { branchSellsToCustomers } from "./settings";
-import type { Branch, DemoState, Offer } from "./types";
+import type { Branch, Offer } from "./types";
+import type { SaleClockConfig } from "./sales";
+import {
+  isOfferSuppressed,
+  type OfferSuppressionReadState,
+} from "./offer-store-scopes";
+interface OfferListReadState extends OfferSuppressionReadState {
+  config: SaleClockConfig;
+  offers: readonly Offer[];
+}
 
 /** Retain every historical version; visibility follows the existing price scope. */
-export function scopedOffers(state: DemoState, branch: Branch): Offer[] {
-  return state.offers.filter(
-    (offer) =>
-      offer.company_id === state.config.company.seed_key &&
-      (offer.scope === "all" ||
-        branchSellsToCustomers(state.config, offer.branch)) &&
-      (offer.scope === "all" || branch === "all" || offer.branch === branch),
-  );
+export function scopedOffers(
+  state: OfferListReadState,
+  branch: Branch,
+): Offer[] {
+  return state.offers
+    .filter(
+      (offer) =>
+        offer.company_id === state.config.company.seed_key &&
+        (offer.scope === "all" ||
+          branchSellsToCustomers(state.config, offer.branch)) &&
+        (offer.scope === "all" ||
+          branch === "all" ||
+          offer.branch === branch) &&
+        !(
+          branch !== "all" &&
+          offer.scope === "all" &&
+          offer.status === "suggested" &&
+          state.offers.some(
+            (local) =>
+              local.company_id === offer.company_id &&
+              local.product_code === offer.product_code &&
+              local.scope === "branch" &&
+              local.branch === branch &&
+              local.status === "active" &&
+              local.label === offer.label &&
+              local.price === offer.price,
+          )
+        ),
+    )
+    .map((offer) => {
+      if (branch === "all" || !isOfferSuppressed(state, offer, branch))
+        return offer;
+      const stop = state.offer_store_suppressions?.find(
+        (record) =>
+          record.offer_id === offer.id &&
+          record.branch === branch &&
+          record.company_id === offer.company_id &&
+          record.status === "active",
+      );
+      return {
+        ...offer,
+        scope: "branch" as const,
+        branch,
+        status: "stopped" as const,
+        stopped_at:
+          stop && "stopped_at" in stop && typeof stop.stopped_at === "string"
+            ? stop.stopped_at
+            : offer.stopped_at,
+      };
+    });
 }
 
 export function isPastOffer(offer: Offer, timezone: string): boolean {

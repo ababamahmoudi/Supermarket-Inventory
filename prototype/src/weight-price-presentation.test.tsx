@@ -1,14 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
-import configuration from "../../seed/arzon-config.json";
+import { configSeed } from "./config";
 import i18n from "./i18n";
-import type { CompanyConfig } from "./types";
 import { ProductCost } from "./weight-price-presentation";
 
 const config = {
-  ...configuration,
-  company: { ...configuration.company, currency: "CAD" },
-} as unknown as CompanyConfig;
+  ...configSeed,
+  company: { ...configSeed.company, currency: "CAD" },
+};
 
 it.each(["en", "fa"])(
   "retains a four-decimal weighed cost with its complete amount/unit isolated in %s",

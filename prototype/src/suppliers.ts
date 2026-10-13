@@ -2,7 +2,11 @@ import { companyCalendarDate } from "./company-time";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
-import { OperationError, type OperationsContext } from "./operations";
+import { OperationError } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { can } from "./permissions";
+import { cloneWithAuthority } from "./authority";
+import { requirePurchase, purchaseLocationAllowed } from "./purchase-authority";
 import { supplierBalanceSummary } from "./supplier-balances";
 import { projectInvoiceLocation } from "./received";
 import {
@@ -54,6 +58,7 @@ export interface SupplierInvoiceRow {
   due_date?: string;
   items: number;
   status: DemoInvoice["status"];
+  purchase?: { total: string };
   financial?: { total: string; outstanding: string };
 }
 export interface SuppliedProductRow {
@@ -117,23 +122,23 @@ export interface SupplierPageData {
   }[];
 }
 
-function guard(state: DemoState, context: OperationsContext) {
-  if (context.company_id !== state.config.company.seed_key)
-    throw new OperationError("scope");
-  if (context.role === "cashier") throw new OperationError("supervisor");
-  if (context.role !== "supervisor" && context.branch === "all")
-    throw new OperationError("scope");
+function guard(state: DemoState, context: AuthenticatedActor) {
+  return requirePurchase(state, context, "suppliers.read");
 }
 function inScope(
+  state: DemoState,
   record: { company_id: string; branch: Branch },
-  context: OperationsContext,
+  context: AuthenticatedActor,
 ) {
-  return (
-    record.company_id === context.company_id &&
-    (context.branch === "all" || record.branch === context.branch)
+  return purchaseLocationAllowed(
+    state,
+    context,
+    "suppliers.read",
+    record.company_id,
+    record.branch,
   );
 }
-function postedInvoices(state: DemoState, context: OperationsContext) {
+function postedInvoices(state: DemoState, context: AuthenticatedActor) {
   const invoices = new Map(
     [...(state.invoices ?? []), state.invoice].map((invoice) => [
       invoice.id,
@@ -143,7 +148,8 @@ function postedInvoices(state: DemoState, context: OperationsContext) {
   return [...invoices.values()]
     .map((invoice) => projectInvoiceLocation(state, invoice))
     .filter(
-      (invoice) => inScope(invoice, context) && invoice.status === "posted",
+      (invoice) =>
+        inScope(state, invoice, context) && invoice.status === "posted",
     );
 }
 function receivedDate(state: DemoState, invoice: DemoInvoice) {
@@ -154,7 +160,7 @@ function receivedDate(state: DemoState, invoice: DemoInvoice) {
 }
 function supplierShorts(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   supplier: string,
 ): SupplierShortRow[] {
   return postedInvoices(state, context)
@@ -193,9 +199,9 @@ function supplierShorts(
 /** Role-filtered read models deliberately omit financial values for workers. */
 export function suppliersOverview(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
 ): SupplierOverviewRow[] {
-  guard(state, context);
+  context = guard(state, context);
   const metadata = supplierRecords(state).filter(
     (record) => record.company_id === context.company_id,
   );
@@ -211,7 +217,7 @@ export function suppliersOverview(
     addName(invoice.supplier),
   );
   state.returns
-    .filter((record) => inScope(record, context))
+    .filter((record) => inScope(state, record, context))
     .forEach((record) => addName(record.supplier));
   const month = companyDate(state.config).slice(0, 7);
   return [...names].map((name) => {
@@ -243,7 +249,7 @@ export function suppliersOverview(
         .length,
       open_returns: state.returns.filter(
         (record) =>
-          inScope(record, context) &&
+          inScope(state, record, context) &&
           matches(record.supplier) &&
           record.status !== "resolved" &&
           record.status !== "cancelled",
@@ -253,7 +259,10 @@ export function suppliersOverview(
         context,
         name,
       ).length,
-      ...(context.role === "supervisor"
+      ...(can(state, context, "supplier_balances.read", {
+        company_id: context.company_id,
+        kind: "company_shared",
+      }).allowed
         ? {
             financial: (() => {
               const summary = supplierBalanceSummary(
@@ -277,10 +286,10 @@ export function suppliersOverview(
 
 export function supplierPage(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   name: string,
 ): SupplierPageData {
-  guard(state, context);
+  context = guard(state, context);
   const matching = supplierRecords(state).find(
     (record) =>
       record.company_id === context.company_id && supplierMatches(record, name),
@@ -291,10 +300,12 @@ export function supplierPage(
     (item) => item.name === name,
   );
   if (!supplier) throw new OperationError("scope");
-  const financial =
-    context.role === "supervisor"
-      ? supplierBalanceSummary(state, context, name)
-      : null;
+  const financial = can(state, context, "supplier_balances.read", {
+    company_id: context.company_id,
+    kind: "company_shared",
+  }).allowed
+    ? supplierBalanceSummary(state, context, name)
+    : null;
   const invoices = postedInvoices(state, context)
     .filter((invoice) => invoice.supplier === name)
     .sort((a, b) =>
@@ -316,6 +327,20 @@ export function supplierPage(
       due_date: invoice.due_date,
       items: invoice.lines.length,
       status: invoice.status,
+      ...(can(state, context, "supplier_items.cost_read", {
+        company_id: context.company_id,
+        kind: "company_shared",
+      }).allowed &&
+      can(state, context, "invoices.cost_read", {
+        company_id: invoice.company_id,
+        kind: "location_record",
+        location_ids: [invoice.branch],
+        entity_id: invoice.id,
+        status: invoice.status,
+        location_policy: "retained_read",
+      }).allowed
+        ? { purchase: { total: invoice.final_total } }
+        : {}),
       ...(financial
         ? {
             financial: {
@@ -348,7 +373,17 @@ export function supplierPage(
         name_fa: product.name_fa,
         unit_size: product.unit_size,
         last_delivery: receipts[0]?.date,
-        ...(financial
+        ...(can(state, context, "supplier_items.cost_read", {
+          company_id: product.company_id,
+          kind: "company_shared",
+          entity_id: product.code,
+        }).allowed &&
+        (receipts.length ||
+          can(state, context, "catalog.cost_read", {
+            company_id: product.company_id,
+            kind: "company_shared",
+            entity_id: product.code,
+          }).allowed)
           ? {
               financial: {
                 last_cost: receipts[0]?.cost ?? product.last_cost_before_tax,
@@ -359,7 +394,9 @@ export function supplierPage(
       };
     }),
     returns: state.returns
-      .filter((record) => inScope(record, context) && record.supplier === name)
+      .filter(
+        (record) => inScope(state, record, context) && record.supplier === name,
+      )
       .map((record) => ({
         id: record.id,
         number: state.returns.indexOf(record) + 1,
@@ -389,7 +426,7 @@ export function supplierPage(
     alerts: state.alerts
       .filter(
         (alert) =>
-          inScope(alert, context) &&
+          inScope(state, alert, context) &&
           (alert.supplier === name ||
             (!alert.supplier && codes.has(alert.product_code))),
       )
@@ -410,7 +447,7 @@ export function supplierPage(
     notes: state.notes
       .filter(
         (note) =>
-          inScope(note, context) &&
+          inScope(state, note, context) &&
           note.product_code &&
           codes.has(note.product_code),
       )
@@ -427,7 +464,7 @@ export function supplierPage(
     result.payments = state.ledger
       .filter(
         (row) =>
-          inScope(row, context) &&
+          inScope(state, row, context) &&
           row.supplier === name &&
           row.type === "payment",
       )
@@ -457,8 +494,8 @@ function canonicalSupplierState(state: DemoState, name: string): DemoState {
     supplierMatches(supplier, record.supplier)
       ? { ...record, supplier: name }
       : record;
-  return {
-    ...state,
+  const projected = cloneWithAuthority(state);
+  Object.assign(projected, {
     invoice: canonical(state.invoice),
     invoices: state.invoices?.map(canonical),
     returns: state.returns.map(canonical),
@@ -474,5 +511,6 @@ function canonicalSupplierState(state: DemoState, name: string): DemoState {
         ? canonical({ ...alert, supplier: alert.supplier })
         : alert,
     ),
-  };
+  });
+  return projected;
 }

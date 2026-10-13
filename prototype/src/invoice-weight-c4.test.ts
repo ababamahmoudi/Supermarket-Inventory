@@ -1,6 +1,8 @@
 import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import type { AuthenticatedActor } from "./authority-types";
 import {
   addManualLine,
   createInvoice,
@@ -30,7 +32,7 @@ function weighted() {
   const product = state.products.find((product) => product.code === "0002")!;
   product.sold_by = "weight";
   product.date_tracking = false;
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, context(state), "Branch 1", true);
   Object.assign(state.invoice, {
     supplier: "Fresh Valley Foods",
     supplier_confirmed: true,
@@ -39,7 +41,7 @@ function weighted() {
     file_type: "image/png",
     file_data: "data:image/png;base64,c291cmNl",
   });
-  addManualLine(state, product.code);
+  addManualLine(state, context(state), product.code);
   const line = state.invoice.lines[0];
   setInvoiceWeightQuantity(line, "1.125", "kg", state.config);
   setInvoiceWeightCost(line, "11.0000", "kg", state.config);
@@ -49,12 +51,20 @@ function weighted() {
   line.date_confirmed = true;
   return state;
 }
-const context = (state: ReturnType<typeof weighted>) => ({
-  company_id: state.config.company.seed_key,
-  branch: "Branch 1",
-  role: "supervisor" as const,
-  actor: "Ali",
-});
+const actors = new WeakMap<
+  ReturnType<typeof initialState>,
+  AuthenticatedActor
+>();
+function context(state: ReturnType<typeof initialState>) {
+  const existing = actors.get(state);
+  if (existing) return existing;
+  const actor = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    name_en: "Ali",
+  });
+  actors.set(state, actor);
+  return actor;
+}
 
 describe("invoice source weight quantities and exact costs", () => {
   it("creates a new weighed product with the receiver's quantity basis and date choice", () => {
@@ -66,8 +76,8 @@ describe("invoice source weight quantities and exact costs", () => {
     line.pricing_category = "grocery";
     line.supplier_item_id = undefined;
     line.supplier_item_code = undefined;
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-    expect(postInvoice(state, "supervisor", "Branch 1")).toBe(true);
+    expect(invoiceBlockers(state, context(state))).toEqual([]);
+    expect(postInvoice(state, context(state))).toBe(true);
     const product = state.products.find(
       (product) => product.code === line.product_code,
     )!;
@@ -98,8 +108,8 @@ describe("invoice source weight quantities and exact costs", () => {
     expect(
       invoiceLineCalculation(line, "grocery", state.config).selling_price,
     ).toBe("7.49");
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1");
+    expect(invoiceBlockers(state, context(state))).toEqual([]);
+    postInvoice(state, context(state));
     expect(state.invoice.final_total).toBe("12.38");
     expect(
       state.products.find((product) => product.code === "0002")!
@@ -154,22 +164,16 @@ describe("invoice source weight quantities and exact costs", () => {
     expect(line.source_quantity).toBe("11.390625");
     expect(line.line_total).toBe("125.30");
     line.review_confirmed = true;
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).not.toContain(
-      "quantity",
-    );
+    expect(invoiceBlockers(state, context(state))).not.toContain("quantity");
   });
   it("rejects fourth decimal source input, invalid source cost and delivered weights above invoiced quantities without posting", () => {
     const state = weighted();
     const line = state.invoice.lines[0];
     setInvoiceWeightQuantity(line, "1.1234", "kg", state.config);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "quantity",
-    );
+    expect(invoiceBlockers(state, context(state))).toContain("quantity");
     const next = weighted();
     setInvoiceWeightReceived(next.invoice.lines[0], "1.126", next.config);
-    expect(invoiceBlockers(next, "supervisor", "Branch 1")).toContain(
-      "quantity",
-    );
+    expect(invoiceBlockers(next, context(next))).toContain("quantity");
     const third = weighted();
     setInvoiceWeightCost(
       third.invoice.lines[0],
@@ -177,7 +181,7 @@ describe("invoice source weight quantities and exact costs", () => {
       "kg",
       third.config,
     );
-    expect(invoiceBlockers(third, "supervisor", "Branch 1")).toContain("cost");
+    expect(invoiceBlockers(third, context(third))).toContain("cost");
   });
   it("posts actual partial weights and restores the original short cents exactly through later deliveries", () => {
     const state = weighted();
@@ -186,7 +190,7 @@ describe("invoice source weight quantities and exact costs", () => {
     line.review_confirmed = true;
     const missing = lineShort(line);
     expect(missing.total).toBe("5.50");
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const quantity = new Decimal(
       weightQuantityPerLb("0.5", "kg", line.weight_conversion_factor),
     ).toNumber();
@@ -196,10 +200,8 @@ describe("invoice source weight quantities and exact costs", () => {
         line.product_code,
         quantity,
         "WEIGHT-SHORT",
-        "supervisor",
-        "Branch 1",
+        context(state),
         0,
-        "Ali",
       ),
     ).toBe("5.50");
     const receipts = receivedLog(state, context(state)).filter(
@@ -212,7 +214,7 @@ describe("invoice source weight quantities and exact costs", () => {
   });
   it("corrects source weight/cost with exact delta while keeping the original source evidence", () => {
     const state = weighted();
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const original = structuredClone(state.invoice);
     const lines = structuredClone(state.invoice.lines);
     setInvoiceWeightQuantity(lines[0], "1.5", "kg", state.config);
@@ -249,7 +251,7 @@ describe("invoice source weight quantities and exact costs", () => {
     setInvoiceWeightQuantity(line, "3", "cases", state.config);
     recalculateInvoice(state.invoice, state.config);
     line.review_confirmed = true;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     // This retained link is protected downstream receipt evidence, not a new order.
     state.invoice.lines[0].order_item_id = "retained-weight-order-line";
     state.invoices!.find(
@@ -326,8 +328,8 @@ describe("invoice source weight quantities and exact costs", () => {
         (product) => product.code === "0002",
       )!;
       product.date_tracking = preference;
-      state.invoice = createInvoice(state, "Branch 1", true);
-      addManualLine(state, "0002");
+      state.invoice = createInvoice(state, context(state), "Branch 1", true);
+      addManualLine(state, context(state), "0002");
       expect(state.invoice.lines[0]).toMatchObject({
         date_tracking: tracking,
         date_confirmed: confirmed,

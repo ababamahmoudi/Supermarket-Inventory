@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import { supplierRecords } from "./supplier-editor";
-import { configuredBranches } from "./settings";
 import { attachReversals, reverseActivity } from "./history";
 import { productCostHistory } from "./product-costs";
 import {
@@ -14,19 +13,25 @@ import {
   supplierItems,
 } from "./supplier-items";
 import type { DemoInvoice, DemoState } from "./types";
-import type { OperationsContext } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import {
+  actorAtLocation,
+  cloneWithAuthority,
+  AuthorityError,
+} from "./authority";
 
 let state: DemoState;
 const supplier = "Fresh Valley Foods";
 const time = new Date("2026-10-09T18:00:00Z");
-const supervisor: OperationsContext = {
-  company_id: "super-arzon",
-  role: "supervisor",
-  branch: "all",
-  actor: "Demo Supervisor",
-};
+let manager: AuthenticatedActor;
 beforeEach(() => {
   state = initialState();
+  manager = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    selection: { kind: "all_locations" },
+    name_en: "Demo Manager",
+  });
   state.invoices = [];
   state.invoice.status = "empty";
   state.stock_movements = [];
@@ -39,7 +44,7 @@ function purchase(
 ): DemoInvoice {
   return {
     ...structuredClone(state.invoice),
-    company_id: supervisor.company_id,
+    company_id: manager.company_id,
     id: "purchase-1",
     branch: "Branch 1",
     supplier,
@@ -51,7 +56,7 @@ function purchase(
     lines: [
       {
         ...structuredClone(state.invoice.lines[0]),
-        company_id: supervisor.company_id,
+        company_id: manager.company_id,
         product_code: "0009",
         supplier_item_code: "SKU-9",
         description: "Fictional product receipt",
@@ -67,12 +72,12 @@ function purchase(
   };
 }
 function facts(branch = "all") {
-  return supplierItemFacts(state, supervisor.company_id, supplier, branch);
+  return supplierItemFacts(state, manager, supplier, branch);
 }
 function add(code = "HAND-9", quote?: string) {
   return saveSupplierItem(
     state,
-    supervisor,
+    manager,
     supplier,
     {
       product_code: "0009",
@@ -84,11 +89,7 @@ function add(code = "HAND-9", quote?: string) {
     time,
   );
 }
-const historyContext = () => ({
-  ...supervisor,
-  username: "supervisor",
-  allowed_branches: configuredBranches(state.config, true),
-});
+const historyContext = () => manager;
 
 describe("Supplier packs and exact costs", () => {
   it("converts integer and fractional cases exactly while unit entry stays units", () => {
@@ -118,7 +119,7 @@ describe("Supplier actual purchase facts", () => {
     const posted = purchase();
     state.invoices = [posted];
     state.invoice = structuredClone(posted);
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(facts()).toHaveLength(1);
     expect(facts()[0]).toMatchObject({
       units_per_case: 12,
@@ -130,9 +131,7 @@ describe("Supplier actual purchase facts", () => {
       regular_unit_cost: "1.6658",
     });
     expect(facts()[0].history).toHaveLength(1);
-    expect(
-      resolveSupplierItem(state, supervisor.company_id, supplier, "all", {}),
-    ).toBeNull();
+    expect(resolveSupplierItem(state, manager, supplier, "all", {})).toBeNull();
     expect(facts()).toEqual(facts());
     expect(state).toEqual(before);
   });
@@ -143,18 +142,18 @@ describe("Supplier actual purchase facts", () => {
     ];
     expect(facts()).toHaveLength(2);
     expect(
-      resolveSupplierItem(state, supervisor.company_id, supplier, "all", {
+      resolveSupplierItem(state, manager, supplier, "all", {
         product_code: "0009",
       }),
     ).toBeNull();
     expect(
-      resolveSupplierItem(state, supervisor.company_id, supplier, "all", {
+      resolveSupplierItem(state, manager, supplier, "all", {
         product_code: "0009",
         supplier_item_code: "SKU-OTHER",
       })?.supplier_item_code,
     ).toBe("SKU-OTHER");
     expect(
-      resolveSupplierItem(state, supervisor.company_id, supplier, "all", {
+      resolveSupplierItem(state, manager, supplier, "all", {
         id: facts()[0].id,
       })?.id,
     ).toBe(facts()[0].id);
@@ -194,7 +193,7 @@ describe("Supplier actual purchase facts", () => {
     expect(facts()[0].history[0].received_units).toBe(24);
     const product = state.products.find((record) => record.code === "0009")!;
     expect(
-      productCostHistory(state, supervisor, product).map(
+      productCostHistory(state, manager, product).map(
         (record) => record.invoice_id,
       ),
     ).toEqual(["partial"]);
@@ -209,6 +208,29 @@ describe("Supplier actual purchase facts", () => {
       history: [],
     });
     expect(facts("Branch 1")[0].history).toHaveLength(1);
+    const selectedWarehouse = actorAtLocation(state, manager, "Warehouse");
+    expect(
+      supplierItemFacts(state, selectedWarehouse, supplier, "Warehouse")[0],
+    ).toMatchObject({
+      product_code: "0009",
+      supplier_item_code: "SKU-9",
+      units_per_case: 12,
+      last_bought_unit_cost: null,
+      last_bought_date: null,
+      last_invoice_number: null,
+      history: [],
+    });
+    const warehouseSupervisor = authenticatedTestActor(
+      state,
+      "branch_supervisor",
+      {
+        locations: ["Warehouse"],
+        selection: { kind: "location", location_id: "Warehouse" },
+      },
+    );
+    expect(
+      supplierItemFacts(state, warehouseSupervisor, supplier, "Warehouse"),
+    ).toEqual([]);
   });
   it("moves history scope through append-only invoice corrections without rewriting posted origin", () => {
     const invoice = purchase();
@@ -216,12 +238,12 @@ describe("Supplier actual purchase facts", () => {
     state.invoice_location_corrections = [
       {
         id: "correction",
-        company_id: supervisor.company_id,
+        company_id: manager.company_id,
         invoice_id: invoice.id,
         from_branch: "Branch 1",
         to_branch: "Warehouse",
         reason: "Correct receipt location",
-        by: supervisor.actor,
+        by: manager.actor,
         at: time.toISOString(),
         outstanding_amount: "0.00",
         currency: "CAD",
@@ -246,7 +268,7 @@ describe("Supplier actual purchase facts", () => {
     state.stock_movements = [
       {
         id: "purchase-1:delivery:later",
-        company_id: supervisor.company_id,
+        company_id: manager.company_id,
         invoice_id: "purchase-1",
         line_index: 0,
         product_code: "0009",
@@ -281,16 +303,23 @@ describe("Supplier actual purchase facts", () => {
     ];
     const renamed = supplierItemFacts(
       state,
-      supervisor.company_id,
+      manager,
       "Fresh Valley Renamed",
       "all",
     );
     expect(renamed).toHaveLength(1);
     expect(renamed[0].supplier_name).toBe("Fresh Valley Renamed");
     expect(renamed[0].history[0].supplier).toBe(supplier);
+    const foreign = initialState();
+    foreign.config.company.seed_key = "other-company";
     expect(() =>
-      supplierItemFacts(state, "other-company", supplier, "all"),
-    ).toThrow("scope");
+      supplierItemFacts(
+        state,
+        authenticatedTestActor(foreign, "manager", { locations: ["Branch 1"] }),
+        supplier,
+        "all",
+      ),
+    ).toThrow(AuthorityError);
   });
   it("keeps supplier identities separate even when edited metadata carries another supplier's name", () => {
     const item = add();
@@ -325,7 +354,7 @@ describe("Supplier item maintenance and permission boundaries", () => {
     const item = add("HAND", "3.55");
     expect(item).toMatchObject({
       quoted_unit_cost_before_tax: "3.5500",
-      quoted_by: supervisor.actor,
+      quoted_by: manager.actor,
       quoted_at: time.toISOString(),
     });
     expect(facts()[0]).toMatchObject({
@@ -345,7 +374,7 @@ describe("Supplier item maintenance and permission boundaries", () => {
     const id = facts()[0].id;
     saveSupplierItem(
       state,
-      supervisor,
+      manager,
       supplier,
       {
         product_code: "0004",
@@ -376,7 +405,7 @@ describe("Supplier item maintenance and permission boundaries", () => {
     const first = facts()[0].id;
     saveSupplierItem(
       state,
-      supervisor,
+      manager,
       supplier,
       {
         product_code: "0009",
@@ -404,30 +433,39 @@ describe("Supplier item maintenance and permission boundaries", () => {
   it("rejects worker/cashier mutations and returns no financial or history keys for workers", () => {
     state.invoices = [purchase()];
     add("HAND", "3.55");
-    const worker = {
-      ...supervisor,
-      role: "floor_worker" as const,
-      branch: "Branch 1",
-    };
+    const worker = authenticatedTestActor(state, "floor_worker", {
+      locations: ["Branch 1"],
+    });
     const visible = supplierItems(state, worker, supplier);
     expect(visible).toHaveLength(2);
     expect(JSON.stringify(visible)).not.toMatch(
       /financial|cost|history|quoted|regular_unit/,
     );
     expect(() =>
-      supplierItems(state, { ...worker, branch: "all" }, supplier),
-    ).toThrow("scope");
+      supplierItems(
+        state,
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+          selection: { kind: "all_locations" },
+        }),
+        supplier,
+      ),
+    ).toThrow(AuthorityError);
     expect(() =>
-      supplierItems(state, { ...worker, role: "cashier" }, supplier),
-    ).toThrow("permission");
-    const before = structuredClone(state);
+      supplierItems(
+        state,
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+        supplier,
+      ),
+    ).toThrow(AuthorityError);
+    const before = cloneWithAuthority(state);
     expect(() =>
       saveSupplierItem(state, worker, supplier, {
         product_code: "0009",
         supplier_item_code: "W",
         units_per_case: 12,
       }),
-    ).toThrow("permission");
+    ).toThrow(AuthorityError);
     expect(state).toEqual(before);
   });
   it("rejects invalid metadata, ambiguous duplicate associations and foreign product references", () => {
@@ -439,22 +477,22 @@ describe("Supplier item maintenance and permission boundaries", () => {
     };
     for (const patch of [{ units_per_case: 0 }, { units_per_case: 1.5 }])
       expect(() =>
-        saveSupplierItem(state, supervisor, supplier, { ...edits, ...patch }),
+        saveSupplierItem(state, manager, supplier, { ...edits, ...patch }),
       ).toThrow("pack");
     expect(() => add()).toThrow("duplicate");
     expect(() => add("INVALID", "3.12345")).toThrow("cost");
     expect(() =>
-      saveSupplierItem(state, supervisor, supplier, {
+      saveSupplierItem(state, manager, supplier, {
         ...edits,
         product_code: "FOREIGN",
       }),
     ).toThrow("product");
     expect(() =>
-      saveSupplierItem(state, supervisor, "Corner Spice Co.", edits),
+      saveSupplierItem(state, manager, "Corner Spice Co.", edits),
     ).toThrow("supplier");
   });
   it("archives an unused manual creation on Revert, retaining the record and audit trail", () => {
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     const item = add();
     attachReversals(before, state, historyContext());
     const activity = state.activity.at(-1)!;
@@ -468,7 +506,7 @@ describe("Supplier item maintenance and permission boundaries", () => {
     );
   });
   it("rejects creation Revert after an invoice references it with no partial mutation", () => {
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     const item = add();
     attachReversals(before, state, historyContext());
     const activity = state.activity.at(-1)!;
@@ -481,10 +519,10 @@ describe("Supplier item maintenance and permission boundaries", () => {
   });
   it("rejects a stale metadata Revert after another edit without losing either audit record", () => {
     const item = add();
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     saveSupplierItem(
       state,
-      supervisor,
+      manager,
       supplier,
       {
         product_code: "0009",
@@ -498,7 +536,7 @@ describe("Supplier item maintenance and permission boundaries", () => {
     const activity = state.activity.at(-1)!;
     saveSupplierItem(
       state,
-      supervisor,
+      manager,
       supplier,
       {
         product_code: "0009",
@@ -520,10 +558,10 @@ describe("Supplier item maintenance and permission boundaries", () => {
   it("reverts the first automatic-item metadata edit by restoring invoice-derived facts", () => {
     state.invoices = [purchase()];
     const id = facts()[0].id;
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     saveSupplierItem(
       state,
-      supervisor,
+      manager,
       supplier,
       {
         product_code: "0009",

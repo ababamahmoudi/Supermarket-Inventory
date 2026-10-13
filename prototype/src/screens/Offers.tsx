@@ -14,15 +14,17 @@ import {
   offerReadiness,
   stopOffer,
 } from "../approvals";
-import {
-  effectivePrice,
-  isOfferScheduledNow,
-  lookupBranch,
-  regularPrice,
-} from "../catalog";
+import { effectivePrice, isOfferScheduledNow, regularPrice } from "../catalog";
 import { ChangePriceDialog } from "../ChangePriceDialog";
 import { endSale, withdrawSaleRequest } from "../sales";
-import type { SaleSchedule, SaleRequest } from "../sales";
+import type {
+  SaleReadDTO as SaleSchedule,
+  SaleRequestReadDTO as SaleRequest,
+} from "../offers-read-model";
+import type { ResourceScope } from "../authority-types";
+import { createId } from "../ids";
+import { offerVersion, suppressedOfferStores } from "../offer-store-scopes";
+import { configuredRoleLabel } from "../role-config";
 import { offerPausedStores, salesOfferRows } from "../sales-offer-list";
 import type { SalesOfferRow as SaleRow } from "../sales-offer-list";
 import { salesText } from "../sales-locale";
@@ -70,9 +72,23 @@ import {
 } from "../ui";
 
 export function Offers() {
-  const { state, update, role, branch, setBranch, lang, t, historyContext } =
-    useDemo();
-  const branches = sellingBranches(state.config);
+  const {
+    state,
+    command,
+    query,
+    can,
+    branch,
+    setBranch,
+    lang,
+    t,
+    actor: historyContext,
+  } = useDemo();
+  const branches = sellingBranches(state.config).filter((id) =>
+    historyContext?.allowed_branches.includes(id),
+  );
+  const companyLocations = historyContext?.location_scope.kind === "company";
+  const mayManageMultiBuy = can("offers.multibuy_manage");
+  const mayCreateSale = can("sales.manage") || can("sales.request");
   const [tab, setTab] = useState<"offers" | "past" | "pools">("offers");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -105,12 +121,11 @@ export function Offers() {
     null,
   );
   const [createType, setCreateType] = useState<"multi_buy" | "sale">(
-    "multi_buy",
+    mayManageMultiBuy ? "multi_buy" : "sale",
   );
   const [createAttempted, setCreateAttempted] = useState(false);
   const company = state.config.company.seed_key;
-  const viewBranch =
-    branch === "all" ? (branches[0] ?? lookupBranch(branch)) : branch;
+  const viewBranch = branch;
   const locationCanSell =
     branch === "all"
       ? branches.length > 0
@@ -171,28 +186,35 @@ export function Offers() {
   const suppliers = [
     ...new Set(products.map((product) => product.main_supplier)),
   ].sort();
-  const saleRows = salesOfferRows(state, historyContext, branch, {
-    tab: tab === "past" ? "past" : "offers",
-    search,
-    status,
-    category,
-    supplier,
-    type,
-  });
+  const saleRows = salesOfferRows(
+    state,
+    historyContext,
+    branch,
+    {
+      tab: tab === "past" ? "past" : "offers",
+      search,
+      status,
+      category,
+      supplier,
+      type,
+    },
+    new Date(),
+    can("approvals.decide"),
+  );
   const clearFilters = () => {
     setSearch("");
     setStatus("");
     setCategory("");
     setSupplier("");
     setType("");
-    if (role === "supervisor") setBranch("all");
+    if (companyLocations) void setBranch("all");
   };
-  if (role === "cashier")
+  if (!can("offers.read"))
     return (
       <EmptyState>
         {t(
-          "Switch to Floor Worker or Supervisor to manage offers.",
-          "برای مدیریت پیشنهادها به کارکنان فروشگاه یا سرپرست تغییر دهید.",
+          `Switch to ${configuredRoleLabel(state.config.roles, "floor_worker", "en")} or ${configuredRoleLabel(state.config.roles, "manager", "en")} to manage offers.`,
+          `برای مدیریت پیشنهادها به ${configuredRoleLabel(state.config.roles, "floor_worker", "fa")} یا ${configuredRoleLabel(state.config.roles, "manager", "fa")} تغییر دهید.`,
         )}
       </EmptyState>
     );
@@ -238,18 +260,69 @@ export function Offers() {
     )[reason];
   const readyMessage = (reason: ReturnType<typeof offerReadiness>) =>
     t(...readinessCopy(reason));
-  const activate = (offer: Offer) => {
+  const offerWriteScope = (offer: Offer): ResourceScope => ({
+    company_id: offer.company_id,
+    kind: "location_record",
+    location_ids:
+      offer.scope === "all"
+        ? companyLocations
+          ? branches
+          : branch === "all"
+            ? []
+            : [branch]
+        : [offer.branch],
+    entity_id: offer.id,
+    version: offerVersion(offer),
+    mutation: true,
+  });
+  const denied = () =>
+    setMessage([
+      "You do not have permission for this action.",
+      "اجازهٔ انجام این کار را ندارید.",
+    ]);
+  const activate = async (source: Offer) => {
+    if (!historyContext) return;
+    if (!companyLocations && branch === "all") {
+      setMessage(readinessCopy("location_not_selling"));
+      return;
+    }
+    const offer =
+      !companyLocations && source.scope === "all"
+        ? {
+            ...source,
+            id: createId("offer"),
+            scope: "branch" as const,
+            branch,
+            version: 1,
+          }
+        : source;
     const readiness = offerReadiness(state, offer);
     if (readiness !== "ready") {
       setMessage(readinessCopy(readiness));
       return;
     }
-    const activation = { result: "created" as "created" | "unchanged" };
-    update((draft) => {
-      activation.result = activateOffer(draft, offer, role ?? "floor_worker");
-    });
+    let result: "created" | "unchanged";
+    try {
+      const currentReady = await query(
+        "offers.multibuy_manage",
+        offerWriteScope(offer),
+        (draft) => offerReadiness(draft, offer),
+      );
+      if (currentReady !== "ready") {
+        setMessage(readinessCopy(currentReady));
+        return;
+      }
+      result = await command(
+        "offers.multibuy_manage",
+        offerWriteScope(offer),
+        (draft, freshActor) => activateOffer(draft, freshActor, offer),
+      );
+    } catch {
+      denied();
+      return;
+    }
     setCreateOpen(false);
-    if (activation.result === "unchanged") {
+    if (result === "unchanged") {
       setMessage([
         "This offer already exists.",
         "این پیشنهاد از قبل وجود دارد.",
@@ -279,8 +352,22 @@ export function Offers() {
             ],
     );
   };
-  const stop = (id: string, dismissed = false) => {
-    update((draft) => stopOffer(draft, id, dismissed, role ?? "floor_worker"));
+  const stop = async (id: string, dismissed = false) => {
+    const offer = state.offers.find(
+      (item) => item.id === id && item.company_id === company,
+    );
+    if (!offer) return;
+    try {
+      await command(
+        "offers.multibuy_manage",
+        offerWriteScope(offer),
+        (draft, freshActor) =>
+          stopOffer(draft, freshActor, id, dismissed, offerVersion(offer)),
+      );
+    } catch {
+      denied();
+      return;
+    }
     setStopId(null);
     setMessage(
       dismissed
@@ -403,9 +490,9 @@ export function Offers() {
         aria-label={t("Offer branch", "شعبه پیشنهاد")}
         value={branch}
         onChange={(value) => setBranch(value as Branch)}
-        disabled={role !== "supervisor"}
+        disabled={branches.length < 2}
         options={
-          role === "supervisor"
+          branches.length > 1
             ? [
                 { value: "all", label: t("All branches", "همه شعبه‌ها") },
                 ...branches.map((value) => ({
@@ -442,9 +529,10 @@ export function Offers() {
         )}
         actions={
           <Button
+            disabled={!mayManageMultiBuy && !mayCreateSale}
             onClick={() => {
               setCreateOpen(true);
-              setCreateType("multi_buy");
+              setCreateType(mayManageMultiBuy ? "multi_buy" : "sale");
               setCreateAttempted(false);
               setMessage(null);
             }}
@@ -684,6 +772,7 @@ export function Offers() {
                       lang,
                       t,
                       context: historyContext,
+                      can,
                       onOpen: setOpenedSale,
                       onChange: (record) =>
                         setChangePrice({
@@ -814,6 +903,26 @@ export function Offers() {
                                     {branchName(store)}
                                   </p>
                                 ))}
+                                {suppressedOfferStores(
+                                  state,
+                                  offer,
+                                  historyContext?.allowed_branches ?? [],
+                                )
+                                  .filter(
+                                    (store) =>
+                                      branch === "all" || store === branch,
+                                  )
+                                  .map((store) => (
+                                    <p
+                                      key={`stopped:${store}`}
+                                      className="muted"
+                                    >
+                                      <Badge tone="neutral">
+                                        {t("Stopped", "متوقف‌شده")}
+                                      </Badge>{" "}
+                                      {branchName(store)}
+                                    </p>
+                                  ))}
                                 {offer.start_date && (
                                   <p className="muted">
                                     {t("Starts", "شروع")}:{" "}
@@ -832,7 +941,7 @@ export function Offers() {
                         </td>
                         <td>
                           <div className="actions offer-row-actions">
-                            {tab === "offers" ? (
+                            {tab === "offers" && mayManageMultiBuy ? (
                               <Menu
                                 iconOnly
                                 showChevron={false}
@@ -848,6 +957,12 @@ export function Offers() {
                                 {group.map((offer) => (
                                   <MenuItem
                                     key={offer.id}
+                                    disabled={
+                                      !can(
+                                        "offers.multibuy_manage",
+                                        offerWriteScope(offer),
+                                      )
+                                    }
                                     onClick={() => setStopId(offer.id)}
                                   >
                                     {t("Stop offer", "توقف پیشنهاد")} ·{" "}
@@ -1021,8 +1136,17 @@ export function Offers() {
                 setCreateAttempted(false);
               }}
               options={[
-                { value: "multi_buy", label: t("Multi-buy", "خرید چندتایی") },
-                { value: "sale", label: t("Sale price", "قیمت حراج") },
+                ...(mayManageMultiBuy
+                  ? [
+                      {
+                        value: "multi_buy",
+                        label: t("Multi-buy", "خرید چندتایی"),
+                      },
+                    ]
+                  : []),
+                ...(mayCreateSale
+                  ? [{ value: "sale", label: t("Sale price", "قیمت حراج") }]
+                  : []),
               ]}
             />
           </Field>
@@ -1042,7 +1166,9 @@ export function Offers() {
                   setMessage(null);
                   const product = products.find((item) => item.code === value);
                   setScope(
-                    product?.branch_prices?.[viewBranch] ? "branch" : "all",
+                    !companyLocations || product?.branch_prices?.[viewBranch]
+                      ? "branch"
+                      : "all",
                   );
                 }}
                 options={[
@@ -1071,10 +1197,17 @@ export function Offers() {
                         value: "branch",
                         label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
                       },
-                      {
-                        value: "all",
-                        label: t("Company default price", "قیمت پیش‌فرض شرکت"),
-                      },
+                      ...(companyLocations
+                        ? [
+                            {
+                              value: "all",
+                              label: t(
+                                "Company default price",
+                                "قیمت پیش‌فرض شرکت",
+                              ),
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 </Field>
@@ -1247,13 +1380,23 @@ export function Offers() {
           description={branchName(endSelected.branch)}
           confirmLabel={salesText(t, "endNow")}
           confirmVariant="danger"
-          onConfirm={() => {
+          onConfirm={async () => {
             if (!historyContext) return;
             try {
-              update((draft) =>
-                endSale(draft, historyContext, endSelected.id, {
-                  expected_revision: endSelected.revision,
-                }),
+              await command(
+                "sales.manage",
+                {
+                  company_id: company,
+                  kind: "location_record",
+                  location_ids: [endSelected.branch],
+                  entity_id: endSelected.id,
+                  version: endSelected.revision,
+                  mutation: true,
+                },
+                (draft, freshActor) =>
+                  endSale(draft, freshActor, endSelected.id, {
+                    expected_revision: endSelected.revision,
+                  }),
               );
               setEndSelected(null);
               setMessage(["Ended sale.", "حراج پایان یافت."]);
@@ -1299,16 +1442,27 @@ export function Offers() {
           description={branchName(withdrawSelected.branch)}
           confirmLabel={salesText(t, "withdraw")}
           confirmVariant="danger"
-          onConfirm={() => {
+          onConfirm={async () => {
             if (!historyContext) return;
             try {
-              update((draft) =>
-                withdrawSaleRequest(
-                  draft,
-                  historyContext,
-                  withdrawSelected.id,
-                  withdrawSelected.revision,
-                ),
+              await command(
+                "sales.request_withdraw_own",
+                {
+                  company_id: company,
+                  kind: "location_record",
+                  location_ids: [withdrawSelected.branch],
+                  entity_id: withdrawSelected.id,
+                  owner_user_id: withdrawSelected.requester_user_id,
+                  version: withdrawSelected.revision,
+                  mutation: true,
+                },
+                (draft, freshActor) =>
+                  withdrawSaleRequest(
+                    draft,
+                    freshActor,
+                    withdrawSelected.id,
+                    withdrawSelected.revision,
+                  ),
               );
               setWithdrawSelected(null);
               setMessage([

@@ -1,7 +1,7 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 async function proposeSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
@@ -88,9 +88,8 @@ test("Supervisor confirms a worker supplier from Approvals without product-price
     .getByRole("button", { name: "Confirm supplier", exact: true })
     .click();
   await expect(card).toHaveCount(0);
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const supplier = saved.suppliers.find(
     (record: { name: string }) => record.name === "Orchard Confirmation Supply",
@@ -137,9 +136,8 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
     .getByRole("button", { name: "Reject proposal", exact: true })
     .click();
   await expect(card).toHaveCount(0);
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const supplier = saved.suppliers.find(
     (record: { name: string }) => record.name === "Orchard Rejection Supply",

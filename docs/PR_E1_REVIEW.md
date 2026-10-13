@@ -1,14 +1,14 @@
-# Pull request E1 — review guide (source-first plan)
+# Pull request E1 — roles, locations and People
 
-E1 stacks on C8 and defines five configured roles, assigned locations, People/setup/sign-in and current actor enforcement. **Implementation, tests and screenshots are Planned in this source-first document.** No unrun result or owner approval is implied. E2 store price tasks and E3 phone installation/private hosting are separate authorised stages, built without an intermediate review pause.
+E1 stacks on C8 and defines five configured roles, assigned locations, People/setup/sign-in and current actor enforcement. The implementation is present. The full app suite passed 1,275/1,275 and required lint/build passed; full retained-browser verification and the original screenshots are still pending. [Exact results and source fingerprints](evidence/e1/verification.json) distinguish executed checks from pending work. Owner approval is not implied. E2 store price tasks and E3 phone installation/private hosting are separate authorised stages, built without an intermediate review pause.
 
 ## What changes
 
 Owner and Manager share former Supervisor company access, including future locations. Branch Supervisor receives an operational dashboard, own-location invoice/Supplier items/Orders purchase costs, pending read-only approvals, requests and a separate sale-cost delivery-hold instruction; no supplier balances, margins, price decisions, credit closing or pickup correction. Existing Floor Worker operational/template/calibration grants remain. Cashier stays Store-only Lookup/custom-note access. People supports invitation/setup, reasoned scope changes, deactivation/reactivation and registered-computer locations, with atomic last-active-Owner/self-change/session checks. Browser data remains separate on each device.
 
-## Run on Ubuntu (planned branch)
+## Run on Ubuntu
 
-No Docker is needed for the browser prototype. The final delivery guide will record the actual branch/PR and verified commands. Intended commands, using the existing repository and Node 22:
+No Docker is needed for the browser prototype. This branch is `feat/prototype-e1-location-roles`; its pull request is still being prepared. Once published, use the following commands in Terminal with the existing repository and Node 22.22.2 or newer in the 22 series:
 
 ```bash
 cd ~/Supermarket-Inventory
@@ -17,14 +17,14 @@ git switch feat/prototype-e1-location-roles
 git pull --ff-only
 cd prototype
 npm ci
-npm run dev -- --host 0.0.0.0 --port 5174
+npm run dev
 ```
 
-Expected when implemented: Vite shows Local `http://localhost:5174/`. Open it in the Ubuntu browser; leave the Terminal open. If this planned branch is not yet available, use the actual final E3 branch from the joint review guide. Installation failures and current test counts are added after validation, not assumed here.
+Vite should show `http://localhost:5174/`. Open that address in Firefox or Chrome inside Ubuntu and leave Terminal open. Press Ctrl+C in Terminal to stop it. If `node --version` does not start with `v22`, install the supported Node version before `npm ci`. If port 5174 is occupied, stop the earlier prototype with Ctrl+C and retry. The final joint guide will use the E3 branch so all four stages can be reviewed together.
 
-## Click paths to verify after implementation
+## Click-by-click review
 
-1. Sign in as **owner**, password **demo1234**. Open **Settings → People**. Check six configured people, role/location/status/last-sign-in, search and role/location filters. Sign in as **supervisor** and confirm the same Manager identity rather than a seventh fixture.
+1. Sign in as **owner**, password **demo1234**, then click **Use simulated passkey**. Open **Settings → People**. Check six configured people, role/location/status/last-sign-in, search and role/location filters. Sign in as **supervisor** and confirm the same Manager identity rather than a seventh fixture.
 2. In **Add person**, enter an English name, username and phone or email. Choose Cashier: Warehouse must be absent; choose one or more Stores. Switch role to Owner/Manager: assignments disappear and company scope is explicit. Save: setup code appears once. Close and reopen People: it must not be listed again.
 3. Sign out. Sign in with that new username/setup code. Choose a new password; business access waits. A new Branch Supervisor/Manager/Owner must also finish the explicitly simulated Passkey/Authenticator step. Reload mid-setup to check resume. Sign out and retry consumed code: it must fail; use the chosen password instead.
 4. As owner/manager edit another person's locations/role with a reason. Check old → new in protected History after commit, without raw authority/setup/session data. Try changing your own role/deactivating yourself and removing/resetting the last usable Active Owner: each fails without partial mutation. Promote a Floor Worker to Owner: they stay Invited until required second-step setup completes, old sessions are revoked, and they cannot yet justify removing the last usable Owner.
@@ -38,8 +38,8 @@ Expected when implemented: Vite shows Local `http://localhost:5174/`. Open it in
 
 ## Verification and screenshots
 
-Planned: full existing pricing/unit/browser checks plus the E1 permission/People/session/migration matrix. People list/Add/Edit, Branch Supervisor picker/dashboard: English light, English dark, Persian and phone. Publish exact source fingerprint, actual counts/failures/skips and individually reviewed original screenshots only after execution. E2 tasks and E3 installed phone evidence remain Planned; no real external account/resource is created.
+Executed: full app/pricing **1,275 passed, zero failed/skipped**, required **lint exit 0**, and full TypeScript/Vite **build exit 0**, all with unchanged source guards. The previous full app run failed seven cases; those failures and the corrected full run are retained in [the evidence](evidence/e1/verification.json). Native authority verification passed 24 desktop/phone cases; its durable summary follows the final browser result. The genuine authority SDK passed **75/75**, native authority **24/24**, and native shell **14/14**, each with zero failures/skips and zero local browser retries. They have separate exact source fingerprints. The full retained browser suite and 20 original People/Add/Edit/picker/dashboard screenshots remain pending. Older tests must inspect actual canonical IndexedDB evidence instead of the retired live localStorage record; migration tests still retain their historical source bytes. E2 tasks and E3 installed-phone evidence are separate stages. No external account or resource has been created.
 
 ## What is outside E1
 
-No production backend/authentication, real text/email invitations, real passkey/authenticator verification or remote synchronized records. Browser storage demonstrates role flows, not tamper-proof server security. No physical phone installation result is claimed here. Owner review is joint after all four stacked PRs; no local testing is required from the owner while development continues.
+No production backend/authentication, real text/email invitations, real passkey/authenticator verification or remote synchronized records. Browser storage demonstrates role flows, not tamper-proof server security. Damaged legacy History recovery is being repaired so real sign-in and explicit verified-backup Reset remain available; this outstanding case is not covered by the green normal-flow checks. No physical phone installation result is claimed here. Owner review is joint after all four stacked PRs; no local testing is required from the owner while development continues.

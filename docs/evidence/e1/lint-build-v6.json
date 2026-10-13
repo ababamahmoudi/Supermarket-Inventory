@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "command": ["npm", "run", "lint"],
+      "actual_exit": 0,
+      "seconds": 171.87
+    },
+    {
+      "command": ["npm", "run", "build"],
+      "actual_exit": 0,
+      "seconds": 69.29
+    }
+  ],
+  "inputs": 545,
+  "source_fingerprint": "5b162bb67d9dca1d3583ce6a5d28c6428ff66579276c7706ee1c9a589ec0441b",
+  "unchanged": true,
+  "changed": [],
+  "production_assets": 55,
+  "checked_at": "2026-10-13T23:27:49.875083+00:00"
+}

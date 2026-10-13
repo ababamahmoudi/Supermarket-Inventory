@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./notes-dates-fixture.e1";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation, AuthorityError } from "./authority";
+import type { AuthenticatedActor } from "./authority-types";
 import {
   addTrackedDate,
   DateTrackingError,
@@ -23,18 +26,36 @@ import type { DemoState } from "./types";
 
 function context(
   state: DemoState,
-  overrides: Partial<HistoryContext> = {},
+  overrides: Partial<AuthenticatedActor> = {},
 ): HistoryContext {
-  return {
-    company_id: state.config.company.seed_key,
-    branch: "all",
-    allowed_branches: configuredBranches(state.config, true),
-    role: "supervisor",
-    actor: "Demo Supervisor",
-    username: "supervisor",
-    ...overrides,
-  };
+  const role = overrides.role ?? "manager";
+  const locations =
+    overrides.allowed_branches ?? configuredBranches(state.config, true);
+  const branch = overrides.branch ?? "all";
+  return authenticatedTestActor(state, role, {
+    user_id: `test-${role}-${locations.join("-")}-${overrides.username ?? "default"}`,
+    username: overrides.username ?? "supervisor",
+    name_en: overrides.actor ?? "Demo Supervisor",
+    locations,
+    selection:
+      branch === "all"
+        ? {
+            kind:
+              role === "owner" || role === "manager"
+                ? "all_locations"
+                : "all_my_locations",
+          }
+        : { kind: "location", location_id: branch },
+  });
 }
+function foreignContext(state: DemoState) {
+  const foreign = structuredClone(state);
+  foreign.config.company.seed_key = "other-company";
+  return authenticatedTestActor(foreign, "manager", {
+    selection: { kind: "all_locations" },
+  });
+}
+
 function input(
   state: DemoState,
   overrides: Partial<AddTrackedDateInput> = {},
@@ -132,7 +153,11 @@ describe("manual date evidence and preference", () => {
   );
   it("requires an active own-company product and configured allowed location", () => {
     const state = initialState();
-    const actor = context(state, { allowed_branches: ["Branch 1"] });
+    const actor = context(state, {
+      role: "branch_supervisor",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+    });
     const foreign = {
       ...state.products[0],
       code: "foreign",
@@ -140,14 +165,14 @@ describe("manual date evidence and preference", () => {
     };
     state.products.push(foreign);
     const before = structuredClone(state);
-    for (const values of [
-      { product_code: "foreign" },
-      { branch: "Branch 2" },
-      { branch: "all" },
-      { branch: "unknown" },
-    ]) {
+    for (const [values, expected] of [
+      [{ product_code: "foreign" }, new DateTrackingError("product")],
+      [{ branch: "Branch 2" }, new AuthorityError("location")],
+      [{ branch: "all" }, new AuthorityError("location")],
+      [{ branch: "unknown" }, new AuthorityError("location")],
+    ] as const) {
       expect(() => addTrackedDate(state, actor, input(state, values))).toThrow(
-        DateTrackingError,
+        expected,
       );
       expect(state).toEqual(before);
     }
@@ -168,11 +193,15 @@ describe("manual date evidence and preference", () => {
     const entry = addTrackedDate(state, worker, input(state));
     expect(() =>
       addTrackedDate(state, worker, input(state, { branch: "Branch 2" })),
-    ).toThrow(new DateTrackingError("location"));
+    ).toThrow(new AuthorityError("location"));
     expect(() =>
       stopProductDateTracking(state, worker, entry.product_code, true),
-    ).toThrow(new DateTrackingError("permission"));
-    const cashier = { ...worker, role: "cashier" as const };
+    ).toThrow(new AuthorityError("capability"));
+    const cashier = context(state, {
+      role: "cashier",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+    });
     expect(() => addTrackedDate(state, cashier, input(state))).toThrow(
       new DateTrackingError("permission"),
     );
@@ -223,7 +252,7 @@ describe("inline tracking preference and atomic auto-enable", () => {
         true,
         "Branch 1",
       ),
-    ).toThrow(new DateTrackingError("permission"));
+    ).toThrow(new AuthorityError("capability"));
     expect(state).toEqual(before);
     const entry = addTrackedDate(state, worker, input(state));
     const action = attachReversals(before, state, worker)[0];
@@ -248,23 +277,34 @@ describe("inline tracking preference and atomic auto-enable", () => {
       company_id: "other-company",
     });
     const before = structuredClone(state);
-    for (const [actor, code, location] of [
+    for (const [actor, code, location, expected] of [
       [
-        { ...worker, role: "cashier" as const },
+        context(state, {
+          role: "cashier",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
         state.products[0].code,
         "Branch 1",
+        new DateTrackingError("permission"),
       ],
       [
-        { ...worker, company_id: "other-company" },
+        foreignContext(state),
         state.products[0].code,
         "Branch 1",
+        new AuthorityError("company"),
       ],
-      [worker, state.products[0].code, "Branch 2"],
-      [worker, "foreign", "Branch 1"],
+      [
+        worker,
+        state.products[0].code,
+        "Branch 2",
+        new AuthorityError("capability"),
+      ],
+      [worker, "foreign", "Branch 1", new AuthorityError("capability")],
     ] as const) {
       expect(() =>
         setProductDateTracking(state, actor, code, true, location),
-      ).toThrow(DateTrackingError);
+      ).toThrow(expected);
       expect(state).toEqual(before);
     }
     state.products[0].status = "archived";
@@ -377,7 +417,7 @@ describe("inline tracking preference and atomic auto-enable", () => {
     expect(() =>
       reverseActivity(
         state,
-        { ...worker, branch: "Branch 2" },
+        actorAtLocation(state, worker, "Branch 2"),
         action.id,
         "undo",
       ),
@@ -410,24 +450,22 @@ describe("scoped next date and removal history", () => {
     expect(nextTrackedDate(state, actor, north.product_code)?.id).toBe(
       other.id,
     );
-    const northOnly = { ...actor, branch: "Branch 1" };
+    const northOnly = actorAtLocation(state, actor, "Branch 1");
     expect(nextTrackedDate(state, northOnly, north.product_code)?.id).toBe(
       north.id,
     );
     expect(
       nextTrackedDate(
         state,
-        { ...actor, allowed_branches: ["Branch 1"] },
+        context(state, {
+          role: "branch_supervisor",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
         north.product_code,
       )?.id,
     ).toBe(north.id);
-    expect(
-      scopedTrackedDates(
-        state,
-        { ...actor, company_id: "other-company" },
-        true,
-      ),
-    ).toEqual([]);
+    expect(scopedTrackedDates(state, foreignContext(state), true)).toEqual([]);
     removeTrackedDate(state, actor, other.id, "sold_out");
     expect(nextTrackedDate(state, actor, north.product_code)?.id).toBe(
       north.id,
@@ -472,33 +510,32 @@ describe("scoped next date and removal history", () => {
     expect(
       nextTrackedDate(
         state,
-        { ...actor, branch: "Branch 1" },
+        actorAtLocation(state, actor, "Branch 1"),
         state.products[0].code,
       ),
     ).toBeUndefined();
     expect(
       nextTrackedDate(
         state,
-        { ...actor, branch: "Branch 2" },
+        actorAtLocation(state, actor, "Branch 2"),
         state.products[0].code,
       )?.branch,
     ).toBe("Branch 2");
     expect(() =>
       removeTrackedDate(
         state,
-        { ...actor, branch: "Branch 1" },
+        actorAtLocation(state, actor, "Branch 1"),
         "from-invoice",
         "sold_out",
       ),
     ).toThrow(new DateTrackingError("scope"));
-    const worker = {
-      ...actor,
-      role: "floor_worker" as const,
+    const worker = context(state, {
+      role: "floor_worker",
       branch: "Branch 2",
       allowed_branches: ["Branch 2"],
       actor: "Richmond worker",
       username: "richmond-worker",
-    };
+    });
     const before = structuredClone(state);
     removeTrackedDate(state, worker, "from-invoice", "sold_out");
     const action = attachReversals(before, state, worker)[0];
@@ -561,7 +598,11 @@ describe("scoped next date and removal history", () => {
     expect(() =>
       removeTrackedDate(
         state,
-        { ...actor, allowed_branches: ["Branch 1"] },
+        context(state, {
+          role: "branch_supervisor",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
         entry.id,
         "sold_out",
       ),
@@ -599,7 +640,7 @@ describe("conflict-aware date Undo and stopping preference", () => {
       reversed_activity_id: removeAction.id,
     });
   });
-  it("Stop keeps dates unless explicitly selected, and removes only allowed dates when selected", () => {
+  it("Stop keeps dates unless explicitly selected, and allows only Owner/Manager to clear retained company dates", () => {
     const state = initialState();
     state.expiry = [];
     const actor = context(state);
@@ -615,16 +656,24 @@ describe("conflict-aware date Undo and stopping preference", () => {
     expect(state.expiry.every((entry) => entry.status === "active")).toBe(true);
     state.products[0].date_tracking = true;
     const before = structuredClone(state);
-    const scoped = { ...actor, allowed_branches: ["Branch 1"] };
-    stopProductDateTracking(state, scoped, north.product_code, true);
+    const scopedWorker = context(state, {
+      role: "branch_supervisor",
+      branch: "Branch 1",
+      allowed_branches: ["Branch 1"],
+    });
+    expect(() =>
+      stopProductDateTracking(state, scopedWorker, north.product_code, true),
+    ).toThrow();
+    expect(state).toEqual(before);
+    stopProductDateTracking(state, actor, north.product_code, true);
     expect(state.expiry.find((entry) => entry.id === north.id)).toMatchObject({
       status: "removed",
       removal_action: "stop_tracking",
     });
     expect(state.expiry.find((entry) => entry.id === other.id)?.status).toBe(
-      "active",
+      "removed",
     );
-    const action = attachReversals(before, state, scoped)[0];
+    const action = attachReversals(before, state, actor)[0];
     reverseActivity(state, actor, action.id, "undo");
     expect(state.products[0].date_tracking).toBe(true);
     expect(state.expiry).toEqual(before.expiry);

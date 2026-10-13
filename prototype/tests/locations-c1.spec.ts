@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, signIn, visitPage } from "./helpers";
 
@@ -43,10 +44,11 @@ test("Warehouse is a configured location and retains its type through a Supervis
   await expect(location).toHaveText("Receiving Warehouse");
   await page.reload();
   await expect(location).toHaveText("Receiving Warehouse");
-  const saved = await page.evaluate(() =>
-    JSON.parse(
-      localStorage.getItem("supermarket-prototype-v1")!,
-    ).config.branches.find((branch: { code: string }) => branch.code === "W1"),
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).config.branches.find(
+        (branch: { code: string }) => branch.code === "W1",
+      ),
   );
   expect(saved).toMatchObject({
     id: "Warehouse",

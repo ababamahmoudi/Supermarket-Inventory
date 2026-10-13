@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { invoiceImage, setLanguage, signIn, uploadInvoice } from "./helpers";
@@ -20,14 +21,14 @@ async function reviewWithComparison(page: Page) {
     .digest("hex");
   await expect
     .poll(() =>
-      page.evaluate((key) => {
-        const state: DemoState = JSON.parse(localStorage.getItem(key)!);
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const state: DemoState = JSON.parse(JSON.stringify(canonicalState)!);
         return {
           fileName: state.invoice.file_name,
           originalHash: state.invoice.file_data?.split(":").at(-1),
           status: state.invoice.status,
         };
-      }, storage),
+      }),
     )
     .toEqual({
       fileName: invoiceImage.name,

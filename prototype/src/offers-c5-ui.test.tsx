@@ -1,24 +1,33 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, expect, it } from "vitest";
-import { SESSION_KEY } from "./auth";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import i18n from "./i18n";
 import { Offers } from "./screens/Offers";
-import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
+import { DemoProvider, useDemo } from "./store";
+import { initialState } from "./e1-bootstrap";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "./test/rendered-ui-readiness";
 
+let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
+afterEach(() => {
+  clearRenderedUiReadiness();
+  cleanup();
+  fixture?.dispose();
+  vi.unstubAllGlobals();
+});
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   void i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "Branch 1",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
 });
 
 function Harness() {
@@ -32,7 +41,7 @@ function Harness() {
   );
 }
 
-it("retranslates retained offer feedback after switching language without changing business records", () => {
+it("retranslates retained offer feedback after switching language without changing business records", async () => {
   const state = initialState();
   const existing = state.offers.find(
     (offer) => offer.product_code === "0003" && offer.status === "active",
@@ -40,12 +49,17 @@ it("retranslates retained offer feedback after switching language without changi
   state.offers = [
     { ...existing, id: "offer:language", branch: "all", scope: "all" },
   ];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: { selection: { kind: "location", location_id: "Branch 1" } },
+  });
   render(
-    <DemoProvider>
+    <DemoProvider options={fixture.options}>
       <Harness />
     </DemoProvider>,
   );
+  await screen.findByRole("button", { name: "Create offer" });
   const offerRow = document.querySelector('tr[data-product-code="0003"]')!;
   fireEvent.click(
     within(offerRow as HTMLElement).getByRole("button", { name: "More" }),
@@ -57,16 +71,23 @@ it("retranslates retained offer feedback after switching language without changi
       { name: "Stop offer" },
     ),
   );
-  expect(screen.getByRole("status")).toHaveTextContent("Stopped offer.");
-  const stopped = localStorage.getItem(STORAGE_KEY);
+  await renderedUiReady(
+    () =>
+      screen.queryByRole("status")?.textContent?.includes("Stopped offer.") ===
+      true,
+  );
+  await waitFor(() =>
+    expect(screen.getByRole("status")).toHaveTextContent("Stopped offer."),
+  );
+  const stopped = JSON.stringify(await fixture.readCanonical());
   expect(JSON.parse(stopped!).offers[0].status).toBe("stopped");
 
   fireEvent.click(screen.getByRole("button", { name: "Use Persian" }));
   expect(screen.getByRole("status")).toHaveTextContent("پیشنهاد متوقف شد.");
   expect(screen.getByRole("status")).not.toHaveTextContent("Stopped offer.");
-  expect(localStorage.getItem(STORAGE_KEY)).toBe(stopped);
+  expect(JSON.stringify(await fixture.readCanonical())).toBe(stopped);
 
   fireEvent.click(screen.getByRole("button", { name: "Use English" }));
   expect(screen.getByRole("status")).toHaveTextContent("Stopped offer.");
-  expect(localStorage.getItem(STORAGE_KEY)).toBe(stopped);
+  expect(JSON.stringify(await fixture.readCanonical())).toBe(stopped);
 });

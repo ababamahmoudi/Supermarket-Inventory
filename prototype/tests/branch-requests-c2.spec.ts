@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
   chooseOption,
@@ -15,10 +16,12 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#requests");
-  const baseline = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    return { stock: state.stock, ledger: state.ledger };
-  });
+  const baseline = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      return { stock: state.stock, ledger: state.ledger };
+    },
+  );
   await page.getByRole("button", { name: "New request", exact: true }).click();
   await chooseOption(
     page,
@@ -163,8 +166,8 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await expect(page.locator(".request-checklist-heading > strong")).toHaveText(
     "1.5 Cases",
   );
-  const final = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const final = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(final.stock).toEqual(baseline.stock);
   expect(final.ledger).toEqual(baseline.ledger);

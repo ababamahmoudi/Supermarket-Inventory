@@ -1,6 +1,6 @@
 # C8 / E1 / E2 / E3 acceptance ledger
 
-This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1/E2/E3 remain Planned in this branch.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
+This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1 implementation is present and its full app/lint/build passed; retained browser proof and original screenshots are pending. E2/E3 remain Planned.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
 
 Build four stacked PRs in order, without an intermediate review pause: **C8 → E1 → E2 → E3**. The owner reviews all together; deadline October 30. Update the source docs before each stage. Change only prototype/, docs/ and seed/. No new hosted service, real AI, inventory, remote accounts/resources or deployment is authorized. Browser user switching simulates people; each device has separate demo data.
 
@@ -388,24 +388,24 @@ Every row below requires **English light, English dark, Persian, 900 px and phon
 
 C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing skips are from `8d9e7f9`. All 75 current-source captures and reviews are from `0303445`; its fresh build passed and its separate CI run passed all required steps with 700 browser passes/42 existing skips and zero failed/flaky outcomes. Linked invalid-save boxes above a scrolled dialog, sticky behavior, hidden columns and print behavior require their executed browser checks, not the static images alone. E1 privacy/roles, E2 tasks and E3 phone installation are not claimed by C8.
 
-## E1 — Current source contract; implementation and proof Planned
+## E1 — Implemented; final browser and visual verification pending
 
-The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses and all E1 statuses as Planned until actual evidence; it does not reinstate the older three-role model.
+The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses. Implementation is present and full app/lint/build passed; final retained-browser and visual results remain pending. See [E1 exact-source evidence](evidence/e1/verification.json). It does not reinstate the older three-role model.
 
-### E1-R01 — Planned
+### E1-R01 — Implemented; verification in progress
 
-- [ ] Five roles (their labels come from config, not code):
+- [x] Five roles (their labels come from config, not code):
 
 - Owner and Manager: exactly the same access, company-wide, at every location, including locations added later. Together they replace today's Supervisor.
   - Branch Supervisor: runs one or more locations.
   - Floor Worker: one or more locations.
   - Cashier: one or more stores, never the Warehouse. Each person has one role and, except for Owner and Manager, one or more locations. For example: a cashier at North York and Richmond Hill, or a Branch Supervisor at all three stores. Record "different roles at different locations" in open-questions as a later option.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
-### E1-R02 — Planned
+### E1-R02 — Implemented; verification in progress
 
-- [ ] Permissions. Put this table in requirements.md. Enforce it in one place (the permission layer) instead of the many "supervisor" checks in the code today, and test it.
+- [x] Permissions. Put this table in requirements.md. Enforce it in one place (the permission layer) instead of the many "supervisor" checks in the code today, and test it.
 
 - Owner and Manager: everything today's Supervisor can do. That includes approving prices, new products and sale requests, starting, changing and ending sales and new regular prices (C8), Payables and supplier money, confirming suppliers, correcting a signed pickup, closing returns with a credit, Settings, People and devices, and every location's price updates and History.
   - Branch Supervisor, at their own locations only:
@@ -417,21 +417,21 @@ Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exac
     - Owner and Manager get today's Supervisor dashboard.
     - A Branch Supervisor gets a location dashboard without supplier money: arrivals, price updates to apply, sales running at their stores, expiring dates, open returns, branch requests, and notes for them. Add tests for every role at an allowed location and at a location they don't have.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
-### E1-R03 — Planned
+### E1-R03 — Implemented; verification in progress
 
-- [ ] Location picker:
+- [x] Location picker:
 
 - It shows only the person's own locations, plus "All my locations" for people with more than one.
   - Owner and Manager also get "All locations".
   - A registered store computer defaults to its own location.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
-### E1-R04 — Planned
+### E1-R04 — Implemented; verification in progress
 
-- [ ] Settings → People (Owner and Manager only).
+- [x] Settings → People (Owner and Manager only).
 
 - List: name, role, locations, status (Active, Invited, Deactivated) and last sign-in, with search and filters by role and location.
   - Add person:
@@ -446,11 +446,11 @@ Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exac
     - Only an Owner or Manager can make someone an Owner or Manager.
   - Registered store computers: keep the current list, and show which location each computer belongs to.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
-### E1-R05 — Planned
+### E1-R05 — Implemented; verification in progress
 
-- [ ] Demo users. Replace the three demo accounts with these, all with password demo1234 and fictional names:
+- [x] Demo users. Replace the three demo accounts with these, all with password demo1234 and fictional names:
 
 - owner (Owner)
   - manager (Manager)
@@ -459,20 +459,20 @@ Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exac
   - wh-floor (Floor Worker at the Warehouse)
   - cashier (Cashier at North York and Richmond Hill) The Demo menu can switch to any of them, and Reset demo restores them. The old username "supervisor" keeps working and signs in as the Manager.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1 required proof
 
-| ID     | Required proof                                                                                                                                                                                 | Status  |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| E1-P01 | Central permission table: every role at allowed and unassigned locations and across companies, including field privacy, Owner/Manager future locations and no Cashier Warehouse.               | Planned |
-| E1-P02 | People no own-role change/self-deactivation, at least one active Owner, promotion authorization, reasoned edits, deactivation invalidates all browser sessions, reactivation retains evidence. | Planned |
-| E1-P03 | Invitation code shown once, forced password/privileged simulated second factor, aliases and six demo/reset users without production-auth/delivery claims.                                      | Planned |
-| E1-V01 | People list with roles/locations/status/filters/last sign-in.                                                                                                                                  | Planned |
-| E1-V02 | Add person with locations and correct role-specific availability.                                                                                                                              | Planned |
-| E1-V03 | Edit person with reason/history.                                                                                                                                                               | Planned |
-| E1-V04 | Branch Supervisor assigned-location picker.                                                                                                                                                    | Planned |
-| E1-V05 | Branch Supervisor location dashboard without supplier money.                                                                                                                                   | Planned |
+| ID     | Required proof                                                                                                                                                                                 | Status                                         |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| E1-P01 | Central permission table: every role at allowed and unassigned locations and across companies, including field privacy, Owner/Manager future locations and no Cashier Warehouse.               | Unit/SDK proof executed; final browser pending |
+| E1-P02 | People no own-role change/self-deactivation, at least one active Owner, promotion authorization, reasoned edits, deactivation invalidates all browser sessions, reactivation retains evidence. | Unit/SDK proof executed; final browser pending |
+| E1-P03 | Invitation code shown once, forced password/privileged simulated second factor, aliases and six demo/reset users without production-auth/delivery claims.                                      | Unit/SDK proof executed; final browser pending |
+| E1-V01 | People list with roles/locations/status/filters/last sign-in.                                                                                                                                  | Planned                                        |
+| E1-V02 | Add person with locations and correct role-specific availability.                                                                                                                              | Planned                                        |
+| E1-V03 | Edit person with reason/history.                                                                                                                                                               | Planned                                        |
+| E1-V04 | Branch Supervisor assigned-location picker.                                                                                                                                                    | Planned                                        |
+| E1-V05 | Branch Supervisor location dashboard without supplier money.                                                                                                                                   | Planned                                        |
 
 ## E2 — Literal planned store-task and notification checklist
 

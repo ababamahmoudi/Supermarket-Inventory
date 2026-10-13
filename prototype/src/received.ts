@@ -1,4 +1,15 @@
 import Decimal from "decimal.js";
+import type { AuthenticatedActor } from "./authority-types";
+import { requireCapability } from "./permissions";
+import {
+  invoiceAuthorityScope,
+  requireInvoiceAuthority,
+} from "./invoice-authority";
+import {
+  requirePurchase,
+  purchaseLocationAllowed,
+  purchaseLocationScope,
+} from "./purchase-authority";
 import { effectiveInvoiceVersion } from "./invoice-version";
 import { weightQuantityFromLb } from "./weighed";
 import { clearInvoiceOrder } from "./invoice-orders";
@@ -6,18 +17,13 @@ import { companyDate } from "./invoice";
 import { branchId, configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import { createId } from "./ids";
-import type {
-  OperationalLedger,
-  OperationalReturn,
-  OperationsContext,
-} from "./operations";
+import type { OperationalLedger, OperationalReturn } from "./operations";
 import type {
   Approval,
   Branch,
   DemoInvoice,
   DemoState,
   ExpiryRecord,
-  Role,
 } from "./types";
 
 export interface InvoiceLocationCorrection {
@@ -73,10 +79,29 @@ export interface ReceivedFilters {
   search?: string;
 }
 
+/** Pure location projection consumes only already-permitted identity metadata. */
+export type InvoiceLocationIdentity = Pick<
+  DemoInvoice,
+  | "id"
+  | "company_id"
+  | "branch"
+  | "status"
+  | "posted_at"
+  | "supplier_invoice_number"
+>;
+export interface InvoiceLocationReadState {
+  readonly invoice: InvoiceLocationIdentity | null;
+  readonly invoices?: readonly InvoiceLocationIdentity[];
+  readonly invoice_location_corrections?: readonly Pick<
+    InvoiceLocationCorrection,
+    "company_id" | "invoice_id" | "from_branch" | "to_branch"
+  >[];
+}
+
 /** Resolve an append-only chain without changing the posted document. */
 export function effectiveInvoiceLocation(
-  state: DemoState,
-  invoice: DemoInvoice,
+  state: InvoiceLocationReadState,
+  invoice: InvoiceLocationIdentity,
 ): Branch {
   if (invoice.status !== "posted") return invoice.branch;
   const original =
@@ -86,7 +111,7 @@ export function effectiveInvoiceLocation(
         record.id === invoice.id &&
         record.status === "posted",
     ) ??
-    (state.invoice.id === invoice.id &&
+    (state.invoice?.id === invoice.id &&
     state.invoice.company_id === invoice.company_id &&
     state.invoice.status === "posted"
       ? state.invoice
@@ -105,11 +130,22 @@ export function effectiveInvoiceLocation(
 
 /** A merged proposal follows its latest cost-basis source, not older evidence. */
 export function effectiveApprovalLocation(
-  state: DemoState,
-  approval: Approval,
+  state: InvoiceLocationReadState,
+  approval: Pick<
+    Approval,
+    | "status"
+    | "branch"
+    | "company_id"
+    | "source_invoice_id"
+    | "invoice_ids"
+    | "invoice_number"
+  >,
 ): Branch {
   if (approval.status !== "pending") return approval.branch;
-  const sources = [...(state.invoices ?? []), state.invoice].filter(
+  const sources = [
+    ...(state.invoices ?? []),
+    ...(state.invoice ? [state.invoice] : []),
+  ].filter(
     (invoice) =>
       invoice.company_id === approval.company_id &&
       invoice.status === "posted" &&
@@ -127,10 +163,10 @@ export function effectiveApprovalLocation(
   return source ? effectiveInvoiceLocation(state, source) : approval.branch;
 }
 
-export function projectInvoiceLocation(
-  state: DemoState,
-  invoice: DemoInvoice,
-): DemoInvoice {
+export function projectInvoiceLocation<I extends InvoiceLocationIdentity>(
+  state: InvoiceLocationReadState,
+  invoice: I,
+): I {
   const branch = effectiveInvoiceLocation(state, invoice);
   return branch === invoice.branch ? invoice : { ...invoice, branch };
 }
@@ -176,15 +212,10 @@ function dateInCompany(state: DemoState, value?: string): string {
 /** Actual receipts only: an order or an unposted invoice is never a delivery. */
 export function receivedLog(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   filters: ReceivedFilters = {},
 ): DeliveryReceipt[] {
-  if (
-    context.company_id !== state.config.company.seed_key ||
-    context.role === "cashier" ||
-    (context.role !== "supervisor" && context.branch === "all")
-  )
-    return [];
+  context = requirePurchase(state, context, "received.read");
   const receipts: DeliveryReceipt[] = [];
   const add = (
     invoice: DemoInvoice,
@@ -245,7 +276,16 @@ export function receivedLog(
     });
   };
   for (const original of postedInvoices(state)) {
-    if (original.company_id !== context.company_id) continue;
+    if (
+      !purchaseLocationAllowed(
+        state,
+        context,
+        "received.read",
+        original.company_id,
+        effectiveInvoiceLocation(state, original),
+      )
+    )
+      continue;
     const invoice = effectiveInvoiceVersion(state, original);
     invoice.lines.forEach((line, index) => {
       add(
@@ -287,7 +327,13 @@ export function receivedLog(
   // Replacement receipts are deliveries with return evidence, never fake invoices.
   for (const movement of state.stock_movements ?? []) {
     if (
-      movement.company_id !== context.company_id ||
+      !purchaseLocationAllowed(
+        state,
+        context,
+        "received.read",
+        movement.company_id,
+        movement.branch,
+      ) ||
       !["replacement", "replacement_received"].includes(movement.type) ||
       !Number.isSafeInteger(movement.qty) ||
       movement.qty <= 0
@@ -335,7 +381,15 @@ export function receivedLog(
   const registry = supplierRecords(state);
   return receipts
     .filter((receipt) => {
-      if (context.branch !== "all" && receipt.branch !== context.branch)
+      if (
+        !purchaseLocationAllowed(
+          state,
+          context,
+          "received.read",
+          receipt.company_id,
+          receipt.branch,
+        )
+      )
         return false;
       if (
         filters.location &&
@@ -400,7 +454,7 @@ export function receivedLog(
 
 export function lastReceivedByLocation(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   product: string,
 ): DeliveryReceipt[] {
   const latest = new Map<Branch, DeliveryReceipt>();
@@ -435,21 +489,27 @@ export function suggestedInvoiceLocation(
 
 export function setInvoiceLocation(
   state: DemoState,
-  role: Role,
-  origin: Branch,
+  actor: AuthenticatedActor,
   destination: Branch,
 ): void {
   const invoice = state.invoice;
-  if (
-    role === "cashier" ||
-    invoice.company_id !== state.config.company.seed_key ||
-    invoice.status === "posted" ||
-    (role !== "supervisor" &&
-      (invoice.handling_branch ?? invoice.branch) !== origin) ||
-    !configuredBranches(state.config).includes(destination)
-  )
+  const current = requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.assign_receiving_location",
+    invoice.id,
+    true,
+  );
+  if (invoice.status === "posted")
     throw new Error("Choose an allowed receiving location for your draft.");
+  const scope = invoiceAuthorityScope(state, invoice.id, true);
+  delete scope.invoice_reviewer_origin_location_id;
+  requireCapability(state, current, "invoices.assign_receiving_location", {
+    ...scope,
+    location_ids: [destination],
+  });
   invoice.handling_branch ??= invoice.branch;
+  invoice.reviewer_origin_location_id ??= invoice.handling_branch;
   if (invoice.branch === destination) return;
   clearInvoiceOrder(invoice);
   invoice.branch = destination;
@@ -474,7 +534,7 @@ export interface InvoiceMovePreview {
 
 export function invoiceLocationMovePreview(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   invoiceId: string,
   destination: Branch,
 ): InvoiceMovePreview {
@@ -482,16 +542,20 @@ export function invoiceLocationMovePreview(
     (record) =>
       record.id === invoiceId && record.company_id === context.company_id,
   );
-  if (
-    context.role !== "supervisor" ||
-    context.company_id !== state.config.company.seed_key ||
-    !invoice ||
-    !configuredBranches(state.config).includes(destination)
-  )
-    throw new Error(
-      "Only the Supervisor can move a posted invoice to an active location.",
-    );
+  if (!invoice) throw new Error("The posted invoice was not found.");
+  context = requirePurchase(state, context, "invoices.relocate", {
+    ...invoiceAuthorityScope(state, invoice.id, true, true),
+    location_policy: "retained_correction",
+  });
+  requireCapability(
+    state,
+    context,
+    "invoices.relocate",
+    purchaseLocationScope(invoice.company_id, destination, true),
+  );
   const from = effectiveInvoiceLocation(state, invoice);
+  if (context.branch !== "all" && context.branch !== from)
+    throw new Error("Choose the invoice's current receiving location.");
   if (from === destination) throw new Error("Choose a different location.");
   const currency = state.ledger.find(
     (row) =>
@@ -530,7 +594,7 @@ export function invoiceLocationMovePreview(
     } else if (row.invoice_id === invoiceId)
       outstanding = outstanding.plus(row.amount);
   }
-  const receipts = receivedLog(state, { ...context, branch: "all" }).filter(
+  const receipts = receivedLog(state, context, { location: from }).filter(
     (receipt) => receipt.invoice_id === invoiceId,
   );
   const approval_ids = state.approvals
@@ -571,7 +635,7 @@ export function invoiceLocationMovePreview(
 /** Append financial/physical corrections; the invoice, payments and approvals stay intact. */
 export function movePostedInvoice(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   invoiceId: string,
   destination: Branch,
   reason: string,
@@ -664,6 +728,9 @@ export function movePostedInvoice(
     branch: destination,
     action: "Move invoice",
     by: context.actor,
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role_snapshot: context.role,
     at,
     device: "Prototype browser",
     reversible: false,

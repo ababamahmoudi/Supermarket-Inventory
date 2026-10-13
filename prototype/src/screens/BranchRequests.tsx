@@ -1,4 +1,11 @@
 import { useState } from "react";
+import type { DemoState } from "../types";
+import {
+  branchRequestView,
+  permittedLocationIdsView,
+} from "../notes-dates-read";
+import type { AuthenticatedActor } from "../authority-types";
+import { actorAtLocation } from "../authority";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft, ChevronRight } from "lucide-react";
 import { useDemo } from "../store";
@@ -28,7 +35,6 @@ import {
   cancelBranchRequest,
   closeBranchRequest,
   copyBranchRequestResidual,
-  listBranchRequests,
   markBranchRequestReceived,
   markBranchRequestSent,
   saveBranchRequestDraft,
@@ -36,7 +42,6 @@ import {
   pickingListSnapshot,
   requestQuantityUnits,
   type BranchRequest,
-  type BranchRequestContext,
   type BranchRequestItem,
   type BranchRequestItemInput,
   type BranchRequestStatus,
@@ -253,22 +258,26 @@ export function RequestPickingList({
 
 type DraftLine = BranchRequestItemInput & { key: string };
 export default function BranchRequests() {
-  const { state, update, branch, role, user, lang, t, navigate } = useDemo();
-  const active = configuredBranches(state.config),
-    allowed =
-      role === "supervisor"
-        ? configuredBranches(state.config, true)
-        : user
-          ? [user.branch]
-          : [];
-  const context: BranchRequestContext = {
-    company_id: state.config.company.seed_key,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-    username: user?.username,
+  const {
+    state,
+    command,
+    query: protectedQuery,
+    actor,
+    can,
     branch,
-    allowed_branches: allowed,
-  };
+    lang,
+    t,
+    navigate,
+  } = useDemo();
+  const active = configuredBranches(state.config);
+  const allowed = permittedLocationIdsView(
+    state,
+    actor,
+    can,
+    "branch_requests.read",
+    { includeInactive: true },
+  );
+  const context = actor;
   const [tab, setTab] = useListState("requests.tab", "outgoing"),
     [query, setQuery] = useListState("requests.search", ""),
     [statusFilter, setStatusFilter] = useListState("requests.status", "open"),
@@ -319,7 +328,7 @@ export default function BranchRequests() {
     );
   const fieldError = (field: BranchRequestError["code"]) =>
     errorField === field ? error : undefined;
-  const currentSessionKey = `${context.company_id}:${context.role}:${branch}:${context.username ?? ""}`;
+  const currentSessionKey = `${context?.company_id}:${context?.role}:${branch}:${context?.username ?? ""}`;
   const [sessionKey, setSessionKey] = useState(currentSessionKey);
   if (sessionKey !== currentSessionKey) {
     setSessionKey(currentSessionKey);
@@ -333,7 +342,7 @@ export default function BranchRequests() {
     setMessage("");
   }
   const { printDocument, printOutput } = useOperationalPrint();
-  const readable = listBranchRequests(state, context),
+  const readable = branchRequestView(state, context),
     request = readable.find((item) => item.id === selected);
   const [selectionKey, setSelectionKey] = useState("");
   const currentSelectionKey = `${request?.id ?? ""}:${request?.revision ?? ""}:${branch}`;
@@ -345,26 +354,24 @@ export default function BranchRequests() {
     setCancelOpen(false);
     setError("");
   }
-  const actionContext = {
-    ...context,
-    branch: branch === "all" ? actingLocation : branch,
-  };
+  const actionLocation = branch === "all" ? actingLocation : branch;
   const sourceAction = Boolean(
     request &&
-    actionContext.branch === request.from_branch &&
+    actionLocation === request.from_branch &&
     active.includes(request.from_branch) &&
     allowed.includes(request.from_branch),
   );
   const targetAction = Boolean(
     request &&
-    actionContext.branch === request.to_branch &&
+    actionLocation === request.to_branch &&
     active.includes(request.to_branch) &&
     allowed.includes(request.to_branch),
   );
-  const run = (
-    work: (draft: typeof state) => void,
+  const run = async (
+    work: (draft: DemoState, actor: AuthenticatedActor) => void,
     success: string,
     checklist?: "send" | "receive",
+    location = actionLocation,
   ) => {
     if (checklist && request) {
       const next: ValidationIssue[] = [];
@@ -422,11 +429,24 @@ export default function BranchRequests() {
       if (next.length) return;
     }
     try {
-      update(work);
+      await command(
+        checklist === "receive"
+          ? "branch_requests.receive"
+          : "branch_requests.send",
+        {
+          company_id: state.config.company.seed_key,
+          kind: "location_record",
+          location_ids: [location],
+          mutation: true,
+        },
+        (draft, freshActor) =>
+          work(draft, actorAtLocation(draft, freshActor, location)),
+      );
       setError("");
       setMessage(success);
       setErrorField(null);
       setMissing([]);
+      return true;
     } catch (failure) {
       setErrorField(
         failure instanceof BranchRequestError ? failure.code : null,
@@ -436,6 +456,7 @@ export default function BranchRequests() {
           ? t(...errorText[failure.code])
           : t("Could not save. Try again.", "ذخیره نشد. دوباره تلاش کنید."),
       );
+      return false;
     }
   };
   const openDraft = (value?: BranchRequest) => {
@@ -451,7 +472,7 @@ export default function BranchRequests() {
     setError("");
     setMessage("");
   };
-  const save = (send: boolean) => {
+  const save = async (send: boolean) => {
     const next: ValidationIssue[] = [];
     if (!active.includes(source) || !allowed.includes(source))
       next.push({
@@ -507,11 +528,11 @@ export default function BranchRequests() {
     setErrorField(null);
     if (next.length) return;
     let id = "";
-    run(
-      (draft) => {
+    const savedSuccessfully = await run(
+      (draft, freshActor) => {
         const saved = saveBranchRequestDraft(
           draft,
-          { ...context, branch: source },
+          actorAtLocation(draft, freshActor, source),
           {
             id: editing?.id,
             expected_revision: editing?.revision,
@@ -533,7 +554,7 @@ export default function BranchRequests() {
         if (send)
           sendBranchRequest(
             draft,
-            { ...context, branch: source },
+            actorAtLocation(draft, freshActor, source),
             saved.id,
             saved.revision,
           );
@@ -541,15 +562,17 @@ export default function BranchRequests() {
       send
         ? t("Request sent.", "درخواست ارسال شد.")
         : t("Draft saved.", "پیش‌نویس ذخیره شد."),
+      undefined,
+      source,
     );
-    if (id) {
+    if (savedSuccessfully && id) {
       setFormOpen(false);
       openRequest(id);
     }
   };
-  if (role === "cashier")
+  if (!can("branch_requests.read"))
     return <EmptyState>{t(...errorText.permission)}</EmptyState>;
-  const listed = listBranchRequests(state, context, {
+  const listed = branchRequestView(state, context, {
     tab: tab as "incoming" | "outgoing",
     query,
     status: statusFilter as BranchRequestStatus | "open" | "all",
@@ -687,7 +710,7 @@ export default function BranchRequests() {
               {searchProducts(
                 state.products.filter(
                   (product) =>
-                    product.company_id === context.company_id &&
+                    product.company_id === context?.company_id &&
                     product.status !== "archived",
                 ),
                 productSearch,
@@ -711,7 +734,7 @@ export default function BranchRequests() {
                             (state.supplier_items ?? [])
                               .filter(
                                 (item) =>
-                                  item.company_id === context.company_id &&
+                                  item.company_id === context?.company_id &&
                                   item.product_code === product.code &&
                                   !item.archived,
                               )
@@ -796,7 +819,7 @@ export default function BranchRequests() {
             {lines.map((line, index) => {
               const product = state.products.find(
                 (item) =>
-                  item.company_id === context.company_id &&
+                  item.company_id === context?.company_id &&
                   item.code === line.product_code,
               );
               const change = (patch: Partial<DraftLine>) => {
@@ -945,16 +968,32 @@ export default function BranchRequests() {
               </Badge>
               <Button
                 variant="tinted"
-                onClick={() => {
+                onClick={async () => {
                   try {
+                    const snapshot = await protectedQuery(
+                      "branch_requests.read",
+                      {
+                        company_id: request.company_id,
+                        kind: "request_endpoints",
+                        location_ids: request.requested_at
+                          ? [request.from_branch, request.to_branch]
+                          : [request.from_branch],
+                        entity_id: request.id,
+                        location_policy: "retained_read",
+                      },
+                      (freshState, freshActor) => ({
+                        request: pickingListSnapshot(
+                          freshState,
+                          freshActor,
+                          request.id,
+                        ),
+                        config: structuredClone(freshState.config),
+                      }),
+                    );
                     printDocument(
                       <RequestPickingList
-                        request={pickingListSnapshot(
-                          state,
-                          context,
-                          request.id,
-                        )}
-                        config={structuredClone(state.config)}
+                        request={snapshot.request}
+                        config={snapshot.config}
                         language={lang}
                       />,
                     );
@@ -1216,10 +1255,10 @@ export default function BranchRequests() {
                   <Button
                     onClick={() =>
                       run(
-                        (draft) => {
+                        (draft, freshActor) => {
                           sendBranchRequest(
                             draft,
-                            actionContext,
+                            freshActor,
                             request.id,
                             request.revision,
                           );
@@ -1239,10 +1278,10 @@ export default function BranchRequests() {
                 <Button
                   onClick={() =>
                     run(
-                      (draft) => {
+                      (draft, freshActor) => {
                         markBranchRequestSent(
                           draft,
-                          actionContext,
+                          freshActor,
                           request.id,
                           decisionRevision ?? -1,
                           request.items.flatMap((item) =>
@@ -1274,10 +1313,10 @@ export default function BranchRequests() {
                 <Button
                   onClick={() =>
                     run(
-                      (draft) => {
+                      (draft, freshActor) => {
                         markBranchRequestReceived(
                           draft,
-                          actionContext,
+                          freshActor,
                           request.id,
                           decisionRevision ?? -1,
                           request.items
@@ -1314,10 +1353,10 @@ export default function BranchRequests() {
                 <Button
                   onClick={() =>
                     run(
-                      (draft) => {
+                      (draft, freshActor) => {
                         closeBranchRequest(
                           draft,
-                          actionContext,
+                          freshActor,
                           request.id,
                           request.revision,
                         );
@@ -1333,14 +1372,14 @@ export default function BranchRequests() {
                 availableBranchRequestResidual(state, request).length > 0 && (
                   <Button
                     variant="neutral"
-                    onClick={() => {
+                    onClick={async () => {
                       let copied: BranchRequest | undefined;
-                      run(
-                        (draft) => {
+                      const saved = await run(
+                        (draft, freshActor) => {
                           copied = structuredClone(
                             copyBranchRequestResidual(
                               draft,
-                              actionContext,
+                              freshActor,
                               request.id,
                               request.revision,
                             ),
@@ -1351,7 +1390,7 @@ export default function BranchRequests() {
                           "موارد کسری یا نرسیده در پیش‌نویس جدید کپی شدند.",
                         ),
                       );
-                      if (copied) openRequest(copied.id);
+                      if (saved && copied) openRequest(copied.id);
                     }}
                   >
                     {t(
@@ -1386,16 +1425,14 @@ export default function BranchRequests() {
                   variant="destructive"
                   onClick={() =>
                     run(
-                      (draft) => {
+                      (draft, freshActor) => {
                         cancelBranchRequest(
                           draft,
-                          actionContext,
+                          freshActor,
                           request.id,
                           request.revision,
                           reason,
                         );
-                        setCancelOpen(false);
-                        setReason("");
                       },
                       t("Request cancelled.", "درخواست لغو شد."),
                     )

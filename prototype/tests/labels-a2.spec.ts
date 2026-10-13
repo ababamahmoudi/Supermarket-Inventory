@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 import { addSelectedLabels, selectLabelGroup } from "./label-selection";
@@ -19,10 +20,9 @@ for (const language of ["en", "fa"] as const) {
       });
       await signIn(page, "Floor Worker");
       await page.goto("/#labels");
-      const initialQueue = await page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-            .label_waitlist,
+      const initialQueue = await readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
       );
       expect(initialQueue).toHaveLength(1);
       expect(initialQueue[0]).toMatchObject({
@@ -110,15 +110,16 @@ for (const language of ["en", "fa"] as const) {
         .getByRole("button", { name: "No", exact: true })
         .click();
       expect(
-        await page.evaluate(
-          (ids) =>
-            JSON.parse(
-              localStorage.getItem("supermarket-prototype-v1")!,
-            ).label_waitlist.filter((item: { id: string }) =>
-              ids.includes(item.id),
-            ),
-          initialQueue.map((item: { id: string }) => item.id),
-        ),
+        await readCanonicalBusinessEvidence(page).then((canonicalState) => {
+          const canonicalEvidenceInput = initialQueue.map(
+            (item: { id: string }) => item.id,
+          );
+          return JSON.parse(
+            JSON.stringify(canonicalState)!,
+          ).label_waitlist.filter((item: { id: string }) =>
+            canonicalEvidenceInput.includes(item.id),
+          );
+        }),
       ).toEqual(initialQueue);
       if (language === "fa") await setLanguage(page, "fa");
       await page.reload();

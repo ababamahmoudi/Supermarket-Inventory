@@ -1,3 +1,20 @@
+import {
+  returnPhotoReference,
+  type ReturnPhotoAttachment,
+} from "./return-file-access";
+import {
+  returnPickupValuationEvidence,
+  closePurchaseEvidence,
+} from "./purchase-evidence.internal";
+import type { AuthenticatedActor, Capability } from "./authority-types";
+import { freshActor } from "./authority";
+import { can, requireCapability, requireConcreteLocation } from "./permissions";
+import {
+  actorAudit,
+  domainScope,
+  guardDomain,
+  selectedLocations,
+} from "./domain-authority";
 import Decimal from "decimal.js";
 import {
   signedReturnPickupQuantities,
@@ -6,7 +23,10 @@ import {
 import { companyDate } from "./invoice";
 import { configuredBranches } from "./settings";
 import { projectExpiryLocation } from "./received";
-import { createReturnMemo, syncReturnCreditAlerts } from "./return-workflow";
+import {
+  createReturnMemo,
+  syncReturnCreditAlertsForReturn,
+} from "./return-workflow";
 import type {
   Branch,
   CompanyConfig,
@@ -14,17 +34,9 @@ import type {
   LedgerEntry,
   NoteRecord,
   ReturnRecord,
-  Role,
 } from "./types";
 
-export interface OperationsContext {
-  company_id: string;
-  branch: Branch;
-  role: Role;
-  actor: string;
-  /** Explicit account capability; no role acquires it implicitly. */
-  pickup_correction_authority?: "owner" | "manager";
-}
+export type OperationsContext = AuthenticatedActor;
 export type Disposition =
   "supplier_held" | "unsafe_on_site" | "recovered_sellable";
 export interface EvidenceEvent {
@@ -32,6 +44,10 @@ export interface EvidenceEvent {
   kind: string;
   at: string;
   by: string;
+  actor_user_id?: string;
+  actor_role_snapshot?: AuthenticatedActor["role"];
+  actor_username?: string;
+  device_id?: string;
   note?: string;
   document?: string;
   photo?: string;
@@ -66,6 +82,10 @@ export interface ReturnClaim {
   invoice_id?: string;
   reason?: string;
   submitted_by: string;
+  submitted_by_user_id?: string;
+  submitted_by_role_snapshot?: AuthenticatedActor["role"];
+  posted_by_user_id?: string;
+  posted_by_role_snapshot?: AuthenticatedActor["role"];
   at: string;
   posted_by?: string;
   item_amounts?: Record<string, string>;
@@ -164,31 +184,51 @@ function returnQuantity(
     fail("weight_quantity");
   return amount.toNumber();
 }
-const canOperate = (context: OperationsContext) => {
-  if (context.role === "cashier") fail("role");
-  if (context.branch === "all") fail("branch");
-};
-const supervisor = (context: OperationsContext) => {
-  canOperate(context);
-  if (context.role !== "supervisor") fail("supervisor");
-};
+function operationGuard(
+  state: DemoState,
+  context: OperationsContext,
+  capability: Capability,
+  record?: {
+    company_id: string;
+    branch?: string;
+    id?: string;
+    status?: string;
+  },
+  mutation = false,
+) {
+  try {
+    return guardDomain(state, context, capability, record, mutation);
+  } catch {
+    return fail("scope");
+  }
+}
 const belongs = (
   record: { company_id: string; branch: Branch },
   context: OperationsContext,
 ) =>
   record.company_id === context.company_id &&
-  (context.branch === "all" || record.branch === context.branch);
+  (context.branch === "all"
+    ? context.allowed_branches.includes(record.branch)
+    : record.branch === context.branch);
 function getReturn(
   state: DemoState,
   context: OperationsContext,
   returnId: string,
 ): OperationalReturn {
-  canOperate(context);
-  if (context.company_id !== state.config.company.seed_key) fail("scope");
-  const record = state.returns.find(
-    (item) => item.id === returnId && belongs(item, context),
-  ) as OperationalReturn | undefined;
-  if (!record) fail("scope");
+  try {
+    freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  const records = state.returns.filter(
+    (item) =>
+      item.id === returnId &&
+      item.company_id === state.config.company.seed_key &&
+      belongs(item, context),
+  );
+  if (records.length !== 1) fail("scope");
+  const record = records[0] as OperationalReturn;
+  operationGuard(state, context, "returns.read", record);
   // Retained legacy evidence is read without filling or rewriting its projections.
   return record;
 }
@@ -197,13 +237,15 @@ function audit(
   context: OperationsContext,
   action: string,
   product_code?: string,
+  origin = context.branch,
 ) {
   state.activity.unshift({
     id: id("activity"),
     company_id: context.company_id,
-    branch: context.branch,
+    branch: origin,
     action,
     by: context.actor,
+    ...actorAudit(state, context),
     at: now(),
     product_code,
   });
@@ -228,6 +270,7 @@ function stock(
   type: string,
   reference: string,
   unit: "units" | "lb" = "units",
+  origin = context.branch,
 ) {
   if (
     !state.products.some(
@@ -235,7 +278,7 @@ function stock(
     )
   )
     fail("product");
-  const key = `${context.branch}:${product}`;
+  const key = `${origin}:${product}`;
   const next = (state.stock[key] ?? 0) + delta;
   // An incomplete sales ledger cannot establish available stock in Phase 1.
   if (unit === "units") {
@@ -248,17 +291,19 @@ function stock(
   (physicalState.stock_movements ??= []).push({
     id: id("movement"),
     company_id: context.company_id,
-    branch: context.branch,
+    branch: origin,
     product_code: product,
     qty: delta,
     quantity_unit: unit,
     type,
     reference,
     by: context.actor,
+    ...actorAudit(state, context),
     at: now(),
   });
 }
 function history(
+  state: DemoState,
   record: OperationalReturn,
   context: OperationsContext,
   event: Omit<EvidenceEvent, "id" | "at" | "by">,
@@ -267,6 +312,7 @@ function history(
     id: id("evidence"),
     at: now(),
     by: context.actor,
+    ...actorAudit(state, context),
     ...structuredClone(event),
   });
 }
@@ -278,7 +324,8 @@ function settled(line: ReturnRecord["lines"][number], record?: ReturnRecord) {
     : Math.max(line.settled ?? 0, line.replaced ?? 0);
 }
 export function returnUnpickedQuantity(
-  record: ReturnRecord,
+  record: Pick<ReturnRecord, "lines" | "replacement_received"> &
+    Pick<OperationalReturn, "recovered">,
   line: ReturnRecord["lines"][number],
 ) {
   const discarded =
@@ -294,7 +341,7 @@ export function returnUnpickedQuantity(
             ? line.qty
             : 0),
       )
-      .minus((record as OperationalReturn).recovered?.[line.product_code] ?? 0)
+      .minus(record.recovered?.[line.product_code] ?? 0)
       .minus(discarded),
   ).toNumber();
 }
@@ -380,7 +427,7 @@ export function recordPickup(
     quantities: Record<string, number>;
     representative: string;
     slip: string;
-    photo?: string;
+    photo?: ReturnPhotoAttachment;
     note?: string;
     shortfalls?: Record<
       string,
@@ -391,7 +438,22 @@ export function recordPickup(
     >;
   },
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  operationGuard(state, context, "returns.pickup_record", record, true);
+  const photoReference = input.photo
+    ? returnPhotoReference(
+        state,
+        context,
+        record.id,
+        "returns.pickup_record",
+        input.photo,
+      )
+    : undefined;
   if (
     record.status === "cancelled" ||
     record.status === "cancellation_review" ||
@@ -458,7 +520,13 @@ export function recordPickup(
     )
   )
     fail("product");
-  const memo = createReturnMemo(state, context, record, input);
+  const evidence = returnPickupValuationEvidence(state, context, record);
+  let memo: ReturnType<typeof createReturnMemo>;
+  try {
+    memo = createReturnMemo(state, context, record, input, evidence);
+  } finally {
+    closePurchaseEvidence(evidence);
+  }
   for (const line of record.lines) {
     line.picked_up = new Decimal(line.picked_up ?? 0)
       .plus(input.quantities[line.product_code] ?? 0)
@@ -481,6 +549,7 @@ export function recordPickup(
           "return_original_recovered",
           memo.reference,
           line.quantity_unit,
+          record.branch,
         );
         (record.recovered ??= {})[line.product_code] = new Decimal(
           record.recovered?.[line.product_code] ?? 0,
@@ -512,20 +581,44 @@ export function recordPickup(
     record.closure_subtype = "written_off";
   } else if (record.lines.some((line) => (line.picked_up ?? 0) > 0))
     record.status = "picked_up";
-  history(record, context, {
+  history(state, record, context, {
     kind: "pickup",
     document: input.slip.trim(),
     representative: input.representative.trim(),
-    photo: input.photo,
+    photo: photoReference,
     note: input.note,
     quantities: input.quantities,
     shortfalls,
   });
-  audit(state, context, "return_pickup");
-  syncReturnCreditAlerts(state);
+  audit(state, context, "return_pickup", undefined, record.branch);
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.pickup_record",
+  );
 }
-export function canCorrectReturnPickup(context: OperationsContext) {
-  return context.role === "supervisor";
+export function canCorrectReturnPickup(
+  state: DemoState,
+  context: OperationsContext,
+  returnId: string,
+) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  const record = state.returns.find(
+    (item) =>
+      item.id === returnId && item.company_id === state.config.company.seed_key,
+  );
+  return Boolean(
+    record &&
+    can(state, context, "returns.pickup_correct", {
+      ...domainScope(state, record, true),
+      location_policy: "retained_correction",
+    }).allowed,
+  );
 }
 /** Correct only the latest pickup snapshot, retaining its signed original and every posted settlement. */
 export function correctReturnPickup(
@@ -545,8 +638,18 @@ export function correctReturnPickup(
     >;
   },
 ) {
-  if (!canCorrectReturnPickup(context)) fail("pickup_authority");
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  if (!canCorrectReturnPickup(state, context, returnId))
+    fail("pickup_authority");
   const record = getReturn(state, context, returnId);
+  requireCapability(state, context, "returns.pickup_correct", {
+    ...domainScope(state, record, true),
+    location_policy: "retained_correction",
+  });
   if (["cancelled", "cancellation_review"].includes(record.status))
     fail("closed");
   if (!input.reason.trim()) fail("reason");
@@ -625,17 +728,29 @@ export function correctReturnPickup(
   )
     fail("product");
   const at = now();
-  const memo = createReturnMemo(
+  const evidence = returnPickupValuationEvidence(
     state,
     context,
     record,
-    {
-      quantities: after,
-      representative: original.representative,
-      slip: original.signed_evidence_reference,
-    },
-    at,
+    "return_pickup_correct",
   );
+  let memo: ReturnType<typeof createReturnMemo>;
+  try {
+    memo = createReturnMemo(
+      state,
+      context,
+      record,
+      {
+        quantities: after,
+        representative: original.representative,
+        slip: original.signed_evidence_reference,
+      },
+      evidence,
+      at,
+    );
+  } finally {
+    closePurchaseEvidence(evidence);
+  }
   memo.correction_of = original.id;
   const correction = {
     id: id("pickup-correction"),
@@ -646,6 +761,7 @@ export function correctReturnPickup(
     previous_memo_id: original.id,
     reason: input.reason.trim(),
     by: context.actor,
+    ...actorAudit(state, context),
     at,
     before,
     after,
@@ -665,6 +781,7 @@ export function correctReturnPickup(
         "return_pickup_correction",
         correction.id,
         line.quantity_unit,
+        record.branch,
       );
       (record.recovered ??= {})[line.product_code] = new Decimal(
         record.recovered?.[line.product_code] ?? 0,
@@ -693,7 +810,7 @@ export function correctReturnPickup(
       ? "partially_resolved"
       : "open";
   if (record.status !== "resolved") delete record.closure_subtype;
-  history(record, context, {
+  history(state, record, context, {
     kind: "pickup_correction",
     document: memo.reference,
     corrects_event_id: original.id,
@@ -702,8 +819,13 @@ export function correctReturnPickup(
     shortfalls,
     note: input.reason.trim(),
   });
-  audit(state, context, "return_pickup_corrected");
-  syncReturnCreditAlerts(state);
+  audit(state, context, "return_pickup_corrected", undefined, record.branch);
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.pickup_correct",
+  );
 }
 export function receiveReplacement(
   state: DemoState,
@@ -716,13 +838,28 @@ export function receiveReplacement(
     date: string;
     representative: string;
     note?: string;
-    photo?: string;
+    photo?: ReturnPhotoAttachment;
     receipt: string;
     invoice_id?: string;
     fully?: boolean;
   },
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  operationGuard(state, context, "returns.operational_resolve", record, true);
+  const photoReference = input.photo
+    ? returnPhotoReference(
+        state,
+        context,
+        record.id,
+        "returns.operational_resolve",
+        input.photo,
+      )
+    : undefined;
   if (record.status === "cancelled" || record.status === "cancellation_review")
     fail("closed");
   const existingReplacement = record.evidence?.find(
@@ -796,6 +933,7 @@ export function receiveReplacement(
     "replacement_received",
     input.receipt,
     replacementUnit,
+    record.branch,
   );
   const coverageStatus = applyCoverage(record, input.covers);
   record.resolution = "replacement_received";
@@ -808,7 +946,7 @@ export function receiveReplacement(
       0,
     ),
   };
-  history(record, context, {
+  history(state, record, context, {
     kind: "replacement",
     document: input.receipt.trim(),
     representative: input.representative.trim(),
@@ -816,12 +954,23 @@ export function receiveReplacement(
     product_code: input.product_code,
     actual_qty: input.qty,
     invoice_id: input.invoice_id,
-    photo: input.photo,
+    photo: photoReference,
     note: `${input.date} | ${input.representative} | ${input.product_code} × ${input.qty}${input.note ? ` | ${input.note}` : ""}`,
     quantities: input.covers,
   });
-  audit(state, context, "replacement_received", input.product_code);
-  syncReturnCreditAlerts(state);
+  audit(
+    state,
+    context,
+    "replacement_received",
+    input.product_code,
+    record.branch,
+  );
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.operational_resolve",
+  );
 }
 export function submitFinancialClaim(
   state: DemoState,
@@ -829,7 +978,13 @@ export function submitFinancialClaim(
   returnId: string,
   input: Omit<ReturnClaim, "id" | "status" | "submitted_by" | "at">,
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  operationGuard(state, context, "returns.operational_resolve", record, true);
   if (
     record.status === "cancelled" ||
     record.status === "cancellation_review" ||
@@ -837,7 +992,7 @@ export function submitFinancialClaim(
   )
     fail("closed");
   if (input.type === "no_compensation") {
-    supervisor(context);
+    operationGuard(state, context, "returns.credit_post", record, true);
     if (!input.reason?.trim()) fail("reason");
   } else if (!input.document?.trim()) fail("credit_document");
   if (input.amount !== undefined && decimalAmount(input.amount).lte(0))
@@ -885,16 +1040,18 @@ export function submitFinancialClaim(
     id: id("claim"),
     status: "submitted",
     submitted_by: context.actor,
+    submitted_by_user_id: context.user_id,
+    submitted_by_role_snapshot: context.role,
     at: now(),
   });
   record.status = "claim_pending";
-  history(record, context, {
+  history(state, record, context, {
     kind: "claim",
     document: input.document,
     note: input.reason,
     quantities: input.covers,
   });
-  audit(state, context, "return_claim_submitted");
+  audit(state, context, "return_claim_submitted", undefined, record.branch);
 }
 export function postReturnClaim(
   state: DemoState,
@@ -904,8 +1061,16 @@ export function postReturnClaim(
   amountInput?: string,
   itemAmountsInput?: Record<string, string>,
 ) {
-  supervisor(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  requireCapability(state, context, "returns.credit_post", {
+    ...domainScope(state, record, true),
+    location_policy: "retained_correction",
+  });
   const claim = record.claims?.find((item) => item.id === claimId);
   if (!claim) fail("claim");
   if (claim.status === "posted") return;
@@ -979,7 +1144,7 @@ export function postReturnClaim(
     state.ledger.push({
       id: `return-credit-${claim.id}`,
       company_id: context.company_id,
-      branch: context.branch,
+      branch: record.branch,
       supplier: record.supplier,
       type: "credit",
       amount: decimalAmount(amount).negated().toFixed(2),
@@ -999,17 +1164,24 @@ export function postReturnClaim(
   const coverageStatus = applyCoverage(record, claim.covers);
   claim.status = "posted";
   claim.posted_by = context.actor;
+  claim.posted_by_user_id = context.user_id;
+  claim.posted_by_role_snapshot = context.role;
   record.resolution = claim.type;
   if (coverageStatus === "resolved")
     record.closure_subtype =
       claim.type === "no_compensation" ? "written_off" : "credited";
-  history(record, context, {
+  history(state, record, context, {
     kind: "claim_posted",
     document: claim.document,
     quantities: claim.covers,
   });
-  audit(state, context, "return_claim_posted");
-  syncReturnCreditAlerts(state);
+  audit(state, context, "return_claim_posted", undefined, record.branch);
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.credit_post",
+  );
 }
 export function cancelReturn(
   state: DemoState,
@@ -1022,7 +1194,13 @@ export function cancelReturn(
     safe: boolean;
   },
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  operationGuard(state, context, "returns.operational_resolve", record, true);
   if (record.status === "cancelled" || record.status === "cancellation_review")
     fail("closed");
   if (!input.reason.trim()) fail("reason");
@@ -1073,6 +1251,7 @@ export function cancelReturn(
           )?.sold_by === "weight"
             ? "lb"
             : "units"),
+        record.branch,
       );
       (record.recovered ??= {})[line.product_code] = new Decimal(
         record.recovered?.[line.product_code] ?? 0,
@@ -1082,12 +1261,18 @@ export function cancelReturn(
     }
   }
   if (recoveredTotal > 0) {
-    history(record, context, {
+    history(state, record, context, {
       kind: "original_recovery",
       note: "Physically received and confirmed safe/sellable",
       quantities: input.recovered,
     });
-    audit(state, context, "return_original_recovered");
+    audit(
+      state,
+      context,
+      "return_original_recovered",
+      undefined,
+      record.branch,
+    );
   }
   record.original_units_recovered = new Decimal(record.original_units_recovered)
     .plus(recoveredTotal)
@@ -1100,7 +1285,7 @@ export function cancelReturn(
     record.claims?.some((claim) => claim.status === "posted");
   record.previous_status = record.status;
   record.status = existingSettlement ? "cancellation_review" : "cancelled";
-  history(record, context, {
+  history(state, record, context, {
     kind: "cancellation_requested",
     note: input.reason,
     quantities: input.recovered,
@@ -1109,8 +1294,15 @@ export function cancelReturn(
     state,
     context,
     existingSettlement ? "return_cancellation_review" : "return_cancelled",
+    undefined,
+    record.branch,
   );
-  syncReturnCreditAlerts(state);
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.operational_resolve",
+  );
 }
 export function reviewCancellation(
   state: DemoState,
@@ -1118,15 +1310,23 @@ export function reviewCancellation(
   returnId: string,
   input: { accept: boolean; settlement_retained: boolean; note: string },
 ) {
-  supervisor(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const record = getReturn(state, context, returnId);
+  requireCapability(state, context, "returns.financial_cancel_review", {
+    ...domainScope(state, record, true),
+    location_policy: "retained_correction",
+  });
   if (record.status !== "cancellation_review") fail("review");
   if (!input.note.trim() || (input.accept && !input.settlement_retained))
     fail("settlement_review");
   record.status = input.accept
     ? "cancelled"
     : (record.previous_status ?? "partially_resolved");
-  history(record, context, {
+  history(state, record, context, {
     kind: input.accept
       ? "cancellation_approved_retained_settlement"
       : "cancellation_declined",
@@ -1138,8 +1338,15 @@ export function reviewCancellation(
     input.accept
       ? "return_cancellation_approved"
       : "return_cancellation_declined",
+    undefined,
+    record.branch,
   );
-  syncReturnCreditAlerts(state);
+  syncReturnCreditAlertsForReturn(
+    state,
+    context,
+    record,
+    "returns.financial_cancel_review",
+  );
 }
 export function addNote(
   state: DemoState,
@@ -1151,7 +1358,19 @@ export function addNote(
     qty?: number;
   },
 ) {
-  canOperate(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  requireConcreteLocation(state, context);
+  operationGuard(
+    state,
+    context,
+    "notes.entry_add",
+    { company_id: state.config.company.seed_key, branch: context.branch },
+    true,
+  );
   if (
     context.company_id !== state.config.company.seed_key ||
     !configuredBranches(state.config).includes(context.branch)
@@ -1187,6 +1406,7 @@ export function addNote(
     branch: context.branch,
     status: "open",
     by: context.actor,
+    ...actorAudit(state, context),
     created_at: now(),
   });
   audit(
@@ -1202,13 +1422,29 @@ export function updateNoteStatus(
   noteId: string,
   status: NoteRecord["status"],
 ) {
-  canOperate(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  try {
+    freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const note = state.notes.find(
     (item) => item.id === noteId && belongs(item, context),
   );
   if (!note) fail("scope");
-  if (note.type === "note_to_supervisor" && context.role !== "supervisor")
-    fail("supervisor");
+  operationGuard(
+    state,
+    context,
+    note.type === "note_to_supervisor"
+      ? "notes.status_manage"
+      : "notes.operational_status",
+    note,
+    true,
+  );
   if (status === "ordered" || note.status === "ordered") fail("status");
   note.status = status;
   const recordedNote = note as NoteRecord & {
@@ -1237,19 +1473,35 @@ export function clearExpiry(
   context: OperationsContext,
   expiryId: string,
 ) {
-  canOperate(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  try {
+    freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   const entry = state.expiry.find(
     (item) =>
       item.id === expiryId &&
       belongs(projectExpiryLocation(state, item), context),
   );
   if (!entry) fail("scope");
+  operationGuard(
+    state,
+    context,
+    "dates.remove",
+    projectExpiryLocation(state, entry),
+    true,
+  );
   entry.status = "cleared";
   audit(state, context, "expiry_cleared", entry.product_code);
 }
 /** Keep evidence in UTC; show its timestamp in the configured business timezone. */
 export function companyTimestamp(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "company">,
   timestamp: string,
 ): string {
   const date = new Date(timestamp);
@@ -1279,7 +1531,12 @@ export function ledgerSummary(
   supplier: string,
   throughDate?: string,
 ): LedgerSummary {
-  if (context.role !== "supervisor") fail("supervisor");
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  operationGuard(state, context, "payables.read");
   const rows = (state.ledger as OperationalLedger[]).filter(
     (row) =>
       belongs(row, context) &&
@@ -1371,6 +1628,11 @@ export function suggestAllocations(
   supplier: string,
   amountInput: string,
 ): Allocation[] {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
   let remaining = decimalAmount(exactMoney(amountInput));
   if (remaining.lte(0)) fail("amount");
   return ledgerSummary(state, context, supplier).invoices.flatMap((invoice) => {
@@ -1388,11 +1650,7 @@ function validateAllocations(
   amountInput: string,
   allocations: Allocation[],
 ) {
-  const summary = ledgerSummary(
-    state,
-    { ...context, role: "supervisor" },
-    supplier,
-  );
+  const summary = ledgerSummary(state, context, supplier);
   const keys = new Set<string>();
   let allocated = new Decimal(0);
   for (const allocation of allocations) {
@@ -1423,7 +1681,19 @@ export function postPayment(
     receipt: string;
   },
 ) {
-  supervisor(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  requireConcreteLocation(state, context);
+  operationGuard(
+    state,
+    context,
+    "payables.write",
+    { company_id: state.config.company.seed_key, branch: context.branch },
+    true,
+  );
   if (
     state.ledger.some(
       (row) =>
@@ -1474,7 +1744,27 @@ export function postLedgerAdjustment(
     note: string;
   },
 ) {
-  supervisor(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  requireConcreteLocation(state, context);
+  operationGuard(
+    state,
+    context,
+    "payables.write",
+    { company_id: state.config.company.seed_key, branch: context.branch },
+    true,
+  );
+  if (input.type === "opening_balance")
+    operationGuard(
+      state,
+      context,
+      "payables.opening_balance_write",
+      { company_id: state.config.company.seed_key, branch: context.branch },
+      true,
+    );
   const amount = exactMoney(input.amount);
   if (
     !input.note.trim() ||
@@ -1526,7 +1816,19 @@ export function markLedgerDispute(
   ledgerId: string,
   note: string,
 ) {
-  supervisor(context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  requireConcreteLocation(state, context);
+  operationGuard(
+    state,
+    context,
+    "payables.write",
+    { company_id: state.config.company.seed_key, branch: context.branch },
+    true,
+  );
   const row = state.ledger.find(
     (item) => item.id === ledgerId && belongs(item, context),
   ) as OperationalLedger | undefined;
@@ -1538,13 +1840,25 @@ export function markLedgerDispute(
     id: id("dispute"),
     kind: "dispute_recorded",
     by: context.actor,
+    ...actorAudit(state, context),
     at: now(),
     note: note.trim(),
   });
   audit(state, context, "supplier_dispute_recorded");
 }
 
-export function ledgerCsv(summary: LedgerSummary, supplier: string) {
+export function ledgerCsv(
+  state: DemoState,
+  context: OperationsContext,
+  supplier: string,
+  throughDate?: string,
+) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  const summary = ledgerSummary(state, context, supplier, throughDate);
   const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
   const rows = [
     [
@@ -1574,10 +1888,24 @@ export function ledgerCsv(summary: LedgerSummary, supplier: string) {
   return "\uFEFF" + rows.map((row) => row.map(cell).join(",")).join("\r\n");
 }
 export function scopedRecords<T extends { company_id: string; branch: Branch }>(
+  state: DemoState,
   records: T[],
   context: OperationsContext,
+  capability: Capability,
 ) {
-  return records.filter((record) => belongs(record, context));
+  try {
+    context = freshActor(state, context);
+  } catch {
+    fail("scope");
+  }
+  operationGuard(state, context, capability);
+  const selected = new Set(selectedLocations(state, context, true));
+  return records.filter(
+    (record) =>
+      record.company_id === state.config.company.seed_key &&
+      (record.branch === "all" || selected.has(record.branch)) &&
+      can(state, context, capability, domainScope(state, record)).allowed,
+  );
 }
 export function operationError(
   key: string,
@@ -1671,6 +1999,10 @@ export function operationError(
     coverage: [
       "Covered original quantities exceed the unsettled return. Check each line.",
       "تعداد اصلی پوشش‌داده‌شده از مرجوعی حل‌نشده بیشتر است. هر ردیف را بررسی کنید.",
+    ],
+    return_changed: [
+      "This return or its payable changed. Review it again before posting.",
+      "این مرجوعی یا پرداختنی آن تغییر کرده است. پیش از ثبت دوباره بررسی کنید.",
     ],
     return_cost: [
       "Review the original purchase cost for this return before recording pickup.",

@@ -1,19 +1,23 @@
+import { canApplyNotebookHistoryActivity } from "./notebooks";
+import { businessAuditRead } from "./business-audit-read";
+import { clearOfferStoreSuppression, offerVersion } from "./offer-store-scopes";
+import type {
+  AuthenticatedActor,
+  Capability,
+  ResourceScope,
+} from "./authority-types";
+import { cloneWithAuthority, freshActor } from "./authority";
+import { can } from "./permissions";
+import { actorAudit, canDomain, domainScope } from "./domain-authority";
 import { createId } from "./ids";
 import { configuredBranches, branchId } from "./settings";
 import { effectiveExpiryLocation } from "./received";
-import type { Activity, Branch, DemoState, Role } from "./types";
+import type { Activity, DemoState } from "./types";
 import type { RequestTransferEvent } from "./branch-requests";
 import Decimal from "decimal.js";
 import { revertSaleLifecycle, SalesError } from "./sales";
 
-export interface HistoryContext {
-  company_id: string;
-  role: Role;
-  actor: string;
-  username?: string;
-  branch: Branch;
-  allowed_branches: Branch[];
-}
+export type HistoryContext = AuthenticatedActor;
 export type HistoryPath = (string | { key: string; value: string })[];
 export interface ReversalPatch {
   path: HistoryPath;
@@ -70,6 +74,7 @@ const safeRoots = new Set([
   "approvals",
   "alerts",
   "offers",
+  "offer_store_suppressions",
   "templates",
   "expiry",
   "notes",
@@ -199,6 +204,7 @@ const creationMode = (root: string): ReversalPatch["creation"] => {
     return "archive";
   if (root === "suppliers") return "deactivate";
   if (root === "offers") return "stop";
+  if (root === "offer_store_suppressions") return "clear";
   if (root === "approvals") return "reject";
   if (root === "alerts") return "resolve";
   if (["orders", "branch_requests", "invoices"].includes(root)) return "cancel";
@@ -415,6 +421,7 @@ export function attachReversals(
   after: DemoState,
   context: HistoryContext,
 ): Activity[] {
+  context = freshActor(after, context);
   const previous = new Set(before.activity.map((entry) => entry.id));
   const entries = after.activity.filter((entry) => !previous.has(entry.id));
   const patches = changedPaths(before, after);
@@ -450,12 +457,15 @@ export function attachReversals(
         },
       ];
       if (entry.by !== "System") entry.actor_username ??= context.username;
+      if (entry.by !== "System")
+        Object.assign(entry, actorAudit(after, context));
       entry.device = "Browser";
       continue;
     }
     if (entry.by === "System" && entry.reversible === false) continue;
     entry.by = context.actor;
     entry.actor_username = context.username;
+    Object.assign(entry, actorAudit(after, context));
     entry.device = "Browser";
     if (entry.reversal_kind) continue;
     if (
@@ -561,50 +571,226 @@ export function pathLabel(path: HistoryPath): string {
     .join(" · ");
 }
 function ownedBy(entry: Activity, context: HistoryContext): boolean {
-  return entry.actor_username
-    ? entry.actor_username === context.username
-    : entry.by === context.actor;
+  return entry.actor_user_id === context.user_id;
 }
-const workerSharedActions = new Set([
-  "Create template",
-  "Save template",
-  "Duplicate template",
-  "Archive template",
-  "Restore template",
-  "Add supplier",
-  "Add product",
-  "Stop offer",
-  "Dismiss",
-  "Confirm offer",
-  "Create offer",
-]);
-function accessible(entry: Activity, context: HistoryContext): boolean {
+function historyScope(state: DemoState, entry: Activity, mutation = false) {
+  return {
+    ...domainScope(state, entry, mutation),
+    owner_user_id: entry.actor_user_id,
+    status:
+      entry.entity_type === "notebook_entry"
+        ? "custom_notebook_entry"
+        : "activity",
+  };
+}
+function accessible(
+  state: DemoState,
+  entry: Activity,
+  context: HistoryContext,
+  ownNotebookUndo = false,
+): boolean {
+  context = freshActor(state, context);
+  if (
+    ownNotebookUndo &&
+    entry.entity_type === "notebook_entry" &&
+    ownedBy(entry, context) &&
+    can(state, context, "history.undo_own", historyScope(state, entry, true))
+      .allowed
+  )
+    return true;
+  if (entry.company_id !== state.config.company.seed_key) return false;
   return (
-    context.role !== "cashier" &&
-    entry.company_id === context.company_id &&
-    (entry.branch === "all"
-      ? context.role === "supervisor" ||
-        workerSharedActions.has(entry.action) ||
-        entry.reversal_kind === "undo"
-      : context.allowed_branches.includes(entry.branch)) &&
-    (context.role === "supervisor" || ownedBy(entry, context))
+    can(state, context, "history.read_all", historyScope(state, entry))
+      .allowed ||
+    (ownedBy(entry, context) &&
+      can(state, context, "history.read_own", historyScope(state, entry))
+        .allowed &&
+      ownSharedSourceReadable(state, entry, context))
+  );
+}
+function sourceCapability(
+  state: DemoState,
+  entry: Activity,
+  root: string,
+  context: HistoryContext,
+): Capability | null {
+  if (root === "sales") return "sales.manage";
+  if (root === "sale_requests") return "sales.request_edit_own";
+  if (root === "notes") {
+    const note = state.notes.find(
+      (item) =>
+        item.company_id === entry.company_id && item.id === entry.entity_id,
+    );
+    const statusAction = /status|resolved|ordered|done|open/i.test(
+      entry.action,
+    );
+    if (!statusAction) return "notes.entry_add";
+    if (!note) return null;
+    return note.type === "note_to_supervisor"
+      ? "notes.status_manage"
+      : "notes.operational_status";
+  }
+  if (root === "notebook_entries") {
+    if (!canApplyNotebookHistoryActivity(state, context, entry.id)) return null;
+    if (
+      ["notebook_entry_done", "notebook_entry_reopened"].includes(entry.action)
+    )
+      return "notebooks.entry_add";
+    return can(
+      state,
+      context,
+      "notebooks.entry_edit_any",
+      historyScope(state, entry, true),
+    ).allowed
+      ? "notebooks.entry_edit_any"
+      : "notebooks.entry_edit_own";
+  }
+  if (root === "notebooks") return "notebooks.definition_manage";
+  if (root === "expiry") return "dates.remove";
+  if (root === "label_waitlist") return "labels.queue_write";
+  if (root === "label_settings") return "labels.calibrate";
+  if (root === "templates")
+    return entry.action.includes("Archive") || entry.action.includes("Restore")
+      ? "labels.templates_archive"
+      : "labels.templates_edit";
+  if (root === "offers" || root === "offer_store_suppressions")
+    return "offers.multibuy_manage";
+  if (root === "suppliers")
+    return ["Confirm supplier", "Reject supplier"].includes(entry.action)
+      ? "suppliers.confirm"
+      : entry.action === "Add supplier"
+        ? "invoices.supplier_propose"
+        : "suppliers.manage";
+  if (root === "supplier_items") return "supplier_items.manage";
+  if (root === "orders") return "orders.write";
+  if (root === "branch_requests")
+    return entry.action === "Mark as sent"
+      ? "branch_requests.send"
+      : "branch_requests.receive";
+  if (root === "invoice" || root === "invoices") return "invoices.edit";
+  if (root === "products")
+    return [
+      "Add date",
+      "Turn on date tracking",
+      "Turn off date tracking",
+    ].includes(entry.action)
+      ? "dates.add"
+      : entry.action.includes("price") || entry.action.includes("Price")
+        ? "pricing.regular_manage"
+        : "catalog.edit";
+  if (root === "ledger") return "payables.write";
+  if (root === "returns") return "returns.operational_resolve";
+  if (root === "approvals") return "approvals.decide";
+  if (root === "config") return "settings.manage";
+  if (root === "alerts") return "alerts.decide";
+  return null;
+}
+function sourcePermitted(
+  state: DemoState,
+  entry: Activity,
+  context: HistoryContext,
+) {
+  return (entry.reversal ?? []).every((patch) => {
+    if (patch.path[0] === "offer_store_suppressions") {
+      const selector = patch.path[1];
+      const suppression =
+        typeof selector === "object"
+          ? state.offer_store_suppressions?.find(
+              (item) =>
+                item.id === selector.value &&
+                item.company_id === entry.company_id,
+            )
+          : undefined;
+      const offer =
+        suppression &&
+        state.offers.find(
+          (item) =>
+            item.id === suppression.offer_id &&
+            item.company_id === suppression.company_id,
+        );
+      if (
+        !suppression ||
+        !offer ||
+        suppression.status !== "active" ||
+        suppression.branch !== entry.branch ||
+        offerVersion(offer) !== suppression.offer_version
+      )
+        return false;
+    }
+    const cap = sourceCapability(state, entry, String(patch.path[0]), context);
+    return Boolean(
+      cap && can(state, context, cap, historyScope(state, entry, true)).allowed,
+    );
+  });
+}
+/** Shared own-action rows still require the real source's current authority.
+ * A fabricated own audit label cannot expose company Settings to a worker. */
+function ownSharedSourceReadable(
+  state: DemoState,
+  entry: Activity,
+  context: HistoryContext,
+): boolean {
+  if (entry.branch !== "all" || canDomain(state, context, "history.read_all"))
+    return true;
+  const source = entry.reversed_activity_id
+    ? state.activity.find(
+        (item) =>
+          item.id === entry.reversed_activity_id &&
+          item.company_id === entry.company_id,
+      )
+    : entry;
+  if (!source) return false;
+  // Action is canonical audit evidence. Settings takes precedence over a stale
+  // or forged entity label, and no company-management fallback is supplied.
+  const roots = source.reversal?.map((patch) => String(patch.path[0])) ?? [];
+  if (!roots.length && /settings/i.test(source.action))
+    roots.push(
+      source.entity_type === "label_settings" ? "label_settings" : "config",
+    );
+  if (!roots.length) {
+    const root =
+      source.entity_type === "supplier"
+        ? "suppliers"
+        : source.entity_type === "supplier_item"
+          ? "supplier_items"
+          : source.entity_type === "template" ||
+              source.entity_type === "label_template"
+            ? "templates"
+            : source.entity_type === "product"
+              ? "products"
+              : source.entity_type === "offer"
+                ? "offers"
+                : null;
+    if (root) roots.push(root);
+  }
+  return (
+    roots.length > 0 &&
+    roots.every((root) => {
+      const capability = sourceCapability(state, source, root, context);
+      return Boolean(
+        capability &&
+        can(state, context, capability, historyScope(state, source)).allowed,
+      );
+    })
   );
 }
 export function selectHistory(
   state: DemoState,
   context: HistoryContext,
 ): Activity[] {
+  context = freshActor(state, context);
   if (context.company_id !== state.config.company.seed_key) return [];
   return state.activity
     .filter(
       (entry) =>
-        accessible(entry, context) &&
+        accessible(state, entry, context) &&
         (entry.branch !== "all" ||
-          context.role !== "supervisor" ||
+          !canDomain(state, context, "history.read_all") ||
           configuredBranches(state.config, true).every((branch) =>
             context.allowed_branches.includes(branch),
           )),
     )
+    .map((entry) => projectHistoryEntry(state, context, entry))
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 export function hasBeenReversed(state: DemoState, id: string): boolean {
@@ -616,18 +802,46 @@ export function canReverse(
   context: HistoryContext,
   mode: "undo" | "revert",
 ): boolean {
+  context = freshActor(state, context);
+  const canonical = state.activity.find(
+    (item) =>
+      item.id === entry.id && item.company_id === state.config.company.seed_key,
+  );
+  if (!canonical) return false;
+  entry = canonical;
   return (
-    accessible(entry, context) &&
+    accessible(state, entry, context, mode === "undo") &&
     (entry.branch !== "all" ||
-      context.role !== "supervisor" ||
+      !canDomain(state, context, "history.read_all") ||
       configuredBranches(state.config, true).every((branch) =>
         context.allowed_branches.includes(branch),
       )) &&
     Boolean(entry.reversible && entry.reversal?.length) &&
     !hasBeenReversed(state, entry.id) &&
-    (mode === "undo" || context.role === "supervisor") &&
+    can(
+      state,
+      context,
+      mode === "undo" ? "history.undo_own" : "history.revert",
+      historyScope(state, entry, true),
+    ).allowed &&
+    sourcePermitted(state, entry, context) &&
     (mode !== "undo" || ownedBy(entry, context))
   );
+}
+
+/** Resolve only the current person's authorised source; expose no History row. */
+export function ownUndoResource(
+  state: DemoState,
+  context: HistoryContext,
+  id: string,
+): ResourceScope {
+  context = freshActor(state, context);
+  const entries = state.activity.filter(
+    (entry) => entry.id === id && entry.company_id === context.company_id,
+  );
+  if (entries.length !== 1 || !canReverse(state, entries[0], context, "undo"))
+    throw new HistoryError("permission");
+  return historyScope(state, entries[0], true);
 }
 function patchScope(
   state: DemoState,
@@ -635,6 +849,12 @@ function patchScope(
   context: HistoryContext,
   entry: Activity,
 ) {
+  const cap = sourceCapability(state, entry, String(patch.path[0]), context);
+  if (
+    !cap ||
+    !can(state, context, cap, historyScope(state, entry, true)).allowed
+  )
+    throw new HistoryError("permission");
   if (typeof patch.path[0] !== "string" || !safeRoots.has(patch.path[0]))
     throw new HistoryError("irreversible");
   const productSelector = patch.path[1];
@@ -647,7 +867,7 @@ function patchScope(
   // C5 authorizes only a worker's explicit tracking switch (or Add date's
   // atomic auto-enable), not general catalog editing through a reversal.
   const workerDatePreference =
-    context.role === "floor_worker" &&
+    !canDomain(state, context, "catalog.edit") &&
     patch.path.length === 3 &&
     patch.path[0] === "products" &&
     patch.path[2] === "date_tracking" &&
@@ -665,7 +885,7 @@ function patchScope(
     (!patch.before_exists || typeof patch.before === "boolean") &&
     patch.after === (entry.action !== "Turn off date tracking");
   if (
-    context.role !== "supervisor" &&
+    !canDomain(state, context, "history.read_all") &&
     !workerDatePreference &&
     ![
       "notes",
@@ -675,6 +895,7 @@ function patchScope(
       "invoice",
       "templates",
       "offers",
+      "offer_store_suppressions",
       "orders",
       "branch_requests",
     ].includes(patch.path[0])
@@ -682,7 +903,7 @@ function patchScope(
     throw new HistoryError("permission");
   if (
     patch.path[0] === "orders" &&
-    context.role === "floor_worker" &&
+    !canDomain(state, context, "catalog.edit") &&
     !state.config.orders?.allow_floor_worker
   )
     throw new HistoryError("permission");
@@ -697,7 +918,10 @@ function patchScope(
     if (
       !context.allowed_branches.includes(endpoint) ||
       (context.branch !== endpoint &&
-        !(context.role === "supervisor" && context.branch === "all"))
+        !(
+          canDomain(state, context, "history.read_all") &&
+          context.branch === "all"
+        ))
     )
       throw new HistoryError("scope");
   }
@@ -741,7 +965,7 @@ function patchScope(
   )
     throw new HistoryError("irreversible");
 }
-export function historyChangePreview(
+function rawHistoryChangePreview(
   state: DemoState,
   entry: Activity,
 ): { patch: ReversalPatch; current: unknown; conflict: boolean }[] {
@@ -790,6 +1014,39 @@ export function historyChangePreview(
   });
 }
 
+export function historyChangePreview(
+  state: DemoState,
+  context: HistoryContext,
+  activityId: string,
+) {
+  const entry = state.activity.find(
+    (item) =>
+      item.id === activityId &&
+      item.company_id === state.config.company.seed_key,
+  );
+  if (
+    !entry ||
+    !accessible(state, entry, context) ||
+    !sourcePermitted(state, entry, context)
+  )
+    throw new HistoryError("permission");
+  const raw = rawHistoryChangePreview(state, entry);
+  if (canDomain(state, context, "history.read_all"))
+    return businessAuditRead(raw);
+  const projected = projectHistoryEntry(state, context, entry);
+  return businessAuditRead(
+    raw.map((item, index) => ({
+      ...item,
+      patch: projected.reversal![index],
+      current: item.patch.path.some(
+        (part) => typeof part === "string" && privateHistoryField(part),
+      )
+        ? undefined
+        : projectHistoryValue(item.current),
+    })),
+  );
+}
+
 /** Validation precedes every mutation, and the audit trail is append-only. */
 export function reverseActivity(
   state: DemoState,
@@ -798,10 +1055,13 @@ export function reverseActivity(
   mode: "undo" | "revert",
   now = new Date(),
 ): Activity {
+  context = freshActor(state, context);
   if (context.company_id !== state.config.company.seed_key)
     throw new HistoryError("scope");
-  const entry = state.activity.find((item) => item.id === id);
-  if (!entry || !accessible(entry, context))
+  const entry = state.activity.find(
+    (item) => item.id === id && item.company_id === context.company_id,
+  );
+  if (!entry || !accessible(state, entry, context, mode === "undo"))
     throw new HistoryError("permission");
   if (!canReverse(state, entry, context, mode))
     throw new HistoryError("irreversible");
@@ -822,7 +1082,7 @@ export function reverseActivity(
       throw error;
     }
   }
-  const preview = historyChangePreview(state, entry);
+  const preview = rawHistoryChangePreview(state, entry);
   if (preview.some((item) => item.conflict)) throw new HistoryError("conflict");
   for (const { patch } of preview) patchScope(state, patch, context, entry);
   const request =
@@ -958,8 +1218,15 @@ export function reverseActivity(
         throw new HistoryError("conflict");
     }
   }
-  const candidate = structuredClone(state);
+  const candidate = cloneWithAuthority(state);
   for (const { patch } of [...preview].reverse()) {
+    if (patch.path[0] === "offer_store_suppressions" && !patch.before_exists) {
+      const selector = patch.path[1];
+      if (typeof selector !== "object" || selector.key !== "id")
+        throw new HistoryError("irreversible");
+      clearOfferStoreSuppression(candidate, context, selector.value);
+      continue;
+    }
     if (!patch.before_exists && patch.creation && patch.creation !== "remove") {
       const record = structuredClone(patch.after) as Record<string, unknown>;
       if (patch.creation === "archive") {
@@ -998,6 +1265,7 @@ export function reverseActivity(
           event.normalized_units === null ? null : -event.normalized_units,
         at: now.toISOString(),
         by: context.actor,
+        by_user_id: context.user_id,
         username: context.username,
         device: "Browser",
       });
@@ -1058,7 +1326,7 @@ export function reverseActivity(
     branch: entry.branch,
     action: mode === "undo" ? "Undone" : `Reverted ${entry.action}`,
     by: context.actor,
-    actor_username: context.username,
+    ...actorAudit(state, context, now),
     device: "Browser",
     at: now.toISOString(),
     product_code: entry.product_code,
@@ -1095,8 +1363,8 @@ export function hydrateLegacyReversals(state: DemoState): void {
     )
       continue;
     if (!own(entry.before.product) || !own(entry.after.product)) continue;
-    const before = structuredClone(state),
-      after = structuredClone(state);
+    const before = cloneWithAuthority(state),
+      after = cloneWithAuthority(state);
     for (const [target, snapshot] of [
       [before, entry.before],
       [after, entry.after],
@@ -1123,4 +1391,106 @@ export function hydrateLegacyReversals(state: DemoState): void {
     if (entry.reversal.some((patch) => !patch.before_exists && !patch.creation))
       entry.reversible = false;
   }
+}
+
+const financialHistoryKeys = new Set([
+  "cost",
+  "store_cost",
+  "opening_balance",
+  "confirmed_balance",
+  "pending_credit",
+  "overdue",
+  "snapshot_balance",
+  "snapshot_overdue",
+  "unapplied_credit",
+  "unallocated_debits",
+  "unit_cost",
+  "unit_cost_before_tax",
+  "unit_cost_at_receipt",
+  "last_cost_before_tax",
+  "cost_snapshot",
+  "cost_source",
+  "expected_credit",
+  "amount",
+  "balance",
+  "paid",
+  "owed",
+  "prior_cost",
+  "received_cost",
+  "previous_cost",
+  "new_cost",
+  "old_cost",
+  "unit_cost_at_receipt",
+  "case_cost_before_tax",
+  "line_total",
+  "line_tax",
+  "subtotal",
+  "tax",
+  "final_total",
+  "short_before_tax",
+  "short_tax",
+  "calculated_selling_price",
+  "verified_amount",
+  "compensation_amount",
+  "item_amounts",
+  "credit_amount",
+  "expected_credit",
+  "total_before_tax",
+  "total_with_tax",
+]);
+const marginHistoryKeys = new Set([
+  "margin",
+  "minimum_margin",
+  "threshold",
+  "prior_margin",
+  "new_margin",
+  "below_cost_reason",
+  "acknowledgment_reason",
+  "minimum_margin_accepted",
+  "below_cost_approved",
+  "below_minimum_margin",
+  "below_cost",
+]);
+export function projectHistoryEntry(
+  state: DemoState,
+  actor: HistoryContext,
+  entry: Activity,
+): Activity {
+  actor = freshActor(state, actor);
+  const canonical = state.activity.find(
+    (item) => item.id === entry.id && item.company_id === actor.company_id,
+  );
+  if (!canonical || !accessible(state, canonical, actor))
+    throw new HistoryError("permission");
+  entry = canonical;
+  const privateMoney = canDomain(state, actor, "history.read_all");
+  if (privateMoney) return businessAuditRead(entry);
+  return businessAuditRead(projectHistoryValue(entry)) as Activity;
+}
+
+function privateHistoryField(key: string): boolean {
+  return key
+    .split(/[.[\]]/)
+    .some(
+      (part) => financialHistoryKeys.has(part) || marginHistoryKeys.has(part),
+    );
+}
+function projectHistoryValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(projectHistoryValue);
+  if (!value || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const protectedPatch =
+    Array.isArray(record.path) &&
+    record.path.some(
+      (part) => typeof part === "string" && privateHistoryField(part),
+    );
+  return Object.fromEntries(
+    Object.entries(record)
+      .filter(
+        ([key]) =>
+          !privateHistoryField(key) &&
+          !(protectedPatch && ["before", "after", "guards"].includes(key)),
+      )
+      .map(([key, item]) => [key, projectHistoryValue(item)]),
+  );
 }

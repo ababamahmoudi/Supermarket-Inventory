@@ -1,7 +1,7 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 test.setTimeout(180000);
 test.use({ actionTimeout: 10000 });
 
@@ -410,9 +410,8 @@ test("an order error belongs to its invalid item and clears immediately only whe
   await expect(costs.nth(0)).toHaveAttribute("aria-invalid", "true");
   await costs.nth(0).fill("1.0000");
   await expect(costs.nth(0)).toHaveAttribute("aria-invalid", "false");
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).orders,
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).orders,
   );
   expect(saved).toHaveLength(0);
 });
@@ -440,9 +439,8 @@ test("external payment is unchanged until explicit money confirmation, and cance
     })
     .click();
   const ledger = () =>
-    page.evaluate(
-      (key) => JSON.parse(localStorage.getItem(key)!).ledger,
-      storage,
+    readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).ledger,
     );
   const before = await ledger();
   await page

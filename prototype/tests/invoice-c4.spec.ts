@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
@@ -6,10 +7,11 @@ import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "js
 import type { DemoState } from "../src/types";
 import { setBranch, setLanguage, signIn } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 const originalId = `a2-fixture:${receiptFixtures.invoices[0].number}`;
 const saved = (page: Page): Promise<DemoState> =>
-  page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), storage);
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
+  );
 
 for (const language of ["en", "fa"] as const)
   test(`posted original and confirmed correction retain immutable evidence and version links in ${language}`, async ({

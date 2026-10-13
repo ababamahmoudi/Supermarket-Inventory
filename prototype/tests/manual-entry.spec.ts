@@ -1,6 +1,7 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, invoiceImage, setLanguage, signIn } from "./helpers";
-const storage = "supermarket-prototype-v1";
+
 test.setTimeout(60000);
 
 test("Supervisor Add supplier saves Confirmed and a dated branch opening balance", async ({
@@ -51,9 +52,8 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
       .locator(".supplier-header-card")
       .getByText("Confirmed", { exact: true }),
   ).toBeVisible();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const supplier = saved.suppliers.find(
     (record: { name: string }) => record.name === "North Orchard Supply",
@@ -151,9 +151,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     dialog.getByLabel("Selling price (per unit)", { exact: true }),
   ).not.toHaveValue("");
-  const conflictingBarcode = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).products[0].barcode,
-    storage,
+  const conflictingBarcode = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products[0].barcode,
   );
   await dialog.getByLabel("Barcode", { exact: true }).fill(conflictingBarcode);
   await expect(
@@ -182,9 +182,8 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     page.getByRole("heading", { level: 1, name: "Orchard Pears", exact: true }),
   ).toBeVisible();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const product = saved.products.find(
     (record: { name_en: string }) => record.name_en === "Orchard Pears",
@@ -250,9 +249,8 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(
     saved.suppliers.find(
@@ -378,9 +376,8 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .getByRole("dialog", { name: "Post invoice", exact: true })
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(saved.invoice).toMatchObject({
     status: "posted",

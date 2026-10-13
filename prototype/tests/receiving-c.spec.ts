@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import Decimal from "decimal.js";
 import {
@@ -11,15 +12,13 @@ import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "js
 import type { DemoState } from "../src/types";
 import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
-const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
 
 async function saved(
   page: import("@playwright/test").Page,
 ): Promise<DemoState> {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 

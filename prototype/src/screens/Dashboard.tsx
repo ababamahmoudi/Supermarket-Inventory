@@ -2,7 +2,6 @@ import {
   branchLabel as configuredBranchLabel,
   branchSellsToCustomers,
   sellingBranches,
-  configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
 import { isValidElement, useEffect, useState, type ReactNode } from "react";
@@ -17,16 +16,11 @@ import {
   PackageMinus,
   MoreHorizontal,
 } from "lucide-react";
-import { demoUsers, useDemo } from "../store";
+import { useDemo } from "../store";
+import { useProtectedQuery } from "../use-protected-query";
+import { configuredRoleLabel } from "../role-config";
 import { companyDate } from "../invoice";
-import {
-  effectiveInvoiceLocation,
-  effectiveApprovalLocation,
-  projectInvoiceLocation,
-} from "../received";
-import { activeTrackedDates, dateIsDueSoon } from "../date-tracking";
 import { approvalSnapshot, resolveApproval } from "../approvals";
-import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
 import { SupplierApproval } from "./SupplierApproval";
 import { SaleRequestCards } from "./SalesApprovals";
@@ -39,17 +33,9 @@ import {
   ProductName,
   UnitText,
 } from "../presentation";
-import {
-  supplierBalanceOverview,
-  supplierBalanceSummary,
-} from "../supplier-balances";
 import "./financial-polish.css";
 import "./dashboard-a2.css";
-import {
-  dashboardArrivals,
-  dashboardPriceChanges,
-  dashboardPurchases,
-} from "../dashboard-data";
+import { dashboardSummary, type DashboardSummary } from "../dashboard-data";
 import {
   Badge,
   Button,
@@ -62,19 +48,8 @@ import {
   MenuItem,
   TableRowLink,
 } from "../ui";
-import {
-  companyTimestamp,
-  scopedRecords,
-  type OperationalReturn,
-  type OperationsContext,
-} from "../operations";
-import type {
-  Alert,
-  Approval,
-  Branch,
-  DemoInvoice,
-  NoteRecord,
-} from "../types";
+import { companyTimestamp } from "../operations";
+import type { Alert, Approval, Branch, DemoInvoice } from "../types";
 
 function DashboardListRow({
   title,
@@ -131,13 +106,14 @@ export function Dashboard() {
   );
   const {
     state,
-    update,
-    role,
+    actor,
+    can,
+    command,
+    query,
     branch,
     t,
     lang,
     navigate,
-    user,
     needsReauthentication,
   } = useDemo();
   const [scope, setScope] = useState<"all" | "branch">("all");
@@ -156,36 +132,44 @@ export function Dashboard() {
     company: string;
     branch: Branch;
   } | null>(null);
-  const context: OperationsContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor:
-      user?.name ?? demoUsers.find((item) => item.role === role)?.name ?? "",
-  };
-  if (role !== "supervisor")
+  const result = useProtectedQuery(
+    "dashboard.company",
+    { company_id: state.config.company.seed_key, kind: "company_shared" },
+    (canonical, current) => dashboardSummary(canonical, current, new Date(now)),
+    `dashboard:${Math.floor(now / 60_000)}`,
+  );
+  const context = actor;
+  if (!context || !can("dashboard.company")) return null;
+  if (result.error)
     return (
       <EmptyState>
         {t(
-          "The Supervisor dashboard is available to Supervisors only.",
-          "داشبورد سرپرست فقط برای سرپرستان در دسترس است.",
+          "Browser storage could not be read or updated. Your original data is retained. Allow browser storage, then reload.",
+          "فضای ذخیره‌سازی مرورگر قابل خواندن یا به‌روزرسانی نیست. داده‌های اصلی شما حفظ شده‌اند. ذخیره‌سازی مرورگر را مجاز کنید، سپس صفحه را دوباره بارگذاری کنید.",
         )}
       </EmptyState>
     );
+  if (!result.data)
+    return <EmptyState>{t("Loading", "در حال بارگذاری")}</EmptyState>;
+  const {
+    today,
+    recentInvoices,
+    shortCount,
+    expiryCount,
+    notes,
+    activity,
+    balances,
+    purchases,
+    arrivals,
+    weeklyChanges,
+    approvalPrices,
+  } = result.data;
 
   const branches = sellingBranches(state.config);
-  const today = companyDate(state.config);
-  const approvals = scopedRecords(
-    state.approvals.map((row) => ({
-      ...row,
-      branch: effectiveApprovalLocation(state, row),
-    })),
-    context,
-  ).filter((item) => item.status === "pending");
-  const pendingSaleRequests = scopedRecords(
-    state.sale_requests ?? [],
-    context,
-  ).filter((request) => request.status === "pending");
+  const approvals = state.approvals.filter((item) => item.status === "pending");
+  const pendingSaleRequests = (state.sale_requests ?? []).filter(
+    (item) => item.status === "pending",
+  );
   const alertPriority: Record<Alert["type"], number> = {
     lower_price: 0,
     price_conflict: 1,
@@ -210,8 +194,7 @@ export function Dashboard() {
     .sort(
       (left, right) => alertPriority[left.type] - alertPriority[right.type],
     );
-  const returns = scopedRecords(state.returns, context) as OperationalReturn[];
-  const openReturns = returns.filter(
+  const openReturns = state.returns.filter(
     (item) => item.status !== "resolved" && item.status !== "cancelled",
   );
   const returnCredits = openReturns.filter(
@@ -219,82 +202,6 @@ export function Dashboard() {
       item.status === "claim_pending" ||
       item.claims?.some((claim) => claim.status === "submitted"),
   );
-  const invoices = scopedRecords(
-    (state.invoices ?? []).map((row) => projectInvoiceLocation(state, row)),
-    context,
-  );
-  const currentInvoiceVisible =
-    state.invoice.company_id === context.company_id &&
-    (branch === "all" ||
-      effectiveInvoiceLocation(state, state.invoice) === branch);
-  if (currentInvoiceVisible && state.invoice.status !== "empty") {
-    const currentIndex = invoices.findIndex(
-      (item) => item.id === state.invoice.id,
-    );
-    if (currentIndex === -1)
-      invoices.push(projectInvoiceLocation(state, state.invoice));
-    else invoices[currentIndex] = projectInvoiceLocation(state, state.invoice);
-  }
-  const posted = invoices.filter((item) => item.status === "posted");
-  const recentInvoices = invoices
-    .filter((item) => item.status !== "empty")
-    .sort((left, right) =>
-      (
-        right.posted_at ??
-        right.received_at ??
-        right.invoice_date ??
-        ""
-      ).localeCompare(
-        left.posted_at ?? left.received_at ?? left.invoice_date ?? "",
-      ),
-    )
-    .slice(0, 5);
-  const shorts = posted.flatMap((invoice) =>
-    invoice.lines.filter(
-      (line) =>
-        line.qty_invoiced -
-          line.qty_received_at_posting -
-          (line.qty_later_received ?? 0) >
-        0,
-    ),
-  );
-  const expiry = activeTrackedDates(state, {
-    ...context,
-    allowed_branches:
-      role === "supervisor" ? configuredBranches(state.config, true) : [branch],
-  }).filter((item) => dateIsDueSoon(state, item));
-  const notes = scopedRecords(state.notes, context)
-    .filter(
-      (item) =>
-        !item.archived &&
-        item.type === "note_to_supervisor" &&
-        item.status !== "resolved",
-    )
-    .sort(
-      (left, right) =>
-        Number(right.status === "open") - Number(left.status === "open") ||
-        right.created_at.localeCompare(left.created_at),
-    );
-  const activity = state.activity
-    .filter(
-      (item) =>
-        item.company_id === context.company_id &&
-        (branch === "all" || item.branch === branch || item.branch === "all"),
-    )
-    .sort((left, right) => right.at.localeCompare(left.at));
-  const balances = supplierBalanceOverview(state, context)
-    .map((item) => {
-      const summary = supplierBalanceSummary(state, context, item.supplier);
-      const outstanding = summary.invoices.filter((invoice) =>
-        new Decimal(invoice.amount).gt(0),
-      );
-      return { ...item, summary, outstanding };
-    })
-    .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
-    .slice(0, 5);
-  const purchases = dashboardPurchases(state, context, today);
-  const arrivals = dashboardArrivals(state, context, today);
-  const weeklyChanges = dashboardPriceChanges(state, context, today);
   const productName = (code: string) => {
     const product = state.products.find(
       (item) => item.company_id === context.company_id && item.code === code,
@@ -356,7 +263,7 @@ export function Dashboard() {
       review: t("Needs review", "نیاز به بررسی"),
       posted: t("Posted", "ثبت‌شده"),
     })[status];
-  const noteText = (item: NoteRecord) =>
+  const noteText = (item: DashboardSummary["notes"][number]) =>
     item.text ===
     "Customer asked about the tea glass set price; please confirm."
       ? t(
@@ -451,40 +358,60 @@ export function Dashboard() {
         "تعدیل دفتر ثبت شد",
       ),
     })[action] ?? historyActionLabel(action, lang);
-  const openPreview = (approval: Approval, decision: "approve" | "reject") => {
+  const openPreview = async (
+    approval: Approval,
+    decision: "approve" | "reject",
+  ) => {
     setMessage("");
     setError("");
     if (needsReauthentication("approvals")) {
       navigate("approvals");
       return;
     }
-    setScope("all");
-    setPreview({
-      approval,
-      decision,
-      snapshot: approvalSnapshot(state, approval.product_code),
-      target: branchSellsToCustomers(state.config, approval.branch)
-        ? approval.branch
-        : branchSellsToCustomers(state.config, branch)
-          ? branch
-          : (branches[0] ?? "all"),
+    const reviewed = {
       company: context.company_id,
       branch,
-    });
+      approval,
+      decision,
+    };
+    try {
+      const snapshot = await query(
+        "approvals.decide",
+        {
+          company_id: context.company_id,
+          kind: "company_shared",
+          entity_id: approval.id,
+        },
+        (canonical, current) =>
+          approvalSnapshot(canonical, current, approval.product_code),
+      );
+      setScope("all");
+      setPreview({
+        ...reviewed,
+        snapshot,
+        target: branchSellsToCustomers(state.config, approval.branch)
+          ? approval.branch
+          : branchSellsToCustomers(state.config, branch)
+            ? branch
+            : "all",
+      });
+    } catch {
+      setError(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
   };
-  const confirm = () => {
+  const confirm = async () => {
     if (!preview) return;
     if (needsReauthentication("approvals")) {
       setPreview(null);
       navigate("approvals");
       return;
     }
-    if (
-      preview.company !== context.company_id ||
-      preview.branch !== branch ||
-      preview.snapshot !==
-        approvalSnapshot(state, preview.approval.product_code)
-    ) {
+    if (preview.company !== context.company_id || preview.branch !== branch) {
       setError(
         t(
           "Prices or branch changed. Open the approval again to review the latest prices before confirming.",
@@ -495,16 +422,25 @@ export function Dashboard() {
       return;
     }
     try {
-      update((draft) =>
-        resolveApproval(
-          draft,
-          preview.approval.id,
-          preview.decision,
-          scope,
-          preview.target,
-          undefined,
-          preview.snapshot,
-        ),
+      await command(
+        "approvals.decide",
+        {
+          company_id: context.company_id,
+          kind: "company_shared",
+          entity_id: preview.approval.id,
+          mutation: true,
+        },
+        (draft, current) =>
+          resolveApproval(
+            draft,
+            current,
+            preview.approval.id,
+            preview.decision,
+            scope,
+            preview.target,
+            undefined,
+            preview.snapshot,
+          ),
       );
       setMessage(
         preview.decision === "reject"
@@ -558,14 +494,14 @@ export function Dashboard() {
     },
     {
       label: t("Open shorts", "کسری‌های باز"),
-      value: shorts.length,
+      value: shortCount,
       detail: t("Items waiting for delivery", "کالاهای در انتظار تحویل"),
       page: "invoices",
       icon: PackageMinus,
     },
     {
       label: t("Expiring soon", "انقضای نزدیک"),
-      value: expiry.length,
+      value: expiryCount,
       detail: t(
         "Within each product's reminder window",
         "در بازهٔ یادآوری هر محصول",
@@ -578,7 +514,10 @@ export function Dashboard() {
   return (
     <>
       <PageHeader
-        title={t("Supervisor dashboard", "داشبورد سرپرست")}
+        title={t(
+          `${configuredRoleLabel(state.config.roles, "manager", "en")} dashboard`,
+          `داشبورد ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
+        )}
         description={t(
           "Your branch priorities, approvals, and recent activity.",
           "اولویت‌های شعبه، تأییدها و فعالیت اخیر.",
@@ -656,7 +595,9 @@ export function Dashboard() {
                         value.code === item.product_code,
                     );
                     if (!product) return null;
-                    const approved = regularPrice(state, product, item.branch);
+                    const approved =
+                      approvalPrices.find((row) => row.id === item.id)
+                        ?.regular_price ?? null;
                     const inline =
                       !item.manual_override &&
                       (item.type === "new_product" ||
@@ -1122,7 +1063,7 @@ export function Dashboard() {
                         <Money value={item.balance} />
                       </td>
                       <td className="numeric">
-                        <bdi>{item.outstanding.length}</bdi>
+                        <bdi>{item.outstandingCount}</bdi>
                       </td>
                       <td className="numeric">
                         <Money value={item.overdue} />
@@ -1380,13 +1321,7 @@ export function Dashboard() {
                       entry.company_id === context.company_id &&
                       entry.code === item.product_code,
                   );
-                  const price = product
-                    ? regularPrice(
-                        state,
-                        product,
-                        item.branch === "all" ? branch : item.branch,
-                      )
-                    : null;
+                  const price = item.regular_price;
                   return (
                     <DashboardListRow
                       key={item.id}
@@ -1443,12 +1378,17 @@ export function Dashboard() {
           className="dashboard-aside"
           aria-label={t("Notes and activity", "یادداشت‌ها و فعالیت")}
         >
-          <Card title={t("Notes for Supervisor", "یادداشت‌های سرپرست")}>
+          <Card
+            title={t(
+              `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,
+              `یادداشت‌های ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
+            )}
+          >
             {notes.length === 0 ? (
               <EmptyState>
                 {t(
-                  "No open notes for the Supervisor.",
-                  "یادداشت بازی برای سرپرست نیست.",
+                  `No open notes for the ${configuredRoleLabel(state.config.roles, "manager", "en")}.`,
+                  `یادداشت بازی برای ${configuredRoleLabel(state.config.roles, "manager", "fa")} نیست.`,
                 )}
               </EmptyState>
             ) : (

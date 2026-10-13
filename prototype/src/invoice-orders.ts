@@ -1,11 +1,5 @@
 import Decimal from "decimal.js";
-import type {
-  DemoState,
-  InvoiceLine,
-  Role,
-  Branch,
-  DemoInvoice,
-} from "./types";
+import type { DemoState, InvoiceLine, DemoInvoice } from "./types";
 import {
   compareInvoiceOrder,
   suggestOpenOrders,
@@ -18,8 +12,20 @@ import {
   type OrderReceiptInput,
 } from "./orders";
 import { associatePostedSupplierItem } from "./supplier-items";
-import { effectiveInvoiceLocation } from "./received";
-import type { OperationsContext } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { cloneWithAuthority, freshActor } from "./authority";
+import { can } from "./permissions";
+import { purchaseLocationScope } from "./purchase-authority";
+import {
+  canInvoiceAuthority,
+  requireInvoiceAuthority,
+} from "./invoice-authority";
+import {
+  invoicePurchaseEvidence,
+  invoiceEvidenceActor,
+  closePurchaseEvidence,
+  type InternalPurchaseEvidence,
+} from "./purchase-evidence.internal";
 
 /** A retained explanation of a received invoice's differences from its order. */
 export interface InvoiceOrderDifference {
@@ -41,49 +47,59 @@ export interface InvoiceOrderDifference {
 export function invoiceReviewerAllowed(
   state: DemoState,
   invoice: DemoInvoice,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor | null,
 ): boolean {
-  return (
-    invoice.company_id === state.config.company.seed_key &&
-    role !== "cashier" &&
-    (role === "supervisor" ||
-      (invoice.status === "posted"
-        ? effectiveInvoiceLocation(state, invoice)
-        : (invoice.handling_branch ?? invoice.branch)) === branch)
-  );
+  return canInvoiceAuthority(state, actor, "invoices.read", invoice.id);
 }
-
 export function compatibleInvoiceOrders(
   state: DemoState,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor,
 ): Order[] {
-  return invoiceReviewerAllowed(state, state.invoice, role, branch)
-    ? suggestOpenOrders(state, state.invoice)
-    : [];
+  const current = requireInvoiceAuthority(state, actor, "invoices.cost_read");
+  return suggestOpenOrders(state, current, state.invoice);
 }
 
 export function linkedInvoiceOrder(
   state: DemoState,
+  actor: AuthenticatedActor,
   invoice = state.invoice,
 ): Order | null {
+  actor = requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.cost_read",
+    invoice.id,
+  );
+  const canonical =
+    invoice.id === state.invoice.id
+      ? state.invoice
+      : state.invoices?.find((record) => record.id === invoice.id);
+  if (!canonical) return null;
+  invoice = canonical;
   return (
     (state.orders ?? []).find(
       (order) =>
         order.id === invoice.order_id &&
-        order.company_id === invoice.company_id,
+        order.company_id === invoice.company_id &&
+        can(
+          state,
+          actor,
+          "invoices.cost_read",
+          purchaseLocationScope(order.company_id, order.branch),
+        ).allowed,
     ) ?? null
   );
 }
 
 export function currentInvoiceOrderComparison(
   state: DemoState,
+  actor: AuthenticatedActor,
 ): OrderComparison | null {
+  requireInvoiceAuthority(state, actor, "invoices.cost_read");
+  const order = linkedInvoiceOrder(state, actor);
+  if (!order) return null;
   if (state.invoice.status === "posted")
     return state.invoice.order_comparison ?? null;
-  const order = linkedInvoiceOrder(state);
-  if (!order) return null;
   try {
     return compareInvoiceOrder(order, state.invoice);
   } catch {
@@ -93,17 +109,22 @@ export function currentInvoiceOrderComparison(
 
 export function setInvoiceOrder(
   state: DemoState,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor,
   orderId: string,
 ): void {
   if (
-    !invoiceReviewerAllowed(state, state.invoice, role, branch) ||
+    !canInvoiceAuthority(
+      state,
+      actor,
+      "invoices.edit",
+      state.invoice.id,
+      true,
+    ) ||
     state.invoice.status === "posted"
   )
     throw new Error("Choose an invoice in your allowed receiving location.");
   const order = orderId
-    ? compatibleInvoiceOrders(state, role, branch).find(
+    ? compatibleInvoiceOrders(state, actor).find(
         (candidate) => candidate.id === orderId,
       )
     : null;
@@ -115,7 +136,7 @@ export function setInvoiceOrder(
   if (order) {
     state.invoice.order_id = order.id;
     state.invoice.order_review_version = order.version;
-    const comparison = currentInvoiceOrderComparison(state);
+    const comparison = currentInvoiceOrderComparison(state, actor);
     for (const row of comparison?.lines ?? [])
       state.invoice.lines[row.invoice_line_index].order_item_id =
         row.order_line_id;
@@ -124,20 +145,25 @@ export function setInvoiceOrder(
 
 export function setInvoiceExtraDecision(
   state: DemoState,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor,
   index: number,
   decision: "keep" | "refuse",
 ): void {
   if (
-    !invoiceReviewerAllowed(state, state.invoice, role, branch) ||
+    !canInvoiceAuthority(
+      state,
+      actor,
+      "invoices.edit",
+      state.invoice.id,
+      true,
+    ) ||
     state.invoice.status === "posted" ||
     !["keep", "refuse"].includes(decision)
   )
     throw new Error(
       "Review the delivered invoice before choosing an extra-item decision.",
     );
-  const comparison = currentInvoiceOrderComparison(state);
+  const comparison = currentInvoiceOrderComparison(state, actor);
   const row = comparison?.lines.find(
     (entry) => entry.invoice_line_index === index,
   );
@@ -153,18 +179,17 @@ export function setInvoiceExtraDecision(
 /** Explicit reviewer choice; neither names nor product similarity select a temporary line. */
 export function setInvoiceNewItemMatch(
   state: DemoState,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor,
   orderLineId: string,
   invoiceLineIndex: number | null,
 ): void {
   const invoice = state.invoice;
-  const order = linkedInvoiceOrder(state);
+  const order = linkedInvoiceOrder(state, actor);
   if (
-    !invoiceReviewerAllowed(state, invoice, role, branch) ||
+    !canInvoiceAuthority(state, actor, "invoices.edit", invoice.id, true) ||
     invoice.status === "posted" ||
     !order ||
-    !compatibleInvoiceOrders(state, role, branch).some(
+    !compatibleInvoiceOrders(state, actor).some(
       (item) => item.id === order.id,
     ) ||
     invoice.order_review_version !== order.version
@@ -223,15 +248,15 @@ export function setInvoiceNewItemMatch(
 export type InvoiceOrderIssue = "order" | "order_decisions";
 export function invoiceOrderIssues(
   state: DemoState,
-  role: Role,
-  branch: Branch,
+  actor: AuthenticatedActor,
 ): InvoiceOrderIssue[] {
+  requireInvoiceAuthority(state, actor, "invoices.read");
   const invoice = state.invoice;
   if (!invoice.order_id)
     return invoice.lines.some((line) => (line.refused_units ?? 0) > 0)
       ? ["order_decisions"]
       : [];
-  const order = compatibleInvoiceOrders(state, role, branch).find(
+  const order = compatibleInvoiceOrders(state, actor).find(
     (record) => record.id === invoice.order_id,
   );
   if (!order || order.version !== invoice.order_review_version)
@@ -320,72 +345,104 @@ function initialReceipt(invoice: DemoInvoice): OrderReceiptInput {
 /** Validate a prospective posted snapshot before any receipt or money is written. */
 export function prepareInvoiceOrder(
   state: DemoState,
-  role: Role,
-  branch: Branch,
-  actor: string,
+  actor: AuthenticatedActor,
 ): OrderComparison | null {
+  actor = requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.post",
+    state.invoice.id,
+    true,
+  );
   if (!state.invoice.order_id) return null;
-  const issues = invoiceOrderIssues(state, role, branch);
+  const issues = invoiceOrderIssues(state, actor);
   if (issues.length) throw new Error(issues.join(", "));
-  const comparison = currentInvoiceOrderComparison(state)!;
-  const preview = structuredClone(state);
-  preview.invoice.status = "posted";
-  preview.invoice.order_comparison = structuredClone(comparison);
-  preview.invoices = (preview.invoices ?? []).filter(
-    (invoice) =>
-      invoice.id !== preview.invoice.id ||
-      invoice.company_id !== preview.invoice.company_id,
-  );
-  preview.invoices.push(structuredClone(preview.invoice));
-  for (const row of comparison.lines) {
-    const temporary = linkedInvoiceOrder(preview)?.lines.find(
-      (line) =>
-        line.id === row.order_line_id &&
-        line.new_item &&
-        !line.new_item_association,
-    );
-    const line = preview.invoice.lines[row.invoice_line_index];
-    if (!temporary || row.accepted_units <= 0) continue;
-    if (line.product_code === "NEW") {
-      const existing = preview.products.find(
-        (product) =>
-          product.company_id === line.company_id &&
-          product.name_en === line.new_name_en,
-      );
-      if (existing) line.product_code = existing.code;
-      else continue;
-    }
-    associatePostedSupplierItem(
-      preview,
-      { company_id: preview.invoice.company_id, role, branch, actor },
-      preview.invoice,
-      row.invoice_line_index,
-    );
-  }
-  validateOrderReceipt(
+  const comparison = currentInvoiceOrderComparison(state, actor)!;
+  const preview = cloneWithAuthority(state);
+  const evidence = invoicePurchaseEvidence(
     preview,
-    { company_id: preview.invoice.company_id, role, branch, actor },
-    preview.invoice.order_id!,
-    initialReceipt(preview.invoice),
+    actor,
+    preview.invoice.id,
+    "invoice_post",
   );
-  return comparison;
+  try {
+    preview.invoice.status = "posted";
+    preview.invoice.order_comparison = structuredClone(comparison);
+    preview.invoices = (preview.invoices ?? []).filter(
+      (invoice) =>
+        invoice.id !== preview.invoice.id ||
+        invoice.company_id !== preview.invoice.company_id,
+    );
+    preview.invoices.push(structuredClone(preview.invoice));
+    for (const row of comparison.lines) {
+      const temporary = preview.orders
+        ?.find(
+          (item) =>
+            item.id === preview.invoice.order_id &&
+            item.company_id === preview.invoice.company_id,
+        )
+        ?.lines.find(
+          (line) =>
+            line.id === row.order_line_id &&
+            line.new_item &&
+            !line.new_item_association,
+        );
+      const line = preview.invoice.lines[row.invoice_line_index];
+      if (!temporary || row.accepted_units <= 0) continue;
+      if (line.product_code === "NEW") {
+        const existing = preview.products.find(
+          (product) =>
+            product.company_id === line.company_id &&
+            product.name_en === line.new_name_en,
+        );
+        if (existing) line.product_code = existing.code;
+        else continue;
+      }
+      associatePostedSupplierItem(
+        preview,
+        evidence,
+        preview.invoice,
+        row.invoice_line_index,
+      );
+    }
+    validateOrderReceipt(
+      preview,
+      actor,
+      preview.invoice.order_id!,
+      initialReceipt(preview.invoice),
+      evidence,
+    );
+    return comparison;
+  } finally {
+    closePurchaseEvidence(evidence);
+  }
 }
 
 export function applyPostedInvoiceOrder(
   state: DemoState,
-  role: Role,
-  branch: Branch,
-  actor: string,
+  actor: AuthenticatedActor,
+  evidence: InternalPurchaseEvidence,
 ): void {
+  const current = invoiceEvidenceActor(
+    state,
+    evidence,
+    state.invoice.id,
+    "invoice_post",
+  );
+  actor = freshActor(state, actor);
+  if (
+    actor.user_id !== current.user_id ||
+    actor.session_id !== current.session_id
+  )
+    throw new Error("Invoice authority changed.");
   if (state.invoice.order_id) {
-    const order = linkedInvoiceOrder(state)!;
+    const order = state.orders!.find(
+      (item) =>
+        item.id === state.invoice.order_id &&
+        item.company_id === state.invoice.company_id,
+    )!;
     const input = initialReceipt(state.invoice);
-    validateOrderReceipt(
-      state,
-      { company_id: state.invoice.company_id, role, branch, actor },
-      order.id,
-      input,
-    );
+    validateOrderReceipt(state, actor, order.id, input, evidence);
     const already = order.receipts.some(
       (event) =>
         event.kind === "invoice" && event.invoice_id === state.invoice.id,
@@ -404,7 +461,7 @@ export function applyPostedInvoiceOrder(
           continue;
         const item = associatePostedSupplierItem(
           state,
-          { company_id: state.invoice.company_id, role, branch, actor },
+          evidence,
           state.invoice,
           row.invoice_line_index,
         );
@@ -429,19 +486,40 @@ export function applyPostedInvoiceOrder(
       }
     applyInvoiceToOrder(
       state,
-      { company_id: state.invoice.company_id, role, branch, actor },
+      actor,
       state.invoice.order_id,
       initialReceipt(state.invoice),
+      evidence,
     );
   }
 }
 
 export function invoiceOrderDifferences(
   state: DemoState,
+  actor: AuthenticatedActor,
   comparison: OrderComparison,
+  evidence?: InternalPurchaseEvidence,
 ): InvoiceOrderDifference[] {
+  if (evidence) {
+    const current = invoiceEvidenceActor(
+      state,
+      evidence,
+      state.invoice.id,
+      "invoice_post",
+    );
+    actor = freshActor(state, actor);
+    if (
+      actor.user_id !== current.user_id ||
+      actor.session_id !== current.session_id
+    )
+      throw new Error("Invoice authority changed.");
+  } else requireInvoiceAuthority(state, actor, "invoices.cost_read");
   const invoice = state.invoice;
-  const order = linkedInvoiceOrder(state)!;
+  const order = state.orders?.find(
+    (item) =>
+      item.id === invoice.order_id && item.company_id === invoice.company_id,
+  );
+  if (!order) throw new Error("order");
   const result: InvoiceOrderDifference[] = [];
   for (const row of comparison.lines) {
     const line = invoice.lines[row.invoice_line_index];
@@ -537,18 +615,26 @@ export function shortOrderReceipt(
 
 export function validateShortOrderReceipt(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   input: OrderReceiptInput,
+  evidence: InternalPurchaseEvidence,
 ): void {
-  validateOrderReceipt(state, context, state.invoice.order_id!, input);
+  validateOrderReceipt(
+    state,
+    context,
+    state.invoice.order_id!,
+    input,
+    evidence,
+  );
 }
 
 export function applyShortOrderReceipt(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   input: OrderReceiptInput,
+  evidence: InternalPurchaseEvidence,
 ): void {
-  applyInvoiceToOrder(state, context, state.invoice.order_id!, input);
+  applyInvoiceToOrder(state, context, state.invoice.order_id!, input, evidence);
 }
 
 /** Changing a receiving location or supplier invalidates the old order link. */

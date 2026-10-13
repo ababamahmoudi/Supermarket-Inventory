@@ -1,3 +1,5 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
 import { beforeEach, describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import { effectivePrice, pendingPrice } from "./catalog";
@@ -31,14 +33,13 @@ beforeEach(() => {
   product = state.products.find((item) => item.code === "0009")!;
 });
 function context(branch = "Branch 1") {
-  return {
-    company_id: state.config.company.seed_key,
-    role: "supervisor" as const,
-    actor: "Demo Supervisor",
-    branch,
-    allowed_branches: configuredBranches(state.config),
-  };
+  return authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    username: "supervisor",
+    selection: { kind: "location", location_id: branch },
+  });
 }
+
 function edits(patch: Partial<ProductEdits> = {}): ProductEdits {
   return {
     name_en: product.name_en,
@@ -143,11 +144,11 @@ describe("manual price provenance", () => {
   it("clears only the accepted rule scope, including a rule that equals the company manual price", () => {
     save("3.29");
     const item = proposal({ proposed_price: "3.29", clear_manual_price: true });
-    resolveApproval(state, item.id, "approve", "branch", "Branch 1");
+    resolveApproval(state, context(), item.id, "approve", "branch", "Branch 1");
     expect(effectivePrice(state, product, "Branch 1")).toBe("3.29");
     expect(manualPrice(state, product, "Branch 1")).toBeNull();
     expect(manualPrice(state, product, "Branch 2")?.price).toBe("3.29");
-    applyApprovedPrice(state, product.code, "2.99", "all", "all");
+    applyApprovedPrice(state, context(), product.code, "2.99", "all", "all");
     expect(product.manual_prices).toEqual({});
     expect(manualPrice(state, product, "Branch 2")).toBeNull();
   });
@@ -156,12 +157,19 @@ describe("manual price provenance", () => {
     const item = proposal({ clear_manual_price: true });
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("3.29");
     expect(pendingPrice(state, product, "Branch 1")).toBe("2.99");
-    resolveApproval(state, item.id, "reject", "branch", "Branch 1");
+    resolveApproval(state, context(), item.id, "reject", "branch", "Branch 1");
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("3.29");
   });
   it("preserves other locations' saved B manual provenance during a branch-only rule decision", () => {
     legacySavedBPrice("3.29");
-    applyApprovedPrice(state, product.code, "2.99", "branch", "Branch 1");
+    applyApprovedPrice(
+      state,
+      context(),
+      product.code,
+      "2.99",
+      "branch",
+      "Branch 1",
+    );
     expect(manualPrice(state, product, "Branch 1")).toBeNull();
     expect(manualPrice(state, product, "Branch 2")?.price).toBe("3.29");
   });
@@ -191,13 +199,13 @@ describe("manual price provenance", () => {
       state.products.find((item) => item.code === product.code)?.manual_prices
         ?.all.price,
     ).toBe("3.29");
-    applyApprovedPrice(state, product.code, "3.29", "all", "all");
+    applyApprovedPrice(state, context(), product.code, "3.29", "all", "all");
     hydrateManualPriceMarkers(state);
     expect(manualPrice(state, product, "Branch 1")).toBeNull();
   });
   it("restores the marker together with the edited price through conflict-aware History", () => {
     save("3.29");
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     save("4.29", "branch");
     const entries = attachReversals(before, state, context());
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("4.29");
@@ -231,7 +239,7 @@ describe("manual price provenance", () => {
   });
   it("rejects a stale Revert after the derived conflict alert was separately resolved", () => {
     save("3.29");
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     save("4.29", "branch");
     const entry = attachReversals(before, state, context()).at(-1)!;
     const conflict = state.alerts.find(
@@ -331,10 +339,10 @@ describe("scoped catalog cost history", () => {
     expect(productStoreCost(state, context(), product)).toBe("1.7001");
     for (const role of ["floor_worker", "cashier"] as const) {
       expect(
-        productCostHistory(state, { ...context(), role }, product),
+        productCostHistory(state, authenticatedTestActor(state, role), product),
       ).toEqual([]);
       expect(
-        productStoreCost(state, { ...context(), role }, product),
+        productStoreCost(state, authenticatedTestActor(state, role), product),
       ).toBeNull();
     }
     expect(
@@ -397,7 +405,7 @@ describe("approval location follows append-only invoice corrections", () => {
       invoice_number: original.supplier_invoice_number,
       proposed_price: "3.29",
     });
-    const snapshot = approvalSnapshot(state, product.code);
+    const snapshot = approvalSnapshot(state, context(), product.code);
     const preview = invoiceLocationMovePreview(
       state,
       context(),
@@ -417,6 +425,7 @@ describe("approval location follows append-only invoice corrections", () => {
     expect(() =>
       resolveApproval(
         state,
+        context(),
         item.id,
         "approve",
         "branch",
@@ -425,7 +434,7 @@ describe("approval location follows append-only invoice corrections", () => {
         snapshot,
       ),
     ).toThrow("Prices changed");
-    resolveApproval(state, item.id, "approve", "branch", "Branch 1");
+    resolveApproval(state, context(), item.id, "approve", "branch", "Branch 1");
     expect(effectivePrice(state, product, "Warehouse")).toBe("3.29");
     expect(effectivePrice(state, product, "Branch 1")).toBe("2.99");
     expect(item.branch).toBe("Branch 1");
@@ -461,10 +470,11 @@ describe("approval location follows append-only invoice corrections", () => {
       "Correct delivery location",
       preview.snapshot,
     );
-    keepApprovedPrice(state, kept.id, "Retain approved price");
+    keepApprovedPrice(state, context(), kept.id, "Retain approved price");
     expect(state.activity.at(-1)?.branch).toBe("Warehouse");
     const next = proposeManualOverride(
       state,
+      context(),
       overridden.id,
       "4.99",
       "Manual price decision",

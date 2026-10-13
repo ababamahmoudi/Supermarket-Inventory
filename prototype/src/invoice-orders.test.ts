@@ -25,17 +25,33 @@ import { costPerUnit, saveSupplierItem } from "./supplier-items";
 import { receivedLog, setInvoiceLocation } from "./received";
 import { setManualPriceMarker } from "./manual-prices";
 import type { DemoState, InvoiceLine } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
+const managers = new WeakMap<DemoState, AuthenticatedActor>();
+function actor(state: DemoState) {
+  let current = managers.get(state);
+  if (!current) {
+    current = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+      selection: { kind: "all_locations" },
+      name_en: "Ali",
+    });
+    managers.set(state, current);
+  }
+  return current;
+}
 import type { Order, OrderLine } from "./orders";
 
 function draft(): DemoState {
   const state = initialState();
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, actor(state), "Branch 1", true);
   state.invoice.supplier = "Fresh Valley Foods";
   state.invoice.supplier_confirmed = true;
   state.invoice.supplier_invoice_number = "FICTIONAL-C2-100";
   state.invoice.file_name = "fictional-original.png";
   state.invoice.file_data = "data:image/png;base64,ZGVtbw==";
-  addManualLine(state, "0002");
+  addManualLine(state, actor(state), "0002");
   state.invoice.lines[0].unit_cost_before_tax = "0.9800";
   setInvoiceLineQuantity(state.invoice.lines[0], "12", "units", 12);
   recalculateInvoice(state.invoice, state.config);
@@ -114,18 +130,15 @@ function addOrder(
   return order;
 }
 function link(state: DemoState) {
-  setInvoiceOrder(state, "supervisor", "Branch 1", "order-1");
+  setInvoiceOrder(state, actor(state), "order-1");
 }
 function postingEntries(state: DemoState) {
   return state.ledger.filter((row) => row.invoice_id === state.invoice.id);
 }
 const receipts = (state: DemoState) =>
-  receivedLog(state, {
-    company_id: state.invoice.company_id,
-    role: "supervisor",
-    branch: "all",
-    actor: "Ali",
-  }).filter((row) => row.invoice_id === state.invoice.id);
+  receivedLog(state, actor(state)).filter(
+    (row) => row.invoice_id === state.invoice.id,
+  );
 
 describe("invoice pack snapshots and payable precision", () => {
   it("remembers a unique uploaded supplier item's pack without changing parsed quantities, costs or explicit metadata", () => {
@@ -133,24 +146,14 @@ describe("invoice pack snapshots and payable precision", () => {
     state.invoice.status = "empty";
     state.invoices = [];
     state.supplier_items = [];
-    const original = createInvoice(state, "Branch 1");
+    const original = createInvoice(state, actor(state), "Branch 1");
     const parsed = original.lines.find((line) => line.product_code === "0002")!;
-    const item = saveSupplierItem(
-      state,
-      {
-        company_id: original.company_id,
-        role: "supervisor",
-        branch: "all",
-        actor: "Ali",
-      },
-      original.supplier,
-      {
-        product_code: "0002",
-        supplier_item_code: "UPLOAD-PACK-12",
-        units_per_case: 12,
-      },
-    );
-    const uploaded = createInvoice(state, "Branch 1");
+    const item = saveSupplierItem(state, actor(state), original.supplier, {
+      product_code: "0002",
+      supplier_item_code: "UPLOAD-PACK-12",
+      units_per_case: 12,
+    });
+    const uploaded = createInvoice(state, actor(state), "Branch 1");
     const remembered = uploaded.lines.find(
       (line) => line.product_code === "0002",
     )!;
@@ -165,7 +168,9 @@ describe("invoice pack snapshots and payable precision", () => {
       supplier_item_code: "UPLOAD-PACK-12",
       units_per_case: 6,
     };
-    expect(rememberInvoiceSupplierItem(state, uploaded, explicit)).toEqual({
+    expect(
+      rememberInvoiceSupplierItem(state, actor(state), uploaded, explicit),
+    ).toEqual({
       ...explicit,
       supplier_item_id: item.id,
     });
@@ -174,23 +179,18 @@ describe("invoice pack snapshots and payable precision", () => {
       supplier_item_code: "PARSED-DIFFERENT-SKU",
       units_per_case: 24,
     };
-    expect(rememberInvoiceSupplierItem(state, uploaded, differentSku)).toEqual(
-      differentSku,
-    );
+    expect(
+      rememberInvoiceSupplierItem(state, actor(state), uploaded, differentSku),
+    ).toEqual(differentSku);
   });
   it("declines ambiguous uploaded SKU packs and never borrows another company or supplier's pack", () => {
     const state = initialState();
     state.invoice.status = "empty";
     state.invoices = [];
     state.supplier_items = [];
-    const original = createInvoice(state, "Branch 1");
+    const original = createInvoice(state, actor(state), "Branch 1");
     const parsed = original.lines.find((line) => line.product_code === "0002")!;
-    const context = {
-      company_id: original.company_id,
-      role: "supervisor" as const,
-      branch: "all",
-      actor: "Ali",
-    };
+    const context = actor(state);
     const first = saveSupplierItem(state, context, original.supplier, {
       product_code: "0002",
       supplier_item_code: "UPLOAD-6",
@@ -202,7 +202,7 @@ describe("invoice pack snapshots and payable precision", () => {
       units_per_case: 12,
     });
     expect(
-      createInvoice(state, "Branch 1").lines.find(
+      createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
     ).toEqual(parsed);
@@ -210,7 +210,7 @@ describe("invoice pack snapshots and payable precision", () => {
       { ...first, company_id: "another-company", units_per_case: 48 },
     ];
     expect(
-      createInvoice(state, "Branch 1").lines.find(
+      createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
     ).toEqual(parsed);
@@ -226,7 +226,7 @@ describe("invoice pack snapshots and payable precision", () => {
       },
     ];
     expect(
-      createInvoice(state, "Branch 1").lines.find(
+      createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
     ).toEqual(parsed);
@@ -246,7 +246,7 @@ describe("invoice pack snapshots and payable precision", () => {
         .times(line.qty_invoiced)
         .toFixed(2),
     ).toBe("9994.80");
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, actor(state));
     expect(postingEntries(state)[0].amount).toBe("9995.00");
     expect(receipts(state)[0]).toMatchObject({
       units: 6000,
@@ -261,7 +261,7 @@ describe("invoice pack snapshots and payable precision", () => {
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
     expect(line.qty_invoiced).toBe(6);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
+    expect(invoiceBlockers(state, actor(state))).toEqual([]);
     setInvoiceLineQuantity(line, "7", "units", 12);
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
@@ -270,11 +270,9 @@ describe("invoice pack snapshots and payable precision", () => {
     setInvoiceLineQuantity(line, "0.5", "cases", 3);
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "quantity",
-    );
+    expect(invoiceBlockers(state, actor(state))).toContain("quantity");
     const before = structuredClone(state);
-    expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow();
+    expect(() => postInvoice(state, actor(state))).toThrow();
     expect(state).toEqual(before);
   });
 });
@@ -285,24 +283,26 @@ describe("invoice compared with its order", () => {
     addOrder(state);
     link(state);
     state.invoice.lines[0].unit_cost_before_tax = "";
-    expect(() => currentInvoiceOrderComparison(state)).not.toThrow();
-    expect(currentInvoiceOrderComparison(state)).toBeNull();
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain("cost");
     expect(() =>
-      setInvoiceOrder(state, "supervisor", "Branch 1", "order-1"),
+      currentInvoiceOrderComparison(state, actor(state)),
     ).not.toThrow();
+    expect(currentInvoiceOrderComparison(state, actor(state))).toBeNull();
+    expect(invoiceBlockers(state, actor(state))).toContain("cost");
+    expect(() => setInvoiceOrder(state, actor(state), "order-1")).not.toThrow();
     state.invoice.lines[0].unit_cost_before_tax = "0.9800";
-    expect(currentInvoiceOrderComparison(state)?.order_id).toBe("order-1");
+    expect(currentInvoiceOrderComparison(state, actor(state))?.order_id).toBe(
+      "order-1",
+    );
     state.invoice.lines[0].units_per_case = 0;
-    expect(currentInvoiceOrderComparison(state)).toBeNull();
+    expect(currentInvoiceOrderComparison(state, actor(state))).toBeNull();
   });
   it("records an as-ordered invoice once with an immutable comparison, no invented alert, and Received status", () => {
     const state = draft();
     const order = addOrder(state);
     link(state);
     confirm(state);
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([]);
+    postInvoice(state, actor(state));
     expect(order).toMatchObject({
       status: "received",
       linked_invoice_ids: [state.invoice.id],
@@ -315,13 +315,14 @@ describe("invoice compared with its order", () => {
       price_changed: false,
     });
     expect(
-      currentInvoiceOrderComparison(state)?.lines[0].expected_remaining_units,
+      currentInvoiceOrderComparison(state, actor(state))?.lines[0]
+        .expected_remaining_units,
     ).toBe(12);
     expect(
       state.alerts.filter((alert) => alert.invoice_id === state.invoice.id),
     ).toEqual([]);
     const after = structuredClone(state);
-    expect(postInvoice(state, "supervisor", "Branch 1", "Ali")).toBe(false);
+    expect(postInvoice(state, actor(state))).toBe(false);
     expect(state).toEqual(after);
   });
   it("uses invoice Shorts for billed missing units and updates later physical deliveries cumulatively without replay", () => {
@@ -330,45 +331,24 @@ describe("invoice compared with its order", () => {
     state.invoice.lines[0].qty_received_at_posting = 8;
     link(state);
     confirm(state);
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
       "order_decisions",
     ]);
     state.invoice.order_missing_decisions = { "order-line-1": "short" };
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, actor(state));
     expect(order.status).toBe("partially_received");
     expect(order.lines[0].received_units).toBe(8);
     expect(state.invoice.payable_after_open_shorts).toBe("7.84");
     expect(
-      receiveShort(
-        state,
-        "0002",
-        2,
-        "FICTITIOUS-LATER-1",
-        "supervisor",
-        "Branch 1",
-      ),
+      receiveShort(state, "0002", 2, "FICTITIOUS-LATER-1", actor(state)),
     ).toBe("1.96");
     expect(order.lines[0].received_units).toBe(10);
     const after = structuredClone(state);
     expect(
-      receiveShort(
-        state,
-        "0002",
-        2,
-        "FICTITIOUS-LATER-1",
-        "supervisor",
-        "Branch 1",
-      ),
+      receiveShort(state, "0002", 2, "FICTITIOUS-LATER-1", actor(state)),
     ).toBe("0.00");
     expect(state).toEqual(after);
-    receiveShort(
-      state,
-      "0002",
-      2,
-      "FICTITIOUS-LATER-2",
-      "supervisor",
-      "Branch 1",
-    );
+    receiveShort(state, "0002", 2, "FICTITIOUS-LATER-2", actor(state));
     expect(order.lines[0].received_units).toBe(12);
     expect(order.status).toBe("received");
     expect(order.receipts).toHaveLength(3);
@@ -395,11 +375,9 @@ describe("invoice compared with its order", () => {
       const order = addOrder(state, [orderLine(state), absent]);
       link(state);
       confirm(state);
-      expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-        "order_decisions",
-      );
+      expect(invoiceBlockers(state, actor(state))).toContain("order_decisions");
       state.invoice.order_missing_decisions = { absent: decision };
-      postInvoice(state, "supervisor", "Branch 1", "Ali");
+      postInvoice(state, actor(state));
       expect(postingEntries(state).map((row) => row.type)).toEqual(["invoice"]);
       expect(state.invoice.payable_after_open_shorts).toBe("11.76");
       expect(order.lines[1].received_units).toBe(0);
@@ -432,12 +410,14 @@ describe("invoice compared with its order", () => {
     recalculateInvoice(state.invoice, state.config);
     link(state);
     confirm(state);
-    expect(currentInvoiceOrderComparison(state)?.residual[0]).toMatchObject({
+    expect(
+      currentInvoiceOrderComparison(state, actor(state))?.residual[0],
+    ).toMatchObject({
       missing_units: 12,
       absent: false,
     });
     state.invoice.order_missing_decisions = { "order-line-1": "back_ordered" };
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, actor(state));
     expect(shortTotals(state.invoice).total).toBe("0.00");
     expect(postingEntries(state).map((row) => row.type)).toEqual(["invoice"]);
     expect(state.invoice.payable_after_open_shorts).toBe("35.28");
@@ -452,12 +432,12 @@ describe("invoice compared with its order", () => {
       recalculateInvoice(state.invoice, state.config);
       link(state);
       confirm(state);
-      expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+      expect(invoiceOrderIssues(state, actor(state))).toEqual([
         "order_decisions",
       ]);
-      setInvoiceExtraDecision(state, "supervisor", "Branch 1", 0, decision);
+      setInvoiceExtraDecision(state, actor(state), 0, decision);
       confirm(state);
-      postInvoice(state, "supervisor", "Branch 1", "Ali");
+      postInvoice(state, actor(state));
       expect(order.lines[0].received_units).toBe(12);
       expect(order.receipts[0].lines[0].extra_units).toBe(
         decision === "keep" ? 6 : 0,
@@ -493,13 +473,13 @@ describe("invoice compared with its order", () => {
     state.invoice.lines.push(extra);
     recalculateInvoice(state.invoice, state.config);
     link(state);
-    setInvoiceExtraDecision(state, "supervisor", "Branch 1", 1, "refuse");
+    setInvoiceExtraDecision(state, actor(state), 1, "refuse");
     confirm(state);
     const products = structuredClone(state.products);
     const expiry = structuredClone(state.expiry);
     const proposals = structuredClone(state.approvals);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    expect(invoiceBlockers(state, actor(state))).toEqual([]);
+    postInvoice(state, actor(state));
     expect(state.products.map((product) => product.code)).toEqual(
       products.map((product) => product.code),
     );
@@ -529,7 +509,7 @@ describe("invoice compared with its order", () => {
       }),
     ]);
     link(state);
-    setInvoiceExtraDecision(state, "supervisor", "Branch 1", 0, "refuse");
+    setInvoiceExtraDecision(state, actor(state), 0, "refuse");
     state.invoice.order_missing_decisions = { absent: "back_ordered" };
     confirm(state);
     expect(shortTotals(state.invoice)).toMatchObject({
@@ -542,17 +522,10 @@ describe("invoice compared with its order", () => {
       tax: "0.00",
       total: "0.01",
     });
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, actor(state));
     expect(state.invoice.payable_after_open_shorts).toBe("0.00");
     expect(receipts(state)).toHaveLength(0);
-    receiveShort(
-      state,
-      "0002",
-      1,
-      "FICTITIOUS-MISSING-1",
-      "supervisor",
-      "Branch 1",
-    );
+    receiveShort(state, "0002", 1, "FICTITIOUS-MISSING-1", actor(state));
     expect(state.invoice.payable_after_open_shorts).toBe("0.02");
     expect(receipts(state)[0].units).toBe(1);
     expect(
@@ -568,11 +541,11 @@ describe("invoice compared with its order", () => {
     recalculateInvoice(state.invoice, state.config);
     link(state);
     confirm(state);
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
       "order_decisions",
     ]);
     state.invoice.lines[0].order_price_decision = "accept";
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, actor(state));
     const alerts = state.alerts.filter(
       (alert) =>
         alert.invoice_id === state.invoice.id ||
@@ -606,34 +579,63 @@ describe("invoice compared with its order", () => {
       if (change === "supplier") order.supplier_id = "other-supplier";
       if (change === "location") order.branch = "Branch 2";
       const before = structuredClone(state);
-      expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow();
+      expect(() => postInvoice(state, actor(state))).toThrow();
       expect(state).toEqual(before);
     }
   });
   it("allows the authorized Worker to reconcile their own Warehouse draft while standalone Orders stays disabled", () => {
     const state = draft();
+    const worker = authenticatedTestActor(state, "floor_worker", {
+      user_id: "test-warehouse-reconcile-worker",
+      locations: ["Branch 1", "Warehouse"],
+      name_en: "Demo Floor Worker",
+    });
+    const parsed = state.invoice;
+    state.invoice = createInvoice(state, worker, "Branch 1", false);
+    Object.assign(state.invoice, {
+      supplier: parsed.supplier,
+      supplier_confirmed: parsed.supplier_confirmed,
+      supplier_invoice_number: parsed.supplier_invoice_number,
+      file_name: parsed.file_name,
+      file_type: parsed.file_type,
+      file_data: parsed.file_data,
+      lines: structuredClone(parsed.lines),
+      lower_price_answers: parsed.lower_price_answers,
+    });
+    recalculateInvoice(state.invoice, state.config);
     const order = addOrder(state, undefined, { branch: "Warehouse" });
     expect(state.config.orders?.allow_floor_worker ?? false).toBe(false);
-    setInvoiceLocation(state, "floor_worker", "Branch 1", "Warehouse");
-    expect(compatibleInvoiceOrders(state, "floor_worker", "Branch 2")).toEqual(
-      [],
-    );
-    expect(compatibleInvoiceOrders(state, "cashier", "Branch 1")).toEqual([]);
-    setInvoiceOrder(state, "floor_worker", "Branch 1", order.id);
+    setInvoiceLocation(state, worker, "Warehouse");
+    expect(() =>
+      compatibleInvoiceOrders(
+        state,
+        authenticatedTestActor(state, "floor_worker", {
+          user_id: "test-unassigned-reconcile-worker",
+          locations: ["Branch 2"],
+        }),
+      ),
+    ).toThrow(AuthorityError);
+    expect(() =>
+      compatibleInvoiceOrders(
+        state,
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+      ),
+    ).toThrow(AuthorityError);
+    setInvoiceOrder(state, worker, order.id);
     confirm(state);
-    postInvoice(state, "floor_worker", "Branch 1", "Demo Floor Worker");
+    postInvoice(state, worker);
     expect(order.status).toBe("received");
     expect(state.invoice).toMatchObject({
       branch: "Warehouse",
       handling_branch: "Branch 1",
     });
     expect(
-      receivedLog(state, {
-        company_id: state.invoice.company_id,
-        role: "floor_worker",
-        branch: "Branch 1",
-        actor: "Demo Floor Worker",
-      }).some((row) => row.invoice_id === state.invoice.id),
+      receivedLog(
+        state,
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+        }),
+      ).some((row) => row.invoice_id === state.invoice.id),
     ).toBe(false);
   });
 });
@@ -646,10 +648,10 @@ describe("short-dated expiry discounts", () => {
       const product = state.products.find((item) => item.code === "0002")!;
       setManualPriceMarker(
         state,
+        actor(state),
         product,
         "all",
         "2.49",
-        "Ali",
         new Date("2026-10-09T10:00:00Z"),
       );
       product.selling_price = "2.49";
@@ -668,15 +670,13 @@ describe("short-dated expiry discounts", () => {
       recalculateInvoice(state.invoice, state.config);
       confirm(state);
       state.invoice.lower_price_answers = undefined;
-      expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-        "date",
-      );
+      expect(invoiceBlockers(state, actor(state))).toContain("date");
       const before = structuredClone(state);
-      expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow();
+      expect(() => postInvoice(state, actor(state))).toThrow();
       expect(state).toEqual(before);
       line.date_value = "2030-12-01";
-      expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-      postInvoice(state, "supervisor", "Branch 1", "Ali");
+      expect(invoiceBlockers(state, actor(state))).toEqual([]);
+      postInvoice(state, actor(state));
       expect(product).toEqual(prior);
       expect(state.approvals).toEqual(approvals);
       expect(state.invoice.payable_after_open_shorts).toBe("9.60");
@@ -705,6 +705,6 @@ describe("short-dated expiry discounts", () => {
     line.unit_cost_before_tax = costPerUnit("19.99", 12);
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain("date");
+    expect(invoiceBlockers(state, actor(state))).toContain("date");
   });
 });

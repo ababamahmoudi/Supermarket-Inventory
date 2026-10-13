@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import { createOrder } from "./orders";
 import { OrderPrintDocument } from "./order-print";
 import {
@@ -9,16 +10,12 @@ import {
 } from "./operational-print";
 import { saveSupplierDocumentSettings } from "./supplier-document-settings";
 
-const context = {
-  company_id: "super-arzon",
-  branch: "all",
-  role: "supervisor" as const,
-  actor: "Document reviewer",
-};
+const context = (state: ReturnType<typeof initialState>) =>
+  authenticatedTestActor(state, "manager", { name_en: "Document reviewer" });
 describe("C6 supplier document language", () => {
   it("prints the supplier order in English by default even from the Persian interface", () => {
     const state = initialState();
-    const order = createOrder(state, context, {
+    const order = createOrder(state, context(state), {
       branch: "Branch 1",
       supplier: "Fresh Valley Foods",
       lines: [
@@ -67,15 +64,15 @@ describe("C6 supplier document language", () => {
       ledger: state.ledger,
       stock: state.stock,
     });
-    saveSupplierDocumentSettings(state, context, {
+    saveSupplierDocumentSettings(state, context(state), {
       return_memo: "bilingual",
       supplier_order: "en",
     });
     expect(state.activity[0]).toMatchObject({
       action: "Supplier document settings changed",
       entity_id: "supplier_documents",
-      by: context.actor,
-      company_id: context.company_id,
+      by: "Document reviewer",
+      company_id: state.config.company.seed_key,
     });
     expect(
       JSON.stringify({
@@ -89,17 +86,26 @@ describe("C6 supplier document language", () => {
     expect(() =>
       saveSupplierDocumentSettings(
         state,
-        { ...context, role: "floor_worker" },
+        authenticatedTestActor(state, "floor_worker"),
         { return_memo: "en", supplier_order: "en" },
       ),
-    ).toThrow("supervisor");
+    ).toThrow("capability");
     expect(() =>
       saveSupplierDocumentSettings(
         state,
-        { ...context, company_id: "other-company" },
+        authenticatedTestActor(
+          {
+            ...state,
+            config: {
+              ...state.config,
+              company: { ...state.config.company, seed_key: "other-company" },
+            },
+          },
+          "manager",
+        ),
         { return_memo: "en", supplier_order: "en" },
       ),
-    ).toThrow("scope");
+    ).toThrow("company");
     expect(JSON.stringify(state)).toBe(before);
   });
 });

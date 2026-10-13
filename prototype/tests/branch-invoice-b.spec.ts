@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
   invoiceImage,
@@ -7,7 +8,6 @@ import {
   signIn,
 } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
 
 test("a Floor Worker cannot read another branch's manual draft, and starting their own invoice preserves it for the Supervisor", async ({
@@ -24,9 +24,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
-  const original = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const original = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(original.branch).toBe("Branch 2");
 
@@ -41,9 +40,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  const own = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const own = await readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(own.invoice.branch).toBe("Branch 1");
   expect(
@@ -61,9 +59,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await expect(
     page.getByLabel("Supplier invoice number (optional)", { exact: true }),
   ).toHaveValue("PRIVATE-BRANCH-2");
-  const resumed = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const resumed = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(resumed).toEqual(original);
 });
@@ -83,9 +80,8 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await expect(
     page.getByText("Reading invoice…", { exact: true }),
   ).toBeVisible();
-  const original = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const original = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(original.status).toBe("reading");
   await signIn(page, "Floor Worker");
@@ -97,16 +93,14 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
     .getByRole("menuitem", { name: "Use fictional demo answer", exact: true })
     .click();
   await page.clock.runFor(2800);
-  const untouched = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const untouched = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(untouched).toEqual(original);
   await page.reload();
   await page.clock.runFor(2800);
-  const reloaded = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const reloaded = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(reloaded).toEqual(original);
 });

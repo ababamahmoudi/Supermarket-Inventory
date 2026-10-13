@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import Decimal from "decimal.js";
 import { chooseOption, invoiceImage, signIn } from "./helpers";
@@ -6,8 +7,8 @@ import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
 test.setTimeout(60000);
 const stored = (page: Page): Promise<DemoState> =>
-  page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 
 async function rememberedPack(page: Page) {

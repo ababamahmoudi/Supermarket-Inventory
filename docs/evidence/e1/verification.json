@@ -1,0 +1,59 @@
+{
+  "status": "Implementation present; full app and required static checks passed; retained browser and original E1 screenshots still pending.",
+  "tested_source_kind": "Exact dirty implementation file fingerprints, not the docs-first Git HEAD.",
+  "app": {
+    "tests": 1275,
+    "passed": 1275,
+    "failed": 0,
+    "skipped": 0,
+    "fingerprint": "bba505d64531aad3c5a08af8ae14a813cf3265b515b38507f5f2223d295fc58e",
+    "proof": "app-full-v2.json"
+  },
+  "required_static": {
+    "lint_exit": 0,
+    "build_exit": 0,
+    "fingerprint": "5b162bb67d9dca1d3583ce6a5d28c6428ff66579276c7706ee1c9a589ec0441b",
+    "proof": "lint-build-v6.json"
+  },
+  "earlier_failed_run": {
+    "tests": 1271,
+    "passed": 1264,
+    "failed": 7,
+    "skipped": 0,
+    "proof": "app-full-v1.json"
+  },
+  "remaining": [
+    "Retained browser mutation/migration/readiness ports and full execution",
+    "Explicit damaged-History recovery on genuine authority runtime",
+    "Original20 screenshots and individual review",
+    "Stacked PR/exact-head CI"
+  ],
+  "sdk": {
+    "tests": 75,
+    "passed": 75,
+    "failed": 0,
+    "skipped": 0,
+    "actual_exit": 0,
+    "fingerprint": "5b162bb67d9dca1d3583ce6a5d28c6428ff66579276c7706ee1c9a589ec0441b",
+    "proof": "sdk-final.json"
+  },
+  "native_shell": {
+    "tests": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "configured_retries": 0,
+    "fingerprint": "36a2cf499fcb4a5d4fc4cde5e422d52480be9c502140b3efe89762d822a4fa7e",
+    "proof": "native-shell-v4.json"
+  },
+  "native_authority": {
+    "tests": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "configured_retries": 0,
+    "fingerprint": "bba505d64531aad3c5a08af8ae14a813cf3265b515b38507f5f2223d295fc58e",
+    "raw": "native-authority-raw.json.gz"
+  }
+}

@@ -1,3 +1,4 @@
+import type { InvoiceEditableLine } from "./invoice-edit-types";
 import Decimal from "decimal.js";
 import { calculatePrice } from "./pricing";
 import {
@@ -10,10 +11,10 @@ import {
   weightQuantityPerLb,
   type WeightUnit,
 } from "./weighed";
-import type { CompanyConfig, InvoiceLine } from "./types";
+import type { CompanyConfig } from "./types";
 
 export function invoiceLineCalculation(
-  line: InvoiceLine,
+  line: InvoiceEditableLine,
   category: string,
   config: CompanyConfig,
 ) {
@@ -30,8 +31,8 @@ export function invoiceLineCalculation(
 
 /** Source kg/lb precision and original cost are independent of canonical pricing. */
 export function refreshInvoiceWeight(
-  line: InvoiceLine,
-  config: CompanyConfig,
+  line: InvoiceEditableLine,
+  config: Pick<CompanyConfig, "weighed_items">,
 ): void {
   if (line.sold_by !== "weight") return;
   line.weight_conversion_factor ??= weightConversionFactor(config);
@@ -91,10 +92,10 @@ export function refreshInvoiceWeight(
 }
 
 export function setInvoiceWeightQuantity(
-  line: InvoiceLine,
+  line: InvoiceEditableLine,
   quantity: string | number,
   unit: WeightUnit | "cases",
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "weighed_items">,
 ) {
   const full = new Decimal(line.qty_received_at_posting).eq(line.qty_invoiced);
   const previousReceived = line.qty_received_at_posting;
@@ -135,9 +136,9 @@ export function setInvoiceWeightQuantity(
 }
 
 export function setInvoiceWeightReceived(
-  line: InvoiceLine,
+  line: InvoiceEditableLine,
   value: string,
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "weighed_items">,
 ) {
   line.source_received_quantity = value;
   try {
@@ -149,10 +150,10 @@ export function setInvoiceWeightReceived(
 }
 
 export function setInvoiceWeightCost(
-  line: InvoiceLine,
+  line: InvoiceEditableLine,
   value: string,
   unit: WeightUnit,
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "weighed_items">,
 ) {
   line.source_cost_before_tax = value;
   line.source_cost_unit = unit;
@@ -164,10 +165,10 @@ export function setInvoiceWeightCost(
   line.review_confirmed = false;
 }
 
-export function initializeInvoiceWeight(
-  line: InvoiceLine,
-  config: CompanyConfig,
-): InvoiceLine {
+export function initializeInvoiceWeight<Line extends InvoiceEditableLine>(
+  line: Line,
+  config: Pick<CompanyConfig, "weighed_items">,
+): Line {
   if (line.sold_by !== "weight") return line;
   line.source_quantity_unit ??= "lb";
   line.source_quantity ??= String(line.qty_invoiced);

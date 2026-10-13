@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { domainScope } from "../domain-authority";
+import { reverseActivity } from "../history";
+import { useEffect, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { useDemo } from "../store";
 import {
@@ -48,6 +50,8 @@ import { formatDate } from "../formatters";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import "./history-b.css";
 
+const EMPTY_REVERSIBLE_IDS: string[] = [];
+
 function InvoiceVersionLinks({ entry }: { entry: Activity }) {
   const { t } = useDemo();
   if (entry.entity_type !== "invoice_content_correction" || !entry.entity_id)
@@ -90,8 +94,21 @@ function InvoiceVersionLinks({ entry }: { entry: Activity }) {
 }
 
 export default function History() {
-  const { state, role, user, lang, t, tCount, historyContext, revertActivity } =
-    useDemo();
+  const {
+    state,
+    can,
+    command,
+    query,
+    authorityHistory,
+    businessRevision,
+    authorityGeneration,
+    authorityDirectoryVersion,
+    user,
+    lang,
+    t,
+    tCount,
+    historyContext,
+  } = useDemo();
   const [filters, setFilters] = useListState("history", {
     person: "all",
     branch: "all",
@@ -109,11 +126,159 @@ export default function History() {
     setFilters((current) => ({ ...current, action }));
   const setSearch = (search: string) =>
     setFilters((current) => ({ ...current, search }));
-  const [selected, setSelected] = useState<string | null>(null);
+  const selectionKey = JSON.stringify([
+    authorityGeneration,
+    authorityDirectoryVersion,
+    historyContext?.company_id,
+    historyContext?.user_id,
+    historyContext?.session_id,
+    historyContext?.authority_epoch,
+    historyContext?.person_version,
+    historyContext?.selection,
+  ]);
+  const [selection, setSelection] = useState<{
+    key: string;
+    id: string | null;
+  }>({ key: selectionKey, id: null });
+  const selected = selection.key === selectionKey ? selection.id : null;
+  const setSelected = (id: string | null) =>
+    setSelection({ key: selectionKey, id });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [expandedChanges, setExpandedChanges] = useState<string[]>([]);
-  if (!historyContext || !user || role === "cashier")
+  const accessKey = JSON.stringify([selectionKey, businessRevision]);
+  const [entrySnapshot, setEntrySnapshot] = useState<{
+    key: string;
+    rows: Activity[];
+    reversible: string[];
+    reversed: string[];
+  }>({ key: accessKey, rows: [], reversible: [], reversed: [] });
+  const entries = entrySnapshot.key === accessKey ? entrySnapshot.rows : [];
+  const reversibleIds =
+    entrySnapshot.key === accessKey
+      ? entrySnapshot.reversible
+      : EMPTY_REVERSIBLE_IDS;
+  const reversedIds =
+    entrySnapshot.key === accessKey ? entrySnapshot.reversed : [];
+  const previewKey = JSON.stringify([accessKey, selected]);
+  const [previewSnapshot, setPreviewSnapshot] = useState<{
+    key: string;
+    changes: ReturnType<typeof historyChangePreview>;
+  }>({ key: previewKey, changes: [] });
+  const preview =
+    previewSnapshot.key === previewKey ? previewSnapshot.changes : [];
+  const readsAll = can("history.read_all");
+  const readsHistory = Boolean(
+    historyContext && (readsAll || can("history.read_own")),
+  );
+  useEffect(() => {
+    let current = true;
+    if (!readsHistory || !historyContext)
+      return () => {
+        current = false;
+      };
+    void query(
+      readsAll ? "history.read_all" : "history.read_own",
+      domainScope(state),
+      (canonical, actor) => {
+        const rows = selectHistory(canonical, actor);
+        return {
+          rows,
+          reversible: rows
+            .filter((entry) => canReverse(canonical, entry, actor, "revert"))
+            .map((entry) => entry.id),
+          reversed: rows
+            .filter((entry) => hasBeenReversed(canonical, entry.id))
+            .map((entry) => entry.id),
+        };
+      },
+    )
+      .then(async (result) => {
+        const directory = readsAll ? await authorityHistory() : [];
+        const safeDirectory: Activity[] = directory.map((entry) => ({
+          id: entry.id,
+          company_id: entry.company_id,
+          branch: "all",
+          actor_user_id: entry.actor_user_id,
+          actor_role_snapshot: entry.actor_role_snapshot,
+          device_id: entry.device_id,
+          by: entry.actor_name_snapshot,
+          at: entry.at,
+          entity_type: entry.entity_type,
+          entity_id: entry.entity_id,
+          action: entry.action,
+          before: entry.before,
+          after: entry.after,
+          reversible: false,
+        }));
+        if (current) {
+          setEntrySnapshot({
+            key: accessKey,
+            rows: [...result.rows, ...safeDirectory].sort((a, b) =>
+              b.at.localeCompare(a.at),
+            ),
+            reversible: result.reversible,
+            reversed: result.reversed,
+          });
+        }
+      })
+      .catch((caught) => {
+        if (current) setError(historyErrorMessage(caught, t));
+      });
+    return () => {
+      current = false;
+    };
+  }, [
+    query,
+    authorityHistory,
+    businessRevision,
+    authorityGeneration,
+    readsHistory,
+    readsAll,
+    historyContext,
+    state,
+    t,
+    accessKey,
+  ]);
+  useEffect(() => {
+    let current = true;
+    if (
+      !selected ||
+      !historyContext ||
+      !readsHistory ||
+      !reversibleIds.includes(selected)
+    )
+      return () => {
+        current = false;
+      };
+    void query(
+      readsAll ? "history.read_all" : "history.read_own",
+      domainScope(state),
+      (canonical, actor) => historyChangePreview(canonical, actor, selected),
+    )
+      .then((result) => {
+        if (current) setPreviewSnapshot({ key: previewKey, changes: result });
+      })
+      .catch((caught) => {
+        if (current) setError(historyErrorMessage(caught, t));
+      });
+    return () => {
+      current = false;
+    };
+  }, [
+    previewKey,
+    selected,
+    reversibleIds,
+    query,
+    businessRevision,
+    authorityGeneration,
+    readsAll,
+    readsHistory,
+    historyContext,
+    state,
+    t,
+  ]);
+  if (!historyContext || !user || !readsHistory)
     return (
       <EmptyState>
         {t(
@@ -122,7 +287,6 @@ export default function History() {
         )}
       </EmptyState>
     );
-  const entries = selectHistory(state, historyContext);
   const productName = (entry: Activity) =>
     historyProductName(state.products, entry, historyContext.company_id, lang);
   const visible = entries.filter(
@@ -138,9 +302,6 @@ export default function History() {
           .includes(search.toLowerCase())),
   );
   const selectedEntry = entries.find((entry) => entry.id === selected);
-  const preview = selectedEntry
-    ? historyChangePreview(state, selectedEntry)
-    : [];
   const conflict = preview.some((item) => item.conflict);
   const fieldLabel = (patch: ReversalPatch) => {
     const last = patch.path.at(-1);
@@ -301,7 +462,7 @@ export default function History() {
       <PageHeader
         title={t("History", "سابقه")}
         description={
-          role === "supervisor"
+          can("history.read_all")
             ? t(
                 "Review recorded actions and before-and-after values.",
                 "کارهای ثبت‌شده و مقادیر پیش و پس از تغییر را بررسی کنید.",
@@ -502,7 +663,7 @@ export default function History() {
                   <td>
                     {entry.entity_type === "invoice_content_correction" ? (
                       <InvoiceVersionLinks entry={entry} />
-                    ) : canReverse(state, entry, historyContext, "revert") ? (
+                    ) : reversibleIds.includes(entry.id) ? (
                       <Button
                         variant="neutral"
                         size="sm"
@@ -514,7 +675,7 @@ export default function History() {
                       >
                         {t("Revert", "بازگردانی")}
                       </Button>
-                    ) : hasBeenReversed(state, entry.id) ? (
+                    ) : reversedIds.includes(entry.id) ? (
                       <Badge tone="neutral">
                         {t("Reverted", "بازگردانده‌شده")}
                       </Badge>
@@ -611,10 +772,25 @@ export default function History() {
                 {t("Cancel", "لغو")}
               </Button>
               <Button
-                disabled={conflict}
-                onClick={() => {
+                disabled={
+                  conflict ||
+                  !preview.length ||
+                  !selectedEntry ||
+                  !reversibleIds.includes(selectedEntry.id)
+                }
+                onClick={async () => {
                   try {
-                    revertActivity(selectedEntry.id);
+                    await command(
+                      "history.revert",
+                      domainScope(state, selectedEntry, true),
+                      (draft, freshActor) =>
+                        reverseActivity(
+                          draft,
+                          freshActor,
+                          selectedEntry.id,
+                          "revert",
+                        ),
+                    );
                     setSelected(null);
                     setMessage(t("Change reverted", "تغییر بازگردانده شد"));
                   } catch (caught) {

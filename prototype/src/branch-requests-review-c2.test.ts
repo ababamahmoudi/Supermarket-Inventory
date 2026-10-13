@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./notes-dates-fixture.e1";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import { configuredBranches } from "./settings";
 import {
   availableBranchRequestResidual,
@@ -21,23 +22,26 @@ function fixture() {
   state.branch_requests = [];
   state.request_transfer_events = [];
   const branches = configuredBranches(state.config);
-  const worker = (branch: string): BranchRequestContext => ({
-    company_id: state.config.company.seed_key,
-    role: "floor_worker",
-    branch,
-    allowed_branches: [branch],
-    actor: `Worker at ${branch}`,
-    username: "worker",
-  });
+  const worker = (branch: string): BranchRequestContext =>
+    authenticatedTestActor(state, "floor_worker", {
+      user_id: `worker-${branch}`,
+      username: `worker-${branch}`,
+      name_en: `Worker ${branch}`,
+      locations: [branch],
+      selection: { kind: "location", location_id: branch },
+    });
   const source = worker(branches[0]);
   const target = worker(branches[1]);
-  const supervisor: BranchRequestContext = {
-    ...source,
-    role: "supervisor",
-    branch: "all",
-    allowed_branches: branches,
-    actor: "Demo Supervisor",
-  };
+  const supervisor: BranchRequestContext = authenticatedTestActor(
+    state,
+    "manager",
+    {
+      name_en: "Demo Supervisor",
+      username: "supervisor",
+      locations: branches,
+      selection: { kind: "all_locations" },
+    },
+  );
   const product = state.products.find(
     (item) =>
       item.company_id === state.config.company.seed_key &&

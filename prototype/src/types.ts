@@ -1,4 +1,4 @@
-import { configSeed, demoSeed } from "./config";
+import type { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
 import type { ReversalPatch } from "./history";
 import type { InvoiceLocationCorrection } from "./received";
@@ -19,7 +19,11 @@ import type {
   SalePriceUnit,
 } from "./sales";
 
-export type Role = "supervisor" | "floor_worker" | "cashier";
+import type { RoleId, DecisionAttribution } from "./authority-types";
+import type { RoleDefinition } from "./role-config";
+export type Role = RoleId;
+/** Old serialized input only; never a current authority role. */
+export type LegacyRole = "supervisor" | "floor_worker" | "cashier";
 export type Language = "en" | "fa";
 export type Branch = string;
 export type CompanyConfig = Omit<
@@ -31,7 +35,25 @@ export type CompanyConfig = Omit<
   | "weighed_items"
   | "returns"
   | "sales"
+  | "roles"
+  | "notebooks"
 > & {
+  roles: RoleDefinition[];
+  notebooks: {
+    built_in: {
+      kind: string;
+      name_en: string;
+      name_fa: string;
+      name_role_key?: Role;
+      read_roles: Role[];
+      add_roles: Role[];
+      has_status?: boolean;
+      creates_stock_movement?: boolean;
+      notify_supervisor?: boolean;
+      notify_roles?: Role[];
+    }[];
+    custom_created_by: Role[];
+  };
   company: typeof configSeed.company & {
     logo_data?: string;
     date_format?: "yyyy-mm-dd" | "dd/mm/yyyy" | "mm/dd/yyyy";
@@ -116,11 +138,27 @@ export type Product = Omit<
       price: string;
       rule_price: string;
       set_by: string;
+      set_by_user_id?: string;
+      set_by_role_snapshot?: Role;
+      decision_attribution?: DecisionAttribution;
       set_at: string;
     }
   >;
 };
 export interface Approval extends ScopedRecord {
+  decided_by_user_id?: string;
+  decided_at?: string;
+  decision_attribution?: DecisionAttribution;
+  source_manual_request?: {
+    requester_user_id: string;
+    requester_name_snapshot: string;
+    requester_role_snapshot: Role;
+    requested_at: string;
+    entered_price: string;
+    price_unit: "each" | "lb" | "kg";
+    regular_price_snapshot: string | null;
+  };
+  triggered_by_user_id?: string;
   supplier_id?: string;
   supplier_name?: string;
   barcode?: string;
@@ -165,6 +203,8 @@ export interface Approval extends ScopedRecord {
   sale_id?: string;
 }
 export interface Alert extends ScopedRecord {
+  decided_by_user_id?: string;
+  decision_attribution?: DecisionAttribution;
   id: string;
   type:
     | "lower_price"
@@ -281,6 +321,11 @@ export type DemoInvoice = Omit<
 > &
   ScopedRecord & {
     id: string;
+    created_by_user_id?: string;
+    handler_user_ids?: string[];
+    reviewer_user_ids?: string[];
+    reviewer_origin_location_id?: string;
+    version?: number;
     status: "empty" | "reading" | "draft" | "review" | "posted";
     lines: InvoiceLine[];
     file_name?: string;
@@ -327,6 +372,10 @@ export type DemoInvoice = Omit<
     };
   };
 export interface Offer extends ScopedRecord {
+  version?: number;
+  decision_attribution?: DecisionAttribution;
+  created_by_user_id?: string;
+  stopped_by_user_id?: string;
   id: string;
   product_code: string;
   label: string;
@@ -343,6 +392,17 @@ export interface Offer extends ScopedRecord {
   lot_id?: string;
   expiry_date?: string;
   clearance?: boolean;
+}
+export interface OfferStoreSuppression extends ScopedRecord {
+  id: string;
+  offer_id: string;
+  offer_version: number;
+  status: "active" | "cleared";
+  stopped_at: string;
+  stopped_by_user_id: string;
+  stopped_by: string;
+  cleared_at?: string;
+  cleared_by_user_id?: string;
 }
 export interface LabelTemplate {
   id: string;
@@ -368,6 +428,7 @@ export interface LabelWaitlistItem extends ScopedRecord {
   lot_id?: string;
   copies: number;
   added_by: string;
+  added_by_user_id?: string;
   added_at: string;
   preferred_template?: "regular" | "promo";
   source_event_id?: string;
@@ -429,6 +490,8 @@ export interface ReturnRecord extends ScopedRecord {
   closure_subtype?: "credited" | "replaced" | "written_off";
 }
 export interface ExpiryRecord extends ScopedRecord {
+  created_by_user_id?: string;
+  removed_by_user_id?: string;
   id: string;
   product_code: string;
   expires_in_days: number;
@@ -494,6 +557,10 @@ export interface LedgerEntry extends ScopedRecord {
   note?: string;
 }
 export interface Activity extends ScopedRecord {
+  actor_user_id?: string;
+  actor_role?: Role;
+  actor_role_snapshot?: Role;
+  device_id?: string;
   actor_username?: string;
   device?: string;
   id: string;
@@ -512,6 +579,9 @@ export interface Activity extends ScopedRecord {
   reversal_kind?: "undo" | "revert";
 }
 export interface SupplierRecord {
+  created_by_user_id?: string;
+  updated_by_user_id?: string;
+  confirmed_by_user_id?: string;
   id: string;
   company_id: string;
   name: string;
@@ -542,6 +612,7 @@ export interface DemoState {
   prototype_c4_schema?: 1;
   prototype_c6_schema?: 1;
   prototype_c8_schema?: 1;
+  prototype_e1_schema?: 1;
   sales?: SaleSchedule[];
   sale_requests?: SaleRequest[];
   sale_events?: SaleLifecycleEvent[];
@@ -578,6 +649,7 @@ export interface DemoState {
   invoice: DemoInvoice;
   invoices?: DemoInvoice[];
   offers: Offer[];
+  offer_store_suppressions?: OfferStoreSuppression[];
   templates: LabelTemplate[];
   label_waitlist?: LabelWaitlistItem[];
   label_settings?: {

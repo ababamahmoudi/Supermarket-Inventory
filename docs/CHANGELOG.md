@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-13 — E1 implementation and verified app checks
+
+- Replaced active role-string authorization with configured Owner, Manager, Branch Supervisor, Floor Worker and Cashier capabilities and assigned-location resource checks.
+- Added genuine browser-local IndexedDB people/session/business transactions, protected field/file queries, resumable invitation/password/second-step setup, registered computers, cross-tab invalidation, verified migration and six-person reset.
+- Preserved pricing, invoice/return money and evidence, notes, offers and labels; protected service reads recheck current authority after asynchronous work without repeatedly refreshing private screen state.
+- Full app/pricing passed 1,275/1,275 with zero failures/skips; required lint and full TypeScript/Vite build passed. Earlier seven failures and corrected source fingerprints are retained in docs/evidence/e1.
+- Native SDK desktop/phone verification passed 24/24; full retained-browser fixture ports and original E1 screenshots are still in progress. E2/E3 remain separate authorized stages; no owner review pause or hosting deployment.
+
 ## 2026-10-12 — E1 source-first roles, People and authority specification
 
 - Replaced active three-role/single-location rules with five configured roles, company/current/future-location Owner/Manager access, explicit other-role assignments and Store-only Cashier scope. Historical C3–C8 review evidence retains its original wording and authors.

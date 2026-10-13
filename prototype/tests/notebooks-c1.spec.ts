@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -76,17 +77,19 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await expect(
     page.locator(".topbar").getByLabel("Branch", { exact: true }),
   ).toContainText("All branches");
-  const saved = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const note = state.notebook_entries.find(
-      (item: { text: string }) =>
-        item.text === "Warehouse receiving area cleaned",
-    );
-    const action = state.activity.find(
-      (item: { entity_id: string }) => item.entity_id === note.id,
-    );
-    return { note, action };
-  });
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      const note = state.notebook_entries.find(
+        (item: { text: string }) =>
+          item.text === "Warehouse receiving area cleaned",
+      );
+      const action = state.activity.find(
+        (item: { entity_id: string }) => item.entity_id === note.id,
+      );
+      return { note, action };
+    },
+  );
   expect(saved.note.branch).not.toBe("all");
   expect(saved.action.branch).toBe(saved.note.branch);
   expect(saved.action.by).toBe("Demo Supervisor");

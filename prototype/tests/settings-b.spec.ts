@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn, visitPage } from "./helpers";
 async function group(page: Page, label: string) {
@@ -85,10 +86,9 @@ test("company settings save deliberately, persist and record before/after Histor
     .getByLabel("Name (Persian)", { exact: true })
     .fill("فروشگاه ارزان");
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).config
-          .company.name_en,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).config.company.name_en,
     ),
   ).toBe("Super Arzon");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
@@ -100,10 +100,11 @@ test("company settings save deliberately, persist and record before/after Histor
   await expect(page.getByLabel("Name (English)", { exact: true })).toHaveValue(
     "Arzon Market",
   );
-  const activity = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity.find(
-      (entry: { entity_id: string }) => entry.entity_id === "company",
-    ),
+  const activity = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).activity.find(
+        (entry: { entity_id: string }) => entry.entity_id === "company",
+      ),
   );
   expect(activity).toMatchObject({
     reversible: true,
@@ -118,10 +119,9 @@ test("company settings save deliberately, persist and record before/after Histor
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("Enter a valid time zone");
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).config
-          .company.timezone,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).config.company.timezone,
     ),
   ).toBe("America/Toronto");
 });
@@ -181,10 +181,9 @@ test("new branch configuration works in the live branch switcher and retains his
     page.getByRole("option", { name: "North Market", exact: true }),
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
-  const branches = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).config
-        .branches,
+  const branches = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).config.branches,
   );
   expect(
     branches.find((entry: { code: string }) => entry.code === "B4"),
@@ -279,10 +278,11 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
       tableGeometry.wrapperWidth + 2,
     );
   }
-  const before = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(
-      (product: { selling_price: string }) => product.selling_price,
-    ),
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.map(
+        (product: { selling_price: string }) => product.selling_price,
+      ),
   );
   await page.getByRole("button", { name: "Add category", exact: true }).click();
   const dialog = page.getByRole("dialog", {
@@ -311,9 +311,9 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
   // the saved category before reloading instead of racing that write.
   await expect
     .poll(() =>
-      page.evaluate(() =>
+      readCanonicalBusinessEvidence(page).then((canonicalState) =>
         JSON.parse(
-          localStorage.getItem("supermarket-prototype-v1")!,
+          JSON.stringify(canonicalState)!,
         ).config.pricing_categories.find(
           (category: { key: string }) => category.key === "bakery",
         ),
@@ -337,10 +337,11 @@ test("a new pricing category feeds the same Decimal tester and preserves approve
       .getByRole("button", { name: "Show details", exact: true })
       .click();
   await expect(divisor).toHaveValue("0.50");
-  const after = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(
-      (product: { selling_price: string }) => product.selling_price,
-    ),
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.map(
+        (product: { selling_price: string }) => product.selling_price,
+      ),
   );
   expect(after).toEqual(before);
 });
@@ -359,16 +360,15 @@ test("offer preferences and module visibility save, while existing records stay 
   await expect(offersSave).toBeVisible();
   await offersSave.click();
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).config
-          .promotions.ai_suggestions_enabled,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).config.promotions
+          .ai_suggestions_enabled,
     ),
   ).toBe(false);
-  const returns = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).returns
-        .length,
+  const returns = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).returns.length,
   );
   await group(page, "Modules");
   await page.getByRole("switch", { name: "Returns", exact: true }).click();
@@ -383,10 +383,9 @@ test("offer preferences and module visibility save, while existing records stay 
       .getByRole("link", { name: "Returns", exact: true, includeHidden: true }),
   ).toHaveCount(0);
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).returns
-          .length,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).returns.length,
     ),
   ).toBe(returns);
   await page.getByRole("switch", { name: "Returns", exact: true }).click();

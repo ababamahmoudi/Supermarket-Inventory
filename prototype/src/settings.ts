@@ -1,3 +1,6 @@
+import { isCompanyRole } from "./authority";
+import type { AuthenticatedActor } from "./authority-types";
+import { can } from "./permissions";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { validatePricingConfig } from "./pricing";
@@ -6,7 +9,7 @@ import type { Branch, CompanyConfig, DemoState, Language, Role } from "./types";
 
 export type SettingsGroup =
   "company" | "branches" | "catalog" | "offers" | "modules" | "orders";
-export type SettingsActor = { role: Role; company_id: string; by: string };
+export type SettingsActor = AuthenticatedActor;
 export type ConfigBranch = CompanyConfig["branches"][number];
 export type PricingCategory = CompanyConfig["pricing_categories"][number];
 
@@ -19,7 +22,7 @@ export function branchId(branch: ConfigBranch, index = 0): Branch {
   );
 }
 export function configuredBranches(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "branches">,
   includeInactive = false,
 ): Branch[] {
   return config.branches.flatMap((branch, index) =>
@@ -28,7 +31,7 @@ export function configuredBranches(
 }
 /** Retail prices and offers apply only to locations configured to sell. */
 export function sellingBranches(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "branches">,
   includeInactive = false,
 ): Branch[] {
   return config.branches.flatMap((branch, index) =>
@@ -39,13 +42,13 @@ export function sellingBranches(
   );
 }
 export function branchSellsToCustomers(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "branches">,
   id: Branch,
 ): boolean {
   return id !== "all" && sellingBranches(config).includes(id);
 }
 export function branchLabel(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "branches">,
   id: Branch,
   language: Language,
 ): string {
@@ -58,16 +61,19 @@ export function branchLabel(
     ? branch.name_fa || branch.name_en.replace(/\s*\(PLACEHOLDER.*$/i, "")
     : branch.name_en.replace(/\s*\(PLACEHOLDER.*$/i, "");
 }
-export function branchIsActive(config: CompanyConfig, id: Branch): boolean {
+export function branchIsActive(
+  config: Pick<CompanyConfig, "branches">,
+  id: Branch,
+): boolean {
   return id === "all" || configuredBranches(config).includes(id);
 }
 export function branchAllowsRole(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "branches">,
   id: Branch,
   role: Role,
 ): boolean {
   if (!branchIsActive(config, id) || id === "all")
-    return role === "supervisor" && id === "all";
+    return isCompanyRole(role) && id === "all";
   const target = config.branches.find(
     (entry, index) => branchId(entry, index) === id,
   );
@@ -75,12 +81,15 @@ export function branchAllowsRole(
     Boolean(target) && !(role === "cashier" && target?.type === "warehouse")
   );
 }
-export function activePricingCategories(
-  config: CompanyConfig,
-): PricingCategory[] {
+export function activePricingCategories<
+  P extends { archived?: boolean },
+>(config: { readonly pricing_categories: readonly P[] }): P[] {
   return config.pricing_categories.filter((category) => !category.archived);
 }
-export function moduleEnabled(config: CompanyConfig, key: string): boolean {
+export function moduleEnabled(
+  config: Pick<CompanyConfig, "modules">,
+  key: string,
+): boolean {
   return (
     !Object.hasOwn(config.modules, key) ||
     config.modules[key as keyof typeof config.modules] !== false
@@ -106,9 +115,16 @@ export class SettingsError extends Error {
   }
 }
 function guard(state: DemoState, actor: SettingsActor) {
-  if (actor.role !== "supervisor") throw new SettingsError("permission");
   if (actor.company_id !== state.config.company.seed_key)
     throw new SettingsError("company");
+  if (
+    !can(state, actor, "settings.manage", {
+      company_id: state.config.company.seed_key,
+      kind: "company_shared",
+      mutation: true,
+    }).allowed
+  )
+    throw new SettingsError("permission");
 }
 function record(
   state: DemoState,
@@ -132,7 +148,10 @@ function record(
     branch: "all",
     scope: "all",
     action: actions[group],
-    by: actor.by,
+    by: actor.actor,
+    actor_user_id: actor.user_id,
+    actor_username: actor.username,
+    actor_role_snapshot: actor.role,
     at: new Date().toISOString(),
     reversible: true,
     before: structuredClone(before),

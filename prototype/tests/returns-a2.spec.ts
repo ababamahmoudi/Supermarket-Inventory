@@ -1,11 +1,12 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn, visitPage } from "./helpers";
 
 test.setTimeout(60000);
 
 async function snapshot(page: Page) {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 

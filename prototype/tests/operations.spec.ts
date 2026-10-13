@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import { chooseOption, signIn, visitPage, setLanguage } from "./helpers";
@@ -8,8 +9,8 @@ async function visit(page: Page, label: string) {
   await visitPage(page, label);
 }
 async function stored(page: Page) {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 async function openReturn(page: Page, number: number) {

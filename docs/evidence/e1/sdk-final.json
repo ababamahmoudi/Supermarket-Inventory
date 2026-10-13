@@ -1,0 +1,26 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:sdk",
+    "--",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/tmp/e1-root-sdk-final-v1/vitest-result.json"
+  ],
+  "actual_exit": 0,
+  "seconds": 9.13,
+  "inputs": 545,
+  "source_fingerprint": "5b162bb67d9dca1d3583ce6a5d28c6428ff66579276c7706ee1c9a589ec0441b",
+  "unchanged": true,
+  "changed": [],
+  "counts": {
+    "numTotalTests": 75,
+    "numPassedTests": 75,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTodoTests": 0,
+    "success": true
+  },
+  "checked_at": "2026-10-13T23:28:51.911809+00:00"
+}

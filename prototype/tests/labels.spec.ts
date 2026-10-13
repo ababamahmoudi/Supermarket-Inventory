@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch, setLanguage } from "./helpers";
 import {
@@ -25,10 +26,9 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
-  const initialQueue = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const initialQueue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   expect(initialQueue).toHaveLength(1);
   expect(initialQueue[0]).toMatchObject({
@@ -46,10 +46,9 @@ test("creates a template, starts after four used slots, and prints bilingual lab
     "Choose a template",
   );
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).templates
-          .length,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).templates.length,
     ),
   ).toBe(2);
   await page
@@ -103,15 +102,16 @@ test("creates a template, starts after four used slots, and prints bilingual lab
     .click();
   await expect
     .poll(() =>
-      page.evaluate(
-        (ids) =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).label_waitlist.filter((item: { id: string }) =>
-            ids.includes(item.id),
-          ),
-        initialQueue.map((item: { id: string }) => item.id),
-      ),
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const canonicalEvidenceInput = initialQueue.map(
+          (item: { id: string }) => item.id,
+        );
+        return JSON.parse(
+          JSON.stringify(canonicalState)!,
+        ).label_waitlist.filter((item: { id: string }) =>
+          canonicalEvidenceInput.includes(item.id),
+        );
+      }),
     )
     .toEqual(initialQueue);
   await page.reload();
@@ -155,10 +155,9 @@ test("requires one branch and prints its approved price instead of a pending pro
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
-  const initialQueue = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const initialQueue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   expect(initialQueue).toHaveLength(1);
   expect(initialQueue[0]).toMatchObject({
@@ -204,12 +203,11 @@ test("requires one branch and prints its approved price instead of a pending pro
   await expect(teaLabel.locator(".price")).toHaveText("$6.99");
   await expect(lavashLabel.locator(".price")).toHaveText("$1.99");
   await expect(lavashLabel).toContainText("3 for $5.00");
-  const branch2Queue = await page.evaluate(() =>
-    JSON.parse(
-      localStorage.getItem("supermarket-prototype-v1")!,
-    ).label_waitlist.filter(
-      (item: { branch: string }) => item.branch === "Branch 2",
-    ),
+  const branch2Queue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist.filter(
+        (item: { branch: string }) => item.branch === "Branch 2",
+      ),
   );
   expect(
     branch2Queue
@@ -221,19 +219,15 @@ test("requires one branch and prints its approved price instead of a pending pro
   // Richmond Hill's two labels stay scoped to that branch.
   await expect(await waitlistCopies(page, "0012")).toHaveValue("1");
   expect(
-    await page.evaluate(() =>
-      JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      ).label_waitlist.filter(
+    await readCanonicalBusinessEvidence(page).then((canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist.filter(
         (item: { branch: string }) => item.branch === "Branch 1",
       ),
     ),
   ).toEqual(initialQueue);
   expect(
-    await page.evaluate(() =>
-      JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      ).label_waitlist.filter(
+    await readCanonicalBusinessEvidence(page).then((canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist.filter(
         (item: { branch: string }) => item.branch === "Branch 2",
       ),
     ),

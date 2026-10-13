@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator } from "@playwright/test";
 import { addSelectedLabels, selectLabelGroup } from "./label-selection";
 import { chooseOption, setLanguage, signIn } from "./helpers";
@@ -132,9 +133,8 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
   page,
 }) => {
   await signIn(page, "Supervisor");
-  const productsBefore = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).products,
-    STORAGE_KEY,
+  const productsBefore = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );
   await page.goto("/#settings?group=pricing");
   await expect(
@@ -162,9 +162,9 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
   // Require the exact durable configuration before testing reload persistence.
   await expect
     .poll(() =>
-      page.evaluate(
-        (key) => JSON.parse(localStorage.getItem(key)!).config.weighed_items,
-        STORAGE_KEY,
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).config.weighed_items,
       ),
     )
     .toEqual({
@@ -184,9 +184,8 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
     page.getByRole("switch", { name: "Use rounding bands", exact: true }),
   ).not.toBeChecked();
   expect(
-    await page.evaluate(
-      (key) => JSON.parse(localStorage.getItem(key)!).products,
-      STORAGE_KEY,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
     ),
   ).toEqual(productsBefore);
 
@@ -230,12 +229,13 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).toHaveCount(0);
-  const product = await page.evaluate(
-    ({ key, code }) =>
-      JSON.parse(localStorage.getItem(key)!).products.find(
-        (item: { code: string }) => item.code === code,
-      ),
-    { key: STORAGE_KEY, code: PRODUCT_CODE },
+  const product = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const canonicalEvidenceInput = { key: STORAGE_KEY, code: PRODUCT_CODE };
+      return JSON.parse(JSON.stringify(canonicalState)!).products.find(
+        (item: { code: string }) => item.code === canonicalEvidenceInput.code,
+      );
+    },
   );
   expect(product.selling_price).toBe("7.49");
   expect(product.last_cost_before_tax).toBe("4.9895");
@@ -327,12 +327,13 @@ test("weighed Regular labels retain physical geometry, readable units, and appro
   );
   const printedInk = await measurePriceInk(printedPrice);
   expect(printedInk.inkFits).toBe(true);
-  const product = await page.evaluate(
-    ({ key, code }) =>
-      JSON.parse(localStorage.getItem(key)!).products.find(
-        (item: { code: string }) => item.code === code,
-      ),
-    { key: STORAGE_KEY, code: PRODUCT_CODE },
+  const product = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const canonicalEvidenceInput = { key: STORAGE_KEY, code: PRODUCT_CODE };
+      return JSON.parse(JSON.stringify(canonicalState)!).products.find(
+        (item: { code: string }) => item.code === canonicalEvidenceInput.code,
+      );
+    },
   );
   expect(product.selling_price).toBe("7.49");
   await info.attach("Loaded-font label overflow negative control", {

@@ -1,13 +1,17 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { DemoProvider } from "./store";
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+} from "./shared-ui-provider-test-fixture";
+import { act, fireEvent, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { WhatsMissing } from "./WhatsMissing";
 afterEach(() => vi.useRealTimers());
 describe("linked form validation", () => {
-  it("links a missing requirement to the right field without changing the application route", () => {
-    vi.useFakeTimers();
+  it("links a missing requirement to the right field without changing the application route", async () => {
     const scroll = vi.fn();
-    render(
+    await render(
       <DemoProvider>
         <WhatsMissing
           issues={[
@@ -22,6 +26,7 @@ describe("linked form validation", () => {
         <input aria-label="Unrelated field" />
       </DemoProvider>,
     );
+    vi.useFakeTimers();
     const field = screen.getByRole("textbox", { name: "Email" });
     field.scrollIntoView = scroll;
     const previousHash = window.location.hash;
@@ -35,8 +40,8 @@ describe("linked form validation", () => {
     act(() => vi.advanceTimersByTime(2500));
     expect(field).not.toHaveClass("validation-field-highlight");
   });
-  it("focuses Browse rather than the hidden native file input", () => {
-    render(
+  it("focuses Browse rather than the hidden native file input", async () => {
+    await render(
       <DemoProvider>
         <WhatsMissing
           issues={[
@@ -60,12 +65,18 @@ describe("linked form validation", () => {
       screen.getByRole("button", { name: "Browse original" }),
     ).toHaveFocus();
   });
-  it("omits the summary when the form is valid", () => {
-    render(
+  it("omits the summary when the form is valid", async () => {
+    await render(
       <DemoProvider>
         <WhatsMissing issues={[]} />
       </DemoProvider>,
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

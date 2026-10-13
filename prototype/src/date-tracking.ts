@@ -3,11 +3,20 @@ import { createId } from "./ids";
 import { companyDate } from "./invoice";
 import { projectExpiryLocation } from "./received";
 import { configuredBranches } from "./settings";
-import type { HistoryContext } from "./history";
+import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
+import { actorAtLocation, freshActor } from "./authority";
+import { requireSystemReconciliation } from "./authority-repository";
+import {
+  allowedLocationIds,
+  can,
+  requireCapability,
+  requireConcreteLocation,
+} from "./permissions";
 import type {
   Alert,
   Branch,
   DemoState,
+  CompanyConfig,
   ExpiryRecord,
   Language,
   Product,
@@ -86,25 +95,32 @@ export function trackedDateDaysLeft(date: string, today: string): number {
 
 export function allowedDateLocations(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor | null,
   includeInactive = false,
 ): Branch[] {
-  if (context.company_id !== state.config.company.seed_key) return [];
-  if (!Array.isArray(context.allowed_branches)) return [];
-  const configured = configuredBranches(state.config, includeInactive);
-  return configured.filter(
-    (location) =>
-      context.allowed_branches.includes(location) &&
-      (context.role === "supervisor" || location === context.branch),
-  );
+  if (!context || !can(state, context, "dates.read").allowed) return [];
+  try {
+    const actor = freshActor(state, context);
+    return allowedLocationIds(state, actor, { includeInactive }).filter(
+      (location) => actor.branch === "all" || location === actor.branch,
+    );
+  } catch {
+    return [];
+  }
 }
 
 /** Project posted location corrections before applying company/user location guards. */
 export function scopedTrackedDates(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor | null,
   includeRemoved = false,
 ): ExpiryRecord[] {
+  if (!context) return [];
+  try {
+    context = freshActor(state, context);
+  } catch {
+    return [];
+  }
   const allowed = allowedDateLocations(state, context, true);
   if (!allowed.length) return [];
   return state.expiry
@@ -113,6 +129,13 @@ export function scopedTrackedDates(
     .filter(
       (entry) =>
         allowed.includes(entry.branch) &&
+        can(state, context, "dates.read", {
+          company_id: entry.company_id,
+          kind: "location_record",
+          location_ids: [entry.branch],
+          entity_id: entry.id,
+          location_policy: "retained_read",
+        }).allowed &&
         (context.branch === "all" || entry.branch === context.branch) &&
         (includeRemoved || entry.status === "active"),
     );
@@ -120,10 +143,44 @@ export function scopedTrackedDates(
 
 export function nextTrackedDate(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor | null,
   productCode: string,
 ): ExpiryRecord | undefined {
-  return scopedTrackedDates(state, context)
+  if (!context) return undefined;
+  try {
+    context = freshActor(state, context);
+  } catch {
+    return undefined;
+  }
+  const operational = scopedTrackedDates(state, context);
+  const lookup =
+    operational.length || can(state, context, "dates.read").allowed
+      ? operational
+      : state.expiry
+          .filter((entry) => entry.company_id === state.config.company.seed_key)
+          .map((entry) => projectExpiryLocation(state, entry))
+          .filter(
+            (entry) =>
+              entry.status === "active" &&
+              (context.branch === "all" || entry.branch === context.branch) &&
+              can(state, context, "lookup.read", {
+                company_id: entry.company_id,
+                kind: "location_record",
+                location_ids: [entry.branch],
+                entity_id: entry.id,
+              }).allowed,
+          )
+          .map((entry): ExpiryRecord => ({
+            id: entry.id,
+            company_id: entry.company_id,
+            branch: entry.branch,
+            product_code: entry.product_code,
+            date: entry.date,
+            date_type: entry.date_type,
+            status: entry.status,
+            expires_in_days: entry.expires_in_days,
+          }));
+  return lookup
     .filter(
       (entry) =>
         entry.product_code === productCode && validTrackedDate(entry.date),
@@ -136,8 +193,9 @@ export function nextTrackedDate(
 /** Kept dates stay readable on Lookup, but an untracked product has no work queue. */
 export function activeTrackedDates(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor | null,
 ): ExpiryRecord[] {
+  if (!context) return [];
   return scopedTrackedDates(state, context).filter((entry) =>
     state.products.some(
       (product) =>
@@ -150,7 +208,7 @@ export function activeTrackedDates(
 }
 
 export function productReminderDays(
-  state: DemoState,
+  state: { readonly config: Pick<CompanyConfig, "expiry"> },
   product?: Pick<Product, "date_reminder_days">,
 ): number {
   return product?.date_reminder_days ?? state.config.expiry.expiring_soon_days;
@@ -177,8 +235,10 @@ export function dateIsDueSoon(
 /** A derived alert identity survives refresh, day changes and stopped-date history. */
 export function syncDateReminderAlerts(
   state: DemoState,
-  now = new Date(),
+  attribution: SystemAttribution,
+  now = new Date(attribution.applied_at),
 ): boolean {
+  requireSystemReconciliation(state, attribution, "date_reminders");
   let changed = false;
   const company = state.config.company.seed_key;
   const today = companyDate(state.config, now);
@@ -251,7 +311,9 @@ export function syncDateReminderAlerts(
 }
 
 export function dateReminderMessage(
-  state: DemoState,
+  state: Readonly<
+    Pick<import("./e1-read-model").ScopedReadView, "config" | "products">
+  >,
   alert: Alert,
   language: Language,
   now = new Date(),
@@ -286,11 +348,15 @@ export function dateReminderMessage(
 
 export function productDateDrafts(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
   branch: Branch,
 ): ProductDateDraft[] {
-  return scopedTrackedDates(state, { ...context, branch })
+  const actor =
+    branch === "all"
+      ? freshActor(state, context)
+      : actorAtLocation(state, context, branch);
+  return scopedTrackedDates(state, actor)
     .filter((entry) => entry.product_code === productCode)
     .map((entry) => ({
       id: entry.id,
@@ -307,18 +373,16 @@ export function productDateDrafts(
 /** Validate every row before a product or its high-water code is changed. */
 export function validateProductDateDrafts(
   state: DemoState,
-  context: Pick<
-    HistoryContext,
-    "company_id" | "role" | "actor" | "branch" | "allowed_branches"
-  >,
+  context: AuthenticatedActor,
   productCode: string,
   drafts: ProductDateDraft[] | undefined,
   reminderDays?: number,
   stopChoice?: StopTrackingChoice,
 ): void {
+  context = freshActor(state, context);
   if (context.company_id !== state.config.company.seed_key)
     throw new DateTrackingError("scope");
-  if (context.role !== "supervisor" && context.role !== "floor_worker")
+  if (!can(state, context, "dates.add").allowed)
     throw new DateTrackingError("permission");
   if (
     reminderDays !== undefined &&
@@ -327,11 +391,7 @@ export function validateProductDateDrafts(
     throw new DateTrackingError("reminder");
   if (stopChoice !== undefined && !["keep", "clear"].includes(stopChoice))
     throw new DateTrackingError("stop_choice");
-  const allowed = configuredBranches(state.config).filter(
-    (branch) =>
-      context.allowed_branches.includes(branch) &&
-      (context.role === "supervisor" || context.branch === branch),
-  );
+  const allowed = allowedDateLocations(state, context);
   const seen = new Set<string>();
   for (const draft of drafts ?? []) {
     if (!allowed.includes(draft.branch))
@@ -339,7 +399,7 @@ export function validateProductDateDrafts(
     if (draft.product_code !== productCode)
       throw new DateTrackingError("product");
     if (draft.id) {
-      if (context.role !== "supervisor")
+      if (!can(state, context, "catalog.tracking_preference_edit").allowed)
         throw new DateTrackingError("permission");
       const existing = state.expiry.find(
         (entry) =>
@@ -418,14 +478,12 @@ export function validateProductTrackingDate(
 /** Applied only after whole-form validation. Existing source dates are never erased. */
 export function applyProductDateDrafts(
   state: DemoState,
-  context: Pick<
-    HistoryContext,
-    "company_id" | "role" | "actor" | "branch" | "allowed_branches"
-  >,
+  context: AuthenticatedActor,
   product: Product,
   drafts: ProductDateDraft[] | undefined,
   now = new Date(),
 ): void {
+  context = freshActor(state, context);
   if (product.company_id !== context.company_id)
     throw new DateTrackingError("scope");
   validateProductDateDrafts(state, context, product.code, drafts);
@@ -462,6 +520,7 @@ export function applyProductDateDrafts(
       previous.removed_reason = draft.remove_reason || undefined;
       previous.removal_action = draft.remove_reason ? "remove" : "correction";
       previous.removed_by = context.actor;
+      previous.removed_by_user_id = context.user_id;
       previous.removed_at = at;
     }
     if (draft.remove_reason) continue;
@@ -483,6 +542,7 @@ export function applyProductDateDrafts(
       received_date: previous?.received_date,
       created_at: at,
       created_by: context.actor,
+      created_by_user_id: context.user_id,
       expires_in_days: trackedDateDaysLeft(
         draft.date,
         companyDate(state.config, now),
@@ -491,16 +551,16 @@ export function applyProductDateDrafts(
   }
 }
 
-function requireOperator(state: DemoState, context: HistoryContext) {
+function requireOperator(state: DemoState, context: AuthenticatedActor) {
   if (context.company_id !== state.config.company.seed_key)
     throw new DateTrackingError("scope");
-  if (context.role !== "supervisor" && context.role !== "floor_worker")
+  if (!can(state, context, "dates.add").allowed)
     throw new DateTrackingError("permission");
 }
 
 function appendAudit(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   action: string,
   productCode: string,
   location: Branch,
@@ -514,6 +574,8 @@ function appendAudit(
     action,
     by: context.actor,
     actor_username: context.username,
+    actor_user_id: context.user_id,
+    actor_role: context.role,
     device: "Browser",
     at,
     product_code: productCode,
@@ -528,10 +590,17 @@ function appendAudit(
 /** Optional quantity is retained evidence. It never updates stock, receipts or money. */
 export function addTrackedDate(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   input: AddTrackedDateInput,
 ): ExpiryRecord {
+  context = freshActor(state, context);
   requireOperator(state, context);
+  requireCapability(state, context, "dates.add", {
+    company_id: state.config.company.seed_key,
+    kind: "location_record",
+    location_ids: [requireConcreteLocation(state, context, input.branch)],
+    mutation: true,
+  });
   const product = state.products.find(
     (item) =>
       item.company_id === context.company_id &&
@@ -571,6 +640,7 @@ export function addTrackedDate(
     lot_number: input.lot_number?.trim() || undefined,
     note: input.note?.trim() || undefined,
     created_by: context.actor,
+    created_by_user_id: context.user_id,
     created_at: at,
     supplier: product.main_supplier,
   };
@@ -594,13 +664,18 @@ export function addTrackedDate(
 /** The inline preference switch never removes existing date evidence. */
 export function setProductDateTracking(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
   enabled: boolean,
   location: Branch,
 ): void {
+  context = freshActor(state, context);
   requireOperator(state, context);
-  if (context.role !== "supervisor") throw new DateTrackingError("permission");
+  requireCapability(state, context, "catalog.tracking_preference_edit", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
   if (!allowedDateLocations(state, context).includes(location))
     throw new DateTrackingError("location");
   const product = state.products.find(
@@ -625,10 +700,11 @@ export function setProductDateTracking(
 
 export function removeTrackedDate(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   entryId: string,
   reason: DateRemovalReason,
 ): void {
+  context = freshActor(state, context);
   requireOperator(state, context);
   if (!dateRemovalReasons.includes(reason))
     throw new DateTrackingError("reason");
@@ -636,6 +712,19 @@ export function removeTrackedDate(
     (entry) => entry.id === entryId,
   );
   if (!projected) throw new DateTrackingError("scope");
+  const activeLocation = configuredBranches(state.config).includes(
+    projected.branch,
+  );
+  requireCapability(state, context, "dates.remove", {
+    company_id: projected.company_id,
+    kind: "location_record",
+    // This concrete target comes from the retained canonical date, never a
+    // caller's branch claim. Only company roles may correct an inactive record.
+    location_ids: [projected.branch],
+    entity_id: projected.id,
+    location_policy: activeLocation ? "active_only" : "retained_correction",
+    mutation: true,
+  });
   const entry = state.expiry.find(
     (item) => item.id === entryId && item.company_id === context.company_id,
   )!;
@@ -645,6 +734,7 @@ export function removeTrackedDate(
   entry.removed_reason = reason;
   entry.removal_action = "remove";
   entry.removed_by = context.actor;
+  entry.removed_by_user_id = context.user_id;
   entry.removed_at = at;
   appendAudit(
     state,
@@ -659,12 +749,17 @@ export function removeTrackedDate(
 
 export function stopProductDateTracking(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
   choice: StopTrackingChoice | boolean,
 ): void {
+  context = freshActor(state, context);
   requireOperator(state, context);
-  if (context.role !== "supervisor") throw new DateTrackingError("permission");
+  requireCapability(state, context, "catalog.tracking_preference_edit", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
   const product = state.products.find(
     (item) =>
       item.company_id === context.company_id && item.code === productCode,
@@ -675,9 +770,26 @@ export function stopProductDateTracking(
   const at = new Date().toISOString();
   const open =
     choice === "clear" || choice === true
-      ? scopedTrackedDates(state, { ...context, branch: "all" }).filter(
-          (entry) => entry.product_code === productCode,
-        )
+      ? state.expiry
+          .filter((entry) => entry.company_id === context.company_id)
+          .map((entry) => projectExpiryLocation(state, entry))
+          .filter(
+            (entry) =>
+              entry.status === "active" &&
+              can(state, context, "dates.remove", {
+                company_id: entry.company_id,
+                kind: "location_record",
+                location_ids: [entry.branch],
+                entity_id: entry.id,
+                location_policy: configuredBranches(state.config).includes(
+                  entry.branch,
+                )
+                  ? "active_only"
+                  : "retained_correction",
+                mutation: true,
+              }).allowed,
+          )
+          .filter((entry) => entry.product_code === productCode)
       : [];
   product.date_tracking = false;
   for (const projected of open) {
@@ -688,6 +800,7 @@ export function stopProductDateTracking(
     entry.status = "removed";
     entry.removal_action = "stop_tracking";
     entry.removed_by = context.actor;
+    entry.removed_by_user_id = context.user_id;
     entry.removed_at = at;
   }
   appendAudit(

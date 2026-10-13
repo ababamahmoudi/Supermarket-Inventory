@@ -1,4 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { useState } from "react";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import { cloneWithAuthority } from "./authority";
+import { saveProductEdits, productEditSnapshot } from "./product-editor";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { initialState, DemoProvider, STORAGE_KEY, useDemo } from "./store";
 import {
@@ -6,7 +11,6 @@ import {
   reverseActivity,
   type HistoryContext,
 } from "./history";
-import { configuredBranches } from "./settings";
 import {
   encodeHistoryStorage,
   decodeHistoryStorage,
@@ -16,23 +20,23 @@ import {
 import type { DemoState } from "./types";
 
 const plain = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
-const context = (state: DemoState): HistoryContext => ({
-  company_id: state.config.company.seed_key,
-  branch: "Branch 1",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  username: "supervisor",
-  allowed_branches: configuredBranches(state.config, true),
+const context = (state: DemoState): HistoryContext =>
+  authenticatedTestActor(state, "manager");
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
 });
 function largeHistory() {
   const state = initialState();
+  const manager = context(state);
   for (let index = 0; index < 20; index++)
     state.activity.push({
       id: `storage-fixture-${index}`,
       company_id: state.config.company.seed_key,
       branch: "Branch 1",
       action: "Save draft",
-      by: "Demo Supervisor",
+      by: manager.actor,
+      actor_user_id: manager.user_id,
       at: "2026-10-11T12:00:00.000Z",
       reversible: true,
       before: { invoice: structuredClone(state.invoice) },
@@ -57,25 +61,36 @@ function largeHistory() {
   return state;
 }
 function validRevert() {
-  const state = initialState();
-  const before = structuredClone(state);
-  state.products[0].name_en = "Changed name for codec proof";
-  state.activity.push({
-    id: "codec-name-edit",
-    company_id: state.config.company.seed_key,
-    branch: "all",
-    action: "Save product",
-    by: "Demo Supervisor",
-    at: "2026-10-11T12:00:00.000Z",
-    reversible: true,
-  });
-  attachReversals(before, state, context(state));
-  state.activity.at(-1)!.reversal![0].guards!.push({
+  const state = initialState(),
+    manager = context(state);
+  const before = cloneWithAuthority(state),
+    product = state.products[0];
+  saveProductEdits(
+    state,
+    manager,
+    product.code,
+    {
+      name_en: "Changed name for codec proof",
+      name_fa: product.name_fa ?? "",
+      description_en: product.description_en ?? "",
+      description_fa: product.description_fa ?? "",
+      unit_size: product.unit_size,
+      ai_category: product.ai_category ?? "",
+      pricing_category: product.pricing_category,
+      barcode: product.barcode ?? "",
+      main_supplier: product.main_supplier,
+      date_tracking: product.date_tracking,
+      scope: "all",
+    },
+    productEditSnapshot(state, manager, product.code),
+  );
+  const [entry] = attachReversals(before, state, manager);
+  entry.reversal![0].guards!.push({
     path: ["config"],
     after: structuredClone(state.config),
     exists: true,
   });
-  return { state, originalName: before.products[0].name_en };
+  return { state, originalName: before.products[0].name_en, entryId: entry.id };
 }
 describe("lossless scoped History persistence", () => {
   it("deduplicates repeated large before/after/inverse/guard values without losing a single audit field", () => {
@@ -107,11 +122,11 @@ describe("lossless scoped History persistence", () => {
     expect(second[0].supplier).not.toBe(first[0].supplier);
   });
   it("restores real Revert and rejects intervening config changes with the full large guard intact", () => {
-    const { state, originalName } = validRevert();
+    const { state, originalName, entryId } = validRevert();
     const decoded = decodeHistoryStorage(
       plain(encodeHistoryStorage(state)),
     ) as DemoState;
-    reverseActivity(decoded, context(decoded), "codec-name-edit", "revert");
+    reverseActivity(decoded, context(decoded), entryId, "revert");
     expect(decoded.products[0].name_en).toBe(originalName);
     expect(decoded.activity).toHaveLength(state.activity.length + 1);
     const conflicting = decodeHistoryStorage(
@@ -119,29 +134,22 @@ describe("lossless scoped History persistence", () => {
     ) as DemoState;
     conflicting.config.company.currency = "USD";
     expect(() =>
-      reverseActivity(
-        conflicting,
-        context(conflicting),
-        "codec-name-edit",
-        "revert",
-      ),
+      reverseActivity(conflicting, context(conflicting), entryId, "revert"),
     ).toThrow();
     expect(conflicting.products[0].name_en).toBe(
       "Changed name for codec proof",
     );
   });
   it("retains company and branch guards and blocks a foreign company's reversal", () => {
-    const { state } = validRevert();
+    const { state, entryId } = validRevert();
     const decoded = decodeHistoryStorage(
       plain(encodeHistoryStorage(state)),
     ) as DemoState;
+    const foreignState = initialState();
+    foreignState.config.company.seed_key = "another-company";
+    const foreignManager = context(foreignState);
     expect(() =>
-      reverseActivity(
-        decoded,
-        { ...context(decoded), company_id: "another-company" },
-        "codec-name-edit",
-        "revert",
-      ),
+      reverseActivity(decoded, foreignManager, entryId, "revert"),
     ).toThrow();
     expect(decoded.activity.at(-1)!.reversal).toEqual(
       plain(state.activity.at(-1)!.reversal),
@@ -195,7 +203,7 @@ describe("lossless scoped History persistence", () => {
     else dictionary.integrity = "invalid";
     expect(() => decodeHistoryStorage(encoded)).toThrow(HistoryStorageError);
   });
-  it("does not overwrite a malformed saved dictionary with fallback seed or subsequent in-memory edits", () => {
+  it("does not overwrite a malformed saved dictionary with fallback seed or subsequent in-memory edits", async () => {
     localStorage.clear();
     sessionStorage.clear();
     const state = initialState();
@@ -209,28 +217,76 @@ describe("lossless scoped History persistence", () => {
     };
     const raw = JSON.stringify(invalid);
     localStorage.setItem(STORAGE_KEY, raw);
+    const fixture = await authenticatedProviderFixture({
+      state: initialState(),
+      role: "manager",
+      initializeBusiness: false,
+    });
+    fixtures.push(fixture);
     function Probe() {
-      const demo = useDemo();
+      const demo = useDemo(),
+        [attempted, setAttempted] = useState(false);
       return (
-        <button
-          onClick={() => {
-            demo.signIn("supervisor", "demo1234");
-            demo.update((draft) => {
-              draft.products[0].name_en = "In-memory edit";
-            });
-          }}
-        >
-          Attempt edit
-        </button>
+        <>
+          <button
+            onClick={async () => {
+              try {
+                await demo.signIn(fixture.actor.username, "demo1234");
+                await demo.command(
+                  "catalog.edit",
+                  {
+                    company_id: fixture.actor.company_id,
+                    kind: "company_shared",
+                    mutation: true,
+                  },
+                  (draft, actor) => {
+                    const product = draft.products[0];
+                    saveProductEdits(
+                      draft,
+                      actor,
+                      product.code,
+                      {
+                        name_en: "In-memory edit",
+                        name_fa: product.name_fa ?? "",
+                        description_en: product.description_en ?? "",
+                        description_fa: product.description_fa ?? "",
+                        unit_size: product.unit_size,
+                        ai_category: product.ai_category ?? "",
+                        pricing_category: product.pricing_category,
+                        barcode: product.barcode ?? "",
+                        main_supplier: product.main_supplier,
+                        date_tracking: product.date_tracking,
+                        scope: "all",
+                      },
+                      productEditSnapshot(draft, actor, product.code),
+                    );
+                  },
+                );
+              } catch {
+                /* Actual corruption startup denies all business commands. */
+              }
+              setAttempted(true);
+            }}
+          >
+            Attempt edit
+          </button>
+          <output data-testid="history-corrupt">
+            {demo.historyLoadError ? "quarantined" : "loading"}
+          </output>
+          {attempted && <output>Attempt completed</output>}
+        </>
       );
     }
     render(
-      <DemoProvider>
+      <DemoProvider options={fixture.options}>
         <Probe />
       </DemoProvider>,
     );
+    await screen.findByText("quarantined");
     expect(localStorage.getItem(STORAGE_KEY)).toBe(raw);
     fireEvent.click(screen.getByRole("button", { name: "Attempt edit" }));
+    await screen.findByText("Attempt completed");
     expect(localStorage.getItem(STORAGE_KEY)).toBe(raw);
+    await expect(fixture.readCanonical()).rejects.toThrow();
   });
 });

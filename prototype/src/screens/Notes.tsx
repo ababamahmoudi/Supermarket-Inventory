@@ -27,31 +27,35 @@ import {
   addNote,
   operationError,
   companyTimestamp,
-  scopedRecords,
   updateNoteStatus,
 } from "../operations";
 import {
   addNotebookEntry,
   archiveNotebook,
-  canAddNotebookEntry,
-  canEditNotebookEntry,
   editNotebookEntry,
   notebookError,
   NotebookError,
-  notebookEntryLocations,
-  readableNotebookEntries,
   updateNotebookEntryStatus,
-  visibleNotebooks,
   type NotebookDefinition,
-  type NotebookContext,
   type NotebookEntry,
   NOTEBOOK_EDIT_WINDOW,
 } from "../notebooks";
-import { branchLabel, configuredBranches } from "../settings";
+import { configuredRoleLabel } from "../role-config";
+import { branchLabel } from "../settings";
 import { translateCount } from "../i18n";
 import { notesText } from "../c-notes-i18n";
 import { NotebookEditor } from "./NotebookSettings";
-import type { NoteRecord } from "../types";
+import {
+  visibleNotebookView,
+  readableNotebookEntryView,
+  canAddNotebookEntryView,
+  canEditNotebookEntryView,
+  notebookEntryLocationView,
+  permittedLocationIdsView,
+} from "../notes-dates-read";
+import type { DemoState, NoteRecord } from "../types";
+import type { AuthenticatedActor, Capability } from "../authority-types";
+import { actorAtLocation } from "../authority";
 import "./notebooks-b.css";
 import "./c3-labels-notes-offers.css";
 
@@ -59,25 +63,17 @@ type NoteField =
   "text" | "product" | "qty" | "date" | "measurement" | "location";
 
 export function Notes() {
-  const { state, update, branch, role, user, lang, t } = useDemo();
-  const context: NotebookContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-    allowed_branches:
-      role === "supervisor"
-        ? configuredBranches(state.config, true)
-        : user
-          ? [user.branch]
-          : [],
-  };
-  const definitions = visibleNotebooks(state, context);
-  const allDefinitions = visibleNotebooks(state, context, {
+  const { state, command, actor, can, branch, role, lang, t } = useDemo();
+  const context = actor;
+  const canManageNotebooks = can("notebooks.definition_manage");
+  const canReadBuiltinNotes = can("notes.read");
+
+  const definitions = visibleNotebookView(state);
+  const allDefinitions = visibleNotebookView(state, {
     includeArchived: true,
   });
   const [tab, setTab] = useState<string>(() =>
-    role === "cashier" ? (definitions[0]?.id ?? "") : "to_order",
+    !canReadBuiltinNotes ? (definitions[0]?.id ?? "") : "to_order",
   );
   const [text, setText] = useState("");
   const [product, setProduct] = useState("");
@@ -101,10 +97,12 @@ export function Notes() {
   } | null>(null);
   const [entryClock, setEntryClock] = useState(0);
   useEffect(() => {
-    if (role === "supervisor") return;
+    if (canManageNotebooks) return;
     const now = Date.now();
     const deadline = (state.notebook_entries ?? [])
-      .filter((entry) => entry.by === context.actor && !entry.archived)
+      .filter(
+        (entry) => entry.by_user_id === context?.user_id && !entry.archived,
+      )
       .map((entry) => Date.parse(entry.created_at) + NOTEBOOK_EDIT_WINDOW)
       .filter((time) => Number.isFinite(time) && time > now)
       .sort((left, right) => left - right)[0];
@@ -114,7 +112,12 @@ export function Notes() {
       deadline - now + 1,
     );
     return () => window.clearTimeout(timer);
-  }, [role, context.actor, state.notebook_entries, entryClock]);
+  }, [
+    canManageNotebooks,
+    context?.user_id,
+    state.notebook_entries,
+    entryClock,
+  ]);
   const clearEntryForm = () => {
     setEditing(null);
     setText("");
@@ -130,17 +133,16 @@ export function Notes() {
       delete next[field];
       return next;
     });
-  const builtinTabs =
-    role === "cashier"
-      ? []
-      : [
-          { key: "to_order", label: t("To order", "برای سفارش") },
-          { key: "store_use", label: t("Store use", "مصرف فروشگاه") },
-          {
-            key: "note_to_supervisor",
-            label: t("For Supervisor", "برای سرپرست"),
-          },
-        ];
+  const builtinTabs = !canReadBuiltinNotes
+    ? []
+    : [
+        { key: "to_order", label: t("To order", "برای سفارش") },
+        { key: "store_use", label: t("Store use", "مصرف فروشگاه") },
+        {
+          key: "note_to_supervisor",
+          label: t("For Supervisor", "برای سرپرست"),
+        },
+      ];
   const tabs = [
     ...builtinTabs,
     ...definitions.map((item) => ({
@@ -152,25 +154,24 @@ export function Notes() {
     ? tab
     : (tabs[0]?.key ?? "");
   const notebook = definitions.find((item) => item.id === activeTab);
-  const isBuiltin = !notebook && role !== "cashier";
+  const isBuiltin = !notebook && canReadBuiltinNotes;
   const locations = notebook
-    ? notebookEntryLocations(state, notebook, context)
-    : configuredBranches(state.config).filter((location) =>
-        context.allowed_branches?.includes(location),
-      );
+    ? notebookEntryLocationView(state, notebook, context, can)
+    : context
+      ? permittedLocationIdsView(state, context, can, "notes.entry_add", {
+          mutation: true,
+        })
+      : [];
   const targetLocation = branch === "all" ? entryLocation : branch;
-  const canChooseLocation = Boolean(
-    role === "supervisor" && branch === "all" && locations.length,
-  );
+  const canChooseLocation = Boolean(branch === "all" && locations.length);
   const canAdd = isBuiltin
     ? locations.includes(targetLocation)
     : Boolean(notebook && locations.includes(targetLocation));
   const canSaveEdit = Boolean(
-    editing && canEditNotebookEntry(state, context, editing.entry.id),
+    editing && canEditNotebookEntryView(state, context, can, editing.entry.id),
   );
-  const allNotes =
-    role === "cashier" ? [] : scopedRecords(state.notes, context);
-  const allEntries = readableNotebookEntries(state, context);
+  const allNotes = !canReadBuiltinNotes || !context ? [] : state.notes;
+  const allEntries = readableNotebookEntryView(state);
   const query = search.trim().toLocaleLowerCase();
   const searchText = (item: {
     text: string;
@@ -180,7 +181,7 @@ export function Notes() {
   }) => {
     const linked = state.products.find(
       (record) =>
-        record.company_id === context.company_id &&
+        record.company_id === context?.company_id &&
         record.code === item.product_code,
     );
     const named = allDefinitions.find(
@@ -204,20 +205,38 @@ export function Notes() {
       (!query || searchText(item)),
   );
   const count = notes.length + entries.length;
-  const run = (
-    action: (draft: typeof state) => void,
+  const run = async (
+    action: (draft: DemoState, actor: AuthenticatedActor) => void,
     feedback: [string, string],
     custom = false,
+    capability: Capability = "notes.entry_add",
+    location = targetLocation,
   ) => {
     try {
-      update(action);
+      await command(
+        capability,
+        {
+          company_id: state.config.company.seed_key,
+          kind:
+            capability === "notebooks.definition_manage"
+              ? "company_shared"
+              : "location_record",
+          location_ids:
+            capability === "notebooks.definition_manage" ? [] : [location],
+          mutation: true,
+          ...(capability === "notebooks.entry_edit_any"
+            ? { location_policy: "retained_correction" as const }
+            : {}),
+        },
+        action,
+      );
       setMessage(feedback);
       setError("");
       setFieldErrors({});
       return true;
     } catch (caught) {
       const message = custom
-        ? notebookError(caught, t)
+        ? notebookError(caught, t, state.config)
         : operationError(caught instanceof Error ? caught.message : "", t);
       const key =
         caught instanceof NotebookError
@@ -246,7 +265,7 @@ export function Notes() {
   const productView = (code: string) => {
     const item = state.products.find(
       (record) =>
-        record.code === code && record.company_id === context.company_id,
+        record.code === code && record.company_id === context?.company_id,
     );
     return item ? (
       <ProductName product={item} language={lang} />
@@ -286,7 +305,7 @@ export function Notes() {
                 {t("Add note", "افزودن یادداشت")}
               </Button>
             )}
-            {role === "supervisor" && (
+            {canManageNotebooks && (
               <Button variant="neutral" onClick={() => setEditor("new")}>
                 <Plus size={16} aria-hidden="true" />
                 {t("New notebook", "دفترچه جدید")}
@@ -310,7 +329,7 @@ export function Notes() {
           value: item.key,
           label: item.label,
           count:
-            item.key === "note_to_supervisor" && role === "supervisor"
+            item.key === "note_to_supervisor" && can("notes.status_manage")
               ? allNotes.filter(
                   (note) => note.type === item.key && note.status === "open",
                 ).length
@@ -324,7 +343,7 @@ export function Notes() {
                 : undefined,
         }))}
       />
-      {notebook && role === "supervisor" && (
+      {notebook && canManageNotebooks && (
         <div className="actions notebook-manage-actions">
           <Button variant="neutral" onClick={() => setEditor(notebook)}>
             <Pencil size={16} aria-hidden="true" />
@@ -364,7 +383,7 @@ export function Notes() {
                 : t("Add note", "افزودن یادداشت")
             }
             noValidate
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
               const missing: Partial<Record<NoteField, string>> = {};
               if (!text.trim())
@@ -423,12 +442,12 @@ export function Notes() {
               }
               setFieldErrors(missing);
               if (Object.keys(missing).length) return;
-              const saved = run(
-                (draft) => {
+              const saved = await run(
+                (draft, freshActor) => {
                   if (editing)
                     editNotebookEntry(
                       draft,
-                      context,
+                      freshActor,
                       editing.entry.id,
                       {
                         text,
@@ -440,7 +459,7 @@ export function Notes() {
                       editing.snapshot,
                     );
                   else if (notebook)
-                    addNotebookEntry(draft, context, notebook.id, {
+                    addNotebookEntry(draft, freshActor, notebook.id, {
                       branch: targetLocation || undefined,
                       text,
                       product_code: product || undefined,
@@ -451,7 +470,7 @@ export function Notes() {
                   else
                     addNote(
                       draft,
-                      { ...context, branch: targetLocation },
+                      actorAtLocation(draft, freshActor, targetLocation),
                       {
                         type: activeTab as NoteRecord["type"],
                         text,
@@ -464,6 +483,14 @@ export function Notes() {
                   ? ["Saved changes.", "تغییرات ذخیره شد."]
                   : ["Saved note.", "یادداشت ذخیره شد."],
                 Boolean(notebook),
+                editing
+                  ? can("notebooks.entry_edit_any")
+                    ? "notebooks.entry_edit_any"
+                    : "notebooks.entry_edit_own"
+                  : notebook
+                    ? "notebooks.entry_add"
+                    : "notes.entry_add",
+                editing?.entry.branch ?? targetLocation,
               );
               if (saved) {
                 clearEntryForm();
@@ -540,7 +567,7 @@ export function Notes() {
                       ...state.products
                         .filter(
                           (item) =>
-                            item.company_id === context.company_id &&
+                            item.company_id === context?.company_id &&
                             (item.status === "active" ||
                               item.code === editing?.entry.product_code),
                         )
@@ -641,8 +668,8 @@ export function Notes() {
             {editing && !canSaveEdit && (
               <p className="muted" role="status">
                 {t(
-                  "This note can no longer be edited. Ask the Supervisor to review it.",
-                  "دیگر امکان ویرایش این یادداشت وجود ندارد. از سرپرست بخواهید آن را بررسی کند.",
+                  `This note can no longer be edited. Ask an ${configuredRoleLabel(state.config.roles, "owner", "en")} or ${configuredRoleLabel(state.config.roles, "manager", "en")} to review it.`,
+                  `دیگر امکان ویرایش این یادداشت وجود ندارد. از ${configuredRoleLabel(state.config.roles, "owner", "fa")} یا ${configuredRoleLabel(state.config.roles, "manager", "fa")} بخواهید آن را بررسی کند.`,
                 )}
               </p>
             )}
@@ -663,9 +690,11 @@ export function Notes() {
         <p className="muted" role="status">
           {notesText(
             t,
-            role !== "supervisor" &&
-              (!notebook.read_roles.includes(role ?? "cashier") ||
-                !notebook.add_roles.includes(role ?? "cashier"))
+            !canManageNotebooks &&
+              (!role ||
+                !notebook.read_roles.includes(role) ||
+                !role ||
+                !notebook.add_roles.includes(role))
               ? "readOnly"
               : "noLocation",
           )}
@@ -781,7 +810,7 @@ export function Notes() {
           <div className="actions">
             {item.status === "open" &&
               item.type === "note_to_supervisor" &&
-              role === "supervisor" && (
+              can("notes.status_manage") && (
                 <Menu
                   icon={
                     <MoreHorizontal
@@ -797,9 +826,12 @@ export function Notes() {
                     disabled={branch === "all"}
                     onClick={() =>
                       run(
-                        (draft) =>
-                          updateNoteStatus(draft, context, item.id, "read"),
+                        (draft, freshActor) =>
+                          updateNoteStatus(draft, freshActor, item.id, "read"),
                         ["Marked seen.", "دیده‌شده علامت‌گذاری شد."],
+                        false,
+                        "notes.status_manage",
+                        item.branch,
                       )
                     }
                   >
@@ -809,18 +841,30 @@ export function Notes() {
               )}
             {item.status !== "resolved" &&
               item.status !== "ordered" &&
-              (item.type !== "note_to_supervisor" || role === "supervisor") && (
+              (item.type === "note_to_supervisor"
+                ? can("notes.status_manage")
+                : can("notes.operational_status")) && (
                 <Button
                   variant="neutral"
                   size="sm"
                   disabled={branch === "all"}
                   onClick={() =>
                     run(
-                      (draft) =>
-                        updateNoteStatus(draft, context, item.id, "resolved"),
+                      (draft, freshActor) =>
+                        updateNoteStatus(
+                          draft,
+                          freshActor,
+                          item.id,
+                          "resolved",
+                        ),
                       item.type === "to_order"
                         ? ["Marked ordered.", "سفارش‌داده‌شده علامت‌گذاری شد."]
                         : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
+                      false,
+                      item.type === "note_to_supervisor"
+                        ? "notes.status_manage"
+                        : "notes.operational_status",
+                      item.branch,
                     )
                   }
                 >
@@ -901,36 +945,56 @@ export function Notes() {
                 </span>
               )}
             </div>
-            {(canEditNotebookEntry(state, context, item.id) ||
+            {(canEditNotebookEntryView(state, context, can, item.id) ||
               (owner.status_enabled &&
-                canAddNotebookEntry(owner, context))) && (
+                canAddNotebookEntryView(
+                  state,
+                  owner,
+                  context,
+                  can,
+                  item.branch,
+                ))) && (
               <div className="actions">
                 {owner.status_enabled &&
-                  canAddNotebookEntry(owner, context) &&
+                  canAddNotebookEntryView(
+                    state,
+                    owner,
+                    context,
+                    can,
+                    item.branch,
+                  ) &&
                   item.status !== "done" && (
                     <Button
                       variant="neutral"
                       size="sm"
                       onClick={() =>
                         run(
-                          (draft) =>
+                          (draft, freshActor) =>
                             updateNotebookEntryStatus(
                               draft,
-                              context,
+                              freshActor,
                               item.id,
                               "done",
                             ),
                           ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
                           true,
+                          "notebooks.entry_add",
+                          item.branch,
                         )
                       }
                     >
                       {t("Mark done", "علامت انجام‌شده")}
                     </Button>
                   )}
-                {(canEditNotebookEntry(state, context, item.id) ||
+                {(canEditNotebookEntryView(state, context, can, item.id) ||
                   (owner.status_enabled &&
-                    canAddNotebookEntry(owner, context) &&
+                    canAddNotebookEntryView(
+                      state,
+                      owner,
+                      context,
+                      can,
+                      item.branch,
+                    ) &&
                     item.status === "done")) && (
                   <Menu
                     icon={
@@ -943,7 +1007,7 @@ export function Notes() {
                     iconOnly
                     label={t("More actions", "کارهای بیشتر")}
                   >
-                    {canEditNotebookEntry(state, context, item.id) && (
+                    {canEditNotebookEntryView(state, context, can, item.id) && (
                       <MenuItem
                         onClick={() => {
                           setEditing({
@@ -969,20 +1033,28 @@ export function Notes() {
                       </MenuItem>
                     )}
                     {owner.status_enabled &&
-                      canAddNotebookEntry(owner, context) &&
+                      canAddNotebookEntryView(
+                        state,
+                        owner,
+                        context,
+                        can,
+                        item.branch,
+                      ) &&
                       item.status === "done" && (
                         <MenuItem
                           onClick={() =>
                             run(
-                              (draft) =>
+                              (draft, freshActor) =>
                                 updateNotebookEntryStatus(
                                   draft,
-                                  context,
+                                  freshActor,
                                   item.id,
                                   "open",
                                 ),
                               ["Marked open.", "باز علامت‌گذاری شد."],
                               true,
+                              "notebooks.entry_add",
+                              item.branch,
                             )
                           }
                         >
@@ -1017,14 +1089,16 @@ export function Notes() {
           "یادداشت‌ها قابل جستجو می‌مانند. در صورت نیاز، دفترچه را در تنظیمات بازیابی کنید.",
         )}
         confirmLabel={t("Archive notebook", "بایگانی دفترچه")}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!archiving) return;
-          run(
-            (draft) => archiveNotebook(draft, context, archiving.id),
+          const saved = await run(
+            (draft, freshActor) =>
+              archiveNotebook(draft, freshActor, archiving.id),
             ["Archived notebook.", "دفترچه بایگانی شد."],
             true,
+            "notebooks.definition_manage",
           );
-          setArchiving(null);
+          if (saved) setArchiving(null);
         }}
       />
     </div>

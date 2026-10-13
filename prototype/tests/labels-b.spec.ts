@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { setBranch, signIn } from "./helpers";
 import {
@@ -98,10 +99,9 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   });
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
-  const initialQueue = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const initialQueue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   expect(initialQueue).toHaveLength(1);
   expect(initialQueue[0]).toMatchObject({
@@ -127,10 +127,9 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   await expect(
     page.locator(".label-bilingual-preview .print-sheet"),
   ).toHaveCount(2);
-  const queuedBeforePrint = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const queuedBeforePrint = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await expect(page.locator("body")).toHaveAttribute("data-print-calls", "1");
@@ -146,10 +145,9 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
     .click();
   await expect(await waitlistCopies(page, "0003")).toHaveValue("20");
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-          .label_waitlist,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
     ),
   ).toEqual(queuedBeforePrint);
   await page.reload();
@@ -165,10 +163,9 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   // record untouched, including its exact identity and copy count.
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-            .label_waitlist,
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
       ),
     )
     .toEqual(initialQueue);
@@ -176,10 +173,11 @@ test("shared waitlist prints multiple pages but only explicit Yes clears it", as
   await expect(page.getByLabel("Copies for 0003", { exact: true })).toHaveCount(
     0,
   );
-  const printed = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity.find(
-      (item: { action: string }) => item.action === "Print labels",
-    ),
+  const printed = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).activity.find(
+        (item: { action: string }) => item.action === "Print labels",
+      ),
   );
   expect(printed.reversible).toBe(false);
   expect(printed.after.copies).toBe(20);
@@ -192,10 +190,9 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#labels");
-  const initialQueue = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const initialQueue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   expect(initialQueue).toHaveLength(1);
   expect(initialQueue[0]).toMatchObject({
@@ -234,10 +231,9 @@ test("waitlists persist across coworkers and remain isolated by branch", async (
   // record untouched, including its exact identity and copy count.
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-            .label_waitlist,
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
       ),
     )
     .toEqual(initialQueue);

@@ -3,6 +3,25 @@ import type { ReturnRecord } from "./types";
 import type { EvidenceEvent, OperationalReturn } from "./operations";
 import type { ReturnMemo } from "./return-workflow";
 
+export type SignedPickupMemo = Pick<
+  ReturnMemo,
+  | "id"
+  | "company_id"
+  | "branch"
+  | "return_id"
+  | "signed_evidence_reference"
+  | "representative"
+  | "correction_of"
+> & {
+  lines: Pick<
+    ReturnMemo["lines"][number],
+    "product_code" | "quantity" | "quantity_unit"
+  >[];
+};
+export type SignedPickupRecord = Omit<ReturnRecord, "pickup_memos"> & {
+  pickup_memos?: SignedPickupMemo[];
+} & Pick<OperationalReturn, "evidence" | "claims" | "recovered">;
+
 const validQuantity = (value: unknown, weighted = false) => {
   try {
     if (typeof value !== "number") return undefined;
@@ -17,7 +36,7 @@ const validQuantity = (value: unknown, weighted = false) => {
     return undefined;
   }
 };
-const memoQuantities = (memo: ReturnMemo) => {
+const memoQuantities = (memo: SignedPickupMemo) => {
   if (!Array.isArray(memo.lines)) return undefined;
   const result = new Map<string, Decimal>();
   for (const line of memo.lines) {
@@ -30,7 +49,7 @@ const memoQuantities = (memo: ReturnMemo) => {
 const sameQuantities = (
   left: Map<string, Decimal>,
   right: Record<string, number>,
-  record: ReturnRecord,
+  record: SignedPickupRecord,
 ) => {
   const codes = new Set([...left.keys(), ...Object.keys(right)]);
   return [...codes].every((code) => {
@@ -44,14 +63,14 @@ const sameQuantities = (
 };
 /** Actual signed per-item pickup evidence, never an imported aggregate projection. */
 export function signedReturnPickupQuantities(
-  record: ReturnRecord,
+  record: SignedPickupRecord,
 ): Map<string, number> {
-  const operational = record as OperationalReturn;
+  const operational = record;
   const events = operational.evidence ?? [];
   const memos = record.pickup_memos ?? [];
   const valid = new Map<
     string,
-    { memo: ReturnMemo; quantities: Map<string, Decimal> }
+    { memo: SignedPickupMemo; quantities: Map<string, Decimal> }
   >();
   const superseded = new Set<string>();
   const ambiguous = new Set<string>();
@@ -216,8 +235,8 @@ export function signedReturnPickupQuantities(
 }
 
 /** Retained settlements outrank stale UI projections. Matching event/claim snapshots count once. */
-export function retainedReturnSettlementEvidence(record: ReturnRecord) {
-  const operational = record as OperationalReturn;
+export function retainedReturnSettlementEvidence(record: SignedPickupRecord) {
+  const operational = record;
   const quantities = new Map<string, Decimal>();
   const replacements = new Map<string, Decimal>();
   const otherSettlements = new Map<string, Decimal>();

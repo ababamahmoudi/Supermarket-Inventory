@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 import { addSelectedLabels, selectLabelGroup } from "./label-selection";
@@ -11,10 +12,9 @@ for (const language of ["en", "fa"] as const) {
     });
     await signIn(page, "Floor Worker");
     await page.goto("/#labels");
-    const initialQueue = await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-          .label_waitlist,
+    const initialQueue = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
     );
     expect(initialQueue).toHaveLength(1);
     expect(initialQueue[0]).toMatchObject({
@@ -147,15 +147,16 @@ for (const language of ["en", "fa"] as const) {
     );
     expect(promoMetrics.overflow).toBeLessThanOrEqual(0.2);
     expect(
-      await page.evaluate(
-        (ids) =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).label_waitlist.filter((item: { id: string }) =>
-            ids.includes(item.id),
-          ),
-        initialQueue.map((item: { id: string }) => item.id),
-      ),
+      await readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const canonicalEvidenceInput = initialQueue.map(
+          (item: { id: string }) => item.id,
+        );
+        return JSON.parse(
+          JSON.stringify(canonicalState)!,
+        ).label_waitlist.filter((item: { id: string }) =>
+          canonicalEvidenceInput.includes(item.id),
+        );
+      }),
     ).toEqual(initialQueue);
   });
 }
@@ -181,8 +182,8 @@ test("built-in templates can be duplicated, edited, archived and restored withou
   await page
     .getByRole("button", { name: "Archive template", exact: true })
     .click();
-  const archivedState = await page.evaluate(() =>
-    localStorage.getItem("supermarket-prototype-v1"),
+  const archivedState = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.stringify(canonicalState),
   );
   await page
     .getByRole("button", { name: "Save template", exact: true })
@@ -191,7 +192,9 @@ test("built-in templates can be duplicated, edited, archived and restored withou
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("Restore");
   expect(
-    await page.evaluate(() => localStorage.getItem("supermarket-prototype-v1")),
+    await readCanonicalBusinessEvidence(page).then((canonicalState) =>
+      JSON.stringify(canonicalState),
+    ),
   ).toBe(archivedState);
   await expect(
     page.getByRole("status").filter({
@@ -215,9 +218,8 @@ test("built-in templates can be duplicated, edited, archived and restored withou
     "Promo",
   );
   await expect(page.getByRole("button", { name: /^Delete/ })).toHaveCount(0);
-  const templates = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).templates,
+  const templates = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).templates,
   );
   expect(templates).toHaveLength(3);
   expect(
@@ -230,10 +232,9 @@ test("Promo without an active offer never invents SPECIAL or an offer", async ({
 }) => {
   await signIn(page, "Floor Worker");
   await page.goto("/#labels");
-  const initialQueue = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-        .label_waitlist,
+  const initialQueue = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
   );
   expect(initialQueue).toHaveLength(1);
   expect(initialQueue[0]).toMatchObject({
@@ -253,14 +254,13 @@ test("Promo without an active offer never invents SPECIAL or an offer", async ({
   await expect(promo.locator(".promo-label-special")).toBeEmpty();
   await expect(promo.locator(".promo-label-regular-price")).toBeEmpty();
   expect(
-    await page.evaluate(
-      (ids) =>
-        JSON.parse(
-          localStorage.getItem("supermarket-prototype-v1")!,
-        ).label_waitlist.filter((item: { id: string }) =>
-          ids.includes(item.id),
-        ),
-      initialQueue.map((item: { id: string }) => item.id),
-    ),
+    await readCanonicalBusinessEvidence(page).then((canonicalState) => {
+      const canonicalEvidenceInput = initialQueue.map(
+        (item: { id: string }) => item.id,
+      );
+      return JSON.parse(JSON.stringify(canonicalState)!).label_waitlist.filter(
+        (item: { id: string }) => canonicalEvidenceInput.includes(item.id),
+      );
+    }),
   ).toEqual(initialQueue);
 });

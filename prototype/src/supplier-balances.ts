@@ -1,14 +1,11 @@
 import Decimal from "decimal.js";
+import type { AuthenticatedActor } from "./authority-types";
+import { cloneWithAuthority, actorAtLocation } from "./authority";
+import { requirePurchase } from "./purchase-authority";
 import { configSeed, demoSeed } from "./config";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate, dateAfter } from "./invoice";
-import {
-  ledgerCsv,
-  ledgerSummary,
-  OperationError,
-  type LedgerSummary,
-  type OperationsContext,
-} from "./operations";
+import { ledgerCsv, ledgerSummary, type LedgerSummary } from "./operations";
 import type { Branch, DemoState } from "./types";
 import {
   pendingReturnCredits,
@@ -47,10 +44,8 @@ const seedBalances = demoSeed.supplier_balances_demo as unknown as Record<
   Record<string, SeedBalance> | string
 >;
 
-function guard(state: DemoState, context: OperationsContext) {
-  if (context.role !== "supervisor") throw new OperationError("supervisor");
-  if (context.company_id !== state.config.company.seed_key)
-    throw new OperationError("scope");
+function guard(state: DemoState, context: AuthenticatedActor) {
+  return requirePurchase(state, context, "supplier_balances.read");
 }
 
 /**
@@ -60,11 +55,11 @@ function guard(state: DemoState, context: OperationsContext) {
  */
 export function supplierBalanceSummary(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   supplier: string,
   throughDate?: string,
 ): SupplierBalanceSummary {
-  guard(state, context);
+  context = guard(state, context);
   const identity = supplierRecords(state).find(
     (record) =>
       record.company_id === context.company_id &&
@@ -72,8 +67,8 @@ export function supplierBalanceSummary(
   );
   if (identity?.previous_names?.length) {
     supplier = identity.name;
-    state = {
-      ...state,
+    const normalized = cloneWithAuthority(state);
+    Object.assign(normalized, {
       ledger: state.ledger.map((row) =>
         row.company_id === context.company_id &&
         supplierMatches(identity, row.supplier)
@@ -91,7 +86,8 @@ export function supplierBalanceSummary(
         supplierMatches(identity, state.invoice.supplier)
           ? { ...state.invoice, supplier }
           : state.invoice,
-    };
+    });
+    state = normalized;
   }
   const summary = ledgerSummary(state, context, supplier, throughDate);
   const snapshotDate =
@@ -138,7 +134,7 @@ export function supplierBalanceSummary(
         context.branch === "all"
           ? ledgerSummary(
               state,
-              { ...context, branch: branch as Branch },
+              actorAtLocation(state, context, branch as Branch),
               supplier,
               throughDate,
             )
@@ -193,9 +189,9 @@ export function supplierBalanceSummary(
 /** Include zero-balance and proposed suppliers, not only suppliers in a ledger. */
 export function supplierBalanceOverview(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
 ): SupplierBalanceRow[] {
-  guard(state, context);
+  context = guard(state, context);
   const suppliers = new Set<string>();
   const registry = supplierRecords(state).filter(
     (record) => record.company_id === context.company_id,
@@ -232,13 +228,14 @@ export function supplierBalanceOverview(
 
 /** Export the dated demo figure separately from the unchanged ledger rows. */
 export function supplierBalanceCsv(
-  summary: SupplierBalanceSummary,
+  state: DemoState,
+  context: AuthenticatedActor,
   supplier: string,
+  throughDate?: string,
 ): string {
-  let csv = ledgerCsv(
-    { ...summary, balance: summary.confirmed_balance },
-    supplier,
-  );
+  context = guard(state, context);
+  const summary = supplierBalanceSummary(state, context, supplier, throughDate);
+  let csv = ledgerCsv(state, context, supplier, throughDate);
   if (summary.pending_returns.length) {
     const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
     const pending = [

@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { createId } from "../ids";
+import { InvoiceCorrectionError } from "../invoice-corrections";
 import {
-  correctPostedInvoice,
-  invoiceContentCorrectionPreview,
-  InvoiceCorrectionError,
-  type InvoiceCorrectionPreview,
-} from "../invoice-corrections";
-import { effectiveInvoiceVersion } from "../invoice-version";
+  purchaseInvoiceView,
+  type InvoiceReadDTO,
+  type InvoicePurchaseReadDTO,
+} from "../invoice-projections";
+import { useProtectedQuery } from "../use-protected-query";
+import {
+  invoiceCorrectionReview,
+  applyReviewedInvoiceCorrection,
+  discardInvoiceCorrectionReview,
+  type InvoiceCorrectionReview,
+} from "../invoice-correction-read";
+import type { InvoiceEditableLine } from "../invoice-edit-types";
 import { setInvoiceLineQuantity } from "../invoice";
 import {
   initializeInvoiceWeight,
@@ -27,7 +34,6 @@ import {
   SegmentedControl,
 } from "../ui";
 import { LtrText, Money, ProductName } from "../presentation";
-import type { DemoInvoice, InvoiceLine } from "../types";
 import "./invoice-document-c4.css";
 
 export function InvoiceCorrectionDialog({
@@ -35,27 +41,94 @@ export function InvoiceCorrectionDialog({
   onClose,
   onSaved,
 }: {
-  original: DemoInvoice;
+  original: InvoiceReadDTO;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { state, update, role, branch, user, t, lang } = useDemo();
-  const [lines, setLines] = useState(() =>
-    structuredClone(effectiveInvoiceVersion(state, original).lines),
+  const { state, actor, can, authorityGeneration } = useDemo();
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+    entity_id: original.id,
+  };
+  const read = useProtectedQuery(
+    "invoices.correct",
+    scope,
+    (canonical, currentActor) =>
+      purchaseInvoiceView(canonical, currentActor, original.id),
+    original.id,
   );
+  const current =
+    state.invoice_workspace?.invoice.id === original.id
+      ? state.invoice_workspace.invoice
+      : read.data;
+  if (!actor || !can("invoices.correct", scope) || !current) return null;
+  return (
+    <InvoiceCorrectionWorkspace
+      key={JSON.stringify([
+        actor.session_id,
+        actor.authority_epoch,
+        authorityGeneration,
+        original.id,
+      ])}
+      original={current}
+      onClose={onClose}
+      onSaved={onSaved}
+    />
+  );
+}
+function InvoiceCorrectionWorkspace({
+  original,
+  onClose,
+  onSaved,
+}: {
+  original: InvoicePurchaseReadDTO;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const {
+    state,
+    actor,
+    query,
+    command,
+    authorityGeneration,
+    businessRevision,
+    t,
+    lang,
+  } = useDemo();
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+    entity_id: original.id,
+  };
+  const key = JSON.stringify([
+    actor?.session_id,
+    actor?.authority_epoch,
+    authorityGeneration,
+    businessRevision,
+    original.id,
+  ]);
+  const [lines, setLines] = useState(() => structuredClone(original.lines));
+  const [pending, setPending] = useState(false);
   const [reason, setReason] = useState("");
   const [requestId] = useState(() => createId("invoice-correction-request"));
-  const [preview, setPreview] = useState<InvoiceCorrectionPreview | null>(null);
+  const [previewState, setPreview] = useState<{
+    key: string;
+    value: InvoiceCorrectionReview;
+  } | null>(null);
+  const preview = previewState?.key === key ? previewState.value : null;
+  const stalePreview = Boolean(previewState && previewState.key !== key);
+  const reviewToken = previewState?.value.snapshot;
+  useEffect(
+    () => () => {
+      if (reviewToken) discardInvoiceCorrectionReview(reviewToken);
+    },
+    [reviewToken],
+  );
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<{ code: string; line?: number } | null>(
     null,
   );
-  const context = {
-    company_id: state.config.company.seed_key,
-    role: role!,
-    branch,
-    actor: user?.name ?? "",
-  };
   const copy: Record<string, string> = {
     reason: t("Give a reason for the correction.", "دلیل اصلاح را وارد کنید."),
     product: t("Choose a product.", "کالا را انتخاب کنید."),
@@ -98,7 +171,7 @@ export function InvoiceCorrectionDialog({
       });
     } else setError({ code: "stale" });
   }
-  function edit(index: number, change: (line: InvoiceLine) => void) {
+  function edit(index: number, change: (line: InvoiceEditableLine) => void) {
     setLines((current) => {
       const next = structuredClone(current);
       change(next[index]);
@@ -119,41 +192,53 @@ export function InvoiceCorrectionDialog({
       ? copy[code]
       : undefined;
   }
-  function inspect() {
+  async function inspect() {
     if (!reason.trim()) {
       setError({ code: "reason" });
       return;
     }
+    if (pending) return;
+    setPending(true);
     try {
-      setPreview(
-        invoiceContentCorrectionPreview(state, context, original.id, {
-          lines,
-          reason,
-        }),
+      const value = await query(
+        "invoices.correct",
+        scope,
+        (canonical, currentActor) =>
+          invoiceCorrectionReview(canonical, currentActor, original.id, {
+            lines,
+            reason,
+          }),
       );
+      setPreview({ key, value });
       setError(null);
     } catch (caught) {
       report(caught);
+    } finally {
+      setPending(false);
     }
   }
-  function save() {
+  async function save() {
     if (!preview) return;
+    if (pending) return;
+    setPending(true);
     try {
-      update((draft) => {
-        correctPostedInvoice(
+      await command("invoices.correct", scope, (draft, currentActor) =>
+        applyReviewedInvoiceCorrection(
           draft,
-          context,
+          currentActor,
           original.id,
           { lines, reason },
           preview.snapshot,
           requestId,
-        );
-      });
+        ),
+      );
       onSaved();
     } catch (caught) {
       setPreview(null);
       setConfirmed(false);
       report(caught);
+    } finally {
+      setPending(false);
     }
   }
   function blockerText(blocker: string) {
@@ -198,7 +283,7 @@ export function InvoiceCorrectionDialog({
   ].flatMap((id) => {
     const approval = state.approvals.find(
       (approval) =>
-        approval.company_id === context.company_id && approval.id === id,
+        approval.company_id === original.company_id && approval.id === id,
     );
     return approval ? [approval] : [];
   });
@@ -211,6 +296,11 @@ export function InvoiceCorrectionDialog({
       title={t("Correct invoice", "اصلاح فاکتور")}
       className="invoice-correction-dialog"
     >
+      {stalePreview && (
+        <p role="alert" className="form-error">
+          {copy.stale}
+        </p>
+      )}
       {preview ? (
         <>
           <p>
@@ -349,8 +439,11 @@ export function InvoiceCorrectionDialog({
               {t("Back", "بازگشت")}
             </Button>
             <Button
-              disabled={!!preview.blockers.length}
-              onClick={() => (confirmed ? save() : setConfirmed(true))}
+              disabled={pending || !!preview.blockers.length}
+              onClick={() => {
+                if (confirmed) void save();
+                else setConfirmed(true);
+              }}
             >
               {confirmed
                 ? t("Confirm correction", "تأیید اصلاح")
@@ -358,6 +451,19 @@ export function InvoiceCorrectionDialog({
             </Button>
           </div>
         </>
+      ) : stalePreview && confirmed ? (
+        <div className="actions">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPreview(null);
+              setConfirmed(false);
+            }}
+          >
+            {t("Back", "بازگشت")}
+          </Button>
+          <Button disabled>{t("Confirm correction", "تأیید اصلاح")}</Button>
+        </div>
       ) : (
         <>
           {lines.map((line, index) => {
@@ -735,7 +841,7 @@ export function InvoiceCorrectionDialog({
             <Button variant="secondary" onClick={onClose}>
               {t("Cancel", "انصراف")}
             </Button>
-            <Button onClick={inspect}>
+            <Button disabled={pending} onClick={() => void inspect()}>
               {t("Preview correction", "پیش‌نمایش اصلاح")}
             </Button>
           </div>

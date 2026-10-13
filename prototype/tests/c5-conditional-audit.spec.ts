@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import Decimal from "decimal.js";
@@ -340,23 +341,25 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     .click();
   await measure(page, "Corrected History More actions menu");
   await page.keyboard.press("Escape");
-  const beforeNameEdit = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const product = state.products.find(
-      (item: { code: string }) => item.code === "0006",
-    );
-    return {
-      ledger: state.ledger,
-      invoices: state.invoices,
-      expiry: state.expiry,
-      prices: {
-        selling_price: product.selling_price,
-        branch_prices: product.branch_prices,
-        last_cost_before_tax: product.last_cost_before_tax,
-        pending_price: product.pending_price,
-      },
-    };
-  });
+  const beforeNameEdit = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      const product = state.products.find(
+        (item: { code: string }) => item.code === "0006",
+      );
+      return {
+        ledger: state.ledger,
+        invoices: state.invoices,
+        expiry: state.expiry,
+        prices: {
+          selling_price: product.selling_price,
+          branch_prices: product.branch_prices,
+          last_cost_before_tax: product.last_cost_before_tax,
+          pending_price: product.pending_price,
+        },
+      };
+    },
+  );
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0006");
   await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
@@ -379,23 +382,25 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
-  const afterNameEdit = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const product = state.products.find(
-      (item: { code: string }) => item.code === "0006",
-    );
-    return {
-      ledger: state.ledger,
-      invoices: state.invoices,
-      expiry: state.expiry,
-      prices: {
-        selling_price: product.selling_price,
-        branch_prices: product.branch_prices,
-        last_cost_before_tax: product.last_cost_before_tax,
-        pending_price: product.pending_price,
-      },
-    };
-  });
+  const afterNameEdit = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      const product = state.products.find(
+        (item: { code: string }) => item.code === "0006",
+      );
+      return {
+        ledger: state.ledger,
+        invoices: state.invoices,
+        expiry: state.expiry,
+        prices: {
+          selling_price: product.selling_price,
+          branch_prices: product.branch_prices,
+          last_cost_before_tax: product.last_cost_before_tax,
+          pending_price: product.pending_price,
+        },
+      };
+    },
+  );
   expect(afterNameEdit).toEqual(beforeNameEdit);
   await page.goto("/#history");
   const savedRow = page

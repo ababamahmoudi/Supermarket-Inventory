@@ -35,7 +35,9 @@ function UndoToastItem({ toast }: { toast: UndoToast }) {
         className="undo-toast-link"
         onClick={() => {
           try {
-            undoActivity(toast.id);
+            void undoActivity(toast.id).catch((caught: unknown) => {
+              setError(historyErrorMessage(caught, t));
+            });
           } catch (caught) {
             setError(historyErrorMessage(caught, t));
           }

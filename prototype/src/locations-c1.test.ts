@@ -6,31 +6,26 @@ import {
   saveBranchSettings,
   newBranch,
 } from "./settings";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 
-const actor = {
-  role: "supervisor" as const,
-  company_id: "super-arzon",
-  by: "Location Supervisor",
-};
+import { catalogTestActor } from "./catalog-authority-test-fixture";
 
 describe("configured store and warehouse locations", () => {
   it("permits receiving roles at Warehouse and prevents Cashier access at the domain guard", () => {
     const state = initialState();
-    expect(branchAllowsRole(state.config, "Warehouse", "supervisor")).toBe(
-      true,
-    );
+    expect(branchAllowsRole(state.config, "Warehouse", "manager")).toBe(true);
     expect(branchAllowsRole(state.config, "Warehouse", "floor_worker")).toBe(
       true,
     );
     expect(branchAllowsRole(state.config, "Warehouse", "cashier")).toBe(false);
     expect(branchAllowsRole(state.config, "Branch 1", "cashier")).toBe(true);
-    expect(branchAllowsRole(state.config, "missing", "supervisor")).toBe(false);
+    expect(branchAllowsRole(state.config, "missing", "manager")).toBe(false);
     expect(branchAllowsRole(state.config, "all", "floor_worker")).toBe(false);
   });
 
-  it("allows Supervisor location type changes without changing the ID or deleting invoices", () => {
+  it("allows Manager location type changes without changing the ID or deleting invoices", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const before = structuredClone(state.invoices);
     const location = state.config.branches[0];
     const originalId = branchId(location);
@@ -65,6 +60,7 @@ describe("configured store and warehouse locations", () => {
 
   it("adds a warehouse as configured data and rejects invalid types atomically", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const location = {
       ...newBranch(state.config),
       name_en: "East Depot",

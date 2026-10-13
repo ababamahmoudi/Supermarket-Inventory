@@ -1,3 +1,5 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import {
@@ -6,6 +8,7 @@ import {
   historyChangePreview,
   reverseActivity,
   selectHistory,
+  projectHistoryEntry,
   HistoryError,
   type HistoryContext,
 } from "./history";
@@ -18,19 +21,26 @@ import { saveSupplier } from "./supplier-editor";
 import { supplierBalanceSummary } from "./supplier-balances";
 import { configuredBranches } from "./settings";
 
-const supervisor: HistoryContext = {
-  company_id: "super-arzon",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  username: "supervisor",
-  branch: "Branch 1",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-};
-const context = (state: DemoState): HistoryContext => ({
-  ...supervisor,
-  company_id: state.config.company.seed_key,
-  allowed_branches: configuredBranches(state.config, true),
-});
+const context = (state: DemoState): HistoryContext =>
+  authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    username: "supervisor",
+  });
+const workerContext = (
+  state: DemoState,
+  branch = "Branch 1",
+  name = "Demo Floor Worker",
+  username = "floorworker",
+  user_id = "demo-person-ny-floor",
+): HistoryContext =>
+  authenticatedTestActor(state, "floor_worker", {
+    name_en: name,
+    username,
+    user_id,
+    locations: [branch],
+    selection: { kind: "location", location_id: branch },
+  });
+
 function act(
   state: DemoState,
   mutate: (state: DemoState) => void,
@@ -38,7 +48,9 @@ function act(
   branch = "all",
   by = "Demo Supervisor",
 ) {
-  const before = structuredClone(state);
+  const actualActor =
+    by === "Demo Floor Worker" ? workerContext(state) : context(state);
+  const before = cloneWithAuthority(state);
   mutate(state);
   const entry: Activity = {
     id: `test-${state.activity.length}`,
@@ -48,14 +60,12 @@ function act(
     by,
     at: new Date().toISOString(),
     reversible: true,
+    ...(action === "notebook_entry_added"
+      ? { entity_type: "notebook_entry", entity_id: "new-entry" }
+      : {}),
   };
   state.activity.push(entry);
-  attachReversals(before, state, {
-    ...context(state),
-    actor: by,
-    username: by === "Demo Supervisor" ? "supervisor" : "floorworker",
-    role: by === "Demo Supervisor" ? "supervisor" : "floor_worker",
-  });
+  attachReversals(before, state, actualActor);
   return entry;
 }
 describe("History and safe scoped reversal", () => {
@@ -85,10 +95,12 @@ describe("History and safe scoped reversal", () => {
       s.products[0].name_fa = "نام جدید";
     });
     state.products[0].barcode = "LATER-BARCODE";
-    const before = structuredClone(state);
-    expect(historyChangePreview(state, entry).some((row) => row.conflict)).toBe(
-      true,
-    );
+    const before = cloneWithAuthority(state);
+    expect(
+      historyChangePreview(state, context(state), entry.id).some(
+        (row) => row.conflict,
+      ),
+    ).toBe(true);
     expect(() =>
       reverseActivity(state, context(state), entry.id, "revert"),
     ).toThrowError(HistoryError);
@@ -116,7 +128,7 @@ describe("History and safe scoped reversal", () => {
       s.products[0].barcode = "FREE-CODE";
     });
     state.products[1].barcode = original;
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       reverseActivity(state, context(state), entry.id, "revert"),
     ).toThrow("barcode_conflict");
@@ -133,13 +145,7 @@ describe("History and safe scoped reversal", () => {
       "Branch 1",
       "Demo Floor Worker",
     );
-    const worker = {
-      ...context(state),
-      role: "floor_worker" as const,
-      actor: "Demo Floor Worker",
-      username: "floorworker",
-      allowed_branches: ["Branch 1"],
-    };
+    const worker = workerContext(state);
     expect(selectHistory(state, worker).map((item) => item.id)).toEqual([
       entry.id,
     ]);
@@ -173,20 +179,14 @@ describe("History and safe scoped reversal", () => {
         allowed_branches: ["Branch 1"],
       },
     ]) {
-      expect(selectHistory(state, ctx)).not.toContainEqual(entry);
+      expect(() => selectHistory(state, ctx)).toThrow();
       expect(() => reverseActivity(state, ctx, entry.id, "undo")).toThrow();
     }
   });
   it("shows only the worker's own shared template and quick-add actions and lets that worker undo their template", () => {
     const state = initialState();
-    const worker = {
-      ...context(state),
-      role: "floor_worker" as const,
-      actor: "Demo Floor Worker",
-      username: "floorworker",
-      allowed_branches: ["Branch 1"],
-    };
-    const before = structuredClone(state);
+    const worker = workerContext(state);
+    const before = cloneWithAuthority(state);
     saveLabelTemplate(
       state,
       {
@@ -204,7 +204,7 @@ describe("History and safe scoped reversal", () => {
         offset_x: 0,
         offset_y: 0,
       },
-      { name: worker.actor, role: worker.role, branch: worker.branch },
+      worker,
     );
     const [entry] = attachReversals(before, state, worker);
     const ownQuickAdd: Activity = {
@@ -214,6 +214,7 @@ describe("History and safe scoped reversal", () => {
       action: "Add supplier",
       by: worker.actor,
       actor_username: worker.username,
+      actor_user_id: worker.user_id,
       at: new Date().toISOString(),
       reversible: false,
       entity_type: "supplier",
@@ -224,6 +225,7 @@ describe("History and safe scoped reversal", () => {
         ...ownQuickAdd,
         id: "other-worker-supplier",
         actor_username: "newemployee",
+        actor_user_id: "test-other-history-worker",
       },
       {
         ...ownQuickAdd,
@@ -241,6 +243,13 @@ describe("History and safe scoped reversal", () => {
         .map((item) => item.id)
         .sort(),
     ).toEqual([entry.id, ownQuickAdd.id].sort());
+    expect(() =>
+      projectHistoryEntry(
+        state,
+        worker,
+        state.activity.find((item) => item.id === "global-settings")!,
+      ),
+    ).toThrow("permission");
     reverseActivity(state, worker, entry.id, "undo");
     expect(
       state.templates.find((template) => template.id === "worker-template"),
@@ -277,32 +286,15 @@ describe("History and safe scoped reversal", () => {
       "Demo Floor Worker",
     );
     state.templates.find((item) => item.id === "shared-template")!.offset_x = 2;
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
-      reverseActivity(
-        state,
-        {
-          ...context(state),
-          role: "floor_worker",
-          actor: "Demo Floor Worker",
-          username: "floorworker",
-          allowed_branches: ["Branch 1"],
-        },
-        entry.id,
-        "undo",
-      ),
+      reverseActivity(state, workerContext(state), entry.id, "undo"),
     ).toThrow("conflict");
     expect(state).toEqual(before);
   });
   it("allows a Floor Worker to undo stopping an offer in their branch without changing another branch", () => {
     const state = initialState();
-    const worker = {
-      ...context(state),
-      role: "floor_worker" as const,
-      actor: "Demo Floor Worker",
-      username: "floorworker",
-      allowed_branches: ["Branch 1"],
-    };
+    const worker = workerContext(state);
     const offer = {
       ...state.offers[0],
       id: "worker-branch-offer",
@@ -315,8 +307,8 @@ describe("History and safe scoped reversal", () => {
     const otherBranches = structuredClone(
       state.offers.filter((item) => item.branch !== "Branch 1"),
     );
-    const before = structuredClone(state);
-    stopOffer(state, offer.id, false, "floor_worker");
+    const before = cloneWithAuthority(state);
+    stopOffer(state, worker, offer.id, false);
     const [entry] = attachReversals(before, state, worker);
     reverseActivity(state, worker, entry.id, "undo");
     expect(state.offers.find((item) => item.id === offer.id)?.status).toBe(
@@ -344,7 +336,7 @@ describe("History and safe scoped reversal", () => {
       if (dependency === "product")
         state.products[0].pricing_category = "new-category";
       else state.invoice.lines[0].pricing_category = "new-category";
-      const before = structuredClone(state);
+      const before = cloneWithAuthority(state);
       expect(() =>
         reverseActivity(state, context(state), entry.id, "revert"),
       ).toThrow("conflict");
@@ -380,7 +372,8 @@ describe("History and safe scoped reversal", () => {
       name: "Foreign Supplier",
     };
     state.suppliers!.push(foreignSupplier);
-    const before = structuredClone(state);
+    context(state);
+    const before = cloneWithAuthority(state);
     saveSupplier(
       state,
       context(state),
@@ -434,7 +427,7 @@ describe("History and safe scoped reversal", () => {
       s.products[0].name_en = "Changed";
     });
     reverseActivity(state, context(state), entry.id, "undo");
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       reverseActivity(state, context(state), entry.id, "revert"),
     ).toThrow("irreversible");
@@ -481,28 +474,18 @@ describe("History and safe scoped reversal", () => {
           notebook_id: s.notebooks![0].id,
           text: "Fridge reading",
           by: "Demo Floor Worker",
+          by_user_id: workerContext(s).user_id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           status: "open",
           notify_supervisor: false,
         });
       },
-      "Add notebook entry",
+      "notebook_entry_added",
       "Branch 1",
       "Demo Floor Worker",
     );
-    reverseActivity(
-      state,
-      {
-        ...context(state),
-        role: "floor_worker",
-        actor: "Demo Floor Worker",
-        username: "floorworker",
-        allowed_branches: ["Branch 1"],
-      },
-      entry.id,
-      "undo",
-    );
+    reverseActivity(state, workerContext(state), entry.id, "undo");
     expect(
       state.notebook_entries!.find((item) => item.id === "new-entry"),
     ).toMatchObject({ archived: true, text: "Fridge reading" });
@@ -545,7 +528,8 @@ describe("History and safe scoped reversal", () => {
   });
   it("reverts approved price edits with related offers while retaining the decision record", () => {
     const state = initialState();
-    const before = structuredClone(state);
+    context(state);
+    const before = cloneWithAuthority(state);
     const product = state.products.find((item) => item.code === "0009")!;
     savePriceChange(state, context(state), {
       product_code: product.code,
@@ -590,7 +574,7 @@ describe("History and safe scoped reversal", () => {
     const entry = act(state, (s) => {
       s.products.find((item) => item.code === "FOREIGN")!.name_en = "Tampered";
     });
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       reverseActivity(state, context(state), entry.id, "revert"),
     ).toThrow("scope");

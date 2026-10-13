@@ -20,12 +20,21 @@ import {
   ProductName,
 } from "../presentation";
 import { Badge, Button, Card, DataTable } from "../ui";
-import type { DemoInvoice, InvoiceLine } from "../types";
+import type {
+  InvoiceReadDTO,
+  InvoicePurchaseReadDTO,
+} from "../invoice-projections";
+import type { InvoiceEditableLine } from "../invoice-edit-types";
+import { useProtectedQuery } from "../use-protected-query";
+import {
+  requireInvoiceAuthority,
+  canInvoiceAuthority,
+} from "../invoice-authority";
 import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./invoice-document-c4.css";
 import "./invoices-c7.css";
 
-export function InvoiceQuantity({ line }: { line: InvoiceLine }) {
+export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
   const { lang, t, tCount } = useDemo();
   if (line.sold_by === "weight")
     return (
@@ -87,16 +96,52 @@ export function PostedInvoice({
   onMove,
   children,
 }: {
-  original: DemoInvoice;
-  invoice: DemoInvoice;
+  original: InvoiceReadDTO;
+  invoice: InvoicePurchaseReadDTO;
   versionId: string;
   onCorrect?: () => void;
   onMove?: () => void;
   children?: ReactNode;
 }) {
-  const { state, role, lang, t } = useDemo();
-  const versions = invoiceContentVersions(state, original);
-  const current = versions.at(-1)!.version_id === versionId;
+  const { state, actor, can, lang, t } = useDemo();
+  const scope = {
+    company_id: original.company_id,
+    kind: "company_shared" as const,
+    entity_id: original.id,
+  };
+  const read = useProtectedQuery(
+    "invoices.cost_read",
+    scope,
+    (canonical, currentActor) => {
+      requireInvoiceAuthority(
+        canonical,
+        currentActor,
+        "invoices.cost_read",
+        original.id,
+      );
+      const record =
+        original.id === canonical.invoice.id
+          ? canonical.invoice
+          : canonical.invoices?.find((row) => row.id === original.id);
+      if (!record) throw new Error("Invoice was not found.");
+      const versions = invoiceContentVersions(canonical, record);
+      return {
+        currentId: versions.at(-1)!.version_id,
+        versions: canInvoiceAuthority(
+          canonical,
+          currentActor,
+          "invoices.correct",
+          original.id,
+        )
+          ? versions.map((version) => ({ version_id: version.version_id }))
+          : [],
+      };
+    },
+    original.id,
+  );
+  const versions = read.data?.versions ?? [];
+  const current = read.data?.currentId === versionId;
+  if (!actor || !can("invoices.cost_read", scope)) return null;
   const location = effectiveInvoiceLocation(state, original);
   const shorts = shortTotals(invoice);
   const refused = refusedTotals(invoice);
@@ -114,16 +159,22 @@ export function PostedInvoice({
                 : t("Posted", "ثبت‌شده")}
             </Badge>
           </div>
-          {role === "supervisor" && current && (
-            <div className="actions">
-              <Button onClick={onCorrect}>
-                {t("Correct invoice", "اصلاح فاکتور")}
-              </Button>
-              <Button variant="neutral" onClick={onMove}>
-                {t("Move invoice", "انتقال فاکتور")}
-              </Button>
-            </div>
-          )}
+          {current &&
+            (can("invoices.correct", scope) ||
+              can("invoices.relocate", scope)) && (
+              <div className="actions">
+                {can("invoices.correct", scope) && (
+                  <Button onClick={onCorrect}>
+                    {t("Correct invoice", "اصلاح فاکتور")}
+                  </Button>
+                )}
+                {can("invoices.relocate", scope) && (
+                  <Button variant="neutral" onClick={onMove}>
+                    {t("Move invoice", "انتقال فاکتور")}
+                  </Button>
+                )}
+              </div>
+            )}
         </div>
         <dl className="posted-invoice-header">
           <div>

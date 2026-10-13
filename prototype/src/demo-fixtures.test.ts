@@ -1,12 +1,12 @@
 import Decimal from "decimal.js";
 import { describe, expect, it, vi } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import {
   DEMO_FIXTURE_BACKUP_KEY,
   hydrateDemoFixture,
   restoreDemoFixture,
 } from "./demo-fixtures";
-import { ledgerSummary, type OperationsContext } from "./operations";
+import { ledgerSummary } from "./operations";
 import {
   dashboardArrivals,
   companyWeekStart,
@@ -16,12 +16,11 @@ import {
 import { companyDate } from "./invoice";
 import type { DemoState } from "./types";
 
-const context: OperationsContext = {
-  company_id: "super-arzon",
-  branch: "Branch 1",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-};
+import {
+  catalogTestActor,
+  foreignCatalogManager,
+} from "./catalog-authority-test-fixture";
+import { configuredDemoPeople } from "./e1-seed-fixtures";
 
 function legacyState() {
   const state = initialState();
@@ -45,6 +44,7 @@ function legacyState() {
 describe("explicit fictional demo documents", () => {
   it("makes every posted invoice total reconcile to quantities, four-decimal costs, tax and allocated payments", () => {
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     for (const invoice of state.invoices!) {
       expect(invoice.status).toBe("posted");
       expect(invoice.company_id).toBe(context.company_id);
@@ -74,6 +74,26 @@ describe("explicit fictional demo documents", () => {
         )?.amount,
       ).toBe(invoice.final_total);
     }
+    const people = configuredDemoPeople();
+    expect(people).toHaveLength(6);
+    expect(people.map((person) => person.id)).toEqual([
+      "demo-person-owner",
+      "demo-person-manager",
+      "demo-person-rh-supervisor",
+      "demo-person-ny-floor",
+      "demo-person-wh-floor",
+      "demo-person-cashier",
+    ]);
+    expect(context).toMatchObject({
+      user_id: "demo-person-manager",
+      role: "manager",
+    });
+    expect(
+      people.find((person) => person.id === "demo-person-manager")?.aliases,
+    ).toContain("supervisor");
+    expect(people.some((person) => person.username === "newemployee")).toBe(
+      false,
+    );
     expect(state.invoice.status).toBe("empty");
     expect(
       Decimal.sum(...state.ledger.map((row) => row.amount)).toFixed(2),
@@ -170,6 +190,7 @@ describe("explicit fictional demo documents", () => {
 describe("dashboard content from the same scoped business records", () => {
   it("uses purchases only, ignoring payments, opening balances, foreign branches/companies and unrelated adjustments", () => {
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     const today = companyDate(state.config);
     const before = dashboardPurchases(state, context, today);
     const rows = state.ledger;
@@ -219,6 +240,7 @@ describe("dashboard content from the same scoped business records", () => {
 
   it("subtracts a recorded linked purchase credit from monthly and weekly totals", () => {
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     const today = companyDate(state.config);
     const before = dashboardPurchases(state, context, today);
     const invoice = state.invoices!.find(
@@ -257,6 +279,7 @@ describe("dashboard content from the same scoped business records", () => {
 
   it("shows this week's actual arrivals and ignores retained counters and To order reminders", () => {
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     const today = companyDate(state.config);
     // The relative historical fixture can legitimately have no arrivals on a
     // Monday. Keep this check tied to an explicit actual receipt in this week.
@@ -292,6 +315,7 @@ describe("dashboard content from the same scoped business records", () => {
 
   it("uses scoped actual receipts across all locations without duplicate entries or another company's documents", () => {
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     const today = companyDate(state.config);
     const invoice = state.invoices![0];
     state.invoices!.push({
@@ -304,7 +328,11 @@ describe("dashboard content from the same scoped business records", () => {
       invoice_date: today,
     });
     const branchRows = dashboardArrivals(state, context, today);
-    const rows = dashboardArrivals(state, { ...context, branch: "all" }, today);
+    const rows = dashboardArrivals(
+      state,
+      catalogTestActor(state, "manager", "all"),
+      today,
+    );
     expect(rows.filter((row) => row.branch === context.branch)).toEqual(
       branchRows,
     );
@@ -318,14 +346,19 @@ describe("dashboard content from the same scoped business records", () => {
       invoice_date: today,
     });
     expect(
-      dashboardArrivals(state, { ...context, branch: "all" }, today),
+      dashboardArrivals(
+        state,
+        catalogTestActor(state, "manager", "all"),
+        today,
+      ),
     ).toEqual(rows);
   });
 
   it("shows actual price changes this company-timezone week, excluding metadata-only product edits", () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-07T16:00:00Z"));
     const state = initialState();
+    const context = catalogTestActor(state, "manager");
     const before = dashboardPriceChanges(state, context);
     expect(before.map((entry) => entry.product_code)).toEqual(["0004", "0007"]);
     const product = state.products[0];
@@ -358,14 +391,15 @@ describe("dashboard content from the same scoped business records", () => {
 
   it("rejects unauthorized company and role scopes", () => {
     const state = initialState();
+    catalogTestActor(state, "manager"); // Target company is genuinely bound before the foreign-actor guard.
     expect(() =>
-      dashboardPurchases(state, { ...context, company_id: "foreign" }),
-    ).toThrow("scope");
+      dashboardPurchases(state, foreignCatalogManager(state)),
+    ).toThrow("company");
     expect(() =>
-      dashboardArrivals(state, { ...context, role: "floor_worker" }),
-    ).toThrow("supervisor");
+      dashboardArrivals(state, catalogTestActor(state, "floor_worker")),
+    ).toThrow("capability");
     expect(() =>
-      dashboardPriceChanges(state, { ...context, role: "cashier" }),
-    ).toThrow("supervisor");
+      dashboardPriceChanges(state, catalogTestActor(state, "cashier")),
+    ).toThrow("capability");
   });
 });

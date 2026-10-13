@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import {
@@ -39,10 +40,8 @@ async function upload(page: Page) {
   });
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const invoice = JSON.parse(
-          localStorage.getItem("supermarket-prototype-v1")!,
-        ).invoice;
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const invoice = JSON.parse(JSON.stringify(canonicalState)!).invoice;
         return {
           fileName: invoice.file_name,
           originalHash: invoice.file_data?.split(":").at(-1),
@@ -57,8 +56,8 @@ async function upload(page: Page) {
     });
 }
 async function stored(page: Page) {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 
