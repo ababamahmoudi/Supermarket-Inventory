@@ -241,3 +241,25 @@ Individual review of the corrected C6 Persian Received screenshot found that iso
 ### E1 scoped ordinary-offer Stop and internal jobs
 
 Retain Floor Worker own-store Stop with exact company/store/Offer ID+version suppression, preserving the global Offer and other stores. Clear rather than delete suppression during valid Undo; Sale pausing does not advance Offer version. Internal clock jobs require a repository-minted current-draft witness, never a Manager role proxy. These choices retain operational behavior while enforcing scope and original history.
+
+## 033 — Explicit damaged-History quarantine and ordered Reset retirement (E1, 2026-10-13)
+
+A healthy existing canonical IndexedDB business record takes precedence over any retired legacy text. Do not read a stale legacy dictionary, falsely quarantine healthy data, recreate people, reset a password, or replace existing company business records during normal startup.
+
+When the company has no canonical business record and its retained legacy History dictionary is invalid, retain that exact legacy string. Before creating a separate fictional quarantine demo, save its exact UTF-8 bytes as a company/storage-key/SHA256 addressed FileDB backup; wait for the write transaction, read it back and verify both exact text and hash. If this verification fails, startup remains blocked, the original text/file bytes stay retained, and no usable business view or fabricated authentication is published. This is not a completed migration or recovery of the damaged business data.
+
+After successful verification, persist a private canonical recovery marker containing only its schema, legacy source key, original digest, verified backup reference and phase. The quarantined business is explicitly a separate fictional demo. Normal sign-in/setup and protected queries/commands use the genuine current company directory, credentials, sessions and capabilities. Existing people, passwords and sessions are preserved. Valid demo edits may persist in the separate canonical quarantine demo; they never overwrite the unreadable legacy string. Reload retains both the private marker and the visible recovery notice. Public business projections contain neither that marker, the raw damaged history nor credential data.
+
+Only an explicitly confirmed, fresh authorized `demo.reset` command can replace the canonical demo and six configured people. Reverify the exact original backup and any remaining legacy source before that transaction. A backup/check/authority/canonical-transaction rejection leaves the current canonical data, directory, original text and recovery notice unchanged. Keep all immutable files and backups.
+
+Canonical Reset and legacy localStorage retirement are different storage transactions. After a successful canonical Reset, persist the `reset_committed` recovery phase until a current authorized command verifies the backup again, retires only the matching old legacy source and clears the marker. Failure in retirement is a **committed Reset with retirement pending**, not a rejected Reset or a silent completed recovery. Retain the original backup and explicit notice; the old text also remains whenever removal did not succeed. A partial retirement can have removed the old text before the marker write failed; its exact verified backup remains and the notice persists. Retry only this already-authorized retirement after a genuine allowed session resumes or signs in, without resetting business or people again. Never remove changed/unverified legacy text.
+
+Recovery notice (English): **Saved history could not be read. Your original data is retained. You are using a separate fictional demo. Allow browser storage, then reload, or choose Reset demo.**
+
+Recovery notice (Persian): **سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. اکنون از یک دموی ساختگی جداگانه استفاده می‌کنید. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید، یا بازنشانی دمو را انتخاب کنید.**
+
+Committed Reset with retirement pending (English): **Demo reset is complete. Your original history is backed up, but its old browser copy could not be retired. Allow browser storage, then reload.**
+
+Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
+
+Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
