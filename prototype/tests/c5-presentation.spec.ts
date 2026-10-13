@@ -759,15 +759,19 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     '.past-offers-table tr[data-product-code="0003"]',
   );
   await expect(pastRow).toHaveCount(1);
+  let retainedStatus = await pastRow.innerText();
   const details = button(pastRow, "Show details");
   if (await details.count()) {
     const detailsId = await details.getAttribute("aria-controls");
     expect(detailsId).toBeTruthy();
     await details.click();
-    await expect(page.locator(`[id="${detailsId}"]`)).toContainText("Stopped");
-  } else {
-    await expect(pastRow).toContainText("Stopped");
+    const omitted = page.locator(`[id="${detailsId}"]`);
+    await expect(omitted).toBeVisible();
+    expect(await omitted.locator("dl > div > dd").count()).toBeGreaterThan(0);
+    // C8 keeps Status in the phone row; only genuinely omitted values expand.
+    retainedStatus += ` ${await omitted.innerText()}`;
   }
+  expect(retainedStatus).toContain("Stopped");
   const toast = page
     .getByTestId("undo-toast")
     .filter({ hasText: "Stop offer" });

@@ -424,14 +424,18 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
   await waitForSavedFiles(page);
   const photo = await makePhoto(page, 99);
   await page.goto("/#settings?group=company");
+  const logoPicker = page.waitForEvent("filechooser");
   await page
     .locator("#company-logo")
-    .getByLabel("Upload file", { exact: true })
-    .setInputFiles({
-      name: "fictional-company-logo.jpg",
-      mimeType: "image/jpeg",
-      buffer: photo.buffer,
-    });
+    .getByRole("button", { name: "Replace", exact: true })
+    .click();
+  await (
+    await logoPicker
+  ).setFiles({
+    name: "fictional-company-logo.jpg",
+    mimeType: "image/jpeg",
+    buffer: photo.buffer,
+  });
   await expect
     .poll(() =>
       page
