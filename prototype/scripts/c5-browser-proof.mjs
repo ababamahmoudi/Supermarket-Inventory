@@ -324,7 +324,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             element.classList.contains("button-sm") ||
             element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
-          const expectedHeight = phone ? 44 : small ? 32 : 40;
+          // C8 requires field-aligned Add controls to be 44px at every width.
+          const fieldAlignedAdd = element.matches(
+            ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
+          );
+          const expectedHeight =
+            phone || fieldAlignedAdd ? 44 : small ? 32 : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
