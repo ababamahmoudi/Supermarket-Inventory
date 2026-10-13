@@ -4,7 +4,7 @@
 
 - Completed the 22 layout fixes, temporary sales, manual regular prices, worker requests, price approvals, receipt cost alerts, delivery hold/release notes and frozen Promo/Regular label intents.
 - All 75 final-source original screenshots were individually reviewed against all five owner annotations; the strict gallery has no warnings. The final-source build passed, with 150 production guards and no geometry/browser errors.
-- Source `8d9e7f9`: 1,124 unit/pricing tests passed, lint/type/build passed; GitHub full browser run passed 700 with 42 existing skips and zero failed/flaky outcomes. Final Persian caption-font source `0303445` has its own fresh build/screens and separate CI finishing when this entry was recorded. Earlier failed runs retain their original source and actual outcomes in the evidence folder.
+- Source `8d9e7f9`: 1,124 unit/pricing tests passed, lint/type/build passed; GitHub full browser run passed 700 with 42 existing skips and zero failed/flaky outcomes. Final Persian caption-font source `0303445` has its own fresh build/screens and all required CI checks passed, including 700 browser passes/42 existing skips with zero failed/flaky outcomes. Earlier failed runs retain their original source and actual outcomes in the evidence folder.
 - [Review and Ubuntu click paths](PR_C8_REVIEW.md), [screenshots](redesign-screenshots/pr-c8/index.html), [test evidence](evidence/c8/verification.json). E1/E2/E3 continue as stacked PRs; no review pause, automatic merge, deployment or physical-phone installation is implied.
 
 ## 2026-10-13 — C8 browser compatibility and layout verification in progress

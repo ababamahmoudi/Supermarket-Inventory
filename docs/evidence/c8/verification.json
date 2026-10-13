@@ -10,7 +10,12 @@
     "browserErrors": 0,
     "productionGuards": 150,
     "githubRun": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38443831934",
-    "ciStatus": "pending"
+    "ciStatus": "success",
+    "ciBrowserPassed": 700,
+    "ciBrowserSkipped": 42,
+    "ciBrowserFailed": 0,
+    "ciBrowserFlaky": 0,
+    "lintUnitPricingBuild": "GitHub required steps completed successfully on the exact source."
   },
   "precedingSource": {
     "unitPassed": 1124,
@@ -63,5 +68,6 @@
       }
     }
   ],
-  "reviewApproval": "Owner review remains outstanding; these new PRs are not automatically merged."
+  "reviewApproval": "Owner review remains outstanding; these new PRs are not automatically merged.",
+  "documentationHeadCheck": "Required separately on PR21 after this documentation-only commit; inspect latest checks, not an earlier source run."
 }

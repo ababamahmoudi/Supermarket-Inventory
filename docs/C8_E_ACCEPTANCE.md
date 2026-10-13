@@ -1,6 +1,6 @@
 # C8 / E1 / E2 / E3 acceptance ledger
 
-This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI and the documentation-only head check remain pending. E1/E2/E3 remain Planned in this branch.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
+This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1/E2/E3 remain Planned in this branch.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
 
 Build four stacked PRs in order, without an intermediate review pause: **C8 → E1 → E2 → E3**. The owner reviews all together; deadline October 30. Update the source docs before each stage. Change only prototype/, docs/ and seed/. No new hosted service, real AI, inventory, remote accounts/resources or deployment is authorized. Browser user switching simulates people; each device has separate demo data.
 
@@ -10,10 +10,10 @@ Sources: [requirements §34–35](requirements.md#34-c8-fixes-sales-and-new-regu
 
 ## Resolved owner choices
 
-| ID     | Required proof                                                                                                                                                                                     | Status                             |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| C8-D01 | Correct signed pickup: Supervisor represents Owner/Manager until E1; only Owner/Manager afterwards. All other roles denied. Reason, impact, immutable original and settled-coverage guards remain. | Executed; final-head check pending |
-| C8-D02 | Dark filled Primary and solid blue summary cards are #2B59C3/white. #7397F0 only dark links/icons/selected tabs/focus. Actual text contrast remains at least 4.5:1.                                | Executed; final-head check pending |
+| ID     | Required proof                                                                                                                                                                                     | Status                                              |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| C8-D01 | Correct signed pickup: Supervisor represents Owner/Manager until E1; only Owner/Manager afterwards. All other roles denied. Reason, impact, immutable original and settled-coverage guards remain. | Executed; final source PASS; PR-head check separate |
+| C8-D02 | Dark filled Primary and solid blue summary cards are #2B59C3/white. #7397F0 only dark links/icons/selected tabs/focus. Actual text contrast remains at least 4.5:1.                                | Executed; final source PASS; PR-head check separate |
 
 ## C8 — All 22 fixes, literal owner checklist
 
@@ -26,7 +26,7 @@ Sources: [requirements §34–35](requirements.md#34-c8-fixes-sales-and-new-regu
   - In the whole dialog, dropdowns fill their column like text fields do (Pricing category, Sold by, Category, Supplier). Only short number fields, like "Remind me 30 days", stay compact.
   - Separate the sections (Names, Pricing, Details, Date tracking) with a hairline above each section title.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F02 — Implemented; executed proof recorded
 
@@ -35,7 +35,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - If Date tracking is Yes and the product has no open date at any location, Save product doesn't save. It shows the What's missing box with "Add an expiry date, or turn off date tracking", links to the date field and focuses it.
   - If someone picked a date but didn't press Add, Save product adds that date itself instead of dropping it.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F03 — Implemented; executed proof recorded
 
@@ -47,7 +47,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - Columns: checkbox (48 px) | Product (takes the free space) | Product Code | Offer | Selling price, right-aligned at the card's right edge. No gap after the checkbox and no empty space after the last column.
   - Add a layout test: on every page at 390, 900 and 1440 px, no table row extends past its card.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F04 — Implemented; executed proof recorded
 
@@ -58,7 +58,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - The inputs use the filled style, not outlined.
   - Money everywhere: show at least 2 and at most 4 decimals, dropping zeros after the second. 18.4000 shows as 18.40; 1.5525 stays 1.5525. Keep storing 4 decimals. Check invoice lines, supplier items and orders too.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F05 — Implemented; executed proof recorded
 
@@ -74,31 +74,31 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - Drop the sentence "Received quantities are invoice evidence, not stock on hand" from the page. It can be a hint on the Lots title.
     Found by Claude:
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F06 — Implemented; executed proof recorded
 
 - [x] The product page doesn't update when you go from one product to another. Open #product?code=0016, then change the address to #product?code=0006, or press Back: the breadcrumb changes, but the page still shows Bulk Almonds. ProductPage reads window.location.hash only once. Re-render on hashchange (Back and Forward too) and test it.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F07 — Implemented; executed proof recorded
 
 - [x] Received shows fractions of cases: "3.3333 cases (40 units)", "2.6667 cases (16 units)", "7.5 cases (30 units)". Show whole cases plus loose units, like "3 cases + 4 units", everywhere cases are shown.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F08 — Implemented; executed proof recorded
 
 - [x] Dashboard → Purchases by supplier: Fresh Valley Foods' bar ($181.22) is so pale it looks empty. Every bar uses the accent blue, or at least 3:1 contrast against its track.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F09 — Implemented; executed proof recorded
 
 - [x] A fresh demo shows a half-started invoice on Invoices → Drafts: fictional-fv-20417.svg is attached, with no lines and no way to continue, above "No drafts". Either list it as a draft row ("Not read yet · Continue") or start the demo without it. Its file name also shows twice.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F10 — Implemented; executed proof recorded
 
@@ -108,7 +108,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - Show the ˅ (hidden columns) only when columns are actually hidden, also at the row's end.
 - Give the name column enough room (at least 240 px at 1440 px), so names like "Canned Fava Beans 400 g" don't wrap onto three lines.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F11 — Implemented; executed proof recorded
 
@@ -118,25 +118,25 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - Write per-unit prices the same way everywhere: "$4.99/lb", not "$4.99 /lb".
 - Show 25 products per page, not 8.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F12 — Implemented; executed proof recorded
 
 - [x] Orders and History use two unlabelled "Choose date" fields. Use the same single Date range control as Received (From, To, and Today / This week / This month).
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F13 — Implemented; executed proof recorded
 
 - [x] History: the Item column says "Product Code 0004" and Before → after says "Recorded action". Show the product name and the real values, for example "Black Tea 450 g · $6.99 → $6.49".
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F14 — Implemented; executed proof recorded
 
 - [x] Alerts: the cards are about half the page wide, with empty space on the right. Make them full width like other pages, and show date-tracking alerts as compact list rows instead of one large card each.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F15 — Implemented; executed proof recorded
 
@@ -146,7 +146,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - Remove the empty gap inside the Offer cell, between the price and "Mix-and-match".
 - When there are no suggestions, show one short line instead of a large empty card.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F16 — Implemented; executed proof recorded
 
@@ -155,25 +155,25 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - The Returns card title is bigger than the other card titles. Match them, and move "View all returns" to the right side of the title row, like other cards.
 - Date-tracking alert chips are red. Use amber, and red only when a date has passed.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F17 — Implemented; executed proof recorded
 
 - [x] Date tracking → Add date: Add is 40 px tall and sits higher than the 44 px fields. At 900 px, Location wraps and Add floats far to the right. Keep Product, Date, Location and Add together as one row that wraps as a group. The note under the list touches the card; give it some space.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F18 — Implemented; executed proof recorded
 
 - [x] At 900–1100 px, where the sidebar shows icons only, the group headers appear as bare › and ˅ arrows. Hide them in icon mode and separate the groups with a short divider.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F19 — Implemented; executed proof recorded
 
 - [x] Filter bars sit inside the list's card on Received, Returns, Suppliers, Orders and Labels, but on the grey page on Products, Offers, Payables and Date tracking. So the same controls look different (white with a border on some pages, filled on others). Put every filter bar inside its list card, at the top, so they all use the filled style.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F20 — Implemented; executed proof recorded
 
@@ -182,19 +182,19 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - The selected result is wider than the other rows and has a blue bar at its start. Keep the same inset as the other rows and show selection with the tint only.
 - "Taxable" uses the same blue as offers. Make it a neutral grey chip so offers stand out.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F21 — Implemented; executed proof recorded
 
 - [x] Settings → Company: show a colour swatch next to each brand colour. Show the current logo with a Replace button instead of an empty dropzone.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-F22 — Implemented; executed proof recorded
 
 - [x] Seed data: Dried Barberries' Persian name uses Western digits ("زرشک خشک 100 گرمی"), while the other products use Persian digits. Make it consistent.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ## C8 — All 10 price-reduction requirements, literal owner checklist
 
@@ -207,7 +207,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - Offers → Create offer → "Sale price"
   - Edit product, where Selling price becomes the current price shown with a "Change price" link. Nobody types a new price straight into Edit product any more.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S02 — Implemented; executed proof recorded
 
@@ -226,7 +226,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - A plain summary box that updates as you type. For example: "From today until Saturday, October 31, all 3 stores sell Stainless Steel Pot 24 cm at $16.99 instead of $20.99. On Sunday, November 1, it goes back to $20.99 by itself."
   - Buttons: Cancel, and "Start sale" ("Schedule sale" when it starts later) or "Save new price".
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S03 — Implemented; executed proof recorded
 
@@ -237,7 +237,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - Below cost: a red note and a required reason.
   - A product can have one sale per store at a time, and scheduled sales can't overlap. If a sale already exists, the dialog opens that sale to change it.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S04 — Implemented; executed proof recorded
 
@@ -251,7 +251,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - A lot's clearance price stays separate, as in C6. Lookup shows both.
   - Weighed items: the sale price is per main unit, and the second unit is worked out as today.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S05 — Implemented; executed proof recorded
 
@@ -262,13 +262,13 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - A sale with no end date: remind the Supervisor every 14 days (a setting): "Stainless Steel Pot has been on sale at North York for 14 days." with Keep it and End sale.
   - Every start, change and end goes to History with its before and after values, and can be reverted from History.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S06 — Implemented; executed proof recorded
 
 - [x] New regular price (permanent). This is today's manual price, set through the same dialog. It stays until a regular invoice brings a different cost. Then the approval offers "Use the new calculated price $X" (selected by default) or "Keep $Y". An invoice at the same cost changes nothing.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S07 — Implemented; executed proof recorded
 
@@ -285,7 +285,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - If the cost went down so far that the new regular price would be at or below the sale price, alert: "The new regular price $15.99 would be lower than the sale price $16.99", with End sale now and Keep the sale.
   - A Short-dated (expiry discount) receipt changes nothing here, as today.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S08 — Implemented; executed proof recorded
 
@@ -296,7 +296,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - add Promo labels when a sale starts (on)
   - add regular labels when a sale ends (on)
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S09 — Implemented; executed proof recorded
 
@@ -315,7 +315,7 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
   - One open request per product per store. The requester can change or withdraw it until it's decided.
   - Cashiers see sales and requested sales but can't request or change them. E1 maps all of this to the new roles.
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8-S10 — Implemented; executed proof recorded
 
@@ -326,43 +326,43 @@ Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and fu
 - Put both click paths in the review doc.
 - Docs: a new section in requirements, plus data-model, workflows, screens, decisions and open-questions. In open-questions, record two later options: putting several products on sale at once, and "until sold out" (needs stock counts, so Phase 2).
 
-Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI is still pending, separately from the preceding green full run. Owner approval remains outstanding.
+Implementation: **Complete**. Executed evidence: [unit/pricing/lint/build and full-browser results](evidence/c8/verification.json); [current-source original screenshots and individual review](redesign-screenshots/pr-c8/index.html). Final-source browser CI passed separately: 700 passed, 42 existing skips, zero failed/flaky outcomes. Owner approval remains outstanding.
 
 ### C8 technical guards agreed before code
 
-| ID     | Required proof                                                                                                                                                                                                                                     | Status                             |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| C8-T01 | Existing Edit product has current price/Change price link. Add product retains initial price/manual-override/margin validation; no sale for an unsaved product.                                                                                    | Executed; final-head check pending |
-| C8-T02 | Tracking Yes checks active/unremoved dates at any same-company location, including past dates. Valid unadded inline date saves atomically; invalid/missing/cancel leaves all staged records unchanged and exposes no private other-location facts. | Executed; final-head check pending |
-| C8-T03 | Sale keeps exact main-unit cents and price_unit, with full-precision Decimal normalization/secondary conversion. Regular canonical prices and source cost/quantity evidence stay unchanged.                                                        | Executed; final-head check pending |
-| C8-T04 | Every reviewed target is an eligible same-company selling store; Warehouse/inactive/non-selling excluded. Validate regular price/cost/minimum per store; no company or location leakage through direct domain calls.                               | Executed; final-head check pending |
-| C8-T05 | Existing sale change requests link sale/revision and remain pending. Worker Why optional; no private cost/margin leak. Approver enforces margin acknowledgement and below-cost reason.                                                             | Executed; final-head check pending |
-| C8-T06 | Clock uses configured IANA zone/local dates and handles DST/midnight, inclusive last day, scheduled starts, request expiry and idempotent reminders/history/labels.                                                                                | Executed; final-head check pending |
-| C8-T07 | Current regular price is independent of sale; ordinary offer pause/mix exclusion and clearance comparison use separate projections. Revert refuses stale conflicts and never revives elapsed schedules/restores stale regular price.               | Executed; final-head check pending |
-| C8-T08 | New regular price during an active sale defers automatic Regular labels until actual end, preserves Promo intent and explains timing. Label preferences/reasons/source identities are real, not a counter-only queue change; geometry unchanged.   | Executed; final-head check pending |
-| C8-T09 | Capture old regular cost before invoice post mutation; use actual accepted non-short-dated same-store evidence. Four alert keys: sale_cost_increase, sale_regular_not_above_sale, sale_no_end_reminder, sale_delivery_release.                     | Executed; final-head check pending |
-| C8-T10 | Hold instruction links actual sale/invoice/product/store; changed/early/natural end updates one first-day-after reminder. No stock or financial movement and no invented delivery evidence.                                                        | Executed; final-head check pending |
-| C8-T11 | Fresh/reset fixture dates anchor once to configured local Today and persist absolute dates. Reload does not slide an existing sale/request window or overwrite custom records/passwords/files.                                                     | Executed; final-head check pending |
-| C8-T12 | Display currency min2/max4 across UI and printed costs, preserving four-decimal storage/allocations; whole-case display does not prohibit valid fractional input or alter exact units.                                                             | Executed; final-head check pending |
+| ID     | Required proof                                                                                                                                                                                                                                     | Status                                              |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| C8-T01 | Existing Edit product has current price/Change price link. Add product retains initial price/manual-override/margin validation; no sale for an unsaved product.                                                                                    | Executed; final source PASS; PR-head check separate |
+| C8-T02 | Tracking Yes checks active/unremoved dates at any same-company location, including past dates. Valid unadded inline date saves atomically; invalid/missing/cancel leaves all staged records unchanged and exposes no private other-location facts. | Executed; final source PASS; PR-head check separate |
+| C8-T03 | Sale keeps exact main-unit cents and price_unit, with full-precision Decimal normalization/secondary conversion. Regular canonical prices and source cost/quantity evidence stay unchanged.                                                        | Executed; final source PASS; PR-head check separate |
+| C8-T04 | Every reviewed target is an eligible same-company selling store; Warehouse/inactive/non-selling excluded. Validate regular price/cost/minimum per store; no company or location leakage through direct domain calls.                               | Executed; final source PASS; PR-head check separate |
+| C8-T05 | Existing sale change requests link sale/revision and remain pending. Worker Why optional; no private cost/margin leak. Approver enforces margin acknowledgement and below-cost reason.                                                             | Executed; final source PASS; PR-head check separate |
+| C8-T06 | Clock uses configured IANA zone/local dates and handles DST/midnight, inclusive last day, scheduled starts, request expiry and idempotent reminders/history/labels.                                                                                | Executed; final source PASS; PR-head check separate |
+| C8-T07 | Current regular price is independent of sale; ordinary offer pause/mix exclusion and clearance comparison use separate projections. Revert refuses stale conflicts and never revives elapsed schedules/restores stale regular price.               | Executed; final source PASS; PR-head check separate |
+| C8-T08 | New regular price during an active sale defers automatic Regular labels until actual end, preserves Promo intent and explains timing. Label preferences/reasons/source identities are real, not a counter-only queue change; geometry unchanged.   | Executed; final source PASS; PR-head check separate |
+| C8-T09 | Capture old regular cost before invoice post mutation; use actual accepted non-short-dated same-store evidence. Four alert keys: sale_cost_increase, sale_regular_not_above_sale, sale_no_end_reminder, sale_delivery_release.                     | Executed; final source PASS; PR-head check separate |
+| C8-T10 | Hold instruction links actual sale/invoice/product/store; changed/early/natural end updates one first-day-after reminder. No stock or financial movement and no invented delivery evidence.                                                        | Executed; final source PASS; PR-head check separate |
+| C8-T11 | Fresh/reset fixture dates anchor once to configured local Today and persist absolute dates. Reload does not slide an existing sale/request window or overwrite custom records/passwords/files.                                                     | Executed; final source PASS; PR-head check separate |
+| C8-T12 | Display currency min2/max4 across UI and printed costs, preserving four-decimal storage/allocations; whole-case display does not prohibit valid fractional input or alter exact units.                                                             | Executed; final source PASS; PR-head check separate |
 
 ## C8 required automated proof
 
-| ID     | Required proof                                                                                                                                                                              | Status                             |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| C8-P01 | Product page follows address change, Back and Forward, including direct product0016→0006 without stale content.                                                                             | Executed; final-head check pending |
-| C8-P02 | Every working page/visible table row is contained by its own card at 390, 900 and 1440 px; retain broader EN/FA whole-word/control/inner-bound negative checks.                             | Executed; final-head check pending |
-| C8-P03 | Date save Yes/no open date, existing past/open other-location date, valid picked-but-unadded date, invalid staged date, error focus and atomic cancel/failure.                              | Executed; final-head check pending |
-| C8-P04 | Currency18.4000→18.40,1.5525 retained, negative/offer/printed costs; whole cases+loose units with retained pack and valid fractional-entry boundary.                                        | Executed; final-head check pending |
-| C8-P05 | Starting/scheduled sale, automatic ending restores current regular, early end, no overlapping sale per store, lower-price/min-margin/below-cost guards and company/store permissions.       | Executed; final-head check pending |
-| C8-P06 | Multi-buy pauses/resumes only in affected store, sale cannot mix even at a mapped amount, clearance independent, weighed main/secondary price correct.                                      | Executed; final-head check pending |
-| C8-P07 | No-end reminder timing/Keep/End and repeated load/evaluation idempotency.                                                                                                                   | Executed; final-head check pending |
-| C8-P08 | Pending sale request display on Products/Lookup/product/Offers; Approve/Change and approve/Reject(reason)/withdraw/edit/expiry, notifications and current charge unchanged before decision. | Executed; final-head check pending |
-| C8-P09 | New regular price persists at same cost; changed regular receipt defaults Use calculated, explicit Keep retains manual, applies-after-sale approval never changes current sale.             | Executed; final-head check pending |
-| C8-P10 | Both cost-up and lower/equal-regular sale alerts with retained old/new cost/margin/approval, explicit Keep/Change/End, Short-dated exclusion and no duplicate posting effects.              | Executed; final-head check pending |
-| C8-P11 | Actual hold note and first-day-after reminder for changed/early/natural end; no-end without fabricated date or stock record.                                                                | Executed; final-head check pending |
-| C8-P12 | Promo/Regular automatic waitlist preferences, label contents/exact physical geometry, explicit template override and deferred regular intent.                                               | Executed; final-head check pending |
-| C8-P13 | Sale start/change/end History values and conflict-safe Revert; later regular approval and elapsed schedule remain correct.                                                                  | Executed; final-head check pending |
-| C8-P14 | Every existing unit/pricing/browser/lint/type/build check remains; all seed cases retained and passed on final head. Record counts without summing overlapping runs.                        | Executed; final-head check pending |
+| ID     | Required proof                                                                                                                                                                              | Status                                              |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| C8-P01 | Product page follows address change, Back and Forward, including direct product0016→0006 without stale content.                                                                             | Executed; final source PASS; PR-head check separate |
+| C8-P02 | Every working page/visible table row is contained by its own card at 390, 900 and 1440 px; retain broader EN/FA whole-word/control/inner-bound negative checks.                             | Executed; final source PASS; PR-head check separate |
+| C8-P03 | Date save Yes/no open date, existing past/open other-location date, valid picked-but-unadded date, invalid staged date, error focus and atomic cancel/failure.                              | Executed; final source PASS; PR-head check separate |
+| C8-P04 | Currency18.4000→18.40,1.5525 retained, negative/offer/printed costs; whole cases+loose units with retained pack and valid fractional-entry boundary.                                        | Executed; final source PASS; PR-head check separate |
+| C8-P05 | Starting/scheduled sale, automatic ending restores current regular, early end, no overlapping sale per store, lower-price/min-margin/below-cost guards and company/store permissions.       | Executed; final source PASS; PR-head check separate |
+| C8-P06 | Multi-buy pauses/resumes only in affected store, sale cannot mix even at a mapped amount, clearance independent, weighed main/secondary price correct.                                      | Executed; final source PASS; PR-head check separate |
+| C8-P07 | No-end reminder timing/Keep/End and repeated load/evaluation idempotency.                                                                                                                   | Executed; final source PASS; PR-head check separate |
+| C8-P08 | Pending sale request display on Products/Lookup/product/Offers; Approve/Change and approve/Reject(reason)/withdraw/edit/expiry, notifications and current charge unchanged before decision. | Executed; final source PASS; PR-head check separate |
+| C8-P09 | New regular price persists at same cost; changed regular receipt defaults Use calculated, explicit Keep retains manual, applies-after-sale approval never changes current sale.             | Executed; final source PASS; PR-head check separate |
+| C8-P10 | Both cost-up and lower/equal-regular sale alerts with retained old/new cost/margin/approval, explicit Keep/Change/End, Short-dated exclusion and no duplicate posting effects.              | Executed; final source PASS; PR-head check separate |
+| C8-P11 | Actual hold note and first-day-after reminder for changed/early/natural end; no-end without fabricated date or stock record.                                                                | Executed; final source PASS; PR-head check separate |
+| C8-P12 | Promo/Regular automatic waitlist preferences, label contents/exact physical geometry, explicit template override and deferred regular intent.                                               | Executed; final source PASS; PR-head check separate |
+| C8-P13 | Sale start/change/end History values and conflict-safe Revert; later regular approval and elapsed schedule remain correct.                                                                  | Executed; final source PASS; PR-head check separate |
+| C8-P14 | Every existing unit/pricing/browser/lint/type/build check remains; all seed cases retained and passed on final head. Record counts without summing overlapping runs.                        | Executed; final source PASS; PR-head check separate |
 
 ## C8 screenshot matrix
 
@@ -386,7 +386,7 @@ Every row below requires **English light, English dark, Persian, 900 px and phon
 | C8-V14 | Cost went up during a sale alert with actual cost/margin/regular proposal and hold option.                | Reviewed PASS |
 | C8-V15 | Promo label preview for a sale, unchanged exact template.                                                 | Reviewed PASS |
 
-C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing skips are from `8d9e7f9`. All 75 current-source captures and reviews are from `0303445`; its fresh build passed and its separate CI run is finishing. Linked invalid-save boxes above a scrolled dialog, sticky behavior, hidden columns and print behavior require their executed browser checks, not the static images alone. E1 privacy/roles, E2 tasks and E3 phone installation are not claimed by C8.
+C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing skips are from `8d9e7f9`. All 75 current-source captures and reviews are from `0303445`; its fresh build passed and its separate CI run passed all required steps with 700 browser passes/42 existing skips and zero failed/flaky outcomes. Linked invalid-save boxes above a scrolled dialog, sticky behavior, hidden columns and print behavior require their executed browser checks, not the static images alone. E1 privacy/roles, E2 tasks and E3 phone installation are not claimed by C8.
 
 ## E1 — Literal planned role, People and sign-in checklist
 
