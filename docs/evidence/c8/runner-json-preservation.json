@@ -1,0 +1,18 @@
+[
+  {
+    "file": "unit-results-8d9e7f9.json",
+    "originalSHA256": "b451fe9e03414011a3b61946313fd639a77abb08ae2bdd2e89fb9fb002f5f905",
+    "mirrorSHA256": "e752d13ebbaa50e667d8b7534f95fba1a622c2458fe8eda8dd09da7690d08054",
+    "rawArchive": "unit-results-8d9e7f9.json.gz",
+    "archiveSHA256": "8e6c2c6a0accde494602847b859b8b9a09d44b09b9a2ce4d63220a075be91304",
+    "transformation": "The normal end-of-file hook added exactly one LF to the readable JSON mirror. The gzip archive expands to the byte-exact original runner result."
+  },
+  {
+    "file": "focused-browser-results-8d9e7f9.json",
+    "originalSHA256": "fe6a4a1a5d7c2ddf553fac4f7c367d9aee61faad956d57443efc2e82925cb9ef",
+    "mirrorSHA256": "5a7842b6d196b65a0c6dff2f7548c9dcd77a5c37f3b4bcfe9650b142a2b97366",
+    "rawArchive": "focused-browser-results-8d9e7f9.json.gz",
+    "archiveSHA256": "c7cd49464a636b55145af54b85022cb02ba873b4de4e6268bf1766682f16cf75",
+    "transformation": "The normal end-of-file hook added exactly one LF to the readable JSON mirror. The gzip archive expands to the byte-exact original runner result."
+  }
+]

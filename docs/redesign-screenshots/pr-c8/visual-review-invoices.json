@@ -1,0 +1,445 @@
+{
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "reviewedAt": "2026-10-13T18:18:01.551284+00:00",
+  "reviewer": "/root/c8_invoice_finish",
+  "scope": [
+    "new-order",
+    "product-detail",
+    "sale-cost-increase"
+  ],
+  "variants": [
+    "en-light",
+    "en-dark",
+    "fa-light",
+    "mid-900",
+    "phone-dark"
+  ],
+  "captureManifestSHA256": "edd475f1e1362487a191b27efb576ff1030014e037b55209eed7c8cf1755db94",
+  "referenceManifestSHA256": "cece71a5ebb52e7e85e2050ff7bc91fd4d354c1d1d2d867e304cda0befe1504e",
+  "sourceFingerprint": "9de62a1d93f3c83abc431d5f830c7da3ccc790061bbd3d53dff083eb5c8fe4e3",
+  "productionFingerprint": "d76711ba33f1ea71cc064109ff31ae3f760dc7f5c1f2d6526f4fd1df53b6f06e",
+  "openedCount": 15,
+  "referenceOpenedCount": 5,
+  "referenceImages": [
+    {
+      "file": "1.png",
+      "bytes": 662344,
+      "sha256": "a5713ece8ceeda7e65ae3b87adcc4608d09f05e87f4db9b8d1e455605b29e860",
+      "openedIndividually": true,
+      "comparison": "Individually opened original date-editor layout annotation. Outside the three assigned scenes; no editor-state fix is claimed by this partition."
+    },
+    {
+      "file": "2.png",
+      "bytes": 620459,
+      "sha256": "a39c775e76acc03f6a0fac2311e8adb717554450f4f35c1306a094514ae082ad",
+      "openedIndividually": true,
+      "comparison": "Individually opened original missing-date validation annotation. Outside these three assigned scenes; no validation-state fix is claimed by this partition."
+    },
+    {
+      "file": "3.png",
+      "bytes": 644837,
+      "sha256": "63ed45dcd87ca9d7526065f09be2ee2bec539c0575f55adaa7de82a06db36df5",
+      "openedIndividually": true,
+      "comparison": "Individually opened original Labels alignment annotation. Outside these three assigned scenes; Labels review belongs to another partition."
+    },
+    {
+      "file": "4.png",
+      "bytes": 572152,
+      "sha256": "63c73c79d77d62a3ad581023d7e6aec1eabdabe96b2abb893fdfeecb91566259",
+      "openedIndividually": true,
+      "comparison": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "file": "5.png",
+      "bytes": 557581,
+      "sha256": "42fb9b0ef52f9ef2547d8b13d9c045c7efac311de48eb354f334f9c6dfb81a8b",
+      "openedIndividually": true,
+      "comparison": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    }
+  ],
+  "verdict": "pass",
+  "reviewPassed": true,
+  "overallReviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "realFailures": [],
+  "reviews": [
+    {
+      "filename": "new-order-en-light.png",
+      "scene": "new-order",
+      "variant": "en-light",
+      "sha256": "8fc8dfdec3264a314498a4b68d5dc66ce9f5e12c0f190360baf138c52b205207",
+      "bytes": 138384,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Pack, Cases, Units, Expected unit cost, Case cost and Before-tax total align with their values. Pack values 4/12/6, entered cases 12/2, and calculated units 48/24 remain legible.",
+        "Resting inputs are filled and borderless; the focused field alone has a focus ring. Product names and paired units remain complete inside their cells or phone cards.",
+        "The exact expected total $933.60 and line totals $883.20/$50.40 remain intact. Cancel, Save as draft and Place order remain visible in normal flow."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "filename": "new-order-en-dark.png",
+      "scene": "new-order",
+      "variant": "en-dark",
+      "sha256": "a96ebab1578421f71104f20b4480e2b72c1857807b01d957cc5b86edafc1936c",
+      "bytes": 139573,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Pack, Cases, Units, Expected unit cost, Case cost and Before-tax total align with their values. Pack values 4/12/6, entered cases 12/2, and calculated units 48/24 remain legible.",
+        "Resting inputs are filled and borderless; the focused field alone has a focus ring. Product names and paired units remain complete inside their cells or phone cards.",
+        "The exact expected total $933.60 and line totals $883.20/$50.40 remain intact. Cancel, Save as draft and Place order remain visible in normal flow."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "filename": "new-order-fa-light.png",
+      "scene": "new-order",
+      "variant": "fa-light",
+      "sha256": "76ad25da039fca44afec91f548af1f5f3c503b7891f9c714fa09f2ee05f89700",
+      "bytes": 143247,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Pack, Cases, Units, Expected unit cost, Case cost and Before-tax total align with their values. Pack values 4/12/6, entered cases 12/2, and calculated units 48/24 remain legible.",
+        "Resting inputs are filled and borderless; the focused field alone has a focus ring. Product names and paired units remain complete inside their cells or phone cards.",
+        "The exact expected total $933.60 and line totals $883.20/$50.40 remain intact. Cancel, Save as draft and Place order remain visible in normal flow.",
+        "Persian sections mirror correctly; product names, codes, dates, decimal money and arrow pairs remain isolated and readable in the RTL layout."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "filename": "new-order-mid-900.png",
+      "scene": "new-order",
+      "variant": "mid-900",
+      "sha256": "ebd2f00e9e459749666355f6d2eae46b75bcb040fe1ae28310f109eb37d502fa",
+      "bytes": 101883,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Pack, Cases, Units, Expected unit cost, Case cost and Before-tax total align with their values. Pack values 4/12/6, entered cases 12/2, and calculated units 48/24 remain legible.",
+        "Resting inputs are filled and borderless; the focused field alone has a focus ring. Product names and paired units remain complete inside their cells or phone cards.",
+        "The exact expected total $933.60 and line totals $883.20/$50.40 remain intact. Cancel, Save as draft and Place order remain visible in normal flow.",
+        "At 900px the compact sidebar and page content fit. Wrapped product names keep paired units together and controls stay inside their section."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "filename": "new-order-phone-dark.png",
+      "scene": "new-order",
+      "variant": "phone-dark",
+      "sha256": "d3c35f397a6ecc7c812c1286b842f428e6f3e1cb35700c8c0583b854bf354a23",
+      "bytes": 104268,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Pack, Cases, Units, Expected unit cost, Case cost and Before-tax total align with their values. Pack values 4/12/6, entered cases 12/2, and calculated units 48/24 remain legible.",
+        "Resting inputs are filled and borderless; the focused field alone has a focus ring. Product names and paired units remain complete inside their cells or phone cards.",
+        "The exact expected total $933.60 and line totals $883.20/$50.40 remain intact. Cancel, Save as draft and Place order remain visible in normal flow.",
+        "At phone width each order line uses captioned fields in one contained card; the footer actions and exact total remain readable."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original New order numeric-field alignment and resting-border annotation. Compared with each of all five current-source New order variants."
+    },
+    {
+      "filename": "product-detail-en-light.png",
+      "scene": "product-detail",
+      "variant": "en-light",
+      "sha256": "22170d7fb4c3deb002e578771d8efa2084df93495a7bc18c7c382dd17a9570c0",
+      "bytes": 186638,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Price, Cost and margin, Dates, Details, Prices by store, Deliveries, Lots, Cost history and History are separated into readable sections.",
+        "Compact cost $4.9895/lb has no space before the slash. Selling price $7.49/lb and $16.51/kg, margin 33.38%, divisor 0.65 and minimum 25% remain complete.",
+        "Store rows and empty evidence states remain visible. Sections retain clear hierarchy and complete amounts within their surfaces."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    },
+    {
+      "filename": "product-detail-en-dark.png",
+      "scene": "product-detail",
+      "variant": "en-dark",
+      "sha256": "681c7a21a26daace2513c89d061f495bca6470eda452a1d9deaaed5acf05bf13",
+      "bytes": 187693,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Price, Cost and margin, Dates, Details, Prices by store, Deliveries, Lots, Cost history and History are separated into readable sections.",
+        "Compact cost $4.9895/lb has no space before the slash. Selling price $7.49/lb and $16.51/kg, margin 33.38%, divisor 0.65 and minimum 25% remain complete.",
+        "Store rows and empty evidence states remain visible. Sections retain clear hierarchy and complete amounts within their surfaces."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    },
+    {
+      "filename": "product-detail-fa-light.png",
+      "scene": "product-detail",
+      "variant": "fa-light",
+      "sha256": "8c9a8135e329de323e44009469c15d61445b64c29b139a84daa1c59f4d52cc6d",
+      "bytes": 197885,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Price, Cost and margin, Dates, Details, Prices by store, Deliveries, Lots, Cost history and History are separated into readable sections.",
+        "Compact cost $4.9895/lb has no space before the slash. Selling price $7.49/lb and $16.51/kg, margin 33.38%, divisor 0.65 and minimum 25% remain complete.",
+        "Store rows and empty evidence states remain visible. Sections retain clear hierarchy and complete amounts within their surfaces.",
+        "Persian sections mirror correctly; product names, codes, dates, decimal money and arrow pairs remain isolated and readable in the RTL layout."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    },
+    {
+      "filename": "product-detail-mid-900.png",
+      "scene": "product-detail",
+      "variant": "mid-900",
+      "sha256": "e26863844601d717ef100d745f016559bdd0a7ed844eec20384bf86b5a9f303e",
+      "bytes": 147613,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Price, Cost and margin, Dates, Details, Prices by store, Deliveries, Lots, Cost history and History are separated into readable sections.",
+        "Compact cost $4.9895/lb has no space before the slash. Selling price $7.49/lb and $16.51/kg, margin 33.38%, divisor 0.65 and minimum 25% remain complete.",
+        "Store rows and empty evidence states remain visible. Sections retain clear hierarchy and complete amounts within their surfaces.",
+        "At 900px the compact sidebar and page content fit. Wrapped product names keep paired units together and controls stay inside their section."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    },
+    {
+      "filename": "product-detail-phone-dark.png",
+      "scene": "product-detail",
+      "variant": "phone-dark",
+      "sha256": "a519d7d3d1b3f26f18585416ae7bc723e9cd5d6b26e38093b1381a528bfd132a",
+      "bytes": 135273,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "Price, Cost and margin, Dates, Details, Prices by store, Deliveries, Lots, Cost history and History are separated into readable sections.",
+        "Compact cost $4.9895/lb has no space before the slash. Selling price $7.49/lb and $16.51/kg, margin 33.38%, divisor 0.65 and minimum 25% remain complete.",
+        "Store rows and empty evidence states remain visible. Sections retain clear hierarchy and complete amounts within their surfaces.",
+        "At phone width the product sections and branch price cards stack without clipping; both selling-price units and the compact cost unit remain readable."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "Individually opened original Product detail grouping annotation. Compared with each of all five current-source Product detail variants."
+    },
+    {
+      "filename": "sale-cost-increase-en-light.png",
+      "scene": "sale-cost-increase",
+      "variant": "en-light",
+      "sha256": "5c40adfbd4814b1ddafa2c366244311039da6975ef668b4e02fb9a5c3a04a44a",
+      "bytes": 164255,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "The sale-cost alert preserves cost $12.60 \u2192 $14.20, sale $16.99, margin 26% \u2192 16% (minimum 25%), and after-sale price $20.99 \u2192 $23.49 with the approval link.",
+        "North York and product code HW-5012 appear once in the alert metadata. The hold-delivery checkbox and all three actions remain visible and contained.",
+        "Date-tracking rows and cross-branch conflict remain separate from the sale-cost alert, with status badges and end-row actions readable."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "All five original annotations were individually opened. None depicts this sale-cost alert; this scene is reviewed against the current design rules and preserved amounts/actions."
+    },
+    {
+      "filename": "sale-cost-increase-en-dark.png",
+      "scene": "sale-cost-increase",
+      "variant": "en-dark",
+      "sha256": "17658996dd90ebd872a5f2dedc67e59c705ee8c462fc50cbfad8bd947d0b3155",
+      "bytes": 165930,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "The sale-cost alert preserves cost $12.60 \u2192 $14.20, sale $16.99, margin 26% \u2192 16% (minimum 25%), and after-sale price $20.99 \u2192 $23.49 with the approval link.",
+        "North York and product code HW-5012 appear once in the alert metadata. The hold-delivery checkbox and all three actions remain visible and contained.",
+        "Date-tracking rows and cross-branch conflict remain separate from the sale-cost alert, with status badges and end-row actions readable."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "All five original annotations were individually opened. None depicts this sale-cost alert; this scene is reviewed against the current design rules and preserved amounts/actions."
+    },
+    {
+      "filename": "sale-cost-increase-fa-light.png",
+      "scene": "sale-cost-increase",
+      "variant": "fa-light",
+      "sha256": "91e49fa04a9bb85599dd93a485bddc5f5fe9e9f9e6dc39398292427c316596e1",
+      "bytes": 171570,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "The sale-cost alert preserves cost $12.60 \u2192 $14.20, sale $16.99, margin 26% \u2192 16% (minimum 25%), and after-sale price $20.99 \u2192 $23.49 with the approval link.",
+        "North York and product code HW-5012 appear once in the alert metadata. The hold-delivery checkbox and all three actions remain visible and contained.",
+        "Date-tracking rows and cross-branch conflict remain separate from the sale-cost alert, with status badges and end-row actions readable.",
+        "Persian sections mirror correctly; product names, codes, dates, decimal money and arrow pairs remain isolated and readable in the RTL layout."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "All five original annotations were individually opened. None depicts this sale-cost alert; this scene is reviewed against the current design rules and preserved amounts/actions."
+    },
+    {
+      "filename": "sale-cost-increase-mid-900.png",
+      "scene": "sale-cost-increase",
+      "variant": "mid-900",
+      "sha256": "ed488766bc486d535aeef81984c9d0ddf9cf541c738ee76a85f3f1c1b812c2c7",
+      "bytes": 125646,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "The sale-cost alert preserves cost $12.60 \u2192 $14.20, sale $16.99, margin 26% \u2192 16% (minimum 25%), and after-sale price $20.99 \u2192 $23.49 with the approval link.",
+        "North York and product code HW-5012 appear once in the alert metadata. The hold-delivery checkbox and all three actions remain visible and contained.",
+        "Date-tracking rows and cross-branch conflict remain separate from the sale-cost alert, with status badges and end-row actions readable.",
+        "At 900px the compact sidebar and page content fit. Wrapped product names keep paired units together and controls stay inside their section."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "All five original annotations were individually opened. None depicts this sale-cost alert; this scene is reviewed against the current design rules and preserved amounts/actions."
+    },
+    {
+      "filename": "sale-cost-increase-phone-dark.png",
+      "scene": "sale-cost-increase",
+      "variant": "phone-dark",
+      "sha256": "e8a1e955b2fb4368d1a7228efba98a533e6c061afb5902e18bd28ffa4f50d097",
+      "bytes": 113056,
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "openedIndividually": true,
+      "verdict": "pass",
+      "reviewPassed": true,
+      "strictGalleryEligible": true,
+      "diagnostic": false,
+      "realFailures": [],
+      "checks": [
+        "The sale-cost alert preserves cost $12.60 \u2192 $14.20, sale $16.99, margin 26% \u2192 16% (minimum 25%), and after-sale price $20.99 \u2192 $23.49 with the approval link.",
+        "North York and product code HW-5012 appear once in the alert metadata. The hold-delivery checkbox and all three actions remain visible and contained.",
+        "Date-tracking rows and cross-branch conflict remain separate from the sale-cost alert, with status badges and end-row actions readable.",
+        "At phone width alert text and the date wrap naturally; the hold label wraps beside its checkbox, the three actions wrap within the card, and conflict rows become contained captioned cards."
+      ],
+      "framingNotes": [
+        "This exact unedited PNG was individually opened for this current-source review; display scaling did not modify its bytes.",
+        "Only the captured state is reviewed here; interactions and other role/route states require separate runtime proof."
+      ],
+      "referenceChecks": "All five original annotations were individually opened. None depicts this sale-cost alert; this scene is reviewed against the current design rules and preserved amounts/actions."
+    }
+  ],
+  "summary": {
+    "status": "PASS",
+    "reviewed": 15,
+    "passed": 15,
+    "failed": 0,
+    "failures": [],
+    "description": "All 15 exact 0303445 captures and all five unchanged original owner annotations were freshly and individually opened. New order numeric alignment, separate Product detail sections with compact cost units, and the sale-cost alert amount/RTL/action containment pass in all five assigned variants."
+  }
+}

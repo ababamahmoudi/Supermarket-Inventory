@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-13 — C8 implemented and screenshot review complete
+
+- Completed the 22 layout fixes, temporary sales, manual regular prices, worker requests, price approvals, receipt cost alerts, delivery hold/release notes and frozen Promo/Regular label intents.
+- All 75 final-source original screenshots were individually reviewed against all five owner annotations; the strict gallery has no warnings. The final-source build passed, with 150 production guards and no geometry/browser errors.
+- Source `8d9e7f9`: 1,124 unit/pricing tests passed, lint/type/build passed; GitHub full browser run passed 700 with 42 existing skips and zero failed/flaky outcomes. Final Persian caption-font source `0303445` has its own fresh build/screens and separate CI finishing when this entry was recorded. Earlier failed runs retain their original source and actual outcomes in the evidence folder.
+- [Review and Ubuntu click paths](PR_C8_REVIEW.md), [screenshots](redesign-screenshots/pr-c8/index.html), [test evidence](evidence/c8/verification.json). E1/E2/E3 continue as stacked PRs; no review pause, automatic merge, deployment or physical-phone installation is implied.
+
 ## 2026-10-13 — C8 browser compatibility and layout verification in progress
 
 - Kept the new Change price workflow, date-tracking validation, two sale/request demo records, grouped label intents and exact 2–4 decimal display. Updated older browser fixtures and locators to exercise these current requirements while retaining their money, stock, scope, evidence, Undo and geometry checks; all 742 logical browser cases remain.

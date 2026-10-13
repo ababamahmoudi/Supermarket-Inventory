@@ -1,0 +1,11 @@
+{
+  "stage": "c8",
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "diagnostic": false,
+  "screens": 75,
+  "expectedCount": 75,
+  "individuallyReviewed": 75,
+  "references": 5,
+  "warnings": [],
+  "productionFingerprint": "d76711ba33f1ea71cc064109ff31ae3f760dc7f5c1f2d6526f4fd1df53b6f06e"
+}

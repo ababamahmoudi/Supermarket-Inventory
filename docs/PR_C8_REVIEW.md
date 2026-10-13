@@ -33,7 +33,13 @@ Open `http://localhost:5174` in the Ubuntu browser. Keep the terminal open. Stop
 
 ## Verification
 
-Final exact-source test counts, screenshot gallery and any known limitations will be added after the immutable build and full browser run. Focused checks are diagnostic until then; this draft makes no full-suite completion claim.
+The [75-image screenshot gallery](redesign-screenshots/pr-c8/index.html) contains the unedited final-source captures: 15 moments in English light, English dark, Persian light, 900 px and 390 px dark. Every original PNG and all five owner annotations were opened individually. All 75 visual reviews passed; all 150 before/after production guards passed with zero geometry findings or browser errors. Screenshots were captured from source `0303445`, whose fresh build passed. The [evidence index](evidence/c8/verification.json) records actual source hashes and separate run results.
+
+On the preceding source `8d9e7f9`, all **1,124 unit tests**, every seed pricing case, lint, type-check and build passed. [GitHub CI](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38441051423) completed successfully with **700 browser tests passed, 42 existing skips, zero failures and zero flaky outcomes**. Eight focused desktop/phone regression cases also passed without retries. These overlapping runs are not added together.
+
+The final-source adjustment only changes the font of Persian phone table captions. Its own [GitHub run](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38443831934) is still finishing; lint, unit/pricing tests and build have already passed there. The source's production hashes are different, so the previous build is not treated as the same final build. The eventual documentation-only PR head must also pass its own required GitHub checks before the PR is marked ready.
+
+Earlier failures remain in [the evidence folder](evidence/c8/): the initial full run had 154 failures; a later run had 11; another had one sign-in persistence readiness failure before its glyph assertions. The old photo-persistence timeout's cause remains unproven; a focused run and the later full run passed the unchanged 20-original-photo checks. No timeout or assertion was weakened to hide these records. Physical phone installation, register integration, hosting and cross-device synchronization are outside C8.
 
 ## Later stacked stages
 
