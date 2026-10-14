@@ -155,7 +155,12 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       "SIGNED-C5-COLOR-001",
     );
     await button(pickup, "Record pickup").click();
+    // This existing status is published only after the actual command completes.
+    await expect(page.getByRole("status")).toHaveText(
+      "Recorded pickup and retained Return memo.",
+    );
     await page.goto("/#returns");
+    await expect(page.locator(".returns-overview-table")).toBeVisible();
     await appearance(page, variant);
     const proof = await assertContract(
       page,

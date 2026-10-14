@@ -1,6 +1,6 @@
 # C8 / E1 / E2 / E3 acceptance ledger
 
-This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1 implementation is present and its full app/lint/build passed; retained browser proof and original screenshots are pending. E2/E3 remain Planned.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
+This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1 implementation is present; its latest completed full app/pricing run passed 1,294/1,294 and four bounded repaired native checks passed. Current-root SDK passed 75/75 and build exited 0; final required lint passed at its recorded v2 inputs. The complete 742-case retained-browser attempt was interrupted with unresolved failures; final browser proof and original screenshots remain pending. E2/E3 remain Planned.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
 
 Build four stacked PRs in order, without an intermediate review pause: **C8 → E1 → E2 → E3**. The owner reviews all together; deadline October 30. Update the source docs before each stage. Change only prototype/, docs/ and seed/. No new hosted service, real AI, inventory, remote accounts/resources or deployment is authorized. Browser user switching simulates people; each device has separate demo data.
 
@@ -390,7 +390,7 @@ C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing s
 
 ## E1 — Implemented; final browser and visual verification pending
 
-The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses. Implementation is present and full app/lint/build passed; final retained-browser and visual results remain pending. See [E1 exact-source evidence](evidence/e1/verification.json). It does not reinstate the older three-role model.
+The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses. Implementation is present. Completed full app/pricing v5 passed 1,294/1,294; four bounded repaired native checks passed. Current-root SDK 75/75 and build passed; final required lint passed at its recorded v2 inputs. Complete retained-browser execution and visual results remain pending after an interrupted failing attempt. See [E1 exact-source evidence](evidence/e1/verification.json). It does not reinstate the older three-role model.
 
 ### E1-R01 — Implemented; verification in progress
 
@@ -401,7 +401,7 @@ The current role/account contract is in requirements §2/§3/§16 and data-model
   - Floor Worker: one or more locations.
   - Cashier: one or more stores, never the Warehouse. Each person has one role and, except for Owner and Manager, one or more locations. For example: a cashier at North York and Richmond Hill, or a Branch Supervisor at all three stores. Record "different roles at different locations" in open-questions as a later option.
 
-Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1-R02 — Implemented; verification in progress
 
@@ -417,7 +417,7 @@ Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/bui
     - Owner and Manager get today's Supervisor dashboard.
     - A Branch Supervisor gets a location dashboard without supplier money: arrivals, price updates to apply, sales running at their stores, expiring dates, open returns, branch requests, and notes for them. Add tests for every role at an allowed location and at a location they don't have.
 
-Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1-R03 — Implemented; verification in progress
 
@@ -427,7 +427,7 @@ Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/bui
   - Owner and Manager also get "All locations".
   - A registered store computer defaults to its own location.
 
-Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1-R04 — Implemented; verification in progress
 
@@ -446,7 +446,7 @@ Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/bui
     - Only an Owner or Manager can make someone an Owner or Manager.
   - Registered store computers: keep the current list, and show which location each computer belongs to.
 
-Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1-R05 — Implemented; verification in progress
 
@@ -459,7 +459,7 @@ Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/bui
   - wh-floor (Floor Worker at the Warehouse)
   - cashier (Cashier at North York and Richmond Hill) The Demo menu can switch to any of them, and Reset demo restores them. The old username "supervisor" keeps working and signs in as the Manager.
 
-Implementation: **Present**. Full app/pricing **1,275/1,275**, required lint/build **PASS**. Final retained-browser and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
 
 ### E1 required proof
 
@@ -630,4 +630,8 @@ People, picker/dashboard, task/progress, cashier pill and bell scenes require En
 
 ## Actual results
 
-**Not yet executed for C8/E.** Add actual implementation source, named test results, screenshot manifests, CI URLs and remaining limits after each stage; this planning document contains no fabricated completion count.
+C8 final-source browser CI and the 75 original screenshot reviews are recorded above. They do not establish E1/E2/E3 completion.
+
+E1 [full app/pricing v5](evidence/e1/app-full-v5.json) completed with **1,294/1,294 passed**, zero failures/pending/todo and actual exit **0**, unchanged 553-input fingerprint `2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539`. [Current-source comparison](evidence/e1/app-v5-current-source-match.json) records seven unsupported ByRole-option removals, runtime formatting with identical emitted JavaScript, and three retained browser fixture/readiness changes. Seed/assets and all other inputs remain unchanged; eight original C5 cases passed in v13 and final two foreign-event cases passed separately in v14; no complete retained742 pass is claimed. This is not a new whole-unit execution.
+
+E1 [bounded repaired native v11](evidence/e1/native-repaired-v11.json) completed **4/4**, actual TypeScript/Vite/browser exits **0**, zero skips/flaky/retries/unhandled errors, unchanged 553 inputs and 55 built/served assets. The retained **742-case** attempt was interrupted at actual **exit 130**: [95 passed, four failed, one interrupted, 642 NOT_RUN, zero actual conditional skips](evidence/e1/retained-full-v12-classification.json). Raw reporter skipped=643 must not be misreported as intentional skips. [Required standard checks](evidence/e1/final-standard-checks.json) passed final required lint **exit 0** at recorded v2 inputs, with SDK **75/75** and full build **exit 0** at their separately recorded v1 inputs; no same-input rerun is implied. Bounded native v13 retained **eight original C5 passes and two foreign-reading failures**; final revised public-event two-case proof passed separately **2/2** in v14; corrected full browser verification, the 20 E1 screenshots/individual review, stacked draft PR and exact-head CI remain pending. Recovery is implemented and all 14 genuine cases are covered in the full app run. Earlier overlapping/failing runs remain preserved separately. E2/E3 and physical-phone installation are separate stages.

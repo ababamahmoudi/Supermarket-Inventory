@@ -62,6 +62,7 @@ export type CompanyReadConfig = Omit<
 export interface ScopedReadView extends Omit<
   DemoState,
   | "config"
+  | "prototype_e1_history_recovery"
   | "products"
   | "invoice"
   | "invoices"

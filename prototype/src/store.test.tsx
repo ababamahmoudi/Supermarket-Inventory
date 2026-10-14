@@ -370,11 +370,12 @@ describe("atomic fresh authorized demo actions", () => {
     );
   });
 });
+let authProbeCompleted: Promise<unknown> = Promise.resolve();
 function AuthProbe() {
   const demo = useDemo();
   const [error, setError] = useState("");
   const run = (operation: () => Promise<unknown>) => {
-    void Promise.resolve()
+    authProbeCompleted = Promise.resolve()
       .then(operation)
       .then((value) => setError(typeof value === "string" ? value : ""))
       .catch((caught) =>
@@ -434,6 +435,14 @@ function AuthProbe() {
     </>
   );
 }
+async function completeAuthProbeAction(label: string) {
+  fireEvent.click(screen.getByText(label));
+  // Wait for the actual SDK operation, canonical publication and test probe
+  // error/result update. No timer, actor, permission or source is replaced.
+  await act(async () => {
+    await authProbeCompleted;
+  });
+}
 describe("password gates and employee identity", () => {
   it("blocks business mutations until the new employee chooses a password then records that employee as the actor", async () => {
     localStorage.setItem(LEGACY_AUTH_STORAGE_KEY, legacyEmployee);
@@ -445,12 +454,12 @@ describe("password gates and employee identity", () => {
         fixture.options.companyId,
       )
     ).state;
-    fireEvent.click(screen.getByText("New employee"));
+    await completeAuthProbeAction("New employee");
     await waitFor(() =>
       expect(screen.getByTestId("must-change")).toHaveTextContent("true"),
     );
     expect(screen.getByTestId("username")).toHaveTextContent("newemployee");
-    fireEvent.click(screen.getByText("Record action"));
+    await completeAuthProbeAction("Record action");
     await waitFor(() =>
       expect(screen.getByTestId("auth-error")).not.toBeEmptyDOMElement(),
     );
@@ -462,21 +471,21 @@ describe("password gates and employee identity", () => {
         )
       ).state.activity,
     ).toEqual(original.activity);
-    fireEvent.click(screen.getByText("Choose password"));
+    await completeAuthProbeAction("Choose password");
     await waitFor(() =>
       expect(screen.getByTestId("must-change")).toHaveTextContent("false"),
     );
-    fireEvent.click(screen.getByText("Record action"));
+    await completeAuthProbeAction("Record action");
     await waitFor(() =>
       expect(screen.getByTestId("actor")).toHaveTextContent(
         "Demo New Employee",
       ),
     );
-    fireEvent.click(screen.getByText("Lock session"));
+    await completeAuthProbeAction("Lock session");
     await waitFor(() =>
       expect(screen.getByTestId("locked")).toHaveTextContent("true"),
     );
-    fireEvent.click(screen.getByText("Record action"));
+    await completeAuthProbeAction("Record action");
     await waitFor(() =>
       expect(screen.getByTestId("auth-error")).not.toBeEmptyDOMElement(),
     );

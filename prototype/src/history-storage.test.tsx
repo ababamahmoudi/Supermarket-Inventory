@@ -4,7 +4,13 @@ import { authenticatedTestActor } from "./authority-test-fixture";
 import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import { cloneWithAuthority } from "./authority";
 import { saveProductEdits, productEditSnapshot } from "./product-editor";
-import { render, screen, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { initialState, DemoProvider, STORAGE_KEY, useDemo } from "./store";
 import {
   attachReversals,
@@ -18,12 +24,17 @@ import {
   historyStorageChecksum,
 } from "./history-storage";
 import type { DemoState } from "./types";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "./test/rendered-ui-readiness";
 
 const plain = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const context = (state: DemoState): HistoryContext =>
   authenticatedTestActor(state, "manager");
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
 });
 function largeHistory() {
@@ -223,53 +234,65 @@ describe("lossless scoped History persistence", () => {
       initializeBusiness: false,
     });
     fixtures.push(fixture);
+    let attemptCompleted: Promise<void> = Promise.resolve();
     function Probe() {
       const demo = useDemo(),
         [attempted, setAttempted] = useState(false);
       return (
         <>
           <button
-            onClick={async () => {
-              try {
-                await demo.signIn(fixture.actor.username, "demo1234");
-                await demo.command(
-                  "catalog.edit",
-                  {
-                    company_id: fixture.actor.company_id,
-                    kind: "company_shared",
-                    mutation: true,
-                  },
-                  (draft, actor) => {
-                    const product = draft.products[0];
-                    saveProductEdits(
-                      draft,
-                      actor,
-                      product.code,
-                      {
-                        name_en: "In-memory edit",
-                        name_fa: product.name_fa ?? "",
-                        description_en: product.description_en ?? "",
-                        description_fa: product.description_fa ?? "",
-                        unit_size: product.unit_size,
-                        ai_category: product.ai_category ?? "",
-                        pricing_category: product.pricing_category,
-                        barcode: product.barcode ?? "",
-                        main_supplier: product.main_supplier,
-                        date_tracking: product.date_tracking,
-                        scope: "all",
-                      },
-                      productEditSnapshot(draft, actor, product.code),
-                    );
-                  },
-                );
-              } catch {
-                /* Actual corruption startup denies all business commands. */
-              }
-              setAttempted(true);
+            onClick={() => {
+              attemptCompleted = (async () => {
+                try {
+                  await demo.signIn(fixture.actor.username, "demo1234");
+                  await demo.completeSecondStep(
+                    fixture.options.demoUsers.find(
+                      (person) => person.id === fixture.actor.user_id,
+                    )!.setup.second_step_method === "passkey"
+                      ? "simulated-passkey"
+                      : initialState().config.session
+                          .simulated_authenticator_code!,
+                  );
+                  await demo.command(
+                    "catalog.edit",
+                    {
+                      company_id: fixture.actor.company_id,
+                      kind: "company_shared",
+                      mutation: true,
+                    },
+                    (draft, actor) => {
+                      const product = draft.products[0];
+                      saveProductEdits(
+                        draft,
+                        actor,
+                        product.code,
+                        {
+                          name_en: "In-memory edit",
+                          name_fa: product.name_fa ?? "",
+                          description_en: product.description_en ?? "",
+                          description_fa: product.description_fa ?? "",
+                          unit_size: product.unit_size,
+                          ai_category: product.ai_category ?? "",
+                          pricing_category: product.pricing_category,
+                          barcode: product.barcode ?? "",
+                          main_supplier: product.main_supplier,
+                          date_tracking: product.date_tracking,
+                          scope: "all",
+                        },
+                        productEditSnapshot(draft, actor, product.code),
+                      );
+                    },
+                  );
+                } catch {
+                  /* A failed command cannot satisfy the canonical edit assertion below. */
+                }
+                setAttempted(true);
+              })();
             }}
           >
             Attempt edit
           </button>
+          <output data-testid="history-auth-stage">{demo.authStage}</output>
           <output data-testid="history-corrupt">
             {demo.historyLoadError ? "quarantined" : "loading"}
           </output>
@@ -282,11 +305,27 @@ describe("lossless scoped History persistence", () => {
         <Probe />
       </DemoProvider>,
     );
+    // Quarantine publication precedes the real resumed-session projection.
+    // Preserve the complete-stage assertion, awaiting actual bootstrap first.
+    await renderedUiReady(
+      () =>
+        screen.queryByTestId("history-auth-stage")?.textContent === "complete",
+    );
     await screen.findByText("quarantined");
+    await waitFor(() =>
+      expect(screen.getByTestId("history-auth-stage")).toHaveTextContent(
+        "complete",
+      ),
+    );
     expect(localStorage.getItem(STORAGE_KEY)).toBe(raw);
-    fireEvent.click(screen.getByRole("button", { name: "Attempt edit" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Attempt edit" }));
+      await attemptCompleted;
+    });
     await screen.findByText("Attempt completed");
     expect(localStorage.getItem(STORAGE_KEY)).toBe(raw);
-    await expect(fixture.readCanonical()).rejects.toThrow();
+    const separate = await fixture.readCanonical();
+    expect(separate.products[0].name_en).toBe("In-memory edit");
+    expect(separate.prototype_e1_history_recovery?.phase).toBe("quarantined");
   });
 });

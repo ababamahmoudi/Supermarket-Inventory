@@ -47,6 +47,7 @@ import {
 import { shouldShowUndoNotification } from "./undo-notification-policy";
 import { configSeed } from "./config";
 import { HistoryStorageError } from "./history-storage";
+import { FileStorageError } from "./file-database";
 import { AuthorityStorageError } from "./authority-repository";
 import { configuredLocations } from "./authority";
 
@@ -59,7 +60,11 @@ export {
 } from "./e1-bootstrap";
 export type ProviderOptions = Omit<
   ShellRuntimeOptions<DemoState, ScopedReadView>,
-  "publish" | "publishPreferences" | "publishError" | "onCommitted"
+  | "publish"
+  | "publishPreferences"
+  | "publishError"
+  | "publishRecoveryStatus"
+  | "onCommitted"
 >;
 type Runtime = Awaited<
   ReturnType<typeof createE1ShellRuntime<DemoState, ScopedReadView>>
@@ -141,6 +146,8 @@ export function DemoProvider({
   );
   const [storageError, setStorageError] = useState(false);
   const [historyLoadError, setHistoryLoadError] = useState(false);
+  const [historyQuarantineActive, setHistoryQuarantineActive] = useState(false);
+  const [historyResetPending, setHistoryResetPending] = useState(false);
   const [currentComputerId, setCurrentComputerId] = useState<string | null>(
     null,
   );
@@ -161,6 +168,7 @@ export function DemoProvider({
     if (
       error instanceof AuthorityStorageError ||
       error instanceof HistoryStorageError ||
+      error instanceof FileStorageError ||
       error instanceof PreferenceStorageError ||
       (error instanceof Error && error.message === "storage") ||
       error instanceof DOMException
@@ -203,6 +211,13 @@ export function DemoProvider({
           } catch {
             setStorageError(true);
           }
+        }
+      },
+      publishRecoveryStatus: (status) => {
+        if (active) {
+          setHistoryLoadError(status.active);
+          setHistoryQuarantineActive(status.active);
+          setHistoryResetPending(status.retirementPending);
         }
       },
       publishPreferences: (next) => {
@@ -484,6 +499,7 @@ export function DemoProvider({
     ): Promise<string | null> => {
       try {
         await operation(requireRuntime());
+        await requireRuntime().retryHistoryRetirement();
         return null;
       } catch (error) {
         reportStorageFailure(error);
@@ -616,13 +632,24 @@ export function DemoProvider({
       switchDemoUser: (username) =>
         authAction((runtime) => runtime.controller.switchDemoUser(username)),
       signOut: async () => {
-        await authAction((runtime) => runtime.controller.signOut());
+        await authAction(async (runtime) => {
+          await runtime.controller.signOut();
+          // Retire the prior route after genuine sign-out, independently of
+          // the later damaged-History retirement retry inside authAction.
+          window.location.hash = "";
+        });
       },
       lock: async () => {
         await authAction((runtime) => runtime.controller.lock());
       },
       reset: async () => {
-        await requireRuntime().resetDemo();
+        try {
+          const result = await requireRuntime().resetDemo();
+          if (result.clean) setStorageError(false);
+        } catch (error) {
+          reportStorageFailure(error);
+          throw error;
+        }
         setCurrentComputerId(requireRuntime().currentComputerId());
         setUndoToasts([]);
         setResetGeneration((current) => current + 1);
@@ -714,18 +741,27 @@ export function DemoProvider({
     currentComputerId,
     requireRuntime,
     changePreference,
+    reportStorageFailure,
   ]);
   return (
     <DemoContext.Provider value={value}>
-      {storageError && (
+      {(storageError || historyLoadError) && (
         <div className="banner danger" role="status">
           {t(
-            historyLoadError
-              ? "Saved history could not be read. Your original data is retained. Allow browser storage, then reload."
-              : "Browser storage could not be read or updated. Your original data is retained. Allow browser storage, then reload.",
-            historyLoadError
-              ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید."
-              : "فضای ذخیره‌سازی مرورگر قابل خواندن یا به‌روزرسانی نیست. داده‌های اصلی شما حفظ شده‌اند. ذخیره‌سازی مرورگر را مجاز کنید، سپس صفحه را دوباره بارگذاری کنید.",
+            historyResetPending
+              ? "Demo reset is complete. Your original history is backed up, but its old browser copy could not be retired. Allow browser storage, then reload."
+              : historyQuarantineActive
+                ? "Saved history could not be read. Your original data is retained. You are using a separate fictional demo. Allow browser storage, then reload, or choose Reset demo."
+                : historyLoadError
+                  ? "Saved history could not be read. Your original data is retained. Allow browser storage, then reload."
+                  : "Browser storage could not be read or updated. Your original data is retained. Allow browser storage, then reload.",
+            historyResetPending
+              ? "بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید."
+              : historyQuarantineActive
+                ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. اکنون از یک دموی ساختگی جداگانه استفاده می‌کنید. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید، یا بازنشانی دمو را انتخاب کنید."
+                : historyLoadError
+                  ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید."
+                  : "فضای ذخیره‌سازی مرورگر قابل خواندن یا به‌روزرسانی نیست. داده‌های اصلی شما حفظ شده‌اند. ذخیره‌سازی مرورگر را مجاز کنید، سپس صفحه را دوباره بارگذاری کنید.",
           )}
         </div>
       )}

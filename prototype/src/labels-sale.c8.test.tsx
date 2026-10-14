@@ -1,5 +1,6 @@
 import {
   configure,
+  act,
   getConfig,
   cleanup,
   fireEvent,
@@ -78,14 +79,20 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+let testControlCommandCompleted: Promise<unknown> = Promise.resolve();
+let testControlFailure: { error: unknown } | null = null;
 function TestControls() {
   const { state, actor, command } = useDemo();
   return (
     <>
       {actor && (
         <button
-          onClick={() =>
-            command(
+          onClick={() => {
+            testControlFailure = null;
+            // React does not await an event handler's returned promise. Track
+            // the real SDK command through reconcile/refresh and capture a
+            // rejection immediately; the awaiting test rethrows any failure.
+            testControlCommandCompleted = command(
               "labels.queue_write",
               {
                 company_id: state.config.company.seed_key,
@@ -101,8 +108,13 @@ function TestControls() {
                   "Branch 1",
                   currentActor,
                 ),
-            )
-          }
+            ).then(
+              () => undefined,
+              (error) => {
+                testControlFailure = { error };
+              },
+            );
+          }}
         >
           Add regular copies for label test
         </button>
@@ -113,6 +125,18 @@ function TestControls() {
     </>
   );
 }
+async function completeLabelTestControl(
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  await user.click(
+    screen.getByRole("button", { name: "Add regular copies for label test" }),
+  );
+  await act(async () => {
+    await testControlCommandCompleted;
+  });
+  if (testControlFailure) throw testControlFailure.error;
+}
+
 function ReadyLabelScreen() {
   const { actor } = useDemo();
   return actor ? (
@@ -262,9 +286,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
   it("separates mixed copies, auto-selects each style and retains explicit template/slot choices in its own group", async () => {
     const user = userEvent.setup();
     const { container } = await showLabels();
-    await user.click(
-      screen.getByRole("button", { name: "Add regular copies for label test" }),
-    );
+    await completeLabelTestControl(user);
     await waitFor(() =>
       expect(
         JSON.parse(screen.getByTestId("waiting-evidence").textContent!),
@@ -331,9 +353,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
     const user = userEvent.setup();
     const print = vi.spyOn(window, "print").mockImplementation(() => {});
     const { container } = await showLabels();
-    await user.click(
-      screen.getByRole("button", { name: "Add regular copies for label test" }),
-    );
+    await completeLabelTestControl(user);
     await waitFor(() =>
       expect(
         JSON.parse(screen.getByTestId("waiting-evidence").textContent!),

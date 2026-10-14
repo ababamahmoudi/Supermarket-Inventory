@@ -18,6 +18,11 @@ import { evaluateSales } from "./sales";
 import { syncReturnCreditAlerts } from "./return-workflow";
 import { syncDateReminderAlerts } from "./date-tracking";
 import type { DemoState } from "./types";
+import {
+  historyRecoveryStatus,
+  prepareHistoryRecoveryReset,
+  finishHistoryRecoveryReset,
+} from "./history-recovery.e1";
 import type {
   SystemAttribution,
   SystemReconciliationSource,
@@ -29,6 +34,13 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
   return {
     companyId: configSeed.company.seed_key,
     loadInitialBusiness,
+    historyRecovery: {
+      status: historyRecoveryStatus,
+      prepareReset: prepareHistoryRecoveryReset,
+      finishReset: (
+        controller: Parameters<typeof finishHistoryRecoveryReset>[0],
+      ) => finishHistoryRecoveryReset(controller, configSeed.company.seed_key),
+    },
     migrateInitialAttribution: migrateE1BusinessAttribution,
     freshDemoBusiness: async () => migrateE1BusinessState(initialState()),
     demoUsers: configuredDemoPeople(),

@@ -1,6 +1,7 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import Decimal from "decimal.js";
 import { chooseOption, setBranch, signIn } from "./helpers";
 import { inspect, type C5Inspection } from "../scripts/c5-browser-proof.mjs";
@@ -9,7 +10,7 @@ test.setTimeout(180000);
 test.use({ actionTimeout: 10000 });
 const reports = new WeakMap<Page, C5Inspection[]>();
 
-async function measure(page: Page, screen: string, role = "supervisor") {
+async function measure(page: Page, screen: string, role = "manager") {
   const observation = await inspect(
     page,
     screen,
@@ -57,7 +58,7 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
   await page.getByRole("button", { name: "Send", exact: true }).click();
   const reference = await page.locator(".request-detail h2").innerText();
   await measure(page, "Requested branch request", "floor_worker");
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await setBranch(page, "Warehouse");
   await page.goto("/#requests");
   await page.getByRole("tab", { name: "Incoming", exact: true }).click();
@@ -109,16 +110,21 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
 });
 
 test("C5 conditional reauthentication dialog", async ({ page }) => {
-  await signIn(page, "Supervisor");
+  await page.clock.install({ time: new Date() });
+  await signIn(page, "Manager");
   await page.goto("/#settings");
-  // Reproduce the existing real-session expiry recipe without altering demo data.
-  await page.evaluate(() => {
-    const key = "supermarket-prototype-session-v2";
-    const session = JSON.parse(sessionStorage.getItem(key)!);
-    session.authenticatedAt = Date.now() - 16 * 60 * 1000;
-    session.lastActivityAt = Date.now();
-    sessionStorage.setItem(key, JSON.stringify(session));
-  });
+  // Advance the real browser source clock beyond the configured freshness
+  // window, keeping activity inside the idle-lock window. No identity, role,
+  // session timestamp or authority record is manufactured or overwritten.
+  for (
+    let minute = 0;
+    minute <= configuration.session.reprompt_password_after_minutes;
+    minute++
+  ) {
+    await page.mouse.move(48 + minute, 8);
+    await page.clock.fastForward(60_000);
+  }
+  await page.mouse.move(80, 8);
   await page.reload();
   const dialog = page.getByRole("dialog", {
     name: "Confirm your password",
@@ -186,7 +192,7 @@ test("C5 conditional label selection, template restore, and print confirmation",
 test("C5 conditional note editing and seen/done/open actions", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await page.goto("/#notes");
   await page.getByRole("tab", { name: /^Deli temperatures(?: \d+)?$/ }).click();
   await page.getByRole("button", { name: "Add note", exact: true }).click();
@@ -252,7 +258,7 @@ test("C5 conditional note editing and seen/done/open actions", async ({
 test("C5 conditional saved order and print/cancel dialogs", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await setBranch(page, "Branch 1");
   await page.goto("/#orders");
   await page.getByRole("button", { name: "New order", exact: true }).click();
@@ -283,7 +289,7 @@ test("C5 conditional saved order and print/cancel dialogs", async ({
 test("C5 conditional correction preview, confirmation, versions, history menu and Revert", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await setBranch(page, "all");
   await page.goto("/#invoices?id=a2-fixture%3AFV-20390");
   await page
@@ -359,6 +365,16 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
         },
       };
     },
+  );
+  // Aggregate Lookup requires an explicitly selected Store before catalog editing.
+  await setBranch(page, "Branch 1");
+  await expect(
+    page.locator(".topbar").getByRole("combobox", {
+      name: "Location",
+      exact: true,
+    }),
+  ).toContainText(
+    configuration.branches.find((location) => location.id === "Branch 1")!.name,
   );
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0006");
@@ -463,7 +479,7 @@ test("C5 conditional supplier-held return cancellation review actions", async ({
     "Return cancellation awaiting Supervisor",
     "floor_worker",
   );
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await page.goto("/#return?id=demo-return-2");
   await measure(page, "Supervisor cancellation approve/decline review");
 });

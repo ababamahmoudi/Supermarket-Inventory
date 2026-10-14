@@ -1,3 +1,4 @@
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
@@ -192,46 +193,48 @@ for (const language of ["en", "fa"] as const) {
       window.print = () => {};
     });
     await signIn(page, "Supervisor");
-    await page.evaluate(() => {
-      const state = JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      );
-      const product = state.products.find(
-        (item: { code: string }) => item.code === "0003",
-      );
-      const now = new Date().toISOString();
-      state.branch_requests = [
-        {
-          id: "request-print-proof",
-          reference: "REQ-PRINT",
-          company_id: state.config.company.seed_key,
-          branch: "Branch 1",
-          from_branch: "Branch 1",
-          to_branch: "Warehouse",
-          status: "requested",
-          revision: 2,
-          created_at: now,
-          created_by: "Demo Floor Worker",
-          updated_at: now,
-          requested_at: now,
-          requested_by: "Demo Floor Worker",
-          items: Array.from({ length: 70 }, (_, index) => ({
-            id: `print-line-${index}`,
-            kind: "catalog",
-            product_code: product.code,
-            name_en: product.name_en,
-            name_fa: product.name_fa,
-            unit_size: product.unit_size,
-            quantity: "2",
-            quantity_unit: "cases",
-            units_per_case: 12,
-            normalized_units: 24,
-            note: `Picking line ${index + 1}`,
-          })),
-        },
-      ];
-      localStorage.setItem("supermarket-prototype-v1", JSON.stringify(state));
-    });
+    await runCanonicalBusinessFixture(
+      page,
+      (state) => {
+        const product = state.products.find(
+          (item: { code: string }) => item.code === "0003",
+        );
+        if (!product)
+          throw new Error("The picking fixture requires product 0003.");
+        const now = new Date().toISOString();
+        state.branch_requests = [
+          {
+            id: "request-print-proof",
+            reference: "REQ-PRINT",
+            company_id: state.config.company.seed_key,
+            branch: "Branch 1",
+            from_branch: "Branch 1",
+            to_branch: "Warehouse",
+            status: "requested",
+            revision: 2,
+            created_at: now,
+            created_by: "Demo Floor Worker",
+            updated_at: now,
+            requested_at: now,
+            requested_by: "Demo Floor Worker",
+            items: Array.from({ length: 70 }, (_, index) => ({
+              id: `print-line-${index}`,
+              kind: "catalog",
+              product_code: product.code,
+              name_en: product.name_en,
+              name_fa: product.name_fa,
+              unit_size: product.unit_size,
+              quantity: "2",
+              quantity_unit: "cases",
+              units_per_case: 12,
+              normalized_units: 24,
+              note: `Picking line ${index + 1}`,
+            })),
+          },
+        ];
+      },
+      undefined,
+    );
     await page.reload();
     await setBranch(page, "all");
     await page.goto("/#requests");

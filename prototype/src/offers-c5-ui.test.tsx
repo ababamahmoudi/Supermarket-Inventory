@@ -59,6 +59,11 @@ it("retranslates retained offer feedback after switching language without changi
       <Harness />
     </DemoProvider>,
   );
+  // The real Provider resumes its private persisted session asynchronously.
+  // The source capability affordance marks completion; permissions stay real.
+  await renderedUiReady(
+    () => screen.queryByRole("button", { name: "Create offer" }) !== null,
+  );
   await screen.findByRole("button", { name: "Create offer" });
   const offerRow = document.querySelector('tr[data-product-code="0003"]')!;
   fireEvent.click(

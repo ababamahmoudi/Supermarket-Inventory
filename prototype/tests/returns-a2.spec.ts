@@ -1,6 +1,13 @@
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { chooseOption, setLanguage, signIn, visitPage } from "./helpers";
+import {
+  chooseOption,
+  setBranch,
+  setLanguage,
+  signIn,
+  visitPage,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -318,33 +325,37 @@ test("Overview and direct return links enforce company and worker branch scope",
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.evaluate(() => {
-    const key = "supermarket-prototype-v1";
-    const state = JSON.parse(localStorage.getItem(key)!);
-    const original = state.returns.find(
-      (record: { id: string }) => record.id === "demo-return-1",
-    );
-    state.returns.push({
-      ...original,
-      id: "scope-other-company",
-      company_id: "another-company",
-      supplier: "Another Company Private Supplier",
-    });
-    state.returns.push({
-      ...original,
-      id: "scope-other-branch",
-      branch: "Branch 2",
-      supplier: "Branch Two Private Return",
-    });
-    state.returns.push({
-      ...original,
-      id: "scope-cancelled",
-      status: "cancelled",
-      supplier: "Cancelled Return Supplier",
-    });
-    localStorage.setItem(key, JSON.stringify(state));
-  });
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const original = state.returns.find(
+        (record: { id: string }) => record.id === "demo-return-1",
+      );
+      if (!original)
+        throw new Error("The scope fixture requires demo-return-1.");
+      state.returns.push({
+        ...original,
+        id: "scope-other-company",
+        company_id: "another-company",
+        supplier: "Another Company Private Supplier",
+      });
+      state.returns.push({
+        ...original,
+        id: "scope-other-branch",
+        branch: "Branch 2",
+        supplier: "Branch Two Private Return",
+      });
+      state.returns.push({
+        ...original,
+        id: "scope-cancelled",
+        status: "cancelled",
+        supplier: "Cancelled Return Supplier",
+      });
+    },
+    undefined,
+  );
   await page.reload();
+  await setBranch(page, "all");
   await page.goto("/#returns");
   await expect(page.locator(".returns-overview-table")).toContainText(
     "Branch Two Private Return",

@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
@@ -252,7 +253,9 @@ test("Notes has a focused validating dialog; Save is quiet and Mark done can be 
   const entry = page
     .locator(".notebook-entry-card")
     .filter({ hasText: "Check tomorrow's delivery time" });
-  await expect(entry).toContainText("Demo Supervisor");
+  await expect(entry).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(page.locator(".undo-toast")).toHaveCount(0);
   await entry.getByRole("button", { name: "Mark done", exact: true }).click();
   await expect

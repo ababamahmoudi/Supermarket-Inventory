@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
 import { companyDate } from "./invoice";
-import { dashboardArrivals, dashboardPurchases } from "./dashboard-data";
+import {
+  dashboardArrivals,
+  dashboardPurchases,
+  dashboardSummary,
+} from "./dashboard-data";
+import { stopOffer } from "./approvals";
 import { invoiceLocationMovePreview, movePostedInvoice } from "./received";
 import { authenticatedTestActor } from "./authority-test-fixture";
 import { actorAtLocation, cloneWithAuthority } from "./authority";
@@ -24,6 +29,46 @@ function context(state: ReturnType<typeof initialState>, branch = "all") {
 }
 
 describe("C1 dashboard uses receiving evidence rather than inventory estimates", () => {
+  it("filters real offer activity by the selected location while retaining company-wide actions", () => {
+    const state = initialState();
+    const manager = context(state);
+    const globalOffer = state.offers.find(
+      (offer) => offer.status === "active" && offer.scope === "all",
+    );
+    expect(globalOffer).toBeDefined();
+    if (!globalOffer) throw new Error("Active configured offer is missing");
+    const localOffer = {
+      ...structuredClone(globalOffer),
+      id: "dashboard-location-offer",
+      branch: "Branch 2",
+      scope: "branch" as const,
+    };
+    state.offers.push(localOffer);
+    stopOffer(state, manager, localOffer.id);
+    stopOffer(state, manager, globalOffer.id);
+    const localActivity = state.activity.find(
+      (entry) => entry.action === "Stop offer" && entry.branch === "Branch 2",
+    );
+    const globalActivity = state.activity.find(
+      (entry) => entry.action === "Stop offer" && entry.branch === "all",
+    );
+    expect(localActivity).toBeDefined();
+    expect(globalActivity).toBeDefined();
+    const northYork = dashboardSummary(state, context(state, "Branch 1"));
+    const richmondHill = dashboardSummary(state, context(state, "Branch 2"));
+    const all = dashboardSummary(state, manager);
+    expect(northYork.activity.map((entry) => entry.id)).not.toContain(
+      localActivity!.id,
+    );
+    expect(northYork.activity.map((entry) => entry.id)).toContain(
+      globalActivity!.id,
+    );
+    expect(richmondHill.activity.map((entry) => entry.id)).toContain(
+      localActivity!.id,
+    );
+    expect(all.activity.map((entry) => entry.id)).toContain(localActivity!.id);
+  });
+
   it("keeps arrivals unchanged when obsolete estimated stock changes", () => {
     const state = initialState();
     const invoice = structuredClone(state.invoices![0]);

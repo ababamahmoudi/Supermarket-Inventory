@@ -146,12 +146,12 @@ test("new branch configuration works in the live branch switcher and retains his
   await expect(dialog).not.toBeVisible();
   await chooseOption(
     page,
-    page.locator(".topbar").getByLabel("Branch", { exact: true }),
+    page.locator(".topbar").getByLabel("Location", { exact: true }),
     "Branch 4",
     "North Market",
   );
   await expect(
-    page.locator(".topbar").getByLabel("Branch", { exact: true }),
+    page.locator(".topbar").getByLabel("Location", { exact: true }),
   ).toContainText("North Market");
   await page.reload();
   const row = page.getByRole("row").filter({
@@ -176,7 +176,7 @@ test("new branch configuration works in the live branch switcher and retains his
       ),
     ).toContainText("Inactive");
   }
-  await page.locator(".topbar").getByLabel("Branch", { exact: true }).click();
+  await page.locator(".topbar").getByLabel("Location", { exact: true }).click();
   await expect(
     page.getByRole("option", { name: "North Market", exact: true }),
   ).toHaveCount(0);

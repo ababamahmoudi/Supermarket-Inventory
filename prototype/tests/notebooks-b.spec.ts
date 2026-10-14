@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -90,7 +91,9 @@ test("Supervisor configures a custom notebook and entries persist with author, b
   const entry = page
     .locator(".notebook-entry-card")
     .filter({ hasText: "Deli counter cleaned" });
-  await expect(entry).toContainText("Demo Supervisor");
+  await expect(entry).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(entry).toContainText("North York");
   await expect(entry).toContainText("3.5 °C");
   await page.reload();
@@ -172,7 +175,7 @@ test("archive retains authorized search results, restore keeps entries, and work
     page
       .locator(".notebook-entry-card")
       .filter({ hasText: "Floor Worker cleaning check" }),
-  ).toContainText("Demo Floor Worker");
+  ).toContainText(configuredPersonExpectation("ny-floor").name_en);
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await expect(page.getByRole("tab", { name: /^Cleaning log/ })).toHaveCount(0);

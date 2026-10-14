@@ -12,6 +12,10 @@ import { authenticatedProviderFixture } from "../authority-provider-test-fixture
 import { authenticatedTestActor } from "../authority-test-fixture";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import i18n from "../i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 import { saveDateReminderSettings } from "../date-reminder-settings";
 import { productReminderDays } from "../date-tracking";
 import { ReturnsSettings } from "./ReturnsSettings";
@@ -23,6 +27,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
 });
 afterEach(() => {
+  clearRenderedUiReadiness();
   cleanup();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
@@ -40,6 +45,11 @@ describe("C6 configurable reminders and supplier document controls", () => {
           <ReturnsSettings />
         </SettingsConfigurationGate>
       </DemoProvider>,
+    );
+    // Await the real authenticated Settings gate and its protected form,
+    // retaining all validation, canonical-price and money assertions below.
+    await renderedUiReady(
+      () => screen.queryByLabelText("Default date reminder (days)") !== null,
     );
     await screen.findByLabelText("Default date reminder (days)");
     const original = await fixture.readCanonical();

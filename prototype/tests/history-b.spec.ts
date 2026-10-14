@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
@@ -185,8 +186,8 @@ test("quiet product Save retains append-only History and can be explicitly rever
   );
   expect(saved.at(-1)).toMatchObject({
     action: "Reverted Save product",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversal_kind: "revert",
   });
   expect(
@@ -237,8 +238,8 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   );
   expect(saved.at(-1)).toMatchObject({
     action: "Undone",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversal_kind: "undo",
   });
   expect(
@@ -261,7 +262,9 @@ test("History Revert previews the actor, branch, values and requires confirmatio
     name: "Revert change",
     exact: true,
   });
-  await expect(dialog).toContainText("Demo Supervisor");
+  await expect(dialog).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(dialog).toContainText("All branches");
   await expect(dialog).toContainText("Lavash Bread 500 g approved edit");
   await expect(dialog).toContainText("Lavash Bread 500 g");

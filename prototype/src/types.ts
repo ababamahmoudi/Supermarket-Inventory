@@ -599,6 +599,14 @@ export interface SupplierRecord {
   created_at: string;
   created_by: string;
 }
+/** Private canonical quarantine metadata; never an authenticated/public DTO. */
+export interface HistoryRecoveryMarker {
+  version: 1;
+  source_key: string;
+  source_sha256: string;
+  backup_reference: string;
+  phase: "quarantined" | "reset_committed";
+}
 export interface DemoState {
   version: 1;
   /** The supplied balance figures are a dated demo snapshot, not ledger entries. */
@@ -613,6 +621,7 @@ export interface DemoState {
   prototype_c6_schema?: 1;
   prototype_c8_schema?: 1;
   prototype_e1_schema?: 1;
+  prototype_e1_history_recovery?: HistoryRecoveryMarker;
   sales?: SaleSchedule[];
   sale_requests?: SaleRequest[];
   sale_events?: SaleLifecycleEvent[];

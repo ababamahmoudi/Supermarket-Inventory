@@ -1,78 +1,34 @@
-# C8 → E1 → E2 → E3 implementation status
+# C8 → E1 → E2 → E3 current implementation checkpoint
 
-This is an implementation handoff, not the final review report. The owner's
-complete request is in `owner-requests/C8-E1-E2-E3-2026-10-12.md`. Continue all
-four stacked pull requests without an intermediate owner approval pause.
-Change only `prototype/`, `docs/`, and `seed/`. Do not merge the new pull
-requests or create hosting accounts/resources.
+This is the authoritative current handoff. [Historical checkpoints](evidence/e1/handoff-history.md) are archived separately and contain superseded statuses. The complete owner request is [C8/E1/E2/E3](owner-requests/C8-E1-E2-E3-2026-10-12.md). Finish **all four stacked PRs** without an intermediate owner approval pause; change only `prototype/`, `docs/`, `seed/`. Do not merge the new stages or create hosting accounts/resources/deployments.
 
-## Completed C8
+## Current source and completed work
 
-- C6 and C7 were merged in the approved order after their checks passed.
-- C8 is ready for review as [PR #21](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21),
-  branch `feat/prototype-c8-sales-fixes`, head
-  `0c80d38e8e6920c57a5a390cb1418c93aed5b179`.
-- Exact-head GitHub CI run `38447627723` passed both jobs. See
-  `PR_C8_REVIEW.md` and the committed C8 evidence and screenshots.
-- Main remains `3b6da31d84afa6bb8b454320bb26b4cc6b5454d2`.
+Current branch: `feat/prototype-e1-location-roles`. HEAD `0e3c3312ae26b4bc69370e0767749a0690c4d940` is docs context, not the tested dirty source identity. Actual implementation and proof use exact path hashes. C8 is [PR #21](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21), branch `feat/prototype-c8-sales-fixes`; its original CI/screens remain separate evidence. E1 has not yet been published as a PR.
 
-## Current E1 work
+E1 implements genuine IndexedDB authority/business transactions, configured roles/locations, People/setup/password/second-step flows, protected files and scoped dashboards. Explicit sign-out retires the old route; Cashier plain unsupported top-level routes return to Lookup without weakening foreign/detail denial. Damaged History recovery is **implemented**: own-company gate before verified exact-raw backup/quarantine, real sign-in, unchanged malformed source through normal edits, and guarded Reset/committed-retirement retry. All **14** genuine recovery cases are covered in the completed full app run. Healthy canonical state takes precedence over stale legacy source; no credential reset occurs except explicit authorized Reset.
 
-The checkout is on `feat/prototype-e1-location-roles`. Its docs-first commit is
-`d7cdde3e9509997e5d52e073f72b6dba25e9c982`; the implementation remains in the
-working tree and is not yet an E1 pull request. Do not confuse that docs commit
-with the tested implementation's source identity.
+## Actual evidence and remaining limits
 
-Implemented: genuine IndexedDB authority and business transactions; configured
-roles and location permissions; People/invitation/password/second-step flows;
-registered computers; scoped dashboards and queries; protected files; migration
-and reset; preserved invoice, pricing, returns, notes, and label workflows.
-Read-only authority service queries no longer republish the app snapshot, and
-they recheck persisted authority after an asynchronous result. Invitation codes
-survive the creator's directory refresh while identity changes still hide
-private state.
-
-Actual validation as of this handoff:
-
-- Full app v2 passed **1,275/1,275**, zero failures/skips, actual exit0 and all546 source files unchanged: `/tmp/e1-root-full-app-v2/`, fingerprint `bba505d64531aad3c5a08af8ae14a813cf3265b515b38507f5f2223d295fc58e`. Previous v1 1,264/1,271 with seven failures remains preserved; all seven were fixed with actual production/fixture/readiness changes.
-- Final required `npm run lint` and `npm run build` both exit0 on unchanged545 inputs: `/tmp/e1-root-required-static-build-v6/`; production55 asset hashes retained.
-- Native authority24/24 passed on the same current full-app fingerprint: `/tmp/e1-current-browser-proof-v1/`; final SDK75 also passed75/75 at `/tmp/e1-root-sdk-final-v1/` on unchanged545 inputs.
-- Controller protected-read4/4 and Return photo13/13 passed. Notes6/6, Undo7/7, financial9/9, invoice UI/orders31/31 and corrected original-document7/7 earlier genuine focused runs remain separate evidence, not summed.
-- Native shell14 v4 passed14/14, zero skips/flaky/retries and actual build/test0; source547frozen/live and55asset hashes unchanged, ownedserver alive through final checks. Previous v3 12pass2fail phone readiness result is preserved.
-- Read-only canonical IndexedDB ports37files/126reads+1readinesswait are now Rootapplied with all1658originalmatcher calls/expected arguments retained. Mutation/migration ports and first full runtime remain pending.
-- Retained browser742 discovery is exact. Many original tests still inspect retired live localStorage; a test-only genuine canonical IndexedDB evidence-reader port is being staged. Explicit preload/migration/quota mutations require individual treatment. No production compatibility mirror or authority bypass is allowed.
-
-Do not add overlapping targeted counts into one total. Record each run's actual
-exit, source fingerprint, failures, skips, and unhandled errors. Root is the
-sole working-tree applier; source-only agent manifests under `/tmp` must match
-both current baselines and staged hashes before application. Keep at most four
-heavy test/compiler/browser workers, with one serial worker per agent.
+- [Full app/pricing v5](evidence/e1/app-full-v5.json): **1,294/1,294 passed**, actual **exit 0**, zero failures/pending/todo; unchanged **553** inputs, fingerprint `2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539`. [Current comparison](evidence/e1/app-v5-current-source-match.json) records the seven unsupported ByRole-option removals and three retained fixture files. The only production difference is an optional TypeScript generic comma; verified emitted JavaScript is identical. This is not a new unit run after test-only edits.
+- [Required standard checks](evidence/e1/final-standard-checks.json): final required **lint exit 0** on recorded v2 inputs; actual SDK **75/75** and full **build exit 0** on separately recorded v1 inputs. Prior formatting-only lint failure is preserved. Do not imply a same-input combined rerun or sum counts.
+- [Repaired native v11](evidence/e1/native-repaired-v11.json): **4/4**, TSC/Vite/browser exits **0**, zero skips/flaky/retries/unhandled; exact **553** inputs and **55** built/HTTP assets unchanged.
+- [Bounded diagnostic v13](evidence/e1/native-diagnostic-v13-summary.json): **8 passed, 2 failed**, actual browser **exit 1**, TSC/Vite **exit 0**, zero skips/flaky/retries/unhandled; exact **553** inputs and **55** built/HTTP assets unchanged. All eight original C5 cases passed and remain unchanged. Only two foreign-reading cases failed unavailable Demo-action selection; current same-path fixture asserts absence and attempts the actual public event with genuine authority. [Final genuine foreign-event v14](evidence/e1/native-foreign-event-v14.json) passed separately **2/2**, TSC/Vite/browser exits **0**, zero skips/flaky/retries/unhandled; unchanged **553** inputs / `c0f0377b65dcce57e202f8adebc5509bfccbe4fc1507d77f84a5354064b38abd` and **55** built/HTTP assets. Do not sum bounded checks into a whole-suite claim.
+- [Complete retained v12 attempt](evidence/e1/retained-full-v12-classification.json): discovered **742**, interrupted **exit 130**; **95 passed, 4 failed, 1 interrupted, 642 NOT_RUN, zero actual conditional skips**, no retries/flaky/unhandled. Raw reporter skipped643 combines interrupted/NOT_RUN; it is not an intentional-skip count. Corrected complete retained-browser/CI proof remains pending.
+- Original **20** E1 screenshots, individual review, normal final source commit, stacked draft E1 PR and exact-head CI are **pending**. Earlier authority24 and shell14 runs remain separate original-source proofs. No physical-phone installation or external hosting result is claimed.
 
 ## Next concrete actions
 
-1. Finish runtime/migration test ports and genuine damaged-History quarantine/recovery. Fullbrowser diagnosticexit130 retained12passes7failures1interrupted722notrun (not intentional skips). No productionstorage mirror or authority bypass.
-2. Full app and required lint/build passed. Finish final SDK75 and retained browser regressions on the final source.
-   Frozen test copies must include the real `docs/return-policy.md` raw import.
-3. Commit normally, push the E1 branch, and open a stacked pull request based
-   on C8. Verify exact-head CI and the full retained browser suite.
-4. Capture and individually review the five E1 scenes in English light,
-   English dark, Persian, and phone width. The location picker must show the
-   actual Richmond Hill/Newmarket Branch Supervisor's restricted options.
-5. Continue E2, then E3; do not stop for owner review after E1.
+1. Final diagnosed families have their genuine bounded passes; preserve v13/v12 failures and budgets/oracles. Commit E1 source normally with required hooks; freeze the exact commit and production build; capture/review all five E1 scenes × English light/dark, Persian and phone (**20 originals**). The Branch Supervisor picker must show only real assigned Richmond Hill/Newmarket options.
+2. Publish the E1 branch and open a **draft stacked PR based on C8**; verify exact-head CI and required complete **742-case** browser result with Root-authorized two-worker execution. Do not mark the interrupted diagnostic or focused native cases as the whole-suite pass.
+3. Continue **E2**, then **E3** without an owner approval pause. Finish all four actual PR links/branch names, final Ubuntu commands for E3, click-by-click scripts, truthful tests/screenshots and explicit limits.
 
-## E2 and E3 preparation
+## Prepared E2 and E3
 
-E2's price-task core, source adapters, notifications, and UI are prepared under
-`/tmp/e2-*`. Some isolated core checks passed, but the actual source hooks,
-clock, migration, notification sink, frozen labels, and runtime ports are not
-yet integrated in the repository. Regenerate docs-first changes against final
-E1 docs before branching to `feat/prototype-e2-price-updates`.
+E2 consolidated private assembly: `/tmp/e2-private-integration-staging/verified-assembly-manifest.json`, SHA `a1561f688e41a05440b100c1302b788ccfa2221e1c707d843d10cf7d54ebfc76`, **186/186** isolated cases and compiler/lint/format0, immutable608 pins. This is prepared source, not integrated Root E2. Rebase its App seam onto current Cashier fallback, preserve Recovery/sign-out/label producer, regenerate docs-first decision034 against final E1, then integrate the consolidated assembly rather than duplicate old overlays. Native14 and original24 captures are still unrun preparation.
 
-E3 compact lists, PWA, and an officially researched private-hosting guide are
-prepared under `/tmp/e3-*`. They are not an implemented product. Apply E3 docs
-first on top of final E2. No hosting account/resource or physical phone
-installation has been performed; never substitute emulation for that claim.
+E3 phone/PWA/private-hosting composition is staged under `/tmp/e3-*` on verified E2; it is not current Root implementation or real-device evidence. Apply docs-first decision035 against final E2, validate phone/PWA/composition and review the hosting guide. Create no account/resource and report physical Home Screen/HTTPS/camera proof separately from viewport emulation. Every browser/phone retains separate demo data until a real server exists.
 
-Final delivery must include all four pull requests and branch names, final
-Ubuntu commands, click-by-click scripts, actual test results, screenshots, and
-explicit remaining limitations. No owner action is needed during development.
+## Execution ownership
+
+Root is sole actual-repository applier/committer. Agent stages under `/tmp` require exact baseline and staged hashes. At most four heavy workers; each agent gets one serial worker only when Root grants it. Current final native owner is `e1_ci_browser`; capture preparation belongs to `e1_shell_finish`; E2 final assembly belongs to `e2_ui_finish`; E3 composition belongs to `e2_sources_finish`; hosting guide belongs to `e3_hosting_finish`. These assignments are coordination, not test evidence. No owner testing or action is needed while development is incomplete.

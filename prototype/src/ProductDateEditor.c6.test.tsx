@@ -12,6 +12,10 @@ import { DemoProvider, initialState, useDemo } from "./store";
 import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import { ProductEditor } from "./screens/Catalog";
 import i18n from "./i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "./test/rendered-ui-readiness";
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -20,6 +24,7 @@ beforeEach(async () => {
 });
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   cleanup();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
@@ -153,6 +158,11 @@ it("Save product atomically retains blank optional Persian and the locally added
   await draftDate(user);
   expect(screen.getByTestId("saved-dates")).not.toHaveTextContent("C6-LOT");
   await saveReadyProduct(user);
+  // The click starts actual validation/read/write transactions. Wait for its
+  // source onClose to remove the native editor before the original assertions.
+  await renderedUiReady(
+    () => screen.queryByRole("dialog", { name: "Edit product" }) === null,
+  );
   await waitFor(
     () => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     { timeout: 3000 },
@@ -229,6 +239,9 @@ it("C8 Save reports and focuses the missing expiry date instead of silently savi
   await user.click(screen.getByRole("button", { name: "Today" }));
   // The selected date is deliberately not added to the staged rows first.
   await saveReadyProduct(user);
+  await renderedUiReady(
+    () => screen.queryByRole("dialog", { name: "Edit product" }) === null,
+  );
   await waitFor(
     () =>
       expect(
@@ -269,6 +282,9 @@ it("C8 invalid unadded date evidence blocks the entire save and stays available 
   await user.clear(quantity);
   await user.type(quantity, "3");
   await saveReadyProduct(user);
+  await renderedUiReady(
+    () => screen.queryByRole("dialog", { name: "Edit product" }) === null,
+  );
   await waitFor(
     () =>
       expect(
@@ -309,6 +325,9 @@ it("C8 separate price save preserves unsaved catalog fields and lets their later
     { timeout: 3000 },
   );
   await user.click(savePrice);
+  await renderedUiReady(
+    () => screen.queryByRole("dialog", { name: "Change price" }) === null,
+  );
   await waitFor(
     () =>
       expect(
@@ -325,6 +344,9 @@ it("C8 separate price save preserves unsaved catalog fields and lets their later
     '"selling_price":"24.99"',
   );
   await saveReadyProduct(user, editor);
+  await renderedUiReady(
+    () => screen.queryByRole("dialog", { name: "Edit product" }) === null,
+  );
   await waitFor(
     () =>
       expect(

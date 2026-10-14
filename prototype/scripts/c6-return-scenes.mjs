@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { readC8State } from "./capture-c8-proof.mjs";
 
 /** All return scenes use actual UI pickup/settlement events and the retained signed memo. */
 export async function setupReturnScene(page, scene, { button, field, choose }) {
@@ -46,10 +47,8 @@ export async function setupReturnScene(page, scene, { button, field, choose }) {
   await expect(page.locator(".return-detail-title")).toContainText(
     "Waiting for credit",
   );
-  const pickup = await page.evaluate(() =>
-    JSON.parse(
-      globalThis.localStorage.getItem("supermarket-prototype-v1"),
-    ).returns.find((record) => record.id === "demo-return-1"),
+  const pickup = (await readC8State(page)).returns.find(
+    (record) => record.id === "demo-return-1",
   );
   if (scene === "return-memo") {
     const reference = pickup.pickup_memos.at(-1).reference;
@@ -92,10 +91,8 @@ export async function setupReturnScene(page, scene, { button, field, choose }) {
     "Waiting for credit",
   );
   await button(header, "Record resolution").click();
-  const resolution = await page.evaluate(() =>
-    JSON.parse(
-      globalThis.localStorage.getItem("supermarket-prototype-v1"),
-    ).returns.find((record) => record.id === "demo-return-1"),
+  const resolution = (await readC8State(page)).returns.find(
+    (record) => record.id === "demo-return-1",
   );
   return {
     selector: ".return-detail",

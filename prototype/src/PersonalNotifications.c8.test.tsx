@@ -13,6 +13,10 @@ import { DemoProvider, initialState, useDemo } from "./store";
 import { authenticatedTestFixture } from "./authority-test-fixture";
 import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import { Menu } from "./ui";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "./test/rendered-ui-readiness";
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 beforeEach(async () => {
@@ -22,6 +26,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
 });
 afterEach(() => {
+  clearRenderedUiReadiness();
   cleanup();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
@@ -91,6 +96,12 @@ it("opens the notified location before navigating to its approval and marks the 
   fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
   fireEvent.click(
     await screen.findByRole("menuitem", { name: /Sale request.*Lavash Bread/ }),
+  );
+  // Read acknowledgement and selected-location adoption are two real IDB
+  // operations. Await the actual rendered location before the original oracle.
+  await renderedUiReady(
+    () =>
+      screen.queryByLabelText("Selected location")?.textContent === "Branch 1",
   );
   await waitFor(async () => {
     expect(screen.getByLabelText("Selected location")).toHaveTextContent(

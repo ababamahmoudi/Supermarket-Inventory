@@ -201,6 +201,44 @@ describe("E1 authentication and role-aware shell", () => {
       screen.getByText("Only an Owner or Manager can change Settings."),
     ).toBeVisible();
   });
+  it("retires a denied route on explicit sign-out so a new sign-in opens its permitted home", async () => {
+    await show();
+    const user = await signIn("floorworker");
+    await screen.findByRole(
+      "navigation",
+      { name: "Pages" },
+      { timeout: 10000 },
+    );
+    window.location.hash = "payables?name=previous-session";
+    fireEvent(window, new HashChangeEvent("hashchange"));
+    expect(
+      screen.getByText("You do not have permission for this action."),
+    ).toBeVisible();
+    await openUserMenu(user);
+    await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
+    await screen.findByRole("heading", { name: "Sign in" });
+    await waitFor(() => expect(window.location.hash).toBe(""));
+    await signIn("floorworker");
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: "Invoices" },
+        { timeout: 10000 },
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByText("You do not have permission for this action."),
+    ).not.toBeInTheDocument();
+    // A direct private route in the new authenticated session is still denied.
+    window.location.hash = "payables";
+    fireEvent(window, new HashChangeEvent("hashchange"));
+    expect(
+      screen.getByText("You do not have permission for this action."),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "Payables" }),
+    ).not.toBeInTheDocument();
+  });
   it("uses a custom location selector and supports Persian RTL", async () => {
     await show();
     const user = await signIn("supervisor");

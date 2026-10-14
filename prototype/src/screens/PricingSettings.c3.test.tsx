@@ -12,6 +12,10 @@ import { authenticatedProviderFixture } from "../authority-provider-test-fixture
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import { useSettingsConfiguration } from "../settings-configuration";
 import i18n from "../i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 import PricingSettings from "./PricingSettings";
 
 beforeEach(async () => {
@@ -22,6 +26,7 @@ beforeEach(async () => {
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   cleanup();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
@@ -54,6 +59,11 @@ async function show() {
         <Harness />
       </SettingsConfigurationGate>
     </DemoProvider>,
+  );
+  // The protected Settings DTO is an actual second asynchronous read after
+  // session resume; do not exercise the form before its affordance mounts.
+  await renderedUiReady(
+    () => screen.queryByRole("button", { name: "Add category" }) !== null,
   );
   await screen.findByRole("button", { name: "Add category" });
   return user;

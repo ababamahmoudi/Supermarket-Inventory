@@ -1,0 +1,69 @@
+{
+  "source_kind": "Actual current Root frozen native retained verification with no overlays",
+  "root_head_context_only": "0e3c3312ae26b4bc69370e0767749a0690c4d940",
+  "source_fingerprint": "5d8efcb521cbcd1712cda7dee891507a245e2d2f07e19e812355a2dae7601db2",
+  "source_files": 553,
+  "source_unchanged": true,
+  "changed_candidate_files": [],
+  "live_root_unchanged": true,
+  "live_root_changed": [],
+  "production_asset_files": 55,
+  "production_assets_unchanged": true,
+  "owned_http_before_all_match": true,
+  "owned_http_after_all_match": true,
+  "configured_workers": 1,
+  "configured_retries": 0,
+  "test_timeout_unchanged": true,
+  "grep": "",
+  "phases": [
+    {
+      "name": "list",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e1-retained-full-current-root-v12/retained.config.mts",
+        "--list"
+      ],
+      "actual_exit": 0,
+      "started": "2026-10-14T01:13:44.240690+00:00",
+      "ended": "2026-10-14T01:13:49.599395+00:00"
+    },
+    {
+      "name": "build",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/vite/bin/vite.js",
+        "build"
+      ],
+      "actual_exit": 0,
+      "started": "2026-10-14T01:13:49.600179+00:00",
+      "ended": "2026-10-14T01:13:51.874852+00:00"
+    },
+    {
+      "name": "browser",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e1-retained-full-current-root-v12/retained.config.mts"
+      ],
+      "actual_exit": 130,
+      "started": "2026-10-14T01:13:52.989774+00:00",
+      "ended": "2026-10-14T01:32:26.261404+00:00"
+    }
+  ],
+  "browser_stats": {
+    "startTime": "2026-10-14T01:13:53.817Z",
+    "duration": 1112336.65,
+    "expected": 95,
+    "skipped": 643,
+    "unexpected": 4,
+    "flaky": 0
+  },
+  "unhandled_errors": [],
+  "registered_actual_test_records": 742,
+  "runner_error": null
+}

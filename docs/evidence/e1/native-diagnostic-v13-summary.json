@@ -1,0 +1,80 @@
+{
+  "status": "Actual completed bounded native v13; not a whole retained-browser pass",
+  "actual_exit": 1,
+  "registered": 10,
+  "passed": 8,
+  "failed": 2,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "unhandled_errors": [],
+  "source_fingerprint": "f7ceb57bb4efe02ee490456ed98b82b044e5802c4885596302a50c355831d18c",
+  "source_files": 553,
+  "source_unchanged": true,
+  "live_root_unchanged": true,
+  "production_asset_files": 55,
+  "production_assets_unchanged": true,
+  "http_assets_before_after_match": true,
+  "green_scope": "Eight original C5 cases: correction/History/Revert in desktop+phone and Waiting-for-credit EN-light/EN-dark/FA-light in desktop+phone. Only branch-invoice fixture changed after this run; green C5 source/oracles remain unchanged.",
+  "failed_scope": "Only the two foreign-reading original cases in desktop and phone. They timed out selecting a Demo menu action correctly unavailable on the protected foreign record; revised test now checks its absence and attempts the actual public event directly, without a forged actor or command.",
+  "passed_cases": [
+    {
+      "file": "c5-conditional-audit.spec.ts",
+      "title": "C5 conditional correction preview, confirmation, versions, history menu and Revert",
+      "project": "desktop"
+    },
+    {
+      "file": "c5-conditional-audit.spec.ts",
+      "title": "C5 conditional correction preview, confirmation, versions, history menu and Revert",
+      "project": "phone"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+      "project": "desktop"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+      "project": "desktop"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (fa-light)",
+      "project": "desktop"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+      "project": "phone"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+      "project": "phone"
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (fa-light)",
+      "project": "phone"
+    }
+  ],
+  "failed_cases": [
+    {
+      "file": "branch-invoice-b.spec.ts",
+      "title": "another branch's reading draft stays hidden and unchanged by reading timers or Demo answers",
+      "project": "desktop",
+      "attempt_statuses": ["timedOut"]
+    },
+    {
+      "file": "branch-invoice-b.spec.ts",
+      "title": "another branch's reading draft stays hidden and unchanged by reading timers or Demo answers",
+      "project": "phone",
+      "attempt_statuses": ["timedOut"]
+    }
+  ],
+  "raw_execution": "native-diagnostic-v13.json",
+  "raw_records_sha256": "041ec06f005863fc36a1e20e22bcd9b0bec9fa181680c073a16d81d4836516d5",
+  "final_two_status": "Passed separately in final genuine v14: 2/2, browser/TSC/Vite exits0; v13 failures remain preserved",
+  "final_two_proof": "native-foreign-event-v14.json"
+}

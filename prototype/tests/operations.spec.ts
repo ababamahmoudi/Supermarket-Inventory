@@ -1,6 +1,12 @@
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import {
+  configuredRoleLabel,
+  readConfiguredRoleDefinitions,
+} from "../src/role-config";
 import { chooseOption, signIn, visitPage, setLanguage } from "./helpers";
 
 test.setTimeout(60000);
@@ -334,35 +340,36 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.evaluate(() => {
-    const key = "supermarket-prototype-v1";
-    const state = JSON.parse(localStorage.getItem(key)!);
-    const common = { at: new Date().toISOString(), by: "Demo Supervisor" };
-    state.activity = [
-      {
-        ...common,
-        id: "company-wide-price",
-        company_id: state.config.company.seed_key,
-        branch: "all",
-        action: "Approve price",
-      },
-      {
-        ...common,
-        id: "other-company-offer",
-        company_id: "another-company",
-        branch: "all",
-        action: "Create offer",
-      },
-      {
-        ...common,
-        id: "other-branch-offer",
-        company_id: state.config.company.seed_key,
-        branch: "Branch 2",
-        action: "Stop offer",
-      },
-    ];
-    localStorage.setItem(key, JSON.stringify(state));
-  });
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const common = { at: new Date().toISOString(), by: "Demo Supervisor" };
+      state.activity = [
+        {
+          ...common,
+          id: "company-wide-price",
+          company_id: state.config.company.seed_key,
+          branch: "all",
+          action: "Approve price",
+        },
+        {
+          ...common,
+          id: "other-company-offer",
+          company_id: "another-company",
+          branch: "all",
+          action: "Create offer",
+        },
+        {
+          ...common,
+          id: "other-branch-offer",
+          company_id: state.config.company.seed_key,
+          branch: "Branch 2",
+          action: "Stop offer",
+        },
+      ];
+    },
+    undefined,
+  );
   await page.reload();
   await visit(page, "Dashboard");
   await expect(page.getByText("Approve price", { exact: true })).toBeVisible();
@@ -381,7 +388,7 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
     "Recent invoices",
     "Returns",
     "Supplier balances",
-    "Notes for Supervisor",
+    `Notes for ${configuredRoleLabel(readConfiguredRoleDefinitions(configuration.roles), "manager", "en")}`,
     "Activity",
   ])
     await expect(

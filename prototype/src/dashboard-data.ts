@@ -277,6 +277,7 @@ export function dashboardSummary(
       created_at: note.created_at,
     }));
   const activity = selectHistory(state, actor)
+    .filter((entry) => entry.branch === "all" || locations.has(entry.branch))
     .sort((left, right) => right.at.localeCompare(left.at))
     .map((entry) => ({
       id: entry.id,

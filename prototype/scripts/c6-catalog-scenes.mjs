@@ -1,11 +1,10 @@
-/* global window, localStorage */
+/* global window */
 import { expect } from "@playwright/test";
+import { readC8State } from "./capture-c8-proof.mjs";
 import { setupDatedReceipt } from "./c6-invoice-scenes.mjs";
 
 async function savedState(page) {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")),
-  );
+  return readC8State(page);
 }
 async function visit(page, route) {
   await page.evaluate((value) => {

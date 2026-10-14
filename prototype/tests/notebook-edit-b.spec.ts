@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
@@ -93,13 +94,13 @@ test("a worker corrects their own note within ten seconds, the original author w
   );
   expect(audit).toHaveLength(2);
   expect(audit[0]).toMatchObject({
-    by: "Demo Supervisor",
+    by: configuredPersonExpectation("manager").name_en,
     before: { text: "Afternoon check corrected" },
     after: { text: "Supervisor verified fridge check" },
     reversible: true,
   });
   expect(audit[1]).toMatchObject({
-    by: "Demo Floor Worker",
+    by: configuredPersonExpectation("ny-floor").name_en,
     before: { text: "Afternoon fridge check" },
     after: { text: "Afternoon check corrected" },
     reversible: true,

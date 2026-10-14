@@ -1,3 +1,9 @@
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import {
+  configuredRoleLabel,
+  readConfiguredRoleDefinitions,
+} from "../src/role-config";
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
@@ -19,12 +25,34 @@ async function createNotebook(
     .getByLabel("Name (Persian) (optional)", { exact: true })
     .fill("دفتر نظافت");
   for (const group of ["Who can read", "Who can add"])
-    for (const role of ["Supervisor", "Floor Worker"])
+    for (const role of ["owner", "manager", "floor_worker"] as const)
       await expect(
         dialog
           .getByRole("group", { name: group, exact: true })
-          .getByRole("checkbox", { name: role, exact: true }),
+          .getByRole("checkbox", {
+            name: configuredRoleLabel(
+              readConfiguredRoleDefinitions(configuration.roles),
+              role,
+              "en",
+            ),
+            exact: true,
+          }),
       ).toBeChecked();
+  // The documented custom default is exactly Owner/Manager/Floor Worker.
+  for (const group of ["Who can read", "Who can add"])
+    for (const role of ["branch_supervisor", "cashier"] as const)
+      await expect(
+        dialog
+          .getByRole("group", { name: group, exact: true })
+          .getByRole("checkbox", {
+            name: configuredRoleLabel(
+              readConfiguredRoleDefinitions(configuration.roles),
+              role,
+              "en",
+            ),
+            exact: true,
+          }),
+      ).not.toBeChecked();
   if (options.readOnly)
     await dialog
       .getByRole("group", { name: "Who can add", exact: true })
@@ -73,10 +101,14 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
     .locator(".notebook-entry-card")
     .filter({ hasText: "Warehouse receiving area cleaned" });
   await expect(entry).toContainText("Warehouse");
-  await expect(entry).toContainText("Demo Supervisor");
+  await expect(entry).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(
-    page.locator(".topbar").getByLabel("Branch", { exact: true }),
-  ).toContainText("All branches");
+    page
+      .locator(".topbar")
+      .getByRole("combobox", { name: "Location", exact: true }),
+  ).toContainText("All locations");
   const saved = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => {
       const state = JSON.parse(JSON.stringify(canonicalState)!);
@@ -92,7 +124,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   );
   expect(saved.note.branch).not.toBe("all");
   expect(saved.action.branch).toBe(saved.note.branch);
-  expect(saved.action.by).toBe("Demo Supervisor");
+  expect(saved.action.by).toBe(configuredPersonExpectation("manager").name_en);
   await page.reload();
   await page.getByRole("tab", { name: /^Cleaning log/ }).click();
   await expect(entry).toBeVisible();
@@ -104,10 +136,11 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await page
     .getByRole("button", { name: "افزودن یادداشت", exact: true })
     .click();
-  await expect(page.getByLabel("مکان", { exact: true })).toHaveAttribute(
-    "role",
-    "combobox",
-  );
+  await expect(
+    page
+      .getByRole("form", { name: "افزودن یادداشت", exact: true })
+      .getByLabel("مکان", { exact: true }),
+  ).toHaveAttribute("role", "combobox");
   await expect(
     page.locator(
       ".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]",
@@ -117,7 +150,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
   await setLanguage(page, "en");
   await setBranch(page, "North York");
   await page.getByRole("button", { name: "Add note", exact: true }).click();
-  await expect(page.getByLabel("Location", { exact: true })).toHaveCount(0);
+  await expect(form.getByLabel("Location", { exact: true })).toHaveCount(0);
   await form
     .getByLabel("Note", { exact: true })
     .fill("North York Supervisor check");
@@ -139,7 +172,7 @@ test("Supervisor can create and add to a custom notebook in All branches, includ
     page
       .locator(".notebook-entry-card")
       .filter({ hasText: "Floor Worker cleaning check" }),
-  ).toContainText("Demo Floor Worker");
+  ).toContainText(configuredPersonExpectation("ny-floor").name_en);
   await expect(
     page
       .locator(".notebook-entry-card")
@@ -174,7 +207,9 @@ test("All branches notebook add picker is restricted to its configured location"
   await setBranch(page, "all");
   await createNotebook(page, { location: "North York" });
   await page.getByRole("button", { name: "Add note", exact: true }).click();
-  const location = page.getByLabel("Location", { exact: true });
+  const location = page
+    .getByRole("form", { name: "Add note", exact: true })
+    .getByLabel("Location", { exact: true });
   await location.click();
   await expect(
     page.getByRole("option", { name: "North York", exact: true }),

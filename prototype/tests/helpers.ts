@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, type Locator, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
@@ -222,6 +224,8 @@ export async function resetDemo(page: Page) {
 }
 
 export async function visitPage(page: Page, label: string) {
+  // Wait for the real route projection before choosing a compact sidebar group.
+  await expect(page.locator("main h1")).toBeVisible();
   if (await page.evaluate(() => window.innerWidth <= 760))
     await page.locator("#menu-toggle").click();
   const link = page
@@ -232,7 +236,11 @@ export async function visitPage(page: Page, label: string) {
       'xpath=ancestor::div[contains(@class, "nav-section")][1]',
     );
     const groupToggle = section.getByRole("button");
-    if (await groupToggle.count()) await groupToggle.first().click();
+    if (
+      (await groupToggle.count()) &&
+      (await groupToggle.first().getAttribute("aria-expanded")) === "false"
+    )
+      await groupToggle.first().click();
   }
   await expect(link).toBeVisible();
   await link.click();
@@ -262,7 +270,34 @@ export async function openInvoiceUpload(page: Page) {
 
 export async function uploadInvoice(page: Page) {
   await (await openInvoiceUpload(page)).setInputFiles(invoiceImage);
+  const deadline = Date.now() + 8000;
+  const remaining = () => Math.max(1, deadline - Date.now());
+  // The heading mounts before the native original retention/read transaction.
+  // Observe this actual upload's committed reference and completed review first.
+  const originalHash = createHash("sha256")
+    .update(invoiceImage.buffer)
+    .digest("hex");
+  await expect
+    .poll(
+      async () => {
+        const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+        return {
+          fileName: invoice.file_name,
+          sourceHash: invoice.file_data?.split(":").at(-1),
+          status: invoice.status,
+        };
+      },
+      { timeout: remaining() },
+    )
+    .toEqual({
+      fileName: invoiceImage.name,
+      sourceHash: originalHash,
+      status: "review",
+    });
   await expect(
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
-  ).toBeVisible({ timeout: 8000 });
+  ).toBeVisible({ timeout: remaining() });
+  await expect(page.locator(".invoice-line")).toHaveCount(6, {
+    timeout: remaining(),
+  });
 }

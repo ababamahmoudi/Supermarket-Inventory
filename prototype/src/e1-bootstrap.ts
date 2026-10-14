@@ -15,7 +15,12 @@ import {
 } from "./file-database";
 import { migrateE1BusinessState } from "./e1-state-migration";
 import type { DemoState, Branch } from "./types";
-export const STORAGE_KEY = "supermarket-prototype-v1";
+import {
+  LEGACY_HISTORY_SOURCE_KEY,
+  parseLegacyCompanySource,
+  quarantineHistoryBusiness,
+} from "./history-recovery.e1";
+export const STORAGE_KEY = LEGACY_HISTORY_SOURCE_KEY;
 export const branches = demoSeed.branches as Exclude<Branch, "all">[];
 
 export function relativeDate(days: number): string {
@@ -231,8 +236,14 @@ export function initialState(): DemoState {
 function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {
   let rawSaved = "null";
   try {
-    rawSaved = localStorage.getItem(STORAGE_KEY) ?? "null";
-    const saved = decodeHistoryStorage(JSON.parse(rawSaved));
+    const retained = localStorage.getItem(STORAGE_KEY);
+    rawSaved = retained ?? "null";
+    const saved =
+      retained === null
+        ? null
+        : decodeHistoryStorage(
+            parseLegacyCompanySource(retained, configSeed.company.seed_key),
+          );
     if (
       saved &&
       typeof saved === "object" &&
@@ -312,7 +323,11 @@ function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {
 /** A retained corrupt History never becomes a silently empty replacement database. */
 export async function loadInitialBusiness(): Promise<DemoState> {
   const loaded = readLegacyState();
-  if (loaded.invalidHistoryRaw !== undefined) throw new HistoryStorageError();
+  if (loaded.invalidHistoryRaw !== undefined)
+    return quarantineHistoryBusiness(
+      migrateE1BusinessState(loaded.state),
+      loaded.invalidHistoryRaw,
+    );
   const state = migrateE1BusinessState(loaded.state),
     company = state.config.company.seed_key;
   const raw = localStorage.getItem(STORAGE_KEY);

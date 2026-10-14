@@ -63,6 +63,17 @@ export interface ShellRuntimeOptions<
   publish(snapshot: ShellSnapshot<View>): void;
   publishPreferences(preferences: AuthPreferences): void;
   publishError(error: unknown): void;
+  publishRecoveryStatus?(status: {
+    active: boolean;
+    retirementPending: boolean;
+  }): void;
+  historyRecovery?: {
+    status(state: State): { active: boolean; retirementPending: boolean };
+    prepareReset(before: State, replacement: State): Promise<void>;
+    finishReset(
+      controller: ReturnType<typeof createE1StoreController<State, View>>,
+    ): Promise<void>;
+  };
   prepareCommit?(draft: State, before: State, actor: AuthenticatedActor): void;
   onCommitted?(before: State, after: State, actor: AuthenticatedActor): void;
   systemJobs?: readonly {
@@ -111,6 +122,13 @@ export async function createE1ShellRuntime<
     }
     if (initial.config.company.seed_key !== options.companyId)
       throw new Error("company");
+    const publishRecovery = () =>
+      options.publishRecoveryStatus?.(
+        options.historyRecovery?.status(initial) ?? {
+          active: false,
+          retirementPending: false,
+        },
+      );
     const initialized = await initializeAuthority(repository, {
       state: initial,
       demo_users: options.demoUsers,
@@ -128,7 +146,10 @@ export async function createE1ShellRuntime<
       local.removeItem(LEGACY_AUTH_STORAGE_KEY);
     if (imported)
       options.migrateInitialAttribution?.(initial, initialized.snapshot.people);
-    await repository.initializeBusiness(initial);
+    initial = (await repository.initializeBusiness(initial)).state;
+    // Announce quarantine only from the actual committed business record.
+    // A concurrent healthy initialization takes precedence over a prepared import.
+    publishRecovery();
     const runSystemJob = async (
       source: SystemReconciliationSource,
       apply: (draft: State, attribution: SystemAttribution) => void,
@@ -182,6 +203,7 @@ export async function createE1ShellRuntime<
       authentication,
       projectView: (state, actor) => {
         initial = state;
+        publishRecovery();
         return actor
           ? options.projectView(state, actor)
           : options.signedOutView(initial);
@@ -347,31 +369,100 @@ export async function createE1ShellRuntime<
         });
       },
     };
+    let retirementPending: Promise<void> | null = null;
+    const retryHistoryRetirement = async () => {
+      if (
+        last?.stage !== "complete" ||
+        !options.historyRecovery?.status(initial).retirementPending
+      )
+        return;
+      retirementPending ??= options.historyRecovery
+        .finishReset(controller)
+        .catch(options.publishError)
+        .finally(() => {
+          retirementPending = null;
+        });
+      await retirementPending;
+    };
     await controller.resume(readIdentity(session));
+    await retryHistoryRetirement();
     return {
       controller,
       people,
       registeredComputers,
-      resetDemo: () =>
-        controller.resetDemo(async (identity) => {
-          const fixture = options.demoUsers.find(
-            (person) => person.id === last?.actor?.user_id,
-          );
-          if (!fixture) throw new Error("capability");
-          const state = await options.freshDemoBusiness();
-          const replacement = prepareAuthorityDocument({
-            state,
-            demo_users: options.demoUsers,
-            registered_computers: options.configuredComputers,
-          }).document;
-          options.migrateInitialAttribution?.(state, replacement.people);
-          await repository.resetDemo(identity, state, replacement);
-          writeComputerId(options.companyId, configuredDefault, local);
-          currentComputerId = configuredDefault;
+      retryHistoryRetirement,
+      resetDemo: async () => {
+        let committed = false;
+        let followUpFailed = false;
+        try {
+          await controller.resetDemo(async (identity) => {
+            const fixture = options.demoUsers.find(
+              (person) => person.id === last?.actor?.user_id,
+            );
+            if (!fixture) throw new Error("capability");
+            const state = await options.freshDemoBusiness();
+            const replacement = prepareAuthorityDocument({
+              state,
+              demo_users: options.demoUsers,
+              registered_computers: options.configuredComputers,
+            }).document;
+            options.migrateInitialAttribution?.(state, replacement.people);
+            if (options.historyRecovery) {
+              const before = await repository.queryBusiness<State, State>(
+                identity,
+                (draft) => structuredClone(draft),
+                {
+                  capability: "demo.reset",
+                  resource: {
+                    company_id: options.companyId,
+                    kind: "company_shared",
+                    mutation: true,
+                  },
+                },
+              );
+              await options.historyRecovery.prepareReset(before.value, state);
+            }
+            const accepted = await repository.resetDemo(
+              identity,
+              state,
+              replacement,
+            );
+            committed = true;
+            initial = accepted.business.state;
+            publishRecovery();
+            // The newly issued real session uses the reset computer default.
+            // A failed preference write cannot reject an already committed Reset.
+            currentComputerId = configuredDefault;
+            try {
+              writeComputerId(options.companyId, configuredDefault, local);
+            } catch (error) {
+              followUpFailed = true;
+              options.publishError(error);
+            }
+            return fixture.username;
+          });
+        } catch (error) {
+          if (!committed) throw error;
+          // Reset is already committed; a failed later sign-in cannot make the
+          // old directory/business reappear or pretend the reset was rejected.
+          options.publishError(error);
+          await controller.resume(null);
+          return { clean: false };
+        }
+        try {
           for (const job of options.systemJobs ?? [])
             await runSystemJob(job.source, job.apply);
-          return fixture.username;
-        }),
+        } catch (error) {
+          followUpFailed = true;
+          options.publishError(error);
+        }
+        await retryHistoryRetirement();
+        return {
+          clean:
+            !followUpFailed &&
+            !(options.historyRecovery?.status(initial).active ?? false),
+        };
+      },
       async reconcile(
         source: SystemReconciliationSource,
         apply: (draft: State, attribution: SystemAttribution) => void,

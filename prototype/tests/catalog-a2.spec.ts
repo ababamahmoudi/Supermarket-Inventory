@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
@@ -97,6 +98,13 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
     .getByRole("main")
     .getByLabel("Search products", { exact: true })
     .fill("0009");
+  // Aggregate Lookup requires an actual selling store before prices/actions.
+  await chooseOption(
+    page,
+    page.locator(".lookup-page").getByLabel("Location", { exact: true }),
+    "Branch 1",
+    "North York",
+  );
   const editor = await openRegularPrice(page);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await expect(
@@ -115,8 +123,8 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   );
   expect(audit).toMatchObject({
     action: "Set regular price",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversible: true,
     branch: "all",
     entity_type: "product",
@@ -280,7 +288,7 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     branch: "Branch 1",
     barcode: owner.barcode,
     conflicting_product_code: owner.code,
-    triggered_by: "Demo Supervisor",
+    triggered_by: configuredPersonExpectation("manager").name_en,
   });
   await editor.getByLabel("Barcode", { exact: true }).fill("new-chips-barcode");
   await editor

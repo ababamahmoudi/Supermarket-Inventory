@@ -911,6 +911,23 @@ export default function App() {
         <Button onClick={() => void signOut()}>{t("Sign out", "خروج")}</Button>
       </Card>
     );
+  const requestedKnownRouteDenied = Boolean(
+    parentKey &&
+    pages.some((candidate) => candidate.key === parentKey) &&
+    !allowed.some((candidate) => candidate.key === parentKey),
+  );
+  // Preserve the Cashier's safe home for plain unsupported destinations. Any
+  // entity/location query or detail route still uses the existing denial path.
+  const cashierSafeTopLevelFallback =
+    requestedKnownRouteDenied &&
+    role === "cashier" &&
+    routeKey === parentKey &&
+    !hash.includes("?") &&
+    page.key === "lookup" &&
+    !page.disabled &&
+    allowed.some(
+      (candidate) => candidate.key === "lookup" && !candidate.disabled,
+    );
   const routeDetailId = routeParams.get("id");
   const detailInvoice =
     page.key === "invoices" && routeDetailId
@@ -1450,9 +1467,7 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {parentKey &&
-          pages.some((candidate) => candidate.key === parentKey) &&
-          !allowed.some((candidate) => candidate.key === parentKey) ? (
+          {requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
             <Card>
               <p>
                 {parentKey === "settings"
