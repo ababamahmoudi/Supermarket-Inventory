@@ -260,3 +260,11 @@ Committed Reset with retirement pending (English): **Demo reset is complete. You
 Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
 
 Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
+
+### Verified quarantine notice boundary
+
+Show the separate fictional-demo notice only after its private marker is present in the actual committed canonical business record. A prepared import is insufficient: a failed canonical write remains blocked, and a concurrent healthy initialization takes precedence. Failed backup metadata/integrity verification reuses the existing blocked-History notice: **Saved history could not be read. Your original data is retained. Allow browser storage, then reload.** / **سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.** Do not claim a usable fictional quarantine, completed migration, or recovered original data after a failed verification.
+
+### Same-company original-source gate
+
+Before expanding any legacy History dictionary, saving a FileDB backup, or initializing canonical business/authority, valid legacy JSON must explicitly declare version 1 and the actual configured company in `config.company.seed_key`. Missing, malformed or mismatching ownership metadata stays blocked with its original text unchanged; do not archive a foreign company's source under the current company or manufacture a usable quarantine from it. The direct quarantine helper repeats the same gate before any file I/O, and Reset rechecks ownership in the verified original backup. Healthy existing canonical business continues to ignore stale legacy text, including another company's damaged dictionary. This gate never substitutes a default company for missing source metadata or changes genuine existing directory credentials.
