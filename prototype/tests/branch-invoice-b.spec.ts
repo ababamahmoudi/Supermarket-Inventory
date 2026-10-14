@@ -16,11 +16,78 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  // Both entry actions create real drafts. Bind the accepted Upload route before
+  // requesting Manual entry; the old form can remain visible during the command.
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+  });
+  const uploadInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!uploadInvoiceId)
+    throw new Error("The accepted Upload draft ID is missing.");
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== uploadInvoiceId);
+  });
+  const manualInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!manualInvoiceId)
+    throw new Error("The accepted Manual draft ID is missing.");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        branch: invoice.branch,
+        status: invoice.status,
+        entry_mode: invoice.entry_mode,
+        lines: invoice.lines.length,
+      };
+    })
+    .toEqual({
+      id: manualInvoiceId,
+      branch: "Branch 2",
+      status: "draft",
+      entry_mode: "manual",
+      lines: 0,
+    });
+  // Existing visible copy, not an invented Manual entry heading. The actual
+  // accepted Manual workspace is empty and renders its real review section.
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "No lines. Add a product below to start your manual draft.",
+      { exact: true },
+    ),
+  ).toBeVisible();
   await page
     .getByLabel("Supplier invoice number (optional)", { exact: true })
     .fill("PRIVATE-BRANCH-2");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        branch: invoice.branch,
+        supplier_invoice_number: invoice.supplier_invoice_number,
+      };
+    })
+    .toEqual({
+      id: manualInvoiceId,
+      branch: "Branch 2",
+      supplier_invoice_number: "PRIVATE-BRANCH-2",
+    });
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
@@ -28,6 +95,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(original.branch).toBe("Branch 2");
+  expect(original.id).toBe(manualInvoiceId);
+  expect(original.supplier_invoice_number).toBe("PRIVATE-BRANCH-2");
 
   await signIn(page, "Floor Worker");
   await expect(

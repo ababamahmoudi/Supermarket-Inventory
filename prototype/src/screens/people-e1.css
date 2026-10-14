@@ -3,7 +3,8 @@
   gap: 24px;
 }
 /* Keep usernames and the current-computer note on their own secondary line. */
-.people-e1 td[data-column-key="name"] > small.muted {
+.people-e1 td[data-column-key="name"] > small.muted,
+.people-e1 + .card td[data-column-key="name"] > small.muted {
   display: block;
   margin-block-start: 4px;
 }
