@@ -271,3 +271,7 @@ Show the separate fictional-demo notice only after its private marker is present
 ### Same-company original-source gate
 
 Before expanding any legacy History dictionary, saving a FileDB backup, or initializing canonical business/authority, valid legacy JSON must explicitly declare version 1 and the actual configured company in `config.company.seed_key`. Missing, malformed or mismatching ownership metadata stays blocked with its original text unchanged; do not archive a foreign company's source under the current company or manufacture a usable quarantine from it. The direct quarantine helper repeats the same gate before any file I/O, and Reset rechecks ownership in the verified original backup. Healthy existing canonical business continues to ignore stale legacy text, including another company's damaged dictionary. This gate never substitutes a default company for missing source metadata or changes genuine existing directory credentials.
+
+### Invoice workspace busy state
+
+While **New invoice** or **Manual entry** awaits its actual creation command, keep the existing workspace visible but prevent editing or another start. Expose the busy state to assistive technology and use the existing pending control presentation. After the accepted invoice is ready, enable that invoice's fields. On failure, retain the previous workspace and the existing error feedback. Keep the current labels, layout and bilingual copy; do not add a new message or change the command's permission and data rules.
