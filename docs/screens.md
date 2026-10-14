@@ -47,6 +47,8 @@ Use the central route/resource/capability evaluator for menus, direct links, acc
 
 Large white/surface search 56 px with scan inside; name/code/barcode/EN/FA. Category chips All/most-used/More. Calm result list, names/code start, prices end, offers pills, selected blue tint. Card 60 px approved price plus offer/clearance pill; Taxable/New price pending remain. Current concrete-location price and clearance expiry only; other locations' lots/prices absent. Dates and Last received are quiet **read-only** rows with icon tiles, e.g. Expires 2026-10-23 · North York and close-date pill. No On/Off, inline date or Add button. Owner/Manager Edit opens same product form; costs/margins remain private.
 
+A signed-in Cashier who opens an unsupported, known top-level screen such as `#received` without any query/entity parameters retains the existing safe Lookup home. This is a presentation fallback only: the requested screen and its protected data/commands stay unavailable. Parameterized links (including foreign location or entity references), detail routes, and other roles' unauthorized Payables/Settings links still show the existing permission denial; never substitute a store or render a requested private screen.
+
 ### Invoices
 
 List uses Columns/Reset columns and retained tab/filter/scroll state. Every detail has Back to Invoices and clickable breadcrumbs.
