@@ -1,0 +1,21 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test-only first-import setup isolation; no production changes",
+  "files": [
+    {
+      "path": "prototype/tests/c8-migration.spec.ts",
+      "source": "/tmp/e3-c8-migration-fixture-fix-v2/staged/prototype/tests/c8-migration.spec.ts",
+      "baseline_sha256": "08f15c474bbbb3f4a0678524cab3456eb1c4c5e10c5c0eb631f5c8129d2e9407",
+      "sha256": "e5ac3b22fcd3426b86e85a1b0d653544b7efe065c11bcc9a36f98fbe889fdd8b"
+    }
+  ],
+  "reason": "Original trace proves E3 service worker served the real9039-byte app index instead of page.route inert setup document; live app raced database removal and backup-fault installation. Unregister only for explicit inert first-import setup, leave controlling document, and assert genuine inert page before deleting authority database. Actual app navigation still re-registers its service worker normally.",
+  "preserved": [
+    "all original backup failure and verified-before-publish oracles",
+    "exact bytes/hash/state/history/original evidence",
+    "privacy and no canonical publication while failure injected",
+    "recovery through real sign-in and actual app migration",
+    "test/assertion budgets, retries, skips, test counts",
+    "ordinary PWA tests untouched"
+  ]
+}

@@ -1,0 +1,546 @@
+{
+  "old_frozen_commit": "5741353f47457842f925df623f35e44135a250e5",
+  "exact_targeted_case_passes": 43,
+  "cases": [
+    {
+      "old_id": "3f6635d19ee95a180195-c5047f0fad3279789d36",
+      "file": "alignment-a2.spec.ts",
+      "title": "table columns align and phone cards retain labelled contained values (en)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "3f6635d19ee95a180195-e054225a26ccb5e5ec86",
+      "file": "alignment-a2.spec.ts",
+      "title": "table columns align and phone cards retain labelled contained values (fa)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "d6c99d8674fe08ace5e5-1130cf182bc387987ecb",
+      "file": "b-polish.spec.ts",
+      "title": "Part 1 pills and dashboard branch values stay on one line",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "395df1b82e7dbfc62c65-129a6fbf116d7f5a1f45",
+      "file": "c3-tables.spec.ts",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "395df1b82e7dbfc62c65-ef8ac45b395f9edac878",
+      "file": "c3-tables.spec.ts",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "ea6e84828c1d06944850-1dd0ceb5cee789b9f835",
+      "file": "c5-button-audit.spec.ts",
+      "title": "C5 button contract covers Suppliers, every supplier tab and item dialogs",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "ea6e84828c1d06944850-9475b9bb1df467259bf2",
+      "file": "c5-button-audit.spec.ts",
+      "title": "C5 button contract covers Labels, Notes, History, Received and ledger forms",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "ea6e84828c1d06944850-68b682e48118e2909537",
+      "file": "c5-button-audit.spec.ts",
+      "title": "C5 button contract covers primary product, date, approval and invoice dialogs",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v5-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "f01ae16c82f3d9a08d05-d7a2a25e97b7269a955f",
+      "file": "c5-conditional-audit.spec.ts",
+      "title": "C5 conditional label selection, template restore, and print confirmation",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-0722e28e679922eacda7",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-ce9b6ff61b96df913690",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-3e78fa2da3b2234b391d",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-0b835dc64fa44b2d6255",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-f8564bb6fa3f030f559b",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (fa-light)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0ced034a5c1535935284-9f6f7f6db8309657e29f",
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "534a02de3f153c5b41b6-c1ec88515826d2bb4fc9",
+      "file": "c8-layout-display.spec.ts",
+      "title": "C8 Received uses whole cases and retained loose units (en)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "534a02de3f153c5b41b6-4577e696e86008117326",
+      "file": "c8-layout-display.spec.ts",
+      "title": "C8 list navigation and disclosure stay at the row end (en)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "534a02de3f153c5b41b6-ecfe507bfa981b0e8a17",
+      "file": "c8-layout-display.spec.ts",
+      "title": "C8 Received uses whole cases and retained loose units (fa)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "534a02de3f153c5b41b6-c5c1c090c8303adf6dbe",
+      "file": "c8-layout-display.spec.ts",
+      "title": "C8 list navigation and disclosure stay at the row end (fa)",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/phone-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "e7386dd79e53a6b9768d-eafdad0def32f8507ebd",
+      "file": "catalog-a2.spec.ts",
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "e7386dd79e53a6b9768d-c6a3a38bc06b743a1cdd",
+      "file": "catalog-a2.spec.ts",
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "e7386dd79e53a6b9768d-d32c1e79d4886461a9b1",
+      "file": "catalog-a2.spec.ts",
+      "title": "duplicate barcode reports one scoped conflict and allows a corrected save",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v5-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "ac597fb86d6413fdffea-9f5949627d574e77dff9",
+      "file": "filters-a2.spec.ts",
+      "title": "Payables filters supplier totals and keeps selected report in the same branch",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v7-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "c469c8974af40fae3884-b91e96a0c6f83f148595",
+      "file": "history-b.spec.ts",
+      "title": "Undo stays above a native modal and keyboard focus pauses its own timer",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "c469c8974af40fae3884-3044d741182033bab18f",
+      "file": "history-b.spec.ts",
+      "title": "Undo stays above a native modal and keyboard focus pauses its own timer",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "1b0ec9cfebb11564caa1-52888deabc59b87d9be1",
+      "file": "invoice-a2.spec.ts",
+      "title": "Persian signed money, line numbers and deduction parentheses stay isolated",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "1b0ec9cfebb11564caa1-17814814418e4fa0dbfe",
+      "file": "invoice-a2.spec.ts",
+      "title": "Persian signed money, line numbers and deduction parentheses stay isolated",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a515dfb8df5e297f69c2-0f531a16c09b7e1d9999",
+      "file": "invoice-orders-c2.spec.ts",
+      "title": "retained case quote bills exactly, remembers the pack and leaves the posted snapshot intact",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a515dfb8df5e297f69c2-2b8403595fdf9210da70",
+      "file": "invoice-orders-c2.spec.ts",
+      "title": "order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a515dfb8df5e297f69c2-e570558512d5b0eea2fc",
+      "file": "invoice-orders-c2.spec.ts",
+      "title": "short-dated expiry discount requires a real date and preserves an existing manual selling price",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v1/playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a515dfb8df5e297f69c2-831b4a379c65b57694ba",
+      "file": "invoice-orders-c2.spec.ts",
+      "title": "order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a515dfb8df5e297f69c2-0e7252fab1b6ecc5ba94",
+      "file": "invoice-orders-c2.spec.ts",
+      "title": "short-dated expiry discount requires a real date and preserves an existing manual selling price",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "bf10ff72eb560ee5dde5-8ead06bdf8ca40c1a9de",
+      "file": "invoices.spec.ts",
+      "title": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "bf10ff72eb560ee5dde5-48f64c73564534200abf",
+      "file": "invoices.spec.ts",
+      "title": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "991ef8dcc903c9ee8261-cd19fdaaf3807a6ee036",
+      "file": "manual-entry.spec.ts",
+      "title": "worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "991ef8dcc903c9ee8261-4e9f6b52fab2fb685fcc",
+      "file": "manual-entry.spec.ts",
+      "title": "worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "5f6b3e98e64a0de485d7-9533887bba016bced7ef",
+      "file": "manual-prices-c1.spec.ts",
+      "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v5-desktop-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "5f6b3e98e64a0de485d7-cc1789fa2d8fd05f2c39",
+      "file": "manual-prices-c1.spec.ts",
+      "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v7-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "2df9f6c39993f091524e-3a449f6cb916979265f0",
+      "file": "notebook-edit-b.spec.ts",
+      "title": "an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "2df9f6c39993f091524e-26fd97efe88c835a0f22",
+      "file": "notebook-edit-b.spec.ts",
+      "title": "an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "d2ad8ecc63c2804d452e-d6743f327599e1550ab4",
+      "file": "notebooks-b.spec.ts",
+      "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v5-desktop-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "d2ad8ecc63c2804d452e-4a405e5dacaf12ba6409",
+      "file": "notebooks-b.spec.ts",
+      "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v7-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "4f8fd72df7d8ab107a64-4ad23eb4bee8e71ce3fa",
+      "file": "operations.spec.ts",
+      "title": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "4f8fd72df7d8ab107a64-6265a865387416da511e",
+      "file": "operations.spec.ts",
+      "title": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "4f8fd72df7d8ab107a64-ce181e152874f3546a60",
+      "file": "operations.spec.ts",
+      "title": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "print-phone-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "895646cd521928cd084b-fdeff760b9b39fa27b32",
+      "file": "receiving-c.spec.ts",
+      "title": "a worker retargets their own invoice to Warehouse without gaining Warehouse access",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "895646cd521928cd084b-6e4c883fcb2d6a421769",
+      "file": "receiving-c.spec.ts",
+      "title": "invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "895646cd521928cd084b-264764006ce2ea9fcd71",
+      "file": "receiving-c.spec.ts",
+      "title": "a worker retargets their own invoice to Warehouse without gaining Warehouse access",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "895646cd521928cd084b-451fcbb90a1b2898668d",
+      "file": "receiving-c.spec.ts",
+      "title": "invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a29327b5fc09aae5978c-7c4a094e5d2533fd4759",
+      "file": "returns-a2.spec.ts",
+      "title": "Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a29327b5fc09aae5978c-d4e2ea1af88145bf0d53",
+      "file": "returns-a2.spec.ts",
+      "title": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a29327b5fc09aae5978c-574c0cf4ba11110491a6",
+      "file": "returns-a2.spec.ts",
+      "title": "Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian",
+      "project": "phone",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "returns-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a29327b5fc09aae5978c-83b180d625b71d98eec4",
+      "file": "returns-a2.spec.ts",
+      "title": "Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "a29327b5fc09aae5978c-57f27bc72304d4ffa100",
+      "file": "returns-a2.spec.ts",
+      "title": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "1ef711489f5b7c6f0dbf-0052c2ce7cb9276c6904",
+      "file": "settings-b.spec.ts",
+      "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "1ef711489f5b7c6f0dbf-72bd022eab5bf81f1cd5",
+      "file": "settings-b.spec.ts",
+      "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0c9eefa7183abf26d2b6-c4bb0a65636ccbd5f126",
+      "file": "storage-c6.spec.ts",
+      "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "v5-desktop-playwright.json.gz",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0c9eefa7183abf26d2b6-6950e18f2a89017ed6fa",
+      "file": "storage-c6.spec.ts",
+      "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0c6784b2e4caa94bff85-e5cc16795ed37549710b",
+      "file": "suppliers-a2.spec.ts",
+      "title": "Cashier cannot open Suppliers through a direct address",
+      "project": "desktop",
+      "verification_status": "exact retained case passed on separately recorded repaired input",
+      "targeted_evidence": "earlier-v4/desktop-playwright.json",
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    },
+    {
+      "old_id": "0c6784b2e4caa94bff85-170a298ab71812c5a17e",
+      "file": "suppliers-a2.spec.ts",
+      "title": "Cashier cannot open Suppliers through a direct address",
+      "project": "phone",
+      "verification_status": "equivalent family passed; exact project remains for the complete final replay",
+      "targeted_evidence": null,
+      "final_current_source_full_replay": "pending; do not classify an unexecuted final case as passed"
+    }
+  ]
+}

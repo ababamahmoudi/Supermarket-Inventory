@@ -1,0 +1,12 @@
+# Final bounded native follow-ups
+
+These are separate, overlapping verification runs. They do not replace the complete final-source browser matrix.
+
+- The v5 desktop run passed **4/4**: public rule/manual comparisons and privacy, branch-only price isolation, a real Cashier custom-notebook read followed by Manager ACL revocation, and **twenty distinct real 3 MB photos** with exact retained hashes/previews/reload/download and an actual History Revert. Its phone run passed 3/6 and exposed three later fixture entry-path assumptions; those failures remain in the raw results.
+- The corrected v7 phone run passed **3/3**, preserving all original expected money and permission facts: the same rule/manual pair with private margins absent; Cashier notebook read and actual revocation; and Payables Richmond Hill `$0.00` plus Golden Grain's separate `$210.00` overdue amount through its real supplier report. The earlier compact-row barcode conflict and complete primary-dialog cases already passed in v5.
+- The retained Returns phone geometry case then passed **1/1**, checking both English and Persian overview/detail layouts with every original 2 px visible-glyph/control/cell/page guard. Explicit compact regions replace only obsolete repeated field-caption expectations.
+- The genuine print repair passed **8/8** units (four new print cases plus four retained disclosure cases), the normal build/TypeScript check, ESLint and formatting. The original Payables ledger print case passed **Desktop 1/1 + Phone 1/1**, retaining the cheque `DEMO-1001`, payment amount, balance, CSV and worker-denial assertions. Printing restores layout-collapsed authorized columns while honoring hidden columns; ordinary phone layout returns afterwards.
+
+All successful runs have zero skips/retries/flaky classifications and unchanged frozen source and built HTTP bytes. Source versions and exact normal-build inputs are recorded independently. Browser print-media proof does not claim physical printing or installed-phone hardware verification.
+
+`known-sixty-failure-coverage.json` maps the original failed cases to actual exact-case bounded successes where available. Equivalent-family coverage is explicitly labelled and remains for the final complete replay. The original completed diagnostic matrix remains **710 passed / 60 failed / 42 unchanged intentional layout or phone-specific skips**; no overlapping pass counts are added to it.

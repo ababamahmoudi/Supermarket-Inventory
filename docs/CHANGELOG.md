@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-15 — Migration test isolation and final unit evidence
+
+- Make the first-import browser fixture genuinely empty before removing its authority database: unregister its old service worker, leave the controlled page, and verify the inert document. Production offline behavior and all original backup, recovery, exact-byte and permission assertions remain unchanged.
+- Both original migration cases passed on desktop and phone (4/4). The complete retained browser replay remains separately recorded and is not inferred from these four cases.
+- Full post-print application verification passed 1,426/1,426, with actual process exit 0 and no unhandled errors; SDK 75/75 and normal lint also passed. Preserve the earlier unexplained exit-1 attempt rather than treating its passing assertions as a successful process.
+- Clarify the Ubuntu/phone instructions, actual menu labels and safe pause before switching a repository with local changes.
+
 ## 2026-10-15 — Complete permitted phone print tables
 
 - Restore layout-collapsed cheque/payment columns for actual printing, keeping explicitly hidden columns excluded and restoring phone/expanded-row layout afterward. No payment amounts or records change.

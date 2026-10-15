@@ -1,0 +1,22 @@
+{
+  "command": [
+    "node",
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/tmp/e3-retained-bounded-v7/source/prototype/bounded.config.ts",
+    "--workers=1",
+    "--project=phone",
+    "--grep",
+    "Returns desktop columns align within two pixels",
+    "--reporter=line,json",
+    "--output",
+    "/tmp/e3-retained-bounded-v7/returns-phone-followup/output"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 5.1392786502838135,
+  "source_unchanged": true,
+  "http_unchanged": true,
+  "http_matches_prior_normal_build": true,
+  "expected_cases": 1
+}

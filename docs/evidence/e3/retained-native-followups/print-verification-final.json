@@ -1,0 +1,151 @@
+{
+  "base_commit": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d",
+  "manifest": "/tmp/e3-print-layout-repair/manifest.json",
+  "manifest_sha256": "e30d117587db5c71c0a00636ca82a7685bd105a048c37ba526ad85695354ca65",
+  "scope": "Bounded genuine print repair verification, not a full retained suite",
+  "unit": {
+    "numTotalTests": 8,
+    "numPassedTests": 8,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "native": {
+    "desktop": {
+      "stats": {
+        "startTime": "2026-10-15T18:36:44.956Z",
+        "duration": 7351.273,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "global_errors": [],
+      "workers": 1,
+      "retries": [
+        [
+          "desktop",
+          0
+        ],
+        [
+          "phone",
+          0
+        ]
+      ]
+    },
+    "phone": {
+      "stats": {
+        "startTime": "2026-10-15T18:36:52.800Z",
+        "duration": 5767.1359999999995,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "global_errors": [],
+      "workers": 1,
+      "retries": [
+        [
+          "desktop",
+          0
+        ],
+        [
+          "phone",
+          0
+        ]
+      ]
+    }
+  },
+  "normal_build_includes_tsc": true,
+  "targeted_eslint": {
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      "src/ui.tsx",
+      "src/table-print.e3.test.tsx",
+      "--max-warnings=0"
+    ],
+    "actual_exit_code": 0
+  },
+  "targeted_prettier": {
+    "command": [
+      "node",
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "src/ui.tsx",
+      "src/c3-components.css",
+      "src/table-print.e3.test.tsx"
+    ],
+    "actual_exit_code": 0
+  },
+  "execution": {
+    "executions": [
+      {
+        "label": "targeted-unit",
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "src/table-print.e3.test.tsx",
+          "src/table-disclosure.c8.test.tsx",
+          "--maxWorkers=1",
+          "--reporter=json",
+          "--outputFile=/tmp/e3-print-layout-proof-v1/unit.json"
+        ],
+        "actual_exit_code": 0
+      },
+      {
+        "label": "normal-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "actual_exit_code": 0
+      },
+      {
+        "label": "native-desktop",
+        "command": [
+          "node",
+          "node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+          "--workers=1",
+          "--project=desktop",
+          "--grep",
+          "Supervisor ledger records a partial cheque",
+          "--reporter=line,json",
+          "--output",
+          "/tmp/e3-print-layout-proof-v1/desktop-output"
+        ],
+        "actual_exit_code": 0
+      },
+      {
+        "label": "native-phone",
+        "command": [
+          "node",
+          "node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+          "--workers=1",
+          "--project=phone",
+          "--grep",
+          "Supervisor ledger records a partial cheque",
+          "--reporter=line,json",
+          "--output",
+          "/tmp/e3-print-layout-proof-v1/phone-output"
+        ],
+        "actual_exit_code": 0
+      }
+    ],
+    "seconds": 40.4820716381073,
+    "source_unchanged": true,
+    "http_matches_built_dist_before": true,
+    "http_unchanged": true,
+    "expected_native_tests": 2,
+    "expected_unit_tests": 8
+  },
+  "source_unchanged_after_lint": true
+}

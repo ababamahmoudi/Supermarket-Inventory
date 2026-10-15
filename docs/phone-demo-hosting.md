@@ -47,6 +47,11 @@ If `Supermarket-Inventory` already exists, use these instead:
 ```bash
 cd ~/Supermarket-Inventory
 git status --short
+```
+
+No output means there are no changed files. If files are listed, keep them and stop before switching branches. When there are no changes, run:
+
+```bash
 git fetch origin
 git switch feat/prototype-e3-phones
 git pull --ff-only origin feat/prototype-e3-phones
@@ -66,7 +71,7 @@ npm run preview -- --host 127.0.0.1 --port 5174 --strictPort
 
 Expect **`feat/prototype-e3-phones`**, a completed dependency installation, a successful TypeScript/Vite build and **`http://127.0.0.1:5174/`**. Leave this Terminal open. In Chrome or Firefox **inside Ubuntu**, enter **http://localhost:5174**. The sign-in page should open. A funding notice or build chunk-size warning is not a failure when the command ends successfully.
 
-For a fresh/reset fictional demo, use **manager / demo1234**. The privileged second step is simulated; follow the prompt. **Demo → Switch user** has owner, manager, rh-supervisor, ny-floor, wh-floor and cashier. Existing saved/custom passwords are preserved during normal upgrades; the fresh-demo password is not a promise to overwrite them. **Reset demo** explicitly clears fictional business/People changes in this browser, as its confirmation explains.
+For a fresh/reset fictional demo, use **manager / demo1234**. The privileged second step is simulated; follow the prompt. Open **Demo** and choose the direct **Switch to…** item for the supplied person. At phone width, open **More (⋯) → Demo** first. The supplied usernames are owner, manager, rh-supervisor, ny-floor, wh-floor and cashier. Existing saved/custom passwords are preserved during normal upgrades; the fresh-demo password is not a promise to overwrite them. **Reset demo** explicitly clears fictional business/People changes in this browser, as its confirmation explains.
 
 For local automated checks, stop the preview with **Ctrl+C**, then run each command separately from `~/Supermarket-Inventory/prototype`:
 
@@ -247,6 +252,11 @@ The four review branches are not automatically merged. Once you have approved th
 ```bash
 cd ~/Supermarket-Inventory
 git status --short
+```
+
+Continue only if that status shows no changed files. If it lists files, keep them and stop before switching branches. With a clean status, run:
+
+```bash
 git fetch origin
 git switch main
 git pull --ff-only origin main

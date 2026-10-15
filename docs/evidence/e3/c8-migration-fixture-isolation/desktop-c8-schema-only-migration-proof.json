@@ -1,0 +1,42 @@
+{
+  "fixture": "Actual UI-produced E1 business state with only prototype_c8_schema removed; not an archived C7 snapshot",
+  "saved_sha256_before": "12bb8b304994dcef06527d412acbf33a9bd722f8973fdf42107afc1516dfd2cf",
+  "exact_boundary_backup_sha256": "d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16",
+  "source_sha256": "e414d230b867caedea593b0e3b9277626590d92a0309478c1088f4dd4e5e85ee",
+  "retained_activity_count": 8,
+  "sale_ids": [
+    "demo-c8-pot-sale"
+  ],
+  "sale_request_ids": [
+    "demo-c8-oil-request"
+  ],
+  "every_decoded_field_preserved": true,
+  "backup_verified_before_publish": true,
+  "repeated_load_idempotent": true,
+  "events": [
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16",
+      "exists": false
+    },
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16",
+      "exists": true
+    },
+    {
+      "kind": "backup-text",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16",
+      "raw_sha256": "d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16"
+    },
+    {
+      "kind": "backup-hash",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16",
+      "sha256": "d3a1a50f643278f65cd587506dcad2154cf794a4ce57f8072949c547fd7a8e16"
+    },
+    {
+      "kind": "publish",
+      "schema": 1
+    }
+  ]
+}

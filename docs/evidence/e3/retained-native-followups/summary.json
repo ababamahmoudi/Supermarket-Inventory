@@ -1,0 +1,406 @@
+{
+  "scope": "Bounded verification of reviewed fixes; overlapping attempts are separate, never summed as a complete suite.",
+  "proofs": {
+    "v5": {
+      "execution": {
+        "executions": [
+          {
+            "label": "normal-build",
+            "command": [
+              "npm",
+              "run",
+              "build"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "native-desktop",
+            "command": [
+              "node",
+              "node_modules/@playwright/test/cli.js",
+              "test",
+              "--config",
+              "/tmp/e3-retained-bounded-v5/source/prototype/bounded.config.ts",
+              "--workers=1",
+              "--project=desktop",
+              "--grep",
+              "Cashier gets only granted custom notebook|manual price stays visible to staff|branch-only manual prices|C6 keeps twenty distinct",
+              "--reporter=line,json",
+              "--output",
+              "/tmp/e3-retained-bounded-v5/desktop-output"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "native-phone",
+            "command": [
+              "node",
+              "node_modules/@playwright/test/cli.js",
+              "test",
+              "--config",
+              "/tmp/e3-retained-bounded-v5/source/prototype/bounded.config.ts",
+              "--workers=1",
+              "--project=phone",
+              "--grep",
+              "Cashier gets only granted custom notebook|manual price stays visible to staff|branch-only manual prices|duplicate barcode reports|C5 button contract covers primary|Payables filters supplier totals",
+              "--reporter=line,json",
+              "--output",
+              "/tmp/e3-retained-bounded-v5/phone-output"
+            ],
+            "actual_exit_code": 1
+          }
+        ],
+        "seconds": 353.98757553100586,
+        "source_unchanged": true,
+        "http_matches_built_dist_before": true,
+        "http_unchanged": true,
+        "expected_tests": 10
+      },
+      "cases": [
+        {
+          "file": "manual-prices-c1.spec.ts",
+          "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+          "project": "desktop",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "manual-prices-c1.spec.ts",
+          "title": "branch-only manual prices do not flag the other location",
+          "project": "desktop",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "notebooks-b.spec.ts",
+          "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+          "project": "desktop",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "storage-c6.spec.ts",
+          "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+          "project": "desktop",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "c5-button-audit.spec.ts",
+          "title": "C5 button contract covers primary product, date, approval and invoice dialogs",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "catalog-a2.spec.ts",
+          "title": "duplicate barcode reports one scoped conflict and allows a corrected save",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "filters-a2.spec.ts",
+          "title": "Payables filters supplier totals and keeps selected report in the same branch",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "failed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "manual-prices-c1.spec.ts",
+          "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "failed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "manual-prices-c1.spec.ts",
+          "title": "branch-only manual prices do not flag the other location",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "notebooks-b.spec.ts",
+          "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "timedOut",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        }
+      ]
+    },
+    "v7": {
+      "execution": {
+        "executions": [
+          {
+            "label": "normal-build",
+            "command": [
+              "npm",
+              "run",
+              "build"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "native-phone",
+            "command": [
+              "node",
+              "node_modules/@playwright/test/cli.js",
+              "test",
+              "--config",
+              "/tmp/e3-retained-bounded-v7/source/prototype/bounded.config.ts",
+              "--workers=1",
+              "--project=phone",
+              "--grep",
+              "Cashier gets only granted custom notebook|manual price stays visible to staff|Payables filters supplier totals",
+              "--reporter=line,json",
+              "--output",
+              "/tmp/e3-retained-bounded-v7/phone-output"
+            ],
+            "actual_exit_code": 0
+          }
+        ],
+        "seconds": 43.668785572052,
+        "source_unchanged": true,
+        "http_matches_built_dist_before": true,
+        "http_unchanged": true,
+        "expected_tests": 3
+      },
+      "cases": [
+        {
+          "file": "filters-a2.spec.ts",
+          "title": "Payables filters supplier totals and keeps selected report in the same branch",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "manual-prices-c1.spec.ts",
+          "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "notebooks-b.spec.ts",
+          "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        }
+      ]
+    },
+    "returns": {
+      "execution": {
+        "command": [
+          "node",
+          "node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e3-retained-bounded-v7/source/prototype/bounded.config.ts",
+          "--workers=1",
+          "--project=phone",
+          "--grep",
+          "Returns desktop columns align within two pixels",
+          "--reporter=line,json",
+          "--output",
+          "/tmp/e3-retained-bounded-v7/returns-phone-followup/output"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 5.1392786502838135,
+        "source_unchanged": true,
+        "http_unchanged": true,
+        "http_matches_prior_normal_build": true,
+        "expected_cases": 1
+      },
+      "cases": [
+        {
+          "file": "returns-a2.spec.ts",
+          "title": "Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        }
+      ]
+    },
+    "print": {
+      "execution": {
+        "executions": [
+          {
+            "label": "targeted-unit",
+            "command": [
+              "node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "src/table-print.e3.test.tsx",
+              "src/table-disclosure.c8.test.tsx",
+              "--maxWorkers=1",
+              "--reporter=json",
+              "--outputFile=/tmp/e3-print-layout-proof-v1/unit.json"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "normal-build",
+            "command": [
+              "npm",
+              "run",
+              "build"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "native-desktop",
+            "command": [
+              "node",
+              "node_modules/@playwright/test/cli.js",
+              "test",
+              "--config",
+              "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+              "--workers=1",
+              "--project=desktop",
+              "--grep",
+              "Supervisor ledger records a partial cheque",
+              "--reporter=line,json",
+              "--output",
+              "/tmp/e3-print-layout-proof-v1/desktop-output"
+            ],
+            "actual_exit_code": 0
+          },
+          {
+            "label": "native-phone",
+            "command": [
+              "node",
+              "node_modules/@playwright/test/cli.js",
+              "test",
+              "--config",
+              "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+              "--workers=1",
+              "--project=phone",
+              "--grep",
+              "Supervisor ledger records a partial cheque",
+              "--reporter=line,json",
+              "--output",
+              "/tmp/e3-print-layout-proof-v1/phone-output"
+            ],
+            "actual_exit_code": 0
+          }
+        ],
+        "seconds": 40.4820716381073,
+        "source_unchanged": true,
+        "http_matches_built_dist_before": true,
+        "http_unchanged": true,
+        "expected_native_tests": 2,
+        "expected_unit_tests": 8
+      },
+      "cases": [
+        {
+          "file": "operations.spec.ts",
+          "title": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+          "project": "desktop",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        },
+        {
+          "file": "operations.spec.ts",
+          "title": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+          "project": "phone",
+          "expected": "passed",
+          "actual_status": "passed",
+          "attempts": 1,
+          "retries": [
+            0
+          ]
+        }
+      ],
+      "unit": {
+        "numTotalTests": 8,
+        "numPassedTests": 8,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      }
+    }
+  },
+  "large_photos": {
+    "actual_distinct_sources": 20,
+    "source_bytes_each_at_least": 3000000,
+    "all_original_hashes_and_previews_after_reload": true,
+    "actual_download_hash_checked": true,
+    "history_revert_after_reload": true,
+    "browser_errors": [],
+    "raw_evidence": "twenty-real-photos-proof.json"
+  },
+  "latest_behaviors": {
+    "public_rule_manual_pair_and_private_margin_denial": "Desktop actualv5; Phone actualv7 passed",
+    "Cashier_granted_custom_notebook_read_then_real_Manager_ACL_revocation": "Desktop actualv5; Phone actualv7 passed",
+    "compact_product_barcode_conflict_and_shared_primary_dialogs": "Phone actualv5 passed",
+    "Payables_Richmond_Hill_zero_balance_and_separate_Golden_Grain_overdue_210": "Phone actualv7 passed using real report",
+    "Returns_EN_FA_overview_and_detail_geometry": "Phone exact retained case actual followup passed, original2px every glyph/control guard preserved",
+    "phone_and_desktop_month_end_cheque_evidence": "Original ledger case passed both projects; four new print regressions + four retained disclosure units passed"
+  },
+  "source_identity_boundary": "v5 uses exact90ad plus originalv11 three test overlays; v7/Returns use exact4524 plus v14 three native test overlays. Print uses exact90ad plus separate production print repair. Each normal build and source/HTTP guard is recorded. Later final branch replay is separate.",
+  "diagnostic_v5_boundary": "Actual7/10, with three phone fixture failures retained. Their fully preserved amount/privacy assertions pass in v7.",
+  "preparation_failures": "v3/v6 stopped on exact-source baseline mismatch before any build/test. v14 recomposed the already applied compact helper with the overdue report check on explicit Git4524, preserving earlier work.",
+  "complete_final_source_native_matrix": "Pending separately; no incomplete or family-equivalent result is called a final full pass."
+}

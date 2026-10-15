@@ -1,0 +1,66 @@
+{
+  "actual_exit_code": 0,
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "global_errors": [],
+  "original_stats": {
+    "startTime": "2026-10-15T19:02:55.445Z",
+    "duration": 41041.061,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "C8 schema-only boundary preserves real saved settings, manual prices, all records and original bytes after verified exact backup",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "desktop-c8-schema-only-migration-proof.json"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "C8 backup write failure blocks schema replacement and retains exact state and originals until recovery",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "desktop-c8-backup-failure-recovery-proof.json"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "C8 schema-only boundary preserves real saved settings, manual prices, all records and original bytes after verified exact backup",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "phone-c8-schema-only-migration-proof.json"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "C8 backup write failure blocks schema replacement and retains exact state and originals until recovery",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "phone-c8-backup-failure-recovery-proof.json"
+      ]
+    }
+  ],
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 42.68920969963074,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 4,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "0a18be56210b2a54e615f5b6a58321928714642d0886b0b54b90e19707f3187a"
+  }
+}

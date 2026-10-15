@@ -1,0 +1,26 @@
+{
+  "base_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "source_files_checked": 1841,
+  "source_changed_during_run": false,
+  "recorded_overlay_files": [
+    "prototype/tests/c8-migration.spec.ts"
+  ],
+  "production_files_changed": [],
+  "dist_files": 61,
+  "normal_build_reused_from_exact_base": true,
+  "new_normal_build_claimed": false,
+  "http_before_and_after_all_assets_match_pins": true,
+  "guard_detail": "The included bounded-runner.py hashes each of the61served assets before and after against the actual normal-build pin. Run metadata records actual comparisons; per-asset HTTP response bodies are not duplicated.",
+  "source_overlay_sha256": "e5ac3b22fcd3426b86e85a1b0d653544b7efe065c11bcc9a36f98fbe889fdd8b",
+  "private_adapter_changes": [
+    "baseURL5197",
+    "webServerundefined; owned normal Vite preview"
+  ],
+  "unchanged_budgets": {
+    "test_ms": 60000,
+    "expect_ms": 5000,
+    "retries": 0,
+    "workers": 2
+  },
+  "scope": "Four original affected cases only. Does not turn the separate original812 run into a clean run."
+}

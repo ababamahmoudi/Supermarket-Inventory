@@ -1,0 +1,177 @@
+{
+  "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "source_unchanged": true,
+  "source_pins_identical_across_runs": true,
+  "current_tracked_inputs_match": true,
+  "application": {
+    "counts": {
+      "numTotalTests": 1426,
+      "numPassedTests": 1426,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "actual_exit_code": 0,
+    "seconds": 353.040057182312,
+    "files": 140,
+    "global_errors": [],
+    "reporters": [
+      "default",
+      "json",
+      "read-only global-error observer"
+    ],
+    "command": [
+      "node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/tmp/e3-postprint-diagnostic/observer.mjs",
+      "--outputFile=/tmp/e3-postprint-diagnostic/app.json"
+    ]
+  },
+  "sdk": {
+    "counts": {
+      "numTotalTests": 75,
+      "numPassedTests": 75,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "name": "sdk",
+    "command": [
+      "npm",
+      "run",
+      "test:sdk",
+      "--",
+      "--maxWorkers=2",
+      "--reporter=json",
+      "--outputFile=/tmp/e3-combined-verified-print-final/sdk.json"
+    ],
+    "exit_code": 0,
+    "seconds": 4.19
+  },
+  "lint": {
+    "name": "lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "seconds": 59.678
+  },
+  "initial_application_attempt": {
+    "actual_exit_code": 1,
+    "all_1426_assertions_passed": true,
+    "classification": "Failed process; the JSON-only reporter did not retain a cause. The default/error-aware rerun and same-head CI units passed; no source change or error suppression was used. Original failure remains retained."
+  },
+  "pricing_seed_cases": 23,
+  "limitations": [
+    "This packet proves application tests, SDK and lint; it does not claim the still-running full browser suite passed.",
+    "Physical printer alignment, a real register, Android/iPhone installation and Cloudflare deployment were not performed."
+  ],
+  "raw_files": [
+    {
+      "path": "diagnostic-app.json.gz",
+      "bytes": 74796,
+      "sha256": "92cf7f3cc54c6aff2d6b76143e68da4482760b957f4b1e8ec5ace5abd28c28b5",
+      "original_bytes": 570977,
+      "original_sha256": "cfd808502557935c0c518300bcd0eae0ce1742d85274a86bf6e100ec65e911a9"
+    },
+    {
+      "path": "diagnostic-app.log.gz",
+      "bytes": 11607,
+      "sha256": "1292fa7687b5d9f8b7fa726595f54fdf598c35ad7fad7116d8d96ce36ddc4e32",
+      "original_bytes": 35007,
+      "original_sha256": "4955045311a0a0fd1c79f6a9bb2339433ebaac9b2d1107dac085f4c4aed035c3"
+    },
+    {
+      "path": "diagnostic-start.json.gz",
+      "bytes": 28778,
+      "sha256": "f730bdb2d4c039416932c7c7c5c44e067637f4d8936361a65971b9636171e272",
+      "original_bytes": 67240,
+      "original_sha256": "e3d0dfae1abd3f281b4403364da1e36f02c92c00dcd46a4d1138e69b787c0c82"
+    },
+    {
+      "path": "diagnostic-result.json.gz",
+      "bytes": 255,
+      "sha256": "612ced163da39115a3df7a5e894ce2e10185880129a0df46d3d8b5c8d5b0265f",
+      "original_bytes": 405,
+      "original_sha256": "d8613a54ed32ecf5abfba8d22af375912c3c85522a5079f8579993f89e01d3ff"
+    },
+    {
+      "path": "diagnostic-global-errors.json.gz",
+      "bytes": 132,
+      "sha256": "19eea5f154407fa01f7366a139c7b99727a6dbe6f4e7e76ee93da392fc15dec9",
+      "original_bytes": 174,
+      "original_sha256": "15ba71e386ad476cfffa442a6c54c69ef9463eff84a0a8a041fb5aa84687fc41"
+    },
+    {
+      "path": "diagnostic-observer.mjs.gz",
+      "bytes": 434,
+      "sha256": "cd2be905bb95eb7b19e6fd3c5d27297fdd5f497ffd60a2a08f89a97ca26d2b03",
+      "original_bytes": 678,
+      "original_sha256": "ae88688feee9a56a6d3ffc3c747c38fa9a03ec1e64a3f71007bcaa0c892d3d94"
+    },
+    {
+      "path": "diagnostic-run.py.gz",
+      "bytes": 694,
+      "sha256": "cd8ce89541fa1d958980a31342ef54d9aa0babfe67b2ce544b576c0c1e2a3b34",
+      "original_bytes": 1296,
+      "original_sha256": "a0f2dc8028d76f08957e48c6d5f7a5c79321ffb4a29193de4fdd66f184fedd5b"
+    },
+    {
+      "path": "initial-app.json.gz",
+      "bytes": 74783,
+      "sha256": "11ec7a58f0114cea13fe88d3c9dda2a743d04d1c7b78dcee11aabb7b64ed85d3",
+      "original_bytes": 570867,
+      "original_sha256": "1238e753168c2bd9818d09e96fb5c16ec55072e15b84084ee7c10f0abc29ba9f"
+    },
+    {
+      "path": "initial-app.log.gz",
+      "bytes": 88,
+      "sha256": "805029fa00d9e350ec66ce10bb79f33106ef2cb2c2e858ab3936dbe54e83212a",
+      "original_bytes": 70,
+      "original_sha256": "f5627fef5a68ce1d4d48228ebb0ba05f0faeea8dab9c67c64f9d34a5014b4765"
+    },
+    {
+      "path": "initial-start.json.gz",
+      "bytes": 28634,
+      "sha256": "b13751f5c4caf13409e700372c33e71f38c16149e6becb4ae34dc7bfd078792b",
+      "original_bytes": 66978,
+      "original_sha256": "69fabfc553473573c5ad08a3df7f5e3cbb5d21ba91de17e17edd2868ed35c3ed"
+    },
+    {
+      "path": "initial-result.json.gz",
+      "bytes": 28902,
+      "sha256": "efef5692f18f5cc66b6c92819e3764155b706dd2dd5e690ea59d9eee780e81d4",
+      "original_bytes": 67777,
+      "original_sha256": "8e920e654fb9e0dcf91f2c22884985123b38df4f3a07af01576cd7347f0da612"
+    },
+    {
+      "path": "initial-sdk.json.gz",
+      "bytes": 4563,
+      "sha256": "1bebcc2e5cec9a523d8e7adb60b5eead738e2b3db9996beb6cb4d3f27404bf9f",
+      "original_bytes": 25871,
+      "original_sha256": "5b4ec41b4e750289d1c803f9ce2473e54ece20078dc8c2405fc9ce2e4e4a87a1"
+    },
+    {
+      "path": "initial-sdk.log.gz",
+      "bytes": 290,
+      "sha256": "705d8ee1302066711268a60f81a15db2fd193c7e3d61a052243bf06915994f58",
+      "original_bytes": 464,
+      "original_sha256": "606c2af75e610a27e4b5f6328554b28312d6f5e58c7d6f79872dbf0c3bfc634c"
+    },
+    {
+      "path": "initial-lint.log.gz",
+      "bytes": 253,
+      "sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "original_bytes": 369,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a"
+    }
+  ]
+}
