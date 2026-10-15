@@ -199,3 +199,9 @@ The complete43-item owner mapping, required 17-scene/five-variant screenshot mat
 Stack E2 on final E1 without an owner-review pause. Build requirements §36 / Decision 034: canonical effective selling terms and all source adapters; one scoped task per changed selling Store, coalescing/Undo and local Sale preparation; protected register/physical-label/waiver work, bulk actions and current-source printing; personal bell/routing, mandatory 24/48 reminders, Dashboard card and Cashier pill. Preserve verified migration and all existing tests.
 
 Before Ready: run actual full app/SDK/pricing/type/lint/build and E2 native user-flow/scope tests; capture/review 24 requested E2 screenshots against final source. Publish actual outputs and pending limits in PR_E2_REVIEW.md. Then continue E3, without automatic merge or hosting account/resource creation. Do not count commands that are merely prepared as completed tests.
+
+## Authorized E3 stage (source contract saved before code)
+
+Stack E3 on final E2: seven compact phone rows, all new screens/menus EN/FA390/430 with role masking, generated company manifest/icons/standalone/theme, dedicated offline page and public-only safe-update worker. Requirements §37/Decision035 govern cache and genuine work guards. Preserve exact printing and all existing app/SDK/pricing/lint/type/build/browser checks.
+
+Write detailed owner-run phone-demo-hosting without creating accounts/resources/deployment. Review final screenshots individually; label browser standalone emulation honestly and leave physical Home Screen/Safari/printer/real hosting unverified when unavailable. Finish all four branch/PR links, latest E3 no-Docker commands and two original E demo scripts. No automatic merge, paid resource or server implementation.

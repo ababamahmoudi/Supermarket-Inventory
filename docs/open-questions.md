@@ -130,3 +130,13 @@ No new monetary or authority rule is invented. Price updates describe outstandin
 - Real push/email delivery and shared phone data remain later server work. Route settings cannot remove the owner's mandatory minimum task/escalation recipients or the requester's own Sale decision.
 
 Later options remain different roles by location, multi-product Sale editing, until sold out after inventory, and real push/email. There is no new owner-action gate between the authorized E stages. Actual tests/screenshots remain pending until executed proof is recorded.
+
+## E3 recorded boundaries and later work
+
+- Use the seven requested compact phone-row families; keep wider tables/Columns and inherited protected data. Verify EN/FA at 390 and 430 rather than treating desktop width alone as proof.
+- Configure PWA name/logo/themes/scope/standalone and a dedicated bilingual No connection page. Use exact generated public asset caching only; no private/offline financial workspace or stale signed-in HTML. Explicit safe updates wait actual commands/files/migration/printing and dirty UI, preserve data and never auto-reload an editor.
+- No cloud account/resource is created here, including a free one. Optional Cloudflare Pages/Access instructions are for the owner later. Pages built-in preview protection does not secure its production parent hostname; both must be verified privately before real build upload. Plan/seat limits and dashboard labels can change and must be checked before owner setup.
+- Current Scan barcode focuses search; a live camera decoder remains unbuilt. HTTPS permits secure browser features but does not implement a scanner. Existing photo capture depends on the actual device browser.
+- Hardware Android/iPhone Home Screen launch, real Safari, physical printing and real private hosting are not presumed tested. Genuine emulator evidence must say emulator. Each phone/origin stores independent demo records; real push/email, remote revocation/sync and authenticated server data remain future work.
+
+These are transparent implementation boundaries, not a new request for owner action during the already authorized build. Existing unresolved defaults continue unchanged.

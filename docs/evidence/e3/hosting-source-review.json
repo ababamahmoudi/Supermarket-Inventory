@@ -1,0 +1,247 @@
+{
+  "kind": "read-only-official-source-review",
+  "checked_utc": "2026-10-15T14:21:20.908694+00:00",
+  "scope": "Hosting instructions only. No account, resource, deployment or privateAccess policy created. Official websites denied by networkproxy; successful raw files are official upstream documentation repositories through supported allowedproxy route.",
+  "sources": [
+    {
+      "url": "https://developers.cloudflare.com/pages/get-started/direct-upload/",
+      "checked_utc": "2026-10-15T14:11:33.059744+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/pages/configuration/preview-deployments/",
+      "checked_utc": "2026-10-15T14:11:33.060426+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/pages/configuration/branch-build-controls/",
+      "checked_utc": "2026-10-15T14:11:33.060840+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/pages/configuration/build-configuration/",
+      "checked_utc": "2026-10-15T14:11:33.061371+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/pages/platform/limits/",
+      "checked_utc": "2026-10-15T14:11:33.073895+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/",
+      "checked_utc": "2026-10-15T14:11:33.075379+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/integrations/third-party-apps/cloudflare-pages/",
+      "checked_utc": "2026-10-15T14:11:33.076877+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/access-controls/policies/",
+      "checked_utc": "2026-10-15T14:11:33.078955+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/",
+      "checked_utc": "2026-10-15T14:11:33.081077+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/account-limits/",
+      "checked_utc": "2026-10-15T14:11:33.082855+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://www.cloudflare.com/plans/zero-trust-services/",
+      "checked_utc": "2026-10-15T14:11:33.084364+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts",
+      "checked_utc": "2026-10-15T14:11:33.086593+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable",
+      "checked_utc": "2026-10-15T14:11:33.089023+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://support.apple.com/guide/iphone/turn-a-website-into-an-app-iph42ab2f3a7/ios",
+      "checked_utc": "2026-10-15T14:11:33.091013+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://vite.dev/guide/static-deploy.html",
+      "checked_utc": "2026-10-15T14:11:33.092974+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/applications/configure-apps/",
+      "checked_utc": "2026-10-15T14:11:33.094997+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "status": null
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/get-started/direct-upload.mdx",
+      "checked_utc": "2026-10-15T14:12:04.766106+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/get-started/direct-upload.mdx",
+      "sha256": "9c29ef385caca6d85fdd6f5692c43d9ea24568f1544341dfd9bc14b394e0f585",
+      "bytes": 7502
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/preview-deployments.mdx",
+      "checked_utc": "2026-10-15T14:12:04.766750+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/preview-deployments.mdx",
+      "sha256": "ddaa11a4a19c3ec4233ebf82ee726804796f689190dfc3e23ececad2257be00f",
+      "bytes": 6848
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx",
+      "checked_utc": "2026-10-15T14:12:04.767138+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx",
+      "sha256": "850c15c33aeda7f7fb23d119b525e9dbe68d33f5cfad3eaa1b770fe5aaf60bbe",
+      "bytes": 4177
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/integrations/third-party-apps/cloudflare-pages.mdx",
+      "checked_utc": "2026-10-15T14:12:04.767641+00:00",
+      "error": "HTTP Error 404: Not Found",
+      "status": 404
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/policies.mdx",
+      "checked_utc": "2026-10-15T14:12:05.062865+00:00",
+      "error": "HTTP Error 404: Not Found",
+      "status": 404
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx",
+      "checked_utc": "2026-10-15T14:12:05.116054+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx",
+      "sha256": "c6a658d09791e7ca70dd62bfade01a90f961f5406fec54d1674b6aeb3d257e46",
+      "bytes": 4975
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/account-limits.mdx",
+      "checked_utc": "2026-10-15T14:12:05.146580+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/account-limits.mdx",
+      "sha256": "be535327f32832b8396905963c5cfaaea19a064942298bb196ecec74b607f209",
+      "bytes": 5809
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/platform/limits.mdx",
+      "checked_utc": "2026-10-15T14:12:05.156785+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/platform/limits.mdx",
+      "sha256": "3e95301efe930c79b09a29f06a285880b0e8a3f3bc10601acaebbbf08fcd6fdc",
+      "bytes": 4815
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/security/secure_contexts/index.md",
+      "checked_utc": "2026-10-15T14:12:05.330983+00:00",
+      "error": "HTTP Error 404: Not Found",
+      "status": 404
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/progressive_web_apps/guides/making_pwas_installable/index.md",
+      "checked_utc": "2026-10-15T14:12:05.344757+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/progressive_web_apps/guides/making_pwas_installable/index.md",
+      "sha256": "0e2712500837b9985b1a69b2954d6e5c01e3e4e27e8f1a0db5832de9546810b2",
+      "bytes": 10538
+    },
+    {
+      "url": "https://raw.githubusercontent.com/vitejs/vite/main/docs/guide/static-deploy.md",
+      "checked_utc": "2026-10-15T14:12:05.385370+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/vitejs/vite/main/docs/guide/static-deploy.md",
+      "sha256": "d2de45903bdc6d2ecbb82e05234d7bcd012e062f40cea96e8107ab118aec30e6",
+      "bytes": 14478
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/platform/known-issues.mdx",
+      "checked_utc": "2026-10-15T14:13:02.208926+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/platform/known-issues.mdx",
+      "sha256": "42381f68eab0c7cffb6bfc9cc169f946802bc7b0125cdad9fdc2319ea35d582d",
+      "bytes": 8046
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/policies/index.mdx",
+      "checked_utc": "2026-10-15T14:13:02.209603+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/policies/index.mdx",
+      "sha256": "fc9754e34b0bb88b785961cd487fd9bf22b0ffef4de461d1ffa148aa7aed3a09",
+      "bytes": 22774
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/partials/cloudflare-one/access/self-hosted-app/generic-public-app.mdx",
+      "checked_utc": "2026-10-15T14:13:02.210222+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/partials/cloudflare-one/access/self-hosted-app/generic-public-app.mdx",
+      "sha256": "20668b734d103da268c14e282d41e61974547888c85312b90a354a77da687fdb",
+      "bytes": 1130
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/cloudflare-one/access-controls/applications/http-apps/application-paths.mdx",
+      "checked_utc": "2026-10-15T14:13:02.218927+00:00",
+      "error": "HTTP Error 404: Not Found",
+      "status": 404
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/security/defenses/secure_contexts/index.md",
+      "checked_utc": "2026-10-15T14:13:02.447648+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/security/defenses/secure_contexts/index.md",
+      "sha256": "34d362549bf0228732eea6025f614c05da3615fd9cfcffdf78e163bf48ab2996",
+      "bytes": 5011
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/deploy-hooks.mdx",
+      "checked_utc": "2026-10-15T14:13:02.612912+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/deploy-hooks.mdx",
+      "sha256": "87b078b880a8882f2d846c28fccee7dd37cf11553d145c950807f9f1521c24c0",
+      "bytes": 6542
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/branch-build-controls.mdx",
+      "checked_utc": "2026-10-15T14:13:02.629574+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/branch-build-controls.mdx",
+      "sha256": "c506920e625aac12414f0ce90be0a8b291ff7f8d02d02965c5498f6082773949",
+      "bytes": 3963
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/build-configuration.mdx",
+      "checked_utc": "2026-10-15T14:13:02.639939+00:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/pages/configuration/build-configuration.mdx",
+      "sha256": "c8976ffd4bdaa8f61433c3f4e0a480573509b510379d967d3a8e79a3374a06dc",
+      "bytes": 4028
+    }
+  ]
+}

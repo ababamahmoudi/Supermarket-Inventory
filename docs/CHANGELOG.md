@@ -1,6 +1,13 @@
 # Project changelog
 
 
+## 2026-10-15 — E3 source-first phone and installable-shell contract
+
+- Specified seven compact phone-row families with inherited protected data, EN/FA390/430 checks and retained wider tables/printing.
+- Defined configured company manifest/icons/standalone/theme, dedicated No connection page, exact public-only cache and explicit updates guarded by genuine active work/dirty editors.
+- Added owner-run no-Docker Ubuntu/local-Wi-Fi/private Pages+Access instructions, separate phone data and accurate scanner/HTTPS/installation limits. No account/resource/deployment or actual hardware test is performed by this specification; executed proof remains separate.
+
+
 ## 2026-10-15 — E2 source-first price work and personal-notification contract
 
 - Activated E2 requirements before code: one canonical public selling-term source for store tasks, no Warehouse/no-op/backlog, retained coalescing/Undo/source attribution and local Sale end preparation.
