@@ -1,0 +1,55 @@
+{
+  "base_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "actual_exit_code": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "global_errors": [],
+  "workers": 1,
+  "stats": {
+    "startTime": "2026-10-15T19:28:45.413Z",
+    "duration": 19306.504,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "project": "phone",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    }
+  ],
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 20.8833224773407,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 2,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "a34f83a3d80cba05f6bf300ec94046f1739bf7dcbd08638dfd3eb26e9e7c811a"
+  },
+  "source_files_checked": 1841,
+  "test_only_overlay_files": [
+    "prototype/tests/c3-tables.spec.ts"
+  ],
+  "application_production_files_changed": [],
+  "normal_build_reused_from_exact_e47": true,
+  "actual_new_build_claimed": false,
+  "original_failure_trace_sha256": "f91ebb7c114819cc2caaf290a8bcd737510d5e86de88949de719147b1215f177",
+  "scope": "Separate two-case replay only. Original full run keeps its genuine failures/partial statuses."
+}

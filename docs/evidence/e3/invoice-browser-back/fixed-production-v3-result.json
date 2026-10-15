@@ -1,0 +1,18 @@
+{
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/screens/Invoices.navigation.e1.test.tsx",
+    "--config",
+    "vitest-proof.config.ts",
+    "--maxWorkers=1",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/tmp/e3-ci-first-two-proof/fixed-production-v3.json"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 7.570035219192505,
+  "variant": "approved one-call production removal, final typed regression",
+  "regression_sha256": "f8aaf90fcbbb787f3188a98507b91d915f873b4e51d5c62ce904d0a60cf38e7a"
+}

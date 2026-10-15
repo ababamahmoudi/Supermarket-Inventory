@@ -1,0 +1,10 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "build"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 23.41173243522644,
+  "interrupted": false
+}

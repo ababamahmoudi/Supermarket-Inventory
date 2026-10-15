@@ -1,0 +1,30 @@
+{
+  "head_sha": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "run_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38788356829",
+  "annotations": [
+    {
+      "path": "prototype/tests/catalog-a2.spec.ts",
+      "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a/prototype/tests/catalog-a2.spec.ts",
+      "start_line": 121,
+      "start_column": 28,
+      "end_line": 121,
+      "end_column": 28,
+      "annotation_level": "failure",
+      "title": "[desktop] \u203a tests/catalog-a2.spec.ts:91:1 \u203a Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "message": "  2) [desktop] \u203a tests/catalog-a2.spec.ts:91:1 \u203a Lookup Change price defaults to all stores and records the signed-in Supervisor \n    Error: expect(locator).not.toBeVisible() failed\n\n    Locator:  getByRole('dialog', { name: 'Change price', exact: true })\n    Expected: not visible\n    Received: visible\n    Timeout:  5000ms\n\n    Call log:\n      - Expect \"not toBeVisible\" getByRole('dialog', { name: 'Change price', exact: true }) with timeout 5000ms\n      - waiting for getByRole('dialog', { name: 'Change price', exact: true })\n        14 \u00d7 locator resolved to <dialog open=\"\" tabindex=\"-1\" aria-labelledby=\"_r_13_\" class=\"confirm-dialog ui-dialog change-price-dialog\">\u2026</dialog>\n           - unexpected value \"visible\"\n\n\n      119 |     .getByRole(\"button\", { name: \"Save new price\", exact: true })\n      120 |     .click();\n    > 121 |   await expect(editor).not.toBeVisible();\n          |                            ^\n      122 |   await expect(page.locator(\".lookup-detail .price\")).toHaveText(\"$3.29\");\n      123 |   await setBranch(page, \"Branch 2\");\n      124 |   await expect(page.locator(\".lookup-detail .price\")).toHaveText(\"$3.29\");\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/catalog-a2.spec.ts:121:28",
+      "raw_details": ""
+    },
+    {
+      "path": "prototype/tests/c3-invoices.spec.ts",
+      "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a/prototype/tests/c3-invoices.spec.ts",
+      "start_line": 287,
+      "start_column": 22,
+      "end_line": 287,
+      "end_column": 22,
+      "annotation_level": "failure",
+      "title": "[desktop] \u203a tests/c3-invoices.spec.ts:253:1 \u203a posted invoice Columns persist",
+      "message": "  1) [desktop] \u203a tests/c3-invoices.spec.ts:253:1 \u203a posted invoice Columns persist, and detail/browser Back retain the Posted list \n    Error: expect(page).toHaveURL(expected) failed\n\n    Expected pattern: /#invoices$/\n    Received string:  \"http://127.0.0.1:5174/#invoices?id=a2-fixture%3AGG-11794\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toHaveURL\" with timeout 5000ms\n        13 \u00d7 locator resolved to <html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-text-size=\"default\">\u2026</html>\n           - unexpected value \"http://127.0.0.1:5174/#invoices?id=a2-fixture%3AGG-11794\"\n\n\n      285 |   ).toBeVisible();\n      286 |   await page.goBack();\n    > 287 |   await expect(page).toHaveURL(/#invoices$/);\n          |                      ^\n      288 |   await expect(page.locator(\".invoice-posted-table\")).toBeVisible();\n      289 |   await expect(\n      290 |     page.getByRole(\"tab\", { name: \"Posted\", exact: true }),\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c3-invoices.spec.ts:287:22",
+      "raw_details": ""
+    }
+  ]
+}

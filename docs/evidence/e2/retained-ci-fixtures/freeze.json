@@ -1,0 +1,29 @@
+{
+  "exact_e2_git_commit": "73891b6c19852e1da6a99316b2fef7873039ea9c",
+  "candidate_manifest_sha256": "de0491f92c70af1686d01ff3136f49b0cfac85832f5b3d70d96daa27a5d7ed44",
+  "candidate_files": [
+    {
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "source": "/tmp/e2-ci-review-guarded-fixtures/prototype/tests/c8-layout-proof.spec.ts",
+      "baseline_sha256": "0758bd43b75d5d7198d275be59d6cc8fbf58b1e671d9665edbea4b3fbe8d3c8c",
+      "sha256": "47e655bf478a6a898f6a06bd5a7df520b652dc942b077c8c2abd71fda611c054"
+    },
+    {
+      "path": "prototype/tests/labels-c1.spec.ts",
+      "source": "/tmp/e2-ci-review-guarded-fixtures/prototype/tests/labels-c1.spec.ts",
+      "baseline_sha256": "05840cf89778c3e63b751a72e4b7519c0b764a36d944e1d9bdee1e7fc834ab82",
+      "sha256": "085b8232d103dafd4a7310c57e5610f16177804bb546f540caf3bb1057d016b7"
+    }
+  ],
+  "source_root": "/tmp/e2-ci-bounded-originals-v1/source",
+  "source_file_count": 1651,
+  "reused_normal_build": {
+    "execution_result": "/tmp/e2-ci-bounded-originals-v1/execution-result.json",
+    "execution_result_sha256": "38b2f8eda78ebb25c0068493774ca021d37d503813c92434df1296f715dc6792",
+    "normal_build_log": "/tmp/e2-ci-bounded-originals-v1/normal-build.log",
+    "normal_build_log_sha256": "e742427ca7ddcc90b0ed1209f4e813571da63b3e7ad8195aee3135a6c704c428",
+    "actual_build_exit_code": 0,
+    "reason": "Prior invocation selector found no tests; every frozen source byte and built production file is unchanged. Only the external CLI grep anchors were corrected."
+  },
+  "source_scope": "Exact E2 Git archive plus only recorded two test-only observation-barrier changes and private transport adapter; production inputs unchanged."
+}

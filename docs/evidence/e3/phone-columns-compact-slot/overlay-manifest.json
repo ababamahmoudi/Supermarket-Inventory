@@ -1,0 +1,22 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test-only explicit compact price-slot verification with desktop selector retained",
+  "files": [
+    {
+      "path": "prototype/tests/c3-tables.spec.ts",
+      "source": "/tmp/e3-phone-columns-price-slot-fix/staged/prototype/tests/c3-tables.spec.ts",
+      "baseline_sha256": "a05d610603babe6aade49f1d279e84e2ed4bce4b362eaf42766c2ffa121462a4",
+      "sha256": "d4b709495cf3cf3ba07c9dca0786b76acfa06ad0e6073fa03bd38e715166b95b"
+    }
+  ],
+  "reason": "Actual authorized worker compact catalog reconstructs price into td.phone-list-value, without old desktop data-column-key. Trace price slot visibly contains seeded Basmati Rice0001 approved23.99; old selector absence is expected E3 presentation, not authority/preference loss.",
+  "preserved": [
+    "mandatory Product column cannot be hidden",
+    "manager price-hidden preference across reload and role switch",
+    "worker independent visible price and supplier financial DOM/Columns permissions",
+    "manager preference still hidden on return and actual Reset columns restoration",
+    "original desktop price cell selector retained unless actualrow.phone-list-row",
+    "all original budgets/retries/skips/casecounts"
+  ],
+  "strengthened": "Both price checks now verify actual seeded product0001 visible approved23.99 in its genuine presentation slot."
+}

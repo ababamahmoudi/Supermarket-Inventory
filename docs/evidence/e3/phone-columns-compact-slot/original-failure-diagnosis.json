@@ -1,0 +1,10 @@
+{
+  "source_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "original_trace": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/c3-tables-Columns-keeps-ma-84160-sor-money-to-a-Floor-Worker-phone/trace.zip",
+  "original_trace_sha256": "f91ebb7c114819cc2caaf290a8bcd737510d5e86de88949de719147b1215f177",
+  "original_failure": "Phone c3-tables.spec.ts Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker; desktop td[data-column-key=price] is absent in intended compact row",
+  "actual_compact_slot": "td.phone-list-value contains actual seeded product0001 approved$23.99; data-column-key omitted by E3 reconstruction",
+  "authority_binding": "useTableColumns scopes saved preferences by company+username+table; compact permittedCell requires resolvedcolumn&&!column.hidden; supplier financial columns separately capability-gated",
+  "fix_scope": "Onlytwo explicit visibleprice checks select compact slot when actualrow.phone-list-row; desktopselector retained. Both also assert knownapproved23.99. Mandatorynames/userpreference/refresh/workerindependence/privatefinancialdenial/switchback/reset assertions retained and actualbothprojectreplaypassed.",
+  "independent_diagnosis": "/tmp/final-native-readonly-causes/C3-TABLES-PHONE.md"
+}
