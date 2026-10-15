@@ -58,10 +58,14 @@ for (const width of [390, 430])
           });
         }
         if (scene.page === "products" || scene.page === "labels") {
-          const size = rows
+          const englishName = rows
             .filter({ hasText: "Stainless Steel Pot" })
             .first()
-            .locator('.product-name [lang="en"] .unit-fragment')
+            .locator(".phone-list-name")
+            .getByText("Stainless Steel Pot 24 cm", { exact: true });
+          await expect(englishName).toBeVisible();
+          const size = englishName
+            .locator(".unit-fragment")
             .filter({ hasText: /^24 cm$/ });
           await expect(size).toBeVisible();
           expect(

@@ -1,0 +1,77 @@
+{
+  "source_commit": "5741353f47457842f925df623f35e44135a250e5",
+  "checks": [
+    {
+      "name": "format",
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--write",
+        "src/e1-notification-read.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.303
+    },
+    {
+      "name": "units",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/e1-notification-read.test.ts",
+        "src/price-updates-sources.e2.test.ts",
+        "src/price-updates.e2.test.ts",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/final-notification-regression/unit-results.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 11.742
+    },
+    {
+      "name": "types",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 30.44
+    },
+    {
+      "name": "scoped-eslint",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/e1-notification-read.test.ts",
+        "--max-warnings",
+        "0"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.965
+    },
+    {
+      "name": "scoped-format",
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/e1-notification-read.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.205
+    }
+  ],
+  "units": {
+    "numTotalTestSuites": 9,
+    "numPassedTestSuites": 9,
+    "numFailedTestSuites": 0,
+    "numTotalTests": 53,
+    "numPassedTests": 53,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "root_source_guard_count": 1637,
+  "root_source_changed_during_checks": []
+}
