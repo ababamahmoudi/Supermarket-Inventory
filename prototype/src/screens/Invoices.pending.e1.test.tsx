@@ -136,6 +136,18 @@ function begins(buttonName: string) {
   // A second click must not allocate a second invoice.
   fireEvent.click(button);
 }
+async function entryReady() {
+  // A retained original is committed before the real controller finishes its
+  // derived reconciliation. Wait for the same public entry readiness used by
+  // New/Manual, then keep the canonical file/hash assertions independent below.
+  await waitFor(
+    () => {
+      expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
+      expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
+    },
+    { timeout: 10000 },
+  );
+}
 async function manual(read: () => Promise<ReturnType<typeof initialState>>) {
   if (!screen.queryByRole("button", { name: "Manual entry" })) {
     const previous = (await read()).invoice.id;
@@ -214,6 +226,7 @@ it("protects the actual source snapshot while a same-ID manual original is retai
       .getByLabelText("Supplier invoice number (optional)")
       .closest("[inert]"),
   ).not.toBeNull();
+  await entryReady();
   await waitFor(async () => {
     const current = await read();
     expect(current.invoice.id).toBe(id);
@@ -247,6 +260,7 @@ it("holds the old upload route until the real recognized original's canonical in
   });
   expect(screen.getByRole("button", { name: "New invoice" })).toBeDisabled();
   const targetId = demoSeed.sales_demo.cost_increase_invoice.id;
+  await entryReady();
   await waitFor(async () => {
     const current = await read();
     expect(current.invoice.id).toBe(targetId);
