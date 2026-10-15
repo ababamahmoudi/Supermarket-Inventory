@@ -2,7 +2,9 @@
 
 ## 2026-10-15 — Keep inline sale-reminder units together
 
-- Render product names in the delivery-release and no-end-sale reminders through the existing unit-text component, keeping short sizes such as 24 cm together at phone width. Wording, business data, pricing and permissions are unchanged.
+- Render product names in delivery-release and no-end-sale reminders through the existing unit-text component. Keep English 24 cm and Persian centimetre/millimetre compounds together, including space and half-space spellings. Wording, business data, pricing and permissions are unchanged.
+- Strengthen the raw layout checker with Persian compound units and an actual seeded product clean/broken/restored negative control. Add exact-text and numeric-direction coverage; preserve the earlier passing native run whose Persian frame failed manual review.
+- Await actual sign-in/projection readiness in the posted-invoice unit harness before its original heading check, preserving financial assertions and timeout budgets.
 - Preserve the original failing complete-run evidence; corrected-source verification is recorded separately.
 
 ## 2026-10-15 — Retain Payables typing on a location reselect

@@ -81,6 +81,66 @@ describe("scalar unit sizes inside RTL display text", () => {
   );
 });
 
+describe("Persian centimetre and millimetre compound units", () => {
+  it.each([
+    ["۲۴ سانتی‌متری", "۲۴"],
+    ["۲۴ سانتی متری", "۲۴"],
+    ["۲۴ سانتیمتری", "۲۴"],
+    ["24 سانتی‌متر", "24"],
+    ["۲۴ سانتی متر", "۲۴"],
+    ["٢٤ سانتیمتر", "٢٤"],
+    ["۲ میلی‌متری", "۲"],
+    ["۲ میلی متری", "۲"],
+    ["۲ میلیمتری", "۲"],
+    ["۲٫۵ میلی‌متر", "۲٫۵"],
+    ["۱۲٬۰۰۰ میلی متر", "۱۲٬۰۰۰"],
+    ["2 میلیمتر", "2"],
+  ])(
+    "keeps the complete entered %s phrase and numeric direction",
+    (phrase, number) => {
+      const product = {
+        name_en: "Stainless Steel Pot",
+        name_fa: `قابلمه استیل ${phrase}`,
+      };
+      const instruction = `حراج پایان یافت: کالای نگه‌داشته‌شده ${product.name_fa} را در قفسه بگذارید.`;
+      const { container } = render(
+        <div dir="rtl">
+          <ProductName product={product} language="fa" />
+          <UnitText>{instruction}</UnitText>
+        </div>,
+      );
+      expect(container.querySelector("strong > bdi")).toHaveAttribute(
+        "dir",
+        "rtl",
+      );
+      expect(container.querySelector("strong")?.textContent).toBe(
+        product.name_fa,
+      );
+      expect(container.querySelector(".unit-text")?.textContent).toBe(
+        instruction,
+      );
+      const groups = [...container.querySelectorAll(".unit-fragment")];
+      expect(groups.map((group) => group.textContent)).toEqual([
+        phrase,
+        phrase,
+      ]);
+      for (const group of groups) {
+        expect(group.querySelector("bdi")).toHaveAttribute("dir", "ltr");
+        expect(group.querySelector("bdi")?.textContent).toBe(number);
+      }
+    },
+  );
+
+  it.each(["۲۴ سانتی‌متریزه", "۲ میلی‌مترها"])(
+    "does not isolate a partial unit inside %s",
+    (text) => {
+      const { container } = render(<UnitText>{text}</UnitText>);
+      expect(container.textContent).toBe(text);
+      expect(container.querySelector(".unit-fragment")).toBeNull();
+    },
+  );
+});
+
 describe("translated case and loose-unit display", () => {
   it.each([
     [

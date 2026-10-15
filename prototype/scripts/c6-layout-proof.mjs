@@ -71,7 +71,7 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
       );
       let unitNode;
       const unitExpression =
-        /\p{N}+(?:[.,\u066B\u066C]\p{N}+)*\s+(?:kg|g|ml|mL|L|lb|lbs|oz|cm|mm|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
+        /\p{N}+(?:[.,\u066B\u066C]\p{N}+)*\s+(?:kg|g|ml|mL|L|lb|lbs|oz|cm|mm|سانتی[\s\u200c]*متری?|میلی[\s\u200c]*متری?|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
       while ((unitNode = rawUnits.nextNode())) {
         const parent = unitNode.parentElement;
         if (
