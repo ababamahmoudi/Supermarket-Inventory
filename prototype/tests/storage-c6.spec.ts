@@ -534,6 +534,9 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       has: page.getByRole("button", { name: "Revert", exact: true }),
     })
     .first();
+  // A negative isVisible check also matches History before its rows mount.
+  // Observe the actual retained Revert row before deciding whether to expand.
+  await expect(row).toBeVisible();
   if (!(await row.getByText("Save product", { exact: true }).isVisible())) {
     const details = row.getByRole("button", {
       name: "Show details",
