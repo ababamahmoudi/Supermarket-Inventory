@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-15 — Complete permitted phone print tables
+
+- Restore layout-collapsed cheque/payment columns for actual printing, keeping explicitly hidden columns excluded and restoring phone/expanded-row layout afterward. No payment amounts or records change.
+- Added print lifecycle/media/restore regressions and retained the original cheque, amount and worker-permission native assertions.
+
+
 ## 2026-10-15 — Retained staff notebook and manual-price presentation
 
 - Restore the Cashier's explicitly shared custom-notebook route through the existing protected ACL/location projection, with revocation and built-in/private-route denials retained.
