@@ -31,7 +31,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function ledger() {
+function ledger(compact = false) {
   return (
     <DataTable
       className="payables-ledger-table"
@@ -42,6 +42,11 @@ function ledger() {
         { key: "cheque", label: "Cheque / payment date", priority: 8 },
         { key: "optional", label: "Optional note", hidden: true, priority: 9 },
       ]}
+      phoneList={
+        compact
+          ? { name: "reference", value: "amount", secondary: ["date"] }
+          : undefined
+      }
     >
       <thead>
         <tr>
@@ -122,6 +127,23 @@ it("responds to real print media changes without losing an expanded screen row",
   );
   expect(screen.getByText("DEMO-1001", { selector: "dd" })).toBeInTheDocument();
   expect(screen.getByText("-$50.00", { selector: "td" })).toBeInTheDocument();
+});
+
+it("mounts full authorized columns during print and restores a compact phone list afterward", () => {
+  printMatches = true;
+  const view = render(ledger(true));
+  const table = view.container.querySelector(".ui-data-table")!;
+  expect(table).toHaveClass("is-printing");
+  expect(table).not.toHaveClass("is-phone-list");
+  expect(screen.getByText("DEMO-1001", { selector: "td" })).toBeInTheDocument();
+  expect(screen.getByText("-$50.00", { selector: "td" })).toBeInTheDocument();
+  expect(screen.queryByText("Hidden optional column")).not.toBeInTheDocument();
+  changePrintMedia(false);
+  expect(table).toHaveClass("is-mobile", "is-phone-list");
+  expect(view.container.querySelector(".phone-list-row")).not.toBeNull();
+  expect(screen.queryByText("DEMO-1001")).not.toBeInTheDocument();
+  expect(screen.getByText("-$50.00")).toBeInTheDocument();
+  expect(screen.queryByText("Hidden optional column")).not.toBeInTheDocument();
 });
 
 it("removes print lifecycle and media subscriptions when the table is unmounted", () => {

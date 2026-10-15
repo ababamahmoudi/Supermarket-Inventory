@@ -1,0 +1,56 @@
+{
+  "group": "pdf",
+  "actual_passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "retries": 0,
+  "global_errors": [],
+  "original_stats": {
+    "startTime": "2026-10-15T19:07:32.325Z",
+    "duration": 14768.759,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 16.4939284324646,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 2,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "fce44697acce2bb40fbd74899834e5a1ec14e5e9917363e5ce1b090f131f3b2a"
+  },
+  "base_source_files": 1841,
+  "overlay_files": [
+    "prototype/tests/invoice-c4.spec.ts"
+  ],
+  "production_application_files_changed": [],
+  "normal_build_reused_from_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "dist_assets_verified": 61,
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "pdf/attachments/desktop-0-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "pdf/attachments/phone-1-0.json.gz"
+      ]
+    }
+  ],
+  "original_failed_trace_sha256": "152ef3550ee58171e1ae2869e12bfacd94ff2bbf78cb3d5c78d86bd806d8c709",
+  "scope": "Separate bounded original cases with explicitly recorded verification-only overlay, never a single full812 run."
+}

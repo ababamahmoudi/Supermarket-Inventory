@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "tests/catalog-a2.spec.ts",
+    "tests/c3-invoices.spec.ts",
+    "--grep",
+    "Lookup Change price defaults to all stores|posted invoice Columns persist",
+    "--config",
+    "/tmp/e3-ci-first-two-proof/candidate/prototype/playwright.ci-triage.config.ts",
+    "--workers=1",
+    "--reporter=line,json",
+    "--output",
+    "/tmp/e3-ci-first-two-proof/browser-output"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 32.07224440574646,
+  "source_unchanged": true,
+  "dist_unchanged": true,
+  "http_unchanged": true,
+  "served_assets": 61
+}

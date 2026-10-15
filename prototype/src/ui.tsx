@@ -58,6 +58,7 @@ import {
 } from "./c3-column-preferences";
 import "./controls.css";
 import "./c3-components.css";
+import "./phone-lists-e3.css";
 
 export function cn(...values: ClassValue[]) {
   return twMerge(clsx(values));
@@ -395,12 +396,19 @@ export function DataTable({
   responsive = true,
   expandedRowKeys,
   onExpandedRowKeysChange,
+  phoneList,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: ResponsiveColumn[];
   responsive?: boolean;
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
+  phoneList?: {
+    name: string;
+    value: string;
+    secondary: string[];
+    selection?: string;
+  };
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
@@ -517,6 +525,7 @@ export function DataTable({
     .at(-1);
   const separateDetailsColumn =
     layoutResponsive &&
+    !(mobile && phoneList) &&
     layout.collapsed.length > 0 &&
     endActionsIndex === undefined;
   const separateDetailsWidth = separateDetailsColumn ? 36 : 0;
@@ -684,6 +693,7 @@ export function DataTable({
         );
         const canExpand =
           layoutResponsive &&
+          !(mobile && phoneList) &&
           bodyRow &&
           !fullRow &&
           layout.collapsed.length > 0;
@@ -711,6 +721,88 @@ export function DataTable({
             <ChevronDown size={16} aria-hidden="true" />
           </IconButton>
         ) : null;
+        if (mobile && phoneList && bodyRow && !fullRow) {
+          const permittedCell = (key: string | undefined) => {
+            const index = resolvedColumns.findIndex(
+              (column) => column.key === key && !column.hidden,
+            );
+            const cell = index < 0 ? null : rowCells[index];
+            return isValidElement<{ children?: ReactNode }>(cell)
+              ? cell.props.children
+              : null;
+          };
+          const findLink = (nodes: ReactNode): ReactNode => {
+            for (const child of Children.toArray(nodes)) {
+              if (
+                !isValidElement<{ children?: ReactNode; href?: string }>(child)
+              )
+                continue;
+              if (child.type === TableRowLink) return child;
+              const found = findLink(child.props.children);
+              if (found) return found;
+            }
+            return null;
+          };
+          const routeLink = findLink(rowCells);
+          return cloneElement(navigation, {
+            className: cn(node.props.className, "phone-list-row"),
+            tabIndex: href ? 0 : undefined,
+            onClick: (event: React.MouseEvent<HTMLTableRowElement>) => {
+              navigation.props.onClick?.(event);
+              if (
+                href &&
+                !event.defaultPrevented &&
+                event.target instanceof Element &&
+                !event.target.closest(
+                  "a,button,input,[role='checkbox'],[role='combobox']",
+                )
+              )
+                window.location.hash = href;
+            },
+            onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
+              navigation.props.onKeyDown?.(event);
+              if (
+                href &&
+                !event.defaultPrevented &&
+                event.target === event.currentTarget &&
+                ["Enter", " "].includes(event.key)
+              ) {
+                event.preventDefault();
+                window.location.hash = href;
+              }
+            },
+            children: (
+              <>
+                {phoneList.selection && (
+                  <td className="phone-list-selection">
+                    {permittedCell(phoneList.selection)}
+                  </td>
+                )}
+                <td className="phone-list-name">
+                  {permittedCell(phoneList.name)}
+                </td>
+                <td className="phone-list-value">
+                  {permittedCell(phoneList.value)}
+                </td>
+                <td className="phone-list-chevron">
+                  {routeLink ??
+                    (href ? (
+                      <TableRowLink
+                        href={href}
+                        aria-label={translate("Open", "باز کردن")}
+                      />
+                    ) : null)}
+                </td>
+                <td className="phone-list-secondary">
+                  {phoneList.secondary.map((key) => {
+                    const content = permittedCell(key);
+                    return content ? <span key={key}>{content}</span> : null;
+                  })}
+                </td>
+              </>
+            ),
+          });
+        }
         const decoratedRow = cloneElement(node, {
           ...(href
             ? {
@@ -877,6 +969,8 @@ export function DataTable({
         layoutResponsive && "is-responsive",
         mobile && "is-mobile",
         printing && "is-printing",
+        mobile && phoneList && "is-phone-list",
+        phoneList?.selection && "has-phone-selection",
         className,
       )}
       tabIndex={0}

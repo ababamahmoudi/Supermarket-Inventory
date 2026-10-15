@@ -279,9 +279,14 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   // Responsive tables expose width-hidden Branch values in expanded details.
   for (const toggle of await invoices.locator(".table-details-toggle").all())
     await toggle.click();
-  const branchCells = await page
-    .locator(".dashboard-invoices")
-    .evaluate((card) => {
+  const branchCells = await page.locator(".dashboard-invoices").evaluate(
+    (card, branchNames) => {
+      const compactRows = [...card.querySelectorAll("tr.phone-list-row")];
+      const compactBranches = compactRows.map((row) =>
+        [...row.querySelectorAll(".phone-list-secondary > span")].filter(
+          (value) => branchNames.includes(value.textContent?.trim() ?? ""),
+        ),
+      );
       const values = [
         ...card.querySelectorAll('tbody td[data-column-key="branch"]'),
         ...[...card.querySelectorAll(".table-expanded-row dl > div")]
@@ -289,23 +294,34 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
             (group) => group.querySelector("dt")?.textContent === "Branch",
           )
           .map((group) => group.querySelector("dd")!),
+        ...compactBranches.flat(),
       ];
-      return values.map((cell) => {
-        const range = document.createRange();
-        range.selectNodeContents(cell);
-        return {
-          text: cell.textContent,
-          lineCount: new Set(
-            [...range.getClientRects()].map((rect) => Math.round(rect.top)),
-          ).size,
-        };
-      });
-    });
-  expect(branchCells.length).toBeGreaterThan(0);
-  for (const cell of branchCells) {
+      return {
+        compactBranchCounts: compactBranches.map((values) => values.length),
+        values: values.map((cell) => {
+          const range = document.createRange();
+          range.selectNodeContents(cell);
+          return {
+            text: cell.textContent,
+            visible:
+              cell.getBoundingClientRect().width > 0 &&
+              cell.getBoundingClientRect().height > 0,
+            lineCount: new Set(
+              [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+            ).size,
+          };
+        }),
+      };
+    },
+    configuration.branches.map((branch) => branch.name),
+  );
+  for (const count of branchCells.compactBranchCounts) expect(count).toBe(1);
+  expect(branchCells.values.length).toBeGreaterThan(0);
+  for (const cell of branchCells.values) {
     expect(configuration.branches.map((branch) => branch.name)).toContain(
       cell.text?.trim(),
     );
+    expect(cell.visible, cell.text ?? "branch").toBe(true);
     expect(cell.lineCount, cell.text ?? "branch").toBeLessThanOrEqual(1);
   }
 });

@@ -1,0 +1,6 @@
+{
+  "commit": "eb68cdca6345295a199819294f35b1cad34e6130",
+  "git_root": "/workspace/Supermarket-Inventory",
+  "same_test_in_both": true,
+  "production_difference": "Only Payables unchanged-branch&&!clear one-line guard"
+}

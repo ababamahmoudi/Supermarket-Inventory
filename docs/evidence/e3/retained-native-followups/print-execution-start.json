@@ -1,0 +1,17 @@
+{
+  "base_commit": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d",
+  "manifests": {
+    "/tmp/e3-print-layout-repair/manifest.json": "e30d117587db5c71c0a00636ca82a7685bd105a048c37ba526ad85695354ca65"
+  },
+  "expected_cases": {
+    "desktop": 1,
+    "phone": 1
+  },
+  "preserved": [
+    "original whole native test bodies and business/geometry oracles except documented current-contract replacements",
+    "original test and assertion time budgets",
+    "no retries or skips",
+    "exact90ad prototype/seed/assets/AGENTS/return-policy plus three recorded print production+unit overlays; unchanged original operations test body; normal production rebuild",
+    "one browser worker"
+  ]
+}

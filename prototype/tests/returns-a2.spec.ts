@@ -126,7 +126,54 @@ async function checkAlignment(table: Locator) {
             })
           );
         });
+        const compact = row.matches(".phone-list-row");
+        const compactRegion = ["name", "value", "secondary", "chevron"].find(
+          (region) => cell.classList.contains(`phone-list-${region}`),
+        );
+        const chevron = row.querySelector<HTMLElement>(
+          ".phone-list-chevron .table-row-link",
+        );
+        const rowStyle = getComputedStyle(row);
+        const rtl = rowStyle.direction === "rtl";
+        const visualEnd = rtl
+          ? rowBox.left +
+            parseFloat(rowStyle.borderLeftWidth || "0") +
+            parseFloat(rowStyle.paddingLeft || "0")
+          : rowBox.right -
+            parseFloat(rowStyle.borderRightWidth || "0") -
+            parseFloat(rowStyle.paddingRight || "0");
         cardCells.push({
+          compact,
+          compactRegion,
+          compactRegionsComplete: [
+            "name",
+            "value",
+            "secondary",
+            "chevron",
+          ].every(
+            (region) =>
+              row.querySelectorAll(`:scope > .phone-list-${region}`).length ===
+              1,
+          ),
+          compactRegionValid:
+            compactRegion !== undefined &&
+            row.querySelectorAll(`:scope > .phone-list-${compactRegion}`)
+              .length === 1,
+          compactNoCaptions:
+            label === "" && ["none", "normal"].includes(caption.content),
+          compactGrid: rowStyle.display === "grid",
+          compactChevronCount: row.querySelectorAll(
+            ".phone-list-chevron .table-row-link",
+          ).length,
+          compactNoDisclosure:
+            row.querySelector(".table-details-toggle") === null,
+          compactChevronAtEnd:
+            !!chevron &&
+            Math.abs(
+              (rtl
+                ? chevron.getBoundingClientRect().left
+                : chevron.getBoundingClientRect().right) - visualEnd,
+            ) <= 2,
           label,
           className: cell.className,
           width: body.width,
@@ -182,10 +229,22 @@ async function checkAlignment(table: Locator) {
   if (geometry.cards) {
     expect(geometry.cardCells.length).toBeGreaterThan(0);
     for (const cell of geometry.cardCells) {
-      expect(cell.matched).toBe(true);
-      expect(cell.labelled).toBe(true);
-      expect(cell.captionFits, JSON.stringify(cell)).toBe(true);
-      expect(cell.captionBeforeValue).toBe(true);
+      if (cell.compact) {
+        // E3's overview uses explicit name/value/secondary/chevron regions.
+        // Keep every original visible-glyph/control/2 px containment guard.
+        expect(cell.compactRegionsComplete).toBe(true);
+        expect(cell.compactRegionValid).toBe(true);
+        expect(cell.compactGrid).toBe(true);
+        expect(cell.compactNoCaptions).toBe(true);
+        expect(cell.compactNoDisclosure).toBe(true);
+        expect(cell.compactChevronCount).toBe(1);
+        expect(cell.compactChevronAtEnd).toBe(true);
+      } else {
+        expect(cell.matched).toBe(true);
+        expect(cell.labelled).toBe(true);
+        expect(cell.captionFits, JSON.stringify(cell)).toBe(true);
+        expect(cell.captionBeforeValue).toBe(true);
+      }
       expect(
         cell.visibleValueFragments + cell.visibleLabelledControlValues,
       ).toBeGreaterThan(0);

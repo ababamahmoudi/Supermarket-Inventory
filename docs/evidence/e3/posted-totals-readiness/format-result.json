@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "node_modules/prettier/bin/prettier.cjs",
+    "--write",
+    "src/screens/DocumentsReturns.c5.test.tsx"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 0.2825024127960205,
+  "scope": "Only private candidate fixture formatted; initial7-pass/Prettier-failed attempt retained separately."
+}

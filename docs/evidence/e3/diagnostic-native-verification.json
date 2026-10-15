@@ -1,0 +1,541 @@
+{
+  "source_file_count": 589,
+  "actual_git_commit_claimed": false,
+  "physical_phone_or_home_screen_installation": "NOT PERFORMED",
+  "method": "Exact frozen E1+finalE2+E3 assembly; no fake sessions/actors or source mutation. Actual served dist files SHA256 compared with build before/after. Original native13cases,1worker,retries0.",
+  "http_before": {
+    "assets/index-BuTl-pKw.css": "af53e9dac295c1ad2a73a0b8509531a408ab5e21d1e2e46bfaa84108ee9bc64d",
+    "assets/index-D7MpYOMx.js": "8ad11c6f9291fa6836ef6db8b2471d093796a3f4a55e0deb5149051152f79d00",
+    "assets/manrope-latin-400-normal-8tf8FM3T.woff": "1bf66c29a29f1b71d507cb97fc138cd130b856ed05b55decd3a2944b413cb636",
+    "assets/manrope-latin-400-normal-PaqtzbVb.woff2": "849290ef12a2eeb9af5c11924120d11aa4ae8b435ed3347d7fc8bc240c293ca3",
+    "assets/manrope-latin-500-normal-BYYD-dBL.woff2": "19874318747181a650eda439c37955220b849d9c4797c9e0718ee67d4bf929bc",
+    "assets/manrope-latin-500-normal-DMZssgOp.woff": "c805ac8fd73fb95ddba74e624500c7d7d9a8ec6434d723bb6a9b76173c9e41b4",
+    "assets/manrope-latin-600-normal-4f0koTD-.woff2": "f7ac6258da20ab7541939b59851155753d1d24f1b30cbcb949077a3faa3d1593",
+    "assets/manrope-latin-600-normal-BqgrALkZ.woff": "8d1f509774bca963fa02faf674678ce9244474306361ca2798583fa600346df6",
+    "assets/manrope-latin-700-normal-BZp_XxE4.woff2": "d2a12c85a831e4b5db341767d0347fa3d1361d22a1fcb3e361a16b6c90080f71",
+    "assets/manrope-latin-700-normal-DGRFkw-m.woff": "e5d35fda4759b0d63ebcc6cca0627d98d9208254ce851c85df29e4d12aeafb61",
+    "assets/manrope-latin-800-normal-BfWYOv1c.woff2": "74c161dbcbce7c3590803cc72dc1f63313c360e13367aba5075a7b7b3818ea49",
+    "assets/manrope-latin-800-normal-uHUdIJgA.woff": "ce954acb78379d559111a15d29925f3390b69161b2b1365c38b0f19c76991bac",
+    "assets/pdf-BxY_f-wb.js": "f1ed500d684e0aeb7f8463c85b8360552e6b75fe29f2a2013c93bd82754ab1ae",
+    "assets/pdf.worker.min-wgc6bjNh.mjs": "f499515a0dc93d97787d693a75218a439675719283f56812067c036dcae1f8d5",
+    "assets/vazirmatn-arabic-400-normal-C4W5XURk.woff": "e46907c6be3f55854c0b154b9502b5bf0d686063d1154bc2dcc27a9322ebf73e",
+    "assets/vazirmatn-arabic-400-normal-DMZFCm7K.woff2": "e31830d3a52e0259b176326385d82bc469581a9898046300de46e5c00f6b7064",
+    "assets/vazirmatn-arabic-500-normal-C_lbnnKa.woff2": "d3bc3b18900b56552fe1e02f899a22a4fc34203f6fb65218d482afaa6deb46a0",
+    "assets/vazirmatn-arabic-500-normal-Dqq3-xo3.woff": "19683c8f3edd6e70ccb2a42d4fc7e63a04a061bd607f70065319ef0b12b8553a",
+    "assets/vazirmatn-arabic-600-normal-CPKvAnd1.woff2": "98a9ca6ced63728b3b407877eda9896ccc9d88e3fc19a469e4e590cc40499605",
+    "assets/vazirmatn-arabic-600-normal-CWYTfCgi.woff": "deb40bb396720d9f2824532699a385b4ebce69ab88621e7e31703e1e0fc50e5c",
+    "assets/vazirmatn-arabic-700-normal-B5nPuCFv.woff": "6d54a13cdc3e0889cc12392a23dd742fb580a80fc5d45e7e9c99d7436941f227",
+    "assets/vazirmatn-arabic-700-normal-Dge_DOjm.woff2": "aa79f9419fa0f5efcf301158b7405d188c4d434c86c32efad1e8669752feb344",
+    "assets/vazirmatn-arabic-800-normal-BH12s3-y.woff": "80adb84b89271cbb1e5f2e3cef3235e46f25ed6ab99712070897c9452ec5718b",
+    "assets/vazirmatn-arabic-800-normal-Bwnt96zj.woff2": "63d5a16d0e9741a61628af09df781d4419010ec098445c7b236d6ba4da300f16",
+    "demo-originals/fictional-fv-20241.png": "b1d7ade89d7a6dd252c779aeb6e7155a68049e8392f6d6bb5ed92d848bd41abf",
+    "demo-originals/fictional-fv-20241.svg": "3a39ab1c1033abd677bd3772a747e98cc398d2703a1c19c3279373e2b0fe262f",
+    "demo-originals/fictional-fv-20296.png": "b1cc88fe358a549080cf179ae293186a6271553a2d1bd7581143deb52dff2b0a",
+    "demo-originals/fictional-fv-20296.svg": "b5c7a858ff4dd04324420b46bd4a9fd3b95af26fe49528807adfefc046c907d6",
+    "demo-originals/fictional-fv-20390.png": "429e19e160ac3c911829acbbd10dafc3b66981ece01f0dbebcca337dd865c220",
+    "demo-originals/fictional-fv-20390.svg": "59ca485b33e7272e4dd4ddcd202ea513b41f67d9cde1c47a690ad22558469939",
+    "demo-originals/fictional-fv-20417.png": "3c8c2680796cf9504e6b2dc61210aed1f0dc8f56badc0209ce6844eea575e545",
+    "demo-originals/fictional-fv-20417.svg": "7972357237d9eac3c7290f94ca1b341dc72edafa5811058345deaa16cafb8296",
+    "demo-originals/fictional-fv-weight-demo.png": "f5def115506b01e34c0a1744cffd3ab4aee5338db64f1326ae4ab1255affab17",
+    "demo-originals/fictional-fv-weight-demo.svg": "0a5792772e53b2b4c2552922ab4e4c0025cee39dcf96dc652bcd640444e456c7",
+    "demo-originals/fictional-gg-11794.png": "4bc49bbda206b3c7ec5230228d5ffc0bc38a8d2493aa7c76cb61a124ef264cba",
+    "demo-originals/fictional-gg-11794.svg": "b09249c71fb6e30ec6ff21be37341c25433385fc553e6a507b05b3655d9a667d",
+    "demo-originals/fictional-gg-11810.png": "d6b56d61375f0c9e950d1fdc6ef3ef8a22937ec5eb1d9c3e8a3b5595a531d6c9",
+    "demo-originals/fictional-gg-11810.svg": "e03ec730d418840b6abf4d65ec0b8a3e94f725d17d7f8529eec1bb816fa4ff72",
+    "demo-originals/fictional-gg-11842.png": "5319d02d3b6c31364b74b09df812e1a6d5a9c476cb98f7582d2704e29f64d8ba",
+    "demo-originals/fictional-gg-11842.svg": "d8702967c86efcf067ccaaedd4fb5147718118d9b37aa066e2e875c159f319ac",
+    "demo-originals/fictional-gg-11879.png": "c5ae0d572b1f96f448ccf9ff380ddc3bc8aa026089fa903bd695c3c84fbd531a",
+    "demo-originals/fictional-gg-11879.svg": "52a10c2519ee7403f80a2e82cd53166a7339e8957057b247cf020c0e6780d362",
+    "demo-originals/fictional-hw-4910.png": "37f3ff09dfda26b863716d8b7da6ec710ae82488bee9acc551c2e37508d15d40",
+    "demo-originals/fictional-hw-4910.svg": "ebbd731b8caecb3260cfc071309bec6b899d8ebdfb5c7b3e4ac5f3af5862e8b5",
+    "demo-originals/fictional-hw-4936.png": "b792983969f8b1189f446460ea60e866edb55726df5c43dd660399a4460381be",
+    "demo-originals/fictional-hw-4936.svg": "f0b0810b719b57fbbc3746c3fe997ded4005dfb8f9260ce6b86a8fb08b88718e",
+    "demo-originals/fictional-hw-5012.svg": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+    "demo-originals/fictional-sb-7801.png": "5d99f999827ea63a135ac822682f63f375697f56a1fbf76707888731d3267898",
+    "demo-originals/fictional-sb-7801.svg": "582e016a24aea6af5ca54cb233b40cfb1622214d1075eb6b59002766135efa11",
+    "demo-originals/fictional-sb-7848.png": "1acb2f133d0b552876c95469b48d4460352033d63a50b8233395bbb4fa14502f",
+    "demo-originals/fictional-sb-7848.svg": "1c1b0b5d820dcf32fcbde29f0eaf1caa9ce1f23ffefc587cbff369ef4c200be9",
+    "demo-originals/fictional-sb-7862.png": "fee8a9439785a7289c123a1cdcd853da4315981cccbd26e47809fb79033f795c",
+    "demo-originals/fictional-sb-7862.svg": "0598ca08e77b29dabd69f5ebd23bc33c366e547f48707909abc12262bc7cd446",
+    "demo-originals/manifest.json": "5380699d14573f214e486351de1b660123437248f11b6a999b6c4fedea080fb5",
+    "icons/company-192.png": "24d9858ae874d2f39d253580f57c762209cf681735250a2bbda6b1307d2429d0",
+    "icons/company-512.png": "4d246e34c2cc8b44bbfedb8e95eef1387f39c99d95b0fa66febae0ed40bfb630",
+    "index.html": "65935a9f03ba30cca8cb663a1e41bae411bbdd03a70bda09cdd674d4a61c367f",
+    "manifest.webmanifest": "9ff1c304449963c514141b014aa4ce2dd6f71aff44ccd746e771f036ba74ca11",
+    "offline.css": "966b640ce44b5a667ae3b4a98f9fb8fd68f79102a5f1b913eb222e176f9477f0",
+    "offline.html": "92a9e593b9110e500df64b0a3479fcbd41a6cf5bd2c4f8c0087371761c8fae25",
+    "service-worker.js": "e53498c7a3ef403d454bf498bc4e38bc8beaee5ff1b17a2115c976611958bcb5"
+  },
+  "native_exit_code": 0,
+  "native_stats": {
+    "startTime": "2026-10-15T15:07:27.842Z",
+    "duration": 110421.498,
+    "expected": 13,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "http_after": {
+    "assets/index-BuTl-pKw.css": "af53e9dac295c1ad2a73a0b8509531a408ab5e21d1e2e46bfaa84108ee9bc64d",
+    "assets/index-D7MpYOMx.js": "8ad11c6f9291fa6836ef6db8b2471d093796a3f4a55e0deb5149051152f79d00",
+    "assets/manrope-latin-400-normal-8tf8FM3T.woff": "1bf66c29a29f1b71d507cb97fc138cd130b856ed05b55decd3a2944b413cb636",
+    "assets/manrope-latin-400-normal-PaqtzbVb.woff2": "849290ef12a2eeb9af5c11924120d11aa4ae8b435ed3347d7fc8bc240c293ca3",
+    "assets/manrope-latin-500-normal-BYYD-dBL.woff2": "19874318747181a650eda439c37955220b849d9c4797c9e0718ee67d4bf929bc",
+    "assets/manrope-latin-500-normal-DMZssgOp.woff": "c805ac8fd73fb95ddba74e624500c7d7d9a8ec6434d723bb6a9b76173c9e41b4",
+    "assets/manrope-latin-600-normal-4f0koTD-.woff2": "f7ac6258da20ab7541939b59851155753d1d24f1b30cbcb949077a3faa3d1593",
+    "assets/manrope-latin-600-normal-BqgrALkZ.woff": "8d1f509774bca963fa02faf674678ce9244474306361ca2798583fa600346df6",
+    "assets/manrope-latin-700-normal-BZp_XxE4.woff2": "d2a12c85a831e4b5db341767d0347fa3d1361d22a1fcb3e361a16b6c90080f71",
+    "assets/manrope-latin-700-normal-DGRFkw-m.woff": "e5d35fda4759b0d63ebcc6cca0627d98d9208254ce851c85df29e4d12aeafb61",
+    "assets/manrope-latin-800-normal-BfWYOv1c.woff2": "74c161dbcbce7c3590803cc72dc1f63313c360e13367aba5075a7b7b3818ea49",
+    "assets/manrope-latin-800-normal-uHUdIJgA.woff": "ce954acb78379d559111a15d29925f3390b69161b2b1365c38b0f19c76991bac",
+    "assets/pdf-BxY_f-wb.js": "f1ed500d684e0aeb7f8463c85b8360552e6b75fe29f2a2013c93bd82754ab1ae",
+    "assets/pdf.worker.min-wgc6bjNh.mjs": "f499515a0dc93d97787d693a75218a439675719283f56812067c036dcae1f8d5",
+    "assets/vazirmatn-arabic-400-normal-C4W5XURk.woff": "e46907c6be3f55854c0b154b9502b5bf0d686063d1154bc2dcc27a9322ebf73e",
+    "assets/vazirmatn-arabic-400-normal-DMZFCm7K.woff2": "e31830d3a52e0259b176326385d82bc469581a9898046300de46e5c00f6b7064",
+    "assets/vazirmatn-arabic-500-normal-C_lbnnKa.woff2": "d3bc3b18900b56552fe1e02f899a22a4fc34203f6fb65218d482afaa6deb46a0",
+    "assets/vazirmatn-arabic-500-normal-Dqq3-xo3.woff": "19683c8f3edd6e70ccb2a42d4fc7e63a04a061bd607f70065319ef0b12b8553a",
+    "assets/vazirmatn-arabic-600-normal-CPKvAnd1.woff2": "98a9ca6ced63728b3b407877eda9896ccc9d88e3fc19a469e4e590cc40499605",
+    "assets/vazirmatn-arabic-600-normal-CWYTfCgi.woff": "deb40bb396720d9f2824532699a385b4ebce69ab88621e7e31703e1e0fc50e5c",
+    "assets/vazirmatn-arabic-700-normal-B5nPuCFv.woff": "6d54a13cdc3e0889cc12392a23dd742fb580a80fc5d45e7e9c99d7436941f227",
+    "assets/vazirmatn-arabic-700-normal-Dge_DOjm.woff2": "aa79f9419fa0f5efcf301158b7405d188c4d434c86c32efad1e8669752feb344",
+    "assets/vazirmatn-arabic-800-normal-BH12s3-y.woff": "80adb84b89271cbb1e5f2e3cef3235e46f25ed6ab99712070897c9452ec5718b",
+    "assets/vazirmatn-arabic-800-normal-Bwnt96zj.woff2": "63d5a16d0e9741a61628af09df781d4419010ec098445c7b236d6ba4da300f16",
+    "demo-originals/fictional-fv-20241.png": "b1d7ade89d7a6dd252c779aeb6e7155a68049e8392f6d6bb5ed92d848bd41abf",
+    "demo-originals/fictional-fv-20241.svg": "3a39ab1c1033abd677bd3772a747e98cc398d2703a1c19c3279373e2b0fe262f",
+    "demo-originals/fictional-fv-20296.png": "b1cc88fe358a549080cf179ae293186a6271553a2d1bd7581143deb52dff2b0a",
+    "demo-originals/fictional-fv-20296.svg": "b5c7a858ff4dd04324420b46bd4a9fd3b95af26fe49528807adfefc046c907d6",
+    "demo-originals/fictional-fv-20390.png": "429e19e160ac3c911829acbbd10dafc3b66981ece01f0dbebcca337dd865c220",
+    "demo-originals/fictional-fv-20390.svg": "59ca485b33e7272e4dd4ddcd202ea513b41f67d9cde1c47a690ad22558469939",
+    "demo-originals/fictional-fv-20417.png": "3c8c2680796cf9504e6b2dc61210aed1f0dc8f56badc0209ce6844eea575e545",
+    "demo-originals/fictional-fv-20417.svg": "7972357237d9eac3c7290f94ca1b341dc72edafa5811058345deaa16cafb8296",
+    "demo-originals/fictional-fv-weight-demo.png": "f5def115506b01e34c0a1744cffd3ab4aee5338db64f1326ae4ab1255affab17",
+    "demo-originals/fictional-fv-weight-demo.svg": "0a5792772e53b2b4c2552922ab4e4c0025cee39dcf96dc652bcd640444e456c7",
+    "demo-originals/fictional-gg-11794.png": "4bc49bbda206b3c7ec5230228d5ffc0bc38a8d2493aa7c76cb61a124ef264cba",
+    "demo-originals/fictional-gg-11794.svg": "b09249c71fb6e30ec6ff21be37341c25433385fc553e6a507b05b3655d9a667d",
+    "demo-originals/fictional-gg-11810.png": "d6b56d61375f0c9e950d1fdc6ef3ef8a22937ec5eb1d9c3e8a3b5595a531d6c9",
+    "demo-originals/fictional-gg-11810.svg": "e03ec730d418840b6abf4d65ec0b8a3e94f725d17d7f8529eec1bb816fa4ff72",
+    "demo-originals/fictional-gg-11842.png": "5319d02d3b6c31364b74b09df812e1a6d5a9c476cb98f7582d2704e29f64d8ba",
+    "demo-originals/fictional-gg-11842.svg": "d8702967c86efcf067ccaaedd4fb5147718118d9b37aa066e2e875c159f319ac",
+    "demo-originals/fictional-gg-11879.png": "c5ae0d572b1f96f448ccf9ff380ddc3bc8aa026089fa903bd695c3c84fbd531a",
+    "demo-originals/fictional-gg-11879.svg": "52a10c2519ee7403f80a2e82cd53166a7339e8957057b247cf020c0e6780d362",
+    "demo-originals/fictional-hw-4910.png": "37f3ff09dfda26b863716d8b7da6ec710ae82488bee9acc551c2e37508d15d40",
+    "demo-originals/fictional-hw-4910.svg": "ebbd731b8caecb3260cfc071309bec6b899d8ebdfb5c7b3e4ac5f3af5862e8b5",
+    "demo-originals/fictional-hw-4936.png": "b792983969f8b1189f446460ea60e866edb55726df5c43dd660399a4460381be",
+    "demo-originals/fictional-hw-4936.svg": "f0b0810b719b57fbbc3746c3fe997ded4005dfb8f9260ce6b86a8fb08b88718e",
+    "demo-originals/fictional-hw-5012.svg": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+    "demo-originals/fictional-sb-7801.png": "5d99f999827ea63a135ac822682f63f375697f56a1fbf76707888731d3267898",
+    "demo-originals/fictional-sb-7801.svg": "582e016a24aea6af5ca54cb233b40cfb1622214d1075eb6b59002766135efa11",
+    "demo-originals/fictional-sb-7848.png": "1acb2f133d0b552876c95469b48d4460352033d63a50b8233395bbb4fa14502f",
+    "demo-originals/fictional-sb-7848.svg": "1c1b0b5d820dcf32fcbde29f0eaf1caa9ce1f23ffefc587cbff369ef4c200be9",
+    "demo-originals/fictional-sb-7862.png": "fee8a9439785a7289c123a1cdcd853da4315981cccbd26e47809fb79033f795c",
+    "demo-originals/fictional-sb-7862.svg": "0598ca08e77b29dabd69f5ebd23bc33c366e547f48707909abc12262bc7cd446",
+    "demo-originals/manifest.json": "5380699d14573f214e486351de1b660123437248f11b6a999b6c4fedea080fb5",
+    "icons/company-192.png": "24d9858ae874d2f39d253580f57c762209cf681735250a2bbda6b1307d2429d0",
+    "icons/company-512.png": "4d246e34c2cc8b44bbfedb8e95eef1387f39c99d95b0fa66febae0ed40bfb630",
+    "index.html": "65935a9f03ba30cca8cb663a1e41bae411bbdd03a70bda09cdd674d4a61c367f",
+    "manifest.webmanifest": "9ff1c304449963c514141b014aa4ce2dd6f71aff44ccd746e771f036ba74ca11",
+    "offline.css": "966b640ce44b5a667ae3b4a98f9fb8fd68f79102a5f1b913eb222e176f9477f0",
+    "offline.html": "92a9e593b9110e500df64b0a3479fcbd41a6cf5bd2c4f8c0087371761c8fae25",
+    "service-worker.js": "e53498c7a3ef403d454bf498bc4e38bc8beaee5ff1b17a2115c976611958bcb5"
+  },
+  "http_unchanged": true,
+  "source_unchanged": true,
+  "screenshots": [
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "sha256": "1c35aac818441b05810b1947c9a2dfece49e9f8d2d78b5c0b81aaef06accde02",
+      "bytes": 377488
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/labels-en-390.png",
+      "sha256": "f0fb6983d6d2e16fc7a52a0fa9a7d8badce2923aab17730fea9903485bc51d83",
+      "bytes": 153200
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+      "sha256": "60f401046581460a6a0b14edb5a7ec70649f8d69a5ba5faf86c635ace208b36c",
+      "bytes": 57642
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+      "sha256": "39cc18251e2ad42cfa5e685af87ec4243843a3c06d9c0ae2939dc339ad045f32",
+      "bytes": 199252
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/received-en-390.png",
+      "sha256": "d7308e995dc5acef835503e18ff6156e009830cbcc018bd989e302a5dc93c471",
+      "bytes": 223018
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+      "sha256": "ee0534d23e5eff0aee2ac892236ea695dc32503086f77056145c0545152a88dd",
+      "bytes": 42496
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+      "sha256": "c4008d565bc8dd7c0dfe1fb1f3d4a7acab78129ead65dfdda90dbcaaca289bc0",
+      "bytes": 54390
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "sha256": "4b3afe8e3b8e18c43ca4f70b4851f9162989b68bc2b35b7cc11a5484d34f9e4d",
+      "bytes": 359699
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/labels-fa-390.png",
+      "sha256": "3b83dc9d94ec0a6fd04d864753fdf76f020bbb02e668488e009acb56b166f0ab",
+      "bytes": 156492
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+      "sha256": "0d9e240a24f2dc51b2b31f02a9e49fcd74a0adf8bfa837a54c0d75bca275c5d8",
+      "bytes": 59402
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+      "sha256": "620aac31117301cfd70039a616206baeb7e67e72b49d018bb77e38ea82d7f1ea",
+      "bytes": 193417
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/received-fa-390.png",
+      "sha256": "e716965fd5c0acd1b8bc2bf9cebc0e75de2b2f154204b957dddfef77dd35f88e",
+      "bytes": 221423
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+      "sha256": "980bca456b034708080bbe7a43c9852d906bb78a1eda447fcb8f8bd234dbca7e",
+      "bytes": 43781
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+      "sha256": "2606f029b71ffa4f87b3d8ae197c51fa7b01a53440906a9c38668ef34d8adb83",
+      "bytes": 57197
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "sha256": "e7f148e21d23fd3e2edc032c15c00481161e3e872fbd38d77c305d0cbebcb3a8",
+      "bytes": 376020
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/labels-en-430.png",
+      "sha256": "3c4d751677df8e56f733fa8c7104c2ba4021b340f83008e3417cbffa15f01239",
+      "bytes": 152413
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+      "sha256": "df8e693b0378206298875e8ddca961e78b9d6dda15e4407c26dcb178909d84e9",
+      "bytes": 57717
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "sha256": "0f14e88c597a1c694b4813c5892467e8267afa35ba8eb721f701731c66aab82f",
+      "bytes": 197106
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/received-en-430.png",
+      "sha256": "a91ba23fdba314a604aead29d82568ff91ebfe4a9d04e6a84294868f28333024",
+      "bytes": 222803
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+      "sha256": "958ba2f21c857bd528b12ba498e158ce9881b1fe5deba816155e04fa649a670d",
+      "bytes": 41521
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+      "sha256": "f714634bc72ce49ebad7bd4f1045b0c983281bad4d20b08b7400e446e06fcb0b",
+      "bytes": 53317
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "sha256": "8892bdf94ee5597559d7997f3a5c5ae43033949ebaadda4d1ee63eb18d2a39c4",
+      "bytes": 359402
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/labels-fa-430.png",
+      "sha256": "2ca64a89458fb5674377c4a1ad4b39c7e79745f6b66086ed77871cad5450bd7f",
+      "bytes": 155316
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+      "sha256": "e70b4e2f9023af6f24dbc9bb7926bb23ad594057890bd75f7e40312a147a24c4",
+      "bytes": 59523
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "sha256": "a364faae9181cf986791ab147cc73179a6df5ef39108ce2f6584ce8cc186303e",
+      "bytes": 193818
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/received-fa-430.png",
+      "sha256": "d54e9ef85765a809c9002032535f5ac56e976521287148ad3c4efd153f1ef11f",
+      "bytes": 219613
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+      "sha256": "68b194e0f33d14951087535d0a037ed1aa6e6dc8b3297c682414eee7f9a4819c",
+      "bytes": 43429
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+      "sha256": "245d612db17b4d98ddaf29bda62ed3113b76a8fae3a1469bae3fdf877d965c90",
+      "bytes": 57708
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+      "sha256": "0a23c99fb3dc9f6237a16de0a0dbf2d526ba2819becff5fd80f9a4034eceb838",
+      "bytes": 63183
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+      "sha256": "9405338c1a3bd7039f2fc4210e7a9e878c4d4645ff27ef1e19e6822c7abd2d61",
+      "bytes": 39953
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+      "sha256": "b9191ae2c10a8a5d0b9d9c612f422bbde965dd7c23172687d51ee76c6bce5e4c",
+      "bytes": 78855
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+      "sha256": "6b1179bd571c6c564c011741d87e295af24afc81fdaa814557233bedc77f6e6e",
+      "bytes": 33191
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/task-checkboxes-fa-430.png",
+      "sha256": "705cccf4d3d2633861c3e420ddd655d99b7c4a5faa546f70b42af9ac486f4129",
+      "bytes": 67810
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+      "sha256": "090ac5dd99fd0ba309079d03b6f2fe40f2b15e828c571420c8a025b71e539705",
+      "bytes": 62790
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+      "sha256": "880a9a6a72e7eab3a26b46d2beb7f2f2cc54a599a268aeaf4788b99f2fcdeb4d",
+      "bytes": 39781
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+      "sha256": "fe29dd186f90ed5738d5d71c33bdf78422ab79c8f6644b6fa3bf731985ed5f12",
+      "bytes": 79851
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+      "sha256": "bbd236075362b51feea0598415b57c9e1fab886529b4c33d8a37653831f194f7",
+      "bytes": 33301
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/task-checkboxes-fa-390.png",
+      "sha256": "29d0cdb627c603db880eeb6a70ee40d47121c6ce8c3ed6fe323f649bf1a0df51",
+      "bytes": 67670
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+      "sha256": "1c499ac47312ecac774783b178767a4ae992a0ccc3430a4107740e4b3d2bc15c",
+      "bytes": 62517
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+      "sha256": "6fb97255ec4bfdb5efea32200a6e8ded868e166c5297b22c50698aa4694cfa8a",
+      "bytes": 37659
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+      "sha256": "40b3923df96f089bae20e9e9bdc5706df45feda9a301bce640747f9503fa7e74",
+      "bytes": 76310
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+      "sha256": "8a7198d9724b160dcad80e7bcc30b9dc28729450a03d7f0bea2808259952e7ca",
+      "bytes": 31535
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/task-checkboxes-en-390.png",
+      "sha256": "b33501dc456f36b64af900247bde49c8fd6ae6c0e994782bd644831137e5cef8",
+      "bytes": 66334
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/change-price-en-430.png",
+      "sha256": "753b98845df1a6eed183123952b9fa838f4f28aebda2e5d7c71ded12eafb8a39",
+      "bytes": 63133
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+      "sha256": "58eee6b0fe131749516292da5a6cb7d4ac5362a5f8d6191b3942c15c96b03479",
+      "bytes": 37822
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+      "sha256": "c1815c54c03c630e9a6ea1f755bf3fa7f51a437fd3e64672f46673326e5fcdba",
+      "bytes": 76616
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+      "sha256": "b0461b67338371e0adb83d88ac67356602988b034a7ee681087bd35cf6f02719",
+      "bytes": 31359
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/task-checkboxes-en-430.png",
+      "sha256": "74bc490d180bae2d903b3dd70672646e5e22b75121f2470d2075278ba3f8e01c",
+      "bytes": 66438
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+      "sha256": "38d5220f44a5475194596550fa29f0bc0ae69ecd93de8bde1ed757436b881f29",
+      "bytes": 32010
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+      "sha256": "1f0cb30fd37c2f3f056e23cd1ca7f63f814f8f75d405be803b5b8c2a574c3d33",
+      "bytes": 40492
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+      "sha256": "dabd1df52093193b42190518c513e7b96da8d5903354b22779d42606ed438784",
+      "bytes": 89640
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+      "sha256": "cc3dd472ae853a08372b417638ed0c59a10d1b997e67648c512d7800a3ed7ba2",
+      "bytes": 97351
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+      "sha256": "153aef8c496d305111d4ece84fcf50e98fac323a0e6aec072416e9825e07dd09",
+      "bytes": 94095
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+      "sha256": "8c9160b335b38231570f18de13e1882f81abb6f1bcea8df1774cdb82a5d6a87d",
+      "bytes": 33254
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+      "sha256": "6908fa5e5572485a1c5dfb948ccd67a80721ac3925db471616b75d4cefdd647a",
+      "bytes": 104867
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+      "sha256": "a95d2ebd124de113046e50c6dbe8543c0fccb5d7cd9c48b6153328221452cb19",
+      "bytes": 30325
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+      "sha256": "19e62bc727a7b920dac61d1c4a856fbe220f2d8e08f1bf6fb946c9c6aacaecd1",
+      "bytes": 40044
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+      "sha256": "9d96e9a5c62c8e95c1a44b072798fe47335e27368cc379b6739182ec44c6db26",
+      "bytes": 100012
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "sha256": "846524d2ebd889d5af128780308f3e2621ca46492b72e7073ce04b10747e46b3",
+      "bytes": 107694
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+      "sha256": "80f060ac3e28e8c69b96dc7a6518d912d77bc16c726a430f2cd6d685065a44bb",
+      "bytes": 104774
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+      "sha256": "1b4a099cd9cc0746a1b83bbf410dea2158b99c4d257c597ecdfa05d55fdf7f65",
+      "bytes": 35550
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/settings-group-people-fa-390.png",
+      "sha256": "01ff4f1d1c432af407ff511cb13cb5e34ce54f06a34c171f7736111877936b7e",
+      "bytes": 100862
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/add-person-en-430.png",
+      "sha256": "f71b218dc1b029140ec52b8bda6a951faf11149186ac222e98a07ce7ec282f70",
+      "bytes": 31219
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/edit-person-en-430.png",
+      "sha256": "6e4d8f44dbdb3b6072d01e3d2832374cd6fcf9ac6c0ffc847faa151e59d6509d",
+      "bytes": 39698
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+      "sha256": "a1b3e94aa0ad8510d730fb190903fdca1eadb83e8dc04936070be9cd084325d1",
+      "bytes": 89037
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "sha256": "300a83f9db848842f600ed8f6ae00c92939dbbc102a4bd6914ed013ce600fbc0",
+      "bytes": 97196
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+      "sha256": "7545db84a0202eb9d7c76e274dc2077e21350315ece8c7e00be4560d2a93fdf9",
+      "bytes": 93601
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+      "sha256": "0a134a16e51af8e093f36f12e8c203ed3831c9160b441af0d4d572728476889d",
+      "bytes": 33460
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/settings-group-people-en-430.png",
+      "sha256": "c80704e3910d4b7250df81447e64b5a49922d1727c33c31d15182fe2a907597d",
+      "bytes": 105171
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+      "sha256": "592c464644937fc60b9cccfb258cf8a1678255b6ae8b9e5dca99afd7970bc7cf",
+      "bytes": 29923
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+      "sha256": "33cec453d8578715e7bb42ecf20b8bf219b486147d26fd1d0a551a05a03913f4",
+      "bytes": 39792
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+      "sha256": "7cd4044e141a0b2c5250609c06b75a5e104564895ade2119a614a24b8d8fd2d3",
+      "bytes": 99567
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "sha256": "a93492688b83a539238b361882b56c983becb3eb80baf86f1a3d554f59c44f59",
+      "bytes": 107505
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+      "sha256": "4116d9b6338f779f56e45ada1292cff1f527e73823b00b9163dece6e13dbdb08",
+      "bytes": 104519
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+      "sha256": "9c41d51ecb8ba819e69bf2bca476f19ab6b9fabead8c325ed69f7c4d68ae2adf",
+      "bytes": 35727
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/settings-group-people-fa-430.png",
+      "sha256": "d3358224ec2c763bf2b23028cdfd03fd2bca2675ee7a76f934fc8778e051de50",
+      "bytes": 100853
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+      "sha256": "7515657808e392cb4cbf31b233363b8a4411a74bbf200e3823541ae73ffb46c7",
+      "bytes": 53045
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+      "sha256": "23ebe500c3adc3c87a09a93d8bb3e47e3da291b208326660f6d15a71ab0f675a",
+      "bytes": 16192
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+      "sha256": "ddcbce2bb0afdb2b106c6befa30221b0ee86a63a0ddb3289b08443d77e9436ab",
+      "bytes": 18062
+    }
+  ],
+  "success": true
+}

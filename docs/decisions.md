@@ -284,6 +284,16 @@ Specification first; implementation and tests require separate actual-source evi
 
 **Why:** Store work and customer charge remain distinct without losing source changes, leaking costs or inventing completed physical actions. The server can reuse capabilities/transactions later. This entry is specification-first; test counts, screenshots and hosted/phone results require separate executed evidence.
 
+## 035 — Compact phone rows and public-only installable shell (E3, 2026-10-15)
+
+**Context:** The owner needs usable phone lists and an installable demo while this prototype still stores authority and business data independently in each browser. Caching signed-in HTML or auto-reloading pending work would create misleading availability/security and risk losing edits.
+
+**Decision:** Use the specified seven compact phone-row families over the same protected DTOs, with existing wider tables/role masking and EN/FA390/430 checks. Generate configured company manifest/icons/standalone/theme and a dedicated bilingual No connection page. Cache only exact generated same-origin public hashed code/style/font/logo/icon/offline assets, including actual allowlisted `.mjs` workers. Never cache navigation/auth/Access/API/authority/business/upload/original responses or accept redirected/MIME-mismatched login pages as assets.
+
+**Decision:** Waiting update uses explicit Demo action, real pending-work leases and dirty UI/print/recovery state. Keep current work/release until safe activation, preserving browser business/file data. Document no-Docker Ubuntu/Wi-Fi and optional private Cloudflare Pages/Access production plus wildcard-preview gates with placeholder-first verification. Create no resource/account/deployment and claim no real hardware installation. Barcode search focus is not a live camera scanner.
+
+**Why:** Phone presentation and installability improve without pretending to add shared server data, remote delivery or recoverable cached business pages. Hardware, hosting, Safari and physical printer evidence remain separate from Chromium/emulated tests. This entry is source-first, not a test or deployment result.
+
 ## 038 — Retain explicitly shared Cashier notebooks and public manual-price comparisons (E1)
 
 **Context:** the full retained browser checks found that the new shell denied Cashier Notes even when the current protected notebook projection contained an explicit custom read grant. The new catalog DTO also retained the manual badge while suppressing the public Rule price / Manual price pair required by the existing requirements.

@@ -1,0 +1,168 @@
+{
+  "source_commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+  "scope": "Supplement to retained full812 f154 packet: actual passing storage and explicit.invalid HTTP SHA fallback test JSON attachment originals, including both twenty-distinct3MB photo and near-full5MiB migration proofs. Does not change overall769pass1fail42skip actual result.",
+  "records": [
+    {
+      "path": "desktop/00-5f981414c58b8604.json.gz",
+      "source": {
+        "original_attachment_path": "/tmp/e3-final-all-original-projects-v2/desktop-run-001/native-output/sha256-lan-c6-C6-nonsecure-77d1e--bytes-without-SubtleCrypto-desktop/attachments/HTTP-LAN-exact-upload-and-migration-proof-96f4b8d2162e5fae99ce4ff433491ca9f022efbf.json"
+      },
+      "source_sha256": "5f981414c58b8604c917ef2c45845db38f26ea3d33dee3e6afa892b8f7ecbc32",
+      "source_bytes": 818,
+      "gzip_sha256": "6fb64cea8bff962d6ecbf44412679944b9c04102861375cf64405654cdac2fe7",
+      "native_project": "desktop",
+      "native_original_file": "sha256-lan-c6.spec.ts",
+      "native_original_title": "C6 nonsecure HTTP uploads, migrates near-full text storage and verifies original bytes without SubtleCrypto",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "HTTP LAN exact upload and migration proof"
+    },
+    {
+      "path": "desktop/01-8d549d93a26c9a8f.json.gz",
+      "source": {
+        "original_attachment_path": "/tmp/e3-final-all-original-projects-v2/desktop-run-001/native-output/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/attachments/20-real-3MB-photos-and-exact-source-retention-7fb7df14918a5abd94a20e98238833d63ccdc0bf.json"
+      },
+      "source_sha256": "8d549d93a26c9a8fd8c9805dd70a358216e9c589207cb93ad7db9466143b2585",
+      "source_bytes": 9140,
+      "gzip_sha256": "2699d6b8b4b562fd14f27adc5aa7a81cd7c8ac7084d6e02ff1f26a0434d5177c",
+      "native_project": "desktop",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "20 real 3MB photos and exact source retention"
+    },
+    {
+      "path": "desktop/02-21ab42931f91f716.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "7736d75624d8c1c3bb241fb017f486e790bb8771a1dd78d3a919758c698822d2",
+        "base64_string_sha256": "38e779fb76cb6ee79807c36585e64c7059ed768e28891622e96d4dfcdff5a0e3"
+      },
+      "source_sha256": "21ab42931f91f7162b1678d0c40fd6039682ef961b1544d126c6163a6ccd09d4",
+      "source_bytes": 675,
+      "gzip_sha256": "d93c87e4fbe8bd3d494ad7505e42ad06c9422b53a9541ed85826abc461f0ab6a",
+      "native_project": "desktop",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Uploaded logo was loaded before window.print"
+    },
+    {
+      "path": "desktop/03-bf992d549ff78a6e.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "7736d75624d8c1c3bb241fb017f486e790bb8771a1dd78d3a919758c698822d2",
+        "base64_string_sha256": "5a41e308277b2f04aad85beb4734fb9a98efac1c2daff2b6fbe0d7b6def18b78"
+      },
+      "source_sha256": "bf992d549ff78a6ee2a1935d64a7ecf357c2457ca6c2b5eefdc98fd1c438aeae",
+      "source_bytes": 144,
+      "gzip_sha256": "28523eade47c961ff85c49e791492245705bf1ac1e35cdca2041070ad4bcd3da",
+      "native_project": "desktop",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Unreadable History retained and exactly archived before Reset"
+    },
+    {
+      "path": "desktop/04-cdaecd11f1bea5b8.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "7736d75624d8c1c3bb241fb017f486e790bb8771a1dd78d3a919758c698822d2",
+        "base64_string_sha256": "5cda1a0cba5d3ae6836db9326fb54f24c02e6db0a02f98544b8eee69bdbb8293"
+      },
+      "source_sha256": "cdaecd11f1bea5b8b9dcc65a6f70674009fecea78cec5ca001d285bd493ec7c2",
+      "source_bytes": 515,
+      "gzip_sha256": "d86de1743fea14c85494a404606abcd2d013d7d4d1eeadab612ffb32b7c4ac59",
+      "native_project": "desktop",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Strict 5MiB migration and verified restore evidence"
+    },
+    {
+      "path": "phone/05-72a36dfa546c4ebf.json.gz",
+      "source": {
+        "original_attachment_path": "/tmp/e3-final-all-original-projects-v2/phone-run-001/native-output/sha256-lan-c6-C6-nonsecure-77d1e--bytes-without-SubtleCrypto-phone/attachments/HTTP-LAN-exact-upload-and-migration-proof-80e5e9c13f8f69d4559d8b72e10e1cd7e7abd3a8.json"
+      },
+      "source_sha256": "72a36dfa546c4ebf5e0a90c7730bf865253411a8d37996917ec55fc2f84b9bc2",
+      "source_bytes": 818,
+      "gzip_sha256": "1c821a39d33eef127ef3474ded5976c16c964bb6b9029315ad65ec0e8771deb0",
+      "native_project": "phone",
+      "native_original_file": "sha256-lan-c6.spec.ts",
+      "native_original_title": "C6 nonsecure HTTP uploads, migrates near-full text storage and verifies original bytes without SubtleCrypto",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "HTTP LAN exact upload and migration proof"
+    },
+    {
+      "path": "phone/06-84592bb3097fc653.json.gz",
+      "source": {
+        "original_attachment_path": "/tmp/e3-final-all-original-projects-v2/phone-run-001/native-output/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-phone/attachments/20-real-3MB-photos-and-exact-source-retention-6ef707b66c0a9c04ab4427e956132621dc75cb78.json"
+      },
+      "source_sha256": "84592bb3097fc6539f5f1a8f9e0c6e38153906ae9fca760b3760e6a4c96233fd",
+      "source_bytes": 9140,
+      "gzip_sha256": "16edeb93c86ab7b6d6be5e7a0a20eea46c97587683272765874a97d23936389c",
+      "native_project": "phone",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "20 real 3MB photos and exact source retention"
+    },
+    {
+      "path": "phone/07-ed7c8fdf85129696.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "929f0434e384b73f25d2e60bd406e30abc96d8357c820fdef014f0284e7b7f23",
+        "base64_string_sha256": "53dd9f88876eb171496ad1eb3d793f7a332eba32f16b6e215adbc06e528ebf65"
+      },
+      "source_sha256": "ed7c8fdf85129696dfb0c0af0423c6bfb2cb34f60309575aca412ad25e119f65",
+      "source_bytes": 675,
+      "gzip_sha256": "7ad30cfe279a6bec840eabea8ed50999c8e1e0e6f549799ebb9980edacc17355",
+      "native_project": "phone",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Uploaded logo was loaded before window.print"
+    },
+    {
+      "path": "phone/08-678fd482505e900d.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "929f0434e384b73f25d2e60bd406e30abc96d8357c820fdef014f0284e7b7f23",
+        "base64_string_sha256": "222706a277c13040a3f3cfdde286e0bc5b714697a2279957d5a9242d4dc6f7fe"
+      },
+      "source_sha256": "678fd482505e900dc5c17c692f988f01c878c72bac64727d6d2bfe03b90e1ee9",
+      "source_bytes": 144,
+      "gzip_sha256": "204fe3f3c9d62a0511b6e372b5861f4d0c521bc4a8d3e932e3b4d1ff3a3d2192",
+      "native_project": "phone",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Unreadable History retained and exactly archived before Reset"
+    },
+    {
+      "path": "phone/09-63b042d927750497.json.gz",
+      "source": {
+        "original_attachment_encoding": "base64 JSON reporter body",
+        "report_sha256": "929f0434e384b73f25d2e60bd406e30abc96d8357c820fdef014f0284e7b7f23",
+        "base64_string_sha256": "397758b39f172efc649ffe7c9e79bae433f0469e54979b6f6e33fcbebc257ddd"
+      },
+      "source_sha256": "63b042d927750497ba97583e066aee384ded2cdf1089bbd932b075e26183675e",
+      "source_bytes": 515,
+      "gzip_sha256": "8bf9f22e6224c3f202ce1b1717c5dc291c6ec430129241735cfa0c224a832cd9",
+      "native_project": "phone",
+      "native_original_file": "storage-c6.spec.ts",
+      "native_original_title": "C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes",
+      "actual_status": "passed",
+      "retry": 0,
+      "attachment_name": "Strict 5MiB migration and verified restore evidence"
+    }
+  ]
+}

@@ -1,26 +1,45 @@
-# C8 → E1 → E2 → E3 current handoff
+# C8 → E1 → E2 → E3: review handoff
 
-The complete authorised request is [the retained owner request](owner-requests/C8-E1-E2-E3-2026-10-12.md). Finish all four stacked PRs without an intermediate approval pause. Change only prototype/, docs/ and seed/. Do not merge new stages or create accounts, resources or deployments.
+Updated 2026-10-15 21:30 UTC. All four requested implementations, review guides, screenshot galleries and local verification packets are complete and ready for the owner's combined review. Required full GitHub browser checks remain unfinished. Do not call the four PRs fully green, merge them, or deploy. No application question remains. The next owner decision is only the proposed CI file-scope exception described below.
 
-## Durable remote work
+## Branches and PRs
 
-- C8: [PR #21](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21), `feat/prototype-c8-sales-fixes`, saved head `0c80d38e8e6920c57a5a390cb1418c93aed5b179`. Original CI and 75 screenshots are retained in docs/evidence/c8 and docs/redesign-screenshots/pr-c8.
-- E1: [draft PR #22](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22), `feat/prototype-e1-location-roles`, based on C8. Implements genuine authority/People/location/setup/recovery with six configured demo people. The saved initial head `962b4f3` has actual GitHub lint, unit/SDK and build success. Its browser job was cancelled before completion; the complete run is not a pass.
-- E2 (`feat/prototype-e2-price-updates`) and E3 (`feat/prototype-e3-phones`) remain to be published on their predecessors. Existing Planned source specifications are not implementation evidence.
+| Stage | PR | Branch | Tested code source |
+| --- | --- | --- | --- |
+| C8 | [21](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21) | `feat/prototype-c8-sales-fixes` | `0c80d38` |
+| E1 | [22](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22) | `feat/prototype-e1-location-roles` | `48d9c27` |
+| E2 | [23](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/23) | `feat/prototype-e2-price-updates` | `b2988e3` |
+| E3 | [24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) | `feat/prototype-e3-phones` | `a6c66dc` |
 
-## Fresh-cloud recovery, 2026-10-15
+Each branch includes its predecessor. E3 includes all four. Later E3 commits only publish proof/docs; do not relabel old tests with a new documentation SHA. All PR descriptions were updated through the API with the five required sections, Ubuntu guide, click paths, screenshots, actual test counts and limits; [publication receipts](evidence/e3/final-a6c66dc-validation/pr-review-publication.json). C8 is non-draft and green. E1/E2/E3 remain drafts while required CI is incomplete. Main was confirmed unchanged at `3b6da31d84afa6bb8b454320bb26b4cc6b5454d2`; all four remain unmerged. Check actual remote state before further work. Root's final task is to normally commit/push the completed proof/docs to E3 and confirm clean/published state; if already remote, do not repeat implementation or tests.
 
-The cloud workspace restarted at main. Root restored C8/E1 from GitHub and verified their exact remote heads. All earlier /tmp staged E2/E3 implementations, unpushed E1 work and active proof sessions were absent. Their earlier private-run counts cannot validate rebuilt source. Rebuild and persist these stages before reporting completion. [Recovery evidence](evidence/e1/resumed-cloud-2026-10-15.json) records frozen npm installation, Node 22.23.3, a successful current build, source hashes and terminal remote CI status. [Terminal initial E1 CI](evidence/e1/ci-962b4f3-final-jobs.json) retains the actual steps.
+## Actual final local checks
 
-Earlier E1 full app 1294/1294, SDK75/75, required lint/build and focused native proofs remain historical input-specific evidence under docs/evidence/e1. The interrupted742-case run and old failures remain explicitly incomplete. Do not sum overlapping focused runs or claim they cover newly rebuilt changes. No physical phone, hosted deployment or remote multi-device data sync is proven.
+- [Final corrected-source application/static packet](evidence/e3/final-a6c66dc-validation/README.md): **1,444/1,444 application tests**, **75/75 SDK tests**, full lint and fresh normal TypeScript/Vite build, each actual exit **0**. No failed/pending cases or application global errors; all595 inputs unchanged. All23 seed pricing cases included. App ran alone2workers. All61 fresh build files exactly match the browser-tested0786 files. Source delta from0786 is solely store.test.tsx, which awaits three unchanged exact configured colors with the default1,000ms wait; no production/pricing/data/permission/asset changes.
+- [Final native original-file replay](evidence/e3/final-0786-native/README.md): **72/72 passed** on actual0786, Desktop36 and Phone36, both CLI0, no skips/retries/global errors/not-run. Four entire selected files cover sales, stronger genuine layout negative controls, unit ordering and all-page C8 geometry. All2441source/61Dist/all61HTTP guards passed. Root personally opened untouched EN/FA phone release trace frames; complete24cm/Persiancompound fragments visibly stay together and measured clean. This is not a new complete812-case run.
+- [Actual E1/E2 backport checks](evidence/e3/brand-css-readiness-final/README.md): entire store.test.tsx11/11 on each exact branch plus scopedESLint/Prettier0, no errors and unchanged562/576inputs. Earlier posted-heading seven-case checks also passed on their recorded exact E1/E2 sources. Do not call combined E3 results standalone E1/E2 full suites.
+- Packet/galleries were independently audited: native690 original artifacts,616JSON attachments,61compressed originals; galleries75/20/28/79 with original hashes. All205 final guide/evidence relative links resolved. All47literal owner blocks and83required-proof columns were preserved; [check](evidence/e3/final-a6c66dc-validation/owner-acceptance-preserved.json). Normal commit hooks remain enabled.
 
-## Immediate work
+The first final a6 archived app attempt genuinely exited1:1392assertions passed,9suites unloaded due external sharedPDFworker denied by the archive's fs.allow,52original cases unexecuted,SDK not run. Root missed that isolated-runner setting. Its actual outputs remain in the final packet; a fresh complete replay used a private adapter importing unchanged config and adding only the genuine shared dependency directory. No mock/module/timeout/assertion replacement. Formatting failures before the final palette fixture were also preserved.
 
-1. Finish authentic E1 invoice New/Manual/attachment pending guards, protected receiving-origin compatibility, safe public Cashier product link, Notes status Undo audit identity and invoice/order disclosure continuity. Preserve command/file/hash/money/source/actor authority. Update docs before behavior changes.
-2. Complete E1 native workflows and capture/review its five scenes in English light/dark, Persian and phone (20). Update draft22 with actual results; do not label failed/pending proof as ready.
-3. Commit docs-first E2 task/notification specification; build real per-store price tasks from every current selling-price cause, lifecycle, Undo, labels, person-specific notifications and all required UI. Publish stacked PR.
-4. Commit docs-first E3, compact phone lists, guarded installable/offline PWA and detailed private hosting instructions. Test required390/430 EN/FA screens, preserve price/data/authority. Publish stacked PR and finish all four links plus precise Ubuntu commands/click paths.
+## Historical outcomes stay historical
 
-## Current environment and coordination
+- Full f154:769passed/1actual English unit-wrap failure/42original skips, all812accounted for, not a pass. [Complete original reports](evidence/e3/retained-native-full-f154/README.md).
+- Scoped431:28passed but actual Persian frame failed Root manual review; old agent PASS was wrong and is explicitly corrected. [Rejected original](evidence/e3/sale-inline-units-native/manual-review.json). Shared formatter/oracle then corrected; [genuine old-fail/new-pass control proof](evidence/e3/persian-compound-units-private/README.md) and final72 are separate.
+- Earlier whole574:710/60/42; e47:759/11/42; stopped4524, interrupted7964 and genuine failing first431app remain in their source-specific packets. Never sum overlapping scopes into812pass. Private Persian proof's sole hook-added newline is explicitly mapped to exact compressed original bytes; do not invalidate the recorded mapping or silently rewrite originals.
 
-Use the existing checkout; no new worktrees. Node: `/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin`; stable dependencies: prototype/node_modules. Use writable npm cache `/workspace/scratch/npm-cache`. Pre-commit: `/workspace/scratch/tools-venv/bin`, cache `/workspace/scratch/pre-commit`; use normal hooks. Chromium `/usr/bin/chromium`. Frontend only, port5174, no Docker. Four CPUs: at most four combined heavy workers. Root alone applies/commits actual repository source. Agents stage exact-baseline files under /tmp and coordinate overlapping App/store/UI seams. Persist working milestones remotely on authorised feature branches so recovery does not depend on temporary files.
+## CI and exact permission needed
+
+[Corrected code snapshot21:28](evidence/e3/exact-ci-a6c66dc/README.md): E1/E2/E3 foundation, prototype lint, unit/pricing and build all passed; browsers running. The real0786configured-color CIunit failure is preserved separately and the corrected E3 code subsequently passed that actual CIstep. Concurrency-cancelled runs are not timeouts/passes. A final docs-only push may enqueue fresh required checks; query actual new-head status rather than copying the code-source result.
+
+[Earlier exact repaired heads](evidence/e3/exact-ci-f154/README.md) explicitly exceeded30m0s. The recorded complete local browser suite alone took about53minutes. The concrete [one-line proposal](ci-prototype-time-budget.md) changes only prototype job30→90minutes; foundation30, allchecks/workers/retries/skips unchanged. It is unapplied. The [latest owner request](owner-requests/C8-E1-E2-E3-2026-10-12.md) explicitly says “Rules: change only prototype/, docs/ and seed/.” `.github/workflows/ci.yml` is outside that scope. Ask only that precise exception after final authorized publication; no auto-review rejection occurred. Do not treat old generic FixCI permission as overriding this later explicit restriction.
+
+## Owner review and limitations
+
+[Ubuntu installation/run and click-by-click guide](PR_C8_E1_E2_E3_REVIEW.md) has all four branch names, exact Git/Node22.23.3 commands, safe pause for local Git modifications and expected localhost5174. No Docker/make needed. Fresh/reset manager/demo1234 → Use simulated passkey; normal updates preserve changed passwords and fictional records. Guides cover People, Black Tea task, Sunflower seeded request, pot sale, real HW-5012 original, invoice Back and Payables search. [Phone/Wi-Fi/VM/HTTPS instructions](phone-demo-hosting.md). Every browser/device/site address has separate records.
+
+Galleries:C875/E120/E228/E379. E3main capture belongs to90ad, not latest source:18frames freshly reviewed/61exactbyte prior-review reuse. Final0786release frames are separately reviewed. No physical Android/iPhoneHomeScreen/Safari/printer/register/realCloudflare policy verification, hosting account/resource creation or deployment. Scan focuses search; no live camera decoder. Final response must be self-contained with allfourPRlinks/branches, actual results/screenshots, exact Ubuntu run path and only necessary CI exception question.
+
+## Runtime
+
+Repo `/workspace/Supermarket-Inventory`; Node22.23.3 `/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin`, Chromium `/usr/bin/chromium`. Normal commit PATH also `/workspace/scratch/tools-venv/bin`, PRE_COMMIT_HOME `/workspace/scratch/pre-commit`. No jobs remain running; do not rerun green checks solely for docs edits. Four-heavy-worker cap. Root sole tracked writer; helpers `/tmp/apply-staged.py` and `/tmp/convert-proof-packet.py` validate scope/hashes. Onboarding/runtime skills already applied and reusable setupdraft saved; deployment is not claimed.

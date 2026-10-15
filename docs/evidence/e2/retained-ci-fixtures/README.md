@@ -1,0 +1,12 @@
+# E2 retained CI fixture proof
+
+Actual native Chromium checks on exact E2 `73891b6c19852e1da6a99316b2fef7873039ea9c` plus the two recorded test-only observation-barrier changes passed **3/3**, with **zero failures, skips, retries, flaky cases or global errors**. Each browser command and the final runner returned exit code **0**.
+
+- Original Labels built-in template duplicate/edit/archive/restore lifecycle: desktop and phone. The same real saved name/style, archived-write denial and exact unchanged archived state, restore, reload, no-delete and template-count assertions remain.
+- Complete original `C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px` case on the phone project. All every-page row/glyph/control guards and original 2px tolerance remain. Fixture still posts exactly 6 invoiced / 2 delivered, proves no premature ledger/stock changes, +2 physical stock and cost ×6 / short deduction cost ×−4. All 43 actual measured layout scenes had zero geometry failures. Actual attached layout reports are in `actual-native-output-artifacts.tar.gz`.
+
+The normal fresh TypeScript/Vite build returned exit 0 in 28.70 seconds. This E2 build has **55 actual dist files**, all hashed over HTTP before and after the real checks. All **1,651 frozen source files** stayed unchanged during execution. This E2 asset count differs from E3 and is deliberately reported as observed. One worker ran at a time. Original assertion/test budgets and skip annotations were preserved; production files were unchanged.
+
+`candidate-input.patch.gz` and `candidate-manifest.json` identify exactly the two test fixture changes. They wait for the actual original retention and each quantity command/projection, and for save/archive/restore commands before dependent checks or reload. `initial-diagnosis.md` retains the original observations and pre-verification caution. Original failing GitHub E2 annotations are retained separately from its 30-minute job cancellation. These bounded checks do not turn that old job green or replace the remaining complete retained suite.
+
+The first local invocation used an incorrectly anchored bare-title selector; Playwright reported **No tests found**, so **zero tests ran** and each command returned 1. Those raw reports and logs are preserved as `first-selector-attempt-*`. The corrected external grep used the exact unchanged source and previously successful normal build; all source and dist bytes were reverified before reuse. No failed test result was hidden or relabelled.

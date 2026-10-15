@@ -1,0 +1,508 @@
+{
+  "scope": "Bounded actual native regressions; this is not the complete812-case suite and not final90ad source proof.",
+  "base_commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+  "tested_recorded_overlays": 21,
+  "source_files_pinned": 1693,
+  "desktop": {
+    "counts": {
+      "passed": 10,
+      "failed": 1
+    },
+    "discovered": 11,
+    "raw_stats": {
+      "startTime": "2026-10-15T18:15:43.053Z",
+      "duration": 314839.55799999996,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "workers": 1,
+    "global_errors": [],
+    "cases": [
+      {
+        "file": "invoices.spec.ts",
+        "title": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 31814
+          }
+        ]
+      },
+      {
+        "file": "manual-entry.spec.ts",
+        "title": "worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 8389
+          }
+        ]
+      },
+      {
+        "file": "notebook-edit-b.spec.ts",
+        "title": "an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 4115
+          }
+        ]
+      },
+      {
+        "file": "operations.spec.ts",
+        "title": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 9419
+          }
+        ]
+      },
+      {
+        "file": "receiving-c.spec.ts",
+        "title": "a worker retargets their own invoice to Warehouse without gaining Warehouse access",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 19976
+          }
+        ]
+      },
+      {
+        "file": "receiving-c.spec.ts",
+        "title": "invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 16773
+          }
+        ]
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "title": "Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 6395
+          }
+        ]
+      },
+      {
+        "file": "returns-a2.spec.ts",
+        "title": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 6318
+          }
+        ]
+      },
+      {
+        "file": "settings-b.spec.ts",
+        "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 4115
+          }
+        ]
+      },
+      {
+        "file": "storage-c6.spec.ts",
+        "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "failed",
+            "retry": 0,
+            "duration_ms": 191449
+          }
+        ]
+      },
+      {
+        "file": "suppliers-a2.spec.ts",
+        "title": "Cashier cannot open Suppliers through a direct address",
+        "project": "desktop",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 1432
+          }
+        ]
+      }
+    ]
+  },
+  "phone": {
+    "counts": {
+      "passed": 16,
+      "failed": 1
+    },
+    "discovered": 17,
+    "raw_stats": {
+      "startTime": "2026-10-15T18:20:58.470Z",
+      "duration": 229979.26,
+      "expected": 16,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "workers": 1,
+    "global_errors": [],
+    "cases": [
+      {
+        "file": "alignment-a2.spec.ts",
+        "title": "table columns align and phone cards retain labelled contained values (en)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 10224
+          }
+        ]
+      },
+      {
+        "file": "alignment-a2.spec.ts",
+        "title": "table columns align and phone cards retain labelled contained values (fa)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 10559
+          }
+        ]
+      },
+      {
+        "file": "b-polish.spec.ts",
+        "title": "Part 1 pills and dashboard branch values stay on one line",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 3069
+          }
+        ]
+      },
+      {
+        "file": "c5-button-audit.spec.ts",
+        "title": "C5 button contract covers Suppliers, every supplier tab and item dialogs",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 42244
+          }
+        ]
+      },
+      {
+        "file": "c5-button-audit.spec.ts",
+        "title": "C5 button contract covers Labels, Notes, History, Received and ledger forms",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 31271
+          }
+        ]
+      },
+      {
+        "file": "c5-button-audit.spec.ts",
+        "title": "C5 button contract covers primary product, date, approval and invoice dialogs",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "failed",
+            "retry": 0,
+            "duration_ms": 15566
+          }
+        ]
+      },
+      {
+        "file": "c5-conditional-audit.spec.ts",
+        "title": "C5 conditional label selection, template restore, and print confirmation",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 14943
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 8367
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 13651
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 10247
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 14390
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Waiting for credit is amber for different retained return states (fa-light)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 9434
+          }
+        ]
+      },
+      {
+        "file": "c5-presentation.spec.ts",
+        "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 15433
+          }
+        ]
+      },
+      {
+        "file": "c8-layout-display.spec.ts",
+        "title": "C8 Received uses whole cases and retained loose units (en)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 4563
+          }
+        ]
+      },
+      {
+        "file": "c8-layout-display.spec.ts",
+        "title": "C8 list navigation and disclosure stay at the row end (en)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 8027
+          }
+        ]
+      },
+      {
+        "file": "c8-layout-display.spec.ts",
+        "title": "C8 Received uses whole cases and retained loose units (fa)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 5684
+          }
+        ]
+      },
+      {
+        "file": "c8-layout-display.spec.ts",
+        "title": "C8 list navigation and disclosure stay at the row end (fa)",
+        "project": "phone",
+        "expected": "passed",
+        "attempts": 1,
+        "results": [
+          {
+            "status": "passed",
+            "retry": 0,
+            "duration_ms": 7758
+          }
+        ]
+      }
+    ]
+  },
+  "total_discovered": 28,
+  "total_actual_pass": 26,
+  "total_actual_fail": 2,
+  "zero_skip_retry_flaky": true,
+  "execution_guards": {
+    "executions": [
+      {
+        "label": "normal-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "actual_exit_code": 0
+      },
+      {
+        "label": "native-desktop",
+        "command": [
+          "node",
+          "node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e3-retained-bounded-v4/source/prototype/bounded.config.ts",
+          "--workers=1",
+          "--project=desktop",
+          "--grep",
+          "simulated upload, review|C6 keeps twenty distinct|Cashier cannot open Suppliers|worker catalog actions|a worker retargets|invoice changed regular cost|supplier pickup and partial|Return detail pickup|Supplier-held cancellation|Settings presents the exact|an already-open worker editor",
+          "--reporter=line,json",
+          "--output",
+          "/tmp/e3-retained-bounded-v4/desktop-output"
+        ],
+        "actual_exit_code": 1
+      },
+      {
+        "label": "native-phone",
+        "command": [
+          "node",
+          "node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e3-retained-bounded-v4/source/prototype/bounded.config.ts",
+          "--workers=1",
+          "--project=phone",
+          "--grep",
+          "table columns align and phone cards retain|Part 1 pills and dashboard branch|C5 button contract covers Suppliers|C5 button contract covers Labels|C5 button contract covers primary|C5 conditional label selection|C5 Waiting for credit|C5 Klead text actions|C8 Received uses whole cases|C8 list navigation and disclosure",
+          "--reporter=line,json",
+          "--output",
+          "/tmp/e3-retained-bounded-v4/phone-output"
+        ],
+        "actual_exit_code": 1
+      }
+    ],
+    "seconds": 576.8870475292206,
+    "source_unchanged": true,
+    "http_matches_built_dist_before": true,
+    "http_unchanged": true,
+    "expected_tests": 28
+  },
+  "outstanding_failures": [
+    "Storage20-photo case: all20originals/hash/reload/download succeeded; later History.isVisible sampled absent row then expected visible Saveproduct in unrelated expanded Person/Branch panel. Incrementalv11 awaits realrow, preserving alloriginaloracles.",
+    "C5primarydialog audit: E3compactProductrows correctly omit rowEdit; incrementalv11 uses actualrecordchevron before unchanged sharedEditdialog audit."
+  ],
+  "other_actual_new_phone_failure": "PayablesRHBranch/$0.00 field locator assumed obsolete percellcaptions; incrementalv11 maps to actual compactscope/value while preserving exactexpectedvalues.",
+  "pending_next_native_cases": [
+    "Storage20\u00d73MB finalHistory Revert afterrowbarrier",
+    "C5primarydialog audit viaactualrecord",
+    "PayablesRHscope andzero balance",
+    "CashiercustomnotebookACLgrant/revoke (bothprojects)",
+    "Manualpublicrule/regular pair andcostdenial (bothprojects)",
+    "Phonebarcodeconflict viaactualrecord",
+    "Remaining full812 outcomes on older frozen574"
+  ]
+}

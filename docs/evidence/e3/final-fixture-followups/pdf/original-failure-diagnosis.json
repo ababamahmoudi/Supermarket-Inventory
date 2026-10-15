@@ -1,0 +1,63 @@
+{
+  "source_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "trace": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/trace.zip",
+  "trace_sha256": "152ef3550ee58171e1ae2869e12bfacd94ff2bbf78cb3d5c78d86bd806d8c709",
+  "original_timeline": [
+    {
+      "method": "click",
+      "startTime": 1189841.556,
+      "endTime": 1190600.842,
+      "params": {
+        "selector": "internal:role=button[name=\"Manual entry\"s]",
+        "strict": true
+      }
+    },
+    {
+      "method": "setInputFiles",
+      "startTime": 1190621.362,
+      "endTime": 1191300.116,
+      "params": {
+        "selector": "internal:label=\"Upload a PDF or photo\"s",
+        "strict": true,
+        "payloads": [
+          {
+            "name": "fictional-two-page-invoice.pdf",
+            "mimeType": "application/pdf",
+            "buffer": "<Buffer>"
+          }
+        ]
+      }
+    }
+  ],
+  "original_dom_before_injection": [
+    {
+      "timestamp": 1190616.945,
+      "elements": [
+        {
+          "tag": "DIV",
+          "attributes": {
+            "aria-busy": "true",
+            "inert": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "attributes": {
+            "__playwright_value_": "",
+            "aria-labelledby": "invoice-original-label",
+            "aria-invalid": "false",
+            "id": "invoice-original",
+            "aria-label": "Upload file",
+            "class": "ui-file-input",
+            "accept": "application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml",
+            "tabindex": "-1",
+            "type": "file",
+            "disabled": ""
+          }
+        }
+      ]
+    }
+  ],
+  "cause": "setInputFiles bypassed an actually disabled input inside an inert guarded manual-invoice transition. The production entry guard correctly rejected the out-of-sequence attachment. No production PDF/rendering failure is justified by this trace.",
+  "correction": "Wait for the actual accepted canonical manual draft, protected review heading and enabled upload input; then run every original actual2-page pixel/hash/original-byte/refresh/download oracle with unchanged budgets."
+}

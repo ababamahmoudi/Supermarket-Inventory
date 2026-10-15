@@ -1,0 +1,16 @@
+{
+  "path": "/tmp/e3-ci-first-two-proof/candidate/prototype/playwright.ci-triage.config.ts",
+  "sha256": "78f128748f0c3e786a2419876d1a47ea3196eba64f2a10cf92c1a3cefac596fa",
+  "changes": [
+    "owned preview baseURL",
+    "equivalent owned webServer"
+  ],
+  "unchanged": [
+    "original tests and assertions",
+    "original desktop and phone project definitions",
+    "original per-case and assertion budgets",
+    "original native storage/authority behavior",
+    "original local retries0"
+  ],
+  "workers": 1
+}

@@ -1,5 +1,19 @@
 # Project changelog
 
+## 2026-10-15 — Combined review verification and remaining CI boundaries
+
+- Record source-specific `0786ea2` application 1,444/1,444, separate SDK75/75, normal full lint and a fresh build, actual exits0 and unchanged source. Preserve earlier failing and successful attempts separately.
+- Record selected corrected native72/72 (36 desktop/36 phone), with no skips/retries/global errors, unchanged source/build/61 served files and actual English/Persian release originals manually viewed and passed. This is not a complete current-source812 browser pass; fullf154 remains769pass/1fail/42intentional skips.
+- Keep the actual configured-brand-color GitHub unit failure separate from older30-minute job limits and local full application success. The later test-only palette fixture waits for all three original exact CSS values under the unchanged default1000ms budget; the final E1/E2 files each passed11/11 and E3 lint/build passed with61 byte-identical build outputs. The final full E3 application1,444/SDK75 passed separately; its first archived-run import failure remains retained.
+- Update Ubuntu commands/click paths, the acceptance ledger and source/image provenance. Keep the one-line prototype-only CI30→90minute proposal unapplied until the owner grants its exception to the allowed path scope. No main merge, deployment or resource creation.
+
+## 2026-10-15 — Keep inline sale-reminder units together
+
+- Render product names in delivery-release and no-end-sale reminders through the existing unit-text component. Keep English 24 cm and Persian centimetre/millimetre compounds together, including space and half-space spellings. Wording, business data, pricing and permissions are unchanged.
+- Strengthen the raw layout checker with Persian compound units and an actual seeded product clean/broken/restored negative control. Add exact-text and numeric-direction coverage; preserve the earlier passing native run whose Persian frame failed manual review.
+- Await actual sign-in/projection readiness in the posted-invoice unit harness before its original heading check, preserving financial assertions and timeout budgets.
+- Preserve the original failing complete-run evidence; corrected-source verification is recorded separately.
+
 ## 2026-10-15 — Retain Payables typing on a location reselect
 
 - Keep supplier search text and focus when the current Payables location is selected again. Actual location changes and Clear filters retain their existing behavior.
@@ -11,11 +25,25 @@
 - Add a genuine Provider/repository delayed-completion regression, reproducing the old unwanted route and verifying the corrected Posted list and column preferences.
 - Retain asynchronous upload, template, pricing-setting, print and named supplier-field assertions through their actual completion, and verify implemented People without weakening unfinished E1 Notifications restrictions.
 
+## 2026-10-15 — Migration test isolation and final unit evidence
+
+- Make the first-import browser fixture genuinely empty before removing its authority database: unregister its old service worker, leave the controlled page, and verify the inert document. Production offline behavior and all original backup, recovery, exact-byte and permission assertions remain unchanged.
+- Both original migration cases passed on desktop and phone (4/4). The complete retained browser replay remains separately recorded and is not inferred from these four cases.
+- Full post-print application verification passed 1,426/1,426, with actual process exit 0 and no unhandled errors; SDK 75/75 and normal lint also passed. Preserve the earlier unexplained exit-1 attempt rather than treating its passing assertions as a successful process.
+- Wait for the accepted manual-upload workspace and the actual completed template save in retained browser checks; preserve PDF pixels/bytes and A4 calibration assertions. Extend the layout test inspector to detect deliberately split cm/mm text. Corrected original PDF 2/2, template 2/2 and layout 12/12 cases passed.
+- Clarify the Ubuntu/phone instructions, actual menu labels and safe pause before switching a repository with local changes.
+
 ## 2026-10-15 — Complete permitted phone print tables
 
 - Restore layout-collapsed cheque/payment columns for actual printing, keeping explicitly hidden columns excluded and restoring phone/expanded-row layout afterward. No payment amounts or records change.
 - Added print lifecycle/media/restore regressions and retained the original cheque, amount and worker-permission native assertions.
 
+## 2026-10-15 — Phone verification corrections
+
+- Keep each Persian case or loose-unit quantity attached to its own translated label in Received, posted invoices, deliveries and orders. The plain-text formatter and exact Decimal decomposition remain unchanged.
+- Give the phone Labels selection cell enough room for its existing checkbox target; retain the original cell-containment threshold.
+- Adapt retained browser selectors to actual compact rows, current role wording, completed original-file transitions and causal audit entries while preserving money, permission, byte-integrity and geometry assertions.
+- Preserve the two failed screenshot reviews and original native failures separately. Final tests and reviewed images are published only after their actual corrected runs.
 
 ## 2026-10-15 — Retained staff notebook and manual-price presentation
 
@@ -24,6 +52,11 @@
 - Added current-Provider and DTO isolation regressions and retained the native read/revoke workflow. This corrects existing requirements rather than adding a new permission.
 
 
+## 2026-10-15 — E3 source-first phone and installable-shell contract
+
+- Specified seven compact phone-row families with inherited protected data, EN/FA390/430 checks and retained wider tables/printing.
+- Defined configured company manifest/icons/standalone/theme, dedicated No connection page, exact public-only cache and explicit updates guarded by genuine active work/dirty editors.
+- Added owner-run no-Docker Ubuntu/local-Wi-Fi/private Pages+Access instructions, separate phone data and accurate scanner/HTTPS/installation limits. No account/resource/deployment or actual hardware test is performed by this specification; executed proof remains separate.
 
 
 ## 2026-10-15 — E2 source-first price work and personal-notification contract

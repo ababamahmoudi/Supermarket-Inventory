@@ -59,7 +59,19 @@ async function freshMigrationSurface(page: Page) {
       body: "<!doctype html><title>Retained migration setup</title>",
     }),
   );
+  // E3's real service worker can answer navigations before page.route, so
+  // leave its controlled document before preparing this isolated first import.
+  // The app must be absent while its authority database alone is removed.
+  await page.evaluate(async () => {
+    if ("serviceWorker" in navigator)
+      for (const registration of await navigator.serviceWorker.getRegistrations())
+        await registration.unregister();
+  });
+  await page.goto("about:blank");
   await page.goto(setup);
+  await expect(page).toHaveTitle("Retained migration setup");
+  await expect(page.locator('script[type="module"]')).toHaveCount(0);
+  await expect(page.locator(".topbar")).toHaveCount(0);
   await page.evaluate(
     ({ databaseName, identityKey }) =>
       new Promise<void>((resolve, reject) => {

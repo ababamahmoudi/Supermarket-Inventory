@@ -1,0 +1,20 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test-only durable template edit completion before refresh",
+  "files": [
+    {
+      "path": "prototype/tests/labels-b.spec.ts",
+      "source": "/tmp/e3-label-template-save-readiness-fix/staged/prototype/tests/labels-b.spec.ts",
+      "baseline_sha256": "c3a4d7a15f53adea904c8ebd1cbdf3d726c5fe511432ee0bc638d28d800814fe",
+      "sha256": "08c3b144e7aa6d4d5fa5b28bed46fd4884c161bd4300354fdd2ef37355dae3e3"
+    }
+  ],
+  "reason": "Original trace reload starts3.64ms after secondSave click returns while actual guarded command is pending. Await actual fresh Template saved confirmation and canonical same named template width60/offset1 before refreshing.",
+  "preserved": [
+    "every original livecapacity/calibration/usedslots oracle",
+    "actual A4 210x297mm and offset11mm physical tolerances<0.2px",
+    "exact printcallcount and12 alignment boxes",
+    "original60width/1offset retention after refresh",
+    "test/assertion budgets,0skips/retries,original testcounts"
+  ]
+}

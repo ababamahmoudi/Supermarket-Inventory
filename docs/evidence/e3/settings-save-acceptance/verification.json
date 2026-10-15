@@ -1,0 +1,44 @@
+{
+  "original_source_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "original_case": "[desktop] tests/settings.spec.ts:25 divisors update live, survive refresh, and invalid money preserves valid rules",
+  "original_failure": "Expected saved Grocery divisor 0.50 after reload; actual0.65",
+  "original_save_click_start_ms": 1650148.912,
+  "original_save_click_end_ms": 1650204.907,
+  "original_reload_start_ms": 1650208.595,
+  "reload_after_click_returns_ms": 3.688,
+  "failed_trace_zip_sha256": "6d07e11556dd352f85581ce0f93e025cdacf9c13c8884f06ccfbd31c31a816e1",
+  "retained_raw_trace_events_sha256": "13944171dcda2bdcb9bb0e1421345dfb8209e5f955327ca61223bda9b81376bf",
+  "original_production_build_exit_code": 0,
+  "reused_build_record": "/tmp/e3-complete-final-proof-v2/build/normal-build-execution.json",
+  "verified_dist_assets": 61,
+  "changed_production_files": 0,
+  "test_change": "After real UI Save, poll actual configured company readonly IndexedDB record for exact Grocery divisor0.50; then original reload and original assertions. No actor minting/storage initialization/mutations/mocks. Existing bakery pricing test uses the same acceptance precondition.",
+  "original_oracles_preserved": [
+    "live Grocery price1.49 to1.99",
+    "saved divisor0.50 after refresh",
+    "price1.99 after refresh",
+    "zero divisor rejects and prior valid price remains",
+    "negative/five-decimal costs do not produce a price",
+    "valid1.12 cost gives1.49,margin24.83%,below-minimum-margin badge"
+  ],
+  "budgets": "Original60000ms test,5000ms expect; original DesktopChrome+iPhone13 Chromium projects; explicit1worker; retries0; skipped0",
+  "actual_bounded_result": {
+    "actual_exit_code": 0,
+    "seconds": 14.830529928207397,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 2,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "0e2ea9e9e6abb1dc32d64ac4f5b5e6ae932c41fe2e6da42b7db56a54029015df"
+  },
+  "actual_playwright_stats": {
+    "startTime": "2026-10-15T19:17:20.073Z",
+    "duration": 13415.043,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

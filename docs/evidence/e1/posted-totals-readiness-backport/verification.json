@@ -1,0 +1,82 @@
+{
+  "scope": "Entire7-case document/returns test file on actual committed branch archive",
+  "result": {
+    "stage": "e1",
+    "branch": "feat/prototype-e1-location-roles",
+    "commit": "13a6ad0c32190ab1be867f0bcbd644a098811099",
+    "command": [
+      "node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--config",
+      "vitest-posted-backport-proof.config.ts",
+      "src/screens/DocumentsReturns.c5.test.tsx",
+      "--maxWorkers=1",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/tmp/posted-totals-readiness-backports/e1/observer.mjs",
+      "--outputFile=/tmp/posted-totals-readiness-backports/e1/unit.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 5.692821502685547,
+    "source_pin_count": 562,
+    "source_unchanged": true,
+    "unit_counts": {
+      "numTotalTests": 7,
+      "numPassedTests": 7,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "global_errors": [],
+    "fixture_sha256": "953980181b1af9395a01489de3d7c5d89c7496f4309fce1878a6dd61baf9ac77",
+    "no_source_overlay": true
+  },
+  "raw_files": {
+    "start.json.gz": {
+      "sha256": "5a240d739c5f22b738a581eb44c6376955c863326dbcacdb8a7a1d7768d231d2",
+      "bytes": 27350,
+      "original_sha256": "0cf9420f3973484c1c404640852993c7c76469d2f536298755010d19396a3039",
+      "original_bytes": 63985
+    },
+    "unit.json.gz": {
+      "sha256": "32ac7ffe0f2a5acd0874249637d2b0dcaabf0901964d08d9128a559692df4d7e",
+      "bytes": 868,
+      "original_sha256": "e3c4a03e846065f165ba0c3e551475cd26ce1722bce5676442276d5f15af2f62",
+      "original_bytes": 2925
+    },
+    "unit.log.gz": {
+      "sha256": "62e6eef2280fad31411f121e054c02e17fd252bed74dff96ef386a3f189534d8",
+      "bytes": 438,
+      "original_sha256": "6e3a08d162b7d30721a33eee74187536d9e6b156fd0b17eca676dbc0b4307330",
+      "original_bytes": 679
+    },
+    "global-errors.json.gz": {
+      "sha256": "c8f0e69c2feb1554d64762a8c6757309e22d2ea33ba02907fcf755d34a4135f3",
+      "bytes": 130,
+      "original_sha256": "91716a636631a19a8d3d8b03e7f872697342a2cc203d316cfe462935c7735705",
+      "original_bytes": 172
+    },
+    "observer.mjs.gz": {
+      "sha256": "9ca5bd18ee00aac86c248ac14b319b135d3bcbbff06775aa131a5355ce04d1ac",
+      "bytes": 342,
+      "original_sha256": "e4dd4cb48ba379a02aac347717ce18997c8aaf32ef5fd472ee5836005c04636f",
+      "original_bytes": 514
+    },
+    "runner-adapter.ts.gz": {
+      "sha256": "e0c6fbbfebc12c061623176bd953ba658bfa3eb9f1eca455218bc688111f7e97",
+      "bytes": 180,
+      "original_sha256": "af2d8c04185cb887bfc936a5e9b3e38c6d974830a277a6fdcc376adea10f6007",
+      "original_bytes": 252
+    },
+    "exact-driver.py.gz": {
+      "sha256": "5a99d086fb438649c7ef34c6d880a6cc3bd99029b34a787b960953c2ded04713",
+      "bytes": 2122,
+      "original_sha256": "d2eb901b19694d561a1ffb8dcd956c558e1030e0bbadab52f506fba60310b129",
+      "original_bytes": 4685
+    }
+  },
+  "full_application_or_browser_claim": false,
+  "new_source_or_authority_mocks": false,
+  "test_and_heading_budgets_unchanged": true
+}

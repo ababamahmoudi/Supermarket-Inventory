@@ -43,3 +43,24 @@
     display: none;
   }
 }
+
+/* A shared modal footer reserves its own message row; no fixed overlay on actions. */
+:root dialog[open] .ui-dialog-actions:has(> .undo-toast-stack) {
+  flex-wrap: wrap;
+}
+:root dialog[open] .ui-dialog-actions > .undo-toast-stack {
+  position: static;
+  flex: 1 0 100%;
+  order: -1;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  margin: 0;
+}
+
+:root [data-undo-toast-host] > .undo-toast-stack {
+  position: static;
+  order: -1;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  margin: 0;
+}

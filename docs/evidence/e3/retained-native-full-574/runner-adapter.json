@@ -1,0 +1,18 @@
+{
+  "path": "/tmp/e3-complete-browser-proof/source/prototype/playwright.immutable-proof.config.ts",
+  "sha256": "c7591fcb1579aa51d62c530434731aa9c3ac8eedc605eabc11830b242b03d653",
+  "changes": [
+    "use.baseURL points to this run owned preview",
+    "webServer disabled because the runner owns the equivalent normal Vite preview"
+  ],
+  "unchanged": [
+    "original test directory",
+    "original desktop and phone projects",
+    "all test timeout/expect budgets",
+    "configured local retries=0",
+    "original assertions/SDK/application source"
+  ],
+  "transport": "explicit simulated insecure HTTP response transport",
+  "nonsecure_origin": "http://supermarket-lan-proof.invalid",
+  "root_head_before": "5741353f47457842f925df623f35e44135a250e5"
+}

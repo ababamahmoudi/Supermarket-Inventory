@@ -1,0 +1,321 @@
+{
+  "source_commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+  "packet_dir": "/tmp/e3-retained-f154-native-proof-packet",
+  "files": [
+    {
+      "path": "actual-failure/derived-original-geometry.json.gz",
+      "sha256": "39e8e35cf2a811cdcb2797e89096e8bec553727832429c8817e22a675af9103a",
+      "bytes": 614
+    },
+    {
+      "path": "actual-failure/error-context.md.gz",
+      "sha256": "62f92ffc52ff9f561c9e5bababffae94da0882616ff5016ea06055c7a3fd0bbe",
+      "bytes": 3101
+    },
+    {
+      "path": "actual-failure/original-4bd28f3a1154a9f6f7123c60f370cd89b257ee04.gz",
+      "sha256": "62f92ffc52ff9f561c9e5bababffae94da0882616ff5016ea06055c7a3fd0bbe",
+      "bytes": 3101
+    },
+    {
+      "path": "actual-failure/original-last-frame.jpeg.gz",
+      "sha256": "f01657d33d0f62ce357f2bcc9eaf2d23507aace4a6fe8ae70fa16208140015b1",
+      "bytes": 35140
+    },
+    {
+      "path": "actual-failure/original-matching-1-trace.trace.ndjson.gz",
+      "sha256": "9ce357ace7fe7ca56f3cd226ecf400f33c0bc9627402002f4ef40082b036c738",
+      "bytes": 4760
+    },
+    {
+      "path": "actual-failure/original-matching-test.trace.ndjson.gz",
+      "sha256": "759e680e8a458060a7f4cf10513e11569b0aadfc186e119b19e1a8309119318f",
+      "bytes": 410
+    },
+    {
+      "path": "actual-failure/trace.zip.gz",
+      "sha256": "e0b759196814f2c22acaa6bc19b86a4b3035340d7c31f14de3880aecd335a0da",
+      "bytes": 3700193
+    },
+    {
+      "path": "all812-canonical-keys.json",
+      "sha256": "d43b915a2ee342b0d794047a29505396774081fa1e5d7d3b2279ce0ccfdb9f9e",
+      "bytes": 307155
+    },
+    {
+      "path": "all812-outcomes.json",
+      "sha256": "a90ad8d06c4c07ea3824b8bd5e24ab3ebd2963bcc6a409b066c921e30d3eb834",
+      "bytes": 351661
+    },
+    {
+      "path": "build/normal-build-execution.json.gz",
+      "sha256": "a521eca0d3da84174cc13c210c8d6dd8e420020ccd88995c41c64a614b9e9d99",
+      "bytes": 131
+    },
+    {
+      "path": "build/normal-build-running.json.gz",
+      "sha256": "33f4d81ee89d3a4b43c147ad6b19277fbbadbfcc463f4b1f783a0f8f5df0f4e4",
+      "bytes": 112
+    },
+    {
+      "path": "build/normal-build.log.gz",
+      "sha256": "b1f2479a69679a4e6eb71a88ebc75a9e2b37671473e0d00a0ff9cac12d967e43",
+      "bytes": 1050
+    },
+    {
+      "path": "build/source-guard.json.gz",
+      "sha256": "0658db5120449bf8442d30f3d779b9a99009689772d4ff5486badea7167888f4",
+      "bytes": 118
+    },
+    {
+      "path": "compressed-originals-integrity.json",
+      "sha256": "495124c3ff02288bbf47aa1ddb5004d3f227529c7e41731a86216bcae76de0bd",
+      "bytes": 22030
+    },
+    {
+      "path": "desktop-native-output-sha256.json",
+      "sha256": "138e7e0aeb4c79fd7b7f3814540c93d853962e4c4ceeda01aadf65eee0c546ea",
+      "bytes": 52786
+    },
+    {
+      "path": "desktop-run-001/canonical-case-keys.json.gz",
+      "sha256": "63a1b0d04e6a7fcd8b78e35fbd703ffe99f904ffd0c07e009bfaf14aab5431c5",
+      "bytes": 14479
+    },
+    {
+      "path": "desktop-run-001/discovery-execution.json.gz",
+      "sha256": "f12bed770eebb463c5d5e42399c63bfdd3b5bef1a8db9483818ecb82bb8ef3ce",
+      "bytes": 238
+    },
+    {
+      "path": "desktop-run-001/discovery-running.json.gz",
+      "sha256": "5a1696c230b18a212bfde083f68d7863a578d950da7215f893f9795aa0ef8bcc",
+      "bytes": 227
+    },
+    {
+      "path": "desktop-run-001/discovery.json.gz",
+      "sha256": "52f16243092e6c141f1ab66d24f9bddf8d86b009b43f4d14c592a720b1d4ade3",
+      "bytes": 23337
+    },
+    {
+      "path": "desktop-run-001/discovery.log.gz",
+      "sha256": "8d632bef56d85ee6714aaf7698b9248e2f3df8aea8ae6511e85649765b991795",
+      "bytes": 11186
+    },
+    {
+      "path": "desktop-run-001/execution-result.json.gz",
+      "sha256": "5e5ed8297f4dc33c7124b745661b40a1079cd06102eea8285a98f547eb6ae3c9",
+      "bytes": 3887
+    },
+    {
+      "path": "desktop-run-001/expected-cases.json.gz",
+      "sha256": "ffce746c4eec2e2feb3604fb820228c5d5c8cb5fa26263c60c717ef13f94d0b9",
+      "bytes": 14566
+    },
+    {
+      "path": "desktop-run-001/guards-before.json.gz",
+      "sha256": "ca656c97184b09401513d113b5d0e7c78f508cdfe652f0c5dc667bfee2f7f8f2",
+      "bytes": 3189
+    },
+    {
+      "path": "desktop-run-001/lifecycle.ndjson.gz",
+      "sha256": "cbd65f05bf626f17747de245809fe29d5167a0ea274b46ac2de7170e8b5484f4",
+      "bytes": 52466
+    },
+    {
+      "path": "desktop-run-001/native-execution.json.gz",
+      "sha256": "351a9db2ee9e6135061c5f2aca764cab81d857f283680abce641edf12a9e9a37",
+      "bytes": 284
+    },
+    {
+      "path": "desktop-run-001/native-outcomes.json.gz",
+      "sha256": "949dd71d69c6c914f5e812f2806c03e89935894e4277394b01e0ea265af1d1e6",
+      "bytes": 19957
+    },
+    {
+      "path": "desktop-run-001/native-running.json.gz",
+      "sha256": "d91f2b4ea3e5448e37d2491e77c84ade3259680ee2fa27e7b860b39781e24807",
+      "bytes": 270
+    },
+    {
+      "path": "desktop-run-001/native.log.gz",
+      "sha256": "70252e3c25fa9d1b017018fd91b6aa84b2273674d153ad97fd616b50490e35de",
+      "bytes": 12467
+    },
+    {
+      "path": "desktop-run-001/owned-preview.json.gz",
+      "sha256": "5c6e87b6e79671eef5210f29fa3cd60dbae22a83d83d61c4aaebf46281404ad3",
+      "bytes": 74
+    },
+    {
+      "path": "desktop-run-001/playwright.json.gz",
+      "sha256": "ffc87f20d7802672ecc730fe5c49737dbf1917621a1d5d9a78488ecd8b0d363a",
+      "bytes": 357537
+    },
+    {
+      "path": "desktop-run-001/preview.log.gz",
+      "sha256": "7105014f1c400664bf771eb9b57c613642d318f0a59c151e09f891fb5a47841d",
+      "bytes": 107
+    },
+    {
+      "path": "desktop-run-001/private-reporter.json.gz",
+      "sha256": "6f2f0d62ad1a39f903cc4e72b90390b6524f0c767a4666cb23b5dea967541482",
+      "bytes": 192
+    },
+    {
+      "path": "desktop-run-001/runner-adapter.json.gz",
+      "sha256": "fd8960442bb6ec7fe1c3d38450b7658f8df0dceae3a5e299ae9dc60a7dc19113",
+      "bytes": 363
+    },
+    {
+      "path": "dist-pins.json.gz",
+      "sha256": "accb41e836f5275824d9c02c461d1d35f9b529ed382f7c6158685100741f1c7e",
+      "bytes": 3093
+    },
+    {
+      "path": "exact-driver.py.gz",
+      "sha256": "dd26f7bfdba1986b74ff8f4af7bd0c73771d5c50118e9ea290c1155700a38def",
+      "bytes": 6429
+    },
+    {
+      "path": "freeze.json.gz",
+      "sha256": "3a2ef475a11da56d16dca7698eff57a9844c065bd955d07ab58c21da83793859",
+      "bytes": 70603
+    },
+    {
+      "path": "lifecycle-reporter.cjs.gz",
+      "sha256": "1b0533d4181068c99bbc9e1ce5e1a601a6892dba3d92988efc754de072454fa4",
+      "bytes": 515
+    },
+    {
+      "path": "native-driver-tool-results.json.gz",
+      "sha256": "5a0f7a8ca4a23cad0730f23a3978cadad017ae19272ee61a3201ef037dcd4675",
+      "bytes": 216
+    },
+    {
+      "path": "original-all812-case-keys.json.gz",
+      "sha256": "1fb7184fd5ca9655829f96b43dffa586b5adaf42f840bbea3b41053068c81f15",
+      "bytes": 32769
+    },
+    {
+      "path": "original-phone-skips.json.gz",
+      "sha256": "f3b92154cd100322f3bb1b2bc4b433be5b37b43c85668a2f7c1b22e00f9f201d",
+      "bytes": 2559
+    },
+    {
+      "path": "phone-native-output-sha256.json",
+      "sha256": "8bcbfefcb25bba3c4ea327847ff17d3bae5272254b3e1165b42e58d36d329c54",
+      "bytes": 52837
+    },
+    {
+      "path": "phone-run-001/canonical-case-keys.json.gz",
+      "sha256": "a31d9d0bc00f65a79ee01134a4f17c2795a13af8959bc88f96374798ce62a91c",
+      "bytes": 14470
+    },
+    {
+      "path": "phone-run-001/discovery-execution.json.gz",
+      "sha256": "1b84e3df1da2b403b84fdde9dc3106187e798c045cf24379ca08df01a3afd997",
+      "bytes": 237
+    },
+    {
+      "path": "phone-run-001/discovery-running.json.gz",
+      "sha256": "7db5bbbe0637a4b104bc673985123eda6f90d26f163c3919e061c0f1131d817e",
+      "bytes": 225
+    },
+    {
+      "path": "phone-run-001/discovery.json.gz",
+      "sha256": "b14a5157ca2644a78ca912ab48e8e05b5ac1f4add6093df83e4751d1b211083b",
+      "bytes": 23313
+    },
+    {
+      "path": "phone-run-001/discovery.log.gz",
+      "sha256": "1f9327c6d106587a584d011f8ecb69b72f755496e87ba6b0b3253ae0370c1cbf",
+      "bytes": 11169
+    },
+    {
+      "path": "phone-run-001/execution-result.json.gz",
+      "sha256": "cab8f7598a7a600df6c075c865439b3d78b6397485cb45f370b95f67d2c7f750",
+      "bytes": 3890
+    },
+    {
+      "path": "phone-run-001/expected-cases.json.gz",
+      "sha256": "de35fc6955a7da1541545309de9b798abf68d9186dceb5abdf4f118531892490",
+      "bytes": 14561
+    },
+    {
+      "path": "phone-run-001/guards-before.json.gz",
+      "sha256": "ca656c97184b09401513d113b5d0e7c78f508cdfe652f0c5dc667bfee2f7f8f2",
+      "bytes": 3189
+    },
+    {
+      "path": "phone-run-001/lifecycle.ndjson.gz",
+      "sha256": "5a5d9403f080a91fe276ef33ce6e68ec48f910ef97831c47c3bf0233ca60b96f",
+      "bytes": 53212
+    },
+    {
+      "path": "phone-run-001/native-execution.json.gz",
+      "sha256": "bbb97ffcf1f6f303489ec09da22b760fdf7c11ab909f4370c2686f6b596e0722",
+      "bytes": 282
+    },
+    {
+      "path": "phone-run-001/native-outcomes.json.gz",
+      "sha256": "9f4da688f13c3438a223ce0d82dbf1f9d231d00691864c02d2eadb45c94d504b",
+      "bytes": 20783
+    },
+    {
+      "path": "phone-run-001/native-running.json.gz",
+      "sha256": "bab031370241630570864e0ae32c764d09af61c841a23306ed7e66908d93e1be",
+      "bytes": 269
+    },
+    {
+      "path": "phone-run-001/native.log.gz",
+      "sha256": "07bcf0de8871b043232af571022e013712913e5a2cf98ccb113a75eb5cf1cf81",
+      "bytes": 13032
+    },
+    {
+      "path": "phone-run-001/owned-preview.json.gz",
+      "sha256": "c372649265ac63f5a8d4929b9910a4c1f7d69d7168202194ab8ca997ef0e8f24",
+      "bytes": 74
+    },
+    {
+      "path": "phone-run-001/playwright.json.gz",
+      "sha256": "2afd85bc89cf374cf9e5299fd8311b157bc4526af1af52904953f98dc10b0ba9",
+      "bytes": 340995
+    },
+    {
+      "path": "phone-run-001/preview.log.gz",
+      "sha256": "22c4e2652f005773ea682950e29b3d22ca4680f1840c18c6b879bc6378bfd0b2",
+      "bytes": 107
+    },
+    {
+      "path": "phone-run-001/private-reporter.json.gz",
+      "sha256": "6f2f0d62ad1a39f903cc4e72b90390b6524f0c767a4666cb23b5dea967541482",
+      "bytes": 192
+    },
+    {
+      "path": "phone-run-001/runner-adapter.json.gz",
+      "sha256": "ebfe3e0d52c99b7ed57b2e1c51926f1b33c9da610381c602206d240e7de2459b",
+      "bytes": 360
+    },
+    {
+      "path": "phone-skip-annotation-metadata-comparison.json.gz",
+      "sha256": "9dab3c9d3702c71127372f981043ebdd193f8859406423993230a6443489c16d",
+      "bytes": 1661
+    },
+    {
+      "path": "private-harness.json.gz",
+      "sha256": "8b92abf8b51df33de7f7b323fef0f3220e28cc87122b91e1ba8bbacace55b998",
+      "bytes": 247
+    },
+    {
+      "path": "source-pins.json.gz",
+      "sha256": "f7ab5b310e7749e1a79e56a1de4b21246c40f67724b52f9604d102694d35bcd9",
+      "bytes": 166260
+    },
+    {
+      "path": "summary.json",
+      "sha256": "27f86fb6c86520c0afdfe5037f6fe80521cf0dac4edb6fed5e9197c89e9190e5",
+      "bytes": 3701
+    }
+  ]
+}

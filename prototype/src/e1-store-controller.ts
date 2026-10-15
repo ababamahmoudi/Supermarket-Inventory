@@ -1,3 +1,4 @@
+import { trackAppWork } from "./app-work";
 import type {
   AuthenticatedActor,
   BusinessState,
@@ -247,7 +248,7 @@ export function createE1StoreController<State extends BusinessState, View>(
       if (!["invalid", "revoked", "authentication"].includes(code)) throw error;
     }
   }
-  return {
+  const controller = {
     async resume(saved: CommandIdentity | null) {
       if (disposed) throw new DiscardedSessionResult();
       const intent = ++authIntent;
@@ -641,4 +642,25 @@ export function createE1StoreController<State extends BusinessState, View>(
       // Keep the persisted genuine SID for the replacement provider/remount.
     },
   };
+  return trackAppWork(controller, [
+    "resume",
+    "signIn",
+    "switchDemoUser",
+    "choosePassword",
+    "setupSecondStep",
+    "completeSecondStep",
+    "unlock",
+    "reauthenticate",
+    "lock",
+    "signOut",
+    "setLocation",
+    "command",
+    "query",
+    "authorityRead",
+    "authorityAction",
+    "restartOwnSetup",
+    "resetDemo",
+    "invalidate",
+    "refresh",
+  ]);
 }

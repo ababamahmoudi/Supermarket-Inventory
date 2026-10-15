@@ -262,9 +262,11 @@ it("requires a confirmation to withdraw one's request and leaves the approved cu
 
 it("opens a sale record by clicking the product row, and filters requests independently from other current sales", async () => {
   const user = await show();
-  await user.click(
-    within(row("0012", "sale")).getByText("Stainless Steel Pot 24 cm"),
+  const productName = row("0012", "sale").querySelector(
+    '.product-name [lang="en"]',
   );
+  expect(productName).toHaveTextContent(/^Stainless Steel Pot 24 cm$/);
+  await user.click(productName as HTMLElement);
   const dialog = screen.getByRole("dialog", { name: "Offer" });
   expect(dialog).toHaveTextContent("Created by");
   expect(dialog).toHaveTextContent("16.99");

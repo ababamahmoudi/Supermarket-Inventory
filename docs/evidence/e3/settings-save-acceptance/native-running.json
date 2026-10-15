@@ -1,0 +1,17 @@
+{
+  "pid": 163090,
+  "command": [
+    "node",
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/tmp/e3-settings-save-bounded-v1/source/prototype/playwright.migration-proof.config.ts",
+    "tests/settings.spec.ts",
+    "--grep",
+    "divisors update live, survive refresh, and invalid money preserves valid rules",
+    "--workers=1",
+    "--reporter=line,json",
+    "--output",
+    "/tmp/e3-settings-save-bounded-v1/native-output"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "base_e2_commit": "73891b6c19852e1da6a99316b2fef7873039ea9c",
+  "candidate_manifest_sha256": "de0491f92c70af1686d01ff3136f49b0cfac85832f5b3d70d96daa27a5d7ed44",
+  "source_changed_only": [
+    "prototype/tests/c8-layout-proof.spec.ts",
+    "prototype/tests/labels-c1.spec.ts"
+  ],
+  "private_transport_adapter": "prototype/bounded.config.ts; own loopback port 5204; no test/permission/timeouts overrides",
+  "normal_fresh_build_exit_code": 0,
+  "normal_fresh_build_seconds": 28.69867777824402,
+  "actual_browser_case_count": 3,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "global_errors": 0,
+  "actual_each_browser_cli_exit_code": 0,
+  "actual_corrected_runner_exit_code": 0,
+  "actual_corrected_run_seconds": 64.79830884933472,
+  "frozen_source_files": 1651,
+  "source_unchanged": true,
+  "actual_e2_dist_assets": 55,
+  "all_served_dist_assets_match_built_bytes_before_and_after": true,
+  "scope_limit": "Bounded original E2 cases only; not a complete E2/E3 retained browser suite or latest-head GitHub CI result.",
+  "retained_failed_setup_attempt": "First selector anchored a bare title against Playwright full prefixed title: no tests found, three CLI1 errors, 0 tests executed. Corrected external grep only; exact frozen production source and normal build were verified and reused.",
+  "actual_c8_fa900_layout_scenes": 43,
+  "actual_c8_layout_scene_failures": 0
+}

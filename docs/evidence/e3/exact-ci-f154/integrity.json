@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-10-15T20:28:01.628740+00:00",
+  "files": {
+    "README.md": {
+      "bytes": 2017,
+      "sha256": "c29f22c61742b7256b92b2f2804356961ba73dc3769cfe0a2c7063126275c857"
+    },
+    "all-four-pr-status.json.gz": {
+      "bytes": 1534,
+      "sha256": "0792fea7ee35476183ac8aa0fd97ef2562df9ed96710e895ae7531edd4df03ff"
+    },
+    "guide-local-links.json.gz": {
+      "bytes": 328,
+      "sha256": "f003e03a7829ac383313b807082c4574bc0162d64b89ca9e18e46471646c805f"
+    },
+    "main-status.json.gz": {
+      "bytes": 2008,
+      "sha256": "d2e9151faf6c8d7797892ceefbc02e5258a748cf36fbb3840d6327c5867bd34a"
+    },
+    "monitor-finished.json.gz": {
+      "bytes": 118,
+      "sha256": "d52b20c753275f83b8eafbfeb3bda719860edcb51dd5ef0403037c045f3860cf"
+    },
+    "pr22-terminal.json.gz": {
+      "bytes": 4516,
+      "sha256": "66522bfd68c4304df9af846891b04dd43186b367a0fffc489570a117d9938ff3"
+    },
+    "pr23-terminal.json.gz": {
+      "bytes": 4496,
+      "sha256": "795b95207da6344126da7c3c79b5fc5ca2c7644047df45597896866485531fac"
+    },
+    "pr24-terminal.json.gz": {
+      "bytes": 4483,
+      "sha256": "176d2d26e6e5562dcc197ded764db829d6247ab149007530c64104ad85fbafca"
+    },
+    "summary.json": {
+      "bytes": 19076,
+      "sha256": "8e208cdc94047fd59147fbf339d60d570e0dc6e1d49801f1da9f12d3eacf7fe4"
+    }
+  },
+  "notes": "Raw gzip files preserve exact original bytes; no remote changes."
+}

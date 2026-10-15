@@ -1,0 +1,231 @@
+{
+  "commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+  "source_unchanged": true,
+  "current_tracked_inputs_match": true,
+  "application": {
+    "counts": {
+      "numTotalTests": 1430,
+      "numPassedTests": 1430,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "files": 142,
+    "name": "app",
+    "command": [
+      "node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/tmp/e3-final-full-application-v2/observer.mjs",
+      "--outputFile=/tmp/e3-final-full-application-v2/app.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 232.48580312728882,
+    "source_unchanged": true,
+    "global_errors": []
+  },
+  "sdk": {
+    "counts": {
+      "numTotalTests": 75,
+      "numPassedTests": 75,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+    "command": [
+      "npm",
+      "run",
+      "test:sdk",
+      "--",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile=/tmp/e3-f154-final-sdk/sdk.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 3.1055643558502197,
+    "source_unchanged": true
+  },
+  "lint": {
+    "commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 46.09080386161804,
+    "source_unchanged": true
+  },
+  "normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 22.72056794166565,
+    "interrupted": false,
+    "source_unchanged": true,
+    "old_build_reused": false
+  },
+  "pricing_seed_cases": 23,
+  "prior_attempt": {
+    "commit": "7964fab2fc396fd1c461652c351491933add8c73",
+    "application": "Explicitly interrupted; not a complete pass.",
+    "lint": "Failed: regression fixture assigned external observer during React render. Fixed by observing in useLayoutEffect; no production behavior changed."
+  },
+  "orchestration_note": "The application subprocess completed with actual CLI 0 and emitted its observer process-exit result. SDK and lint then ran as separate actual guarded commands on the identical f154 tracked input bytes. No overall exit is invented for the original multi-command driver.",
+  "limitations": [
+    "Complete original desktop and phone browser projects are separate and still in progress.",
+    "This packet does not prove physical Home Screen install, Safari hardware, printer alignment, real register or Cloudflare deployment."
+  ],
+  "raw_files": [
+    {
+      "path": "application.json.gz",
+      "bytes": 74633,
+      "sha256": "13362eb62061fb209127178506ae1731685063d818fddba5991e1e30bfc126ad",
+      "original_bytes": 572672,
+      "original_sha256": "0dede372d83b1b00abc62c895bc266ed12d1e1917b0362cb6e035cb9100e1f5e"
+    },
+    {
+      "path": "application.log.gz",
+      "bytes": 11024,
+      "sha256": "49d38a751fdd3e0e972850162a36ab48967270afed1c3d323216a057a9c96f1e",
+      "original_bytes": 32893,
+      "original_sha256": "99e36a1bb22c86077c866e5721a7813d54b323a4699ffc0b8b20ed98c95b8b36"
+    },
+    {
+      "path": "application-execution.json.gz",
+      "bytes": 248,
+      "sha256": "cdc88a84cce4a02e211223ff44b704721e59885d2da1aa99e5966852cf730fc1",
+      "original_bytes": 421,
+      "original_sha256": "e704316644815623604a965f8acddfff3124c5608e97bd1dbc50e879e9f9f8ca"
+    },
+    {
+      "path": "application-global-errors.json.gz",
+      "bytes": 132,
+      "sha256": "107b36761718636a8c1f64a1c2ff267cfcbba8ca59b3cd2d0a303fca81899068",
+      "original_bytes": 174,
+      "original_sha256": "655ce234a5f5829d6600017d75d88eedb48e481e610b01a11cd50d9fa6b8c48b"
+    },
+    {
+      "path": "application-source-pins.json.gz",
+      "bytes": 28755,
+      "sha256": "26d14f4c62d40d20d9765cd8829e47198e9d2e496bbf978a5df363a7bdfff77a",
+      "original_bytes": 67267,
+      "original_sha256": "6020db35c2eb5d81de84c863198f9052015c94ccfdaeeb1fd4f44415c12f3736"
+    },
+    {
+      "path": "sdk.json.gz",
+      "bytes": 4569,
+      "sha256": "7432ad71adf6f97326d3d675c6c68b4a3df15e0d49f675d842695387c352082a",
+      "original_bytes": 25857,
+      "original_sha256": "84807a2cff7e503282cf47036b8b41d283fb205c377cc8096a2c1fe2a048d244"
+    },
+    {
+      "path": "sdk.log.gz",
+      "bytes": 650,
+      "sha256": "5e86e5325c134137e8c1f689467c9120da4a10a4f479382c78e1403572ab3b5b",
+      "original_bytes": 1234,
+      "original_sha256": "67d86791f37fe762aaef468c636bc4e3e3f69a14c5ea019d8239a7c534c84105"
+    },
+    {
+      "path": "sdk-execution.json.gz",
+      "bytes": 236,
+      "sha256": "f0c44596bb86720ccbf3bb46dadd5467d9044fe19b0de2ce089710e41a239ec7",
+      "original_bytes": 335,
+      "original_sha256": "547f9180d8b6928e57e331e745c998355826555604783db851e64765a182e16d"
+    },
+    {
+      "path": "lint.log.gz",
+      "bytes": 253,
+      "sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "original_bytes": 369,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a"
+    },
+    {
+      "path": "lint-execution.json.gz",
+      "bytes": 163,
+      "sha256": "6de5afbf763b5b8053b4e5b0c3703330746c458e4068572860a3f3919194f43b",
+      "original_bytes": 197,
+      "original_sha256": "c14af11b883a807812c4e2481ce4536684e11488c7620d7e9e51f73da4b0f0f7"
+    },
+    {
+      "path": "normal-build.log.gz",
+      "bytes": 1050,
+      "sha256": "ae9baedcb93ede7b27f6cc729a2b08906fd43fab4acb59373ec2b5c96c489e7c",
+      "original_bytes": 2902,
+      "original_sha256": "ef13cdb2e3e18efb54a3de68d5f59e5a2a05f62e8bebeb17fc97f82bb551a3fb"
+    },
+    {
+      "path": "normal-build-execution.json.gz",
+      "bytes": 131,
+      "sha256": "c32639a8076527bda111dee0c32fc33f2b11d280f2767bc4b492d0f0ceae7e8e",
+      "original_bytes": 138,
+      "original_sha256": "ba2836f5b4bdacd1c3a2617a596a272e007d01ab636bd64662b9f43a68522598"
+    },
+    {
+      "path": "normal-build-source-guard.json.gz",
+      "bytes": 118,
+      "sha256": "9ed2e7cc6a854bacc143ab6573210328041ece1a7a7627fd4f30e3f5619303a3",
+      "original_bytes": 123,
+      "original_sha256": "f8218a10038928b40ef13ddd1bc1e0603ad24793cfaca9f514d902f0b7707122"
+    },
+    {
+      "path": "app-driver.py.gz",
+      "bytes": 993,
+      "sha256": "1f5f9dcce95e1f073ae0fdac891c1b8f546040555233cf4459ebf815a06ba652",
+      "original_bytes": 2035,
+      "original_sha256": "44e4a6ccb665f451afc8758b288ce87e770d55eaaaae6aca50d28f20d1af2bad"
+    },
+    {
+      "path": "sdk-lint-driver.py.gz",
+      "bytes": 745,
+      "sha256": "fbd1390a3f44af9e948d71edb0eaa626e4c4f88511ced377d39f4389ff96a8ab",
+      "original_bytes": 1365,
+      "original_sha256": "025913cef42aee67e1877f6a28c096ab5c2cdd5bad876019049a37ccb39d94c8"
+    },
+    {
+      "path": "interrupted-7964-app.log.gz",
+      "bytes": 9973,
+      "sha256": "07c5afa70b92e37a6a4b939dbc84c54bde85dabd700b57efaaf8c4ef475c001a",
+      "original_bytes": 28810,
+      "original_sha256": "abec3563dd6e704771934f105e41ce32e852da90554268b95665d4a5940e0295"
+    },
+    {
+      "path": "interrupted-7964-reason.json.gz",
+      "bytes": 254,
+      "sha256": "51b7c9bcc71bb11c52ac7f3a01a512fccb6201920c2e7ecfb5fda67f48000f38",
+      "original_bytes": 350,
+      "original_sha256": "00b01a427a7eace3617a42eff969bd43cd6bd4ffcb44168c5050241cc78a92d8"
+    },
+    {
+      "path": "interrupted-7964-source-pins.json.gz",
+      "bytes": 28756,
+      "sha256": "25ad3fa5410a241f0d833c79fe519cd0cf7e8353e34d405cc473699c3a4f77a8",
+      "original_bytes": 67267,
+      "original_sha256": "91e348f8a2e1780cc446dc6eba18994c0da73fd3fc799ae682a5c8ffee21a296"
+    },
+    {
+      "path": "failed-7964-lint.log.gz",
+      "bytes": 712,
+      "sha256": "cdc30663761d16702bc0752b3ed3cffe71425886ba619a451725711ee52adcc9",
+      "original_bytes": 1324,
+      "original_sha256": "fea71af5cccbb383b7f893a9dcc7e547027297b121df0647c72f92c943040447"
+    },
+    {
+      "path": "failed-7964-lint-execution.json.gz",
+      "bytes": 146,
+      "sha256": "1397e72ddd44f368ef3e97d80c1e821eacb166c8b1b08da1e88f39f9efc8aba5",
+      "original_bytes": 168,
+      "original_sha256": "74cd9f98e4ad76b5df18983d4103511fd93806d88404ee42692f0183c25011f2"
+    }
+  ]
+}

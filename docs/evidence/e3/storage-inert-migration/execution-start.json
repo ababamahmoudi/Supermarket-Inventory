@@ -1,0 +1,10 @@
+{
+  "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "manifest_sha256": "3f081a3c49ad7486fce5d593df4979f3045cbd7bb75b6b4e19cab7af624b2040",
+  "expected_cases": 6,
+  "normal_build_reused": true,
+  "normal_build_record": "/tmp/e3-complete-final-proof-v2/build/normal-build-execution.json",
+  "production_source": "Exact e47 unchanged; only recorded test fixture overlay",
+  "budgets": "Unchanged original per-test/assertion budgets (nearfull120000ms),0retries,0skip,oneworker",
+  "transport": "Original explicit http://supermarket-lan-proof.invalid insecure-response fixture"
+}

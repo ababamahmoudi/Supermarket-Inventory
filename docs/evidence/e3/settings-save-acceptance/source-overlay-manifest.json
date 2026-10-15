@@ -1,0 +1,10 @@
+{
+  "files": [
+    {
+      "path": "prototype/tests/settings.spec.ts",
+      "source": "/tmp/e3-settings-save-acceptance/prototype/tests/settings.spec.ts",
+      "baseline_sha256": "c41ea12e8d2e5798ac5299731919c3b12a08215a70bbac41ea1005fceeabb200",
+      "sha256": "c7e09cc0c0c70242c5e28127b30a2febd8dcf7d49bbde1c3343b8fc7b417f28e"
+    }
+  ]
+}

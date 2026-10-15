@@ -1,0 +1,50 @@
+{
+  "fixture": "Actual UI-produced E1 business state with only prototype_c8_schema removed; actual backup put throws QuotaExceededError",
+  "boundary_sha256": "c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+  "source_sha256": "e414d230b867caedea593b0e3b9277626590d92a0309478c1088f4dd4e5e85ee",
+  "exact_raw_preserved_during_failure": true,
+  "durable_replacement_blocked": true,
+  "every_decoded_field_preserved_after_recovery": true,
+  "failure_events": [
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "exists": false
+    },
+    {
+      "kind": "backup-failed",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97"
+    },
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "exists": false
+    }
+  ],
+  "recovery_events": [
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "exists": false
+    },
+    {
+      "kind": "backup-read",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "exists": true
+    },
+    {
+      "kind": "backup-text",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "raw_sha256": "c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97"
+    },
+    {
+      "kind": "backup-hash",
+      "reference": "idb-backup:v1:super-arzon:supermarket-prototype-v1:c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97",
+      "sha256": "c72eab7076359953ebe511442643da678c065cbc2973c7e4f3f55be4989acc97"
+    },
+    {
+      "kind": "publish",
+      "schema": 1
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "folder": "c3-tables-Columns-keeps-ma-84160-sor-money-to-a-Floor-Worker-phone",
+    "context": "failures/c3-tables-Columns-keeps-ma-84160-sor-money-to-a-Floor-Worker-phone.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/c3-tables-Columns-keeps-ma-84160-sor-money-to-a-Floor-Worker-phone/trace.zip",
+    "trace_sha256": "f91ebb7c114819cc2caaf290a8bcd737510d5e86de88949de719147b1215f177",
+    "trace_bytes": 1417640
+  },
+  {
+    "folder": "c8-migration-C8-backup-wri-12edd-nd-originals-until-recovery-desktop",
+    "context": "failures/c8-migration-C8-backup-wri-12edd-nd-originals-until-recovery-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/c8-migration-C8-backup-wri-12edd-nd-originals-until-recovery-desktop/trace.zip",
+    "trace_sha256": "97c988d224a96f146c1e1fa91d250c3959250ef486993b2f2e67bae10baae073",
+    "trace_bytes": 3621236
+  },
+  {
+    "folder": "filters-a2-Payables-filter-3e7a7-d-report-in-the-same-branch-phone",
+    "context": "failures/filters-a2-Payables-filter-3e7a7-d-report-in-the-same-branch-phone.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/filters-a2-Payables-filter-3e7a7-d-report-in-the-same-branch-phone/trace.zip",
+    "trace_sha256": "66f96d3fbfbd501dc562e49cfcd1e3834f94cce6848ad60b007d2161f3c0086e",
+    "trace_bytes": 813677
+  },
+  {
+    "folder": "invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop",
+    "context": "failures/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/trace.zip",
+    "trace_sha256": "152ef3550ee58171e1ae2869e12bfacd94ff2bbf78cb3d5c78d86bd806d8c709",
+    "trace_bytes": 1051358
+  },
+  {
+    "folder": "invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone",
+    "context": "failures/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/trace.zip",
+    "trace_sha256": "44da547ac8d695ede520c550ac5fda54fd27c32a5412443ede42e898a94f1f46",
+    "trace_bytes": 1150029
+  },
+  {
+    "folder": "labels-b-live-A4-designer--bb0ae-nd-prints-an-alignment-page-desktop",
+    "context": "failures/labels-b-live-A4-designer--bb0ae-nd-prints-an-alignment-page-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/labels-b-live-A4-designer--bb0ae-nd-prints-an-alignment-page-desktop/trace.zip",
+    "trace_sha256": "203f72c2b739ef1ec7766996ad3c600fa268d7da8f7673e7e89cf59b0dc6c403",
+    "trace_bytes": 2333390
+  },
+  {
+    "folder": "layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-desktop",
+    "context": "failures/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-desktop/trace.zip",
+    "trace_sha256": "ba53f075668aff4d1135a5dfab73060ec1a0c3afe6470d1d3995f01c1487a5ae",
+    "trace_bytes": 631108
+  },
+  {
+    "folder": "layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-phone",
+    "context": "failures/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-phone.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-phone/trace.zip",
+    "trace_sha256": "dc2d86de7fe0fdeb59babc885fcac7cc47f4e9d95f88cc7bb7701640a4aea421",
+    "trace_bytes": 523780
+  },
+  {
+    "folder": "settings-divisors-update-l-62efc-money-preserves-valid-rules-desktop",
+    "context": "failures/settings-divisors-update-l-62efc-money-preserves-valid-rules-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/settings-divisors-update-l-62efc-money-preserves-valid-rules-desktop/trace.zip",
+    "trace_sha256": "6d07e11556dd352f85581ce0f93e025cdacf9c13c8884f06ccfbd31c31a816e1",
+    "trace_bytes": 973220
+  },
+  {
+    "folder": "settings-divisors-update-l-62efc-money-preserves-valid-rules-phone",
+    "context": "failures/settings-divisors-update-l-62efc-money-preserves-valid-rules-phone.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/settings-divisors-update-l-62efc-money-preserves-valid-rules-phone/trace.zip",
+    "trace_sha256": "e04cb5d8d92e57b3e0424ff26bd5b1c66dca60c05a3d32d1d112a241e9dd14d4",
+    "trace_bytes": 1005314
+  },
+  {
+    "folder": "storage-c6-C6-migrates-a-n-59454-ps-and-no-lost-source-bytes-desktop",
+    "context": "failures/storage-c6-C6-migrates-a-n-59454-ps-and-no-lost-source-bytes-desktop.md.gz",
+    "trace_original_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/storage-c6-C6-migrates-a-n-59454-ps-and-no-lost-source-bytes-desktop/trace.zip",
+    "trace_sha256": "ed9d67354e706bfc8915ad0fc2f708e78c53332a7e529b38d17f050a77d57fd1",
+    "trace_bytes": 7486017
+  }
+]

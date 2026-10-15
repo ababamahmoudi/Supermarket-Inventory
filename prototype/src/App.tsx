@@ -1,3 +1,4 @@
+import PwaMenu from "./PwaMenu";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   Archive,
@@ -1098,6 +1099,7 @@ export default function App() {
   );
   const demoItems = (
     <>
+      <PwaMenu />
       <p className="helper">
         {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
       </p>

@@ -1,0 +1,18 @@
+{
+  "baseline_branch": "feat/prototype-e2-price-updates",
+  "baseline_head": "73891b6c19852e1da6a99316b2fef7873039ea9c",
+  "files": [
+    {
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "source": "/tmp/e2-ci-review-guarded-fixtures/prototype/tests/c8-layout-proof.spec.ts",
+      "baseline_sha256": "0758bd43b75d5d7198d275be59d6cc8fbf58b1e671d9665edbea4b3fbe8d3c8c",
+      "sha256": "47e655bf478a6a898f6a06bd5a7df520b652dc942b077c8c2abd71fda611c054"
+    },
+    {
+      "path": "prototype/tests/labels-c1.spec.ts",
+      "source": "/tmp/e2-ci-review-guarded-fixtures/prototype/tests/labels-c1.spec.ts",
+      "baseline_sha256": "05840cf89778c3e63b751a72e4b7519c0b764a36d944e1d9bdee1e7fc834ab82",
+      "sha256": "085b8232d103dafd4a7310c57e5610f16177804bb546f540caf3bb1057d016b7"
+    }
+  ]
+}

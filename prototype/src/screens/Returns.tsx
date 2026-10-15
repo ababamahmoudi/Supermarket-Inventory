@@ -514,6 +514,11 @@ function ReturnsContent() {
             </FilterToolbar>
             <DataTable
               className="returns-overview-table"
+              phoneList={{
+                name: "supplier",
+                value: "status",
+                secondary: ["reference", "location", "date"],
+              }}
               columns={tableColumns.columns}
             >
               <thead>

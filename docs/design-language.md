@@ -256,3 +256,22 @@ Canonical additional copy (interpolate real product/store/price/time values, inc
 | Use a reminder time above zero and a later Owner and Manager alert time. | زمان یادآوری باید بیشتر از صفر و زمان هشدار مالک و مدیر دیرتر باشد. |
 
 Labels referenced from a task retain current Regular/Promo template geometry and actual print behavior. A queue/preview is not a physical print; confirm only the genuine current preparation, and retain successful output evidence if another check fails. This stage builds in-browser personal notifications only, with no browser push permission prompt.
+
+## E3 phone rows, installation and safe update presentation
+
+The specified seven phone list families now use Lookup-style compact rows, superseding Hard rules' general cards-below-760 wording only for those families. Use Klead surface, typography, status tokens and dividers; identifying current-language name/translation at start, key value at end, one muted secondary line and one end chevron. Labels keeps its custom checkbox at row start. Do not show redundant Product/Details/Action labels or isolated chevrons. Preserve independent row/menu/checkbox/expander keyboard targets. All private-field projections and wider table rules remain.
+
+Check actual line fragments and inner panel/page overflow at 390/430 in both directions/themes. No word breaks, sideways tables, duplicate account controls, scrolling sidebar or stretched numeric fields. Manifest icons use supplied company logo on a legible background, never the reference logo. Standalone and No connection use the same configured theme/typography with reduced motion/focus supported. Offline is an availability page, not a fabricated signed-in screen.
+
+Additional canonical copy:
+
+| English | Persian |
+| --- | --- |
+| No connection | اتصال برقرار نیست |
+| Reconnect, then try again. | دوباره متصل شوید و تلاش کنید. |
+| Try again | تلاش دوباره |
+| Update available | به‌روزرسانی آماده است |
+| Update app | به‌روزرسانی برنامه |
+| Finish or close your current work before updating. | پیش از به‌روزرسانی، کار فعلی را تمام کنید یا ببندید. |
+
+Update controls live only in the small Demo menu. They never interrupt a real pending operation or dirty editor; retain the current app until explicit safe activation. This presentation adds no copy claiming that email, a register, another phone, a real passkey or a production server has synchronized.

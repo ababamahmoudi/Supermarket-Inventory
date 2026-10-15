@@ -1,0 +1,69 @@
+{
+  "executions": [
+    {
+      "label": "targeted-unit",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/table-print.e3.test.tsx",
+        "src/table-disclosure.c8.test.tsx",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-print-layout-proof-v1/unit.json"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "normal-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-desktop",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=desktop",
+        "--grep",
+        "Supervisor ledger records a partial cheque",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-print-layout-proof-v1/desktop-output"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-print-layout-proof-v1/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=phone",
+        "--grep",
+        "Supervisor ledger records a partial cheque",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-print-layout-proof-v1/phone-output"
+      ],
+      "actual_exit_code": 0
+    }
+  ],
+  "seconds": 40.4820716381073,
+  "source_unchanged": true,
+  "http_matches_built_dist_before": true,
+  "http_unchanged": true,
+  "expected_native_tests": 2,
+  "expected_unit_tests": 8
+}

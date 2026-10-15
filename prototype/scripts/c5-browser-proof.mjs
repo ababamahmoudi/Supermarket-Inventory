@@ -394,9 +394,59 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           failures.push("Duplicate row navigation chevron");
         if (rowDisclosure.length > 1)
           failures.push("Duplicate hidden-column disclosure");
-        for (const control of [...rowNavigation, ...rowDisclosure]) {
-          if (control.closest("td") !== row.lastElementChild)
-            failures.push("Row navigation/disclosure is not at the row end");
+        if (row.matches("tr.phone-list-row")) {
+          // E3 compact rows place the muted secondary line last in the DOM;
+          // CSS grid keeps their single navigation chevron at the visual end.
+          const cells = [...row.querySelectorAll(":scope > td")].filter(
+            visible,
+          );
+          const chevronCells = cells.filter((cell) =>
+            cell.matches(".phone-list-chevron"),
+          );
+          if (
+            getComputedStyle(row).display !== "grid" ||
+            chevronCells.length !== 1 ||
+            rowNavigation.length !== 1 ||
+            rowDisclosure.length !== 0
+          )
+            failures.push("Compact phone row needs one navigation chevron");
+          const control = rowNavigation[0];
+          const chevronCell = chevronCells[0];
+          if (control && chevronCell) {
+            const style = getComputedStyle(row);
+            const bounds = row.getBoundingClientRect();
+            const rect = control.getBoundingClientRect();
+            const rtl = style.direction === "rtl";
+            const end = rtl
+              ? bounds.left +
+                parseFloat(style.borderLeftWidth || "0") +
+                parseFloat(style.paddingLeft || "0")
+              : bounds.right -
+                parseFloat(style.borderRightWidth || "0") -
+                parseFloat(style.paddingRight || "0");
+            if (
+              control.closest("td") !== chevronCell ||
+              control.querySelectorAll("svg").length !== 1 ||
+              Math.abs((rtl ? rect.left : rect.right) - end) > 2 ||
+              rect.top < bounds.top - 1 ||
+              rect.bottom > bounds.bottom + 1 ||
+              cells.some((cell) => {
+                if (cell === chevronCell) return false;
+                const other = cell.getBoundingClientRect();
+                return rtl
+                  ? other.left < rect.right - 1
+                  : other.right > rect.left + 1;
+              })
+            )
+              failures.push(
+                "Compact phone navigation is not at the visual row end",
+              );
+          }
+        } else {
+          for (const control of [...rowNavigation, ...rowDisclosure]) {
+            if (control.closest("td") !== row.lastElementChild)
+              failures.push("Row navigation/disclosure is not at the row end");
+          }
         }
         for (const disclosure of rowDisclosure) {
           if (!disclosure.getAttribute("aria-controls"))

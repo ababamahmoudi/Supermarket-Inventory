@@ -1,0 +1,25 @@
+{
+  "phase": "fixed",
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "vitest-final-navigation-proof.config.ts",
+    "src/screens/Invoices.navigation.e1.test.tsx",
+    "--maxWorkers=1",
+    "--reporter=default",
+    "--reporter=json",
+    "--reporter=/tmp/final-pure-invoice-navigation/fixed-observer.mjs",
+    "--outputFile=/tmp/final-pure-invoice-navigation/fixed.json"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 5.976603269577026,
+  "source_unchanged_during_phase": true,
+  "identical_final_fixture_sha256": "e99e62e375740a67f4f7772ec5e07938ac3bdfc938b064d3b45947bad7b7c14e",
+  "production_sha256": "e9f43d7713559b8713c7adf9b4443b8198481f241abb1b7c8ffb2a4a39fe8379",
+  "passed": 1,
+  "failed": 0,
+  "pending": 0,
+  "global_errors": []
+}

@@ -1,0 +1,7 @@
+# Exact0786 GitHub status at 2026-10-15 21:10 UTC
+
+PR24 head `0786ea262b6ebdf573cd02f2b56479952633ee21`, run [38806913395](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38806913395), genuinely failed the unit/pricing step. The returned assertion title is **src/store.test.tsx > fictional data and storage > uses the company configured light and dark brand colors** at `prototype/src/store.test.tsx:100:57`: expected `#0F766E`, received default `#2B59C3`. The annotation also records process exit1. Foundation passed; build/browser steps were not executed after that unit failure. This actual current failure is separate from historical30-minute job limits and from Root's local0786 full application1444/SDK75/lint/build success.
+
+E1 `13a6ad0` run38806913692 and E2 `ee71c6c` run38806914494 were still in browser steps after successful foundation/lint/unit/pricing/build. E2 and E3 also have superseded runs explicitly cancelled for a higher-priority request; those cancellations are not attributed to timeout or assertion failures. C8 `0c80d38` remains green. All four PRs remain unmerged. Remote main remains `3b6da31d84afa6bb8b454320bb26b4cc6b5454d2`.
+
+`raw-snapshot.tar.gz` preserves every original API response, full job/step and annotation payload, and member integrity mapping. `summary.json` separates the actual current unit failure, pending runs and independently recorded local checks. No assertion result is inferred from missing logs. No workflow or PR write, merge, deployment or other external action was performed.

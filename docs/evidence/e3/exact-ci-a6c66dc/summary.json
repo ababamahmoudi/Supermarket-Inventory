@@ -1,0 +1,1336 @@
+{
+  "checked_at_utc": "20261015T212827Z",
+  "expected": {
+    "21": "0c80d38",
+    "22": "48d9c27",
+    "23": "b2988e3",
+    "24": "a6c66dc"
+  },
+  "pull_requests": [
+    {
+      "pr": 21,
+      "head": "0c80d38e8e6920c57a5a390cb1418c93aed5b179",
+      "expected_prefix": "0c80d38",
+      "head_matches": true,
+      "state": "open",
+      "draft": false,
+      "base": "main",
+      "merged": false,
+      "runs": [
+        {
+          "id": 38447627723,
+          "head_sha": "0c80d38e8e6920c57a5a390cb1418c93aed5b179",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38447627723",
+          "created_at": "2026-10-13T18:32:50Z",
+          "updated_at": "2026-10-13T18:52:18Z",
+          "jobs": [
+            {
+              "id": 115470031075,
+              "name": "Lint, tests, build, and service smoke checks",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2026-10-13T18:32:53Z",
+              "completed_at": "2026-10-13T18:36:04Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+                }
+              ],
+              "annotation_count": 2,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-13T18:32:53Z",
+                  "completed_at": "2026-10-13T18:32:54Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-13T18:32:54Z",
+                  "completed_at": "2026-10-13T18:33:01Z"
+                },
+                {
+                  "name": "Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-13T18:33:01Z",
+                  "completed_at": "2026-10-13T18:33:01Z"
+                },
+                {
+                  "name": "Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-13T18:33:01Z",
+                  "completed_at": "2026-10-13T18:33:03Z"
+                },
+                {
+                  "name": "Prepare the environment",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-13T18:33:03Z",
+                  "completed_at": "2026-10-13T18:33:58Z"
+                },
+                {
+                  "name": "Run lint checks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-13T18:33:58Z",
+                  "completed_at": "2026-10-13T18:34:04Z"
+                },
+                {
+                  "name": "Run unit and integration tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-13T18:34:04Z",
+                  "completed_at": "2026-10-13T18:34:16Z"
+                },
+                {
+                  "name": "Build the frontend",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-13T18:34:16Z",
+                  "completed_at": "2026-10-13T18:34:20Z"
+                },
+                {
+                  "name": "Start and check services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-13T18:34:20Z",
+                  "completed_at": "2026-10-13T18:34:37Z"
+                },
+                {
+                  "name": "Check hooks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 10,
+                  "started_at": "2026-10-13T18:34:37Z",
+                  "completed_at": "2026-10-13T18:35:08Z"
+                },
+                {
+                  "name": "Run browser smoke tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 11,
+                  "started_at": "2026-10-13T18:35:08Z",
+                  "completed_at": "2026-10-13T18:35:43Z"
+                },
+                {
+                  "name": "Audit runtime dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 12,
+                  "started_at": "2026-10-13T18:35:43Z",
+                  "completed_at": "2026-10-13T18:35:58Z"
+                },
+                {
+                  "name": "Upload browser results",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "number": 13,
+                  "started_at": "2026-10-13T18:35:58Z",
+                  "completed_at": "2026-10-13T18:35:58Z"
+                },
+                {
+                  "name": "Show logs and stop services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 14,
+                  "started_at": "2026-10-13T18:35:58Z",
+                  "completed_at": "2026-10-13T18:36:01Z"
+                },
+                {
+                  "name": "Post Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 26,
+                  "started_at": "2026-10-13T18:36:01Z",
+                  "completed_at": "2026-10-13T18:36:02Z"
+                },
+                {
+                  "name": "Post Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 27,
+                  "started_at": "2026-10-13T18:36:02Z",
+                  "completed_at": "2026-10-13T18:36:02Z"
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 28,
+                  "started_at": "2026-10-13T18:36:02Z",
+                  "completed_at": "2026-10-13T18:36:02Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 29,
+                  "started_at": "2026-10-13T18:36:02Z",
+                  "completed_at": "2026-10-13T18:36:02Z"
+                }
+              ]
+            },
+            {
+              "id": 115470031469,
+              "name": "Prototype lint, pricing and unit tests, build, and browsers",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2026-10-13T18:32:53Z",
+              "completed_at": "2026-10-13T18:52:17Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+                }
+              ],
+              "annotation_count": 3,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-13T18:32:53Z",
+                  "completed_at": "2026-10-13T18:32:54Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-13T18:32:54Z",
+                  "completed_at": "2026-10-13T18:33:02Z"
+                },
+                {
+                  "name": "Read the prototype Node.js requirement",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-13T18:33:02Z",
+                  "completed_at": "2026-10-13T18:33:02Z"
+                },
+                {
+                  "name": "Set up the prototype Node.js version",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-13T18:33:02Z",
+                  "completed_at": "2026-10-13T18:33:03Z"
+                },
+                {
+                  "name": "Install frozen prototype dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-13T18:33:03Z",
+                  "completed_at": "2026-10-13T18:33:10Z"
+                },
+                {
+                  "name": "Check prototype lint and formatting",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-13T18:33:10Z",
+                  "completed_at": "2026-10-13T18:33:42Z"
+                },
+                {
+                  "name": "Run prototype unit tests and every seed pricing case",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-13T18:33:42Z",
+                  "completed_at": "2026-10-13T18:35:10Z"
+                },
+                {
+                  "name": "Build the prototype",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-13T18:35:10Z",
+                  "completed_at": "2026-10-13T18:35:24Z"
+                },
+                {
+                  "name": "Install Chromium and browser dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-13T18:35:24Z",
+                  "completed_at": "2026-10-13T18:35:50Z"
+                },
+                {
+                  "name": "Test desktop and phone browser workflows",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 10,
+                  "started_at": "2026-10-13T18:35:50Z",
+                  "completed_at": "2026-10-13T18:52:16Z"
+                },
+                {
+                  "name": "Upload prototype browser failures",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "number": 11,
+                  "started_at": "2026-10-13T18:52:16Z",
+                  "completed_at": "2026-10-13T18:52:16Z"
+                },
+                {
+                  "name": "Post Set up the prototype Node.js version",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 21,
+                  "started_at": "2026-10-13T18:52:16Z",
+                  "completed_at": "2026-10-13T18:52:16Z"
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 22,
+                  "started_at": "2026-10-13T18:52:16Z",
+                  "completed_at": "2026-10-13T18:52:16Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 23,
+                  "started_at": "2026-10-13T18:52:16Z",
+                  "completed_at": "2026-10-13T18:52:16Z"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 22,
+      "head": "48d9c27ec2925924431127f20b9185cf49ec09f1",
+      "expected_prefix": "48d9c27",
+      "head_matches": true,
+      "state": "open",
+      "draft": true,
+      "base": "feat/prototype-c8-sales-fixes",
+      "merged": false,
+      "runs": [
+        {
+          "id": 38808924106,
+          "head_sha": "48d9c27ec2925924431127f20b9185cf49ec09f1",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808924106",
+          "created_at": "2026-10-15T21:18:59Z",
+          "updated_at": "2026-10-15T21:20:10Z",
+          "jobs": [
+            {
+              "id": 116677372735,
+              "name": "Prototype lint, pricing and unit tests, build, and browsers",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2026-10-15T21:20:09Z",
+              "completed_at": null,
+              "active_steps": [
+                "Test desktop and phone browser workflows"
+              ],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [],
+              "annotation_count": 0,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:20:10Z",
+                  "completed_at": "2026-10-15T21:20:11Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:20:11Z",
+                  "completed_at": "2026-10-15T21:20:16Z"
+                },
+                {
+                  "name": "Read the prototype Node.js requirement",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:20:16Z",
+                  "completed_at": "2026-10-15T21:20:16Z"
+                },
+                {
+                  "name": "Set up the prototype Node.js version",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:20:16Z",
+                  "completed_at": "2026-10-15T21:20:17Z"
+                },
+                {
+                  "name": "Install frozen prototype dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:20:17Z",
+                  "completed_at": "2026-10-15T21:20:26Z"
+                },
+                {
+                  "name": "Check prototype lint and formatting",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:20:26Z",
+                  "completed_at": "2026-10-15T21:21:15Z"
+                },
+                {
+                  "name": "Run prototype unit tests and every seed pricing case",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:21:15Z",
+                  "completed_at": "2026-10-15T21:25:48Z"
+                },
+                {
+                  "name": "Build the prototype",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:25:48Z",
+                  "completed_at": "2026-10-15T21:26:11Z"
+                },
+                {
+                  "name": "Install Chromium and browser dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:26:11Z",
+                  "completed_at": "2026-10-15T21:26:33Z"
+                },
+                {
+                  "name": "Test desktop and phone browser workflows",
+                  "status": "in_progress",
+                  "conclusion": null,
+                  "number": 10,
+                  "started_at": "2026-10-15T21:26:33Z",
+                  "completed_at": null
+                },
+                {
+                  "name": "Upload prototype browser failures",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 11,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Set up the prototype Node.js version",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 21,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 22,
+                  "started_at": null,
+                  "completed_at": null
+                }
+              ]
+            },
+            {
+              "id": 116677373459,
+              "name": "Lint, tests, build, and service smoke checks",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2026-10-15T21:20:09Z",
+              "completed_at": "2026-10-15T21:22:50Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+                }
+              ],
+              "annotation_count": 2,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:20:10Z",
+                  "completed_at": "2026-10-15T21:20:11Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:20:11Z",
+                  "completed_at": "2026-10-15T21:20:14Z"
+                },
+                {
+                  "name": "Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:20:14Z",
+                  "completed_at": "2026-10-15T21:20:15Z"
+                },
+                {
+                  "name": "Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:20:15Z",
+                  "completed_at": "2026-10-15T21:20:16Z"
+                },
+                {
+                  "name": "Prepare the environment",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:20:16Z",
+                  "completed_at": "2026-10-15T21:21:10Z"
+                },
+                {
+                  "name": "Run lint checks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:21:10Z",
+                  "completed_at": "2026-10-15T21:21:14Z"
+                },
+                {
+                  "name": "Run unit and integration tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:21:14Z",
+                  "completed_at": "2026-10-15T21:21:21Z"
+                },
+                {
+                  "name": "Build the frontend",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:21:21Z",
+                  "completed_at": "2026-10-15T21:21:24Z"
+                },
+                {
+                  "name": "Start and check services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:21:24Z",
+                  "completed_at": "2026-10-15T21:21:39Z"
+                },
+                {
+                  "name": "Check hooks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 10,
+                  "started_at": "2026-10-15T21:21:39Z",
+                  "completed_at": "2026-10-15T21:22:04Z"
+                },
+                {
+                  "name": "Run browser smoke tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 11,
+                  "started_at": "2026-10-15T21:22:04Z",
+                  "completed_at": "2026-10-15T21:22:28Z"
+                },
+                {
+                  "name": "Audit runtime dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 12,
+                  "started_at": "2026-10-15T21:22:28Z",
+                  "completed_at": "2026-10-15T21:22:44Z"
+                },
+                {
+                  "name": "Upload browser results",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "number": 13,
+                  "started_at": "2026-10-15T21:22:44Z",
+                  "completed_at": "2026-10-15T21:22:44Z"
+                },
+                {
+                  "name": "Show logs and stop services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 14,
+                  "started_at": "2026-10-15T21:22:44Z",
+                  "completed_at": "2026-10-15T21:22:47Z"
+                },
+                {
+                  "name": "Post Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 26,
+                  "started_at": "2026-10-15T21:22:47Z",
+                  "completed_at": "2026-10-15T21:22:47Z"
+                },
+                {
+                  "name": "Post Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 27,
+                  "started_at": "2026-10-15T21:22:47Z",
+                  "completed_at": "2026-10-15T21:22:47Z"
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 28,
+                  "started_at": "2026-10-15T21:22:47Z",
+                  "completed_at": "2026-10-15T21:22:48Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 29,
+                  "started_at": "2026-10-15T21:22:48Z",
+                  "completed_at": "2026-10-15T21:22:48Z"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 23,
+      "head": "b2988e382b473425508c0067ed2bd1c168e5154f",
+      "expected_prefix": "b2988e3",
+      "head_matches": true,
+      "state": "open",
+      "draft": true,
+      "base": "feat/prototype-e1-location-roles",
+      "merged": false,
+      "runs": [
+        {
+          "id": 38808925862,
+          "head_sha": "b2988e382b473425508c0067ed2bd1c168e5154f",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808925862",
+          "created_at": "2026-10-15T21:19:00Z",
+          "updated_at": "2026-10-15T21:20:12Z",
+          "jobs": [
+            {
+              "id": 116677385264,
+              "name": "Prototype lint, pricing and unit tests, build, and browsers",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2026-10-15T21:20:11Z",
+              "completed_at": null,
+              "active_steps": [
+                "Test desktop and phone browser workflows"
+              ],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [],
+              "annotation_count": 0,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:20:12Z",
+                  "completed_at": "2026-10-15T21:20:13Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:20:13Z",
+                  "completed_at": "2026-10-15T21:20:18Z"
+                },
+                {
+                  "name": "Read the prototype Node.js requirement",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:20:18Z",
+                  "completed_at": "2026-10-15T21:20:18Z"
+                },
+                {
+                  "name": "Set up the prototype Node.js version",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:20:18Z",
+                  "completed_at": "2026-10-15T21:20:23Z"
+                },
+                {
+                  "name": "Install frozen prototype dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:20:23Z",
+                  "completed_at": "2026-10-15T21:20:33Z"
+                },
+                {
+                  "name": "Check prototype lint and formatting",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:20:33Z",
+                  "completed_at": "2026-10-15T21:21:18Z"
+                },
+                {
+                  "name": "Run prototype unit tests and every seed pricing case",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:21:18Z",
+                  "completed_at": "2026-10-15T21:26:06Z"
+                },
+                {
+                  "name": "Build the prototype",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:26:06Z",
+                  "completed_at": "2026-10-15T21:26:26Z"
+                },
+                {
+                  "name": "Install Chromium and browser dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:26:26Z",
+                  "completed_at": "2026-10-15T21:26:45Z"
+                },
+                {
+                  "name": "Test desktop and phone browser workflows",
+                  "status": "in_progress",
+                  "conclusion": null,
+                  "number": 10,
+                  "started_at": "2026-10-15T21:26:45Z",
+                  "completed_at": null
+                },
+                {
+                  "name": "Upload prototype browser failures",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 11,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Set up the prototype Node.js version",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 21,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 22,
+                  "started_at": null,
+                  "completed_at": null
+                }
+              ]
+            },
+            {
+              "id": 116677385686,
+              "name": "Lint, tests, build, and service smoke checks",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2026-10-15T21:20:11Z",
+              "completed_at": "2026-10-15T21:23:17Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+                }
+              ],
+              "annotation_count": 2,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:20:12Z",
+                  "completed_at": "2026-10-15T21:20:12Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:20:12Z",
+                  "completed_at": "2026-10-15T21:20:21Z"
+                },
+                {
+                  "name": "Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:20:21Z",
+                  "completed_at": "2026-10-15T21:20:21Z"
+                },
+                {
+                  "name": "Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:20:21Z",
+                  "completed_at": "2026-10-15T21:20:25Z"
+                },
+                {
+                  "name": "Prepare the environment",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:20:25Z",
+                  "completed_at": "2026-10-15T21:21:27Z"
+                },
+                {
+                  "name": "Run lint checks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:21:27Z",
+                  "completed_at": "2026-10-15T21:21:31Z"
+                },
+                {
+                  "name": "Run unit and integration tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:21:31Z",
+                  "completed_at": "2026-10-15T21:21:40Z"
+                },
+                {
+                  "name": "Build the frontend",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:21:40Z",
+                  "completed_at": "2026-10-15T21:21:42Z"
+                },
+                {
+                  "name": "Start and check services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:21:42Z",
+                  "completed_at": "2026-10-15T21:21:58Z"
+                },
+                {
+                  "name": "Check hooks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 10,
+                  "started_at": "2026-10-15T21:21:58Z",
+                  "completed_at": "2026-10-15T21:22:23Z"
+                },
+                {
+                  "name": "Run browser smoke tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 11,
+                  "started_at": "2026-10-15T21:22:23Z",
+                  "completed_at": "2026-10-15T21:22:54Z"
+                },
+                {
+                  "name": "Audit runtime dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 12,
+                  "started_at": "2026-10-15T21:22:54Z",
+                  "completed_at": "2026-10-15T21:23:11Z"
+                },
+                {
+                  "name": "Upload browser results",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "number": 13,
+                  "started_at": "2026-10-15T21:23:11Z",
+                  "completed_at": "2026-10-15T21:23:11Z"
+                },
+                {
+                  "name": "Show logs and stop services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 14,
+                  "started_at": "2026-10-15T21:23:11Z",
+                  "completed_at": "2026-10-15T21:23:15Z"
+                },
+                {
+                  "name": "Post Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 26,
+                  "started_at": "2026-10-15T21:23:15Z",
+                  "completed_at": "2026-10-15T21:23:15Z"
+                },
+                {
+                  "name": "Post Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 27,
+                  "started_at": "2026-10-15T21:23:15Z",
+                  "completed_at": "2026-10-15T21:23:15Z"
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 28,
+                  "started_at": "2026-10-15T21:23:15Z",
+                  "completed_at": "2026-10-15T21:23:15Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 29,
+                  "started_at": "2026-10-15T21:23:15Z",
+                  "completed_at": "2026-10-15T21:23:15Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 38808924794,
+          "head_sha": "b2988e382b473425508c0067ed2bd1c168e5154f",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808924794",
+          "created_at": "2026-10-15T21:18:59Z",
+          "updated_at": "2026-10-15T21:19:01Z",
+          "jobs": []
+        }
+      ]
+    },
+    {
+      "pr": 24,
+      "head": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+      "expected_prefix": "a6c66dc",
+      "head_matches": true,
+      "state": "open",
+      "draft": true,
+      "base": "feat/prototype-e2-price-updates",
+      "merged": false,
+      "runs": [
+        {
+          "id": 38808926292,
+          "head_sha": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808926292",
+          "created_at": "2026-10-15T21:19:00Z",
+          "updated_at": "2026-10-15T21:19:05Z",
+          "jobs": [
+            {
+              "id": 116676902529,
+              "name": "Lint, tests, build, and service smoke checks",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2026-10-15T21:19:04Z",
+              "completed_at": "2026-10-15T21:22:18Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+                }
+              ],
+              "annotation_count": 2,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:19:05Z",
+                  "completed_at": "2026-10-15T21:19:06Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:19:06Z",
+                  "completed_at": "2026-10-15T21:19:11Z"
+                },
+                {
+                  "name": "Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:19:11Z",
+                  "completed_at": "2026-10-15T21:19:11Z"
+                },
+                {
+                  "name": "Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:19:11Z",
+                  "completed_at": "2026-10-15T21:19:15Z"
+                },
+                {
+                  "name": "Prepare the environment",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:19:15Z",
+                  "completed_at": "2026-10-15T21:20:11Z"
+                },
+                {
+                  "name": "Run lint checks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:20:11Z",
+                  "completed_at": "2026-10-15T21:20:18Z"
+                },
+                {
+                  "name": "Run unit and integration tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:20:18Z",
+                  "completed_at": "2026-10-15T21:20:29Z"
+                },
+                {
+                  "name": "Build the frontend",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:20:29Z",
+                  "completed_at": "2026-10-15T21:20:33Z"
+                },
+                {
+                  "name": "Start and check services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:20:33Z",
+                  "completed_at": "2026-10-15T21:20:50Z"
+                },
+                {
+                  "name": "Check hooks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 10,
+                  "started_at": "2026-10-15T21:20:50Z",
+                  "completed_at": "2026-10-15T21:21:24Z"
+                },
+                {
+                  "name": "Run browser smoke tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 11,
+                  "started_at": "2026-10-15T21:21:24Z",
+                  "completed_at": "2026-10-15T21:21:57Z"
+                },
+                {
+                  "name": "Audit runtime dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 12,
+                  "started_at": "2026-10-15T21:21:57Z",
+                  "completed_at": "2026-10-15T21:22:11Z"
+                },
+                {
+                  "name": "Upload browser results",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "number": 13,
+                  "started_at": "2026-10-15T21:22:11Z",
+                  "completed_at": "2026-10-15T21:22:11Z"
+                },
+                {
+                  "name": "Show logs and stop services",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 14,
+                  "started_at": "2026-10-15T21:22:11Z",
+                  "completed_at": "2026-10-15T21:22:14Z"
+                },
+                {
+                  "name": "Post Set up Node.js",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 26,
+                  "started_at": "2026-10-15T21:22:14Z",
+                  "completed_at": "2026-10-15T21:22:15Z"
+                },
+                {
+                  "name": "Post Set up Python",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 27,
+                  "started_at": "2026-10-15T21:22:15Z",
+                  "completed_at": "2026-10-15T21:22:15Z"
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 28,
+                  "started_at": "2026-10-15T21:22:15Z",
+                  "completed_at": "2026-10-15T21:22:15Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 29,
+                  "started_at": "2026-10-15T21:22:15Z",
+                  "completed_at": "2026-10-15T21:22:15Z"
+                }
+              ]
+            },
+            {
+              "id": 116676902983,
+              "name": "Prototype lint, pricing and unit tests, build, and browsers",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2026-10-15T21:19:04Z",
+              "completed_at": null,
+              "active_steps": [
+                "Test desktop and phone browser workflows"
+              ],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [],
+              "annotation_count": 0,
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 1,
+                  "started_at": "2026-10-15T21:19:05Z",
+                  "completed_at": "2026-10-15T21:19:05Z"
+                },
+                {
+                  "name": "Check out repository",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 2,
+                  "started_at": "2026-10-15T21:19:05Z",
+                  "completed_at": "2026-10-15T21:19:10Z"
+                },
+                {
+                  "name": "Read the prototype Node.js requirement",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 3,
+                  "started_at": "2026-10-15T21:19:10Z",
+                  "completed_at": "2026-10-15T21:19:10Z"
+                },
+                {
+                  "name": "Set up the prototype Node.js version",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 4,
+                  "started_at": "2026-10-15T21:19:10Z",
+                  "completed_at": "2026-10-15T21:19:11Z"
+                },
+                {
+                  "name": "Install frozen prototype dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 5,
+                  "started_at": "2026-10-15T21:19:11Z",
+                  "completed_at": "2026-10-15T21:19:22Z"
+                },
+                {
+                  "name": "Check prototype lint and formatting",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 6,
+                  "started_at": "2026-10-15T21:19:22Z",
+                  "completed_at": "2026-10-15T21:20:11Z"
+                },
+                {
+                  "name": "Run prototype unit tests and every seed pricing case",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 7,
+                  "started_at": "2026-10-15T21:20:11Z",
+                  "completed_at": "2026-10-15T21:25:08Z"
+                },
+                {
+                  "name": "Build the prototype",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 8,
+                  "started_at": "2026-10-15T21:25:08Z",
+                  "completed_at": "2026-10-15T21:25:30Z"
+                },
+                {
+                  "name": "Install Chromium and browser dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "number": 9,
+                  "started_at": "2026-10-15T21:25:30Z",
+                  "completed_at": "2026-10-15T21:25:50Z"
+                },
+                {
+                  "name": "Test desktop and phone browser workflows",
+                  "status": "in_progress",
+                  "conclusion": null,
+                  "number": 10,
+                  "started_at": "2026-10-15T21:25:50Z",
+                  "completed_at": null
+                },
+                {
+                  "name": "Upload prototype browser failures",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 11,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Set up the prototype Node.js version",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 21,
+                  "started_at": null,
+                  "completed_at": null
+                },
+                {
+                  "name": "Post Check out repository",
+                  "status": "pending",
+                  "conclusion": null,
+                  "number": 22,
+                  "started_at": null,
+                  "completed_at": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 38808926107,
+          "head_sha": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808926107",
+          "created_at": "2026-10-15T21:19:00Z",
+          "updated_at": "2026-10-15T21:19:02Z",
+          "jobs": [
+            {
+              "id": 116676894738,
+              "name": "Lint, tests, build, and service smoke checks",
+              "status": "completed",
+              "conclusion": "cancelled",
+              "started_at": "2026-10-15T21:19:01Z",
+              "completed_at": "2026-10-15T21:19:01Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Canceling since a higher priority waiting request for ci-CI-refs/pull/24/merge exists"
+                }
+              ],
+              "annotation_count": 1,
+              "steps": []
+            },
+            {
+              "id": 116676894799,
+              "name": "Prototype lint, pricing and unit tests, build, and browsers",
+              "status": "completed",
+              "conclusion": "cancelled",
+              "started_at": "2026-10-15T21:19:01Z",
+              "completed_at": "2026-10-15T21:19:01Z",
+              "active_steps": [],
+              "failed_steps": [],
+              "timeout_annotations": [],
+              "assertion_annotations": [],
+              "other_failure_annotations": [
+                {
+                  "title": "",
+                  "path": ".github",
+                  "message": "Canceling since a higher priority waiting request for ci-CI-refs/pull/24/merge exists"
+                }
+              ],
+              "annotation_count": 1,
+              "steps": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": "Read-only GitHub API requests only; no workflow, repository, PR or deployment mutation.",
+  "main": {
+    "expected": "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2",
+    "actual": "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2",
+    "unchanged": true
+  }
+}

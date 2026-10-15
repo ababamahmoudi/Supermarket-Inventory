@@ -1,0 +1,17 @@
+{
+  "reason": "Normal end-of-file hook added one final newline to the human-readable attachment copy. Exact original bytes are preserved compressed, not discarded or represented as unchanged.",
+  "human_readable_copy": {
+    "path": "patched-native-original-attachment-0.json",
+    "sha256": "128eadb8b2829d23b40727a83c6f7a22c3d589495ac734ecbb5044431ae17925",
+    "bytes": 27247
+  },
+  "exact_original": {
+    "path": "patched-native-original-attachment-0.json.raw.gz",
+    "sha256": "7d85f492925aec8c3fa397f984377df990f5344f5dc0a71485073aea5c79c863",
+    "bytes": 1526,
+    "decompressed_original_sha256": "599d6970f1c234afd176c18e3db85f216789e04c6ce4c48e4fd41317f8cf5f1d",
+    "decompressed_original_bytes": 27246
+  },
+  "only_added_final_newline": true,
+  "original_manifest_refers_to_pre_hook_bytes": true
+}

@@ -438,6 +438,15 @@ test("C5 button contract covers primary product, date, approval and invoice dial
     await proof.check("Add product dialog");
     await closeDialog(page);
     await page.getByLabel("Search products", { exact: true }).fill("0009");
+    const product = page.locator(".catalog-products-table tbody tr").first();
+    await expect(product).toContainText("0009");
+    if (
+      await product.evaluate((element) => element.matches(".phone-list-row"))
+    ) {
+      // The E3 compact row opens the real record before its shared editor.
+      await product.locator(".phone-list-chevron .table-row-link").click();
+      await expect(page).toHaveURL(/#product\?code=0009$/);
+    }
     await page
       .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
       .click();

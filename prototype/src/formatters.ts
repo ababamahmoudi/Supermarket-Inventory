@@ -60,12 +60,14 @@ export function formatUnitSize(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-/** Keep the entered quantity's precision; choose only its translated unit label. */
-export function formatQuantity(
+export type QuantityUnit = "units" | "cases" | "lb" | "kg";
+
+/** Semantic display parts retain the exact entered quantity and translated label. */
+export function quantityParts(
   value: string | number,
-  unit: "units" | "cases" | "lb" | "kg",
+  unit: QuantityUnit,
   language: Language,
-): string {
+): { value: string; label: string } {
   let singular = false;
   try {
     singular = new Decimal(value).eq(1);
@@ -78,15 +80,24 @@ export function formatQuantity(
       : unit === "cases"
         ? translate(singular ? "case" : "cases", "کارتن", language)
         : unit;
-  return `${value} ${label}`;
+  return { value: String(value), label };
 }
 
-/** Read-only Each quantities use actual units and their retained integer pack. */
-export function formatCasesAndUnits(
-  units: Decimal.Value,
-  unitsPerCase: Decimal.Value,
+/** Keep the entered quantity's precision; choose only its translated unit label. */
+export function formatQuantity(
+  value: string | number,
+  unit: QuantityUnit,
   language: Language,
 ): string {
+  const parts = quantityParts(value, unit, language);
+  return `${parts.value} ${parts.label}`;
+}
+
+/** Read-only display decomposition; actual units and the retained pack stay unchanged. */
+export function casesAndUnitsParts(
+  units: Decimal.Value,
+  unitsPerCase: Decimal.Value,
+): { value: string; unit: "cases" | "units" }[] {
   const quantity = new Decimal(units);
   const pack = new Decimal(unitsPerCase);
   if (
@@ -97,15 +108,25 @@ export function formatCasesAndUnits(
     !pack.isInteger() ||
     pack.lte(1)
   )
-    return formatQuantity(quantity.toString(), "units", language);
+    return [{ value: quantity.toString(), unit: "units" }];
   const cases = quantity.div(pack).floor();
   const loose = quantity.mod(pack);
-  if (cases.isZero())
-    return formatQuantity(loose.toString(), "units", language);
-  const fullCases = formatQuantity(cases.toString(), "cases", language);
+  if (cases.isZero()) return [{ value: loose.toString(), unit: "units" }];
+  const fullCases = { value: cases.toString(), unit: "cases" as const };
   return loose.isZero()
-    ? fullCases
-    : `${fullCases} + ${formatQuantity(loose.toString(), "units", language)}`;
+    ? [fullCases]
+    : [fullCases, { value: loose.toString(), unit: "units" }];
+}
+
+/** Plain-text consumers retain the same numeric precision, labels and separators. */
+export function formatCasesAndUnits(
+  units: Decimal.Value,
+  unitsPerCase: Decimal.Value,
+  language: Language,
+): string {
+  return casesAndUnitsParts(units, unitsPerCase)
+    .map((part) => formatQuantity(part.value, part.unit, language))
+    .join(" + ");
 }
 
 export function branchLabel(branch: string, language: Language): string {

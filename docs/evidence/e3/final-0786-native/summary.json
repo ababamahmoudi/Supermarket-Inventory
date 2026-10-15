@@ -1,0 +1,118 @@
+{
+  "created_utc": "2026-10-15T21:15:11Z",
+  "source_commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+  "source_files": 2441,
+  "source_fingerprint": "b8de80c6e9b558e5b533e10cbae5fbd0fe827057bc71600cdc5d08c10e9c82e3",
+  "source_archive_sha256": "bd4cfb4a7ce3d7975c7a73eeea24a0a13ffef8d37999eb5ddb89d18791d24cd9",
+  "normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 23.405049085617065,
+    "interrupted": false
+  },
+  "normal_build_source_guard": {
+    "before": true,
+    "after": true,
+    "commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+    "old_build_reused": false
+  },
+  "old_build_reused": false,
+  "projects": {
+    "desktop": {
+      "counts": {
+        "PASS": 36
+      },
+      "total_discovered": 36,
+      "actual_native_cli_exit_code": 0,
+      "seconds": 272.46920347213745,
+      "original_stats": {
+        "startTime": "2026-10-15T21:08:55.268Z",
+        "duration": 271924.88,
+        "expected": 36,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "workers": 2,
+      "retries": 0,
+      "global_errors": 0,
+      "source_unchanged": true,
+      "dist_unchanged": true,
+      "served_files_before_and_after": 61,
+      "all_served_bytes_unchanged": true,
+      "exact_original_case_keys": true,
+      "exact_original_skip_keys_and_reasons": true,
+      "lifecycle_tests": 36,
+      "lifecycle_terminal_event": {
+        "utc": "2026-10-15T21:13:27.203Z",
+        "type": "end",
+        "result": {
+          "status": "passed",
+          "startTime": "2026-10-15T21:08:55.268Z",
+          "duration": 271924.88
+        }
+      }
+    },
+    "phone": {
+      "counts": {
+        "PASS": 36
+      },
+      "total_discovered": 36,
+      "actual_native_cli_exit_code": 0,
+      "seconds": 272.5669324398041,
+      "original_stats": {
+        "startTime": "2026-10-15T21:08:55.271Z",
+        "duration": 272001.916,
+        "expected": 36,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "workers": 2,
+      "retries": 0,
+      "global_errors": 0,
+      "source_unchanged": true,
+      "dist_unchanged": true,
+      "served_files_before_and_after": 61,
+      "all_served_bytes_unchanged": true,
+      "exact_original_case_keys": true,
+      "exact_original_skip_keys_and_reasons": true,
+      "lifecycle_tests": 36,
+      "lifecycle_terminal_event": {
+        "utc": "2026-10-15T21:13:27.307Z",
+        "type": "end",
+        "result": {
+          "status": "passed",
+          "startTime": "2026-10-15T21:08:55.271Z",
+          "duration": 272001.916
+        }
+      }
+    }
+  },
+  "combined_counts": {
+    "PASS": 72
+  },
+  "combined_total": 72,
+  "not_run": 0,
+  "interrupted": 0,
+  "retries": 0,
+  "flaky": 0,
+  "global_errors": 0,
+  "exact_original_whole_two_file_subset_keys": true,
+  "not_full812": true,
+  "entire_original_files": [
+    "tests/c8-sales.spec.ts",
+    "tests/layout-proof-c6.spec.ts",
+    "tests/product-unit-order-c6.spec.ts",
+    "tests/c8-layout-proof.spec.ts"
+  ],
+  "stronger_persian_compound_assertions": true,
+  "evidence_only_cli_override": "--trace=on",
+  "same_source_and_fresh_build_for_both_projects": true,
+  "no_timeout_assertion_skip_or_retry_relaxation": true,
+  "transport_limit": "Explicit .invalid HTTP transport fixture; not actual LAN, phone hardware, Safari/HomeScreen, physical printer, production deployment or Cloudflare policy verification."
+}

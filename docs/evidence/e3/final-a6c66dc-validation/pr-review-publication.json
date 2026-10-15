@@ -1,0 +1,45 @@
+{
+  "main_unchanged": true,
+  "pull_requests": [
+    {
+      "pr": 21,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21",
+      "head": "0c80d38e8e6920c57a5a390cb1418c93aed5b179",
+      "head_ref": "feat/prototype-c8-sales-fixes",
+      "base_ref": "main",
+      "draft": false,
+      "merged": false,
+      "body_sha256": "4b4a0d256fc49cc810ed5141057db0150bbccd61133cb0505242307c1a0bf63f"
+    },
+    {
+      "pr": 22,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22",
+      "head": "48d9c27ec2925924431127f20b9185cf49ec09f1",
+      "head_ref": "feat/prototype-e1-location-roles",
+      "base_ref": "feat/prototype-c8-sales-fixes",
+      "draft": true,
+      "merged": false,
+      "body_sha256": "cf3ccfe34146c6355926842a2faa1f75e6edf29000f9cf3b429fa7a69b4a59c5"
+    },
+    {
+      "pr": 23,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/23",
+      "head": "b2988e382b473425508c0067ed2bd1c168e5154f",
+      "head_ref": "feat/prototype-e2-price-updates",
+      "base_ref": "feat/prototype-e1-location-roles",
+      "draft": true,
+      "merged": false,
+      "body_sha256": "88cf081a4dc6ec122d9356278a416f7933fd7e0d00d565cbfad925c5c37dfa73"
+    },
+    {
+      "pr": 24,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24",
+      "head": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+      "head_ref": "feat/prototype-e3-phones",
+      "base_ref": "feat/prototype-e2-price-updates",
+      "draft": true,
+      "merged": false,
+      "body_sha256": "872ecb454dcde498b0c3db4c675d5a6ef57ab9e48f5e7f4a7f3e795e90d84bb9"
+    }
+  ]
+}
