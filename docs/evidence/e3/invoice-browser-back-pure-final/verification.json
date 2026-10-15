@@ -1,0 +1,106 @@
+{
+  "scope": "Final pure fixture old-production failure/patched-production pass only",
+  "source_commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+  "source_input_count": 595,
+  "identical_final_fixture_sha256": "e99e62e375740a67f4f7772ec5e07938ac3bdfc938b064d3b45947bad7b7c14e",
+  "actual_exit_codes": {
+    "old": 1,
+    "fixed": 0
+  },
+  "old_failure_is_exact_route_assertion": true,
+  "root_source_unchanged": true,
+  "all_phase_source_guards_pass": true,
+  "global_errors": [],
+  "original_bytes": {
+    "summary.json": {
+      "sha256": "dcfaff33b9d9a0ac4ffb952e89b74936e6c0361925bb40d8d5b7a5d08bcf63b9",
+      "bytes": 2160
+    },
+    "old-result.json": {
+      "sha256": "621fc51503bed106e14203f0679c35412cd95f5cb4f6d48b37fe3b155a60c82f",
+      "bytes": 782
+    },
+    "fixed-result.json": {
+      "sha256": "c96e3ece81fd753f87de335597c523c75fd7c96023f91c6c29f1dde818440b57",
+      "bytes": 788
+    },
+    "old-global-errors.json": {
+      "sha256": "fd45302be5d7356494669eb50cd76c7b3fef8b13acc103c3d0d49f5c247ce4b5",
+      "bytes": 172
+    },
+    "fixed-global-errors.json": {
+      "sha256": "91716a636631a19a8d3d8b03e7f872697342a2cc203d316cfe462935c7735705",
+      "bytes": 172
+    },
+    "old.log.gz": {
+      "sha256": "e0c40250bdc2bd82ef77e77b62cf08bc5abd19deb6327b7ee7ae3870ac1e49e6",
+      "bytes": 730,
+      "uncompressed_sha256": "0ede3f8258166720d75692f1e25dbf2734d0ede68d73fb708175bf07a249cf66",
+      "uncompressed_bytes": 1492
+    },
+    "fixed.log.gz": {
+      "sha256": "f3d237143a6c119bfada80c55cdc5712dcae3e62d43f3139299cdc6891af4917",
+      "bytes": 322,
+      "uncompressed_sha256": "6137a7619e1c6fc57f112f423f7eb84214ecc2393f1e11b043e380d8e6606005",
+      "uncompressed_bytes": 470
+    },
+    "old.json.gz": {
+      "sha256": "fb86dffd87a4a2db130b772061895adece494beba4fcc987511b8e7504380fcf",
+      "bytes": 685,
+      "uncompressed_sha256": "cbc1223b0a0b52cacff11adcb66d23fa6ef053e03302461ee8e3dc1f2e1c6eba",
+      "uncompressed_bytes": 1480
+    },
+    "fixed.json.gz": {
+      "sha256": "c32cb2d463b69efcc6e886855d7dfe9c76b47a23986744d8d4ef6e1e866af4dd",
+      "bytes": 472,
+      "uncompressed_sha256": "cdc9f4e7875c3da8f5e14a5a1422fbabde16d442b38cfa4451b7d05dee155530",
+      "uncompressed_bytes": 1025
+    },
+    "start.json.gz": {
+      "sha256": "66c44a1fce6f98a357a47131ef6cc03e8a0b92f6f9b6e969aeb95d483f0847ca",
+      "bytes": 29167,
+      "uncompressed_sha256": "e4d231697a5d85b5e10174edfddd10d283d7c30bdb703d1faeb482ab88f5c8bb",
+      "uncompressed_bytes": 67969
+    },
+    "old-observer.mjs.gz": {
+      "sha256": "36920563152089bbfebe7fdacc12f2980cd893e91b1bb94dca7c9cea1222478c",
+      "bytes": 366,
+      "uncompressed_sha256": "3ef437def696f92a8b984d55f54e9ddecb72a59f1ee7faa51ed6eafcd696c21e",
+      "uncompressed_bytes": 571
+    },
+    "fixed-observer.mjs.gz": {
+      "sha256": "5f0daf221359f131c45b817610e6e228651f2f24c8e7d1f6536182e06dd281ac",
+      "bytes": 367,
+      "uncompressed_sha256": "52f127678b54ae92c58116c29a273452690a0ad2374489aac7bc428c50b0ef48",
+      "uncompressed_bytes": 573
+    },
+    "run-proof.py.gz": {
+      "sha256": "6b4f07dccf04def29aa06cf7b12aac2bf624db37f4032f6ef486a0d52d0dc2a4",
+      "bytes": 2712,
+      "uncompressed_sha256": "cf4701a8ed904c898b57fa13a1bf10a9933efd115d17e327b908f65c2512a8dc",
+      "uncompressed_bytes": 7232
+    },
+    "final-regression.test.tsx.gz": {
+      "sha256": "8a23807553e48665465a4eb7c55d12a0f6fecce0f0e1d2982d8212fac1caeb24",
+      "bytes": 1787,
+      "uncompressed_sha256": "e99e62e375740a67f4f7772ec5e07938ac3bdfc938b064d3b45947bad7b7c14e",
+      "uncompressed_bytes": 4917
+    },
+    "vitest-runner-adapter.ts.gz": {
+      "sha256": "95dcba6868b4b07f4c27fdc76e0e7cc72df54418c76084f6a15c186dd20e906b",
+      "bytes": 187,
+      "uncompressed_sha256": "d20b1bc7b13febdf8fad07c07ec1ae018e7db4ccc8ba04759066e799cd22b447",
+      "uncompressed_bytes": 292
+    },
+    "single-route.patch.gz": {
+      "sha256": "c6fac6d7d66494b5c572c4b5c79db75bc40a23738aeacca50e52b9a3f805aeed",
+      "bytes": 342,
+      "uncompressed_sha256": "cc765e869aac1427043efb009cadac5fbc63c69b34331d37288282c8ac6b7c20",
+      "uncompressed_bytes": 749
+    },
+    "README.md": {
+      "sha256": "d11e429531c752076438fde20e8952defaad519e9fafe3c11058c76e95be9e81",
+      "bytes": 2482
+    }
+  }
+}

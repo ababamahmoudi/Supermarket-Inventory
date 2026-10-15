@@ -1,0 +1,11 @@
+{
+  "phase": "process-exit",
+  "code": 1,
+  "errors": [],
+  "atRunEnd": {
+    "phase": "onTestRunEnd",
+    "reason": "failed",
+    "errors": [],
+    "moduleCount": 1
+  }
+}

@@ -4,7 +4,7 @@ This is a browser prototype with fictional data. No cloud account, site, email p
 
 Every phone, browser profile and site address keeps its **own separate demo records**. A change on your Ubuntu computer does not appear on a phone. Switching people from **Demo** demonstrates colleagues sharing that one browser; it does not send data to another device. The local address, a Cloudflare production address and a preview address are different browser storage areas. Use fictional information only. App updates preserve that address's local data; changing to another address may look like a fresh demo.
 
-The combined review branch is **`feat/prototype-e3-phones`**, stacked on E2, E1 and C8. Use it after the final pull request is published. After the approved pull requests are merged in order, use `main` for later hosted updates. This guide describes intended owner steps; actual automated test and screenshot results belong in the PR review documents.
+The combined review branch is **`feat/prototype-e3-phones`**, stacked on E2, E1 and C8. It is available in [pull request #24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) and includes all four review branches. After the approved pull requests are merged in order, use `main` for later hosted updates. This guide describes intended owner steps; actual automated test and screenshot results belong in the PR review documents.
 
 ## 1. Start it in a browser inside Ubuntu Desktop
 
@@ -57,7 +57,7 @@ git switch feat/prototype-e3-phones
 git pull --ff-only origin feat/prototype-e3-phones
 ```
 
-`git status --short` should show no changed files. If it lists changes or switching is refused, keep those files and the message. Do not run `git reset --hard`, delete the folder or choose a discard option. `--ff-only` also refuses to overwrite different local history. If the branch is not found, the combined E3 review branch has not yet been published or `git fetch origin` failed; use the final PR's branch name and retain the error.
+`git status --short` should show no changed files. If it lists changes or switching is refused, keep those files and the message. Do not run `git reset --hard`, delete the folder or choose a discard option. `--ff-only` also refuses to overwrite different local history. If the branch is not found, check that `git fetch origin` succeeded and that you are in this repository; compare the branch name with [pull request #24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) and retain the error.
 
 Check the branch, build, and start:
 
