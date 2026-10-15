@@ -1,0 +1,7 @@
+{
+  "terminal_summary_original_sha256": "ffc36e6af0ad6cc34351842f95965759c3c016e2647733d736c84430d3986076",
+  "proposal_original_sha256": "8a309104aa8556b7f414c531048e5eb25422429111860683de11266cebd049be",
+  "proposal_applied": false,
+  "workflow_path": ".github/workflows/ci.yml",
+  "only_proposed_change": "prototype job timeout-minutes: 30 -> 90"
+}
