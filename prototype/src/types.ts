@@ -20,6 +20,13 @@ import type {
 } from "./sales";
 
 import type { RoleId, DecisionAttribution } from "./authority-types";
+import type {
+  PriceUpdateTask,
+  PriceSnapshot,
+  PriceTaskPrint,
+  PriceUpdatesSettings,
+  NotificationSettings,
+} from "./price-updates";
 import type { RoleDefinition } from "./role-config";
 export type Role = RoleId;
 /** Old serialized input only; never a current authority role. */
@@ -35,6 +42,8 @@ export type CompanyConfig = Omit<
   | "weighed_items"
   | "returns"
   | "sales"
+  | "price_updates"
+  | "notifications"
   | "roles"
   | "notebooks"
 > & {
@@ -96,6 +105,8 @@ export type CompanyConfig = Omit<
     supplier_order: "en" | "bilingual";
   };
   sales?: SalesSettings;
+  price_updates?: PriceUpdatesSettings;
+  notifications?: NotificationSettings;
 };
 export interface PriceProvenance {
   invoice_number: string;
@@ -433,7 +444,11 @@ export interface LabelWaitlistItem extends ScopedRecord {
   preferred_template?: "regular" | "promo";
   source_event_id?: string;
   source_reason?:
-    "sale_started" | "sale_changed" | "sale_ended" | "regular_price_changed";
+    | "sale_started"
+    | "sale_changed"
+    | "sale_ended"
+    | "regular_price_changed"
+    | "price_update";
 }
 export interface ReturnLine {
   quantity_unit?: "units" | "lb";
@@ -621,6 +636,10 @@ export interface DemoState {
   prototype_c6_schema?: 1;
   prototype_c8_schema?: 1;
   prototype_e1_schema?: 1;
+  prototype_e2_schema?: 1;
+  price_update_tasks?: PriceUpdateTask[];
+  price_update_baseline?: Record<string, PriceSnapshot>;
+  price_task_prints?: PriceTaskPrint[];
   prototype_e1_history_recovery?: HistoryRecoveryMarker;
   sales?: SaleSchedule[];
   sale_requests?: SaleRequest[];

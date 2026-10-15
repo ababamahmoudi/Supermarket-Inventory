@@ -7,7 +7,7 @@ import {
 } from "./sales";
 import { branchLabel } from "./settings";
 import { companyTimestampText } from "./company-time";
-import { ProductName } from "./presentation";
+import { ProductName, LtrText } from "./presentation";
 import { MenuItem } from "./ui";
 
 export function PersonalNotifications() {
@@ -30,7 +30,9 @@ export function PersonalNotifications() {
     })
   )
     return null;
-  const notifications = state.notifications ?? [];
+  const notifications = [...(state.notifications ?? [])].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  );
   const markAll = async () => {
     try {
       await command(
@@ -70,11 +72,12 @@ export function PersonalNotifications() {
               item.id === id &&
               item.company_id === freshActor.company_id &&
               item.recipient_user_id === freshActor.user_id &&
-              freshActor.allowed_branches.includes(item.branch),
+              (item.branch === "all" ||
+                freshActor.allowed_branches.includes(item.branch)),
           );
           if (
             !source ||
-            !/^(?:#)?(?:product\?code=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$))/.test(
+            !/^(?:#)?(?:product\?code=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$)|price-update\?id=|price-updates(?:[?]|$)|requests(?:[?]|$)|returns(?:[?]|$)|expiry(?:[?]|$))/.test(
               source.href,
             )
           )
@@ -84,7 +87,7 @@ export function PersonalNotifications() {
         },
       );
       if (currentIntent.current !== intentKey) return;
-      await setBranch(destination.branch);
+      if (destination.branch !== "all") await setBranch(destination.branch);
       if (currentIntent.current !== intentKey) return;
       navigate(destination.href);
       setError("");
@@ -100,6 +103,23 @@ export function PersonalNotifications() {
   };
   if (!notifications.length) return null;
   const titles: Record<NotificationRecord["kind"], string> = {
+    sale_request_decision: t("Sale request decision", "نتیجهٔ درخواست حراج"),
+    price_update_created: t("Price update", "به‌روزرسانی قیمت"),
+    price_update_reminder: t(
+      "Price update reminder",
+      "یادآوری به‌روزرسانی قیمت",
+    ),
+    price_update_escalation: t(
+      "Price updates waiting",
+      "به‌روزرسانی قیمت‌های در انتظار",
+    ),
+    approval_waiting: t("Approvals waiting", "تأییدهای در انتظار"),
+    branch_request_waiting: t("Branch request", "درخواست شعبه"),
+    return_waiting_credit: t(
+      "Returns waiting for credit",
+      "مرجوعی‌های در انتظار اعتبار",
+    ),
+    expiry_date_waiting: t("Expiring dates", "تاریخ‌های نزدیک انقضا"),
     sale_request_submitted: t("Sale request", "درخواست حراج"),
     sale_request_approved: t(
       "Your sale request was approved",
@@ -156,8 +176,19 @@ export function PersonalNotifications() {
               {product && <ProductName product={product} language={lang} />}
               <small>
                 {branchLabel(state.config, notification.branch, lang)} ·{" "}
-                {companyTimestampText(state.config, notification.created_at)}
+                <LtrText>
+                  {companyTimestampText(state.config, notification.created_at)}
+                </LtrText>
               </small>
+              {notification.kind === "price_update_escalation" &&
+                notification.count !== undefined && (
+                  <small>
+                    {t(
+                      `${branchLabel(state.config, notification.branch, "en")} has ${notification.count} price updates waiting`,
+                      `${branchLabel(state.config, notification.branch, "fa")} دارای ${notification.count} به‌روزرسانی قیمت در انتظار است`,
+                    )}
+                  </small>
+                )}
               {notification.reason && <small>{notification.reason}</small>}
             </span>
           </MenuItem>

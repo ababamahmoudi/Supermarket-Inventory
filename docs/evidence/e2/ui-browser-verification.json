@@ -1,0 +1,215 @@
+{
+  "predecessor_commit": "1c842165eef6370d575c6e836fc755e6bd914f4e",
+  "engine_manifest_sha256": "919943071c8ba679e0046ba180da8a53e9fc33c1a0862023eb14e6fe51b7fde5",
+  "engine_price_updates_sha256": "bb0130685d023d9915b6efc814f39d565d36dead06a91109186769b7d9abe2d7",
+  "ui_source_manifest_sha256": "28cb865ced333693656586c61c99fb9a160a03c8a2b1d4d76afebdae84f570f6",
+  "ui_sources": [
+    {
+      "path": "prototype/scripts/e2-screenshots.spec.ts",
+      "source": "/tmp/recovered-e2-ui/prototype/scripts/e2-screenshots.spec.ts",
+      "baseline_sha256": null,
+      "sha256": "dc01f3c4667c9f3673836f053875a6e98d09615f25c800720cfed099d29791bd"
+    },
+    {
+      "path": "prototype/scripts/verify-e2-review.mjs",
+      "source": "/tmp/recovered-e2-ui/prototype/scripts/verify-e2-review.mjs",
+      "baseline_sha256": null,
+      "sha256": "e951d1903b8d1d15f22ce612010cf3b388e811bb3e4a62174d3a6046e5b0b8b1"
+    },
+    {
+      "path": "prototype/src/App.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/App.tsx",
+      "baseline_sha256": "5acdfba52a59eb8d1ac8ad4f99ea16caf69dee0ae7d72afdccf9e268db20d3e2",
+      "sha256": "029f4f5516b33cd2ce28d2ccb5e7400ecbf3530e37644b760888878975a95ba3"
+    },
+    {
+      "path": "prototype/src/PersonalNotifications.c8.test.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/PersonalNotifications.c8.test.tsx",
+      "baseline_sha256": "c57c8b7dd9c3062aafce3a541f9d110aa927ee90c97630a1e4be284f8d7ad56f",
+      "sha256": "80f9bc7c36db1938fd10bdc94adaeaf65ada6ed674500e359fb632bbe75ed196"
+    },
+    {
+      "path": "prototype/src/PersonalNotifications.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/PersonalNotifications.tsx",
+      "baseline_sha256": "0c8e7eb36767011a5f5e220d37df9c015c9ad1be37fddcbd4acb26d92fb74110",
+      "sha256": "dbfcaebca46e0d6eab6a1e9565b198f798b201930d1467620cc1de8e3b99f951"
+    },
+    {
+      "path": "prototype/src/history-copy.ts",
+      "source": "/tmp/recovered-e2-ui/prototype/src/history-copy.ts",
+      "baseline_sha256": "a35fd07b0da55e689d7210fb1051276a3ef0b760d8e01952951287fe70d77f0f",
+      "sha256": "c6a055e6f78bd59882500de8a2053d5b08531e926d249349debe932db553e245"
+    },
+    {
+      "path": "prototype/src/price-update-presentation.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/price-update-presentation.tsx",
+      "baseline_sha256": null,
+      "sha256": "a166327d16110d5c40b9a35683a5d7954870916a510fc3062ba62df01a430da6"
+    },
+    {
+      "path": "prototype/src/price-updates-ui.e2.test.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/price-updates-ui.e2.test.tsx",
+      "baseline_sha256": null,
+      "sha256": "e1d8a695098eb3ea6f892ad13018b44acc65cdb3d5ff74de96e208a77bd0aacc"
+    },
+    {
+      "path": "prototype/src/screens/Catalog.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/Catalog.tsx",
+      "baseline_sha256": "4cdbe6dff36a28a8e87f4543bcb5b736c5972dc5baf3a32ea7737359eb7478e0",
+      "sha256": "3f680dc4b8ce398d4c6b4ad4e4a7df4de8d83598e5718c5f1917c037045b642a"
+    },
+    {
+      "path": "prototype/src/screens/Dashboard.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/Dashboard.tsx",
+      "baseline_sha256": "dcf2b1f68c381a706308f2bcd9e7cc9c3d55b7db5376b7f1fb37c8a920f05107",
+      "sha256": "c3bb7a052db93e82394349950d2345e583aa32004bbee0f8a83b17ed7495a727"
+    },
+    {
+      "path": "prototype/src/screens/Labels.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/Labels.tsx",
+      "baseline_sha256": "db2a483e37353363936fa5de8df9488c371b49c7575d13008467e1b31915e080",
+      "sha256": "6e5e352447da7f70505bffd091e8506b93f482e494f8c611df5dd4c218993c69"
+    },
+    {
+      "path": "prototype/src/screens/LocationDashboard.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/LocationDashboard.tsx",
+      "baseline_sha256": "964447070af66c661ee91090d6fa88cb4e2accdf26cbf92105fbb91105b4ba7d",
+      "sha256": "552a199b513717fe062c4fa29c28d1977518f4c780b2b2e5fa7ea2e31737a38e"
+    },
+    {
+      "path": "prototype/src/screens/NotificationSettings.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/NotificationSettings.tsx",
+      "baseline_sha256": null,
+      "sha256": "501e01305cbde96c15b0117d448e1c20276013e4b9207e24ce24067fa2f2002a"
+    },
+    {
+      "path": "prototype/src/screens/PriceUpdates.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/PriceUpdates.tsx",
+      "baseline_sha256": null,
+      "sha256": "d812d86e3cdd69a0aca94a967eadcdf12cc7aa6907ec2d110ba115aa597aab04"
+    },
+    {
+      "path": "prototype/src/screens/Settings.tsx",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/Settings.tsx",
+      "baseline_sha256": "2b48ca9c1922be168ac8a41760f1cda4c80d183f85a4ed5a88b04f22743845c9",
+      "sha256": "c4eb9240766162910f2e48a0fc4648a9eab54d8eae1f6736a3d3bdb25abe954c"
+    },
+    {
+      "path": "prototype/src/screens/price-updates-e2.css",
+      "source": "/tmp/recovered-e2-ui/prototype/src/screens/price-updates-e2.css",
+      "baseline_sha256": null,
+      "sha256": "8040859dfaf0aa2d9c7261dfac5456c2f9e4881b2a7dad7f80d5f91953472617"
+    },
+    {
+      "path": "prototype/tests/e2-browser-flow.ts",
+      "source": "/tmp/recovered-e2-ui/prototype/tests/e2-browser-flow.ts",
+      "baseline_sha256": null,
+      "sha256": "120acf16f445d7554e070f846aab96d12ff4c6746c7d649d2fa828d23213237f"
+    },
+    {
+      "path": "prototype/tests/e2-price-updates.spec.ts",
+      "source": "/tmp/recovered-e2-ui/prototype/tests/e2-price-updates.spec.ts",
+      "baseline_sha256": null,
+      "sha256": "f78582cba3260d810cb071f402ab36c1d3b2d5d05b7083823d786b0e6fd40625"
+    }
+  ],
+  "browser_result": {
+    "success": true,
+    "job": "browser",
+    "results": [
+      {
+        "label": "build",
+        "exit_code": 0,
+        "source_unchanged": true
+      },
+      {
+        "label": "vite",
+        "exit_code": 0,
+        "source_unchanged": true
+      },
+      {
+        "label": "native",
+        "exit_code": 0,
+        "source_unchanged": true
+      },
+      {
+        "label": "screenshots",
+        "exit_code": 0,
+        "source_unchanged": true
+      }
+    ],
+    "source_unchanged": true,
+    "assets_unchanged": true,
+    "proof": "/tmp/recovered-e2-ui-browser-final-v7"
+  },
+  "native": {
+    "passed": 8,
+    "skipped": 0,
+    "failed": 0,
+    "retries": 0,
+    "workers": 1,
+    "stats": {
+      "startTime": "2026-10-15T15:12:37.568Z",
+      "duration": 40344.049999999996,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "captures": {
+    "cases_passed": 4,
+    "primary_pngs": 24,
+    "supplemental_actual_dom_pngs": 4,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "stats": {
+      "startTime": "2026-10-15T15:13:18.415Z",
+      "duration": 36728.085999999996,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "browser_console_errors": 0,
+  "browser_page_errors": 0,
+  "unit_scope": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      "src/price-updates-ui.e2.test.tsx",
+      "src/PersonalNotifications.c8.test.tsx",
+      "src/labels-sale.c8.test.tsx"
+    ]
+  },
+  "static": {
+    "full_typescript": "pass via build",
+    "vite_production_build": "pass",
+    "scoped_eslint_files": 17,
+    "scoped_eslint_warnings": 0,
+    "scoped_prettier": "pass"
+  },
+  "source_pins": 527,
+  "source_guard_unchanged": true,
+  "dist_asset_guard_unchanged": true,
+  "engine_proof_reference": "Engine agent separately ran 260/260 affected cases plus TSC/lint/format on manifest-final-v7; not added to the 13 UI cases as a full application suite.",
+  "genuine_boundaries": [
+    "Actual DemoProvider and normal username/password/MFA first sign-in",
+    "Existing explicit Demo menu account changes",
+    "Protected query and canonical command source, no forged actor/context",
+    "Actual Chromium window.print invoked, frozen sheet evidence then explicit physical confirmation",
+    "No hardware printer proof",
+    "No source or dist rewriting after Vite build"
+  ],
+  "captured_state_manual_review": "ui-manual-review.json",
+  "limitation": "The optional Undo toast was dismissed through its real public control for the captures. These images therefore do not verify an active Undo toast at short phone heights. A real overlap with the task waiver control was separately found; E3 owns the inline reserved-host correction and its final composed-stack proof. No hardware printer was used.",
+  "does_not_claim": [
+    "Whole application/SDK suite on final combined E2 graph",
+    "GitHub CI pass",
+    "Hardware print alignment",
+    "Final E3 composed-state behavior"
+  ]
+}

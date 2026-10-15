@@ -1,6 +1,7 @@
 import { useSettingsConfiguration } from "../settings-configuration";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import People from "./People";
+import NotificationSettings from "./NotificationSettings";
 import RegisteredComputers from "./RegisteredComputers";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import companyLogo from "../../../assets/arzon-logo.png?inline";
@@ -1420,6 +1421,13 @@ function SettingsContent() {
               <ReturnsSettings />
               <LabelsSettings />
             </>
+          ) : selected === "notifications" ? (
+            <NotificationSettings
+              key={JSON.stringify([
+                configuration.notifications,
+                configuration.price_updates,
+              ])}
+            />
           ) : selected === "modules" ? (
             <ModuleSettings
               key={JSON.stringify({

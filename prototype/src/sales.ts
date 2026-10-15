@@ -1,3 +1,4 @@
+import { notificationReadable } from "./notification-access";
 import {
   invoiceEvidenceActor,
   type InternalPurchaseEvidence,
@@ -194,6 +195,14 @@ export interface SaleLifecycleEvent {
   effective_price_after: string | null;
 }
 export type NotificationKind =
+  | "price_update_created"
+  | "price_update_reminder"
+  | "price_update_escalation"
+  | "approval_waiting"
+  | "branch_request_waiting"
+  | "return_waiting_credit"
+  | "expiry_date_waiting"
+  | "sale_request_decision"
   | "sale_request_submitted"
   | "sale_request_approved"
   | "sale_request_rejected"
@@ -209,6 +218,8 @@ export interface NotificationRecord {
   company_id: string;
   branch: Branch;
   target_username: string;
+  task_id?: string;
+  count?: number;
   recipient_user_id?: string;
   kind: NotificationKind;
   product_code?: string;
@@ -916,6 +927,25 @@ function notification(
   input: Omit<NotificationRecord, "id" | "read_at">,
 ) {
   arrays(state);
+  const event =
+    input.kind === "sale_request_submitted"
+      ? "sale_requests"
+      : ["sale_cost_increase", "sale_regular_not_above_sale"].includes(
+            input.kind,
+          )
+        ? "cost_went_up_during_sale"
+        : null;
+  const routedRoles = event
+    ? state.config.notifications?.events[event]
+    : undefined;
+  if (
+    routedRoles &&
+    !directoryRecipients(state, {
+      roles: routedRoles,
+      location_ids: input.branch === "all" ? undefined : [input.branch],
+    }).some((person) => person.user_id === input.recipient_user_id)
+  )
+    return;
   if (
     state.notifications!.some(
       (entry) =>
@@ -937,7 +967,10 @@ function notifySupervisors(
   input: Omit<NotificationRecord, "id" | "read_at" | "target_username">,
 ) {
   for (const recipient of directoryRecipients(state, {
-    capability: "approvals.decide",
+    capability:
+      input.kind === "sale_request_submitted"
+        ? "approvals.read"
+        : "approvals.decide",
     location_ids: [input.branch],
   }))
     notification(state, {
@@ -2129,12 +2162,7 @@ export function userNotifications(
     owner_user_id: context.user_id,
   });
   return (state.notifications ?? [])
-    .filter(
-      (entry) =>
-        entry.company_id === context.company_id &&
-        entry.recipient_user_id === context.user_id &&
-        context.allowed_branches.includes(entry.branch),
-    )
+    .filter((entry) => notificationReadable(state, context, entry))
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 export function markNotificationRead(
