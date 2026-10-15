@@ -100,7 +100,9 @@ describe("fictional data and storage", () => {
     await waitFor(() => {
       expect(style.getPropertyValue("--company-primary")).toBe("#0F766E");
       expect(style.getPropertyValue("--company-dark-primary")).toBe("#5EEAD4");
-      expect(style.getPropertyValue("--company-kpi-accent-end")).toBe("#0D9488");
+      expect(style.getPropertyValue("--company-kpi-accent-end")).toBe(
+        "#0D9488",
+      );
     });
   });
   it("seeds approvals, scoped returns and the existing replacement once", () => {
