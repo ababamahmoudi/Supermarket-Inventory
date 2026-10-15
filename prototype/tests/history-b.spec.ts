@@ -229,6 +229,12 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
       );
     }),
   ).toBe(true);
+  const beforeUndo = await readCanonicalBusinessEvidence(page);
+  const beforeIds = new Set(beforeUndo.activity.map((entry) => entry.id));
+  const stopped = beforeUndo.activity.filter(
+    (entry) => entry.action === "Stop offer" && entry.product_code === "0003",
+  );
+  expect(stopped).toHaveLength(1);
   await undo.click();
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
   await page.keyboard.press("Escape");
@@ -238,7 +244,14 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   const saved = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).activity,
   );
-  expect(saved.at(-1)).toMatchObject({
+  // Price-update cancellation is a later derived audit event. Select the
+  // newly appended reversal of this exact Stop offer command instead.
+  const reversals = saved.filter(
+    (entry: { id: string; reversed_activity_id?: string }) =>
+      !beforeIds.has(entry.id) && entry.reversed_activity_id === stopped[0].id,
+  );
+  expect(reversals).toHaveLength(1);
+  expect(reversals[0]).toMatchObject({
     action: "Undone",
     by: configuredPersonExpectation("manager").name_en,
     actor_username: configuredPersonExpectation("manager").username,

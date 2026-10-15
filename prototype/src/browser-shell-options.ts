@@ -1,3 +1,8 @@
+import {
+  migratePriceUpdates,
+  evaluatePriceUpdates,
+  capturePriceUpdateChanges,
+} from "./price-updates";
 import { configSeed } from "./config";
 import { initialState, loadInitialBusiness } from "./e1-bootstrap";
 import {
@@ -34,6 +39,7 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
   return {
     companyId: configSeed.company.seed_key,
     loadInitialBusiness,
+    prepareInitialBusiness: migratePriceUpdates,
     historyRecovery: {
       status: historyRecoveryStatus,
       prepareReset: prepareHistoryRecoveryReset,
@@ -53,6 +59,7 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
       { source: "sales_clock", apply: evaluateSales },
       { source: "date_reminders", apply: syncDateReminderAlerts },
       { source: "return_credit_reminders", apply: syncReturnCreditAlerts },
+      { source: "price_updates", apply: evaluatePriceUpdates },
     ] satisfies readonly {
       source: SystemReconciliationSource;
       apply(state: DemoState, attribution: SystemAttribution): void;
@@ -61,6 +68,9 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
       draft: Parameters<typeof autoAddApprovedLabelChanges>[1],
       before: Parameters<typeof autoAddApprovedLabelChanges>[0],
       actor: Parameters<typeof autoAddApprovedLabelChanges>[2],
-    ) => autoAddApprovedLabelChanges(before, draft, actor),
+    ) => {
+      capturePriceUpdateChanges(before, draft, actor);
+      autoAddApprovedLabelChanges(before, draft, actor);
+    },
   };
 }

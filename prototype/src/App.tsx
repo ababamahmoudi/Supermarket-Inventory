@@ -20,6 +20,7 @@ import {
   PanelLeftClose,
   RotateCcw,
   Receipt,
+  ClipboardCheck,
   Search,
   Settings,
   Sun,
@@ -61,6 +62,7 @@ import { configuredRoleLabel } from "./people-presentation.e1";
 import LocationPicker from "./LocationPicker.e1";
 import SecondSignInStep from "./AuthSteps.e1";
 import LocationDashboard from "./screens/LocationDashboard";
+import PriceUpdates from "./screens/PriceUpdates";
 import { useNavigationRestoration } from "./navigation";
 import type { Branch } from "./types";
 import {
@@ -127,6 +129,14 @@ export const pages: {
     icon: RotateCcw,
     group: "Daily",
     capabilities: ["returns.read"],
+  },
+  {
+    key: "price-updates",
+    en: "Price updates",
+    fa: "به‌روزرسانی قیمت‌ها",
+    icon: ClipboardCheck,
+    group: "Daily",
+    capabilities: ["price_updates.read"],
   },
   {
     key: "labels",
@@ -664,6 +674,8 @@ function LocationUnavailable() {
   );
 }
 const screenRegistry: Record<string, ReactNode> = {
+  "price-updates": <PriceUpdates />,
+  "price-update": <PriceUpdates />,
   suppliers: <Suppliers />,
   history: <HistoryScreen />,
   lookup: <Lookup />,
@@ -881,7 +893,9 @@ export default function App() {
       ? "products"
       : routeKey === "return"
         ? "returns"
-        : routeKey;
+        : routeKey === "price-update"
+          ? "price-updates"
+          : routeKey;
   const routeParams = new URLSearchParams(hash.split("?")[1]);
   const currentProduct =
     routeKey === "product"
@@ -986,6 +1000,22 @@ export default function App() {
               locationIds.includes(item.to_branch)),
         )
       : undefined;
+  const detailPriceTask =
+    page.key === "price-updates" && routeDetailId
+      ? state.price_update_tasks?.find(
+          (item) =>
+            item.id === routeDetailId &&
+            item.company_id === actor.company_id &&
+            locationIds.includes(item.branch),
+        )
+      : undefined;
+  const detailPriceProduct = detailPriceTask
+    ? state.products.find(
+        (item) =>
+          item.company_id === actor.company_id &&
+          item.code === detailPriceTask.product_code,
+      )
+    : undefined;
   const detailBreadcrumb = currentProduct
     ? lang === "fa"
       ? currentProduct.name_fa
@@ -995,7 +1025,12 @@ export default function App() {
       : (supplierDetail ??
         detailInvoice?.supplier_invoice_number ??
         detailOrder?.reference ??
-        detailRequest?.reference);
+        detailRequest?.reference ??
+        (detailPriceProduct
+          ? lang === "fa"
+            ? detailPriceProduct.name_fa || detailPriceProduct.name_en
+            : detailPriceProduct.name_en
+          : undefined));
   const inBranch = (record: { company_id: string; branch: Branch }) =>
     record.company_id === state.config.company.seed_key &&
     (record.branch === "all" || locationIds.includes(record.branch));
@@ -1020,13 +1055,14 @@ export default function App() {
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
+  const pendingPriceUpdates = (state.price_update_tasks ?? []).filter(
+    (item) => item.status === "pending",
+  ).length;
   const personalNotifications = state.notifications ?? [];
   const personalUnread = personalNotifications.filter(
     (record) => !record.read_at,
   ).length;
-  const notifications =
-    personalUnread +
-    (can("dashboard.company") ? unread + approvalCount + alertCount : 0);
+  const notifications = personalUnread;
   const groupNames: Record<string, [string, string]> = {
     Daily: ["Daily", "روزانه"],
     Catalog: ["Catalog", "کاتالوگ"],
@@ -1199,7 +1235,9 @@ export default function App() {
                             ? approvalCount
                             : item.key === "alerts"
                               ? alertCount
-                              : 0;
+                              : item.key === "price-updates"
+                                ? pendingPriceUpdates
+                                : 0;
                     return (
                       <a
                         key={item.key}
@@ -1391,35 +1429,11 @@ export default function App() {
             }
           >
             <PersonalNotifications />
-            {can("dashboard.company") ? (
-              <>
-                <MenuItem
-                  onClick={() => {
-                    window.location.hash = "approvals";
-                  }}
-                >
-                  {t("Approvals", "تأییدها")} · {approvalCount}
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    window.location.hash = "alerts";
-                  }}
-                >
-                  {t("Alerts", "هشدارها")} · {alertCount}
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    window.location.hash = "notes";
-                  }}
-                >
-                  {t("Notes for Supervisor", "یادداشت‌های سرپرست")} · {unread}
-                </MenuItem>
-              </>
-            ) : personalNotifications.length === 0 ? (
+            {personalNotifications.length === 0 && (
               <p className="helper">
                 {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
               </p>
-            ) : null}
+            )}
           </Menu>
           {!isMobile && (
             <Menu className="demo-menu" label={t("Demo", "دمو")}>

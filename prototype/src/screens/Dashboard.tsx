@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { useDemo } from "../store";
+import { PriceUpdatesDashboardCard } from "../price-update-presentation";
 import { useProtectedQuery } from "../use-protected-query";
 import { configuredRoleLabel } from "../role-config";
 import { companyDate } from "../invoice";
@@ -1378,6 +1379,7 @@ export function Dashboard() {
           className="dashboard-aside"
           aria-label={t("Notes and activity", "یادداشت‌ها و فعالیت")}
         >
+          <PriceUpdatesDashboardCard />
           <Card
             title={t(
               `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,

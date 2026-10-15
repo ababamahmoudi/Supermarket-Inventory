@@ -386,12 +386,56 @@ export function prepareLabelPrint(
     const canonicalProduct = approvedProduct(state, entry.product_code, branch);
     const sale = activeSaleAt(state, canonicalProduct, branch);
     const offer = effectiveOffer(state, canonicalProduct, branch);
+    const intent =
+      entry.source_reason === "price_update"
+        ? state.price_update_tasks?.find(
+            (task) =>
+              task.company_id === entry.company_id &&
+              task.branch === branch &&
+              task.product_code === entry.product_code &&
+              task.status === "pending" &&
+              entry.source_event_id === `price-task:${task.id}:${task.version}`,
+          )
+        : undefined;
+    if (entry.source_reason === "price_update" && !intent)
+      throw new LabelWorkflowError("price");
+    const intentSale =
+      intent?.new_price.sale_id &&
+      state.sales?.find(
+        (row) =>
+          row.company_id === intent.company_id &&
+          row.id === intent.new_price.sale_id,
+      );
+    const intentOffer =
+      intent?.new_price.offer_id &&
+      state.offers.find(
+        (row) =>
+          row.company_id === intent.company_id &&
+          row.id === intent.new_price.offer_id,
+      );
     const product: LabelPrintProduct = {
       ...projectProductReadDTO(state, actor, canonicalProduct),
-      label_sale: sale ? projectSaleReadDTO(sale) : null,
-      label_offer: offer ? projectOfferReadDTO(offer) : null,
-      label_regular_price: regularPrice(state, canonicalProduct, branch),
-      label_effective_price: effectivePrice(state, canonicalProduct, branch),
+      label_sale: intent
+        ? intentSale
+          ? projectSaleReadDTO(intentSale)
+          : null
+        : sale
+          ? projectSaleReadDTO(sale)
+          : null,
+      label_offer: intent
+        ? intentOffer
+          ? projectOfferReadDTO(intentOffer)
+          : null
+        : offer
+          ? projectOfferReadDTO(offer)
+          : null,
+      label_regular_price: intent
+        ? (intent.new_price.canonical_regular_price ??
+          intent.new_price.regular_price)
+        : regularPrice(state, canonicalProduct, branch),
+      label_effective_price: intent
+        ? (intent.new_price.canonical_price ?? intent.new_price.price)
+        : effectivePrice(state, canonicalProduct, branch),
     };
     if (entry.lot_id) {
       const offer = effectiveClearanceOffers(

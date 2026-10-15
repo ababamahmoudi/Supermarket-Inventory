@@ -1,0 +1,115 @@
+{
+  "unit": {
+    "exit_code": 0,
+    "seconds": 30.2,
+    "command": [
+      "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--maxWorkers=1",
+      "--no-file-parallelism",
+      "src/price-updates.e2.test.ts",
+      "src/price-updates-runtime.e2.test.ts",
+      "src/price-updates-sources.e2.test.ts",
+      "src/sales.c8.test.ts",
+      "src/offer-store-scopes.e1.test.ts",
+      "src/label-workflow.test.ts",
+      "src/history.test.ts",
+      "src/pricing.test.ts",
+      "src/PersonalNotifications.c8.test.tsx",
+      "src/labels-sale.c8.test.tsx",
+      "src/approvals.test.ts",
+      "src/e1-returns-sales-domain.test.ts",
+      "--reporter=json",
+      "--outputFile=/tmp/recovered-e2-engine-proof-v9/unit.json"
+    ]
+  },
+  "tsc": {
+    "exit_code": 0,
+    "seconds": 17.946,
+    "command": [
+      "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ]
+  },
+  "lint": {
+    "exit_code": 0,
+    "seconds": 1.823,
+    "command": [
+      "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/eslint/bin/eslint.js",
+      "src/price-updates.ts",
+      "src/price-updates.e2.test.ts",
+      "src/price-updates-runtime.e2.test.ts",
+      "src/price-updates-sources.e2.test.ts",
+      "src/notification-access.ts",
+      "src/types.ts",
+      "src/config.ts",
+      "src/browser-shell-options.ts",
+      "src/e1-read-model.ts",
+      "src/e1-shell-runtime.ts",
+      "src/sales.ts",
+      "src/sales-projections.ts",
+      "src/label-workflow.ts",
+      "--max-warnings",
+      "0"
+    ]
+  },
+  "format": {
+    "exit_code": 0,
+    "seconds": 1.037,
+    "command": [
+      "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "src/price-updates.ts",
+      "src/price-updates.e2.test.ts",
+      "src/price-updates-runtime.e2.test.ts",
+      "src/price-updates-sources.e2.test.ts",
+      "src/notification-access.ts",
+      "src/types.ts",
+      "src/config.ts",
+      "src/browser-shell-options.ts",
+      "src/e1-read-model.ts",
+      "src/e1-shell-runtime.ts",
+      "src/sales.ts",
+      "src/sales-projections.ts",
+      "src/label-workflow.ts",
+      "../seed/arzon-config.json"
+    ]
+  },
+  "source_guards": {
+    "count": 1573,
+    "unchanged": true,
+    "changed": []
+  },
+  "unit_counts": {
+    "numTotalTests": 260,
+    "numPassedTests": 260,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTodoTests": 0,
+    "numRuntimeErrorTestSuites": null,
+    "success": true
+  },
+  "success": true,
+  "stage": "E2 canonical price update engine and notification sources",
+  "scope": "Bounded final combined E2 candidate; actual Root full-suite/CI/browser proof owned by Root; no unverified final-branch claims",
+  "new_tests": 50,
+  "existing_affected_tests": 210,
+  "pricing_tests": 68,
+  "candidate_source_guard": "1573 exact candidate source/asset/doc pins unchanged",
+  "production_price_updates_sha256": "bb0130685d023d9915b6efc814f39d565d36dead06a91109186769b7d9abe2d7",
+  "prior_attempts_retained": [
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "v6",
+    "v7",
+    "v8"
+  ],
+  "runtime_test_description": "Genuine username/password/MFA and Demo switching through production runtime/controller/BrowserAuthorityRepository; real private backup and verified reread before first additive E2 baseline; no mocked authority or command adapters"
+}

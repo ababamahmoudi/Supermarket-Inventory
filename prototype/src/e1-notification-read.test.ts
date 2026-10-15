@@ -114,34 +114,59 @@ describe("E1 personal rejection notifications retain only the actual requester's
   it("a reason without the exact canonical rejected source and decision timestamp is omitted", () => {
     const { state, requester, notification } = fixture();
     notification.request_id = "unrelated-request";
-    expect(
-      projectSalesReadView(state, requester).notifications.find(
-        (item) => item.id === notification.id,
-      ),
-    ).not.toHaveProperty("reason");
+    const missingSource = projectSalesReadView(state, requester).notifications;
+    expect(missingSource.some((item) => item.id === notification.id)).toBe(
+      false,
+    );
+    expect(JSON.stringify(missingSource)).not.toContain(
+      "Fictional rejection reason",
+    );
     notification.request_id = state.sale_requests![0].id;
     notification.created_at = "2026-01-01T00:00:00Z";
-    expect(
-      projectSalesReadView(state, requester).notifications.find(
-        (item) => item.id === notification.id,
-      ),
-    ).not.toHaveProperty("reason");
+    const mismatchedDecision = projectSalesReadView(
+      state,
+      requester,
+    ).notifications.find((item) => item.id === notification.id);
+    expect(mismatchedDecision).toBeDefined();
+    expect(mismatchedDecision).not.toHaveProperty("reason");
+    expect(JSON.stringify(mismatchedDecision)).not.toContain(
+      "Fictional rejection reason",
+    );
   });
 
   it("cost alerts and non-rejection outcomes never publish raw reason fields", () => {
     const { state, requester, notification } = fixture();
     notification.kind = "sale_cost_increase";
     notification.reason = "Fictional private cost justification";
-    expect(
-      projectSalesReadView(state, requester).notifications.find(
-        (item) => item.id === notification.id,
-      ),
-    ).not.toHaveProperty("reason");
+    Object.assign(notification, {
+      below_cost_reason: "Fictional private cost reason",
+      minimum_margin: "0.25",
+    });
+    const forbiddenCostAlert = projectSalesReadView(
+      state,
+      requester,
+    ).notifications;
+    expect(forbiddenCostAlert.some((item) => item.id === notification.id)).toBe(
+      false,
+    );
+    expect(JSON.stringify(forbiddenCostAlert)).not.toContain(
+      "Fictional private cost justification",
+    );
+    expect(JSON.stringify(forbiddenCostAlert)).not.toContain(
+      "below_cost_reason",
+    );
+    expect(JSON.stringify(forbiddenCostAlert)).not.toContain("minimum_margin");
     notification.kind = "sale_request_approved";
-    expect(
-      projectSalesReadView(state, requester).notifications.find(
-        (item) => item.id === notification.id,
-      ),
-    ).not.toHaveProperty("reason");
+    const nonRejection = projectSalesReadView(
+      state,
+      requester,
+    ).notifications.find((item) => item.id === notification.id);
+    expect(nonRejection).toBeDefined();
+    expect(nonRejection).not.toHaveProperty("reason");
+    expect(nonRejection).not.toHaveProperty("below_cost_reason");
+    expect(nonRejection).not.toHaveProperty("minimum_margin");
+    expect(JSON.stringify(nonRejection)).not.toContain(
+      "Fictional private cost justification",
+    );
   });
 });

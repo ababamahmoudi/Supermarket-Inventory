@@ -1,0 +1,92 @@
+import type { AuthenticatedActor, Capability } from "./authority-types";
+import type { DemoState } from "./types";
+import type { NotificationRecord } from "./sales";
+import { can } from "./permissions";
+import { domainScope } from "./domain-authority";
+/** Retained notification rows never retain authority after a person's role/locations change. */
+export function notificationReadable(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  row: NotificationRecord,
+): boolean {
+  if (
+    row.company_id !== actor.company_id ||
+    row.recipient_user_id !== actor.user_id ||
+    (row.branch !== "all" && !actor.allowed_branches.includes(row.branch))
+  )
+    return false;
+  let capability: Capability;
+  switch (row.kind) {
+    case "price_update_created":
+    case "price_update_reminder":
+      if (
+        !state.price_update_tasks?.some(
+          (task) =>
+            task.company_id === row.company_id &&
+            task.id === row.task_id &&
+            task.branch === row.branch,
+        )
+      )
+        return false;
+      capability = "price_updates.read";
+      break;
+    case "price_update_escalation":
+      capability = "dashboard.company";
+      break;
+    case "sale_request_decision":
+      if (
+        !state.sale_requests?.some(
+          (request) =>
+            request.company_id === row.company_id &&
+            request.id === row.request_id &&
+            request.branch === row.branch &&
+            request.status !== "pending",
+        )
+      )
+        return false;
+      capability = "dashboard.company";
+      break;
+    case "approval_waiting":
+    case "sale_request_submitted":
+      capability = "approvals.read";
+      break;
+    case "branch_request_waiting":
+      capability = "branch_requests.read";
+      break;
+    case "return_waiting_credit":
+      capability = "supplier_balances.read";
+      break;
+    case "expiry_date_waiting":
+      capability = "dates.read";
+      break;
+    case "sale_cost_increase":
+    case "sale_regular_not_above_sale":
+      capability = "sales.cost_alert_decide";
+      break;
+    case "sale_no_end_reminder":
+      capability = "sales.manage";
+      break;
+    case "sale_delivery_release":
+      capability = "notes.read";
+      break;
+    case "sale_request_approved":
+    case "sale_request_rejected":
+    case "sale_request_expired":
+    case "sale_request_withdrawn":
+      if (
+        !state.sale_requests?.some(
+          (request) =>
+            request.company_id === row.company_id &&
+            request.id === row.request_id &&
+            request.requester_user_id === actor.user_id &&
+            request.branch === row.branch,
+        )
+      )
+        return false;
+      capability = "sales.read";
+      break;
+    default:
+      return false;
+  }
+  return can(state, actor, capability, domainScope(state, row)).allowed;
+}

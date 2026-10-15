@@ -274,6 +274,16 @@ Specification first; implementation and tests require separate actual-source evi
 
 **Note status audit correction:** successful status actions retain the exact note entity ID/type and actual note location on their newly appended immutable audit entry. Undo resolves that exact source through current capability, actor and conflict checks; it does not require the acting Manager to be the note author. Existing audit events and money/physical records are unchanged.
 
+## 034 — Canonical store price work, physical confirmation and personal events (E2, 2026-10-15)
+
+**Context:** Approved prices change in the app before a Store changes its own register and shelf labels. Every real price/offer source must feed one coherent task, while browser role claims, copied snapshots and preview-only printing must not create false completion.
+
+**Decision:** Compare exact public effective terms for every active selling Store inside the current-authority/latest-business transaction for decisions and private-witness clock reconciliations. Create/coalesce one Pending task per product/Store with immutable source steps and real actor attribution; no Warehouse/no-op/initial-upgrade backlog. Prepare Sale end work on its last local day for the next local midnight, matching the same end effect at actual expiry. Preserve actual staff actions across coalescing and require current-target confirmations. Undo cancels only unacted work, never a physical print.
+
+**Decision:** Register plus actual label confirmation or reasoned waiver gates Done. Current Owner/Manager/assigned Branch Supervisor may register/complete; Floor Worker label-only, optional completion still requires permitted register evidence. Printing retains exact Regular/Promo preference, frozen current task/source checks and physical geometry; queue/preview never claims output. Personal event records use genuine current directory recipients, scoped links/read state and safe copy parameters, with mandatory deduplicated 24-hour supervisor/48-hour company escalation. Settings configure routing but not away the owner's minimum recipients. Normal additive migration first verifies an exact prior-state backup and initializes a non-backlogged baseline.
+
+**Why:** Store work and customer charge remain distinct without losing source changes, leaking costs or inventing completed physical actions. The server can reuse capabilities/transactions later. This entry is specification-first; test counts, screenshots and hosted/phone results require separate executed evidence.
+
 ## 038 — Retain explicitly shared Cashier notebooks and public manual-price comparisons (E1)
 
 **Context:** the full retained browser checks found that the new shell denied Cashier Notes even when the current protected notebook projection contained an explicit custom read grant. The new catalog DTO also retained the manual badge while suppressing the public Rule price / Manual price pair required by the existing requirements.
