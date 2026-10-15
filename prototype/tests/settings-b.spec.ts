@@ -35,14 +35,9 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
     "Modules",
     "Data",
   ]);
-  for (const label of [
-    "People",
-    "Pricing and approvals",
-    "Taxes",
-    "Receiving",
-    "Notifications",
-    "Data",
-  ]) {
+  // E1 implements People and E2 implements Notifications. The remaining
+  // planned groups retain their original no-save/no-input guarantees.
+  for (const label of ["Pricing and approvals", "Taxes", "Receiving", "Data"]) {
     await group(page, label);
     const planned = page.locator(".settings-form-card").filter({
       has: page.getByText(
@@ -75,6 +70,60 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
       ).toBeChecked();
     }
   }
+  await group(page, "People");
+  const people = page.getByRole("region", { name: "People", exact: true });
+  await expect(
+    people.getByRole("button", { name: "Add person", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    people.locator(".people-e1 tbody tr:not(.table-expanded-row)"),
+  ).toHaveCount(6);
+  await expect(
+    people.getByRole("heading", {
+      name: "Registered store computers",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    people.getByRole("button", { name: "Register computer", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    people.getByText(
+      "These settings are planned. Changes are not available yet.",
+      {
+        exact: true,
+      },
+    ),
+  ).toHaveCount(0);
+  await group(page, "Notifications");
+  const notifications = page.getByRole("region", {
+    name: "Notifications",
+    exact: true,
+  });
+  await expect(
+    notifications.getByLabel("Remind after (hours)", { exact: true }),
+  ).toHaveValue("24");
+  await expect(
+    notifications.getByLabel("Alert Owner and Manager after (hours)", {
+      exact: true,
+    }),
+  ).toHaveValue("48");
+  await expect(
+    notifications.getByRole("switch", {
+      name: "Allow Floor Worker to mark tasks done",
+      exact: true,
+    }),
+  ).not.toBeChecked();
+  await expect(notifications.getByRole("checkbox")).toHaveCount(40);
+  await expect(
+    notifications.getByRole("button", { name: "Save changes", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    notifications.getByText(
+      "These settings are planned. Changes are not available yet.",
+      { exact: true },
+    ),
+  ).toHaveCount(0);
 });
 test("company settings save deliberately, persist and record before/after History", async ({
   page,

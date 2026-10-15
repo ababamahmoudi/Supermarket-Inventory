@@ -105,6 +105,11 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
     "Branch 1",
     "North York",
   );
+  const activityBefore = new Set(
+    (await readCanonicalBusinessEvidence(page)).activity.map(
+      (entry) => entry.id,
+    ),
+  );
   const editor = await openRegularPrice(page);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await expect(
@@ -117,10 +122,17 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
-  const audit = await readCanonicalBusinessEvidence(page).then(
-    (canonicalState) =>
-      JSON.parse(JSON.stringify(canonicalState)!).activity.at(-1),
+  // E2 appends derived store tasks after the accepted price decision. Prove
+  // the new causal decision itself, independently of those later audit rows.
+  const decisions = (await readCanonicalBusinessEvidence(page)).activity.filter(
+    (entry) =>
+      !activityBefore.has(entry.id) &&
+      entry.action === "Set regular price" &&
+      entry.entity_type === "product" &&
+      entry.entity_id === "0009",
   );
+  expect(decisions).toHaveLength(1);
+  const audit = JSON.parse(JSON.stringify(decisions[0]));
   expect(audit).toMatchObject({
     action: "Set regular price",
     by: configuredPersonExpectation("manager").name_en,
@@ -255,6 +267,13 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
   const owner = before.find(
     (product: { code: string }) => product.code === "0001",
   );
+  const row = page.locator(".catalog-products-table tbody tr").first();
+  await expect(row).toContainText("0009");
+  if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+    // E3's compact row opens the real record; editing remains on that page.
+    await row.locator(".phone-list-chevron .table-row-link").click();
+    await expect(page).toHaveURL(/#product\?code=0009$/);
+  }
   await page
     .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
     .click();
