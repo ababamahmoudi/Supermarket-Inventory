@@ -1,0 +1,202 @@
+{
+  "commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+  "source_unchanged": true,
+  "current_tracked_inputs_match_at_packaging": true,
+  "tracked_application_inputs": 595,
+  "application": {
+    "counts": {
+      "numTotalTests": 1444,
+      "numPassedTests": 1444,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "files": 142,
+    "name": "app",
+    "command": [
+      "node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/tmp/e3-persian-final-application/observer.mjs",
+      "--outputFile=/tmp/e3-persian-final-application/app.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 236.6371111869812,
+    "source_unchanged": true,
+    "global_errors": []
+  },
+  "sdk": {
+    "counts": {
+      "numTotalTests": 75,
+      "numPassedTests": 75,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "name": "sdk",
+    "command": [
+      "npm",
+      "run",
+      "test:sdk",
+      "--",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile=/tmp/e3-persian-final-application/sdk.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 2.3465940952301025,
+    "source_unchanged": true
+  },
+  "lint": {
+    "commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 47.077993631362915,
+    "source_unchanged": true
+  },
+  "fresh_normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 23.405049085617065,
+    "interrupted": false,
+    "source_unchanged": true,
+    "old_build_reused": false
+  },
+  "pricing_seed_cases": 23,
+  "changed_application_inputs_since_complete_f154": [
+    "prototype/scripts/c6-layout-proof.mjs",
+    "prototype/src/presentation.tsx",
+    "prototype/src/presentation.units.test.tsx",
+    "prototype/src/screens/DocumentsReturns.c5.test.tsx",
+    "prototype/src/screens/SalesAlerts.tsx",
+    "prototype/tests/layout-proof-c6.spec.ts"
+  ],
+  "production_scope": "SalesAlerts inline names use existing UnitText; shared formatter recognises Persian centimetre/millimetre compounds. Exact wording/data/pricing/authority/seed/assets/global CSS are unchanged. Other changes strengthen tests/oracle and await genuine fixture auth readiness.",
+  "browser_scope": "Final selected whole-file72case native replay is separate and still running at packaging; it is not a new complete812case pass.",
+  "prior_attempts": "f154complete769pass/1fail/42skip;431native28pass but PersianframeFAIL manualreview.431firstapp1429pass/1failCLI1,unchanged431full1430passCLI0 andsameheadCIunitstepSUCCESS. All retained in separate packets.",
+  "limitations": [
+    "Required full browser CI still unresolved; exact prior feature runs exceeded30minute prototype budget. Proposed90minute edit outsideownerpathscope unapplied.",
+    "No physical Home Screen/Safari/printer/register/hosting verification."
+  ],
+  "raw_files": [
+    {
+      "path": "application.json.gz",
+      "sha256": "42eb1ea50ee86ee922992b2a98b5e189cacf825ef491049874a49f058bb7e6de",
+      "bytes": 75085,
+      "original_sha256": "2a67f4b2de43120d549e0f3f0446eb9c84b9878049b4d073905b59c77eefe76f",
+      "original_bytes": 578177
+    },
+    {
+      "path": "application.log.gz",
+      "sha256": "78ea1b78662032ea9c19121d9213bab217816642eb9f80c6513666334c064a90",
+      "bytes": 11024,
+      "original_sha256": "de001a58d707a950508104300b13376ebc5497d99e87c359d57b305f612d359a",
+      "original_bytes": 33010
+    },
+    {
+      "path": "sdk.json.gz",
+      "sha256": "7d7c7f0d93d125640550fff6c66db20edeb95e0d7f39fb95b8d51fd6055f86c8",
+      "bytes": 4551,
+      "original_sha256": "821bf6f647b033dd992b58050f36198be763682b3b6533cc8fa953bf91894da7",
+      "original_bytes": 25880
+    },
+    {
+      "path": "sdk.log.gz",
+      "sha256": "55d039da47c262a86bd64d00c706df8ac603073b1ad7bee1da75bb622850ec22",
+      "bytes": 654,
+      "original_sha256": "79d7262484574e6d785f83288971a03069d8da39d21d67fe53ab2bc5e36da170",
+      "original_bytes": 1255
+    },
+    {
+      "path": "source-pins.json.gz",
+      "sha256": "c13671aba25563b70ebc819baa08496d8d96a342c45c4c84c60db625d3e357e6",
+      "bytes": 28755,
+      "original_sha256": "dcdad9a7c910115c3f9fd0022857bc9358a07f7624cdadb80424ae305da99c96",
+      "original_bytes": 67267
+    },
+    {
+      "path": "app-sdk-execution.json.gz",
+      "sha256": "74e723b369e6843243161b5d42a2ece7bd503420bba6f3e8675560040f06e9db",
+      "bytes": 345,
+      "original_sha256": "5bd2dd33bfced6e3a7df5c9e08a1301e3cfba4127fa267e62b2d0b9bae42927a",
+      "original_bytes": 926
+    },
+    {
+      "path": "application-global-errors.json.gz",
+      "sha256": "107b36761718636a8c1f64a1c2ff267cfcbba8ca59b3cd2d0a303fca81899068",
+      "bytes": 132,
+      "original_sha256": "655ce234a5f5829d6600017d75d88eedb48e481e610b01a11cd50d9fa6b8c48b",
+      "original_bytes": 174
+    },
+    {
+      "path": "application-error-observer.mjs.gz",
+      "sha256": "47f18446c7c01bb4575f76a1ca5bda81a264d42ec149c7cc648a887e70381846",
+      "bytes": 437,
+      "original_sha256": "08c4a5da37036ed6a76ea0f0ec51e620efa921860730f49553d112f433aa91c5",
+      "original_bytes": 683
+    },
+    {
+      "path": "lint.log.gz",
+      "sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "bytes": 253,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+      "original_bytes": 369
+    },
+    {
+      "path": "lint-execution.json.gz",
+      "sha256": "14742fa027a009c39b63acb3ce4311fc0e882cdd1be2858d87781ed51ea343ca",
+      "bytes": 166,
+      "original_sha256": "fcfbf8a4c7646d385a512ed1bb1a6b2d0cc207ef9d53f683c8cafb2bd5469785",
+      "original_bytes": 198
+    },
+    {
+      "path": "normal-build.log.gz",
+      "sha256": "f048e9f8718d2ee152205e2801277c24df569573e04933933503ac433664786d",
+      "bytes": 1049,
+      "original_sha256": "742dcfd4b693747b6fea8ff89f132e0de961796227dc032d5b3bcfa832b6360e",
+      "original_bytes": 2902
+    },
+    {
+      "path": "normal-build-execution.json.gz",
+      "sha256": "c25295ef245d17ac77d9acb6d4576ce2b55d316946f318ff85e9b87f38e4cd6c",
+      "bytes": 131,
+      "original_sha256": "2de61b3cda6a41536157545e1eb5c343bd79e82649356574e6314365b6507130",
+      "original_bytes": 139
+    },
+    {
+      "path": "normal-build-source-guard.json.gz",
+      "sha256": "fc733862ef4b46f826088763833494e6c373ed34f098d56fa7208876c76f2737",
+      "bytes": 122,
+      "original_sha256": "b0e6441d60620d199b35f72b1de7b68b7c421699cf7915b24c37c1b5af9e0c9c",
+      "original_bytes": 123
+    },
+    {
+      "path": "app-sdk-driver.py.gz",
+      "sha256": "547130c35d6460383cf3147d0f347649b6cc8cc20c85df49c9cb2943f6268796",
+      "bytes": 992,
+      "original_sha256": "7dba0d85c6d7fdc19c7f11cee9ed53f34c1e12ec10eb6b752d8aff5e463af846",
+      "original_bytes": 2035
+    },
+    {
+      "path": "lint-driver.py.gz",
+      "sha256": "3ec5afa6d4c890acb9c0128dcad5009439896956fb4c6e8d371813a52ef25828",
+      "bytes": 801,
+      "original_sha256": "9d6bacbdaf9a2cf24a65c311088fde0f32f423db5ca5a18b4f3ff84753e1dcab",
+      "original_bytes": 1507
+    }
+  ]
+}
