@@ -275,3 +275,11 @@ Before expanding any legacy History dictionary, saving a FileDB backup, or initi
 ### Invoice workspace busy state
 
 While **New invoice** or **Manual entry** awaits its actual creation command, keep the existing workspace visible but prevent editing or another start. Expose the busy state to assistive technology and use the existing pending control presentation. After the accepted invoice is ready, enable that invoice's fields. On failure, retain the previous workspace and the existing error feedback. Keep the current labels, layout and bilingual copy; do not add a new message or change the command's permission and data rules.
+
+### E1 retained Cashier product link
+
+The exact public `#product?code=<code>` link for a current same-company non-archived product opens Cashier lookup with that Product Code searched. It never opens the private Product page. Unknown, archived, foreign, duplicate-code and additional-parameter routes remain denied. An aggregate scope shows the existing Choose location control before any customer price.
+
+Original attachment uses this same pending state. While the real original is being retained, prevent edits that would invalidate its source snapshot and pause selection of the obsolete route. Enable the accepted invoice only when its canonical ID, route and protected workspace agree. Validation or storage failure releases the form with the existing feedback.
+
+Expanded order-comparison rows retain their disclosure choice while a fresh protected read reloads after a cost edit. Hide the table until that read completes; retain only row keys, never prior costs or invoice data. Keep the accepted cost decision available in the reopened row without weakening session, location or authority invalidation.

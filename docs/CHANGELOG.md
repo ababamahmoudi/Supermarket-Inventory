@@ -1,6 +1,15 @@
 # Project changelog
 
+## E1 retained workflow corrections — verification pending
+
+- Restore the exact public Cashier Product Code shortcut through protected Lookup, with private/extra/foreign routes denied and explicit Store selection retained.
+- Preserve the approved own/handled unposted-invoice Warehouse destination/post workflow through canonical identity and active assigned origin; unrelated destination access remains denied.
+- Link new note-status audit entries to their exact note/location so the authorized actor can safely Undo their own status action on another author's note. Existing immutable History and money remain unchanged.
+- These are source specifications. Actual test results are recorded after implementation verification.
+
 ## 2026-10-13 — E1 implementation and verified app checks
+
+- Protect original attachments and New/Manual transitions until their accepted route and protected workspace agree. Preserve order-comparison disclosure keys across fresh reads without retaining stale costs.
 
 - Replaced active role-string authorization with configured Owner, Manager, Branch Supervisor, Floor Worker and Cashier capabilities and assigned-location resource checks.
 - Added genuine browser-local IndexedDB people/session/business transactions, protected field/file queries, resumable invitation/password/second-step setup, registered computers, cross-tab invalidation, verified migration and six-person reset.

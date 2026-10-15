@@ -263,3 +263,13 @@ Committed Reset with retirement pending (English): **Demo reset is complete. You
 Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
 
 Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
+
+## 036 — Retain public Cashier product links without private Product access (E1)
+
+**Context:** the blanket E1 route denial removed the existing C8 public Product Code shortcut. **Decision:** accept only the exact one-code product route for an existing non-archived protected same-company public product and genuine Lookup grant, then replace it with the existing Lookup search route. All additional/duplicate/private/location parameters and unknown/foreign products remain denied. Aggregate Lookup still needs explicit Store selection. **Why:** retain working public navigation while never mounting private Product details or leaking cost/history/editing.
+
+## 037 — Preserve the retained handling-origin receiving exception (E1)
+
+**Context:** C8 expressly permits a handling worker to retarget and post their own unposted invoice at any active same-company receiving location without destination browsing. E1 must keep existing Floor Worker operations; review-only narrowing was a regression. **Decision:** restore destination selection and posting only for the canonical creator/handler/reviewer with an active assigned retained origin. Verify active same-company destination and current genuine actor at each boundary. Branch Supervisor assignment rules, unrelated Orders/destination records, posted visibility, Short receiving and reviewer reassignment remain unchanged. **Why:** retain the approved Warehouse receiving workflow without adding general location access.
+
+**Note status audit correction:** successful status actions retain the exact note entity ID/type and actual note location on their newly appended immutable audit entry. Undo resolves that exact source through current capability, actor and conflict checks; it does not require the acting Manager to be the note author. Existing audit events and money/physical records are unchanged.
