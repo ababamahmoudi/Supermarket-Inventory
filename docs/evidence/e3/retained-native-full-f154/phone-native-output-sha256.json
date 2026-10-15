@@ -1,0 +1,1092 @@
+[
+  {
+    "path": "native-output/.last-run.json",
+    "bytes": 96,
+    "sha256": "c4b8f15067496637001f67cf8f942bfa65f8aa154502330e939481cdca980e14"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--09d09-gs-groups-and-their-dialogs-phone/attachments/Rendered-button-audit-44fd50606657e0d540cfcbae956bb855ce2b6ad0.json",
+    "bytes": 930393,
+    "sha256": "a7ac5480543a170875eceaa4ff4a2ba5d1924087aca71ec6527fda33ac6b0d1c"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--09d09-gs-groups-and-their-dialogs-phone/button-audit.json",
+    "bytes": 930393,
+    "sha256": "a7ac5480543a170875eceaa4ff4a2ba5d1924087aca71ec6527fda33ac6b0d1c"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--0a914-y-Received-and-ledger-forms-phone/attachments/Rendered-button-audit-aa8f93c953dd49beaadaa9befbf1f7236a516c8b.json",
+    "bytes": 638968,
+    "sha256": "7ffbb65e7a21ecb5e13ee9cc0a8ac7c5f05e0bd09e4b53aadba02b5261559013"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--0a914-y-Received-and-ledger-forms-phone/button-audit.json",
+    "bytes": 638968,
+    "sha256": "7ffbb65e7a21ecb5e13ee9cc0a8ac7c5f05e0bd09e4b53aadba02b5261559013"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--44db8--forms-and-retained-details-phone/attachments/Rendered-button-audit-83c747893ab4d8388868a40c7b0108405dd1476f.json",
+    "bytes": 227392,
+    "sha256": "3665671c33f4608f594c6c2fa954ecc560056859fb028cc1b0c23885ced27a15"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--44db8--forms-and-retained-details-phone/button-audit.json",
+    "bytes": 227392,
+    "sha256": "3665671c33f4608f594c6c2fa954ecc560056859fb028cc1b0c23885ced27a15"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--51279-pplier-tab-and-item-dialogs-phone/attachments/Rendered-button-audit-b158b72d54b3b9b1ef51ced5ee6257bff9d0a07e.json",
+    "bytes": 986606,
+    "sha256": "c29725233335cb16c25ccbb35d225fbd9f6c6a642712f4b47e58ab0d308b47ed"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--51279-pplier-tab-and-item-dialogs-phone/button-audit.json",
+    "bytes": 986606,
+    "sha256": "c29725233335cb16c25ccbb35d225fbd9f6c6a642712f4b47e58ab0d308b47ed"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--c0097-n-password-and-lock-actions-phone/attachments/Rendered-auth-button-audit-cb2043bcc5b0d366d5a99e5d3d0257bc95b0a8fb.json",
+    "bytes": 15277,
+    "sha256": "70b1c7fc2eb2cc38da4b44b42c1a0304464f66250b3e6c91d5bb7c9da41fc36c"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--c0097-n-password-and-lock-actions-phone/button-audit.json",
+    "bytes": 15277,
+    "sha256": "70b1c7fc2eb2cc38da4b44b42c1a0304464f66250b3e6c91d5bb7c9da41fc36c"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--eac67-pproval-and-invoice-dialogs-phone/attachments/Rendered-button-audit-b32aa2e882fea360d89909c8604a692d30fa50b3.json",
+    "bytes": 516713,
+    "sha256": "da24e0ff8bc5b3ddad3c2c87ba40d534e82427a5353f6fdb1bef37a3a12230f8"
+  },
+  {
+    "path": "native-output/c5-button-audit-C5-button--eac67-pproval-and-invoice-dialogs-phone/button-audit.json",
+    "bytes": 516713,
+    "sha256": "da24e0ff8bc5b3ddad3c2c87ba40d534e82427a5353f6fdb1bef37a3a12230f8"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-31b50-and-later-lifecycle-actions-phone/attachments/Conditional-rendered-button-audit-166876d9f015746b7331e8368cb179f8725a3f86.json",
+    "bytes": 63227,
+    "sha256": "d536ef0a86157478f076c4524c83e6b648b79ba13a8e844a0c2cb49142800b4a"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-31b50-and-later-lifecycle-actions-phone/button-audit.json",
+    "bytes": 63227,
+    "sha256": "d536ef0a86157478f076c4524c83e6b648b79ba13a8e844a0c2cb49142800b4a"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-46164-er-and-print-cancel-dialogs-phone/attachments/Conditional-rendered-button-audit-64e552b664ecaf1068ae985968e77a40c9084060.json",
+    "bytes": 31132,
+    "sha256": "d3e70e395caa72870c5c41560832b4d43ebbc436baa7ca2917869ea1d7f7bbe2"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-46164-er-and-print-cancel-dialogs-phone/button-audit.json",
+    "bytes": 31132,
+    "sha256": "d3e70e395caa72870c5c41560832b4d43ebbc436baa7ca2917869ea1d7f7bbe2"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-7994f-ons-history-menu-and-Revert-phone/attachments/Conditional-rendered-button-audit-0045d390a61d9003752c4749a46d72dd3731a823.json",
+    "bytes": 92120,
+    "sha256": "fc7cae5f3453baad15b1c862cd921d9c36fc37a9d77252db3d7d4bf909bb03b3"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-7994f-ons-history-menu-and-Revert-phone/button-audit.json",
+    "bytes": 92120,
+    "sha256": "fc7cae5f3453baad15b1c862cd921d9c36fc37a9d77252db3d7d4bf909bb03b3"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-95d6f--and-seen-done-open-actions-phone/attachments/Conditional-rendered-button-audit-433e06d70f88ca1131b5a61a463e7aa9bf75691e.json",
+    "bytes": 99842,
+    "sha256": "438a55ff2693f561b7017b1516f48bde600b16ca2ce93af6016d9ef1ecb77b6a"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-95d6f--and-seen-done-open-actions-phone/button-audit.json",
+    "bytes": 99842,
+    "sha256": "438a55ff2693f561b7017b1516f48bde600b16ca2ce93af6016d9ef1ecb77b6a"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-a9671-cancellation-review-actions-phone/attachments/Conditional-rendered-button-audit-2725241ad3d4318a3655b1eaf3aaf36c1f263954.json",
+    "bytes": 26500,
+    "sha256": "ebd6f6cd8dcf186444cb6981483b0307420be9620850ac1ffcebba25304af594"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-a9671-cancellation-review-actions-phone/button-audit.json",
+    "bytes": 26500,
+    "sha256": "ebd6f6cd8dcf186444cb6981483b0307420be9620850ac1ffcebba25304af594"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-c0bba-tore-and-print-confirmation-phone/attachments/Conditional-rendered-button-audit-972fcffe5b2e631198fe7bd6aacfaa2b705edf43.json",
+    "bytes": 107471,
+    "sha256": "2db0670ca6b5d2ef1b74535525094c4471d1236724ff18aebc260fc8a883014c"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-co-c0bba-tore-and-print-confirmation-phone/button-audit.json",
+    "bytes": 107471,
+    "sha256": "2db0670ca6b5d2ef1b74535525094c4471d1236724ff18aebc260fc8a883014c"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-conditional-reauthentication-dialog-phone/attachments/Conditional-rendered-button-audit-2f1c763b7d7c8d19b3eb318f8d2158ee1ce3febb.json",
+    "bytes": 7520,
+    "sha256": "feb8b802fbc2a21a2d7f22627be1d2e566525f548c68e4da72ef2802bbc4bb39"
+  },
+  {
+    "path": "native-output/c5-conditional-audit-C5-conditional-reauthentication-dialog-phone/button-audit.json",
+    "bytes": 7520,
+    "sha256": "feb8b802fbc2a21a2d7f22627be1d2e566525f548c68e4da72ef2802bbc4bb39"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-1d74b-and-uniform-topbar-en-dark--phone/attachments/Rendered-primary-screen-button-audit-fdf0f3d7e2a7f995be7a695db744d23d78dae301.json",
+    "bytes": 111610,
+    "sha256": "659298ef98f1ad4f7f626c3cedcb7b4bfb4d7f925b5de31bffbf7ca8301365c6"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-1d74b-and-uniform-topbar-en-dark--phone/button-audit.json",
+    "bytes": 111610,
+    "sha256": "659298ef98f1ad4f7f626c3cedcb7b4bfb4d7f925b5de31bffbf7ca8301365c6"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-546d6-nd-uniform-topbar-fa-light--phone/attachments/Rendered-primary-screen-button-audit-f0abe2764805cd8b23faa11a73d5b2d834ce757f.json",
+    "bytes": 113377,
+    "sha256": "af8d154268fc4ce9b74238f61779753ccce63136c1975934f633c0be54a2092f"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-546d6-nd-uniform-topbar-fa-light--phone/button-audit.json",
+    "bytes": 113377,
+    "sha256": "af8d154268fc4ce9b74238f61779753ccce63136c1975934f633c0be54a2092f"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-5e02c-nd-uniform-topbar-en-light--phone/attachments/Rendered-primary-screen-button-audit-5c6a433eed37707341472880d2d7ae3c9f90e581.json",
+    "bytes": 111027,
+    "sha256": "91ef925a02e09cf287f1b66bac5aded327c2ac63a2533cb8795ca1d79ca7502f"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Klead-t-5e02c-nd-uniform-topbar-en-light--phone/button-audit.json",
+    "bytes": 111027,
+    "sha256": "91ef925a02e09cf287f1b66bac5aded327c2ac63a2533cb8795ca1d79ca7502f"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-4bd8d-ned-return-states-en-light--phone/attachments/Rendered-primary-screen-button-audit-525ec1dac6c273da56885d01748484568536a1bf.json",
+    "bytes": 21284,
+    "sha256": "572a0380122e27e555ef55aa798c5a58d8916dfd43f7912a12dcc30c513e18cc"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-4bd8d-ned-return-states-en-light--phone/button-audit.json",
+    "bytes": 21284,
+    "sha256": "572a0380122e27e555ef55aa798c5a58d8916dfd43f7912a12dcc30c513e18cc"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-fa5a6-ned-return-states-fa-light--phone/attachments/Rendered-primary-screen-button-audit-5b9316e9bc659be1359ab43fbe2a4dde4e77511a.json",
+    "bytes": 21485,
+    "sha256": "14a862d2eb5375a707363bc1603d328b9af19a9fe34042352ee0db785f0e4087"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-fa5a6-ned-return-states-fa-light--phone/button-audit.json",
+    "bytes": 21485,
+    "sha256": "14a862d2eb5375a707363bc1603d328b9af19a9fe34042352ee0db785f0e4087"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-feb6e-ined-return-states-en-dark--phone/attachments/Rendered-primary-screen-button-audit-3db0dd35468fa397d47c016ad7812ef3a43676ee.json",
+    "bytes": 21327,
+    "sha256": "7d23e9f9a7f53c8384b9d7e09044823026df7cf97d6b2201b7f1a4f880f6b1ba"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-Waiting-feb6e-ined-return-states-en-dark--phone/button-audit.json",
+    "bytes": 21327,
+    "sha256": "7d23e9f9a7f53c8384b9d7e09044823026df7cf97d6b2201b7f1a4f880f6b1ba"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--ac8de-and-return-policy-en-light--phone/attachments/Rendered-primary-screen-button-audit-fce65a2f21f4408cccc4f4a67175b45dc713d1fa.json",
+    "bytes": 88423,
+    "sha256": "7df72d12b74ce76f48c3af9c9a3d56c8e79617781a5032f767af621a19fabec6"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--ac8de-and-return-policy-en-light--phone/button-audit.json",
+    "bytes": 88423,
+    "sha256": "7df72d12b74ce76f48c3af9c9a3d56c8e79617781a5032f767af621a19fabec6"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--b5641--and-return-policy-en-dark--phone/attachments/Rendered-primary-screen-button-audit-c5c60619622fbe392ecadcd23a28ebbbd079e9d2.json",
+    "bytes": 88574,
+    "sha256": "47d4180dd4977f1c2ee8ab52e6eaa13a5c8144bf3c8e315a704b57814d752b04"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--b5641--and-return-policy-en-dark--phone/button-audit.json",
+    "bytes": 88574,
+    "sha256": "47d4180dd4977f1c2ee8ab52e6eaa13a5c8144bf3c8e315a704b57814d752b04"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--dd26b-and-return-policy-fa-light--phone/attachments/Rendered-primary-screen-button-audit-d5fdb00b304d76890f4165a5c7dcab0c70952e1f.json",
+    "bytes": 89953,
+    "sha256": "b666c904902160ffb530833536fb627fd7659ffd7cb62a355e5e9fb2adc72698"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-posted--dd26b-and-return-policy-fa-light--phone/button-audit.json",
+    "bytes": 89953,
+    "sha256": "b666c904902160ffb530833536fb627fd7659ffd7cb62a355e5e9fb2adc72698"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-repeate-228db-t-and-Undo-restores-Current-phone/attachments/Rendered-primary-screen-button-audit-3ff8f7b377e4ad782dffa1d38aca7353c7c9c911.json",
+    "bytes": 59775,
+    "sha256": "35dd0dd4ad1cfda122e2e7f0f454616a12f04a3d8a690a815d3caeeb6d8742a4"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-repeate-228db-t-and-Undo-restores-Current-phone/button-audit.json",
+    "bytes": 59775,
+    "sha256": "35dd0dd4ad1cfda122e2e7f0f454616a12f04a3d8a690a815d3caeeb6d8742a4"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-return--5a443-pact-actions-for-both-roles-phone/attachments/Rendered-primary-screen-button-audit-49d3b3fdc603e592672c33edefbd3931b9a3a278.json",
+    "bytes": 100122,
+    "sha256": "fb4cb240b255e154e72f1d2608074be85f4d96910acdf56a5a17536296e56460"
+  },
+  {
+    "path": "native-output/c5-presentation-C5-return--5a443-pact-actions-for-both-roles-phone/button-audit.json",
+    "bytes": 100122,
+    "sha256": "fb4cb240b255e154e72f1d2608074be85f4d96910acdf56a5a17536296e56460"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-Lookup--1fdd8-ores-evidence-Floor-Worker--phone/attachments/Rendered-primary-screen-button-audit-c0f8c86f6b1ca251b3f306eba209167bd7815cfb.json",
+    "bytes": 11510,
+    "sha256": "acbef436d4aba8f1a38733b9ab773a50ce0b9ac0ca96fe34f4996f9389a240b5"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-Lookup--1fdd8-ores-evidence-Floor-Worker--phone/button-audit.json",
+    "bytes": 11510,
+    "sha256": "acbef436d4aba8f1a38733b9ab773a50ce0b9ac0ca96fe34f4996f9389a240b5"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-Lookup--f2a88-stores-evidence-Supervisor--phone/attachments/Rendered-primary-screen-button-audit-807506aab48ace4c84c33556cc0d0d68149dc9a7.json",
+    "bytes": 12118,
+    "sha256": "7f43f9b1d463d2ef176c844ed099a6102aa2dfa4a38d79ca0c5b75a3b50db497"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-Lookup--f2a88-stores-evidence-Supervisor--phone/button-audit.json",
+    "bytes": 12118,
+    "sha256": "7f43f9b1d463d2ef176c844ed099a6102aa2dfa4a38d79ca0c5b75a3b50db497"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-shelf-q-565dd-Remove-Undo-preserves-money-phone/attachments/Rendered-primary-screen-button-audit-29642b997595a4367d16697904f4ee81ca45263e.json",
+    "bytes": 36649,
+    "sha256": "f79006c177da6c0c0a912a936d2807a9d00b824564e1e863d566e82a44cae1f7"
+  },
+  {
+    "path": "native-output/c5-presentation-C6-shelf-q-565dd-Remove-Undo-preserves-money-phone/button-audit.json",
+    "bytes": 36649,
+    "sha256": "f79006c177da6c0c0a912a936d2807a9d00b824564e1e863d566e82a44cae1f7"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1024px-phone/attachments/Actual-responsive-geometry-dc2967dab3b2f2703df8925f82ab1040ac09e644.json",
+    "bytes": 35197,
+    "sha256": "3cb441145cc8b86df2e79906127b4fca4c102c6b22f93b2ef514b3da06a202a3"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1024px-phone/dashboard-geometry.json",
+    "bytes": 2560,
+    "sha256": "4fdd98e04b221d61b09a25282ec3986d9335a99bbf2376286e9a406566992e4a"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1024px-phone/responsive-geometry.json",
+    "bytes": 35197,
+    "sha256": "3cb441145cc8b86df2e79906127b4fca4c102c6b22f93b2ef514b3da06a202a3"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1180px-phone/attachments/Actual-responsive-geometry-27839743a20174fe1053457f1c96c9c92146eebf.json",
+    "bytes": 35238,
+    "sha256": "c90f1a303cdc389766bcd0cf1a10aaccf078f6e6adc471f22c4d5def5f8af5dc"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1180px-phone/dashboard-geometry.json",
+    "bytes": 2593,
+    "sha256": "e7abce9c468af8e1e6d169ccfb56dba74419bcff306e6cba145bb9cc768d57ef"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1180px-phone/responsive-geometry.json",
+    "bytes": 35238,
+    "sha256": "c90f1a303cdc389766bcd0cf1a10aaccf078f6e6adc471f22c4d5def5f8af5dc"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1280px-phone/attachments/Actual-responsive-geometry-8b9f38d63f0f648d38c334f7ff9226213d5270bf.json",
+    "bytes": 34806,
+    "sha256": "626eeab163a1d6b9c0eae489ba14343dad67ddfa424a0b32562ada070c144b69"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1280px-phone/dashboard-geometry.json",
+    "bytes": 2568,
+    "sha256": "5b88cc71f21334bb4a5d1873e4eeb189d1b5dc4cd8c7053a22653045615675f4"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1280px-phone/responsive-geometry.json",
+    "bytes": 34806,
+    "sha256": "626eeab163a1d6b9c0eae489ba14343dad67ddfa424a0b32562ada070c144b69"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1440px-phone/attachments/Actual-responsive-geometry-326e304abe1e6a4014bc99cb5270d818c0f5efad.json",
+    "bytes": 34902,
+    "sha256": "171c1aae762f3fa488ed161934e585945a070a5a6efb0703baff3c859d033bb6"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1440px-phone/dashboard-geometry.json",
+    "bytes": 2549,
+    "sha256": "02e51f595573d7073651e351070458ccc5adaf3f456fee58e845cc11e4482a19"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1440px-phone/responsive-geometry.json",
+    "bytes": 34902,
+    "sha256": "171c1aae762f3fa488ed161934e585945a070a5a6efb0703baff3c859d033bb6"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1920px-phone/attachments/Actual-responsive-geometry-7af3e07a1a8539f6ddbf7e69b16eb9e7be730f0b.json",
+    "bytes": 34908,
+    "sha256": "3873b378d9b232d2fae3959cff0363b3bc531f1d1e1a8efe8f513cc87128dadd"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1920px-phone/dashboard-geometry.json",
+    "bytes": 2573,
+    "sha256": "02e01e550aabb4eebea081d73e378e8c92aeb393d70d7d26b377236c5f6ef157"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-1920px-phone/responsive-geometry.json",
+    "bytes": 34908,
+    "sha256": "3873b378d9b232d2fae3959cff0363b3bc531f1d1e1a8efe8f513cc87128dadd"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-390px-phone/attachments/Actual-responsive-geometry-a15cfb37155296cb3219acfb7b408f3a6d19090e.json",
+    "bytes": 27761,
+    "sha256": "b6247eb9c7f53ab6d7d3b22b7d512fe7fcc835f417bd6ea2fa5af414f4edfbca"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-390px-phone/dashboard-geometry.json",
+    "bytes": 2489,
+    "sha256": "da73e83c4bf0488018da39d56712f8152b0fb05ef849a2c3b4f0051371d7d6e7"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-390px-phone/responsive-geometry.json",
+    "bytes": 27761,
+    "sha256": "b6247eb9c7f53ab6d7d3b22b7d512fe7fcc835f417bd6ea2fa5af414f4edfbca"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-768px-phone/attachments/Actual-responsive-geometry-85f3c84b2c21c201a0477fadf55c3f85d2290fa6.json",
+    "bytes": 35175,
+    "sha256": "6dc7664ec52a042191f6c6321722588085a9f407f59e5b1204add5e479f7f882"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-768px-phone/dashboard-geometry.json",
+    "bytes": 2545,
+    "sha256": "2e045b44b1f887e9dd19b221b9c919e58ea0aea4c7712c57ee60b47b44a1f3d8"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-768px-phone/responsive-geometry.json",
+    "bytes": 35175,
+    "sha256": "6dc7664ec52a042191f6c6321722588085a9f407f59e5b1204add5e479f7f882"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-900px-phone/attachments/Actual-responsive-geometry-976ee92e3df7d0c5a755f3c448667211d12db60d.json",
+    "bytes": 35176,
+    "sha256": "b28e15f0f693fa6f341161bf5a6e6453e0d2eb23ec10eb11701472ffffc0f075"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-900px-phone/dashboard-geometry.json",
+    "bytes": 2539,
+    "sha256": "c3f8dd65dde7df26c51590052e13b66ed11166eb7070328042f3a7d1faf48347"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-en-900px-phone/responsive-geometry.json",
+    "bytes": 35176,
+    "sha256": "b28e15f0f693fa6f341161bf5a6e6453e0d2eb23ec10eb11701472ffffc0f075"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1024px-phone/attachments/Actual-responsive-geometry-30ad48a8d27f2b78d567e0fbe497709685a334c0.json",
+    "bytes": 35274,
+    "sha256": "61f310e4ce0244e7651e11e9ea02bce81c85b4f086dc1abf5b2313a877299166"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1024px-phone/dashboard-geometry.json",
+    "bytes": 2552,
+    "sha256": "c21c8d4f7231ebb459b54000ab5fd4b95d13c11e92832357c0d62fd453a90e88"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1024px-phone/responsive-geometry.json",
+    "bytes": 35274,
+    "sha256": "61f310e4ce0244e7651e11e9ea02bce81c85b4f086dc1abf5b2313a877299166"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1180px-phone/attachments/Actual-responsive-geometry-82be70c01a48bc33480a54f3446d38bcfff78757.json",
+    "bytes": 35313,
+    "sha256": "4be25a8b828b04cb6c0b9f39e22fb83347a1bdce8769dfcf1bbba1b395d48111"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1180px-phone/dashboard-geometry.json",
+    "bytes": 2586,
+    "sha256": "b8c8a380e7abc28441b148257e56cdfe590a6078c9992e3653ec055afb651694"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1180px-phone/responsive-geometry.json",
+    "bytes": 35313,
+    "sha256": "4be25a8b828b04cb6c0b9f39e22fb83347a1bdce8769dfcf1bbba1b395d48111"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1280px-phone/attachments/Actual-responsive-geometry-8c1737563cf8b2bd77b92c675d144167c0161492.json",
+    "bytes": 34905,
+    "sha256": "90f7ac8ed868e96aaa3585e319ab6a7b4424feee2c2b8f5f9d34ecb41cfda37c"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1280px-phone/dashboard-geometry.json",
+    "bytes": 2558,
+    "sha256": "df7d1d369731c1c5e9ad1b9616c618d7ab672f4c53a32abf3c9b610f18e32227"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1280px-phone/responsive-geometry.json",
+    "bytes": 34905,
+    "sha256": "90f7ac8ed868e96aaa3585e319ab6a7b4424feee2c2b8f5f9d34ecb41cfda37c"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1440px-phone/attachments/Actual-responsive-geometry-dc51097b52cc1a9c25605c6a74b79eaba1921ff6.json",
+    "bytes": 34997,
+    "sha256": "680f9a6d02d4ec05d874c3862ec04a686d5db7d7418abcb90f173d850714ff75"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1440px-phone/dashboard-geometry.json",
+    "bytes": 2544,
+    "sha256": "abc7281271ac6b5572e5bce9afd209a1a9bf18a99a992daabd8c72136bf777f9"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1440px-phone/responsive-geometry.json",
+    "bytes": 34997,
+    "sha256": "680f9a6d02d4ec05d874c3862ec04a686d5db7d7418abcb90f173d850714ff75"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1920px-phone/attachments/Actual-responsive-geometry-55fdd5db75c4fee7cd071a22268bf4d8456afd9d.json",
+    "bytes": 35003,
+    "sha256": "0f3686502c2f41c0f87dc773ab1d98f1fec991cd1a22eea67b19d62603092d77"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1920px-phone/dashboard-geometry.json",
+    "bytes": 2566,
+    "sha256": "4210793be38ab7d880bcba41e35562353378dec6e1cedf223a0c2eca174acbfe"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-1920px-phone/responsive-geometry.json",
+    "bytes": 35003,
+    "sha256": "0f3686502c2f41c0f87dc773ab1d98f1fec991cd1a22eea67b19d62603092d77"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-390px-phone/attachments/Actual-responsive-geometry-06f89be08e7280c40fbf359db883036ac6800a58.json",
+    "bytes": 27836,
+    "sha256": "954d495d8a31ab31a6db9cecd1c4cf70f0c8c4c2cca68d68fd6637c0be95079a"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-390px-phone/dashboard-geometry.json",
+    "bytes": 2489,
+    "sha256": "8995946c640f8a1c4a44acc0f21a1184e8d769a0b374063e7089d3b00dbcb866"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-390px-phone/responsive-geometry.json",
+    "bytes": 27836,
+    "sha256": "954d495d8a31ab31a6db9cecd1c4cf70f0c8c4c2cca68d68fd6637c0be95079a"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-768px-phone/attachments/Actual-responsive-geometry-6a2ea53fd8c3e50f2803baad58e7b83b39dfa5c2.json",
+    "bytes": 35250,
+    "sha256": "1c5f6a0da94c5c0fd8ae5117614203d4966ad6077c1a1e96d82571de1efddc59"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-768px-phone/dashboard-geometry.json",
+    "bytes": 2538,
+    "sha256": "a00f8b7b03a126a5f27e263fa3e26a4f3cd634068f71d07a420f6cfd360b5d75"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-768px-phone/responsive-geometry.json",
+    "bytes": 35250,
+    "sha256": "1c5f6a0da94c5c0fd8ae5117614203d4966ad6077c1a1e96d82571de1efddc59"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-900px-phone/attachments/Actual-responsive-geometry-33dcd02ff4edac336fa23c77b75d9cd0f1e1f454.json",
+    "bytes": 35251,
+    "sha256": "ff7f1f91e1173cadb50a8805449dafb1acdd511f232a78e6e2b0bf2b72e7acdd"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-900px-phone/dashboard-geometry.json",
+    "bytes": 2532,
+    "sha256": "fad0811bdda97dcf79378f7aa1be6b5f0384ed4fcf71be5fb073c23820016fe4"
+  },
+  {
+    "path": "native-output/c6-responsive-C7-adaptive-tables-and-shell-fa-900px-phone/responsive-geometry.json",
+    "bytes": 35251,
+    "sha256": "ff7f1f91e1173cadb50a8805449dafb1acdd511f232a78e6e2b0bf2b72e7acdd"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-31118-yph-control-guards-fa-900px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-23b6cd07bf990700dcf7cfabf88511df800d2f55.json",
+    "bytes": 212018,
+    "sha256": "85931baf5914d11d448551de69e65b66723143e5a91ec421b3741f92037f6beb"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-31118-yph-control-guards-fa-900px-phone/c8-all-pages-layout.json",
+    "bytes": 212018,
+    "sha256": "85931baf5914d11d448551de69e65b66723143e5a91ec421b3741f92037f6beb"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-77f57-ph-control-guards-en-1440px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-707a30cc85982d885f80b38bd981095e1ccdabb6.json",
+    "bytes": 210015,
+    "sha256": "a4647372c57bb38dfe241141980f2f7292e82addbfea934998c3b34fadf7a247"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-77f57-ph-control-guards-en-1440px-phone/c8-all-pages-layout.json",
+    "bytes": 210015,
+    "sha256": "a4647372c57bb38dfe241141980f2f7292e82addbfea934998c3b34fadf7a247"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-90b7e-yph-control-guards-en-390px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-613aeb5333c0e609613c3be685a9755693e73ca6.json",
+    "bytes": 232501,
+    "sha256": "c233470e23c35146ce6be94f632fad64f5a2c5f9cf65ef72f889bbd4d6e0151b"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-90b7e-yph-control-guards-en-390px-phone/c8-all-pages-layout.json",
+    "bytes": 232501,
+    "sha256": "c233470e23c35146ce6be94f632fad64f5a2c5f9cf65ef72f889bbd4d6e0151b"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-a88f7-ph-control-guards-fa-1440px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-9476404ebfa150994f9e0c8305a4a28b7c0682d2.json",
+    "bytes": 213732,
+    "sha256": "450ca931476b7b6efde02f65e5335566b48312aad126ee129f3c59a2d3e32755"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-a88f7-ph-control-guards-fa-1440px-phone/c8-all-pages-layout.json",
+    "bytes": 213732,
+    "sha256": "450ca931476b7b6efde02f65e5335566b48312aad126ee129f3c59a2d3e32755"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-e2ded-yph-control-guards-fa-390px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-5614ef87032eabfad87c992554fd60bde6226fe4.json",
+    "bytes": 236290,
+    "sha256": "9941bfd8b02e715acde428053c9a995a4ff40376e5042a9644f4cda7edc610be"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-e2ded-yph-control-guards-fa-390px-phone/c8-all-pages-layout.json",
+    "bytes": 236290,
+    "sha256": "9941bfd8b02e715acde428053c9a995a4ff40376e5042a9644f4cda7edc610be"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-f0e76-yph-control-guards-en-900px-phone/attachments/C8-all-page-actual-containment-and-unchanged-glyph-control-guards-0c631ae43fede93c87bb4ae659ee66acfd0d6f0c.json",
+    "bytes": 209202,
+    "sha256": "1fadbb7e8ef0dd26c71cd1daae979442f4a661b8e775829868733089e8eb6c3e"
+  },
+  {
+    "path": "native-output/c8-layout-proof-C8-every-p-f0e76-yph-control-guards-en-900px-phone/c8-all-pages-layout.json",
+    "bytes": 209202,
+    "sha256": "1fadbb7e8ef0dd26c71cd1daae979442f4a661b8e775829868733089e8eb6c3e"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-59225-nvoice-money-and-source-en--phone/error-context.md",
+    "bytes": 10927,
+    "sha256": "17f92be64302f99d30e2adc5a3ea4ae3a0d36a178428462441a73d835b534718"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-59225-nvoice-money-and-source-en--phone/trace.zip",
+    "bytes": 3998187,
+    "sha256": "7a4bfd9796e307733727032eaf32d958b3dd029237c0a1e27c75dd42bd8acd16"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/dashboard-en-390.png",
+    "bytes": 1423232,
+    "sha256": "4d386f0a36cc860e8b3b1981879d15adbf575d9fc78bad47da0ea50e890a529b"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/labels-en-390.png",
+    "bytes": 584656,
+    "sha256": "a3dc62a67ab277ff9544e67b3b93162c6f3ad07bab385b23ee4e361d9e37aa3b"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/payables-en-390.png",
+    "bytes": 216039,
+    "sha256": "d7ecdf1c1098bab53e50f4f65bf0855b5a7dfc0e19b00b89d370da06a2248656"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/products-en-390.png",
+    "bytes": 743098,
+    "sha256": "510ee17681d7b9bcd51fd16c4d02950001471022542102cc1e3db58d4fcc4a16"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/received-en-390.png",
+    "bytes": 849361,
+    "sha256": "3fb9fe209777c7befd29d22fac3e9cff2bcab1b5022d288708f80f516940af90"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/returns-en-390.png",
+    "bytes": 156290,
+    "sha256": "94c130f47295e9635af2b33760b6d1f2cb73d558783b01a8a063d92e2f8b6554"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-en-phone/suppliers-en-390.png",
+    "bytes": 205855,
+    "sha256": "134f3e83b263333206f235e28d5667c920338faa6f34e7abc3ebac37bcd35ad7"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/dashboard-fa-390.png",
+    "bytes": 1388352,
+    "sha256": "f8fe872fe9d4113a85c3cfc3b6e5b1475f584e375b1ad9313eec76fb64d1faa9"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/labels-fa-390.png",
+    "bytes": 588074,
+    "sha256": "94aff3a7463bc0ea58e6f0736a7379cbc98a6cbabdf5cdae14dd4ea887d7cc9f"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/payables-fa-390.png",
+    "bytes": 225290,
+    "sha256": "d3fa07964bbcdb2b11830ece25f76a24602f2333d516f43084143d2e07ec80d0"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/products-fa-390.png",
+    "bytes": 735352,
+    "sha256": "1336541e06c7bfd3dfcf0d33acbd9f0deade4ea6869855b6952eacd21829e508"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/received-fa-390.png",
+    "bytes": 854729,
+    "sha256": "4e71d976018bb233a60f3ec98444c456e90370dcf106f5e4b51ac03016405abc"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/returns-fa-390.png",
+    "bytes": 163161,
+    "sha256": "71d7ddb32fdcd5e93b7deaffb0b61906f1431f5b46cf16d9b38ead9eb4c0b11f"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-390-fa-phone/suppliers-fa-390.png",
+    "bytes": 214654,
+    "sha256": "5a951103440e3003177f9648bd990d9ee7671e590b0a54d8401d8c5c64291764"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/dashboard-en-430.png",
+    "bytes": 1423811,
+    "sha256": "a0f34799e83962d2826a61ddb744b4d50d22a31a2908b42b5e1d4e8852998ac2"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/labels-en-430.png",
+    "bytes": 581549,
+    "sha256": "98c6f0458399c8231efd9c1a38cfc293fa2d1a7155735c65f324eb08da602555"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/payables-en-430.png",
+    "bytes": 217861,
+    "sha256": "bb87f927198696fb12d06f36e59887d463c221597c49efec441739e08b136ce7"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/products-en-430.png",
+    "bytes": 737794,
+    "sha256": "19f96f8a19e71646dbbbbe17af9fb1c82ea423a761977d903a5cd7aa2c20fedc"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/received-en-430.png",
+    "bytes": 846544,
+    "sha256": "caae08bedfdfdd9c0ca50bd2b1c17880ba93e8709319a02549e3af533530e047"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/returns-en-430.png",
+    "bytes": 155858,
+    "sha256": "673f67f78ccf0b52466578a23a4d9bb579b11dcb8b7d184f087e8df785d0bbf2"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-en-phone/suppliers-en-430.png",
+    "bytes": 201753,
+    "sha256": "e84465f79517db5b7964ff05fea23440ce558dbc6cbdaba854d906097890ff2e"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/dashboard-fa-430.png",
+    "bytes": 1395815,
+    "sha256": "d8b2cd6668eb510e5d95ea344ab79b6068070b989f87732ffc2e408eaa2aaa4a"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/labels-fa-430.png",
+    "bytes": 583146,
+    "sha256": "eb19fc5703e011a3d9132541350ebe14305ed9af62be9a66444a6358c41e9edd"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/payables-fa-430.png",
+    "bytes": 226928,
+    "sha256": "af98744187887848a272345ed20c63463dc0bf8107066b71d8073df310da4d6b"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/products-fa-430.png",
+    "bytes": 737856,
+    "sha256": "584fcc4526de88281c8825d2ca570ee667199dfda6132fb8221f229cce2cf086"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/received-fa-430.png",
+    "bytes": 853612,
+    "sha256": "0408e20a64c18dd697d50b2d7f599266619ea8d76e3eb615405d6d508f4ece24"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/returns-fa-430.png",
+    "bytes": 161749,
+    "sha256": "133e77762493ca1e23e2d8d31c19d9ebc57cf378c2f268a280a3cebb1e1539e4"
+  },
+  {
+    "path": "native-output/e3-phones-E3-compact-phone-lists-430-fa-phone/suppliers-fa-430.png",
+    "bytes": 216411,
+    "sha256": "488cf1607fba305d76e5edac5fe21cf2a338acd47710b75f580467c74b41efe1"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa-phone/change-price-fa-430.png",
+    "bytes": 244241,
+    "sha256": "0bf1f0a0b630191d1ced8bd204e896458c28f068fc7aa3437632f17980533f20"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa-phone/pending-tasks-fa-430.png",
+    "bytes": 150817,
+    "sha256": "362f2707fbd5bc57658ab9c036bec4ca990245adca1c96b7c3dce9166af7fde8"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa-phone/sale-cost-alert-fa-430.png",
+    "bytes": 302033,
+    "sha256": "c9ce23aa57f70246883e41d3501e59ff667e85f375832c92d4f3e8a94d2392bb"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa-phone/store-progress-fa-430.png",
+    "bytes": 126365,
+    "sha256": "9e6c6b8f33435fce52637464a8c974bd38da255f760bb27a9fa0f68aeb3f2e7f"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa-phone/task-checkboxes-fa-430.png",
+    "bytes": 258507,
+    "sha256": "4e6c0fc2a487150748341fc16fad420f90db00aad92cadfc910e0158336c9793"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa-phone/change-price-fa-390.png",
+    "bytes": 242225,
+    "sha256": "2b47124481fa819e5cdfb90ee16f54dc843151d301d3c9241b95cf47305ad95d"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa-phone/pending-tasks-fa-390.png",
+    "bytes": 150656,
+    "sha256": "70d59e4ca6d483644db9c64af4c76bd090b5d2472cd8fec8463f5219e7d2c33c"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa-phone/sale-cost-alert-fa-390.png",
+    "bytes": 306815,
+    "sha256": "21883daf6cab588aa052cbe2bd1b19521bf206a8f253df3a6ddfb87ef01ac18d"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa-phone/store-progress-fa-390.png",
+    "bytes": 126834,
+    "sha256": "93e74b91602eb1e797bb6d07c3f4eb1476b5d6693972db7e632e07fac4a0ad98"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa-phone/task-checkboxes-fa-390.png",
+    "bytes": 256578,
+    "sha256": "c117483a2b9821d165b8fadedcd487c06195a06a951eb0859c4b62058baf5557"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en-phone/change-price-en-390.png",
+    "bytes": 229868,
+    "sha256": "b2696faf664acb1a14a4beed5a95e9b6e5351327603bd9dfca4f41484ba48323"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en-phone/pending-tasks-en-390.png",
+    "bytes": 142403,
+    "sha256": "510f8ce19f7e13dbabf1a5e0f53f0ccd114d0d8994f4f68219ba843ad0ce6b1c"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en-phone/sale-cost-alert-en-390.png",
+    "bytes": 297684,
+    "sha256": "01041020ce9cdc7535ef77d02360e30612232e7308deb94c5c668836ae6b12e1"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en-phone/store-progress-en-390.png",
+    "bytes": 117939,
+    "sha256": "f0656d73001145da68bd02a3a2d0c173802397d3551495eb918af776fa72c5e5"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en-phone/task-checkboxes-en-390.png",
+    "bytes": 241667,
+    "sha256": "e28b77ec66f96554056f7ec77ef1c055c728dfe54fca6404b422a4ae47e1b414"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en-phone/change-price-en-430.png",
+    "bytes": 233054,
+    "sha256": "d020ad03573492c0c916c9853673fbd11888f7b2b22dc67ac0485a382014e1fd"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en-phone/pending-tasks-en-430.png",
+    "bytes": 143141,
+    "sha256": "3660b62315af640781f974ba3cd3270aed03ef591af20814ad3f61076d644703"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en-phone/sale-cost-alert-en-430.png",
+    "bytes": 296932,
+    "sha256": "96922105e52a0575592b6e655f403de103c042154075f862220fd59661ca2c30"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en-phone/store-progress-en-430.png",
+    "bytes": 118921,
+    "sha256": "98231ec26ec1362ae8df7e3625664908446d8fb965d73ad267784f70d35b7a4c"
+  },
+  {
+    "path": "native-output/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en-phone/task-checkboxes-en-430.png",
+    "bytes": 243239,
+    "sha256": "a7d646be4e745cb90523755af8505e605975b64602fea78fe1614fbc28be124e"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/add-person-en-390.png",
+    "bytes": 117548,
+    "sha256": "8e34ad3c55c58eef1b0745ee58a51d98aa79400814c10b5fe4ad4e1fb26084a4"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/edit-person-en-390.png",
+    "bytes": 152169,
+    "sha256": "a1bd4afb130a857ae95d088ecf8f91760d462b96ab68d3b7115b47176874b434"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/location-dashboard-en-390.png",
+    "bytes": 308453,
+    "sha256": "7e6dc0df9e3ed5a19b32a011c72f95b4faa38c2e1f29d181ad96a6661fd1b45b"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/location-picker-en-390.png",
+    "bytes": 329321,
+    "sha256": "e1be5faee2eb4b245d83ca0c21b7d99acb911cb19b08a1d9267127811bf6bb29"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/notification-bell-en-390.png",
+    "bytes": 326693,
+    "sha256": "e2bb92f424e4268e2c2099b7081d75222a35e1dab11cbce69e032e82de43b240"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/price-updates-en-390.png",
+    "bytes": 122594,
+    "sha256": "b89c1abad9719f7c296e69f743368e8964df0b6d52b56c2537a958c87daf8058"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en-phone/settings-group-people-en-390.png",
+    "bytes": 394647,
+    "sha256": "66a8a9b808a1d609c57c21c0662f5f12b8ccd197cfb6293dbe6032fb3a5bf451"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/add-person-fa-390.png",
+    "bytes": 109529,
+    "sha256": "c82e550ed1e13320c07aeb07bb8159e143adf06ac4b9cac25fe3cb7243d26245"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/edit-person-fa-390.png",
+    "bytes": 146692,
+    "sha256": "32dbd58e52f7933b432631dbf5dbb65e31d75278797da3ea5d954e138597d249"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/location-dashboard-fa-390.png",
+    "bytes": 363394,
+    "sha256": "f4b87d7d8646fc383035b0d4871f7918689257afef43888c678e78f2e18a35f1"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/location-picker-fa-390.png",
+    "bytes": 386002,
+    "sha256": "0d31e00f62f44fafcd8f40427abcbcbbebd280508189def1cbf67befe0d80662"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/notification-bell-fa-390.png",
+    "bytes": 383103,
+    "sha256": "651523ef3f651f79339b760d03e60d68d790dda75a96142bdb36e8452adf8554"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/price-updates-fa-390.png",
+    "bytes": 132403,
+    "sha256": "510cd07aa2c7bbe4707b1097d838d33c627df1f20788659fbea7287a6b2667e9"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa-phone/settings-group-people-fa-390.png",
+    "bytes": 383336,
+    "sha256": "130cba9fa6529cc20455f0b96566fd68fce862c90fe29b4800d74fb2a17698ff"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/add-person-en-430.png",
+    "bytes": 114844,
+    "sha256": "e3098d962f5c5703249622b13b58412797c1ca0247580dabf21654d3f023bc26"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/edit-person-en-430.png",
+    "bytes": 149223,
+    "sha256": "14abf1dd12b64f8e83ec058f3de6bb3d84a0161b320e1ccdd2f996afb48ad274"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/location-dashboard-en-430.png",
+    "bytes": 308703,
+    "sha256": "fcbeabc2f36c5f652067a909fcb3247cda8539c61c2960371e01f6f4e862d10d"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/location-picker-en-430.png",
+    "bytes": 329618,
+    "sha256": "95117c45ed2756a2f32ccb5fee39769d9a42fcbb5a021edebf8e6417164d9618"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/notification-bell-en-430.png",
+    "bytes": 327147,
+    "sha256": "2a1785c404e8bb0aa473026d02e6af3d05a1958ea4c14672727388c4f26b07b7"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/price-updates-en-430.png",
+    "bytes": 123323,
+    "sha256": "686c0a0bdcf843927abd6240f038ca93b5da479d78802c94348c09b9aaeba6ab"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en-phone/settings-group-people-en-430.png",
+    "bytes": 394976,
+    "sha256": "1c391731c12173cbd5da9b46a124c7832b07d3b37115e4ee85318c9c165fe511"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/add-person-fa-430.png",
+    "bytes": 109159,
+    "sha256": "3d2fce21f34e8f9cde7d42ffe835636e7d7d5bd60e984311f59a069eff19714c"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/edit-person-fa-430.png",
+    "bytes": 146808,
+    "sha256": "dc5479bd5a46b90157798d55134f1fb58e304dfff19d8efbd8d7a465f0c8fa09"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/location-dashboard-fa-430.png",
+    "bytes": 364898,
+    "sha256": "b64e0b5ada3285abd5d046fb5db6b94d8c832fd108bc3709e90ed25b5945c6db"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/location-picker-fa-430.png",
+    "bytes": 389066,
+    "sha256": "5163103bbc25c0da0f2c36d5083a7fc79af10174a9ebbdef4fa172b53aed6cb7"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/notification-bell-fa-430.png",
+    "bytes": 384807,
+    "sha256": "b5a071e00e392eb19c775bc941cd47e80af77d77ceb4b162970bcc559c354bc7"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/price-updates-fa-430.png",
+    "bytes": 132736,
+    "sha256": "8e15574db08d6a9971bd2728296f0d2ef3e586deb37d9b3cf472455dd9b6c265"
+  },
+  {
+    "path": "native-output/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa-phone/settings-group-people-fa-430.png",
+    "bytes": 386292,
+    "sha256": "3dbf85f7c8eda71fcf33565c5adfa3613b9804a65f559b0f4729eeff50c4021d"
+  },
+  {
+    "path": "native-output/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect-phone/app-phone-dark.png",
+    "bytes": 195220,
+    "sha256": "07ae9752c86b77cdaff2424349c197e36f6669f76fc4594f1565d6ead2ce0129"
+  },
+  {
+    "path": "native-output/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect-phone/offline-english.png",
+    "bytes": 65600,
+    "sha256": "0dfa0edb6d6087a69297895b22559afd959d56b8913680013a676ed2f098a3bf"
+  },
+  {
+    "path": "native-output/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect-phone/offline-persian.png",
+    "bytes": 71742,
+    "sha256": "6805d67f173eeb859092576c20a022976eaf0f310c3bf65b5ed2617e71651fa7"
+  },
+  {
+    "path": "native-output/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/attachments/Two-real-PDF-pages-and-unchanged-source-after-reload-download-c9e03f3a7a35776838603709a2f8d4d2b4644092.json",
+    "bytes": 632,
+    "sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9"
+  },
+  {
+    "path": "native-output/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/two-page-pdf-bytes-proof.json",
+    "bytes": 632,
+    "sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-en-dark-phone/attachments/Real-composited-text-colors-and-states-9d1350fdd5ecfa90f130f4ba3abba96cc7f09905.json",
+    "bytes": 2195519,
+    "sha256": "0c25703359605dcf76e2d9c9280b24e9ddca894202d72060a427d0187d79a069"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-en-dark-phone/composited-contrast.json",
+    "bytes": 2195519,
+    "sha256": "0c25703359605dcf76e2d9c9280b24e9ddca894202d72060a427d0187d79a069"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-en-light-phone/attachments/Real-composited-text-colors-and-states-b4828fd0a3a2c1c4fe54dae3088f2309d0e2c57c.json",
+    "bytes": 2188444,
+    "sha256": "a883cd5ef445d6240818f34bb0dcfc06b27cc0db66798eb2f931330dc8af7c63"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-en-light-phone/composited-contrast.json",
+    "bytes": 2188444,
+    "sha256": "a883cd5ef445d6240818f34bb0dcfc06b27cc0db66798eb2f931330dc8af7c63"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-fa-dark-phone/attachments/Real-composited-text-colors-and-states-6831088f6ab50a6d6ceea17e735a00401ea089a6.json",
+    "bytes": 2208988,
+    "sha256": "290427cb52d54dc774e73b62b111d0f62611fd4afa1b529bd455aad2e236a30c"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-fa-dark-phone/composited-contrast.json",
+    "bytes": 2208988,
+    "sha256": "290427cb52d54dc774e73b62b111d0f62611fd4afa1b529bd455aad2e236a30c"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-fa-light-phone/attachments/Real-composited-text-colors-and-states-943f78aaa80177d4ebf5df5c29514b2c60536a4c.json",
+    "bytes": 2201980,
+    "sha256": "6c5691c5f86ff85a2fdf98f678f94c1731f443ddfe9cb0c397bfe6f2ad734195"
+  },
+  {
+    "path": "native-output/klead-contrast-Klead-composited-text-contrast-fa-light-phone/composited-contrast.json",
+    "bytes": 2201980,
+    "sha256": "6c5691c5f86ff85a2fdf98f678f94c1731f443ddfe9cb0c397bfe6f2ad734195"
+  },
+  {
+    "path": "native-output/labels-c8-ink-promo-label--0e947-ark-before-and-during-print-phone/preview-full.png",
+    "bytes": 595320,
+    "sha256": "eb993213bdd39d2c30f0e7e443edd58e4257269dbf45eb4e414888bb3a0daa21"
+  },
+  {
+    "path": "native-output/labels-c8-ink-promo-label--3b5cd-ght-before-and-during-print-phone/preview-full.png",
+    "bytes": 587812,
+    "sha256": "a1e418c29a5a74625df7012d9096f4009b3fa3daf7c1a138b97411d9302f4681"
+  },
+  {
+    "path": "native-output/labels-c8-ink-promo-label--d5c85-ght-before-and-during-print-phone/preview-full.png",
+    "bytes": 604000,
+    "sha256": "82ba416e0fc5de7dabba673915e35a2ed801db1af343590d9cb3980e4cfd878c"
+  },
+  {
+    "path": "native-output/labels-c8-ink-promo-label--f3a89-ark-before-and-during-print-phone/preview-full.png",
+    "bytes": 276821,
+    "sha256": "4d2afff60283434aae7f667512dcf2beb003805b0ed8d1d1a58e368a1f65ae68"
+  },
+  {
+    "path": "native-output/labels-c8-ink-regular-labe-05df7-ght-before-and-during-print-phone/preview-full.png",
+    "bytes": 560768,
+    "sha256": "c7a3061d928525ba1c60a31e3d8ffd05cadbc2346cf633cf52b540f53224d1f1"
+  },
+  {
+    "path": "native-output/labels-c8-ink-regular-labe-1d53f-ark-before-and-during-print-phone/preview-full.png",
+    "bytes": 553112,
+    "sha256": "01d861a86bfe4a8ee38787ef4f06ba6de53fc3ab41f8763ffce5fa6d549cd4ad"
+  },
+  {
+    "path": "native-output/labels-c8-ink-regular-labe-87cf9-ght-before-and-during-print-phone/preview-full.png",
+    "bytes": 544525,
+    "sha256": "97e8e76556bc906e105f3dbd9b5b1b28c01de2e910e1df47aadb14168a5a6d75"
+  },
+  {
+    "path": "native-output/labels-c8-ink-regular-labe-ffa93-ark-before-and-during-print-phone/preview-full.png",
+    "bytes": 267378,
+    "sha256": "233ef7123f0b0f26b188a3fff167142dfff693cd32bbbeef46209a1de81c94c3"
+  },
+  {
+    "path": "native-output/sha256-lan-c6-C6-nonsecure-77d1e--bytes-without-SubtleCrypto-phone/attachments/HTTP-LAN-exact-upload-and-migration-proof-80e5e9c13f8f69d4559d8b72e10e1cd7e7abd3a8.json",
+    "bytes": 818,
+    "sha256": "72a36dfa546c4ebf5e0a90c7730bf865253411a8d37996917ec55fc2f84b9bc2"
+  },
+  {
+    "path": "native-output/sha256-lan-c6-C6-nonsecure-77d1e--bytes-without-SubtleCrypto-phone/nonsecure-lan-exact-bytes-proof.json",
+    "bytes": 818,
+    "sha256": "72a36dfa546c4ebf5e0a90c7730bf865253411a8d37996917ec55fc2f84b9bc2"
+  },
+  {
+    "path": "native-output/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-phone/attachments/20-real-3MB-photos-and-exact-source-retention-6ef707b66c0a9c04ab4427e956132621dc75cb78.json",
+    "bytes": 9140,
+    "sha256": "84592bb3097fc6539f5f1a8f9e0c6e38153906ae9fca760b3760e6a4c96233fd"
+  },
+  {
+    "path": "native-output/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-phone/twenty-real-photos-proof.json",
+    "bytes": 9140,
+    "sha256": "84592bb3097fc6539f5f1a8f9e0c6e38153906ae9fca760b3760e6a4c96233fd"
+  }
+]

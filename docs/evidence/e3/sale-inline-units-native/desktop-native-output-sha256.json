@@ -1,0 +1,77 @@
+[
+  {
+    "path": "native-output/.last-run.json",
+    "bytes": 45,
+    "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-59225-nvoice-money-and-source-en--desktop/trace.zip",
+    "bytes": 4487426,
+    "sha256": "abae0cc2647f2797699a702fdcbe3055a231f644baa03c0ae935a69509cac34d"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-f695a-nvoice-money-and-source-fa--desktop/trace.zip",
+    "bytes": 4399797,
+    "sha256": "9ca932a951160d9d9ffad2cc38b8f6e805feb4578d56697fa7bfaa4020285b87"
+  },
+  {
+    "path": "native-output/c8-sales-C8-regular-price--3b2c9-labels-until-actual-End-fa--desktop/trace.zip",
+    "bytes": 3663480,
+    "sha256": "0206f10bbdee59833e4beb4f64a00f36571723e6f07bdf0f990524456890c981"
+  },
+  {
+    "path": "native-output/c8-sales-C8-regular-price--fa64f-labels-until-actual-End-en--desktop/trace.zip",
+    "bytes": 3335361,
+    "sha256": "8e721f96782a4ff68721bcfaeb0f8a01d5f546b0449db006b8568902a3658add"
+  },
+  {
+    "path": "native-output/c8-sales-C8-sale-defaults--8c7df-nts-are-real-Save-gates-fa--desktop/trace.zip",
+    "bytes": 3944042,
+    "sha256": "b66c2ee3ce2c6a76072648358eeb1a3213e93e08b60a1d7e16cab4539b7fb98e"
+  },
+  {
+    "path": "native-output/c8-sales-C8-sale-defaults--8e7fc-nts-are-real-Save-gates-en--desktop/trace.zip",
+    "bytes": 3470603,
+    "sha256": "bcf9a8c528534bdd6ee397bf9c5987cd470e4cbe2545f1e3d222461d9f8ebbe4"
+  },
+  {
+    "path": "native-output/c8-sales-C8-worker-request-80798-owledgment-and-approval-fa--desktop/trace.zip",
+    "bytes": 3360616,
+    "sha256": "060c2c78797f0dd8250cb8f87a28de98b162a87e29c5b8d0231ff04a260ce602"
+  },
+  {
+    "path": "native-output/c8-sales-C8-worker-request-a4116-owledgment-and-approval-en--desktop/trace.zip",
+    "bytes": 3020521,
+    "sha256": "a8df929392516973ebde17eb899a23f0f81f94da05147b775dd0465394db0be1"
+  },
+  {
+    "path": "native-output/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-desktop/trace.zip",
+    "bytes": 707131,
+    "sha256": "d31dc44f53ae6c849791f43a0a8736cd2209b55a8299733b3287510f10dae4c3"
+  },
+  {
+    "path": "native-output/layout-proof-c6-ordinary-f-309e4--unmarked-split-is-detected-desktop/trace.zip",
+    "bytes": 785743,
+    "sha256": "f052804a40e31351f23c802d5829117c1a5fa394930f235f7bb9fad367d1d3b5"
+  },
+  {
+    "path": "native-output/layout-proof-c6-product-na-ac4f4--fa-and-a-split-is-detected-desktop/trace.zip",
+    "bytes": 637071,
+    "sha256": "56ed25ce45d8a1241603e074574f18436c286b585df2a91bef73e094316b6bc8"
+  },
+  {
+    "path": "native-output/layout-proof-c6-product-na-faeb8--en-and-a-split-is-detected-desktop/trace.zip",
+    "bytes": 605459,
+    "sha256": "665ab988bba528d57029dc821ab175ed2c33208138ba3e930aafe94d7aac138e"
+  },
+  {
+    "path": "native-output/layout-proof-c6-rendered-e-cb384-ual-lines-from-real-overlap-desktop/trace.zip",
+    "bytes": 697448,
+    "sha256": "3c2a6debd999ed33060eccd4bae49fe608abd4b9dc04e34d35e4c19139a627ea"
+  },
+  {
+    "path": "native-output/layout-proof-c6-rendered-f-5dcc4-ual-lines-from-real-overlap-desktop/trace.zip",
+    "bytes": 714266,
+    "sha256": "38892175123a52d97ba4a27b62c63c38524a389f5b248c67728c681f9c39b410"
+  }
+]

@@ -1,0 +1,240 @@
+{
+  "commit": "431bdba29e25a3b53e3acc5d7ef8ad186150ab2b",
+  "source_unchanged": true,
+  "current_tracked_inputs_match_at_packaging": true,
+  "application": {
+    "counts": {
+      "numTotalTests": 1430,
+      "numPassedTests": 1430,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "files": 142,
+    "name": "app",
+    "command": [
+      "node",
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/tmp/e3-sale-unit-unchanged-diagnostic/observer.mjs",
+      "--outputFile=/tmp/e3-sale-unit-unchanged-diagnostic/app.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 236.62128162384033,
+    "source_unchanged": true,
+    "global_errors": []
+  },
+  "sdk": {
+    "counts": {
+      "numTotalTests": 75,
+      "numPassedTests": 75,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numFailedTestSuites": 0,
+      "success": true
+    },
+    "name": "sdk",
+    "command": [
+      "npm",
+      "run",
+      "test:sdk",
+      "--",
+      "--maxWorkers=2",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile=/tmp/e3-sale-unit-unchanged-diagnostic/sdk.json"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 2.2746169567108154,
+    "source_unchanged": true
+  },
+  "lint": {
+    "commit": "431bdba29e25a3b53e3acc5d7ef8ad186150ab2b",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 55.53737545013428,
+    "source_unchanged": true
+  },
+  "normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 26.826597929000854,
+    "interrupted": false,
+    "source_unchanged": true,
+    "old_build_reused": false
+  },
+  "pricing_seed_cases": 23,
+  "production_scope": "Only SalesAlerts localized inline product names use existing UnitText, two JSX sites and import. No strings/data/pricing/permissions/globalCSS/controller changes.",
+  "native_scope": "Separate full original f154 replay:769pass/1fail/42intentionalSkip. Subsequent new431 whole-sale/layout-file28case replay is separate, not a fresh whole812 pass.",
+  "limitations": [
+    "Current-source full browser CI remains unresolved: verified exact feature runs hit30minute limit. Proposed90minute workflow edit is unapplied, outside owner path scope.",
+    "No hardware Home Screen/Safari, real printer alignment, register integration or deployment."
+  ],
+  "raw_files": [
+    {
+      "path": "application.json.gz",
+      "sha256": "9b22f583e01fb7c3d4972557e806ec1714f516e6140eab4269a03165ee9681f9",
+      "bytes": 74769,
+      "original_sha256": "881debfa0963dd32683e7ff3406f2552a5a59adde0486d61426ab8a03eb9ff82",
+      "original_bytes": 572685
+    },
+    {
+      "path": "application.log.gz",
+      "sha256": "43923d8a364aaf4ca48fe6ae39a757a279d8cc73937fbfa570141a5337c8e6da",
+      "bytes": 11163,
+      "original_sha256": "3631926b4a32a0694bce699b3227d350d63c6594c23d27bfc38eb23868832c9e",
+      "original_bytes": 33438
+    },
+    {
+      "path": "sdk.json.gz",
+      "sha256": "f4faf776aa7f515ae34616bbb348b11de6081001f95c9b43cf612764668316dc",
+      "bytes": 4540,
+      "original_sha256": "2ca944edbea5c2bfa3fd52d046bd9c1f32caa96d6c5a44cd8cc6a1bfb7d6aed1",
+      "original_bytes": 25876
+    },
+    {
+      "path": "sdk.log.gz",
+      "sha256": "db968c5cd12f49616e2708e561f97857011f31897ec0a1d0521c731f252dc6a4",
+      "bytes": 659,
+      "original_sha256": "fa07930ffc1bea5360962678af1ce77fb34b688d16ebd5c40783a3ee2de671be",
+      "original_bytes": 1265
+    },
+    {
+      "path": "source-pins.json.gz",
+      "sha256": "a229513e1f924facd7e0af29d4b4afcb45c7ab3c95d2b16aaf220e3e1300cdc9",
+      "bytes": 28755,
+      "original_sha256": "35e6f422cfa10c252273020b2d8e2e7aa40ad6253bbbf98d0f0f640b267761be",
+      "original_bytes": 67267
+    },
+    {
+      "path": "app-sdk-execution.json.gz",
+      "sha256": "4475c31d9c5e2f9fa066d7fe6fa5840ed1534f581d33cb786c227cc5d27532f8",
+      "bytes": 344,
+      "original_sha256": "c7ab8cee2f4e9ca7509832034f3ed1f6f223f5fd1485234947bd219d82ea5e39",
+      "original_bytes": 942
+    },
+    {
+      "path": "application-global-errors.json.gz",
+      "sha256": "107b36761718636a8c1f64a1c2ff267cfcbba8ca59b3cd2d0a303fca81899068",
+      "bytes": 132,
+      "original_sha256": "655ce234a5f5829d6600017d75d88eedb48e481e610b01a11cd50d9fa6b8c48b",
+      "original_bytes": 174
+    },
+    {
+      "path": "application-error-observer.mjs.gz",
+      "sha256": "7bbd6e3c97ca117433782747909239e35e79e171d185c4d8dfd23dc75e2b8b59",
+      "bytes": 440,
+      "original_sha256": "c9c5123a594a0e3dc92a085221093bae65201e1d8079357326027e58754ea5a1",
+      "original_bytes": 688
+    },
+    {
+      "path": "lint.log.gz",
+      "sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "bytes": 253,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+      "original_bytes": 369
+    },
+    {
+      "path": "lint-execution.json.gz",
+      "sha256": "144c3ed082f3255f20e787383a61f4304e56a9a7eabea28e8b364a544c8fb013",
+      "bytes": 163,
+      "original_sha256": "c64b63d7c490ba8276bd362a1fc32010d29ef481771338757eb4b4788c4f4628",
+      "original_bytes": 197
+    },
+    {
+      "path": "normal-build.log.gz",
+      "sha256": "08a66377e45a06663c5310b556e3c1233a2900f2686ae5df4aac37f8752a9418",
+      "bytes": 1050,
+      "original_sha256": "2cee19caf5c82dbd85dcc3cfd25c5b729f2d3998b23de6ecc161acfa8d68a193",
+      "original_bytes": 2902
+    },
+    {
+      "path": "normal-build-execution.json.gz",
+      "sha256": "c64ff67ef69af8b9b2fbb6c1aba11395043e64c39e7c83db7c7c2b18801f3ff1",
+      "bytes": 131,
+      "original_sha256": "c72261f3c78c5fdd015bd1061f7ad87d00e9fca798ca9cd591ada2c0e6f847bb",
+      "original_bytes": 139
+    },
+    {
+      "path": "normal-build-source-guard.json.gz",
+      "sha256": "1e63ae206bc06f777a8ef3ac11235365784bfe55c4fce334ce857051244a6d89",
+      "bytes": 121,
+      "original_sha256": "5f4ada3baaf8510f5c1b35d6bf42a395623e948292349b8a4324676e3cc1dd63",
+      "original_bytes": 123
+    },
+    {
+      "path": "app-sdk-driver.py.gz",
+      "sha256": "813f331edf154a90bea5d93c6930dabf31c2bb8ea07936132bdcc69824a644f1",
+      "bytes": 989,
+      "original_sha256": "d4aa741db7f0c43d9a5706a8223f62be19091e7b419dfe86feb29a830eb79e08",
+      "original_bytes": 2040
+    },
+    {
+      "path": "lint-driver.py.gz",
+      "sha256": "b958d397daaa43d153952d42c711682459ffe15a2543dcb10e30bffc545d5fc4",
+      "bytes": 802,
+      "original_sha256": "e55d72bbdf1d79ffe8b96e7bf41a71ea8b8c95f806766ab5f85572fada92d01d",
+      "original_bytes": 1509
+    },
+    {
+      "path": "exact-production.patch.gz",
+      "sha256": "57b850314df55642b970d77d28e68476becbacfe9040d37802db2ae6e86c3665",
+      "bytes": 784,
+      "original_sha256": "9934c2e1ff0465a712df287c6fe2f1f0ddf819897460908b1326bd6ee2983ee1",
+      "original_bytes": 2424
+    },
+    {
+      "path": "initial-failed-application.json.gz",
+      "sha256": "da7a704372c4f2f2afe4a3d373957684ba3e5947d5ce612e34e7f47bd43eab50",
+      "bytes": 75164,
+      "original_sha256": "9444aacecd67731117e1a49eb3eacfce41569bd511f74dd82b2b4ab448bed56b",
+      "original_bytes": 573358
+    },
+    {
+      "path": "initial-failed-application.log.gz",
+      "sha256": "a192df434e1887d6755d5e931cf855f75a3234846aed5784556f67ee0cee3d52",
+      "bytes": 11787,
+      "original_sha256": "7b0dd5fc68329ec46956497e911fdd71165fa1319688a6993c189b9c4700bb0f",
+      "original_bytes": 35318
+    },
+    {
+      "path": "initial-failed-execution.json.gz",
+      "sha256": "e46804d69db16868fd153e15e1765860fb07cebb76866e3c18c6bf931084b59f",
+      "bytes": 349,
+      "original_sha256": "02937aec2785cd2ce8f62eb8632d6ed8af5c88de49032ff6a0d209a77e9121a8",
+      "original_bytes": 933
+    },
+    {
+      "path": "initial-failed-global-errors.json.gz",
+      "sha256": "c2b17b2a1ee2cd98e192f75cfac83b8fa5e1c0409ef58f514509e3e5531061f4",
+      "bytes": 132,
+      "original_sha256": "bde12c91c313efa41af7d22eee0597e17a43b5cd634164f69c21d001362133b7",
+      "original_bytes": 174
+    },
+    {
+      "path": "initial-failed-source-pins.json.gz",
+      "sha256": "a229513e1f924facd7e0af29d4b4afcb45c7ab3c95d2b16aaf220e3e1300cdc9",
+      "bytes": 28755,
+      "original_sha256": "35e6f422cfa10c252273020b2d8e2e7aa40ad6253bbbf98d0f0f640b267761be",
+      "original_bytes": 67267
+    }
+  ],
+  "initial_failed_application": {
+    "passed": 1429,
+    "failed": 1,
+    "actual_exit_code": 1,
+    "reason": "Posted-invoice heading default wait expired while protected workspace was not yet rendered. Exact stalled bootstrap phase and CPU cause not recorded."
+  }
+}

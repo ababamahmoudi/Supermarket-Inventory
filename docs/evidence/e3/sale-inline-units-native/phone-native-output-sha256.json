@@ -1,0 +1,77 @@
+[
+  {
+    "path": "native-output/.last-run.json",
+    "bytes": 45,
+    "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-59225-nvoice-money-and-source-en--phone/trace.zip",
+    "bytes": 3925911,
+    "sha256": "599107b826c9b0cc97a3ecf9edfd1d925ba0ec575ef35ffc3a2eb6cc86b5c3a5"
+  },
+  {
+    "path": "native-output/c8-sales-C8-actual-cost-up-f695a-nvoice-money-and-source-fa--phone/trace.zip",
+    "bytes": 4648018,
+    "sha256": "f8b811d36b34cb0df635af1c3617195693a1d07fd7f6401af1b7af8af7a83787"
+  },
+  {
+    "path": "native-output/c8-sales-C8-regular-price--3b2c9-labels-until-actual-End-fa--phone/trace.zip",
+    "bytes": 4172789,
+    "sha256": "3772c198513cac7ed0d87129204f9b2fada7a3b8ae9c160e2c7fb8f4a46c5656"
+  },
+  {
+    "path": "native-output/c8-sales-C8-regular-price--fa64f-labels-until-actual-End-en--phone/trace.zip",
+    "bytes": 4029349,
+    "sha256": "bb921487aa062d6114a41480b31758b7d1bef1e2402c942f717e9136906e178b"
+  },
+  {
+    "path": "native-output/c8-sales-C8-sale-defaults--8c7df-nts-are-real-Save-gates-fa--phone/trace.zip",
+    "bytes": 4955779,
+    "sha256": "f18f0ebe1186b8f20384c4d36482213ee6a1d2f6c6b3d8163899f0a97d00bc11"
+  },
+  {
+    "path": "native-output/c8-sales-C8-sale-defaults--8e7fc-nts-are-real-Save-gates-en--phone/trace.zip",
+    "bytes": 4031179,
+    "sha256": "af47a787239276a6066852472351ab16bd7ea8da64ecf785a9d36c7793678221"
+  },
+  {
+    "path": "native-output/c8-sales-C8-worker-request-80798-owledgment-and-approval-fa--phone/trace.zip",
+    "bytes": 5385980,
+    "sha256": "d61cb7a8ae586b701d8dc2b11f8f96e2996dc2f3fbcb7dbf0e60facef3532b96"
+  },
+  {
+    "path": "native-output/c8-sales-C8-worker-request-a4116-owledgment-and-approval-en--phone/trace.zip",
+    "bytes": 3679610,
+    "sha256": "d9c9aab9c67768509bac53c6bee5e80c671c23eaa3835763bd1e05cf323a947f"
+  },
+  {
+    "path": "native-output/layout-proof-c6-ordinary-e-33f63--unmarked-split-is-detected-phone/trace.zip",
+    "bytes": 500271,
+    "sha256": "82121281f4f05e328e94fc51ea14e3cd1077bb71a731fae13db2a6409995a313"
+  },
+  {
+    "path": "native-output/layout-proof-c6-ordinary-f-309e4--unmarked-split-is-detected-phone/trace.zip",
+    "bytes": 536597,
+    "sha256": "70fba0f4d338ff8e1b24452b81026381874a98d5463bafd6dedacf06c94d4ba5"
+  },
+  {
+    "path": "native-output/layout-proof-c6-product-na-ac4f4--fa-and-a-split-is-detected-phone/trace.zip",
+    "bytes": 711982,
+    "sha256": "11d0e632f53abf779219a65011eb611243e44a42008ba10822f72e647a5a61bf"
+  },
+  {
+    "path": "native-output/layout-proof-c6-product-na-faeb8--en-and-a-split-is-detected-phone/trace.zip",
+    "bytes": 608601,
+    "sha256": "59ed9765e20b95fef77af68c078814e864554ad400388c53e3148bc31aa9d159"
+  },
+  {
+    "path": "native-output/layout-proof-c6-rendered-e-cb384-ual-lines-from-real-overlap-phone/trace.zip",
+    "bytes": 492057,
+    "sha256": "b6c8a068515aa7db09c7c66522297f150edbd89a201a172879efa531b9632a9b"
+  },
+  {
+    "path": "native-output/layout-proof-c6-rendered-f-5dcc4-ual-lines-from-real-overlap-phone/trace.zip",
+    "bytes": 560410,
+    "sha256": "fc2eb9e64657dd7b590d460e8ad8d994b67c84afdb76b3d40c977a4d34f4708c"
+  }
+]

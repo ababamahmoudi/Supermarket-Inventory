@@ -1,0 +1,400 @@
+{
+  "counts": {
+    "PASS": 28
+  },
+  "total": 28,
+  "cases": [
+    {
+      "id": "2a73dce4044c9b6369eb-385d263567d1b2677198",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-6ffd7e2e42f9f0a25bda",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ce82083b30358a84f273",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-b03f3806ad09534f7a7e",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-c2deec4f76cc34e930f5",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ecc7860cd91c6d66671b",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-d438ee3cd7358a18265e",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-20db01a5f5c3201f9a80",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-6c3b4d06dbfd42e43f15",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-d75dcf732af67be32fba",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-b09df8e16fba032f9a62",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-20a58a68363fff8426a1",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-9a2d31d77da33304e23f",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-8c1095b28e83b394fe4f",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-0d8d02f4bb2cd1d74d29",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-215d39c1a350d7ef6366",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ee81cd1b3da27ff3de06",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-252f790b81f509d32f46",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-1a2be8f982117c166b49",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-20e12d586854473acc63",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-73123b6763fc9b493f3e",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-df73b0a4d94bfe3656f9",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-a55d9a0a1f6c5ed12616",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-71aaaed2f84766c054da",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-9bb8a06df0b3d693d33b",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-abb237399db42c804875",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-ce27eae39a75c8553cba",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-e164db72a9d12b0ed4fb",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    }
+  ]
+}
