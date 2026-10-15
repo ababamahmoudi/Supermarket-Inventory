@@ -1,0 +1,32 @@
+{
+  "stage": "e2",
+  "branch": "feat/prototype-e2-price-updates",
+  "commit": "ee71c6c5d1765f657ae7bfd94267a617e85b6362",
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "vitest-posted-backport-proof.config.ts",
+    "src/screens/DocumentsReturns.c5.test.tsx",
+    "--maxWorkers=1",
+    "--reporter=default",
+    "--reporter=json",
+    "--reporter=/tmp/posted-totals-readiness-backports/e2/observer.mjs",
+    "--outputFile=/tmp/posted-totals-readiness-backports/e2/unit.json"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 5.944835901260376,
+  "source_pin_count": 576,
+  "source_unchanged": true,
+  "unit_counts": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "global_errors": [],
+  "fixture_sha256": "953980181b1af9395a01489de3d7c5d89c7496f4309fce1878a6dd61baf9ac77",
+  "no_source_overlay": true
+}

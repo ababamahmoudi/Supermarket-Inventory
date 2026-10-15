@@ -1,0 +1,1247 @@
+{
+  "clean": {
+    "scene": "activity-units",
+    "language": "en",
+    "width": 1440,
+    "actualWidth": 1440,
+    "words": 463,
+    "contentWords": 411,
+    "unitFragments": [
+      {
+        "text": "1.8 L",
+        "lines": 1
+      },
+      {
+        "text": "۱٫۸ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "4.5 kg",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "24 cm",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "24 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "20 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "36 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "6 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      }
+    ],
+    "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+    "cells": 48,
+    "tables": [
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          }
+        ],
+        "scrollWidth": 499,
+        "clientWidth": 499
+      },
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          }
+        ],
+        "scrollWidth": 784,
+        "clientWidth": 784
+      }
+    ],
+    "forms": [],
+    "sidebar": {
+      "width": 248,
+      "clientHeight": 1080,
+      "scrollHeight": 1080,
+      "navClientHeight": 912,
+      "navScrollHeight": 912
+    },
+    "topbar": [
+      {
+        "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "breadcrumbs",
+        "width": 324.34375,
+        "height": 18.5625
+      },
+      {
+        "className": "topbar-search",
+        "width": 280,
+        "height": 36
+      },
+      {
+        "className": "ui-select ui-input has-leading-icon branch-pill",
+        "width": 165.046875,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button language-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+        "width": 90.609375,
+        "height": 36
+      }
+    ],
+    "failures": []
+  },
+  "broken": {
+    "scene": "raw-activity-negative-control",
+    "language": "en",
+    "width": 1440,
+    "actualWidth": 1440,
+    "words": 463,
+    "contentWords": 411,
+    "unitFragments": [
+      {
+        "text": "1.8 L",
+        "lines": 1
+      },
+      {
+        "text": "۱٫۸ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "4.5 kg",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "24 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "20 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "36 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "6 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "24 cm",
+        "lines": 2,
+        "source": "plain-text"
+      }
+    ],
+    "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+    "cells": 48,
+    "tables": [
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          }
+        ],
+        "scrollWidth": 499,
+        "clientWidth": 499
+      },
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          }
+        ],
+        "scrollWidth": 784,
+        "clientWidth": 784
+      }
+    ],
+    "forms": [],
+    "sidebar": {
+      "width": 248,
+      "clientHeight": 1080,
+      "scrollHeight": 1080,
+      "navClientHeight": 912,
+      "navScrollHeight": 912
+    },
+    "topbar": [
+      {
+        "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "breadcrumbs",
+        "width": 324.34375,
+        "height": 18.5625
+      },
+      {
+        "className": "topbar-search",
+        "width": 280,
+        "height": 36
+      },
+      {
+        "className": "ui-select ui-input has-leading-icon branch-pill",
+        "width": 165.046875,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button language-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+        "width": 90.609375,
+        "height": 36
+      }
+    ],
+    "failures": [
+      "raw-activity-negative-control: plain-text unit fragment broken across lines: 24 cm",
+      "raw-activity-negative-control: content text leaves container: Stainless",
+      "raw-activity-negative-control: content text leaves container: Steel",
+      "raw-activity-negative-control: content text leaves container: Pot",
+      "raw-activity-negative-control: content text leaves container: cm"
+    ]
+  },
+  "restored": {
+    "scene": "activity-restored",
+    "language": "en",
+    "width": 1440,
+    "actualWidth": 1440,
+    "words": 463,
+    "contentWords": 411,
+    "unitFragments": [
+      {
+        "text": "1.8 L",
+        "lines": 1
+      },
+      {
+        "text": "۱٫۸ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "4.5 kg",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "24 cm",
+        "lines": 1
+      },
+      {
+        "text": "450 g",
+        "lines": 1
+      },
+      {
+        "text": "900 g",
+        "lines": 1
+      },
+      {
+        "text": "24 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "20 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "36 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "6 units",
+        "lines": 1,
+        "source": "plain-text"
+      },
+      {
+        "text": "12 units",
+        "lines": 1,
+        "source": "plain-text"
+      }
+    ],
+    "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+    "cells": 48,
+    "tables": [
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          },
+          {
+            "cells": 3,
+            "words": 3
+          }
+        ],
+        "scrollWidth": 499,
+        "clientWidth": 499
+      },
+      {
+        "className": "table-wrap ui-data-table is-responsive",
+        "rows": [
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 6
+          },
+          {
+            "cells": 5,
+            "words": 5
+          },
+          {
+            "cells": 5,
+            "words": 6
+          }
+        ],
+        "scrollWidth": 784,
+        "clientWidth": 784
+      }
+    ],
+    "forms": [],
+    "sidebar": {
+      "width": 248,
+      "clientHeight": 1080,
+      "scrollHeight": 1080,
+      "navClientHeight": 912,
+      "navScrollHeight": 912
+    },
+    "topbar": [
+      {
+        "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "breadcrumbs",
+        "width": 324.34375,
+        "height": 18.5625
+      },
+      {
+        "className": "topbar-search",
+        "width": 280,
+        "height": 36
+      },
+      {
+        "className": "ui-select ui-input has-leading-icon branch-pill",
+        "width": 165.046875,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button language-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+        "width": 90.609375,
+        "height": 36
+      }
+    ],
+    "failures": []
+  },
+  "persianCompound": {
+    "clean": {
+      "scene": "persian-compound-units",
+      "language": "en",
+      "width": 1440,
+      "actualWidth": 1440,
+      "words": 177,
+      "contentWords": 123,
+      "unitFragments": [
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "۲۴ سانتی‌متری",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ],
+      "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+      "cells": 30,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive",
+          "rows": [
+            {
+              "cells": 3,
+              "words": 5
+            },
+            {
+              "cells": 3,
+              "words": 11
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-last-received-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 9
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-cost-history-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 11
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        }
+      ],
+      "forms": [],
+      "sidebar": {
+        "width": 248,
+        "clientHeight": 1080,
+        "scrollHeight": 1080,
+        "navClientHeight": 912,
+        "navScrollHeight": 912
+      },
+      "topbar": [
+        {
+          "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "breadcrumbs",
+          "width": 328.078125,
+          "height": 18.5625
+        },
+        {
+          "className": "topbar-search",
+          "width": 276.265625,
+          "height": 36
+        },
+        {
+          "className": "ui-select ui-input has-leading-icon branch-pill",
+          "width": 165.046875,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button language-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+          "width": 90.609375,
+          "height": 36
+        }
+      ],
+      "failures": []
+    },
+    "broken": {
+      "scene": "raw-persian-compound-negative-control",
+      "language": "en",
+      "width": 1440,
+      "actualWidth": 1440,
+      "words": 177,
+      "contentWords": 123,
+      "unitFragments": [
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1,
+          "source": "plain-text"
+        },
+        {
+          "text": "۲۴ سانتی‌متری",
+          "lines": 2,
+          "source": "plain-text"
+        }
+      ],
+      "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+      "cells": 30,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive",
+          "rows": [
+            {
+              "cells": 3,
+              "words": 5
+            },
+            {
+              "cells": 3,
+              "words": 11
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-last-received-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 9
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-cost-history-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 11
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        }
+      ],
+      "forms": [],
+      "sidebar": {
+        "width": 248,
+        "clientHeight": 1080,
+        "scrollHeight": 1080,
+        "navClientHeight": 912,
+        "navScrollHeight": 912
+      },
+      "topbar": [
+        {
+          "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "breadcrumbs",
+          "width": 328.078125,
+          "height": 18.5625
+        },
+        {
+          "className": "topbar-search",
+          "width": 276.265625,
+          "height": 36
+        },
+        {
+          "className": "ui-select ui-input has-leading-icon branch-pill",
+          "width": 165.046875,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button language-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+          "width": 90.609375,
+          "height": 36
+        }
+      ],
+      "failures": [
+        "raw-persian-compound-negative-control: plain-text unit fragment broken across lines: ۲۴ سانتی‌متری",
+        "raw-persian-compound-negative-control: content text leaves container: قابلمه",
+        "raw-persian-compound-negative-control: content text leaves container: استیل",
+        "raw-persian-compound-negative-control: content text leaves container: سانتی‌متری"
+      ]
+    },
+    "restored": {
+      "scene": "persian-compound-restored",
+      "language": "en",
+      "width": 1440,
+      "actualWidth": 1440,
+      "words": 177,
+      "contentWords": 123,
+      "unitFragments": [
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "۲۴ سانتی‌متری",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1,
+          "source": "plain-text"
+        }
+      ],
+      "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+      "cells": 30,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive",
+          "rows": [
+            {
+              "cells": 3,
+              "words": 5
+            },
+            {
+              "cells": 3,
+              "words": 11
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-last-received-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 9
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive product-cost-history-table",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 11
+            },
+            {
+              "cells": 6,
+              "words": 9
+            }
+          ],
+          "scrollWidth": 1088,
+          "clientWidth": 1088
+        }
+      ],
+      "forms": [],
+      "sidebar": {
+        "width": 248,
+        "clientHeight": 1080,
+        "scrollHeight": 1080,
+        "navClientHeight": 912,
+        "navScrollHeight": 912
+      },
+      "topbar": [
+        {
+          "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "breadcrumbs",
+          "width": 328.078125,
+          "height": 18.5625
+        },
+        {
+          "className": "topbar-search",
+          "width": 276.265625,
+          "height": 36
+        },
+        {
+          "className": "ui-select ui-input has-leading-icon branch-pill",
+          "width": 165.046875,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button language-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+          "width": 90.609375,
+          "height": 36
+        }
+      ],
+      "failures": []
+    }
+  }
+}

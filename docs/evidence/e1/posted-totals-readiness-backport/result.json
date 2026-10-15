@@ -1,0 +1,32 @@
+{
+  "stage": "e1",
+  "branch": "feat/prototype-e1-location-roles",
+  "commit": "13a6ad0c32190ab1be867f0bcbd644a098811099",
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "vitest-posted-backport-proof.config.ts",
+    "src/screens/DocumentsReturns.c5.test.tsx",
+    "--maxWorkers=1",
+    "--reporter=default",
+    "--reporter=json",
+    "--reporter=/tmp/posted-totals-readiness-backports/e1/observer.mjs",
+    "--outputFile=/tmp/posted-totals-readiness-backports/e1/unit.json"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 5.692821502685547,
+  "source_pin_count": 562,
+  "source_unchanged": true,
+  "unit_counts": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "global_errors": [],
+  "fixture_sha256": "953980181b1af9395a01489de3d7c5d89c7496f4309fce1878a6dd61baf9ac77",
+  "no_source_overlay": true
+}
