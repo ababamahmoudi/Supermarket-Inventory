@@ -1,9 +1,13 @@
 /* eslint-disable react-refresh/only-export-components -- This stateless display API intentionally re-exports its shared text formatters. */
-import type { HTMLAttributes, ReactNode } from "react";
+import { Fragment, type HTMLAttributes, type ReactNode } from "react";
+import "./quantity-presentation.css";
 import type Decimal from "decimal.js";
 import i18n, { translate } from "./i18n";
 import { useConfiguredTimeZone } from "./store";
 import {
+  casesAndUnitsParts,
+  quantityParts,
+  type QuantityUnit,
   formatDate,
   formatMoney,
   formatUnitSize,
@@ -38,6 +42,53 @@ export function LtrText({
     </bdi>
   );
 }
+/** Keep each translated label attached to its own isolated numeric value. */
+export function QuantityText({
+  value,
+  unit,
+  language = i18n.language as Language,
+}: {
+  value: string | number;
+  unit: QuantityUnit;
+  language?: Language;
+}) {
+  const parts = quantityParts(value, unit, language);
+  return (
+    <bdi className="quantity-pair" dir={language === "fa" ? "rtl" : "ltr"}>
+      <LtrText className="quantity-number">{parts.value}</LtrText>{" "}
+      <bdi className="quantity-label" dir="auto">
+        {parts.label}
+      </bdi>
+    </bdi>
+  );
+}
+
+/** A rich display of the same read-only decomposition as formatCasesAndUnits. */
+export function CasesAndUnits({
+  units,
+  unitsPerCase,
+  language = i18n.language as Language,
+}: {
+  units: Decimal.Value;
+  unitsPerCase: Decimal.Value;
+  language?: Language;
+}) {
+  return (
+    <span className="cases-and-units" dir={language === "fa" ? "rtl" : "ltr"}>
+      {casesAndUnitsParts(units, unitsPerCase).map((part, index) => (
+        <Fragment key={part.unit}>
+          {index > 0 && <span className="quantity-separator"> + </span>}
+          <QuantityText
+            value={part.value}
+            unit={part.unit}
+            language={language}
+          />
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 export function Money({
   value,
   currency,

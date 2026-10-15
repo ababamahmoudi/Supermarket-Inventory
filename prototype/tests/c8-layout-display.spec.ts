@@ -46,6 +46,12 @@ async function retainedOriginalHash(page: Page, reference: string) {
 }
 
 async function quantityEvidence(page: Page, row: Locator) {
+  if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+    const quantity = row.locator(".phone-list-value");
+    await expect(quantity).toHaveCount(1);
+    await expect(quantity).toBeVisible();
+    return quantity;
+  }
   const direct = row.locator('td[data-column-key="quantity"]');
   if (await direct.isVisible()) return direct;
   const disclosure = row.locator(".table-details-toggle");
@@ -234,14 +240,61 @@ for (const language of ["en", "fa"] as const) {
       const row = page.locator(`${selector} tbody > tr[data-row-href]`).first();
       await expect(row).toBeVisible();
       await expect(row.locator(".table-row-link")).toHaveCount(1);
-      await expect(
-        row.locator('td[data-column-key="actions"] .table-row-link'),
-      ).toHaveCount(1);
       const disclosure = row.locator(".table-details-toggle");
-      if (await disclosure.count()) {
+      if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
         await expect(
-          row.locator('td[data-column-key="actions"] .table-details-toggle'),
+          row.locator(".phone-list-chevron .table-row-link"),
         ).toHaveCount(1);
+        await expect(disclosure).toHaveCount(0);
+        expect(
+          await row.evaluate((element) => {
+            const control = element.querySelector<HTMLElement>(
+              ".phone-list-chevron .table-row-link",
+            )!;
+            const rect = control.getBoundingClientRect();
+            const bounds = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            const rtl = style.direction === "rtl";
+            const end = rtl
+              ? bounds.left +
+                parseFloat(style.borderLeftWidth || "0") +
+                parseFloat(style.paddingLeft || "0")
+              : bounds.right -
+                parseFloat(style.borderRightWidth || "0") -
+                parseFloat(style.paddingRight || "0");
+            return {
+              grid: style.display,
+              icons: control.querySelectorAll("svg").length,
+              atEnd: Math.abs((rtl ? rect.left : rect.right) - end) <= 2,
+              contained:
+                rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1,
+              afterValues: [...element.querySelectorAll(":scope > td")].every(
+                (cell) => {
+                  if (cell.matches(".phone-list-chevron")) return true;
+                  const other = cell.getBoundingClientRect();
+                  return rtl
+                    ? other.left >= rect.right - 1
+                    : other.right <= rect.left + 1;
+                },
+              ),
+            };
+          }),
+        ).toEqual({
+          grid: "grid",
+          icons: 1,
+          atEnd: true,
+          contained: true,
+          afterValues: true,
+        });
+      } else {
+        await expect(
+          row.locator('td[data-column-key="actions"] .table-row-link'),
+        ).toHaveCount(1);
+        if (await disclosure.count()) {
+          await expect(
+            row.locator('td[data-column-key="actions"] .table-details-toggle'),
+          ).toHaveCount(1);
+        }
       }
     }
     await page.setViewportSize({ width: 1920, height: 1080 });

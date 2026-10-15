@@ -40,7 +40,7 @@
   :root
     .ui-data-table.is-responsive.is-mobile.is-phone-list.has-phone-selection
     tr.phone-list-row {
-    grid-template-columns: 32px minmax(0, 1fr) minmax(0, max-content) 28px;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, max-content) 28px;
     grid-template-areas: "selection name value chevron" "selection secondary secondary chevron";
   }
   :root

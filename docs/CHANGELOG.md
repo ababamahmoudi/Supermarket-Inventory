@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-15 — Phone verification corrections
+
+- Keep each Persian case or loose-unit quantity attached to its own translated label in Received, posted invoices, deliveries and orders. The plain-text formatter and exact Decimal decomposition remain unchanged.
+- Give the phone Labels selection cell enough room for its existing checkbox target; retain the original cell-containment threshold.
+- Adapt retained browser selectors to actual compact rows, current role wording, completed original-file transitions and causal audit entries while preserving money, permission, byte-integrity and geometry assertions.
+- Preserve the two failed screenshot reviews and original native failures separately. Final tests and reviewed images are published only after their actual corrected runs.
+
 ## 2026-10-15 — Retained staff notebook and manual-price presentation
 
 - Restore the Cashier's explicitly shared custom-notebook route through the existing protected ACL/location projection, with revocation and built-in/private-route denials retained.

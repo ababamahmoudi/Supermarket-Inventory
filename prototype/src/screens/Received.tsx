@@ -5,7 +5,14 @@ import { receivedLog, type DeliveryReceipt } from "../received";
 import { branchLabel } from "../settings";
 import { supplierRecords } from "../supplier-editor";
 import { useProtectedQuery } from "../use-protected-query";
-import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
+import {
+  CasesAndUnits,
+  QuantityText,
+  DateText,
+  demoUserLabel,
+  LtrText,
+  ProductName,
+} from "../presentation";
 import {
   Button,
   Card,
@@ -17,7 +24,6 @@ import {
   Select,
   useTableColumns,
 } from "../ui";
-import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./received-c.css";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import "./invoice-entry-c6.css";
@@ -171,19 +177,19 @@ export function ReceivedTable({
                     </>
                   ) : (
                     <>
-                      <LtrText>
-                        {formatCasesAndUnits(
-                          receipt.units,
-                          receipt.units_per_case,
-                          lang,
-                        )}
-                      </LtrText>
+                      <CasesAndUnits
+                        units={receipt.units}
+                        unitsPerCase={receipt.units_per_case}
+                        language={lang}
+                      />
                       {receipt.units_per_case > 1 && (
                         <small className="muted received-units">
                           (
-                          <LtrText>
-                            {formatQuantity(receipt.units, "units", lang)}
-                          </LtrText>
+                          <QuantityText
+                            value={receipt.units}
+                            unit="units"
+                            language={lang}
+                          />
                           )
                         </small>
                       )}

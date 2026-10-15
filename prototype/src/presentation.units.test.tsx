@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ProductName, UnitSize, UnitText } from "./presentation";
+import { CasesAndUnits, ProductName, UnitSize, UnitText } from "./presentation";
+import { formatCasesAndUnits } from "./formatters";
 
 describe("entered product sizes", () => {
   it("preserves the Persian decimal and grouping separators without isolating only the last digit", () => {
@@ -76,6 +77,61 @@ describe("scalar unit sizes inside RTL display text", () => {
       expect(group?.textContent).toBe(text);
       expect(group?.querySelector("bdi")).toHaveAttribute("dir", "ltr");
       expect(group?.querySelector("bdi")?.textContent).toBe(number);
+    },
+  );
+});
+
+describe("translated case and loose-unit display", () => {
+  it.each([
+    [
+      30,
+      4,
+      [
+        ["7", "کارتن"],
+        ["2", "واحد"],
+      ],
+    ],
+    [
+      40,
+      12,
+      [
+        ["3", "کارتن"],
+        ["4", "واحد"],
+      ],
+    ],
+    [
+      "9007199254740993",
+      12,
+      [
+        ["750599937895082", "کارتن"],
+        ["9", "واحد"],
+      ],
+    ],
+  ] as const)(
+    "keeps every quantity paired with its own Persian unit for %s actual units",
+    (units, pack, expected) => {
+      const { container } = render(
+        <CasesAndUnits units={units} unitsPerCase={pack} language="fa" />,
+      );
+      const expression = container.querySelector(".cases-and-units");
+      expect(expression).toHaveAttribute("dir", "rtl");
+      const pairs = [...container.querySelectorAll(".quantity-pair")];
+      expect(
+        pairs.map((pair) => [
+          pair.querySelector(".quantity-number")?.textContent,
+          pair.querySelector(".quantity-label")?.textContent,
+        ]),
+      ).toEqual(expected);
+      for (const pair of pairs) {
+        expect(pair).toHaveAttribute("dir", "rtl");
+        expect(pair.querySelector(".quantity-number")).toHaveAttribute(
+          "dir",
+          "ltr",
+        );
+      }
+      expect(container.textContent).toBe(
+        formatCasesAndUnits(units, pack, "fa"),
+      );
     },
   );
 });

@@ -72,6 +72,93 @@ for (const width of [390, 430])
             await size.evaluate((element) => element.getClientRects().length),
           ).toBe(1);
         }
+        if (scene.page === "received" && language === "fa") {
+          for (const quantity of [
+            {
+              name: "Basmati Rice 4.5 kg",
+              cases: "7",
+              loose: "2",
+              total: "30",
+            },
+            {
+              name: "Dried Red Kidney Beans 900 g",
+              cases: "3",
+              loose: "4",
+              total: "40",
+            },
+          ]) {
+            const receipt = rows.filter({ hasText: quantity.name }).filter({
+              has: page
+                .locator(".cases-and-units .quantity-number")
+                .filter({ hasText: new RegExp(`^${quantity.cases}$`) }),
+            });
+            await expect(receipt).toHaveCount(1);
+            const expression = receipt.locator(".cases-and-units");
+            const pairs = expression.locator(".quantity-pair");
+            await expect(pairs).toHaveText([
+              `${quantity.cases} کارتن`,
+              `${quantity.loose} واحد`,
+            ]);
+            await expect(
+              receipt.locator(".received-units .quantity-pair"),
+            ).toHaveText(`${quantity.total} واحد`);
+            const geometry = await expression.evaluate((element) => {
+              const pairNodes = [
+                ...element.querySelectorAll<HTMLElement>(".quantity-pair"),
+              ];
+              const separator = element
+                .querySelector(".quantity-separator")!
+                .getBoundingClientRect();
+              return {
+                direction: getComputedStyle(element).direction,
+                separator: { left: separator.left, right: separator.right },
+                pairs: pairNodes.map((pair) => {
+                  const number =
+                    pair.querySelector<HTMLElement>(".quantity-number")!;
+                  const label =
+                    pair.querySelector<HTMLElement>(".quantity-label")!;
+                  const numberRect = number.getBoundingClientRect();
+                  const labelRect = label.getBoundingClientRect();
+                  const rect = pair.getBoundingClientRect();
+                  return {
+                    direction: getComputedStyle(pair).direction,
+                    numberDirection: getComputedStyle(number).direction,
+                    numberLeft: numberRect.left,
+                    labelRight: labelRect.right,
+                    numberTop: numberRect.top,
+                    numberBottom: numberRect.bottom,
+                    labelTop: labelRect.top,
+                    labelBottom: labelRect.bottom,
+                    numberRects: number.getClientRects().length,
+                    labelRects: label.getClientRects().length,
+                    left: rect.left,
+                    right: rect.right,
+                  };
+                }),
+              };
+            });
+            expect(geometry.direction).toBe("rtl");
+            expect(geometry.pairs).toHaveLength(2);
+            for (const pair of geometry.pairs) {
+              expect(pair.direction).toBe("rtl");
+              expect(pair.numberDirection).toBe("ltr");
+              expect(pair.numberLeft).toBeGreaterThanOrEqual(
+                pair.labelRight - 1,
+              );
+              expect(pair.numberTop).toBeLessThan(pair.labelBottom);
+              expect(pair.labelTop).toBeLessThan(pair.numberBottom);
+              expect(pair.numberRects).toBe(1);
+              expect(pair.labelRects).toBe(1);
+            }
+            // Cases are read first from the right; each number stays with its own label.
+            expect(geometry.pairs[0].left).toBeGreaterThanOrEqual(
+              geometry.separator.right - 1,
+            );
+            expect(geometry.separator.left).toBeGreaterThanOrEqual(
+              geometry.pairs[1].right - 1,
+            );
+          }
+        }
         if (scene.page === "labels") {
           const checkbox = rows.first().getByRole("checkbox");
           await checkbox.check();

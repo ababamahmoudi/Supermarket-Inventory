@@ -13,6 +13,8 @@ import {
 } from "../invoice";
 import { effectiveInvoiceLocation } from "../received";
 import {
+  CasesAndUnits,
+  QuantityText,
   DateText,
   demoUserLabel,
   LtrText,
@@ -30,7 +32,6 @@ import {
   requireInvoiceAuthority,
   canInvoiceAuthority,
 } from "../invoice-authority";
-import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./invoice-document-c4.css";
 import "./invoices-c7.css";
 
@@ -65,11 +66,18 @@ export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
   if ((line.units_per_case ?? 1) > 1) {
     return (
       <>
-        <LtrText>
-          {formatCasesAndUnits(line.qty_invoiced, line.units_per_case!, lang)}
-        </LtrText>
+        <CasesAndUnits
+          units={line.qty_invoiced}
+          unitsPerCase={line.units_per_case!}
+          language={lang}
+        />
         <span className="muted">
-          (<LtrText>{formatQuantity(line.qty_invoiced, "units", lang)}</LtrText>
+          (
+          <QuantityText
+            value={line.qty_invoiced}
+            unit="units"
+            language={lang}
+          />
           )
         </span>
       </>
