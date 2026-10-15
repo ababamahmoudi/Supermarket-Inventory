@@ -23,6 +23,10 @@ import { PostedInvoice } from "./PostedInvoice";
 import { Returns } from "./Returns";
 import { SupplierReturnsPanel } from "./SupplierReturnsPanel";
 import i18n from "../i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 
 beforeEach(async () => {
   localStorage.clear();
@@ -38,15 +42,20 @@ function ProtectedOriginalSample() {
   ) : null;
 }
 function ProtectedPostedSample() {
-  const { state } = useDemo();
+  const { state, authStage } = useDemo();
   const workspace = state.invoice_workspace;
-  return workspace ? (
-    <PostedInvoice
-      original={workspace.invoice}
-      invoice={workspace.invoice}
-      versionId="original"
-    />
-  ) : null;
+  return (
+    <>
+      <output data-testid="posted-auth-stage">{authStage}</output>
+      {workspace ? (
+        <PostedInvoice
+          original={workspace.invoice}
+          invoice={workspace.invoice}
+          versionId="original"
+        />
+      ) : null}
+    </>
+  );
 }
 
 it("keeps 25–400% zoom and returns to a whole-page fit without changing original bytes", async () => {
@@ -134,6 +143,7 @@ it("keeps 25–400% zoom and returns to a whole-page fit without changing origin
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
 });
@@ -367,6 +377,12 @@ it("pairs each posted total label with its amount and retains all original invoi
     </DemoProvider>,
   );
   try {
+    // Fixture preparation commits storage; Provider startup still resumes the
+    // real session and publishes its protected projection asynchronously.
+    await renderedUiReady(
+      () =>
+        screen.queryByTestId("posted-auth-stage")?.textContent === "complete",
+    );
     await screen.findByRole("heading", {
       name: original.supplier_invoice_number,
     });
