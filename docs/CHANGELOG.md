@@ -1,5 +1,10 @@
 # Project changelog
 
+## 2026-10-15 — Keep inline sale-reminder units together
+
+- Render product names in the delivery-release and no-end-sale reminders through the existing unit-text component, keeping short sizes such as 24 cm together at phone width. Wording, business data, pricing and permissions are unchanged.
+- Preserve the original failing complete-run evidence; corrected-source verification is recorded separately.
+
 ## 2026-10-15 — Retain Payables typing on a location reselect
 
 - Keep supplier search text and focus when the current Payables location is selected again. Actual location changes and Clear filters retain their existing behavior.
