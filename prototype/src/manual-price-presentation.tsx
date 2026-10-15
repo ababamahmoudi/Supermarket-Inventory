@@ -59,7 +59,12 @@ export function ManualPriceDetails({
     key: string;
     value: ManualPricePresentationDTO | null;
   } | null>(null);
-  const details = detailsRecord?.key === readKey ? detailsRecord.value : null;
+  const privateDetails =
+    detailsRecord?.key === readKey ? detailsRecord.value : null;
+  // The fresh public product DTO contains only the two permitted selling
+  // amounts for the selected Store. Costs and margins stay in the private query.
+  const publicDetails = product.manual_price_comparisons[location];
+  const details = permitted ? privateDetails : publicDetails;
   useEffect(() => {
     let current = true;
     if (!permitted) return;
@@ -97,7 +102,7 @@ export function ManualPriceDetails({
     businessRevision,
     query,
   ]);
-  if (!permitted || !details) return null;
+  if (!details) return null;
   return (
     <div className="manual-price-details">
       <p className="helper manual-price-comparison">
@@ -114,9 +119,10 @@ export function ManualPriceDetails({
           config={state.config}
         />
       </p>
-      {details.margin !== null && (
+      {permitted && privateDetails && privateDetails.margin !== null && (
         <p className="helper manual-price-margin">
-          {t("Margin %", "حاشیه سود %")}: <LtrText>{details.margin}%</LtrText>
+          {t("Margin %", "حاشیه سود %")}:{" "}
+          <LtrText>{privateDetails.margin}%</LtrText>
         </p>
       )}
     </div>

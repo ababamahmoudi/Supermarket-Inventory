@@ -207,6 +207,72 @@ test("Cashier gets only granted custom notebook reads and cannot add or read bui
     }),
   ).toHaveCount(0);
   await expect(page.getByLabel("Note", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Add note", exact: true }),
+  ).toHaveCount(0);
+  const mobile = page.viewportSize()!.width < 760;
+  if (mobile)
+    await page
+      .locator(".topbar")
+      .getByRole("button", { name: "Open menu", exact: true })
+      .click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Pages", exact: true })
+      .getByRole("link", { name: "Notes", exact: true }),
+  ).toBeVisible();
+  if (mobile)
+    await page
+      .locator(".topbar")
+      .getByRole("button", { name: "Close menu", exact: true })
+      .click();
+
+  // Revoke the actual read grant through the permitted Manager definition form.
+  // The same Cashier must immediately lose this route without deleting its entry.
+  await signIn(page, "Manager");
+  await page.goto("/#notes");
+  await notebookTab(page, "Cleaning log");
+  await page
+    .getByRole("button", { name: "Edit notebook", exact: true })
+    .click();
+  const definition = page.getByRole("dialog", {
+    name: "Edit notebook",
+    exact: true,
+  });
+  await definition
+    .getByRole("group", { name: "Who can read", exact: true })
+    .getByRole("checkbox", { name: "Cashier", exact: true })
+    .uncheck();
+  await definition
+    .getByRole("button", { name: "Save notebook", exact: true })
+    .click();
+  await expect(definition).not.toBeVisible();
+  await signIn(page, "Cashier");
+  await page.goto("/#notes");
+  await expect(
+    page.getByRole("heading", { name: "Cashier lookup", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Cleaning log/ })).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("navigation", {
+        name: "Pages",
+        exact: true,
+        includeHidden: true,
+      })
+      .getByRole("link", { name: "Notes", exact: true, includeHidden: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Cashier-readable check", { exact: true }),
+  ).toHaveCount(0);
+  await signIn(page, "Manager");
+  await page.goto("/#notes");
+  await notebookTab(page, "Cleaning log");
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "Cashier-readable check" }),
+  ).toBeVisible();
 });
 
 test("Persian Deli notebook uses custom controls and keeps the measurement and dates readable", async ({

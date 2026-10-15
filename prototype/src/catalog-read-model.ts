@@ -2,6 +2,7 @@ import type { AuthenticatedActor } from "./authority-types";
 import { freshActor } from "./authority";
 import { allowedLocationIds, can, requireCapability } from "./permissions";
 import { manualPrice } from "./manual-prices";
+import { branchSellsToCustomers } from "./settings";
 import {
   projectOffersReadView,
   type OfferReadDTO,
@@ -42,8 +43,15 @@ export type ProductReadDTO = Pick<
   | "first_added_branch"
   | "offer"
 > & {
-  /** A public badge flag, without rule-price, cost or decision provenance. */
+  /** Public selling-price provenance; never expose the canonical marker. */
   manual_price_scopes: readonly string[];
+  /** Only assigned visible selling stores, with no cost, margin or decision metadata. */
+  manual_price_comparisons: Readonly<
+    Record<
+      string,
+      { readonly rule_price: string; readonly manual_price: string }
+    >
+  >;
 };
 
 function visibleLocations(state: DemoState, actor: AuthenticatedActor) {
@@ -112,6 +120,20 @@ export function projectProductReadDTO(
     offer: product.offer,
     manual_price_scopes: ["all", ...locations].filter(
       (location) => manualPrice(state, product, location) !== null,
+    ),
+    manual_price_comparisons: Object.fromEntries(
+      [...locations].flatMap((location) => {
+        if (!branchSellsToCustomers(state.config, location)) return [];
+        const marker = manualPrice(state, product, location);
+        return marker
+          ? [
+              [
+                location,
+                { rule_price: marker.rule_price, manual_price: marker.price },
+              ],
+            ]
+          : [];
+      }),
     ),
   };
 }

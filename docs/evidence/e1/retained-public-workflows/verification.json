@@ -1,0 +1,15 @@
+{
+  "actual_repository": "/workspace/Supermarket-Inventory",
+  "baseline": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+  "changes": "Exact staged public notebook/manual-price repair applied; no mocks or authority shortcuts added.",
+  "command": "npm exec vitest -- run src/App.cashier-notebooks.e1.test.tsx src/catalog-privacy.e1.test.ts --maxWorkers=1 --reporter=json",
+  "exit_code": 0,
+  "result": {
+    "numTotalTests": 10,
+    "numPassedTests": 10,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "scope": "Affected real Provider routes and public catalog DTO only; not a full-suite result."
+}
