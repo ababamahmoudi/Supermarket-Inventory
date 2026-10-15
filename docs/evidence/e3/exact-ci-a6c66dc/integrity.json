@@ -1,0 +1,10 @@
+{
+  "raw-snapshot.tar.gz": {
+    "sha256": "588b5ac7f4d798b4612ef7f994cbd9f475af538128b79873342071e7487f981c",
+    "bytes": 37508
+  },
+  "summary.json": {
+    "sha256": "6f03ffcbbbba632fc3e98cd4a128c03f615466574f94496cca429fb300d20f25",
+    "bytes": 52411
+  }
+}

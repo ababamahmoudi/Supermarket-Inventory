@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-15 — Combined review verification and remaining CI boundaries
+
+- Record source-specific `0786ea2` application 1,444/1,444, separate SDK75/75, normal full lint and a fresh build, actual exits0 and unchanged source. Preserve earlier failing and successful attempts separately.
+- Record selected corrected native72/72 (36 desktop/36 phone), with no skips/retries/global errors, unchanged source/build/61 served files and actual English/Persian release originals manually viewed and passed. This is not a complete current-source812 browser pass; fullf154 remains769pass/1fail/42intentional skips.
+- Keep the actual configured-brand-color GitHub unit failure separate from older30-minute job limits and local full application success. The later test-only palette fixture waits for all three original exact CSS values under the unchanged default1000ms budget; the final E1/E2 files each passed11/11 and E3 lint/build passed with61 byte-identical build outputs. The final full E3 application1,444/SDK75 passed separately; its first archived-run import failure remains retained.
+- Update Ubuntu commands/click paths, the acceptance ledger and source/image provenance. Keep the one-line prototype-only CI30→90minute proposal unapplied until the owner grants its exception to the allowed path scope. No main merge, deployment or resource creation.
+
 ## 2026-10-15 — Keep inline sale-reminder units together
 
 - Render product names in delivery-release and no-end-sale reminders through the existing unit-text component. Keep English 24 cm and Persian centimetre/millimetre compounds together, including space and half-space spellings. Wording, business data, pricing and permissions are unchanged.

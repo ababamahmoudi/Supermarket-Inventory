@@ -1,3 +1,5 @@
+> Historical candidate-stage record. The [final exact E1/E2 checks](../brand-css-readiness-final/README.md) and [complete corrected-source application checks](../final-a6c66dc-validation/README.md) are now available; the original pending text below describes staging time.
+
 # Company-brand CSS readiness: candidate and actual CI failure
 
 Exact source `0786ea262b6ebdf573cd02f2b56479952633ee21`, PR CI run `38806913395`, failed the actual unit step in `store.test.tsx`: expected `--company-primary` **#0F766E**, received the default **#2B59C3**. Build and browser steps were skipped. This failure is separate from earlier 30-minute browser job cancellations. Original API annotation/job payloads are preserved unchanged here.
