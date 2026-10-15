@@ -75,6 +75,18 @@ test("live A4 designer redraws capacity and calibration, stores editable presets
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
+  await expect(
+    page
+      .locator(".labels-template-designer")
+      .getByText("Template saved.", { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(async () =>
+      (await readCanonicalBusinessEvidence(page)).templates.find(
+        (template) => template.name === "Template 1",
+      ),
+    )
+    .toMatchObject({ width: 60, offset_x: 1 });
   await page.reload();
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByLabel("Saved template", { exact: true }).click();

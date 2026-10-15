@@ -240,11 +240,27 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   const expectedHash = digest(fixture.buffer);
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(fixture);
+  // File injection bypasses inert/disabled controls. Wait for the real manual
+  // command and protected workspace before acting as an enabled file picker.
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousInvoiceId &&
+        current.entry_mode === "manual" &&
+        current.status === "draft"
+      );
+    })
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
+  const upload = page.getByLabel("Upload a PDF or photo", { exact: true });
+  await expect(upload).toBeEnabled();
+  await upload.setInputFiles(fixture);
   const canvas = page.getByRole("img", {
     name: "Original invoice PDF",
     exact: true,
