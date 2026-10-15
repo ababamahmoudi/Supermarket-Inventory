@@ -317,3 +317,11 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** the name link and end chevron navigate once. The existing route effect selects the invoice through the current protected workspace command. Its eventual completion does not push another route. Keep the Posted tab, per-user column preferences, current authority and original invoice evidence intact.
 
 **Why:** browser Back follows the user's latest action. A regression delays delivery of a genuine authenticated repository command after its real permission check and durable work, then exercises browser Back before releasing it. The original implementation fails with the exact unwanted detail route; the correction retains the list.
+
+## 041 — Retain Payables input when the location does not change
+
+**Context:** selecting the already selected Payables location unnecessarily adopted another authority projection. That refresh could replace the enabled search input during typing and lose its text and focus.
+
+**Decision:** ignore the unchanged location when the action is an ordinary location selection. Explicit Clear filters and actual location changes keep their existing behavior. Every query, financial action and current-authority check remains on its original protected path.
+
+**Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.
