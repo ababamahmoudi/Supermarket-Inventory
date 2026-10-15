@@ -1,0 +1,13 @@
+{
+  "commit": "0249a55dc92022e990d010c39d94e60793999995",
+  "actual_exit_code": 0,
+  "source_unchanged": true,
+  "counts": {
+    "numTotalTests": 1,
+    "numPassedTests": 1,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "scope": "Actual E1 checkout and genuine authenticated Provider regression after the backport. One targeted unit case; no full application or fresh normal build is claimed by this packet."
+}
