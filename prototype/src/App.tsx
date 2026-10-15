@@ -866,7 +866,11 @@ export default function App() {
   const allowed = pages.filter(
     (page) =>
       moduleEnabled(state.config, page.key) &&
-      (role !== "cashier" || page.key === "lookup") &&
+      (role !== "cashier" ||
+        page.key === "lookup" ||
+        // Only current protected custom-notebook DTOs establish this route.
+        // The Cashier never receives built-in Notes or a general Notes grant.
+        (page.key === "notes" && Boolean(state.notebooks?.length))) &&
       page.capabilities.some((capability) => {
         const decision = permission(capability);
         // A recent-password requirement keeps the permitted route visible.

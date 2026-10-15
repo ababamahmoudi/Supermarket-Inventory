@@ -40,6 +40,12 @@ describe("E1 Catalog financial boundary", () => {
         (item) => item.code === product.code,
       )!;
       expect(publicProduct.manual_price_scopes).toContain("Branch 1");
+      expect(publicProduct.manual_price_comparisons).toEqual({
+        "Branch 1": { rule_price: "1.49", manual_price: "1.59" },
+      });
+      expect(
+        Object.keys(publicProduct.manual_price_comparisons["Branch 1"]),
+      ).toEqual(["rule_price", "manual_price"]);
       expect(
         regularPrice(
           { config: state.config, ...view, sales: [] },
@@ -61,6 +67,69 @@ describe("E1 Catalog financial boundary", () => {
       ).toThrow();
     });
   }
+  it("keeps public manual comparisons within the actual selected selling Store and strips private source evidence", () => {
+    const state = fixture();
+    const actor = authenticatedTestFixture(state, "floor_worker", {
+      locations: ["Branch 1", "Branch 2", "Warehouse"],
+      selection: { kind: "location", location_id: "Branch 1" },
+    }).actor;
+    const product = state.products.find((item) => item.code === "0003")!;
+    product.manual_prices = {
+      all: {
+        price: "1.59",
+        rule_price: "1.49",
+        set_by: "Private manager provenance",
+        set_by_user_id: "private-source-person-id",
+        set_at: "2026-10-13T16:00:00Z",
+      },
+      "Branch 2": {
+        price: "1.79",
+        rule_price: "1.69",
+        set_by: "Other Store source",
+        set_at: "2026-10-13T16:00:00Z",
+      },
+    };
+    product.selling_price = "1.59";
+    product.branch_prices = { "Branch 2": "1.79" };
+    const result = projectCatalogReadView(state, actor).products.find(
+      (item) => item.code === product.code,
+    )!;
+    expect(result.manual_price_comparisons).toEqual({
+      "Branch 1": { rule_price: "1.49", manual_price: "1.59" },
+    });
+    expect(JSON.stringify(result.manual_price_comparisons)).not.toMatch(
+      /cost|margin|set_by|set_at|private-source|Other Store|1\.79|1\.69/,
+    );
+    // No private current cost is evaluated or disclosed by this retained public pair.
+    product.last_cost_before_tax = "987.6543";
+    expect(
+      projectCatalogReadView(state, actor).products.find(
+        (item) => item.code === product.code,
+      )!.manual_price_comparisons,
+    ).toEqual(result.manual_price_comparisons);
+    const aggregate = authenticatedTestFixture(state, "floor_worker", {
+      locations: ["Branch 1", "Branch 2", "Warehouse"],
+      selection: { kind: "all_my_locations" },
+    }).actor;
+    const aggregateProduct = projectCatalogReadView(
+      state,
+      aggregate,
+    ).products.find((item) => item.code === product.code)!;
+    expect(aggregateProduct.manual_price_comparisons).toEqual({
+      "Branch 1": { rule_price: "1.49", manual_price: "1.59" },
+      "Branch 2": { rule_price: "1.69", manual_price: "1.79" },
+    });
+    expect(aggregateProduct.manual_price_comparisons).not.toHaveProperty("all");
+    expect(aggregateProduct.manual_price_comparisons).not.toHaveProperty(
+      "Warehouse",
+    );
+    product.company_id = "another-company";
+    expect(
+      projectCatalogReadView(state, aggregate).products.some(
+        (item) => item.code === product.code,
+      ),
+    ).toBe(false);
+  });
   it("uses the current authorized Manager scope for private costs without exposing another company", () => {
     const state = fixture();
     const actor = authenticatedTestFixture(state, "manager", {

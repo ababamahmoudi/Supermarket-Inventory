@@ -293,3 +293,11 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** Waiting update uses explicit Demo action, real pending-work leases and dirty UI/print/recovery state. Keep current work/release until safe activation, preserving browser business/file data. Document no-Docker Ubuntu/Wi-Fi and optional private Cloudflare Pages/Access production plus wildcard-preview gates with placeholder-first verification. Create no resource/account/deployment and claim no real hardware installation. Barcode search focus is not a live camera scanner.
 
 **Why:** Phone presentation and installability improve without pretending to add shared server data, remote delivery or recoverable cached business pages. Hardware, hosting, Safari and physical printer evidence remain separate from Chromium/emulated tests. This entry is source-first, not a test or deployment result.
+
+## 038 — Retain explicitly shared Cashier notebooks and public manual-price comparisons (E1)
+
+**Context:** the full retained browser checks found that the new shell denied Cashier Notes even when the current protected notebook projection contained an explicit custom read grant. The new catalog DTO also retained the manual badge while suppressing the public Rule price / Manual price pair required by the existing requirements.
+
+**Decision:** allow the Cashier Notes route only when its fresh protected view contains an actual permitted custom notebook. The existing company/location/ACL projection and command checks continue to exclude built-in Notes, private routes and unauthorized contributions. Revoking the grant removes the route without deleting the entry. Project only the two retained selling amounts for each currently visible active selling Store; canonical manual markers, actor/decision metadata, costs and margins remain private. Render the permitted public comparison without calling the financial query; keep the existing private Manager comparison/margin path.
+
+**Why:** restore approved staff workflows without broadening financial authority or recreating prices from hidden costs. Regression checks cover real Provider routes, current ACL and company/location denials, public-pair isolation and retained native workflows. Executed results are recorded separately.
