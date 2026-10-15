@@ -1,17 +1,15 @@
-import Decimal from "decimal.js";
 import { useState } from "react";
 import { useDemo } from "../store";
 import {
-  compatibleInvoiceOrders,
-  currentInvoiceOrderComparison,
-  invoiceReviewerAllowed,
-  linkedInvoiceOrder,
   setInvoiceExtraDecision,
   setInvoiceOrder,
   setInvoiceNewItemMatch,
 } from "../invoice-orders";
 import { orderError } from "../c-orders-i18n";
-import { previousReceiptCost } from "../invoice";
+import { invoiceOrderReviewRead } from "../invoice-order-review-read";
+import { useProtectedQuery } from "../use-protected-query";
+import { requireInvoiceAuthority } from "../invoice-authority";
+import type { AuthenticatedActor } from "../authority-types";
 import {
   Badge,
   Button,
@@ -27,35 +25,79 @@ import type { DemoState } from "../types";
 import "./invoice-orders.css";
 
 export function InvoiceOrderReview() {
-  const { state, update, role, branch, user, lang, t } = useDemo();
+  const { state, command, lang, t } = useDemo();
   const [matchErrors, setMatchErrors] = useState<Record<string, string>>({});
-  const invoice = state.invoice;
-  const origin = user?.branch ?? branch;
-  if (!role || !invoiceReviewerAllowed(state, invoice, role, origin))
-    return null;
-  const locked = invoice.status === "posted";
-  const choices = compatibleInvoiceOrders(state, role, origin);
-  const order = linkedInvoiceOrder(state);
-  const comparison = currentInvoiceOrderComparison(state);
-  const stale =
-    !locked && order && order.version !== invoice.order_review_version;
-  const mutate = (action: (draft: DemoState) => void) =>
-    update((draft) => {
-      if (
-        !invoiceReviewerAllowed(draft, draft.invoice, role, origin) ||
-        draft.invoice.status === "posted"
-      )
+  const [error, setError] = useState<string>();
+  // UI keys survive a fresh protected read; invoice data never does.
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const invoiceId = state.invoice?.id;
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+  };
+  const read = useProtectedQuery(
+    invoiceId ? "invoices.cost_read" : null,
+    scope,
+    (canonical, freshActor) => {
+      if (!invoiceId)
         throw new Error(
           "Review an invoice in your allowed receiving location.",
         );
-      action(draft);
-    });
+      return invoiceOrderReviewRead(canonical, freshActor, invoiceId);
+    },
+    invoiceId ?? "",
+  );
+  const loaded = read.data;
+  if (!loaded || !invoiceId) return null;
+  const { invoice, choices, order, comparison } = loaded;
+  const locked = !loaded.can_edit;
+  const stale =
+    !locked && order && order.version !== invoice.order_review_version;
+  const mutate = async (
+    action: (draft: DemoState, freshActor: AuthenticatedActor) => void,
+  ) => {
+    try {
+      await command(
+        "invoices.edit",
+        { ...scope, mutation: true },
+        (draft, freshActor) => {
+          requireInvoiceAuthority(
+            draft,
+            freshActor,
+            "invoices.edit",
+            invoiceId,
+            true,
+          );
+          const current = invoiceOrderReviewRead(draft, freshActor, invoiceId);
+          if (!current.can_edit || current.fingerprint !== loaded.fingerprint)
+            throw new Error(
+              "Review an invoice in your allowed receiving location.",
+            );
+          action(draft, freshActor);
+        },
+      );
+      setError(undefined);
+    } catch (failure) {
+      setError(orderError(failure, t));
+      throw failure;
+    }
+  };
+  const save = (
+    action: (draft: DemoState, freshActor: AuthenticatedActor) => void,
+  ) => {
+    void mutate(action).catch(() => undefined);
+  };
   if (locked && !comparison) return null;
   return (
     <Card
       title={t("Compare with order", "مقایسه با سفارش")}
       className="invoice-order-card"
     >
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
       {!locked && (
         <Field
           label={t("Order (optional)", "سفارش (اختیاری)")}
@@ -67,7 +109,9 @@ export function InvoiceOrderReview() {
           <Select
             value={invoice.order_id ?? ""}
             onChange={(value) =>
-              mutate((draft) => setInvoiceOrder(draft, role, origin, value))
+              save((draft, freshActor) =>
+                setInvoiceOrder(draft, freshActor, value),
+              )
             }
             options={[
               { value: "", label: t("No linked order", "بدون سفارش مرتبط") },
@@ -129,17 +173,16 @@ export function InvoiceOrderReview() {
                       <Select
                         value={matchedIndex < 0 ? "" : String(matchedIndex)}
                         disabled={!!stale}
-                        onChange={(value) => {
+                        onChange={async (value) => {
                           setMatchErrors((current) => ({
                             ...current,
                             [temporary.id]: "",
                           }));
                           try {
-                            mutate((draft) =>
+                            await mutate((draft, freshActor) =>
                               setInvoiceNewItemMatch(
                                 draft,
-                                role,
-                                origin,
+                                freshActor,
                                 temporary.id,
                                 value === "" ? null : Number(value),
                               ),
@@ -241,7 +284,9 @@ export function InvoiceOrderReview() {
             variant="secondary"
             disabled={!choices.some((candidate) => candidate.id === order.id)}
             onClick={() =>
-              mutate((draft) => setInvoiceOrder(draft, role, origin, order.id))
+              save((draft, freshActor) =>
+                setInvoiceOrder(draft, freshActor, order.id),
+              )
             }
           >
             {t("Refresh comparison", "تازه‌سازی مقایسه")}
@@ -251,6 +296,8 @@ export function InvoiceOrderReview() {
       {comparison && (
         <DataTable
           className="invoice-order-table"
+          expandedRowKeys={expandedRowKeys}
+          onExpandedRowKeysChange={setExpandedRowKeys}
           columns={[
             { width: "30%" },
             { width: 140, align: "end" },
@@ -276,15 +323,9 @@ export function InvoiceOrderReview() {
                   item.company_id === invoice.company_id &&
                   item.code === line.product_code,
               );
-              const previous = previousReceiptCost(
-                state,
-                line.product_code,
-                line,
+              const lower = loaded.lower_price_line_indices.includes(
+                row.invoice_line_index,
               );
-              const lower =
-                previous &&
-                /^\d+(?:\.\d{1,4})?$/.test(line.unit_cost_before_tax) &&
-                new Decimal(line.unit_cost_before_tax).lt(previous.cost);
               return (
                 <tr
                   key={`invoice:${row.invoice_line_index}`}
@@ -343,11 +384,10 @@ export function InvoiceOrderReview() {
                             )}
                             value={line.extra_delivery_decision ?? ""}
                             onChange={(value) =>
-                              mutate((draft) =>
+                              save((draft, freshActor) =>
                                 setInvoiceExtraDecision(
                                   draft,
-                                  role,
-                                  origin,
+                                  freshActor,
                                   row.invoice_line_index,
                                   value as "keep" | "refuse",
                                 ),
@@ -385,11 +425,15 @@ export function InvoiceOrderReview() {
                               "هزینه هر واحد پیش از مالیات",
                             )}
                             :{" "}
-                            <Money
-                              value={row.previous_unit_cost ?? "0"}
-                              currency={state.config.company.currency}
-                              decimals={2}
-                            />{" "}
+                            {row.previous_unit_cost === null ? (
+                              <span className="muted">—</span>
+                            ) : (
+                              <Money
+                                value={row.previous_unit_cost}
+                                currency={state.config.company.currency}
+                                decimals={2}
+                              />
+                            )}{" "}
                             →{" "}
                             <Money
                               value={row.new_unit_cost}
@@ -403,11 +447,15 @@ export function InvoiceOrderReview() {
                               "هزینه کارتن پیش از مالیات",
                             )}
                             :{" "}
-                            <Money
-                              value={row.previous_case_cost ?? "0"}
-                              currency={state.config.company.currency}
-                              decimals={2}
-                            />{" "}
+                            {row.previous_case_cost === null ? (
+                              <span className="muted">—</span>
+                            ) : (
+                              <Money
+                                value={row.previous_case_cost}
+                                currency={state.config.company.currency}
+                                decimals={2}
+                              />
+                            )}{" "}
                             →{" "}
                             <Money
                               value={row.new_case_cost}
@@ -423,7 +471,7 @@ export function InvoiceOrderReview() {
                               )}
                               value={line.order_price_decision ?? ""}
                               onChange={(value) =>
-                                mutate((draft) => {
+                                save((draft) => {
                                   const item =
                                     draft.invoice.lines[row.invoice_line_index];
                                   item.order_price_decision = value as
@@ -467,7 +515,7 @@ export function InvoiceOrderReview() {
                                 value={line.date_value ?? ""}
                                 disabled={locked || !!stale}
                                 onChange={(value) =>
-                                  mutate((draft) => {
+                                  save((draft) => {
                                     const item =
                                       draft.invoice.lines[
                                         row.invoice_line_index
@@ -530,7 +578,7 @@ export function InvoiceOrderReview() {
                           ] ?? ""
                         }
                         onChange={(value) =>
-                          mutate((draft) => {
+                          save((draft) => {
                             draft.invoice.order_missing_decisions ??= {};
                             draft.invoice.order_missing_decisions[
                               row.order_line_id

@@ -6,7 +6,8 @@ import {
   setAlertStatus,
 } from "../approvals";
 import { useDemo } from "../store";
-import { effectiveOffer, effectivePrice } from "../catalog";
+import { alertPriceEffects, type AlertPriceEffects } from "../alerts-read";
+import { configuredRoleLabel } from "../role-config";
 import {
   DateText,
   LtrText,
@@ -14,7 +15,7 @@ import {
   OfferLabel,
   ProductName,
 } from "../presentation";
-import { branchLabel, sellingBranches } from "../settings";
+import { branchLabel } from "../settings";
 import { dateReminderMessage } from "../date-tracking";
 import { SalesAlerts } from "./SalesAlerts";
 import { ChevronRight } from "lucide-react";
@@ -32,7 +33,7 @@ import {
 } from "../ui";
 
 export function Alerts() {
-  const { state, update, role, branch, lang, t } = useDemo();
+  const { state, actor, can, command, query, branch, lang, t } = useDemo();
   const [showResolved, setShowResolved] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -44,6 +45,7 @@ export function Alerts() {
     code: string;
     price: string;
     snapshot: string;
+    effects: AlertPriceEffects["effects"];
   } | null>(null);
   const company = state.config.company.seed_key;
   const alerts = state.alerts.filter(
@@ -52,59 +54,139 @@ export function Alerts() {
       (showResolved || item.status === "pending") &&
       (branch === "all" || item.branch === branch || item.branch === "all"),
   );
-  if (role !== "supervisor")
-    return (
-      <EmptyState>
-        {t(
-          "Switch to Supervisor to review alerts.",
-          "برای بررسی هشدارها به سرپرست تغییر دهید.",
-        )}
-      </EmptyState>
-    );
+  if (!actor || !can("alerts.read")) return null;
+  const canDecide = can("alerts.decide");
   const branchName = (value: string) => branchLabel(state.config, value, lang);
-  const demoBranches = sellingBranches(state.config);
-  const resolve = (id: string, status: "pending" | "resolved") => {
-    update((draft) => setAlertStatus(draft, id, status, notes[id]));
-    setMessage(
-      status === "resolved"
-        ? t("Marked as taken care of.", "رسیدگی‌شده ثبت شد.")
-        : t("Kept as pending.", "در انتظار حفظ شد."),
-    );
-  };
-  const applyToAll = () => {
-    if (!confirm) return;
-    const current = approvalSnapshot(state, confirm.code);
-    if (current !== confirm.snapshot) {
-      setConfirm(null);
+  const resolve = async (id: string, status: "pending" | "resolved") => {
+    try {
+      await command(
+        "alerts.decide",
+        {
+          company_id: company,
+          kind: "company_shared",
+          entity_id: id,
+          mutation: true,
+        },
+        (draft, current) =>
+          setAlertStatus(draft, current, id, status, notes[id]),
+      );
+      setMessage(
+        status === "resolved"
+          ? t("Marked as taken care of.", "رسیدگی‌شده ثبت شد.")
+          : t("Kept as pending.", "در انتظار حفظ شد."),
+      );
+    } catch {
       setError({
-        product_code: confirm.code,
+        product_code:
+          state.alerts.find((item) => item.id === id)?.product_code ?? "",
         message: t(
           "Prices changed. Review the latest conflict and choose the price again.",
           "قیمت‌ها تغییر کردند. اختلاف تازه را بررسی و دوباره قیمت را انتخاب کنید.",
         ),
       });
-      return;
     }
-    update((draft) =>
-      applyApprovedPrice(draft, confirm.code, confirm.price, "all", "all"),
-    );
-    setMessage(
-      t(
-        "Applied price to all branches. Overrides were removed and offers were checked.",
-        "قیمت به همه شعبه‌ها اعمال شد. قیمت‌های ویژه حذف و پیشنهادها بررسی شدند.",
-      ),
-    );
-    setConfirm(null);
+  };
+  const reviewPrice = async (code: string, price: string) => {
     setError(undefined);
+    try {
+      const reviewed = await query(
+        "pricing.regular_manage",
+        { company_id: company, kind: "company_shared" },
+        (canonical, current) =>
+          alertPriceEffects(canonical, current, code, price),
+      );
+      setConfirm({ code, price, ...reviewed });
+    } catch {
+      setError({
+        product_code: code,
+        message: t(
+          "Prices changed. Review the latest conflict and choose the price again.",
+          "قیمت‌ها تغییر کردند. اختلاف تازه را بررسی و دوباره قیمت را انتخاب کنید.",
+        ),
+      });
+    }
+  };
+  const applyToAll = async () => {
+    if (!confirm) return;
+    const reviewed = confirm;
+    try {
+      await command(
+        "pricing.regular_manage",
+        { company_id: company, kind: "company_shared", mutation: true },
+        (draft, current) => {
+          if (
+            approvalSnapshot(draft, current, reviewed.code) !==
+            reviewed.snapshot
+          )
+            throw new Error("stale");
+          applyApprovedPrice(
+            draft,
+            current,
+            reviewed.code,
+            reviewed.price,
+            "all",
+            "all",
+          );
+        },
+      );
+      setMessage(
+        t(
+          "Applied price to all branches. Overrides were removed and offers were checked.",
+          "قیمت به همه شعبه‌ها اعمال شد. قیمت‌های ویژه حذف و پیشنهادها بررسی شدند.",
+        ),
+      );
+      setError(undefined);
+    } catch {
+      setError({
+        product_code: reviewed.code,
+        message: t(
+          "Prices changed. Review the latest conflict and choose the price again.",
+          "قیمت‌ها تغییر کردند. اختلاف تازه را بررسی و دوباره قیمت را انتخاب کنید.",
+        ),
+      });
+    }
+    setConfirm(null);
+  };
+  const intentional = async (id: string, product_code: string) => {
+    try {
+      await command(
+        "alerts.decide",
+        {
+          company_id: company,
+          kind: "company_shared",
+          entity_id: id,
+          mutation: true,
+        },
+        (draft, current) => markPriceConflictIntentional(draft, current, id),
+      );
+      setMessage(
+        t(
+          "Marked as intentional. A later price change will create a new alert.",
+          "عمدی ثبت شد. تغییر بعدی قیمت، هشدار تازه ایجاد می‌کند.",
+        ),
+      );
+    } catch {
+      setError({
+        product_code,
+        message: t(
+          "Prices changed. Review the latest conflict and choose the price again.",
+          "قیمت‌ها تغییر کردند. اختلاف تازه را بررسی و دوباره قیمت را انتخاب کنید.",
+        ),
+      });
+    }
   };
   return (
     <>
       <PageHeader
         title={t("Alerts", "هشدارها")}
-        description={t(
-          "Lower supplier costs and branch price differences need a clear decision.",
-          "کاهش هزینه تأمین‌کننده و اختلاف قیمت شعبه‌ها به تصمیم روشن نیاز دارند.",
-        )}
+        description={
+          canDecide
+            ? t(
+                "Lower supplier costs and branch price differences need a clear decision.",
+                "کاهش هزینه تأمین‌کننده و اختلاف قیمت شعبه‌ها به تصمیم روشن نیاز دارند.",
+              )
+            : undefined
+        }
       />
       <div className="toolbar">
         <Checkbox checked={showResolved} onChange={setShowResolved}>
@@ -117,6 +199,11 @@ export function Alerts() {
       {message && (
         <div className="banner" role="status">
           {message}
+        </div>
+      )}
+      {error && (
+        <div className="banner danger" role="alert">
+          {error.message}
         </div>
       )}
       {alerts.length === 0 && (
@@ -176,7 +263,9 @@ export function Alerts() {
       {alerts
         .filter(
           (alert) =>
-            alert.type !== "date_reminder" && !alert.type.startsWith("sale_"),
+            alert.type !== "date_reminder" &&
+            !alert.type.startsWith("sale_") &&
+            (canDecide || alert.type === "return_credit_overdue"),
         )
         .map((alert) => {
           const product = state.products.find(
@@ -290,7 +379,9 @@ export function Alerts() {
                     </thead>
                     <tbody>
                       {Object.entries(alert.branch_prices ?? {})
-                        .filter(([name]) => demoBranches.includes(name))
+                        .filter(([name]) =>
+                          actor.allowed_branches.includes(name),
+                        )
                         .map(([name, price]) => (
                           <tr key={name}>
                             <td>{branchName(name)}</td>
@@ -298,21 +389,13 @@ export function Alerts() {
                               <Money value={price} />
                             </td>
                             <td>
-                              {alert.status === "pending" && (
+                              {canDecide && alert.status === "pending" && (
                                 <Button
                                   variant="neutral"
                                   size="sm"
-                                  onClick={() => {
-                                    setError(undefined);
-                                    setConfirm({
-                                      code: alert.product_code,
-                                      price,
-                                      snapshot: approvalSnapshot(
-                                        state,
-                                        alert.product_code,
-                                      ),
-                                    });
-                                  }}
+                                  onClick={() =>
+                                    void reviewPrice(alert.product_code, price)
+                                  }
                                 >
                                   {t(
                                     "Apply this price to all",
@@ -325,30 +408,17 @@ export function Alerts() {
                         ))}
                     </tbody>
                   </DataTable>
-                  {error?.product_code === alert.product_code && (
-                    <p className="banner danger" role="alert">
-                      {error.message}
-                    </p>
-                  )}
                   <p className="muted">
                     {t(
                       "Intentional differences stay quiet until an approved branch price changes.",
                       "اختلاف‌های عمدی تا تغییر قیمت تأییدشده یک شعبه، دوباره هشدار نمی‌دهند.",
                     )}
                   </p>
-                  {alert.status === "pending" && (
+                  {canDecide && alert.status === "pending" && (
                     <Button
-                      onClick={() => {
-                        update((draft) =>
-                          markPriceConflictIntentional(draft, alert.id),
-                        );
-                        setMessage(
-                          t(
-                            "Marked as intentional. A later price change will create a new alert.",
-                            "عمدی ثبت شد. تغییر بعدی قیمت، هشدار تازه ایجاد می‌کند.",
-                          ),
-                        );
-                      }}
+                      onClick={() =>
+                        void intentional(alert.id, alert.product_code)
+                      }
                     >
                       {t("Mark as intentional", "ثبت به عنوان عمدی")}
                     </Button>
@@ -444,13 +514,18 @@ export function Alerts() {
                                 <td>
                                   {difference.new_unit_cost ? (
                                     <>
-                                      <Money
-                                        value={
-                                          difference.previous_unit_cost ?? "0"
-                                        }
-                                        decimals={2}
-                                        currency={state.config.company.currency}
-                                      />{" "}
+                                      {difference.previous_unit_cost !==
+                                      undefined ? (
+                                        <Money
+                                          value={difference.previous_unit_cost}
+                                          decimals={2}
+                                          currency={
+                                            state.config.company.currency
+                                          }
+                                        />
+                                      ) : (
+                                        "—"
+                                      )}{" "}
                                       →{" "}
                                       <Money
                                         value={difference.new_unit_cost}
@@ -574,30 +649,37 @@ export function Alerts() {
                       {t("Recorded note", "یادداشت ثبت‌شده")}: {alert.note}
                     </p>
                   )}
-                  <Field
-                    label={t(
-                      "Supervisor note (optional)",
-                      "یادداشت سرپرست (اختیاری)",
-                    )}
-                  >
-                    <input
-                      value={notes[alert.id] ?? ""}
-                      onChange={(event) =>
-                        setNotes({ ...notes, [alert.id]: event.target.value })
-                      }
-                    />
-                  </Field>
-                  <div className="actions">
-                    <Button onClick={() => resolve(alert.id, "resolved")}>
-                      {t("Mark as taken care of", "ثبت رسیدگی‌شده")}
-                    </Button>
-                    <Button
-                      variant="neutral"
-                      onClick={() => resolve(alert.id, "pending")}
-                    >
-                      {t("Keep as pending", "حفظ در انتظار")}
-                    </Button>
-                  </div>
+                  {canDecide && (
+                    <>
+                      <Field
+                        label={t(
+                          `${configuredRoleLabel(state.config.roles, "manager", "en")} note (optional)`,
+                          `یادداشت ${configuredRoleLabel(state.config.roles, "manager", "fa")} (اختیاری)`,
+                        )}
+                      >
+                        <input
+                          value={notes[alert.id] ?? ""}
+                          onChange={(event) =>
+                            setNotes({
+                              ...notes,
+                              [alert.id]: event.target.value,
+                            })
+                          }
+                        />
+                      </Field>
+                      <div className="actions">
+                        <Button onClick={() => resolve(alert.id, "resolved")}>
+                          {t("Mark as taken care of", "ثبت رسیدگی‌شده")}
+                        </Button>
+                        <Button
+                          variant="neutral"
+                          onClick={() => resolve(alert.id, "pending")}
+                        >
+                          {t("Keep as pending", "حفظ در انتظار")}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </Card>
@@ -636,13 +718,9 @@ export function Alerts() {
               </tr>
             </thead>
             <tbody>
-              {demoBranches.map((value) => {
-                const product = state.products.find(
-                  (item) =>
-                    item.company_id === company && item.code === confirm.code,
-                )!;
-                const price = effectivePrice(state, product, value);
-                const offer = effectiveOffer(state, product, value);
+              {confirm.effects.map((effect) => {
+                const value = effect.branch,
+                  price = effect.price;
                 return (
                   <tr key={value}>
                     <td>{branchName(value)}</td>
@@ -658,17 +736,20 @@ export function Alerts() {
                       </div>
                     </td>
                     <td>
-                      {offer ? (
-                        <OfferLabel label={offer.label} language={lang} />
+                      {effect.offer_label ? (
+                        <OfferLabel
+                          label={effect.offer_label}
+                          language={lang}
+                        />
                       ) : (
                         t("None", "ندارد")
                       )}
-                      {offer && offer.price !== confirm.price && (
+                      {effect.offer_stops && (
                         <> · {t("Will stop", "متوقف می‌شود")}</>
                       )}
                     </td>
                     <td>
-                      {product.branch_prices?.[value]
+                      {effect.override_removed
                         ? t("Yes", "بله")
                         : t("No", "خیر")}
                     </td>

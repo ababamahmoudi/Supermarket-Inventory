@@ -77,9 +77,9 @@ Staged path so costs stay low while there is no paying usage:
 ## Security and privacy
 
 - HTTPS only; secure, HTTP-only cookies; CSRF protection; rate limiting and account lockout on failed sign-ins.
-- Accounts are created only by the Supervisor (no self-registration); temporary passwords force a change at first sign-in; passwords hashed with a modern algorithm (Argon2 or Django's default), checked against common/breached lists; no PINs.
-- Each company is served on its own subdomain; usernames are unique per company. Registered-device tokens (for the recent-users list) are revocable by the Supervisor; instant user deactivation.
-- Later, not now: invite-only Google sign-in (OpenID Connect, matched to emails the Supervisor added) and authenticator-app second step for Supervisors.
+- Accounts are created only by Owner/Manager (the platform creates the first Owner; no self-registration); one-time setup codes force personal password choice at first sign-in; passwords hashed with a modern algorithm (Argon2 or Django's default), checked against common/breached lists; no PINs.
+- Each company is served on its own subdomain; usernames are unique per company. Registered-device tokens (for the recent-users list) are revocable by the Owner/Manager; instant user deactivation.
+- Later: invite-only Google sign-in (OpenID Connect, matched to invited emails) and real passkey/authenticator verification. E1 demonstrates mandatory privileged second-step setup/challenge locally, explicitly simulated.
 - Server-side permission checks on every endpoint; company/branch scoping enforced centrally; automated tests for cross-company and cross-branch leakage.
 - Uploads: validate type and size, store privately, serve by short-lived signed URL, never trust file names. Add malware scanning before production.
 - Secrets only in secret stores. No secrets in logs. Audit log for sensitive actions.
@@ -114,8 +114,54 @@ C3/C4 remain frontend-only; changes are limited to prototype/, docs/ and seed/ f
 
 C4 retains original file bytes in browser persistence and previews matching fictional images/actual PDF pages. Posted invoice content corrections append immutable effective versions and compensating references, preserving original invoice/file/payment/allocation/physical evidence. New item order association happens only through explicitly linked reviewed posted lines. Weight quantities retain source kg/lb units and Decimal canonical lb cost; product date preferences/manual entries have scoped audited transitions.
 
-Pickup expected return credits are provisional Supervisor-only balance projections, distinct from confirmed supplier ledger credits; worker pickup never grants financial-posting privilege. Actual settlement/written off needs authorized evidence. Replacement releases its expected projection according to the owner's answer, without a new purchase/credit posting. Phase 1 must enforce these transactions server-side; no backend/schema implementation or paid deployment is authorized here.
+Pickup expected return credits are provisional Owner/Manager-only balance projections, distinct from confirmed supplier ledger credits; worker pickup never grants financial-posting privilege. Actual settlement/written off needs authorized evidence. Replacement releases its expected projection according to the owner's answer, without a new purchase/credit posting. Phase 1 must enforce these transactions server-side; no backend/schema implementation or paid deployment is authorized here.
 
 ## C5 presentation boundary
 
 C5 changes prototype/ and docs/ only, after green history-preserving C3/C4 merges. Shared controls enforce intrinsic12 px/40 px text actions, circular icon widgets and visible bordered fields in both themes. New inline date operations reuse scoped validated audits/Undo; identical current offers reuse their existing record and historical versions remain retained. Seed/pricing/backend/CI configuration and protected money/original evidence are unchanged. Browser proof uses the fresh compiled source, actual computed dimensions and unedited UI screenshots; physical printer calibration remains separate.
+
+## E1 authority and future-server boundary
+
+The current source specification defines five configured roles and a private company-scoped Person/credential/session/device authority repository; implementation remains Planned. Async protected Store.command/query reads current actor/setup/epoch and latest persisted business within the same IndexedDB boundary, commits before React and invokes the same central capability/resource/field evaluator as the UI. Domain APIs derive canonical resource scope, not caller role/branch claims. People safety/version/usable Active Owner checks and revocations commit together; usable means Active with complete password and required second-step setup, while promoted Floor Worker stays Invited until setup completes. Shared-browser invalidation and safe protected authorityHistory projection occur after commit; missed messages cannot authorise later operations.
+
+Credentials/challenges stay separate from ordinary business state, exports and History. Normal verified auth migration preserves legacy identities/passwords/forced setup/preferences; reset alone restores six demo fixtures and the configured fictional computer. Browser-local data is not tamper-proof production authentication or synchronized phone data. Future /api/v1 endpoints resolve an actor from an authenticated server session and use database transactions with these same independent role/field/domain rules. No backend/hosted database/resource/deployment change is authorised here.
+
+### Repository-minted system reconciliation
+
+Clock and derived-event jobs require a private runtime witness minted only inside the synchronous company-scoped repository transaction, bound to the exact current draft, source and directory version. Plain/spread/foreign-draft/wrong-source or retained-after-callback objects fail. No public mint, fabricated Manager, asynchronous side effect or authority fallback is permitted. User decisions still require a current authenticated actor.
+
+## E1 damaged legacy History recovery
+
+A healthy existing canonical IndexedDB business record takes precedence over any retired legacy text. Do not read a stale legacy dictionary, falsely quarantine healthy data, recreate people, reset a password, or replace existing company business records during normal startup.
+
+When the company has no canonical business record and its retained legacy History dictionary is invalid, retain that exact legacy string. Before creating a separate fictional quarantine demo, save its exact UTF-8 bytes as a company/storage-key/SHA256 addressed FileDB backup; wait for the write transaction, read it back and verify both exact text and hash. If this verification fails, startup remains blocked, the original text/file bytes stay retained, and no usable business view or fabricated authentication is published. This is not a completed migration or recovery of the damaged business data.
+
+After successful verification, persist a private canonical recovery marker containing only its schema, legacy source key, original digest, verified backup reference and phase. The quarantined business is explicitly a separate fictional demo. Normal sign-in/setup and protected queries/commands use the genuine current company directory, credentials, sessions and capabilities. Existing people, passwords and sessions are preserved. Valid demo edits may persist in the separate canonical quarantine demo; they never overwrite the unreadable legacy string. Reload retains both the private marker and the visible recovery notice. Public business projections contain neither that marker, the raw damaged history nor credential data.
+
+Only an explicitly confirmed, fresh authorized `demo.reset` command can replace the canonical demo and six configured people. Reverify the exact original backup and any remaining legacy source before that transaction. A backup/check/authority/canonical-transaction rejection leaves the current canonical data, directory, original text and recovery notice unchanged. Keep all immutable files and backups.
+
+Canonical Reset and legacy localStorage retirement are different storage transactions. After a successful canonical Reset, persist the `reset_committed` recovery phase until a current authorized command verifies the backup again, retires only the matching old legacy source and clears the marker. Failure in retirement is a **committed Reset with retirement pending**, not a rejected Reset or a silent completed recovery. Retain the original backup and explicit notice; the old text also remains whenever removal did not succeed. A partial retirement can have removed the old text before the marker write failed; its exact verified backup remains and the notice persists. Retry only this already-authorized retirement after a genuine allowed session resumes or signs in, without resetting business or people again. Never remove changed/unverified legacy text.
+
+Recovery notice (English): **Saved history could not be read. Your original data is retained. You are using a separate fictional demo. Allow browser storage, then reload, or choose Reset demo.**
+
+Recovery notice (Persian): **سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. اکنون از یک دموی ساختگی جداگانه استفاده می‌کنید. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید، یا بازنشانی دمو را انتخاب کنید.**
+
+Committed Reset with retirement pending (English): **Demo reset is complete. Your original history is backed up, but its old browser copy could not be retired. Allow browser storage, then reload.**
+
+Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
+
+Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
+
+### E1 durable publication and failed legacy file import
+
+The canonical company `business` IndexedDB transaction is E1's durable business publication. Retired legacy `supermarket-prototype-v1` text remains original evidence; normal commands do not rewrite it or publish a second live state there. Browser migration checks observe the real canonical commit and verify exact retained source/backup/file bytes. Decoded canonical History still supports lossless dictionary encode/decode and its genuine guarded Revert.
+
+A valid legacy file import whose original backup cannot be saved and read back stays blocked before canonical business initialization and before protected rendering. Do not display a protected original through a fabricated session or report migration success. Show the actual storage failure, retain the exact original file/source/backups and leave the canonical company business record absent. This is separate from the verified damaged-History quarantine described above.
+
+### Verified quarantine notice boundary
+
+Show the separate fictional-demo notice only after its private marker is present in the actual committed canonical business record. A prepared import is insufficient: a failed canonical write remains blocked, and a concurrent healthy initialization takes precedence. Failed backup metadata/integrity verification reuses the existing blocked-History notice: **Saved history could not be read. Your original data is retained. Allow browser storage, then reload.** / **سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.** Do not claim a usable fictional quarantine, completed migration, or recovered original data after a failed verification.
+
+### Same-company original-source gate
+
+Before expanding any legacy History dictionary, saving a FileDB backup, or initializing canonical business/authority, valid legacy JSON must explicitly declare version 1 and the actual configured company in `config.company.seed_key`. Missing, malformed or mismatching ownership metadata stays blocked with its original text unchanged; do not archive a foreign company's source under the current company or manufacture a usable quarantine from it. The direct quarantine helper repeats the same gate before any file I/O, and Reset rechecks ownership in the verified original backup. Healthy existing canonical business continues to ignore stale legacy text, including another company's damaged dictionary. This gate never substitutes a default company for missing source metadata or changes genuine existing directory credentials.

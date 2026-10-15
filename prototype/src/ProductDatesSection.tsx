@@ -1,8 +1,9 @@
 import "./date-tracking.css";
 import { CalendarClock, Truck } from "lucide-react";
-import { lookupBranch } from "./catalog";
+import { useEffect, useState } from "react";
+import { actorAtLocation } from "./authority";
+import { trackedDateView } from "./notes-dates-read";
 import {
-  scopedTrackedDates,
   productReminderDays,
   trackedDateDaysLeft,
   validTrackedDate,
@@ -12,7 +13,7 @@ import { DateText, LtrText } from "./presentation";
 import { branchLabel } from "./settings";
 import { lookupLastReceipt } from "./receipt-lots";
 import { useDemo } from "./store";
-import type { Product } from "./types";
+import type { ProductReadDTO } from "./e1-read-model";
 import { Badge } from "./ui";
 
 /** Lookup is a reading surface for every role; edits belong to the product form. */
@@ -20,26 +21,88 @@ export function ProductDatesSection({
   product,
   showReceived = true,
 }: {
-  product: Product;
+  product: ProductReadDTO;
   showReceived?: boolean;
 }) {
-  const { state, branch, historyContext, lang, t } = useDemo();
-  const location = lookupBranch(branch);
-  const dates = historyContext
-    ? scopedTrackedDates(state, { ...historyContext, branch: location })
+  const {
+    state,
+    branch,
+    actor,
+    query,
+    can,
+    businessRevision,
+    authorityGeneration,
+    lang,
+    t,
+  } = useDemo();
+  // The public view already contains only the current scoped date projection.
+  // Aggregate reads stay aggregate; never silently choose the first store.
+  const dates = actor
+    ? trackedDateView(state)
         .filter(
           (entry) =>
-            entry.product_code === product.code && validTrackedDate(entry.date),
+            entry.company_id === product.company_id &&
+            entry.product_code === product.code &&
+            validTrackedDate(entry.date),
         )
-        .sort((a, b) => a.date.localeCompare(b.date))
+        .sort(
+          (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id),
+        )
     : [];
-  const received = historyContext
-    ? lookupLastReceipt(
-        state,
-        { ...historyContext, branch: location },
-        product.code,
-      )
-    : undefined;
+  const receiptScope = {
+    company_id: product.company_id,
+    kind: "location_record" as const,
+    location_ids: [branch],
+  };
+  const readsReceipt =
+    showReceived &&
+    branch !== "all" &&
+    actor !== null &&
+    can("lookup.receipt_hint", receiptScope);
+  type ReceiptHint = ReturnType<typeof lookupLastReceipt>;
+  const [receiptResult, setReceiptResult] = useState<{
+    key: string;
+    hint: ReceiptHint;
+  } | null>(null);
+  const receiptKey = `${product.company_id}:${product.code}:${branch}:${businessRevision}:${authorityGeneration}`;
+  useEffect(() => {
+    if (!readsReceipt) return;
+    let active = true;
+    void query(
+      "lookup.receipt_hint",
+      {
+        company_id: product.company_id,
+        kind: "location_record",
+        location_ids: [branch],
+      },
+      (freshState, freshActor) =>
+        lookupLastReceipt(
+          freshState,
+          actorAtLocation(freshState, freshActor, branch),
+          product.code,
+        ),
+    )
+      .then((hint) => {
+        if (active) setReceiptResult({ key: receiptKey, hint });
+      })
+      .catch(() => {
+        if (active) setReceiptResult({ key: receiptKey, hint: undefined });
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    readsReceipt,
+    product.company_id,
+    product.code,
+    branch,
+    receiptKey,
+    query,
+  ]);
+  const received =
+    readsReceipt && receiptResult?.key === receiptKey
+      ? receiptResult.hint
+      : undefined;
   if (product.company_id !== state.config.company.seed_key) return null;
   return (
     <section
@@ -94,7 +157,7 @@ export function ProductDatesSection({
           )}
         </p>
       )}
-      {showReceived && (
+      {readsReceipt && (
         <div className="product-quiet-row product-last-delivery-row">
           <span className="product-quiet-icon">
             <Truck size={20} aria-hidden="true" />

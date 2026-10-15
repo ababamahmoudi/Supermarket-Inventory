@@ -1,3 +1,5 @@
+import { runCanonicalBusinessFixture } from "./business-fixture";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { invoiceImage, setLanguage, signIn, uploadInvoice } from "./helpers";
@@ -5,7 +7,6 @@ import type { DemoState } from "../src/types";
 import type { Order } from "../src/orders";
 
 test.setTimeout(60000);
-const storage = "supermarket-prototype-v1";
 
 async function reviewWithComparison(page: Page) {
   await signIn(page, "Supervisor");
@@ -20,73 +21,75 @@ async function reviewWithComparison(page: Page) {
     .digest("hex");
   await expect
     .poll(() =>
-      page.evaluate((key) => {
-        const state: DemoState = JSON.parse(localStorage.getItem(key)!);
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const state: DemoState = JSON.parse(JSON.stringify(canonicalState)!);
         return {
           fileName: state.invoice.file_name,
           originalHash: state.invoice.file_data?.split(":").at(-1),
           status: state.invoice.status,
         };
-      }, storage),
+      }),
     )
     .toEqual({
       fileName: invoiceImage.name,
       originalHash,
       status: "review",
     });
-  await page.evaluate((key) => {
-    const state: DemoState = JSON.parse(localStorage.getItem(key)!);
-    const invoice = state.invoice;
-    const item = invoice.lines[0];
-    const product = state.products.find(
-      (entry) => entry.code === item.product_code,
-    )!;
-    const supplier = state.suppliers!.find(
-      (entry) => entry.name === invoice.supplier,
-    )!;
-    const order: Order = {
-      id: "c3-layout-order",
-      company_id: invoice.company_id,
-      branch: invoice.branch,
-      supplier: invoice.supplier,
-      supplier_id: supplier.id,
-      reference: "ORD-C3-LAYOUT",
-      date: invoice.invoice_date!,
-      currency: state.config.company.currency,
-      status: "ordered",
-      created_at: invoice.received_at!,
-      created_by: "Fictional layout fixture",
-      expected_total_before_tax: "0.90",
-      source_note_ids: [],
-      linked_invoice_ids: [],
-      version: 1,
-      receipts: [],
-      lines: [
-        {
-          id: "c3-layout-line",
-          company_id: invoice.company_id,
-          supplier_item_id: item.supplier_item_id ?? "c3-layout-item",
-          product_code: item.product_code,
-          supplier_item_code: item.supplier_item_code ?? "",
-          name_en: product.name_en,
-          name_fa: product.name_fa,
-          unit_size: product.unit_size,
-          units_per_case: item.units_per_case ?? 1,
-          ordered_cases: "1",
-          ordered_units: 1,
-          expected_unit_cost: "0.9000",
-          expected_case_cost: "0.9000",
-          expected_line_total: "0.90",
-          expected_cost_source: "entered",
-          received_units: 0,
-          cancelled_units: 0,
-          source_note_ids: [],
-        },
-      ],
-    };
-    state.orders = [order];
-    localStorage.setItem(key, JSON.stringify(state));
-  }, storage);
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const invoice = state.invoice;
+      const item = invoice.lines[0];
+      const product = state.products.find(
+        (entry) => entry.code === item.product_code,
+      )!;
+      const supplier = state.suppliers!.find(
+        (entry) => entry.name === invoice.supplier,
+      )!;
+      const order: Order = {
+        id: "c3-layout-order",
+        company_id: invoice.company_id,
+        branch: invoice.branch,
+        supplier: invoice.supplier,
+        supplier_id: supplier.id,
+        reference: "ORD-C3-LAYOUT",
+        date: invoice.invoice_date!,
+        currency: state.config.company.currency,
+        status: "ordered",
+        created_at: invoice.received_at!,
+        created_by: "Fictional layout fixture",
+        expected_total_before_tax: "0.90",
+        source_note_ids: [],
+        linked_invoice_ids: [],
+        version: 1,
+        receipts: [],
+        lines: [
+          {
+            id: "c3-layout-line",
+            company_id: invoice.company_id,
+            supplier_item_id: item.supplier_item_id ?? "c3-layout-item",
+            product_code: item.product_code,
+            supplier_item_code: item.supplier_item_code ?? "",
+            name_en: product.name_en,
+            name_fa: product.name_fa,
+            unit_size: product.unit_size,
+            units_per_case: item.units_per_case ?? 1,
+            ordered_cases: "1",
+            ordered_units: 1,
+            expected_unit_cost: "0.9000",
+            expected_case_cost: "0.9000",
+            expected_line_total: "0.90",
+            expected_cost_source: "entered",
+            received_units: 0,
+            cancelled_units: 0,
+            source_note_ids: [],
+          },
+        ],
+      };
+      state.orders = [order];
+    },
+    undefined,
+  );
   await page.reload();
   await page.getByLabel("Order (optional)", { exact: true }).click();
   await page.getByRole("option", { name: /ORD-C3-LAYOUT/ }).click();

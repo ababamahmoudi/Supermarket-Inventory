@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
   invoiceImage,
@@ -7,7 +8,6 @@ import {
   signIn,
 } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
 
 test("a Floor Worker cannot read another branch's manual draft, and starting their own invoice preserves it for the Supervisor", async ({
@@ -16,19 +16,87 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  // Both entry actions create real drafts. Bind the accepted Upload route before
+  // requesting Manual entry; the old form can remain visible during the command.
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+  });
+  const uploadInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!uploadInvoiceId)
+    throw new Error("The accepted Upload draft ID is missing.");
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== uploadInvoiceId);
+  });
+  const manualInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!manualInvoiceId)
+    throw new Error("The accepted Manual draft ID is missing.");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        branch: invoice.branch,
+        status: invoice.status,
+        entry_mode: invoice.entry_mode,
+        lines: invoice.lines.length,
+      };
+    })
+    .toEqual({
+      id: manualInvoiceId,
+      branch: "Branch 2",
+      status: "draft",
+      entry_mode: "manual",
+      lines: 0,
+    });
+  // Existing visible copy, not an invented Manual entry heading. The actual
+  // accepted Manual workspace is empty and renders its real review section.
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "No lines. Add a product below to start your manual draft.",
+      { exact: true },
+    ),
+  ).toBeVisible();
   await page
     .getByLabel("Supplier invoice number (optional)", { exact: true })
     .fill("PRIVATE-BRANCH-2");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        branch: invoice.branch,
+        supplier_invoice_number: invoice.supplier_invoice_number,
+      };
+    })
+    .toEqual({
+      id: manualInvoiceId,
+      branch: "Branch 2",
+      supplier_invoice_number: "PRIVATE-BRANCH-2",
+    });
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
-  const original = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const original = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(original.branch).toBe("Branch 2");
+  expect(original.id).toBe(manualInvoiceId);
+  expect(original.supplier_invoice_number).toBe("PRIVATE-BRANCH-2");
 
   await signIn(page, "Floor Worker");
   await expect(
@@ -41,9 +109,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  const own = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const own = await readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(own.invoice.branch).toBe("Branch 1");
   expect(
@@ -61,9 +128,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await expect(
     page.getByLabel("Supplier invoice number (optional)", { exact: true }),
   ).toHaveValue("PRIVATE-BRANCH-2");
-  const resumed = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const resumed = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(resumed).toEqual(original);
 });
@@ -74,6 +140,27 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  // The original blank seed workspace belongs to North York. Create an actual
+  // selected-store draft instead of uploading into that existing origin.
+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+  });
+  const acceptedInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!acceptedInvoiceId)
+    throw new Error("The accepted foreign-store draft ID is missing.");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return { id: invoice.id, branch: invoice.branch, status: invoice.status };
+    })
+    .toEqual({ id: acceptedInvoiceId, branch: "Branch 2", status: "draft" });
   await openInvoiceUpload(page);
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
@@ -83,30 +170,38 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await expect(
     page.getByText("Reading invoice…", { exact: true }),
   ).toBeVisible();
-  const original = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const original = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(original.status).toBe("reading");
+  expect(original.branch).toBe("Branch 2");
   await signIn(page, "Floor Worker");
+  await page.goto(`/#invoices?id=${encodeURIComponent(original.id)}`);
   await expect(
     page.getByLabel("Upload a PDF or photo", { exact: true }),
   ).toHaveCount(0);
   await (await openShellAction(page, "Demo")).click();
-  await page
-    .getByRole("menuitem", { name: "Use fictional demo answer", exact: true })
-    .click();
+  await expect(
+    page.getByRole("menuitem", {
+      name: "Use fictional demo answer",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  // Attempt the exact public UI event used by the production Demo menu even
+  // though the foreign-record action is hidden. No actor or command is forged.
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("arzon:demo-invoice-answer")),
+  );
   await page.clock.runFor(2800);
-  const untouched = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const untouched = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(untouched).toEqual(original);
   await page.reload();
   await page.clock.runFor(2800);
-  const reloaded = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoice,
-    storage,
+  const reloaded = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(reloaded).toEqual(original);
 });

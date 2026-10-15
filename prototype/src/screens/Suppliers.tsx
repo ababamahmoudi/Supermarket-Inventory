@@ -4,15 +4,8 @@ import { useListState } from "../navigation";
 import Decimal from "decimal.js";
 import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
-import {
-  configuredBranches,
-  branchLabel as configuredBranchLabel,
-} from "../settings";
-import {
-  supplierRecords,
-  supplierMatches,
-  deactivateSupplier,
-} from "../supplier-editor";
+import { branchLabel as configuredBranchLabel } from "../settings";
+import { supplierMatches, deactivateSupplier } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
 import SupplierItems from "./SupplierItems";
 import { SupplierReturnsPanel } from "./SupplierReturnsPanel";
@@ -48,7 +41,7 @@ import {
   ConfirmDialog,
   useTableColumns,
 } from "../ui";
-import type { OperationsContext } from "../operations";
+import { useProtectedQuery } from "../use-protected-query";
 import "./suppliers-a2.css";
 import { companyDate, dateAfter } from "../invoice";
 import "./suppliers-c7.css";
@@ -77,9 +70,19 @@ type SortKey =
   | "next_due_date";
 
 export default function Suppliers() {
-  const { state, role, branch, setBranch, lang, user, navigate, t, update } =
-    useDemo();
-  const branches = configuredBranches(state.config);
+  const {
+    state,
+    actor,
+    can,
+    branch,
+    setBranch,
+    locationIds,
+    lang,
+    navigate,
+    t,
+    command,
+  } = useDemo();
+  const branches = locationIds;
   const [editor, setEditor] = useState<"new" | "edit" | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [query, setQuery] = useListState("suppliers.search", "");
@@ -106,13 +109,36 @@ export default function Suppliers() {
     window.addEventListener("hashchange", changed);
     return () => window.removeEventListener("hashchange", changed);
   }, []);
-  const context: OperationsContext = {
+  const scope = {
     company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
+    kind: "company_shared" as const,
   };
-  const supervisor = role === "supervisor";
+  const supervisor = can("supplier_balances.read", scope);
+  const canManage = can("suppliers.manage", scope);
+  const supplierRead = useProtectedQuery(
+    "suppliers.read",
+    scope,
+    (canonical, currentActor) => {
+      const overview = suppliersOverview(canonical, currentActor);
+      const current = name
+        ? overview.find(
+            (supplier) =>
+              supplier.name === name || supplier.previous_names?.includes(name),
+          )
+        : undefined;
+      return {
+        overview,
+        current,
+        detail: current
+          ? supplierPage(canonical, currentActor, current.name)
+          : null,
+        itemCount: current
+          ? supplierItems(canonical, currentActor, current.name).length
+          : null,
+      };
+    },
+    name ?? "",
+  );
   const tableColumns = useTableColumns("suppliers", [
     {
       key: "name",
@@ -215,7 +241,7 @@ export default function Suppliers() {
       align: "end",
     },
   ]);
-  if (role !== "supervisor" && role !== "floor_worker")
+  if (!actor || !can("suppliers.read", scope))
     return (
       <EmptyState>
         {t(
@@ -224,16 +250,9 @@ export default function Suppliers() {
         )}
       </EmptyState>
     );
-  const overview = suppliersOverview(state, context);
-  const current = name
-    ? overview.find(
-        (supplier) =>
-          supplier.name === name || supplier.previous_names?.includes(name),
-      )
-    : undefined;
-  const detail = current
-    ? supplierPage(state, context, current.name)
-    : undefined;
+  const overview = supplierRead.data?.overview ?? [];
+  const current = supplierRead.data?.current;
+  const detail = supplierRead.data?.detail;
   const openSupplier = (supplier: string) => {
     setTab("overview");
     navigate(`suppliers?name=${encodeURIComponent(supplier)}`);
@@ -251,7 +270,7 @@ export default function Suppliers() {
     value === "posted" ? t("Posted", "ثبت‌شده") : t("Draft", "پیش‌نویس");
   const compareValue = (supplier: SupplierOverviewRow, key: SortKey) => {
     if (key === "balance" || key === "overdue")
-      return supplier.financial?.[key] ?? "0.00";
+      return supplier.financial?.[key] ?? "";
     if (key === "next_due_date") return supplier.financial?.next_due_date ?? "";
     return supplier[key] ?? "";
   };
@@ -276,7 +295,13 @@ export default function Suppliers() {
       const right = compareValue(b, sort.key);
       const result =
         sort.key === "balance" || sort.key === "overdue"
-          ? new Decimal(left).cmp(right)
+          ? left && right
+            ? new Decimal(left).cmp(right)
+            : left
+              ? 1
+              : right
+                ? -1
+                : 0
           : typeof left === "number" && typeof right === "number"
             ? left - right
             : String(left).localeCompare(String(right));
@@ -309,7 +334,7 @@ export default function Suppliers() {
             "تحویل‌ها، مرجوعی‌ها و اطلاعات تأمین‌کنندگان.",
           )}
           actions={
-            supervisor ? (
+            canManage ? (
               <Button onClick={() => setEditor("new")}>
                 {t("Add supplier", "افزودن تأمین‌کننده")}
               </Button>
@@ -540,7 +565,7 @@ export default function Suppliers() {
               ))}
             </tbody>
           </DataTable>
-          {rows.length === 0 && (
+          {rows.length === 0 && !supplierRead.pending && (
             <EmptyState>
               {t(
                 "No suppliers match these filters.",
@@ -551,6 +576,7 @@ export default function Suppliers() {
         </Card>
       </>
     );
+  if (supplierRead.pending && name) return null;
   if (!detail || !current)
     return (
       <>
@@ -596,7 +622,7 @@ export default function Suppliers() {
         title={<LtrText>{current.name}</LtrText>}
         description={t("Supplier details", "اطلاعات تأمین‌کننده")}
         actions={
-          supervisor && current.id ? (
+          canManage && current.id ? (
             <div className="actions">
               <Button variant="neutral" onClick={() => setEditor("edit")}>
                 {t("Edit", "ویرایش")}
@@ -617,9 +643,9 @@ export default function Suppliers() {
       />
       {editor === "edit" && (
         <SupplierEditor
-          supplier={supplierRecords(state).find(
+          supplier={state.suppliers?.find(
             (record) =>
-              record.company_id === context.company_id &&
+              record.company_id === state.config.company.seed_key &&
               supplierMatches(record, current.name),
           )}
           onClose={() => setEditor(null)}
@@ -635,9 +661,12 @@ export default function Suppliers() {
           "تاریخچه حفظ می‌شود و این تأمین‌کننده از گزینه‌های فاکتور جدید حذف خواهد شد.",
         )}
         confirmLabel={t("Deactivate supplier", "غیرفعال کردن تأمین‌کننده")}
-        onConfirm={() =>
-          update((draft) => deactivateSupplier(draft, context, current.id!))
-        }
+        onConfirm={async () => {
+          await command("suppliers.manage", scope, (draft, currentActor) =>
+            deactivateSupplier(draft, currentActor, current.id!),
+          );
+          setConfirmDeactivate(false);
+        }}
       />
       <Card className="supplier-header-card">
         <div className="supplier-header-line">
@@ -773,7 +802,7 @@ export default function Suppliers() {
             </div>
             <div>
               <dt>{t("Supplier items", "کالاهای تأمین‌کننده")}</dt>
-              <dd>{supplierItems(state, context, current.name).length}</dd>
+              <dd>{supplierRead.data?.itemCount ?? "—"}</dd>
             </div>
             <div>
               <dt>{t("Open shorts", "کسری‌های باز")}</dt>

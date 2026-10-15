@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 
 // Hash navigation works with the desktop sidebar and the collapsed phone menu.
 async function visit(page: Page, route: string, heading: string) {
@@ -99,9 +100,12 @@ test("branch switcher shows approved overrides and a new product requires Superv
     ).toHaveCount(1);
   }
   await expect(
-    page.getByText("Pending: confirm with a Supervisor before selling", {
-      exact: true,
-    }),
+    page.getByText(
+      `Pending: confirm with a ${configuration.roles.find((role) => role.key === "manager")!.label} before selling`,
+      {
+        exact: true,
+      },
+    ),
   ).toBeVisible();
 });
 

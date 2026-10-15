@@ -1,3 +1,5 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { cloneWithAuthority, actorAtLocation } from "./authority";
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import {
@@ -5,7 +7,7 @@ import {
   reverseActivity,
   type HistoryContext,
 } from "./history";
-import { configuredBranches, saveCompanySettings } from "./settings";
+import { saveCompanySettings } from "./settings";
 import {
   saveBranchRequestDraft,
   sendBranchRequest,
@@ -36,21 +38,19 @@ import { saveSupplierItem } from "./supplier-items";
 import type { Activity, DemoState } from "./types";
 
 function supervisor(state: DemoState): HistoryContext {
-  return {
-    company_id: state.config.company.seed_key,
-    branch: "all",
-    role: "supervisor",
-    actor: "Undo Supervisor",
+  return authenticatedTestActor(state, "manager", {
+    name_en: "Undo Supervisor",
     username: "supervisor",
-    allowed_branches: configuredBranches(state.config, true),
-  };
+    selection: { kind: "all_locations" },
+  });
 }
+
 function capture(
   state: DemoState,
   context: HistoryContext,
   mutate: () => void,
 ): Activity {
-  const before = structuredClone(state);
+  const before = cloneWithAuthority(state);
   mutate();
   const entries = attachReversals(before, state, context);
   const reversible = entries.filter((entry) => entry.reversible);
@@ -61,14 +61,14 @@ function requestFixture(freeText = false) {
   const state = initialState();
   state.branch_requests = [];
   state.request_transfer_events = [];
-  const worker = (branch: string): HistoryContext & BranchRequestContext => ({
-    company_id: state.config.company.seed_key,
-    branch,
-    allowed_branches: [branch],
-    role: "floor_worker",
-    actor: `Worker ${branch}`,
-    username: `worker-${branch}`,
-  });
+  const worker = (branch: string): HistoryContext & BranchRequestContext =>
+    authenticatedTestActor(state, "floor_worker", {
+      user_id: `test-request-worker-${branch}`,
+      name_en: `Worker ${branch}`,
+      username: `worker-${branch}`,
+      locations: [branch],
+      selection: { kind: "location", location_id: branch },
+    });
   const source = worker("Branch 1"),
     target = worker("Branch 2");
   const draft = saveBranchRequestDraft(state, source, {
@@ -351,7 +351,7 @@ describe("C3 request Undo preserves evidence and endpoint permissions", () => {
       else if (later === "residual")
         copyBranchRequestResidual(state, source, id, 3);
       else state.request_transfer_events![0].quantity = "7";
-      const before = structuredClone(state);
+      const before = cloneWithAuthority(state);
       expect(() => reverseActivity(state, target, entry.id, "undo")).toThrow(
         "conflict",
       );
@@ -376,7 +376,7 @@ describe("C3 request Undo preserves evidence and endpoint permissions", () => {
         allowed_branches: ["Branch 1", "Branch 2"],
       },
     ]) {
-      const before = structuredClone(state);
+      const before = cloneWithAuthority(state);
       expect(() => reverseActivity(state, context, entry.id, "undo")).toThrow();
       expect(state).toEqual(before);
     }
@@ -394,7 +394,14 @@ describe("C3 draft-order and approval Undo", () => {
     const offers = structuredClone(state.offers),
       ledger = structuredClone(state.ledger);
     const entry = capture(state, context, () =>
-      resolveApproval(state, approval.id, "approve", "all", "Branch 1"),
+      resolveApproval(
+        state,
+        context,
+        approval.id,
+        "approve",
+        "all",
+        "Branch 1",
+      ),
     );
     reverseActivity(state, context, entry.id, "undo");
     expect(
@@ -410,14 +417,11 @@ describe("C3 draft-order and approval Undo", () => {
   });
   it("lets a worker undo create and stop offer independently", () => {
     const state = initialState(),
-      context = {
-        ...supervisor(state),
-        role: "floor_worker" as const,
-        branch: "Branch 1",
-        allowed_branches: ["Branch 1"],
-        actor: "Offer Worker",
+      context = authenticatedTestActor(state, "floor_worker", {
+        name_en: "Offer Worker",
         username: "floorworker",
-      };
+        locations: ["Branch 1"],
+      });
     const offer = {
       ...state.offers[0],
       id: "c3-worker-created",
@@ -425,7 +429,7 @@ describe("C3 draft-order and approval Undo", () => {
       scope: "branch" as const,
     };
     const created = capture(state, context, () =>
-      activateOffer(state, offer, "floor_worker"),
+      activateOffer(state, context, offer),
     );
     reverseActivity(state, context, created.id, "undo");
     expect(state.offers.find((item) => item.id === offer.id)!.status).toBe(
@@ -434,7 +438,7 @@ describe("C3 draft-order and approval Undo", () => {
     const retired = structuredClone(
       state.offers.find((item) => item.id === offer.id)!,
     );
-    activateOffer(state, offer, "floor_worker");
+    activateOffer(state, context, offer);
     const reactivated = state.offers.find(
       (item) =>
         item.status === "active" &&
@@ -446,7 +450,7 @@ describe("C3 draft-order and approval Undo", () => {
     expect(reactivated.id).not.toBe(offer.id);
     expect(state.offers.find((item) => item.id === offer.id)).toEqual(retired);
     const stopped = capture(state, context, () =>
-      stopOffer(state, reactivated.id, false, "floor_worker"),
+      stopOffer(state, context, reactivated.id, false),
     );
     expect(
       state.offers.find((item) => item.id === reactivated.id)!.status,
@@ -459,12 +463,8 @@ describe("C3 draft-order and approval Undo", () => {
   });
   it("undoes waitlist addition/removal without altering another location's queue", () => {
     const state = initialState(),
-      context = { ...supervisor(state), branch: "Branch 1" };
-    const actor = {
-      name: context.actor,
-      role: context.role,
-      branch: context.branch,
-    };
+      context = actorAtLocation(state, supervisor(state), "Branch 1");
+    const actor = context;
     const other = structuredClone(
       state.label_waitlist!.filter((item) => item.branch !== "Branch 1"),
     );
@@ -493,7 +493,7 @@ describe("C3 draft-order and approval Undo", () => {
   });
   it("undoes note editing and notebook archival while preserving the original author", () => {
     const state = initialState(),
-      context = { ...supervisor(state), branch: "Branch 1" };
+      context = actorAtLocation(state, supervisor(state), "Branch 1");
     const notebook = state.notebooks![0];
     const record = addNotebookEntry(state, context, notebook.id, {
       text: "Initial check",
@@ -545,11 +545,7 @@ describe("C3 draft-order and approval Undo", () => {
       saveCompanySettings(
         state,
         { ...state.config.company, name_en: "Updated company" },
-        {
-          company_id: context.company_id,
-          by: context.actor,
-          role: context.role,
-        },
+        context,
       ),
     );
     reverseActivity(state, context, changed.id, "undo");
@@ -633,7 +629,7 @@ describe("C3 draft-order and approval Undo", () => {
       status: "posted",
       order_id: order.id,
     });
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() => reverseActivity(state, context, entry.id, "undo")).toThrow(
       "conflict",
     );
@@ -643,7 +639,7 @@ describe("C3 draft-order and approval Undo", () => {
     const { state, context, input } = orderFixture();
     const order = createOrder(state, context, input);
     placeOrder(state, context, order.id, 1);
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     cancelOrder(state, context, order.id, "Supplier cannot supply", 2);
     expect(
       attachReversals(before, state, context).every(
@@ -656,7 +652,7 @@ describe("C3 draft-order and approval Undo", () => {
       context = supervisor(state);
     const approval = state.approvals[0];
     const entry = capture(state, context, () =>
-      resolveApproval(state, approval.id, "reject", "all", "Branch 1"),
+      resolveApproval(state, context, approval.id, "reject", "all", "Branch 1"),
     );
     reverseActivity(state, context, entry.id, "undo");
     expect(
@@ -665,7 +661,7 @@ describe("C3 draft-order and approval Undo", () => {
   });
   it("archives an added ordinary note while preserving later independent notes", () => {
     const state = initialState(),
-      context = { ...supervisor(state), branch: "Branch 1" };
+      context = actorAtLocation(state, supervisor(state), "Branch 1");
     const entry = capture(state, context, () =>
       addNote(state, context, {
         type: "note_to_supervisor",

@@ -1,3 +1,7 @@
+import { freshActor } from "./authority";
+import { cloneWithAuthority } from "./authority";
+import { can, requireCapability } from "./permissions";
+import { actorAudit, domainScope } from "./domain-authority";
 import Decimal from "decimal.js";
 import {
   signedReturnPickupQuantities,
@@ -11,7 +15,7 @@ import {
   type OperationalReturn,
   type OperationsContext,
 } from "./operations";
-import { syncReturnCreditAlerts } from "./return-workflow";
+import { syncReturnCreditAlertsForReturn } from "./return-workflow";
 import type { DemoState, ReturnLine } from "./types";
 
 export type ItemResolutionKind =
@@ -108,19 +112,26 @@ export function recordItemResolutions(
   returnId: string,
   items: ItemResolutionInput[],
 ) {
+  context = freshActor(state, context);
   if (
     context.company_id !== state.config.company.seed_key ||
-    context.role === "cashier" ||
     context.branch === "all"
   )
     throw new OperationError("scope");
-  const record = state.returns.find(
+  const records = state.returns.filter(
     (item) =>
       item.id === returnId &&
       item.company_id === context.company_id &&
       item.branch === context.branch,
-  ) as OperationalReturn | undefined;
-  if (!record) throw new OperationError("scope");
+  );
+  if (records.length !== 1) throw new OperationError("scope");
+  const record = records[0] as OperationalReturn;
+  requireCapability(
+    state,
+    context,
+    "returns.operational_resolve",
+    domainScope(state, record, true),
+  );
   if (["cancelled", "cancellation_review", "resolved"].includes(record.status))
     throw new OperationError("closed");
   const signed = signedReturnPickupQuantities(record);
@@ -134,13 +145,10 @@ export function recordItemResolutions(
     new Set(items.map((item) => item.product_code)).size !== items.length
   )
     throw new OperationError("product");
-  const next = structuredClone(state);
-  const nextRecord = next.returns.find(
-    (item) =>
-      item.id === record.id &&
-      item.company_id === context.company_id &&
-      item.branch === context.branch,
-  )! as OperationalReturn;
+  const next = cloneWithAuthority(state);
+  const nextRecord = next.returns[
+    state.returns.indexOf(record)
+  ] as OperationalReturn;
   const credits = new Map<
     string,
     {
@@ -186,6 +194,7 @@ export function recordItemResolutions(
         kind: "outstanding",
         at,
         by: context.actor,
+        ...actorAudit(state, context),
         received_date: input.expected_date,
         note: input.note?.trim(),
         quantities: {
@@ -198,6 +207,7 @@ export function recordItemResolutions(
         branch: context.branch,
         action: "return_resolution_outstanding",
         by: context.actor,
+        ...actorAudit(state, context),
         at,
         product_code: line.product_code,
         reversible: false,
@@ -234,7 +244,15 @@ export function recordItemResolutions(
       if (input.kind === "credited" && !input.invoice_id)
         throw new OperationError("invoice");
       let amount: Decimal | undefined;
-      if (input.amount !== undefined || context.role === "supervisor") {
+      if (
+        input.amount !== undefined ||
+        can(
+          state,
+          context,
+          "returns.credit_post",
+          domainScope(state, record, true),
+        ).allowed
+      ) {
         try {
           amount = new Decimal(input.amount ?? "");
         } catch {
@@ -282,6 +300,11 @@ export function recordItemResolutions(
       item_amounts: group.amount ? group.item_amounts : undefined,
       reason: group.notes.join("\n") || undefined,
     });
-  syncReturnCreditAlerts(next);
+  syncReturnCreditAlertsForReturn(
+    next,
+    context,
+    nextRecord,
+    "returns.operational_resolve",
+  );
   Object.assign(state, next);
 }

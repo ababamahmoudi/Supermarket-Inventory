@@ -1,3 +1,4 @@
+import { useSettingsConfiguration } from "../settings-configuration";
 import { useState } from "react";
 import { useDemo } from "../store";
 import { Button, Card, Field, Select, Switch } from "../ui";
@@ -9,20 +10,21 @@ import {
 } from "../weighed";
 
 export default function WeighedItemsSettings() {
-  const { state } = useDemo();
+  const configuration = useSettingsConfiguration();
   return (
-    <WeighedSettingsForm key={JSON.stringify(weighedSettings(state.config))} />
+    <WeighedSettingsForm key={JSON.stringify(weighedSettings(configuration))} />
   );
 }
 
 function WeighedSettingsForm() {
-  const { state, update, t, role, user } = useDemo();
+  const { command, t } = useDemo();
+  const configuration = useSettingsConfiguration();
   const [draft, setDraft] = useState<WeighedSettings>(() =>
-    weighedSettings(state.config),
+    weighedSettings(configuration),
   );
   const [error, setError] = useState<string>();
   const dirty =
-    JSON.stringify(draft) !== JSON.stringify(weighedSettings(state.config));
+    JSON.stringify(draft) !== JSON.stringify(weighedSettings(configuration));
   function change(value: Partial<WeighedSettings>) {
     setDraft((previous) => ({ ...previous, ...value }));
     setError(undefined);
@@ -65,25 +67,28 @@ function WeighedSettingsForm() {
           <Button
             variant="neutral"
             onClick={() => {
-              setDraft(weighedSettings(state.config));
+              setDraft(weighedSettings(configuration));
               setError(undefined);
             }}
           >
             {t("Cancel", "انصراف")}
           </Button>
           <Button
-            onClick={() => {
+            onClick={async () => {
               try {
-                update((next) =>
-                  savePricingSettings(
-                    next,
-                    { ...next.config, weighed_items: draft },
-                    {
-                      role: role ?? "cashier",
-                      company_id: next.config.company.seed_key,
-                      by: user?.name ?? "",
-                    },
-                  ),
+                await command(
+                  "settings.manage",
+                  {
+                    company_id: configuration.company.seed_key,
+                    kind: "company_shared",
+                    mutation: true,
+                  },
+                  (next, freshActor) =>
+                    savePricingSettings(
+                      next,
+                      { ...next.config, weighed_items: draft },
+                      freshActor,
+                    ),
                 );
                 setError(undefined);
               } catch {

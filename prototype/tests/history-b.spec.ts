@@ -1,26 +1,30 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 
 async function saveName(page: Page, name: string) {
   // Lavash has existing active date evidence, so this remains a name-only
   // Save rather than changing tracking to bypass C8's required-date rule.
-  const before = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const product = state.products.find(
-      (item: { code: string }) => item.code === "0006",
-    );
-    return {
-      ledger: state.ledger,
-      invoices: state.invoices,
-      expiry: state.expiry,
-      prices: {
-        selling_price: product.selling_price,
-        branch_prices: product.branch_prices,
-        last_cost_before_tax: product.last_cost_before_tax,
-        pending_price: product.pending_price,
-      },
-    };
-  });
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      const product = state.products.find(
+        (item: { code: string }) => item.code === "0006",
+      );
+      return {
+        ledger: state.ledger,
+        invoices: state.invoices,
+        expiry: state.expiry,
+        prices: {
+          selling_price: product.selling_price,
+          branch_prices: product.branch_prices,
+          last_cost_before_tax: product.last_cost_before_tax,
+          pending_price: product.pending_price,
+        },
+      };
+    },
+  );
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0006");
   await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
@@ -39,23 +43,25 @@ async function saveName(page: Page, name: string) {
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
-  const after = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const product = state.products.find(
-      (item: { code: string }) => item.code === "0006",
-    );
-    return {
-      ledger: state.ledger,
-      invoices: state.invoices,
-      expiry: state.expiry,
-      prices: {
-        selling_price: product.selling_price,
-        branch_prices: product.branch_prices,
-        last_cost_before_tax: product.last_cost_before_tax,
-        pending_price: product.pending_price,
-      },
-    };
-  });
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      const product = state.products.find(
+        (item: { code: string }) => item.code === "0006",
+      );
+      return {
+        ledger: state.ledger,
+        invoices: state.invoices,
+        expiry: state.expiry,
+        prices: {
+          selling_price: product.selling_price,
+          branch_prices: product.branch_prices,
+          last_cost_before_tax: product.last_cost_before_tax,
+          pending_price: product.pending_price,
+        },
+      };
+    },
+  );
   expect(after).toEqual(before);
   await page.mouse.move(0, 0);
 }
@@ -87,6 +93,8 @@ async function historyRow(
   include = "",
   exclude = "",
 ): Promise<Locator> {
+  // Protected reads are asynchronous; enumerate only the rendered History.
+  await expect(page.locator(".history-table")).toBeVisible();
   const rows = await page
     .locator(".history-table tbody > tr:not(.table-expanded-row)")
     .all();
@@ -175,14 +183,13 @@ test("quiet product Save retains append-only History and can be explicitly rever
   await historyRow(page, "Save product", "corrected");
   await expect(page.locator(".history-table")).toContainText("Reverted");
   await expect(page.locator(".history-table")).toContainText("Save product");
-  const saved = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).activity,
   );
   expect(saved.at(-1)).toMatchObject({
     action: "Reverted Save product",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversal_kind: "revert",
   });
   expect(
@@ -228,14 +235,13 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   await expect(
     page.locator(".lookup-approved-price .offer-pill"),
   ).toContainText("2 for $5");
-  const saved = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).activity,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).activity,
   );
   expect(saved.at(-1)).toMatchObject({
     action: "Undone",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversal_kind: "undo",
   });
   expect(
@@ -258,15 +264,17 @@ test("History Revert previews the actor, branch, values and requires confirmatio
     name: "Revert change",
     exact: true,
   });
-  await expect(dialog).toContainText("Demo Supervisor");
+  await expect(dialog).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(dialog).toContainText("All branches");
   await expect(dialog).toContainText("Lavash Bread 500 g approved edit");
   await expect(dialog).toContainText("Lavash Bread 500 g");
-  let stored = await page.evaluate(
-    () =>
-      JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      ).products.find((item: { code: string }) => item.code === "0006").name_en,
+  let stored = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.find(
+        (item: { code: string }) => item.code === "0006",
+      ).name_en,
   );
   expect(stored).toContain("approved edit");
   await dialog
@@ -274,11 +282,11 @@ test("History Revert previews the actor, branch, values and requires confirmatio
     .click();
   await expect(dialog).not.toBeVisible();
   await expect(page.getByRole("status")).toContainText("Change reverted");
-  stored = await page.evaluate(
-    () =>
-      JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      ).products.find((item: { code: string }) => item.code === "0006").name_en,
+  stored = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.find(
+        (item: { code: string }) => item.code === "0006",
+      ).name_en,
   );
   expect(stored).toBe("Lavash Bread 500 g");
   await historyRow(page, "Reverted Save product");

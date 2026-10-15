@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { setLanguage, signIn, uploadInvoice, openShellAction } from "./helpers";
 
 const routes = [
@@ -90,7 +91,7 @@ for (const variant of ["light", "dark", "Persian"] as const) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/");
     await assertPresentation(page);
-    await signIn(page, "Supervisor");
+    await signIn(page, "Manager");
     if (variant === "dark")
       await (await openShellAction(page, "Switch to dark theme")).click();
     if (variant === "Persian") await setLanguage(page, "fa");
@@ -127,7 +128,8 @@ test("Persian lookup preserves unit order and makes the Persian name primary", a
 test("re-check dialog is centered and the top bar remains visible while Settings scrolls", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor");
+  await page.clock.install({ time: new Date() });
+  await signIn(page, "Manager");
   await page.goto("/#settings");
   await page.evaluate(() =>
     window.scrollTo(0, document.documentElement.scrollHeight),
@@ -135,13 +137,18 @@ test("re-check dialog is centered and the top bar remains visible while Settings
   const top = await page.locator(".topbar").boundingBox();
   expect(top!.y).toBeGreaterThanOrEqual(0);
   expect(top!.y).toBeLessThanOrEqual(2);
-  await page.evaluate(() => {
-    const key = "supermarket-prototype-session-v2";
-    const session = JSON.parse(sessionStorage.getItem(key)!);
-    session.authenticatedAt = Date.now() - 16 * 60 * 1000;
-    session.lastActivityAt = Date.now();
-    sessionStorage.setItem(key, JSON.stringify(session));
-  });
+  // Advance the real browser source clock beyond the configured freshness
+  // window, keeping activity inside the idle-lock window. No identity, role,
+  // session timestamp or authority record is manufactured or overwritten.
+  for (
+    let minute = 0;
+    minute <= configuration.session.reprompt_password_after_minutes;
+    minute++
+  ) {
+    await page.mouse.move(48 + minute, 8);
+    await page.clock.fastForward(60_000);
+  }
+  await page.mouse.move(80, 8);
   await page.reload();
   const dialog = page.getByRole("dialog", {
     name: "Confirm your password",

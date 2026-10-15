@@ -4,7 +4,6 @@ import { Search } from "lucide-react";
 import { normalizeSearch, searchProducts } from "./catalog";
 import {
   addTrackedDate,
-  allowedDateLocations,
   DateTrackingError,
   dateTrackingErrorMessage,
   validTrackedDate,
@@ -12,8 +11,11 @@ import {
 } from "./date-tracking";
 import { LtrText, ProductName } from "./presentation";
 import { branchLabel } from "./settings";
+import { actorAtLocation } from "./authority";
+import { permittedLocationIdsView } from "./notes-dates-read";
 import { useDemo } from "./store";
-import type { Branch, Product } from "./types";
+import type { Branch } from "./types";
+import type { ProductReadDTO } from "./e1-read-model";
 import { Button, DateField, Field, NumberField, Select } from "./ui";
 
 type DateQuickAddProps = {
@@ -30,15 +32,19 @@ export function DateQuickAdd({
   inline = false,
   onAdded,
 }: DateQuickAddProps) {
-  const { state, update, historyContext, role, branch, lang, t } = useDemo();
+  const { state, command, historyContext, can, branch, lang, t } = useDemo();
   const products = state.products.filter(
     (product) =>
       product.company_id === state.config.company.seed_key &&
       product.status !== "archived",
   );
-  const locations = historyContext
-    ? allowedDateLocations(state, historyContext)
-    : [];
+  const locations = permittedLocationIdsView(
+    state,
+    historyContext,
+    can,
+    "dates.add",
+    { mutation: true },
+  );
   const initialProduct = products.find((item) => item.code === productCode);
   const [query, setQuery] = useState(
     initialProduct
@@ -59,7 +65,9 @@ export function DateQuickAdd({
     {
       branch: locations.includes(defaultLocation ?? branch)
         ? (defaultLocation ?? branch)
-        : (locations[0] ?? ""),
+        : locations.length === 1
+          ? locations[0]
+          : "",
       date: "",
       date_type: "expiry",
       quantity: "",
@@ -78,7 +86,9 @@ export function DateQuickAdd({
       ? currentDefault
       : locations.includes(draft.branch)
         ? draft.branch
-        : (locations[0] ?? "");
+        : locations.length === 1
+          ? locations[0]
+          : "";
     if (draft.branch !== location) setDraft({ ...draft, branch: location });
   }
   const productRef = useRef<HTMLInputElement>(null);
@@ -105,7 +115,7 @@ export function DateQuickAdd({
     setDraft((previous) => ({ ...previous, [field]: value }));
     setErrors((previous) => ({ ...previous, [field]: "" }));
   };
-  const choose = (product: Product) => {
+  const choose = (product: ProductReadDTO) => {
     setSelectedCode(product.code);
     setActiveCode(product.code);
     setQuery(
@@ -130,7 +140,7 @@ export function DateQuickAdd({
     const matching = searchProducts(products, query);
     return matching.length === 1 ? matching[0] : undefined;
   };
-  const save = (selected?: Product) => {
+  const save = async (selected?: ProductReadDTO) => {
     const product = selected ?? resolveProduct();
     const required: Record<string, string> = {};
     if (!product)
@@ -154,22 +164,34 @@ export function DateQuickAdd({
     }
     try {
       if (!historyContext) throw new DateTrackingError("permission");
-      let recordId = "";
-      let trackingEnabled = false;
-      update((next) => {
-        const current = next.products.find(
-          (item) =>
-            item.company_id === historyContext.company_id &&
-            item.code === product!.code,
-        );
-        trackingEnabled = current?.date_tracking !== true;
-        recordId = addTrackedDate(next, historyContext, {
-          ...draft,
-          product_code: product!.code,
-        }).id;
-      });
+      const saved = await command(
+        "dates.add",
+        {
+          company_id: state.config.company.seed_key,
+          kind: "location_record",
+          location_ids: [draft.branch],
+          mutation: true,
+        },
+        (next, freshActor) => {
+          const current = next.products.find(
+            (item) =>
+              item.company_id === freshActor.company_id &&
+              item.code === product!.code,
+          );
+          const trackingEnabled = current?.date_tracking !== true;
+          const recordId = addTrackedDate(
+            next,
+            actorAtLocation(next, freshActor, draft.branch),
+            {
+              ...draft,
+              product_code: product!.code,
+            },
+          ).id;
+          return { recordId, trackingEnabled };
+        },
+      );
       setErrors({});
-      setMessage(trackingEnabled ? "tracking_enabled" : "added");
+      setMessage(saved.trackingEnabled ? "tracking_enabled" : "added");
       setDraft((previous) => ({
         ...previous,
         quantity: "",
@@ -183,7 +205,7 @@ export function DateQuickAdd({
         setSearchOpen(false);
         productRef.current?.focus();
       }
-      onAdded?.(recordId, draft.branch, trackingEnabled);
+      onAdded?.(saved.recordId, draft.branch, saved.trackingEnabled);
     } catch (error) {
       const code = error instanceof DateTrackingError ? error.code : "scope";
       const field =
@@ -205,7 +227,7 @@ export function DateQuickAdd({
     event.preventDefault();
     save();
   };
-  if (role !== "supervisor" && role !== "floor_worker") return null;
+  if (!can("dates.add")) return null;
   return (
     <form
       className={`date-quick-add${inline ? " date-quick-add-inline" : ""}`}

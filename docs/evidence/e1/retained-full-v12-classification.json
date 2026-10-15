@@ -1,0 +1,64 @@
+{
+  "status": "Finalized actual attempt classification; confirmed against CI owner diagnostic summary",
+  "actual_browser_exit": 130,
+  "source_fingerprint": "5d8efcb521cbcd1712cda7dee891507a245e2d2f07e19e812355a2dae7601db2",
+  "registered": 742,
+  "passed": 95,
+  "failed": 4,
+  "interrupted": 1,
+  "not_run": 642,
+  "actual_conditional_skipped": 0,
+  "flaky": 0,
+  "retry_attempts": 0,
+  "reporter_raw_stats": {
+    "startTime": "2026-10-14T01:13:53.817Z",
+    "duration": 1112336.65,
+    "expected": 95,
+    "skipped": 643,
+    "unexpected": 4,
+    "flaky": 0
+  },
+  "reason": "Reporter skipped=643 combines one interrupted attempt and 642 tests with no attempt. Neither is a conditional skip.",
+  "method": "Classify actual-test-records.json by each real attempt status; empty attempt array is NOT_RUN. Preserve raw CLI reporter counts separately.",
+  "failed_and_interrupted": [
+    {
+      "file": "branch-invoice-b.spec.ts",
+      "title": "another branch's reading draft stays hidden and unchanged by reading timers or Demo answers",
+      "project": "desktop",
+      "attempt_statuses": ["failed"]
+    },
+    {
+      "file": "c5-conditional-audit.spec.ts",
+      "title": "C5 conditional correction preview, confirmation, versions, history menu and Revert",
+      "project": "desktop",
+      "attempt_statuses": ["failed"]
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+      "project": "desktop",
+      "attempt_statuses": ["failed"]
+    },
+    {
+      "file": "c5-presentation.spec.ts",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+      "project": "desktop",
+      "attempt_statuses": ["failed"]
+    },
+    {
+      "file": "c6-responsive.spec.ts",
+      "title": "C7 adaptive tables and shell: fa 768px",
+      "project": "desktop",
+      "attempt_statuses": ["interrupted"]
+    }
+  ],
+  "source_unchanged": true,
+  "live_root_unchanged": true,
+  "production_assets_unchanged": true,
+  "unhandled_errors": [],
+  "raw_execution": "retained-full-v12.json",
+  "classification_source_sha256": "4e7165b4855a7e1bffec715b36e73963eb74a9bda62e234d604c73b74106b041",
+  "limits": "This interrupted run is not a completed full retained-browser pass. Corrective fixture/readiness work and final complete execution/CI remain required.",
+  "ci_owner_diagnostic_source_sha256": "a0aa3ab020745aa470ec3e2227fe149e694190e7fafb10b6bc827d8b42213cb4",
+  "ci_owner_diagnostic_matches": true
+}

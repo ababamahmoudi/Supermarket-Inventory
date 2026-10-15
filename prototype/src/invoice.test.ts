@@ -15,6 +15,33 @@ import {
   type InvoiceStockMovement,
 } from "./invoice";
 import type { DemoState } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
+const workers = new WeakMap<DemoState, AuthenticatedActor>();
+const managers = new WeakMap<DemoState, AuthenticatedActor>();
+function receivingActor(state: DemoState) {
+  let actor = workers.get(state);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "floor_worker", {
+      locations: ["Branch 1"],
+      name_en: "Demo Floor Worker",
+    });
+    workers.set(state, actor);
+  }
+  return actor;
+}
+function managerActor(state: DemoState) {
+  let actor = managers.get(state);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+      name_en: "Ali",
+    });
+    managers.set(state, actor);
+  }
+  return actor;
+}
 
 function movements(state: DemoState): InvoiceStockMovement[] {
   return (
@@ -33,7 +60,7 @@ const seedStock = initialState().stock;
 
 function reviewed(): DemoState {
   const state = initialState();
-  state.invoice = createInvoice(state, "Branch 1");
+  state.invoice = createInvoice(state, receivingActor(state), "Branch 1");
   state.invoice.file_name = "fictional-original.png";
   state.invoice.file_type = "image/png";
   state.invoice.file_data = "data:image/png;base64,ZGVtby1vbmx5";
@@ -58,15 +85,15 @@ function reviewed(): DemoState {
 describe("invoice review and posting", () => {
   it("saves a manual draft without an original, then requires attachment and explicit line review before posting", () => {
     const state = initialState();
-    state.invoice = createInvoice(state, "Branch 1", true);
+    state.invoice = createInvoice(state, managerActor(state), "Branch 1", true);
     expect(state.invoice.status).toBe("draft");
     expect(state.invoice.file_data).toBeUndefined();
-    addManualLine(state, "0002");
+    addManualLine(state, managerActor(state), "0002");
     expect(state.invoice.subtotal).toBe("0.98");
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toEqual(
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual(
       expect.arrayContaining(["file", "review", "date"]),
     );
-    expect(() => postInvoice(state, "floor_worker", "Branch 1")).toThrow();
+    expect(() => postInvoice(state, receivingActor(state))).toThrow();
     expect(invoiceLedger(state)).toHaveLength(0);
   });
 
@@ -75,8 +102,8 @@ describe("invoice review and posting", () => {
     state.invoice.lines.find(
       (line) => line.product_code === "0009",
     )!.qty_received_at_posting = 8;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toEqual([]);
-    expect(postInvoice(state, "floor_worker", "Branch 1")).toBe(true);
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual([]);
+    expect(postInvoice(state, receivingActor(state))).toBe(true);
     expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 8);
     expect(state.stock["Branch 2:0009"]).toBe(seedStock["Branch 2:0009"]);
     expect(state.invoice.payable_after_open_shorts).toBe("169.79");
@@ -106,7 +133,7 @@ describe("invoice review and posting", () => {
       state.alerts.filter((alert) => alert.type === "lower_price"),
     ).toHaveLength(1);
     const saved = structuredClone(state);
-    expect(postInvoice(state, "floor_worker", "Branch 1")).toBe(false);
+    expect(postInvoice(state, receivingActor(state))).toBe(false);
     expect(state).toEqual(saved);
   });
 
@@ -115,24 +142,16 @@ describe("invoice review and posting", () => {
     const rice = state.invoice.lines[0];
     rice.pricing_category = "rice";
     rice.date_confirmed = false;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "date",
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).toContain("date");
     rice.date_tracking = true;
     rice.date_confirmed = true;
     rice.date_value = undefined;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "date",
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).toContain("date");
     rice.date_value = "2026-12-01";
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
-      "date",
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).not.toContain("date");
     rice.date_tracking = false;
     rice.date_value = undefined;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
-      "date",
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).not.toContain("date");
   });
 
   it("creates proposals only on posting and refreshes cost, margin, invoice and poster together", () => {
@@ -146,7 +165,7 @@ describe("invoice review and posting", () => {
       before.every((item) => !item.invoice_ids?.includes(state.invoice.id)),
     ).toBe(true);
     expect(state.approvals).toEqual(before);
-    postInvoice(state, "supervisor", "Branch 1", "Ali");
+    postInvoice(state, managerActor(state));
     const approval = state.approvals.find(
       (item) =>
         item.product_code === "0006" &&
@@ -170,8 +189,8 @@ describe("invoice review and posting", () => {
     vi.stubGlobal("crypto", undefined);
     try {
       const state = initialState();
-      const first = createInvoice(state, "Branch 1");
-      const second = createInvoice(state, "Branch 1");
+      const first = createInvoice(state, receivingActor(state), "Branch 1");
+      const second = createInvoice(state, receivingActor(state), "Branch 1");
       expect(first.id).toMatch(/^invoice-/);
       expect(second.id).not.toBe(first.id);
     } finally {
@@ -190,7 +209,7 @@ describe("invoice review and posting", () => {
       item.review_confirmed = true;
       item.date_confirmed = true;
     });
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, receivingActor(state));
     const approval = state.approvals.find(
       (item) => item.product_code === "0002",
     )!;
@@ -221,7 +240,7 @@ describe("invoice review and posting", () => {
         line.review_confirmed = true;
         line.date_confirmed = true;
       });
-      postInvoice(state, "floor_worker", "Branch 1");
+      postInvoice(state, receivingActor(state));
     };
     postCost("1.12");
     postCost("1.12");
@@ -258,7 +277,7 @@ describe("invoice review and posting", () => {
         line.review_confirmed = true;
         line.date_confirmed = true;
       });
-      postInvoice(state, "floor_worker", "Branch 1");
+      postInvoice(state, receivingActor(state));
     };
     receiveCost();
     const acknowledgment = state.approvals.find(
@@ -287,7 +306,7 @@ describe("invoice review and posting", () => {
     product.status = "active";
     product.selling_price = "";
     product.branch_prices = { "Branch 2": "5.49" };
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, receivingActor(state));
     expect(
       state.invoice.lines.find((line) => line.product_code === "0015")!
         .current_selling_price,
@@ -302,21 +321,23 @@ describe("invoice review and posting", () => {
   });
 
   it.each([
-    ["cashier", "Branch 1", "permission"],
-    ["floor_worker", "Branch 2", "branch"],
-  ] as const)("blocks posting for %s in %s", (role, branch, reason) => {
+    ["cashier", "Branch 1"],
+    ["floor_worker", "Branch 2"],
+  ] as const)("blocks posting for %s in %s", (role, branch) => {
     const state = reviewed();
-    expect(invoiceBlockers(state, role, branch)).toContain(reason);
-    expect(() => postInvoice(state, role, branch)).toThrow(reason);
+    const denied = authenticatedTestActor(state, role, {
+      locations: [branch],
+      user_id: `denied-${role}-${branch}`,
+    });
+    expect(invoiceBlockers(state, denied)).toContain("permission");
+    expect(() => postInvoice(state, denied)).toThrow(AuthorityError);
     expect(invoiceLedger(state)).toHaveLength(0);
   });
 
   it("cannot post a foreign-company invoice or product line", () => {
     const state = reviewed();
     state.invoice.lines[0].company_id = "other-company";
-    expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow(
-      "company",
-    );
+    expect(() => postInvoice(state, managerActor(state))).toThrow("company");
     expect(invoiceLedger(state)).toHaveLength(0);
   });
 
@@ -326,9 +347,7 @@ describe("invoice review and posting", () => {
       (category) => category.key === "grocery_taxable",
     )!.cost_divisor = "0";
     const before = structuredClone(state);
-    expect(() => postInvoice(state, "floor_worker", "Branch 1")).toThrow(
-      "cost",
-    );
+    expect(() => postInvoice(state, receivingActor(state))).toThrow("cost");
     expect(state).toEqual(before);
   });
 
@@ -336,46 +355,50 @@ describe("invoice review and posting", () => {
     const state = reviewed();
     state.invoice.lower_price_answers = { same_expiry: "unknown", note: "" };
     state.invoice.supplier_confirmed = false;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toEqual(
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual(
       expect.arrayContaining(["lower_price", "supplier_pending"]),
     );
     state.invoice.lower_price_answers = { same_expiry: "no_previous_stock" };
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toEqual([]);
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual([]);
   });
 
   it("does not invent a same-supplier receipt history for a different branch", () => {
     const state = reviewed();
     state.invoice.branch = "Branch 2";
     state.invoice.lower_price_answers = undefined;
-    expect(invoiceBlockers(state, "supervisor", "Branch 2")).not.toContain(
+    expect(invoiceBlockers(state, managerActor(state))).not.toContain(
       "lower_price",
     );
   });
 
   it("uses the latest posted supplier receipt in the same branch, while drafts do not change the comparison", () => {
     const state = reviewed();
-    postInvoice(state, "floor_worker", "Branch 1");
-    state.invoice = createInvoice(state, "Branch 1");
+    postInvoice(state, receivingActor(state));
+    state.invoice = createInvoice(state, receivingActor(state), "Branch 1");
     const juice = state.invoice.lines.find(
       (line) => line.product_code === "0003",
     )!;
     juice.unit_cost_before_tax = "1.90";
     state.invoice.lower_price_answers = undefined;
     // 1.90 exceeds the actual previous receipt of 1.80, although it is below the original seed cost of 1.95.
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
+    expect(invoiceBlockers(state, receivingActor(state))).not.toContain(
       "lower_price",
     );
     juice.unit_cost_before_tax = "1.70";
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
+    expect(invoiceBlockers(state, receivingActor(state))).toContain(
       "lower_price",
     );
-    const unrelatedDraft = createInvoice(state, "Branch 1");
+    const unrelatedDraft = createInvoice(
+      state,
+      receivingActor(state),
+      "Branch 1",
+    );
     unrelatedDraft.lines.find(
       (line) => line.product_code === "0003",
     )!.unit_cost_before_tax = "1.60";
     state.invoices!.push(unrelatedDraft);
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
+    expect(invoiceBlockers(state, receivingActor(state))).toContain(
       "lower_price",
     );
   });
@@ -383,7 +406,7 @@ describe("invoice review and posting", () => {
   it("creates an alert instead of blocking a discrepancy in invoice totals", () => {
     const state = reviewed();
     state.invoice.final_total = "178.00";
-    expect(postInvoice(state, "floor_worker", "Branch 1")).toBe(true);
+    expect(postInvoice(state, receivingActor(state))).toBe(true);
     expect(
       state.alerts.filter((alert) => alert.type === "tax_discrepancy"),
     ).toHaveLength(1);
@@ -403,7 +426,7 @@ describe("short delivery cumulative allocations", () => {
       tax: "0.83",
       total: "7.23",
     });
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, receivingActor(state));
     const originalMovements = structuredClone(movements(state));
     expect(originalMovements).toHaveLength(6);
     expect(
@@ -421,8 +444,7 @@ describe("short delivery cumulative allocations", () => {
         "0009",
         2,
         "FICTITIOUS-DELIVERY-1",
-        "floor_worker",
-        "Branch 1",
+        receivingActor(state),
       ),
     ).toBe("3.62");
     expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 10);
@@ -433,8 +455,7 @@ describe("short delivery cumulative allocations", () => {
         "0009",
         2,
         "FICTITIOUS-DELIVERY-2",
-        "floor_worker",
-        "Branch 1",
+        receivingActor(state),
       ),
     ).toBe("3.61");
     expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 12);
@@ -485,27 +506,28 @@ describe("short delivery cumulative allocations", () => {
     state.invoice.lines.find(
       (line) => line.product_code === "0009",
     )!.qty_received_at_posting = 8;
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, receivingActor(state));
     expect(() =>
-      receiveShort(state, "0009", 5, "TOO-MANY", "floor_worker", "Branch 1"),
+      receiveShort(state, "0009", 5, "TOO-MANY", receivingActor(state)),
     ).toThrow("remaining");
     expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 8);
-    receiveShort(state, "0009", 2, "SAME-RECEIPT", "floor_worker", "Branch 1");
+    receiveShort(state, "0009", 2, "SAME-RECEIPT", receivingActor(state));
     const saved = structuredClone(state);
     expect(
-      receiveShort(
-        state,
-        "0009",
-        2,
-        "SAME-RECEIPT",
-        "floor_worker",
-        "Branch 1",
-      ),
+      receiveShort(state, "0009", 2, "SAME-RECEIPT", receivingActor(state)),
     ).toBe("0.00");
     expect(state).toEqual(saved);
     expect(() =>
-      receiveShort(state, "0009", 1, "CROSS-BRANCH", "supervisor", "Branch 2"),
-    ).toThrow("permitted");
+      receiveShort(
+        state,
+        "0009",
+        1,
+        "CROSS-BRANCH",
+        authenticatedTestActor(state, "branch_supervisor", {
+          locations: ["Branch 2"],
+        }),
+      ),
+    ).toThrow(AuthorityError);
   });
 
   it("normalizes delivery references before recording and deduplicating whitespace retries", () => {
@@ -513,9 +535,9 @@ describe("short delivery cumulative allocations", () => {
     state.invoice.lines.find(
       (line) => line.product_code === "0009",
     )!.qty_received_at_posting = 8;
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, receivingActor(state));
     expect(
-      receiveShort(state, "0009", 2, "  DEMO-X  ", "floor_worker", "Branch 1"),
+      receiveShort(state, "0009", 2, "  DEMO-X  ", receivingActor(state)),
     ).toBe("3.62");
     expect(state.invoice.short_receipt_keys).toEqual(["DEMO-X"]);
     expect(
@@ -529,17 +551,10 @@ describe("short delivery cumulative allocations", () => {
     ).toBe("DEMO-X");
     const saved = structuredClone(state);
     expect(
-      receiveShort(state, "0009", 2, "DEMO-X", "floor_worker", "Branch 1"),
+      receiveShort(state, "0009", 2, "DEMO-X", receivingActor(state)),
     ).toBe("0.00");
     expect(
-      receiveShort(
-        state,
-        "0009",
-        2,
-        " \tDEMO-X\n ",
-        "floor_worker",
-        "Branch 1",
-      ),
+      receiveShort(state, "0009", 2, " \tDEMO-X\n ", receivingActor(state)),
     ).toBe("0.00");
     expect(state).toEqual(saved);
     expect(state.stock["Branch 1:0009"]).toBe(seedStock["Branch 1:0009"] + 10);

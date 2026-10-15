@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import {
@@ -39,10 +40,8 @@ async function upload(page: Page) {
   });
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const invoice = JSON.parse(
-          localStorage.getItem("supermarket-prototype-v1")!,
-        ).invoice;
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const invoice = JSON.parse(JSON.stringify(canonicalState)!).invoice;
         return {
           fileName: invoice.file_name,
           originalHash: invoice.file_data?.split(":").at(-1),
@@ -57,8 +56,8 @@ async function upload(page: Page) {
     });
 }
 async function stored(page: Page) {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 
@@ -96,9 +95,13 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.30");
   await expect(sumac.locator(".price-display")).toHaveText("$1.99");
   const chips = page.locator(".invoice-line").nth(5);
-  await chips
-    .getByRole("checkbox", { name: "Mark as short", exact: true })
-    .check();
+  const markShort = chips.getByRole("checkbox", {
+    name: "Mark as short",
+    exact: true,
+  });
+  await expect(markShort).not.toBeChecked();
+  await markShort.click();
+  await expect(markShort).toBeChecked();
   await expect(chips.getByText(/Deduction:/)).toContainText("$7.23");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
@@ -155,7 +158,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .getByRole("dialog", { name: "Post invoice", exact: true })
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Posted.");
+  await expect(page.locator(".banner[role=status]")).toContainText("Posted.");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toHaveCount(0);
@@ -191,7 +194,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page
     .getByRole("button", { name: "Receive short delivery", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("$3.62");
+  await expect(page.locator(".banner[role=status]")).toContainText("$3.62");
   state = await stored(page);
   expect(state.stock["Branch 1:0009"]).toBe(beforeStock + 10);
   await page
@@ -200,7 +203,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page
     .getByRole("button", { name: "Receive short delivery", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("$3.61");
+  await expect(page.locator(".banner[role=status]")).toContainText("$3.61");
   state = await stored(page);
   expect(state.stock["Branch 1:0009"]).toBe(beforeStock + 12);
   expect(state.invoice.payable_after_open_shorts).toBe("177.02");

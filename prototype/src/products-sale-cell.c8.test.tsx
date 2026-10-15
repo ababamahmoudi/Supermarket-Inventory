@@ -1,10 +1,19 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { DemoProvider, useDemo } from "./store";
 import { Products } from "./screens/Catalog";
+import { initialState } from "./e1-bootstrap";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import i18n from "./i18n";
 
+let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -25,26 +34,33 @@ beforeEach(async () => {
     },
   );
 });
-afterEach(() => vi.restoreAllMocks());
-function Harness({ username }: { username: string }) {
-  const { switchDemoUser } = useDemo();
-  return (
-    <>
-      <button onClick={() => switchDemoUser(username)}>Use account</button>
-      <Products />
-    </>
-  );
+afterEach(() => {
+  cleanup();
+  fixture?.dispose();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+function Harness() {
+  const { actor } = useDemo();
+  return actor ? <Products /> : null;
 }
-it.each(["supervisor", "floorworker"])(
+it.each(["manager", "floor_worker"] as const)(
   "retains the requested-sale amount beside the current charge when Status is omitted for %s",
-  async (username) => {
+  async (role) => {
     const user = userEvent.setup();
+    fixture = await authenticatedProviderFixture({
+      state: initialState(),
+      role,
+      actorOptions: {
+        selection: { kind: "location", location_id: "Branch 1" },
+      },
+    });
     render(
-      <DemoProvider>
-        <Harness username={username} />
+      <DemoProvider options={fixture.options}>
+        <Harness />
       </DemoProvider>,
     );
-    await user.click(screen.getByRole("button", { name: "Use account" }));
+    await screen.findByRole("searchbox", { name: "Search products" });
     await user.type(
       screen.getByRole("searchbox", { name: "Search products" }),
       "0008",
@@ -52,6 +68,13 @@ it.each(["supervisor", "floorworker"])(
     expect(
       screen.queryByRole("columnheader", { name: "Status and offer" }),
     ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        document.querySelector(
+          '.catalog-products-table tbody td[data-column-key="price"]',
+        ),
+      ).toBeInTheDocument(),
+    );
     const priceCell = document.querySelector(
       '.catalog-products-table tbody td[data-column-key="price"]',
     ) as HTMLElement;
@@ -64,7 +87,7 @@ it.each(["supervisor", "floorworker"])(
     expect(
       document.querySelectorAll(".catalog-products-table .sale-request-pill"),
     ).toHaveLength(1);
-    if (username === "floorworker") {
+    if (role === "floor_worker") {
       expect(
         within(screen.getByRole("table")).queryByText("Store cost"),
       ).not.toBeInTheDocument();

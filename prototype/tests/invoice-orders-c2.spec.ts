@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import Decimal from "decimal.js";
 import { chooseOption, invoiceImage, signIn } from "./helpers";
@@ -6,8 +8,8 @@ import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
 test.setTimeout(60000);
 const stored = (page: Page): Promise<DemoState> =>
-  page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 
 async function rememberedPack(page: Page) {
@@ -39,9 +41,38 @@ async function manual(page: Page) {
     .getByRole("option", { name: /Fresh Valley Foods/ })
     .click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
+  await expect(page.locator(".invoice-line")).toHaveCount(1);
+  const id = (await stored(page)).invoice.id;
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })
     .setInputFiles(invoiceImage);
+  // A pre-existing manual line is visible while its original is still saving.
+  // Start edits only after this exact retained file and route are accepted.
+  await expect
+    .poll(async () => {
+      const invoice = (await stored(page)).invoice;
+      return {
+        id: invoice.id,
+        mode: invoice.entry_mode,
+        status: invoice.status,
+        file: invoice.file_name,
+        sha256: invoice.file_data?.split(":").at(-1),
+      };
+    })
+    .toEqual({
+      id,
+      mode: "manual",
+      status: "review",
+      file: invoiceImage.name,
+      sha256: createHash("sha256").update(invoiceImage.buffer).digest("hex"),
+    });
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
+  await expect(page).toHaveURL(
+    (url) => url.hash === `#invoices?id=${encodeURIComponent(id)}`,
+  );
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   return page.locator(".invoice-line").first();
 }
@@ -85,7 +116,13 @@ test("retained case quote bills exactly, remembers the pack and leaves the poste
     "cases",
     "Cases",
   );
+  // The real unit-change command converts the old count before the next edit.
+  // Wait for its projected control so it cannot replace the value mid-fill.
+  await expect(line.getByLabel("Quantity unit", { exact: true })).toHaveText(
+    "Cases",
+  );
   await line.getByLabel("Invoiced", { exact: true }).fill("500");
+  await expect(line.getByLabel("Invoiced", { exact: true })).toHaveValue("500");
   await line.getByLabel("Case cost before tax", { exact: true }).fill("19.99");
   await expect(
     line.getByLabel("Unit cost before tax", { exact: true }),

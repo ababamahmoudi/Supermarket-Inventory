@@ -1,3 +1,9 @@
+import {
+  normalizeRoleDefinitions,
+  readConfiguredRoleDefinitions,
+  readConfiguredRoleACL,
+  readConfiguredOptionalRole,
+} from "./role-config";
 import sourceConfig from "../../seed/arzon-config.json";
 import sourceDemo from "../../seed/demo-data.json";
 import retainedConfig from "./compat/configuration.json";
@@ -11,6 +17,28 @@ const configured = (value: string, previous: string) =>
 export const configSeed = {
   ...retainedConfig,
   ...sourceConfig,
+  roles: normalizeRoleDefinitions(
+    sourceConfig.roles,
+    readConfiguredRoleDefinitions(sourceConfig.roles),
+  ),
+  notebooks: {
+    ...sourceConfig.notebooks,
+    built_in: sourceConfig.notebooks.built_in.map((book) => ({
+      ...book,
+      read_roles: readConfiguredRoleACL(book.read_roles),
+      add_roles: readConfiguredRoleACL(book.add_roles),
+      notify_roles:
+        "notify_roles" in book
+          ? readConfiguredRoleACL(book.notify_roles)
+          : undefined,
+      name_role_key: readConfiguredOptionalRole(
+        "name_role_key" in book ? book.name_role_key : undefined,
+      ),
+    })),
+    custom_created_by: readConfiguredRoleACL(
+      sourceConfig.notebooks.custom_created_by,
+    ),
+  },
   company: {
     ...retainedConfig.company,
     ...sourceConfig.company,

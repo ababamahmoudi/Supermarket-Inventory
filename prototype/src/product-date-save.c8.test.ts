@@ -1,22 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import { addProduct, type NewProductEdits } from "./manual-product";
 import {
   productEditSnapshot,
   saveProductEdits,
   type ProductEdits,
 } from "./product-editor";
-import { configuredBranches } from "./settings";
+import { catalogTestActor } from "./catalog-authority-test-fixture";
 import { type ProductDateDraft } from "./date-tracking";
 import type { DemoState, Product } from "./types";
 
-const context = (state: DemoState) => ({
-  company_id: state.config.company.seed_key,
-  role: "supervisor" as const,
-  actor: "Demo Supervisor",
-  branch: "Branch 1",
-  allowed_branches: configuredBranches(state.config),
-});
+const context = (state: DemoState) => catalogTestActor(state, "manager", "all");
 const edits = (product: Product): ProductEdits => ({
   name_en: product.name_en,
   name_fa: product.name_fa,
@@ -61,7 +55,7 @@ describe("C8 whole-product date validation", () => {
         context(state),
         product.code,
         { ...edits(product), name_en: "Unsaved name" },
-        productEditSnapshot(state, product.code),
+        productEditSnapshot(state, context(state), product.code),
       ),
     ).toThrow("required_date");
     expect(state).toEqual(before);
@@ -95,7 +89,7 @@ describe("C8 whole-product date validation", () => {
       context(state),
       product.code,
       { ...edits(product), name_en: "Saved with company date" },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, context(state), product.code),
     );
     expect(product.name_en).toBe("Saved with company date");
     expect(product.date_tracking).toBe(true);
@@ -130,7 +124,7 @@ describe("C8 whole-product date validation", () => {
         context(state),
         product.code,
         edits(product),
-        productEditSnapshot(state, product.code),
+        productEditSnapshot(state, context(state), product.code),
       ),
     ).toThrow("required_date");
     expect(state).toEqual(before);
@@ -142,7 +136,7 @@ describe("C8 whole-product date validation", () => {
       context(state),
       product.code,
       { ...edits(product), dates: [draft(product)] },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, context(state), product.code),
     );
     const entry = state.expiry.find(
       (row) => row.product_code === product.code,
@@ -167,7 +161,7 @@ describe("C8 whole-product date validation", () => {
             }),
           ],
         },
-        productEditSnapshot(state, product.code),
+        productEditSnapshot(state, context(state), product.code),
       ),
     ).toThrow("required_date");
     expect(state).toEqual(before);
@@ -181,7 +175,7 @@ describe("C8 whole-product date validation", () => {
         context(state),
         product.code,
         { ...edits(product), date_tracking: false, selling_price: "5.99" },
-        productEditSnapshot(state, product.code),
+        productEditSnapshot(state, context(state), product.code),
       ),
     ).toThrow("price");
     expect(state).toEqual(before);

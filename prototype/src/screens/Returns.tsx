@@ -1,10 +1,20 @@
+import { useProtectedQuery } from "../use-protected-query";
+import { configuredRoleLabel } from "../role-config";
+import type { AuthenticatedActor } from "../authority-types";
+import { actorAudit, domainScope } from "../domain-authority";
+import {
+  returnViews,
+  returnMemoView,
+  type OperationalReturnRead,
+  type ReturnMemoRead,
+} from "../return-projections";
 import "../c3-tables.css";
 import {
   branchLabel as configuredBranchLabel,
   configuredBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useListState } from "../navigation";
 import { ArrowLeft } from "lucide-react";
 import { ReturnMemoDocument, ReturnMemoPreview } from "../return-memo";
@@ -14,13 +24,12 @@ import {
   returnUiStatusLabel,
   returnClosureSubtype,
   returnFinancialFingerprint,
-  type ReturnMemo,
 } from "../return-workflow";
 import "./returns-a2.css";
 import { ReturnStatusBadge } from "../ReturnStatusBadge";
 import { ReturnActionForms, ReturnCancellationForm } from "./ReturnActionForms";
-import { returnItemProgress } from "../return-item-resolutions";
-import { StoredFileImage } from "../stored-file";
+import { ReturnEvidenceImage } from "../ReturnEvidenceImage";
+import type { DemoState } from "../types";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 import policySource from "../../../docs/return-policy.md?raw";
 import { useDemo } from "../store";
@@ -46,13 +55,10 @@ import {
 import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
   operationError,
-  canCorrectReturnPickup,
   returnUnpickedQuantity,
   companyTimestamp,
   postReturnClaim,
   reviewCancellation,
-  scopedRecords,
-  type OperationalReturn,
   type OperationsContext,
 } from "../operations";
 
@@ -66,8 +72,8 @@ const returnFeedback = {
     "جمع‌آوری اصلاح شد. سابقه امضاشده اصلی نگهداری می‌شود.",
   ],
   resolve: [
-    "Recorded item resolutions. Credit claims require Supervisor verification.",
-    "حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید سرپرست نیاز دارد.",
+    "Recorded item resolutions. Credit claims require {financial_roles} verification.",
+    "حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید {financial_roles} نیاز دارد.",
   ],
   cancel: [
     "Recorded cancellation disposition. Existing compensation remains unchanged.",
@@ -86,8 +92,47 @@ const returnFeedback = {
 type ReturnFeedbackKey = keyof typeof returnFeedback;
 
 export function Returns() {
-  const { state, update, role, user, branch, t, lang } = useDemo();
-  const usesPounds = (line: OperationalReturn["lines"][number]) =>
+  const { actor, can, t } = useDemo();
+  if (!actor || !can("returns.read"))
+    return <EmptyState>{t("Returns", "مرجوعی‌ها")}</EmptyState>;
+  return <ReturnsContent />;
+}
+function ReturnsContent() {
+  const {
+    state,
+    command,
+    query,
+    can,
+    actor,
+    branch,
+    t,
+    lang,
+    businessRevision,
+    authorityGeneration,
+    authorityDirectoryVersion,
+  } = useDemo();
+  const financialRoles = {
+    en: ["owner", "manager"]
+      .map((role) =>
+        configuredRoleLabel(
+          state.config.roles,
+          role as "owner" | "manager",
+          "en",
+        ),
+      )
+      .join(" / "),
+    fa: ["owner", "manager"]
+      .map((role) =>
+        configuredRoleLabel(
+          state.config.roles,
+          role as "owner" | "manager",
+          "fa",
+        ),
+      )
+      .join(" / "),
+  };
+  const currentActor = actor!;
+  const usesPounds = (line: OperationalReturnRead["lines"][number]) =>
     line.quantity_unit === "lb" ||
     (!line.quantity_unit &&
       state.products.find(
@@ -95,28 +140,27 @@ export function Returns() {
           item.company_id === state.config.company.seed_key &&
           item.code === line.product_code,
       )?.sold_by === "weight");
-  const branches = configuredBranches(state.config);
+  const branches = configuredBranches(state.config).filter((id) =>
+    currentActor.allowed_branches.includes(id),
+  );
   const [hash, setHash] = useState(() => window.location.hash);
   const detailId = hash.startsWith("#return?")
     ? new URLSearchParams(hash.split("?")[1]).get("id")
     : null;
-  const overviewContext: OperationsContext = {
-    company_id: state.config.company.seed_key,
-    branch: role === "supervisor" ? "all" : (user?.branch ?? branch),
-    role: role ?? "cashier",
-    actor: user?.name ?? t("Floor Worker", "کارمند فروشگاه"),
-  };
-  const scopedReturns = scopedRecords(
-    state.returns,
-    overviewContext,
-  ) as OperationalReturn[];
+  const overviewContext = currentActor;
+  const accessKey = `${authorityGeneration}:${authorityDirectoryVersion}:${currentActor.company_id}:${currentActor.user_id}:${currentActor.session_id}:${currentActor.authority_epoch}:${currentActor.person_version}:${businessRevision}:${branch}`;
+  const returnRead = useProtectedQuery(
+    "returns.read",
+    domainScope(state),
+    (freshState, freshActor) => returnViews(freshState, freshActor),
+    branch,
+  );
+  const scopedReturns = returnRead.data ?? [];
   const selected = detailId
     ? scopedReturns.find((record) => record.id === detailId)
     : undefined;
-  const context: OperationsContext = {
-    ...overviewContext,
-    branch: selected?.branch ?? overviewContext.branch,
-  };
+  // Row scopes are display hints only; commands resolve current canonical authority.
+  const context: OperationsContext = currentActor;
   const suppliers = [
     ...new Set([
       ...state.returns
@@ -153,7 +197,15 @@ export function Returns() {
   const [feedback, setFeedback] = useState<ReturnFeedbackKey | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [retainSettlement, setRetainSettlement] = useState(false);
-  const [manualMemo, setMemo] = useState<ReturnMemo | null>(null);
+  const [memoSnapshot, setMemoSnapshot] = useState<{
+    key: string;
+    memo: ReturnMemoRead | null;
+  }>({ key: accessKey, memo: null });
+  const manualMemo = memoSnapshot.key === accessKey ? memoSnapshot.memo : null;
+  const setMemo = useCallback(
+    (memo: ReturnMemoRead | null) => setMemoSnapshot({ key: accessKey, memo }),
+    [accessKey],
+  );
   const [dismissedMemoHash, setDismissedMemoHash] = useState("");
   const [confirmation, setConfirmation] = useState<{
     returnId: string;
@@ -230,14 +282,14 @@ export function Returns() {
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-  const returnNumber = (record: OperationalReturn) =>
+  }, [setMemo]);
+  const returnNumber = (record: OperationalReturnRead) =>
     state.returns
       .filter((item) => item.company_id === context.company_id)
       .findIndex((item) => item.id === record.id) + 1;
-  const detailHref = (record: OperationalReturn) =>
+  const detailHref = (record: OperationalReturnRead) =>
     `#return?id=${encodeURIComponent(record.id)}`;
-  const query = search.trim().toLocaleLowerCase();
+  const searchQuery = search.trim().toLocaleLowerCase();
   const overviewReturns = scopedReturns.filter((record) => {
     const displayedStatus = returnUiStatus(record);
     const matchesStatus =
@@ -270,7 +322,7 @@ export function Returns() {
       matchesStatus &&
       (supplier === "all" || record.supplier === supplier) &&
       (returnBranch === "all" || record.branch === returnBranch) &&
-      (!query || searchableText.includes(query))
+      (!searchQuery || searchableText.includes(searchQuery))
     );
   });
   useEffect(() => {
@@ -296,18 +348,19 @@ export function Returns() {
       : code;
   };
   const statusLabel = (status: string) => returnUiStatusLabel(status, t);
-  const returnStatus = (record: OperationalReturn) => (
+  const returnStatus = (record: OperationalReturnRead) => (
     <ReturnStatusBadge
       status={returnUiStatus(record)}
       outcome={returnClosureSubtype(record)}
     />
   );
-  const run = (
-    action: (draft: typeof state) => void,
+  const run = async (
+    capability: "returns.credit_post" | "returns.financial_cancel_review",
+    action: (draft: DemoState, freshActor: AuthenticatedActor) => void,
     message: ReturnFeedbackKey,
   ) => {
     try {
-      update(action);
+      await command(capability, domainScope(state, selected, true), action);
       setError("");
       setErrorKey("");
       setFeedback(message);
@@ -327,14 +380,17 @@ export function Returns() {
   };
   const fieldError = (...keys: string[]) =>
     keys.includes(errorKey) ? error : undefined;
-  const openPanel = (record: OperationalReturn, nextPanel: typeof panel) => {
+  const openPanel = (
+    record: OperationalReturnRead,
+    nextPanel: typeof panel,
+  ) => {
     setActive(record.id);
     setPanel(nextPanel);
     setError("");
     setErrorKey("");
     setFeedback(null);
   };
-  if (!role || role === "cashier")
+  if (!can("returns.read"))
     return (
       <EmptyState>
         {t(
@@ -427,16 +483,17 @@ export function Returns() {
                 options={[
                   {
                     value: "all",
-                    label:
-                      role === "supervisor"
-                        ? t("All branches", "همه شعب")
+                    label: can("returns.amount_read")
+                      ? t("All branches", "همه شعب")
+                      : currentActor.allowed_branches.length > 1
+                        ? t("All my locations", "همه محل‌های من")
                         : configuredBranchLabel(
                             state.config,
                             overviewContext.branch,
                             lang,
                           ),
                   },
-                  ...(role === "supervisor" ? branches : []).map((value) => ({
+                  ...branches.map((value) => ({
                     value,
                     label: configuredBranchLabel(state.config, value, lang),
                   })),
@@ -609,27 +666,65 @@ export function Returns() {
             </p>
             <Button
               variant="tinted"
-              onClick={() => {
-                update((draft) => {
-                  draft.activity.unshift({
-                    id: `memo-print-${Date.now()}`,
-                    company_id: context.company_id,
-                    branch: memo.branch,
-                    action: "Return memo printed",
-                    by: context.actor,
-                    at: new Date().toISOString(),
-                    reversible: false,
-                  });
-                });
-                printDocument(
-                  <ReturnMemoDocument
-                    memo={memo}
-                    language={lang}
-                    documentLanguage={
-                      state.config.supplier_documents?.return_memo ?? "en"
-                    }
-                  />,
-                );
+              onClick={async () => {
+                if (!memo) return;
+                try {
+                  const freshMemo = await query(
+                    "returns.read",
+                    domainScope(state, {
+                      company_id: memo.company_id,
+                      branch: memo.branch,
+                    }),
+                    (freshState, freshActor) =>
+                      returnMemoView(
+                        freshState,
+                        freshActor,
+                        memo.return_id,
+                        memo.id,
+                      ),
+                  );
+                  await command(
+                    "returns.read",
+                    domainScope(state, {
+                      company_id: memo.company_id,
+                      branch: memo.branch,
+                    }),
+                    (draft, freshActor) => {
+                      const actual = returnMemoView(
+                        draft,
+                        freshActor,
+                        memo.return_id,
+                        memo.id,
+                      );
+                      draft.activity.unshift({
+                        id: `memo-print-${Date.now()}`,
+                        company_id: actual.company_id,
+                        branch: actual.branch,
+                        action: "Return memo printed",
+                        by: freshActor.actor,
+                        ...actorAudit(draft, freshActor),
+                        at: new Date().toISOString(),
+                        reversible: false,
+                      });
+                    },
+                  );
+                  printDocument(
+                    <ReturnMemoDocument
+                      memo={freshMemo}
+                      language={lang}
+                      documentLanguage={
+                        state.config.supplier_documents?.return_memo ?? "en"
+                      }
+                    />,
+                  );
+                } catch (caught) {
+                  setError(
+                    operationError(
+                      caught instanceof Error ? caught.message : "",
+                      t,
+                    ),
+                  );
+                }
               }}
             >
               {t("Print", "چاپ")}
@@ -651,30 +746,26 @@ export function Returns() {
         confirmLabel={t("Verify and post claim", "تأیید و ثبت ادعا")}
         onConfirm={() => {
           if (!confirmation) return;
-          if (
-            returnFinancialFingerprint(state, confirmation.returnId) !==
-            confirmation.fingerprint
-          ) {
-            setErrorKey("return_changed");
-            setError(
-              t(
-                "This return or its payable changed. Review it again before posting.",
-                "این مرجوعی یا پرداختنی آن تغییر کرده است. پیش از ثبت دوباره بررسی کنید.",
-              ),
-            );
-            setConfirmation(null);
-            return;
-          }
-          run(
-            (draft) =>
-              postReturnClaim(
+          void run(
+            "returns.credit_post",
+            (draft, freshActor) => {
+              if (
+                returnFinancialFingerprint(
+                  draft,
+                  freshActor,
+                  confirmation.returnId,
+                ) !== confirmation.fingerprint
+              )
+                throw new Error("return_changed");
+              return postReturnClaim(
                 draft,
-                context,
+                freshActor,
                 confirmation.returnId,
                 confirmation.claimId,
                 confirmation.amount,
                 confirmation.itemAmounts,
-              ),
+              );
+            },
             "posted",
           );
           setConfirmation(null);
@@ -729,8 +820,8 @@ export function Returns() {
               <strong>{t("Record the outcome", "ثبت نتیجه")}</strong>
               <p>
                 {t(
-                  "Workers submit claims and evidence, Supervisors verify and post money, and replacements record actual receipts.",
-                  "کارکنان ادعا و مدرک ارسال می‌کنند، سرپرستان پول را تأیید و ثبت می‌کنند و برای جایگزین دریافت واقعی ثبت می‌شود.",
+                  `Workers submit claims and evidence, ${financialRoles.en} verify and post money, and replacements record actual receipts.`,
+                  `کارکنان ادعا و مدرک ارسال می‌کنند، ${financialRoles.fa} پول را تأیید و ثبت می‌کنند و برای جایگزین دریافت واقعی ثبت می‌شود.`,
                 )}
               </p>
             </li>
@@ -775,11 +866,20 @@ export function Returns() {
       )}
       {feedback && (
         <div className="banner approved" role="status">
-          {t(returnFeedback[feedback][0], returnFeedback[feedback][1])}
+          {t(
+            returnFeedback[feedback][0].replace(
+              "{financial_roles}",
+              financialRoles.en,
+            ),
+            returnFeedback[feedback][1].replace(
+              "{financial_roles}",
+              financialRoles.fa,
+            ),
+          )}
         </div>
       )}
       {returns.map((record) => {
-        const creation = record as OperationalReturn & {
+        const creation = record as OperationalReturnRead & {
           created_at?: string;
           created_by?: string;
           by?: string;
@@ -828,9 +928,17 @@ export function Returns() {
                     (record.status !== "claim_pending" ||
                       record.lines.some(
                         (line) =>
-                          returnItemProgress(record, line).available > 0,
+                          record.line_progress[line.product_code].available > 0,
                       )) && (
                       <Button
+                        disabled={
+                          !can(
+                            record.status === "open"
+                              ? "returns.pickup_record"
+                              : "returns.operational_resolve",
+                            domainScope(state, record, true),
+                          )
+                        }
                         onClick={() =>
                           openPanel(
                             record,
@@ -844,7 +952,7 @@ export function Returns() {
                       </Button>
                     )}
                   {record.status === "cancellation_review" &&
-                    role === "supervisor" && (
+                    can("returns.amount_read") && (
                       <Button
                         onClick={() =>
                           document
@@ -859,12 +967,13 @@ export function Returns() {
                       </Button>
                     )}
                   {record.status === "claim_pending" &&
-                    role === "supervisor" && (
+                    can("returns.amount_read") && (
                       <Button
                         variant={
                           record.lines.some(
                             (line) =>
-                              returnItemProgress(record, line).available > 0,
+                              record.line_progress[line.product_code]
+                                .available > 0,
                           )
                             ? "neutral"
                             : "primary"
@@ -963,37 +1072,51 @@ export function Returns() {
                             {usesPounds(line) ? " lb" : ""}
                           </LtrText>
                           <div className="return-item-progress">
-                            {returnItemProgress(record, line).credited > 0 && (
+                            {record.line_progress[line.product_code].credited >
+                              0 && (
                               <span>
                                 {t("Credited", "اعتبار دریافت‌شده")}:{" "}
                                 <bdi>
-                                  {returnItemProgress(record, line).credited}
+                                  {
+                                    record.line_progress[line.product_code]
+                                      .credited
+                                  }
                                 </bdi>
                               </span>
                             )}
-                            {returnItemProgress(record, line).replaced > 0 && (
+                            {record.line_progress[line.product_code].replaced >
+                              0 && (
                               <span>
                                 {t("Replaced", "جایگزین‌شده")}:{" "}
                                 <bdi>
-                                  {returnItemProgress(record, line).replaced}
+                                  {
+                                    record.line_progress[line.product_code]
+                                      .replaced
+                                  }
                                 </bdi>
                               </span>
                             )}
-                            {returnItemProgress(record, line).written_off >
-                              0 && (
+                            {record.line_progress[line.product_code]
+                              .written_off > 0 && (
                               <span>
                                 {t("Written off", "سوخت‌شده")}:{" "}
                                 <bdi>
-                                  {returnItemProgress(record, line).written_off}
+                                  {
+                                    record.line_progress[line.product_code]
+                                      .written_off
+                                  }
                                 </bdi>
                               </span>
                             )}
-                            {returnItemProgress(record, line).outstanding >
-                              0 && (
+                            {record.line_progress[line.product_code]
+                              .outstanding > 0 && (
                               <span>
                                 {t("Still outstanding", "هنوز باقی‌مانده")}:{" "}
                                 <bdi>
-                                  {returnItemProgress(record, line).outstanding}
+                                  {
+                                    record.line_progress[line.product_code]
+                                      .outstanding
+                                  }
                                 </bdi>
                                 {line.outstanding_expected_date && (
                                   <>
@@ -1043,8 +1166,8 @@ export function Returns() {
               {record.cancellation_demo_note && (
                 <p className="muted">
                   {t(
-                    "Two originals remain with the supplier; one replacement was received. Cancellation restores zero supplier-held units and needs Supervisor review.",
-                    "دو اصل کالا نزد تأمین‌کننده است؛ یک جایگزین دریافت شده است. لغو هیچ کالایی از نزد تأمین‌کننده به موجودی بازنمی‌گرداند و نیازمند بررسی سرپرست است.",
+                    `Two originals remain with the supplier; one replacement was received. Cancellation restores zero supplier-held units and needs ${financialRoles.en} review.`,
+                    `دو اصل کالا نزد تأمین‌کننده است؛ یک جایگزین دریافت شده است. لغو هیچ کالایی از نزد تأمین‌کننده به موجودی بازنمی‌گرداند و نیازمند بررسی ${financialRoles.fa} است.`,
                   )}
                 </p>
               )}
@@ -1071,7 +1194,10 @@ export function Returns() {
                         </Button>
                       )}
                     {record.pickup_memos?.length &&
-                    canCorrectReturnPickup(context) ? (
+                    can("returns.pickup_correct", {
+                      ...domainScope(state, record, true),
+                      location_policy: "retained_correction",
+                    }) ? (
                       <Button
                         variant="neutral"
                         onClick={() => openPanel(record, "correct")}
@@ -1080,6 +1206,12 @@ export function Returns() {
                       </Button>
                     ) : null}
                     <Button
+                      disabled={
+                        !can(
+                          "returns.operational_resolve",
+                          domainScope(state, record, true),
+                        )
+                      }
                       variant="destructive"
                       onClick={() => openPanel(record, "cancel")}
                     >
@@ -1145,181 +1277,201 @@ export function Returns() {
                     {t("Submitted by", "ارسال‌کننده")}:{" "}
                     {demoUserLabel(claim.submitted_by, lang)}
                   </p>
-                  {role === "supervisor" && claim.status === "submitted" && (
-                    <>
-                      <WhatsMissing issues={claimIssues} />
-                      <Field
-                        className="field-short"
-                        error={
-                          fieldError("amount") ||
-                          claimIssues.find(
-                            (issue) =>
-                              issue.fieldId === `claim-amount-${claim.id}`,
-                          )?.message
-                        }
-                        label={t(
-                          "Verified financial amount (Supervisor only)",
-                          "مبلغ مالی تأییدشده (فقط سرپرست)",
-                        )}
-                      >
-                        <NumberField
-                          id={`claim-amount-${claim.id}`}
-                          value={claimAmounts[claim.id] ?? claim.amount ?? ""}
+                  {can("returns.amount_read") &&
+                    claim.status === "submitted" && (
+                      <>
+                        <WhatsMissing issues={claimIssues} />
+                        <Field
+                          className="field-short"
+                          error={
+                            fieldError("amount") ||
+                            claimIssues.find(
+                              (issue) =>
+                                issue.fieldId === `claim-amount-${claim.id}`,
+                            )?.message
+                          }
+                          label={t(
+                            `Verified financial amount (${financialRoles.en} only)`,
+                            `مبلغ مالی تأییدشده (فقط ${financialRoles.fa})`,
+                          )}
+                        >
+                          <NumberField
+                            id={`claim-amount-${claim.id}`}
+                            value={claimAmounts[claim.id] ?? claim.amount ?? ""}
+                            onChange={(value) => {
+                              setClaimAmounts((current) => ({
+                                ...current,
+                                [claim.id]: value,
+                              }));
+                              clearFieldError("amount");
+                              setClaimIssues((current) =>
+                                current.filter(
+                                  (issue) =>
+                                    issue.fieldId !==
+                                    `claim-amount-${claim.id}`,
+                                ),
+                              );
+                            }}
+                            disabled={claim.type === "no_compensation"}
+                          />
+                        </Field>
+                        {claim.type !== "no_compensation" &&
+                          Object.values(claim.covers).filter(
+                            (count) => count > 0,
+                          ).length > 1 && (
+                            <div className="form-grid">
+                              {Object.entries(claim.covers)
+                                .filter(([, count]) => count > 0)
+                                .map(([code]) => (
+                                  <Field
+                                    key={code}
+                                    className="field-short"
+                                    label={`${productName(code)} · ${t("Actual credit amount", "مبلغ واقعی اعتبار")}`}
+                                    error={
+                                      claimIssues.find(
+                                        (issue) =>
+                                          issue.fieldId ===
+                                          `claim-item-${claim.id}-${code}`,
+                                      )?.message
+                                    }
+                                  >
+                                    <NumberField
+                                      id={`claim-item-${claim.id}-${code}`}
+                                      value={
+                                        claimItemAmounts[claim.id]?.[code] ??
+                                        claim.item_amounts?.[code] ??
+                                        ""
+                                      }
+                                      onChange={(value) => {
+                                        setClaimItemAmounts((current) => ({
+                                          ...current,
+                                          [claim.id]: {
+                                            ...current[claim.id],
+                                            [code]: value,
+                                          },
+                                        }));
+                                        setClaimIssues((current) =>
+                                          current.filter(
+                                            (issue) =>
+                                              issue.fieldId !==
+                                              `claim-item-${claim.id}-${code}`,
+                                          ),
+                                        );
+                                      }}
+                                    />
+                                  </Field>
+                                ))}
+                            </div>
+                          )}
+                        <Checkbox
+                          id={`claim-verify-${claim.id}`}
+                          checked={!!verifiedClaims[claim.id]}
                           onChange={(value) => {
-                            setClaimAmounts((current) => ({
+                            setVerifiedClaims((current) => ({
                               ...current,
                               [claim.id]: value,
                             }));
-                            clearFieldError("amount");
                             setClaimIssues((current) =>
                               current.filter(
                                 (issue) =>
-                                  issue.fieldId !== `claim-amount-${claim.id}`,
+                                  issue.fieldId !== `claim-verify-${claim.id}`,
                               ),
                             );
                           }}
-                          disabled={claim.type === "no_compensation"}
-                        />
-                      </Field>
-                      {claim.type !== "no_compensation" &&
-                        Object.values(claim.covers).filter((count) => count > 0)
-                          .length > 1 && (
-                          <div className="form-grid">
-                            {Object.entries(claim.covers)
-                              .filter(([, count]) => count > 0)
-                              .map(([code]) => (
-                                <Field
-                                  key={code}
-                                  className="field-short"
-                                  label={`${productName(code)} · ${t("Actual credit amount", "مبلغ واقعی اعتبار")}`}
-                                  error={
-                                    claimIssues.find(
-                                      (issue) =>
-                                        issue.fieldId ===
-                                        `claim-item-${claim.id}-${code}`,
-                                    )?.message
-                                  }
-                                >
-                                  <NumberField
-                                    id={`claim-item-${claim.id}-${code}`}
-                                    value={
-                                      claimItemAmounts[claim.id]?.[code] ??
-                                      claim.item_amounts?.[code] ??
-                                      ""
-                                    }
-                                    onChange={(value) => {
-                                      setClaimItemAmounts((current) => ({
-                                        ...current,
-                                        [claim.id]: {
-                                          ...current[claim.id],
-                                          [code]: value,
-                                        },
-                                      }));
-                                      setClaimIssues((current) =>
-                                        current.filter(
-                                          (issue) =>
-                                            issue.fieldId !==
-                                            `claim-item-${claim.id}-${code}`,
-                                        ),
-                                      );
-                                    }}
-                                  />
-                                </Field>
-                              ))}
-                          </div>
-                        )}
-                      <Checkbox
-                        id={`claim-verify-${claim.id}`}
-                        checked={!!verifiedClaims[claim.id]}
-                        onChange={(value) => {
-                          setVerifiedClaims((current) => ({
-                            ...current,
-                            [claim.id]: value,
-                          }));
-                          setClaimIssues((current) =>
-                            current.filter(
-                              (issue) =>
-                                issue.fieldId !== `claim-verify-${claim.id}`,
-                            ),
-                          );
-                        }}
-                      >
-                        {t(
-                          "I verified the document, covered quantities, and invoice allocation.",
-                          "سند، تعداد پوشش‌داده‌شده و تخصیص فاکتور را تأیید کردم.",
-                        )}
-                      </Checkbox>
-                      <Button
-                        onClick={() => {
-                          const missing: ValidationIssue[] = [];
-                          if (!verifiedClaims[claim.id])
-                            missing.push({
-                              id: `claim-verify-${claim.id}-error`,
-                              fieldId: `claim-verify-${claim.id}`,
-                              message: t(
-                                "Verify the document, covered quantities and invoice allocation.",
-                                "سند، تعداد تحت پوشش و تخصیص فاکتور را تأیید کنید.",
-                              ),
-                            });
-                          if (
-                            claim.type !== "no_compensation" &&
-                            !(
-                              Number(claimAmounts[claim.id] ?? claim.amount) > 0
+                        >
+                          {t(
+                            "I verified the document, covered quantities, and invoice allocation.",
+                            "سند، تعداد پوشش‌داده‌شده و تخصیص فاکتور را تأیید کردم.",
+                          )}
+                        </Checkbox>
+                        <Button
+                          onClick={async () => {
+                            const missing: ValidationIssue[] = [];
+                            if (!verifiedClaims[claim.id])
+                              missing.push({
+                                id: `claim-verify-${claim.id}-error`,
+                                fieldId: `claim-verify-${claim.id}`,
+                                message: t(
+                                  "Verify the document, covered quantities and invoice allocation.",
+                                  "سند، تعداد تحت پوشش و تخصیص فاکتور را تأیید کنید.",
+                                ),
+                              });
+                            if (
+                              claim.type !== "no_compensation" &&
+                              !(
+                                Number(claimAmounts[claim.id] ?? claim.amount) >
+                                0
+                              )
                             )
-                          )
-                            missing.push({
-                              id: `claim-amount-${claim.id}-error`,
-                              fieldId: `claim-amount-${claim.id}`,
-                              message: t(
-                                "Enter a valid verified financial amount.",
-                                "مبلغ مالی تأییدشده معتبر وارد کنید.",
-                              ),
-                            });
-                          const coveredCodes = Object.keys(claim.covers).filter(
-                            (code) => claim.covers[code] > 0,
-                          );
-                          const itemAmounts =
-                            claim.type !== "no_compensation" &&
-                            coveredCodes.length > 1
-                              ? Object.fromEntries(
-                                  coveredCodes.map((code) => [
-                                    code,
-                                    claimItemAmounts[claim.id]?.[code] ??
-                                      claim.item_amounts?.[code] ??
-                                      "",
-                                  ]),
-                                )
-                              : undefined;
-                          if (itemAmounts)
-                            for (const code of coveredCodes)
-                              if (!(Number(itemAmounts[code]) > 0))
-                                missing.push({
-                                  id: `claim-item-${claim.id}-${code}-error`,
-                                  fieldId: `claim-item-${claim.id}-${code}`,
-                                  message: t(
-                                    `Enter the actual credit amount for ${productName(code)}.`,
-                                    `مبلغ واقعی اعتبار ${productName(code)} را وارد کنید.`,
+                              missing.push({
+                                id: `claim-amount-${claim.id}-error`,
+                                fieldId: `claim-amount-${claim.id}`,
+                                message: t(
+                                  "Enter a valid verified financial amount.",
+                                  "مبلغ مالی تأییدشده معتبر وارد کنید.",
+                                ),
+                              });
+                            const coveredCodes = Object.keys(
+                              claim.covers,
+                            ).filter((code) => claim.covers[code] > 0);
+                            const itemAmounts =
+                              claim.type !== "no_compensation" &&
+                              coveredCodes.length > 1
+                                ? Object.fromEntries(
+                                    coveredCodes.map((code) => [
+                                      code,
+                                      claimItemAmounts[claim.id]?.[code] ??
+                                        claim.item_amounts?.[code] ??
+                                        "",
+                                    ]),
+                                  )
+                                : undefined;
+                            if (itemAmounts)
+                              for (const code of coveredCodes)
+                                if (!(Number(itemAmounts[code]) > 0))
+                                  missing.push({
+                                    id: `claim-item-${claim.id}-${code}-error`,
+                                    fieldId: `claim-item-${claim.id}-${code}`,
+                                    message: t(
+                                      `Enter the actual credit amount for ${productName(code)}.`,
+                                      `مبلغ واقعی اعتبار ${productName(code)} را وارد کنید.`,
+                                    ),
+                                  });
+                            setClaimIssues(missing);
+                            if (missing.length) return;
+                            try {
+                              const fingerprint = await query(
+                                "returns.amount_read",
+                                domainScope(state, record),
+                                (canonical, actor) =>
+                                  returnFinancialFingerprint(
+                                    canonical,
+                                    actor,
+                                    record.id,
                                   ),
-                                });
-                          setClaimIssues(missing);
-                          if (missing.length) return;
-                          setConfirmation({
-                            returnId: record.id,
-                            claimId: claim.id,
-                            amount:
-                              claimAmounts[claim.id] ?? claim.amount ?? "",
-                            itemAmounts,
-                            fingerprint: returnFinancialFingerprint(
-                              state,
-                              record.id,
-                            ),
-                          });
-                        }}
-                      >
-                        {t("Verify and post claim", "تأیید و ثبت ادعا")}
-                      </Button>
-                    </>
-                  )}
+                              );
+                              setConfirmation({
+                                returnId: record.id,
+                                claimId: claim.id,
+                                amount:
+                                  claimAmounts[claim.id] ?? claim.amount ?? "",
+                                itemAmounts,
+                                fingerprint,
+                              });
+                            } catch (caught) {
+                              setError(
+                                operationError(
+                                  caught instanceof Error ? caught.message : "",
+                                  t,
+                                ),
+                              );
+                            }
+                          }}
+                        >
+                          {t("Verify and post claim", "تأیید و ثبت ادعا")}
+                        </Button>
+                      </>
+                    )}
                 </Card>
               ))}
             </div>
@@ -1330,11 +1482,11 @@ export function Returns() {
               >
                 <div className="banner pending">
                   {t(
-                    "Supervisor review required. Supplier-held originals are not recorded as recovered. Existing settlement has not been reversed.",
-                    "بررسی سرپرست ضروری است. اصل کالای نزد تأمین‌کننده به عنوان بازیابی‌شده ثبت نمی‌شود. تسویه قبلی معکوس نشده است.",
+                    `${financialRoles.en} review required. Supplier-held originals are not recorded as recovered. Existing settlement has not been reversed.`,
+                    `بررسی ${financialRoles.fa} ضروری است. اصل کالای نزد تأمین‌کننده به عنوان بازیابی‌شده ثبت نمی‌شود. تسویه قبلی معکوس نشده است.`,
                   )}
                 </div>
-                {role === "supervisor" && (
+                {can("returns.amount_read") && (
                   <>
                     <Field
                       label={t(
@@ -1358,11 +1510,17 @@ export function Returns() {
                     </Checkbox>
                     <div className="actions">
                       <Button
-                        disabled={context.branch === "all"}
+                        disabled={
+                          !can("returns.financial_cancel_review", {
+                            ...domainScope(state, record, true),
+                            location_policy: "retained_correction",
+                          })
+                        }
                         onClick={() =>
-                          run(
-                            (draft) =>
-                              reviewCancellation(draft, context, record.id, {
+                          void run(
+                            "returns.financial_cancel_review",
+                            (draft, freshActor) =>
+                              reviewCancellation(draft, freshActor, record.id, {
                                 accept: true,
                                 settlement_retained: retainSettlement,
                                 note: reviewNote,
@@ -1375,11 +1533,17 @@ export function Returns() {
                       </Button>
                       <Button
                         variant="destructive"
-                        disabled={context.branch === "all"}
+                        disabled={
+                          !can("returns.financial_cancel_review", {
+                            ...domainScope(state, record, true),
+                            location_policy: "retained_correction",
+                          })
+                        }
                         onClick={() =>
-                          run(
-                            (draft) =>
-                              reviewCancellation(draft, context, record.id, {
+                          void run(
+                            "returns.financial_cancel_review",
+                            (draft, freshActor) =>
+                              reviewCancellation(draft, freshActor, record.id, {
                                 accept: false,
                                 settlement_retained: false,
                                 note: reviewNote,
@@ -1441,10 +1605,11 @@ export function Returns() {
                         </LtrText>
                       </p>
                       {event.note && <p>{event.note}</p>}
-                      {event.photo && (
-                        <StoredFileImage
+                      {event.photo_available && (
+                        <ReturnEvidenceImage
                           className="evidence-photo"
-                          value={event.photo}
+                          returnId={record.id}
+                          eventId={event.id}
                           companyId={context.company_id}
                           alt={t(
                             "Retained local evidence photo",

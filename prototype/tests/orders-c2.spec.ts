@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -61,9 +62,8 @@ async function newOrder(page: Page, location = "North York") {
   return form;
 }
 async function savedOrders(page: Page) {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).orders,
-    storage,
+  return readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).orders,
   );
 }
 
@@ -88,10 +88,12 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
   await addOilItem(page);
-  const before = await page.evaluate((key) => {
-    const state = JSON.parse(localStorage.getItem(key)!);
-    return { ledger: state.ledger, movements: state.stock_movements };
-  }, storage);
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      return { ledger: state.ledger, movements: state.stock_movements };
+    },
+  );
   const form = await newOrder(page, "Warehouse");
   expect(
     await form
@@ -159,11 +161,15 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     };
   });
   await print.getByRole("button", { name: "Print", exact: true }).click();
-  expect(
-    await page.evaluate(
-      () => (window as unknown as { printRequested: boolean }).printRequested,
-    ),
-  ).toBe(true);
+  // Print rechecks the current actor through the asynchronous authority query.
+  // Observe the actual print boundary before checking its unchanged document.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as unknown as { printRequested: boolean }).printRequested,
+      ),
+    )
+    .toBe(true);
   const output = page.locator(
     "body > .operational-print-output .order-print-output",
   );
@@ -207,10 +213,12 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
       ".orders-page select,.orders-page input[type=number],.orders-page input[type=date],.orders-page input[type=checkbox]",
     ),
   ).toHaveCount(0);
-  const after = await page.evaluate((key) => {
-    const state = JSON.parse(localStorage.getItem(key)!);
-    return { ledger: state.ledger, movements: state.stock_movements };
-  }, storage);
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      return { ledger: state.ledger, movements: state.stock_movements };
+    },
+  );
   expect(after).toEqual(before);
 });
 
@@ -235,12 +243,13 @@ test("free-text To order note saves unresolved selection but needs explicit item
     .getByRole("button", { name: "Save note", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText("Saved note.");
-  const freeTextNote = await page.evaluate(
-    ({ key, text }) =>
-      JSON.parse(localStorage.getItem(key)!).notes.find(
-        (item: { text: string }) => item.text === text,
-      ),
-    { key: storage, text: noteText },
+  const freeTextNote = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const canonicalEvidenceInput = { key: storage, text: noteText };
+      return JSON.parse(JSON.stringify(canonicalState)!).notes.find(
+        (item: { text: string }) => item.text === canonicalEvidenceInput.text,
+      );
+    },
   );
   expect(freeTextNote).toMatchObject({
     type: "to_order",
@@ -320,13 +329,13 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await expect
     .poll(
       async () =>
-        await page.evaluate((key) => {
-          const state = JSON.parse(localStorage.getItem(key)!);
+        await readCanonicalBusinessEvidence(page).then((canonicalState) => {
+          const state = JSON.parse(JSON.stringify(canonicalState)!);
           return state.notes.find(
             (item: { id: string }) =>
               item.id === state.orders[0].source_note_ids[0],
           ).status;
-        }, storage),
+        }),
     )
     .toBe("ordered");
   await page.reload();

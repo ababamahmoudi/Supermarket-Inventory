@@ -1,7 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { chooseOption, setBranch, signIn, uploadInvoice } from "./helpers";
-import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import {
   appearance,
   inspect,
@@ -343,22 +342,55 @@ test("C5 button contract covers sign-in, first-sign-in password and lock actions
     await page
       .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
       .click();
-    const employee = demoSeed.demo_users.find(
-      (user) => user.username === "newemployee",
-    )!;
-    await page.getByLabel("Username", { exact: true }).fill(employee.username);
-    await page
-      .getByLabel("Password", { exact: true })
-      .fill(employee.temporary_password!);
+    // Fresh E1 has six complete Demo people. Exercise first sign-in by
+    // inviting an actual seventh person through the protected Owner screen.
+    await signIn(page, "Owner");
+    await page.goto("/#settings?group=people");
+    await page.getByRole("button", { name: "Add person", exact: true }).click();
+    const editor = page.getByRole("dialog", {
+      name: "Add person",
+      exact: true,
+    });
+    await editor
+      .getByLabel("English name", { exact: true })
+      .fill("Demo New Employee");
+    await editor.getByLabel("Username", { exact: true }).fill("newemployee");
+    await editor
+      .getByLabel("Email", { exact: true })
+      .fill("newemployee@example.test");
+    await editor
+      .getByRole("checkbox", { name: "North York", exact: true })
+      .check();
+    await editor.getByRole("button", { name: "Save", exact: true }).click();
+    const setup = page.getByRole("dialog", {
+      name: "One-time setup code",
+      exact: true,
+    });
+    await expect(setup).toBeVisible();
+    const setupCode = (
+      await setup.locator(".one-time-setup-code").innerText()
+    ).trim();
+    expect(setupCode).not.toBe("");
+    await setup.getByRole("button", { name: "Close", exact: true }).click();
+    const ownerMenu = page.getByRole("button", {
+      name: "User menu",
+      exact: true,
+    });
+    if (!(await ownerMenu.isVisible()))
+      await page.locator("#menu-toggle").click();
+    await ownerMenu.click();
+    await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
+    await page.getByLabel("Username", { exact: true }).fill("newemployee");
+    await page.getByLabel("Password", { exact: true }).fill(setupCode);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Choose a new password", exact: true }),
     ).toBeVisible();
-    await measure("Choose a new password", "en-light", employee.role);
+    await measure("Choose a new password", "en-light", "floor_worker");
     await page
       .getByRole("button", { name: "Switch to Persian", exact: true })
       .click();
-    await measure("Choose a new password", "fa-light", employee.role);
+    await measure("Choose a new password", "fa-light", "floor_worker");
     await page
       .getByRole("button", { name: "تغییر به انگلیسی", exact: true })
       .click();

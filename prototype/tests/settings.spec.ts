@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseOption,
@@ -31,6 +32,16 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
   await divisor.fill("0.50");
   await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  // Clicking Save starts the asynchronous authority transaction. Reload only
+  // after its actual company-scoped record accepts this exact divisor.
+  await expect
+    .poll(async () => {
+      const saved = await readCanonicalBusinessEvidence(page);
+      return saved.config.pricing_categories.find(
+        (category) => category.key === "grocery",
+      )?.cost_divisor;
+    })
+    .toBe("0.50");
 
   await page.reload();
   sandbox = page.locator(".card").filter({

@@ -1,5 +1,55 @@
 # Project changelog
 
+## 2026-10-15 — Retain Payables typing on a location reselect
+
+- Keep supplier search text and focus when the current Payables location is selected again. Actual location changes and Clear filters retain their existing behavior.
+- Add actual Provider/repository delayed-refresh coverage, with unchanged ledger/product evidence, Clear filters and genuine Floor Worker denial checks. No pricing, financial authority or business records change.
+
+## 2026-10-15 — Stable posted-invoice navigation
+
+- Prevent a late invoice workspace load from reopening the detail after browser Back. The existing protected route effect now owns the single workspace selection; invoice data, permissions and money stay unchanged.
+- Add a genuine Provider/repository delayed-completion regression, reproducing the old unwanted route and verifying the corrected Posted list and column preferences.
+- Retain asynchronous upload, template, pricing-setting, print and named supplier-field assertions through their actual completion, and verify implemented People without weakening unfinished E1 Notifications restrictions.
+
+## 2026-10-15 — Complete permitted phone print tables
+
+- Restore layout-collapsed cheque/payment columns for actual printing, keeping explicitly hidden columns excluded and restoring phone/expanded-row layout afterward. No payment amounts or records change.
+- Added print lifecycle/media/restore regressions and retained the original cheque, amount and worker-permission native assertions.
+
+
+## 2026-10-15 — Retained staff notebook and manual-price presentation
+
+- Restore the Cashier's explicitly shared custom-notebook route through the existing protected ACL/location projection, with revocation and built-in/private-route denials retained.
+- Restore staff Rule price / Manual price comparisons using only two public selling amounts per visible active Store; private costs, margins and decision provenance remain excluded.
+- Added current-Provider and DTO isolation regressions and retained the native read/revoke workflow. This corrects existing requirements rather than adding a new permission.
+
+
+
+## E1 retained workflow corrections — verification pending
+
+- Restore the exact public Cashier Product Code shortcut through protected Lookup, with private/extra/foreign routes denied and explicit Store selection retained.
+- Preserve the approved own/handled unposted-invoice Warehouse destination/post workflow through canonical identity and active assigned origin; unrelated destination access remains denied.
+- Link new note-status audit entries to their exact note/location so the authorized actor can safely Undo their own status action on another author's note. Existing immutable History and money remain unchanged.
+- These are source specifications. Actual test results are recorded after implementation verification.
+
+## 2026-10-13 — E1 implementation and verified app checks
+
+- Protect original attachments and New/Manual transitions until their accepted route and protected workspace agree. Preserve order-comparison disclosure keys across fresh reads without retaining stale costs.
+
+- Replaced active role-string authorization with configured Owner, Manager, Branch Supervisor, Floor Worker and Cashier capabilities and assigned-location resource checks.
+- Added genuine browser-local IndexedDB people/session/business transactions, protected field/file queries, resumable invitation/password/second-step setup, registered computers, cross-tab invalidation, verified migration and six-person reset.
+- Preserved pricing, invoice/return money and evidence, notes, offers and labels; protected service reads recheck current authority after asynchronous work without repeatedly refreshing private screen state.
+- Full app/pricing passed 1,275/1,275 with zero failures/skips; required lint and full TypeScript/Vite build passed. Earlier seven failures and corrected source fingerprints are retained in docs/evidence/e1.
+- Native SDK desktop/phone verification passed 24/24; full retained-browser fixture ports and original E1 screenshots are still in progress. E2/E3 remain separate authorized stages; no owner review pause or hosting deployment.
+
+## 2026-10-12 — E1 source-first roles, People and authority specification
+
+- Replaced active three-role/single-location rules with five configured roles, company/current/future-location Owner/Manager access, explicit other-role assignments and Store-only Cashier scope. Historical C3–C8 review evidence retains its original wording and authors.
+- Specified independent Branch Supervisor invoice/Supplier items/Orders purchase costs, operational dashboard/pending approvals, requests and delivery-hold instruction, without balances/margins/price decisions/financial settlement or replacement inheritance. Preserved current Floor Worker template creation/calibration/ordinary-offer/replacement operations independently of Company Settings.
+- Specified directory-based username/password/alias, one-time setup codes, forced password and simulated privileged second step, reasoned People edits, active-Owner/self-change protections and atomic IndexedDB authority/session revocation with fresh protected command/query checks.
+- Documented six demo/reset users, stable actor IDs, verified additive legacy identity/auth migration, retained forced newemployee setup/preferences/business/file/History, scoped registered-computer defaults and independent phone/browser data. No remote account/resource, backend, real authentication, invitation delivery or E2/E3 task/installation result is claimed.
+- **Specification only:** implementation/tests/screenshots remain Planned until actual final-source proof. E2/E3 remain authorised Planned stages stacked after E1; no intermediate owner-review pause.
+
 ## 2026-10-13 — C8 implemented and screenshot review complete
 
 - Completed the 22 layout fixes, temporary sales, manual regular prices, worker requests, price approvals, receipt cost alerts, delivery hold/release notes and frozen Promo/Regular label intents.

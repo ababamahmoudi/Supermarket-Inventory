@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import Decimal from "decimal.js";
 import {
@@ -11,15 +13,13 @@ import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "js
 import type { DemoState } from "../src/types";
 import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
-const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
 
 async function saved(
   page: import("@playwright/test").Page,
 ): Promise<DemoState> {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 
@@ -34,9 +34,37 @@ async function manualInvoice(page: import("@playwright/test").Page) {
     .getByRole("option", { name: /Fresh Valley Foods/ })
     .click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
+  const id = (await saved(page)).invoice.id;
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })
     .setInputFiles(invoiceImage);
+  // The existing manual line remains mounted while its original is saving.
+  // Wait for this exact file and accepted route before editing that line.
+  await expect
+    .poll(async () => {
+      const invoice = (await saved(page)).invoice;
+      return {
+        id: invoice.id,
+        mode: invoice.entry_mode,
+        status: invoice.status,
+        file: invoice.file_name,
+        sha256: invoice.file_data?.split(":").at(-1),
+      };
+    })
+    .toEqual({
+      id,
+      mode: "manual",
+      status: "review",
+      file: invoiceImage.name,
+      sha256: createHash("sha256").update(invoiceImage.buffer).digest("hex"),
+    });
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
+  await expect(page).toHaveURL(
+    (url) => url.hash === `#invoices?id=${encodeURIComponent(id)}`,
+  );
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(page.locator(".invoice-line")).toHaveCount(1);
 }
 
@@ -103,9 +131,23 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
   await expect(
     page.getByRole("heading", { name: "Received", exact: true }),
   ).toBeVisible();
+  // E1 always renders the person's permitted Location picker in the topbar.
+  // Received itself still offers no wider location filter to this worker.
   await expect(
-    page.getByRole("combobox", { name: "Location", exact: true }),
+    page
+      .locator(".received-filters")
+      .getByRole("combobox", { name: "Location", exact: true }),
   ).toHaveCount(0);
+  const ownLocation = page
+    .locator(".topbar")
+    .getByRole("combobox", { name: "Location", exact: true });
+  await expect(ownLocation).toHaveText("North York");
+  await ownLocation.click();
+  await expect(page.getByRole("option")).toHaveText(["North York"]);
+  await expect(
+    page.getByRole("option", { name: "Warehouse", exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   expect(
     await page
       .locator(".received-table")

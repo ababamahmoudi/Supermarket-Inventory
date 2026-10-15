@@ -1,0 +1,61 @@
+{
+  "results": [
+    {
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "seconds": 16.19707489013672
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "proof-vite.config.ts",
+        "src/screens/Invoices.pending.e1.test.tsx",
+        "src/screens/InvoiceOrderReview.test.tsx",
+        "src/table-disclosure.c8.test.tsx",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/recovered-e1-invoice/proof-v5/vitest.json"
+      ],
+      "exit_code": 0,
+      "seconds": 36.66628360748291
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/screens/Invoices.tsx",
+        "src/screens/Invoices.pending.e1.test.tsx",
+        "src/screens/InvoiceOrderReview.tsx",
+        "src/screens/InvoiceOrderReview.test.tsx",
+        "src/ui.tsx",
+        "--max-warnings",
+        "0"
+      ],
+      "exit_code": 0,
+      "seconds": 6.221571922302246
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/screens/Invoices.tsx",
+        "src/screens/Invoices.pending.e1.test.tsx",
+        "src/screens/InvoiceOrderReview.tsx",
+        "src/screens/InvoiceOrderReview.test.tsx",
+        "src/ui.tsx"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8921103477478027
+    }
+  ],
+  "source_unchanged": true,
+  "scope": "staged candidate; Root production files not edited"
+}

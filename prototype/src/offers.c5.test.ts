@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { activateOffer, applyApprovedPrice, stopOffer } from "./approvals";
 import { effectiveOffer } from "./catalog";
 import { currentOfferGroups, pastOffers, scopedOffers } from "./offer-list";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import { attachReversals, reverseActivity, HistoryError } from "./history";
-import { configuredBranches } from "./settings";
+import { catalogTestActor } from "./catalog-authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
 import type { DemoState, Offer } from "./types";
 
 function fixture() {
@@ -35,7 +36,7 @@ function offer(state: DemoState, values: Partial<Offer> = {}): Offer {
 }
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-10T16:00:00Z"));
 });
 afterEach(() => vi.useRealTimers());
@@ -44,21 +45,14 @@ describe("C5 offers retain history without duplicate current products", () => {
   it("Undo restores the previous offer, retains the new stopped version and refuses a later conflicting edit", () => {
     for (const conflictingChange of [false, true]) {
       const state = fixture();
-      activateOffer(state, offer(state), "supervisor");
-      const before = structuredClone(state);
+      activateOffer(state, catalogTestActor(state, "manager"), offer(state));
+      const before = cloneWithAuthority(state);
       activateOffer(
         state,
+        catalogTestActor(state, "manager"),
         offer(state, { id: "changed", mix_and_match: false }),
-        "supervisor",
       );
-      const context = {
-        company_id: state.config.company.seed_key,
-        role: "supervisor" as const,
-        actor: "Demo Supervisor",
-        username: "supervisor",
-        branch: "Branch 1",
-        allowed_branches: configuredBranches(state.config, true),
-      };
+      const context = catalogTestActor(state, "manager", "all");
       const [entry] = attachReversals(before, state, context);
       if (conflictingChange) {
         state.offers.find((item) => item.id === "changed")!.end_date =
@@ -86,14 +80,16 @@ describe("C5 offers retain history without duplicate current products", () => {
 
   it("confirms a redundant saved suggestion without replacing the already active offer", () => {
     const state = fixture();
-    activateOffer(state, offer(state));
+    activateOffer(state, catalogTestActor(state, "manager"), offer(state));
     const active = structuredClone(state.offers[0]);
     const suggested = offer(state, {
       id: "suggested:duplicate",
       status: "suggested",
     });
     state.offers.push(suggested);
-    expect(activateOffer(state, suggested)).toBe("created");
+    expect(
+      activateOffer(state, catalogTestActor(state, "manager"), suggested),
+    ).toBe("created");
     expect(state.offers[0]).toEqual(active);
     expect(state.offers[1]).toMatchObject({
       id: suggested.id,
@@ -104,20 +100,27 @@ describe("C5 offers retain history without duplicate current products", () => {
       currentOfferGroups(state.offers, state.config.company.timezone)[0],
     ).toEqual([active]);
     const snapshot = structuredClone(state);
-    expect(activateOffer(state, suggested)).toBe("unchanged");
+    expect(
+      activateOffer(state, catalogTestActor(state, "manager"), suggested),
+    ).toBe("unchanged");
     expect(state).toEqual(snapshot);
   });
 
   it("changed terms using an existing offer identity retain its original version", () => {
     const state = fixture();
-    activateOffer(state, offer(state));
+    activateOffer(state, catalogTestActor(state, "manager"), offer(state));
     const original = structuredClone(state.offers[0]);
-    activateOffer(state, { ...state.offers[0], mix_and_match: false });
+    activateOffer(state, catalogTestActor(state, "manager"), {
+      ...state.offers[0],
+      mix_and_match: false,
+    });
     expect(state.offers).toHaveLength(2);
     expect(state.offers[0]).toEqual({
       ...original,
+      version: (original.version ?? 1) + 1,
       status: "stopped",
       stopped_at: "2026-10-10T16:00:00.000Z",
+      stopped_by_user_id: catalogTestActor(state, "manager").user_id,
     });
     expect(state.offers[1].id).not.toBe(original.id);
     expect(state.offers[1]).toMatchObject({
@@ -133,21 +136,29 @@ describe("C5 offers retain history without duplicate current products", () => {
     ]) {
       const state = fixture();
       const first = offer(state, dates);
-      expect(activateOffer(state, first)).toBe("created");
-      const before = structuredClone(state);
-      expect(activateOffer(state, { ...first, id: "juice:repeat" })).toBe(
-        "unchanged",
-      );
-      expect(activateOffer(state, first)).toBe("unchanged");
+      expect(
+        activateOffer(state, catalogTestActor(state, "manager"), first),
+      ).toBe("created");
+      const before = cloneWithAuthority(state);
+      expect(
+        activateOffer(state, catalogTestActor(state, "manager"), {
+          ...first,
+          id: "juice:repeat",
+        }),
+      ).toBe("unchanged");
+      expect(
+        activateOffer(state, catalogTestActor(state, "manager"), first),
+      ).toBe("unchanged");
       expect(state).toEqual(before);
     }
   });
 
   it("changed terms append one version and stop only the same company/product/price scope", () => {
     const state = fixture();
-    activateOffer(state, offer(state));
+    activateOffer(state, catalogTestActor(state, "manager"), offer(state));
     activateOffer(
       state,
+      catalogTestActor(state, "manager"),
       offer(state, { id: "north", scope: "branch", branch: "Branch 1" }),
     );
     state.offers.push(
@@ -158,6 +169,7 @@ describe("C5 offers retain history without duplicate current products", () => {
     vi.setSystemTime(new Date("2026-10-11T16:00:00Z"));
     activateOffer(
       state,
+      catalogTestActor(state, "manager"),
       offer(state, {
         id: "north:changed",
         scope: "branch",
@@ -216,7 +228,7 @@ describe("C5 offers retain history without duplicate current products", () => {
       ),
     ).toEqual(["expired", "old"]);
     expect(state.offers).toEqual(source);
-    stopOffer(state, "active");
+    stopOffer(state, catalogTestActor(state, "manager"), "active");
     expect(
       pastOffers(scopedOffers(state, "all"), state.config.company.timezone).map(
         (item) => item.id,
@@ -231,9 +243,9 @@ describe("C5 offers retain history without duplicate current products", () => {
       offer(state, { id: "first" }),
       offer(state, { id: "second" }),
     );
-    stopOffer(state, "second");
+    stopOffer(state, catalogTestActor(state, "manager"), "second");
     vi.setSystemTime(new Date("2026-10-11T16:00:00Z"));
-    stopOffer(state, "first");
+    stopOffer(state, catalogTestActor(state, "manager"), "first");
     expect(
       pastOffers(state.offers, state.config.company.timezone).map(
         (item) => item.id,
@@ -243,11 +255,19 @@ describe("C5 offers retain history without duplicate current products", () => {
 
   it("price reconciliation retains the stopped original and timestamps its move to Past", () => {
     const state = fixture();
-    activateOffer(state, offer(state));
+    activateOffer(state, catalogTestActor(state, "manager"), offer(state));
     const original = structuredClone(state.offers[0]);
-    applyApprovedPrice(state, "0003", "1.99", "all", "all");
+    applyApprovedPrice(
+      state,
+      catalogTestActor(state, "manager", "all"),
+      "0003",
+      "1.99",
+      "all",
+      "all",
+    );
     expect(state.offers[0]).toEqual({
       ...original,
+      version: (original.version ?? 1) + 1,
       status: "stopped",
       stopped_at: "2026-10-10T16:00:00.000Z",
     });

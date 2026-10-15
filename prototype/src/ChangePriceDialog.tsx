@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "./store";
 import { lookupBranch, regularPrice } from "./catalog";
@@ -10,9 +10,8 @@ import { weightPriceDisplay, weighedSettings } from "./weighed";
 import { formatMoney } from "./formatters";
 import {
   activeSaleAt,
-  allowedSaleBranches,
+  sellingSaleBranches,
   pendingSaleRequest,
-  previewPriceChange,
   quickSalePrices,
   saleDateAfter,
   saleGroup,
@@ -46,6 +45,12 @@ import {
   SegmentedControl,
 } from "./ui";
 import type { Branch } from "./types";
+import type { Capability, ResourceScope } from "./authority-types";
+import { proposeRegularPrice } from "./approvals";
+import {
+  queryPriceChangePreview,
+  type PriceChangePreviewDTO,
+} from "./price-change-read-model";
 
 export interface ChangePriceDialogProps {
   product_code: string;
@@ -64,17 +69,34 @@ export interface ChangePriceDialogProps {
 }
 
 export function ChangePriceDialog(props: ChangePriceDialogProps) {
-  const { state, branch, role, historyContext, lang, t, update } = useDemo();
+  const {
+    state,
+    branch,
+    actor: context,
+    can,
+    command,
+    query,
+    businessRevision,
+    lang,
+    t,
+  } = useDemo();
   const id = useId();
   const location = lookupBranch(props.branch ?? branch);
-  const worker = role === "floor_worker";
+  const mayManageSale = can("sales.manage");
+  const mayManageRegular = can("pricing.regular_manage");
+  const mayProposeRegular = can("pricing.propose_manual");
+  const allowRegular = mayManageRegular || mayProposeRegular;
+  const worker = !mayManageSale;
   const product = state.products.find(
     (item) =>
       item.company_id === state.config.company.seed_key &&
       item.code === props.product_code,
   );
-  const context = historyContext;
-  const eligible = context ? allowedSaleBranches(state, context) : [];
+  const eligible = context
+    ? sellingSaleBranches(state).filter((id) =>
+        context.allowed_branches.includes(id),
+      )
+    : [];
   const today = saleStoreDate(state.config, location);
   const settings = salesSettings(state);
   const [originalRequest] = useState(() => {
@@ -86,7 +108,16 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
             item.id === explicit,
         )
       : worker
-        ? pendingSaleRequest(state, props.product_code, location)
+        ? (() => {
+            const request = pendingSaleRequest(
+              state,
+              props.product_code,
+              location,
+            );
+            return request?.requester_user_id === context?.user_id
+              ? request
+              : null;
+          })()
         : null;
   });
   const [originalSale] = useState(() => {
@@ -125,7 +156,9 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     return {
       product_code: props.product_code,
       mode:
-        worker || props.approve_request_id ? "sale" : (props.mode ?? "sale"),
+        (worker && !allowRegular) || props.approve_request_id
+          ? "sale"
+          : (props.mode ?? "sale"),
       scope: worker
         ? "current"
         : existingBranches.length
@@ -189,7 +222,71 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     );
     setTransactionError("");
   };
-  const preview = context ? previewPriceChange(state, context, input) : null;
+  const inputKey = JSON.stringify([
+    input,
+    context?.user_id,
+    context?.authority_epoch,
+    businessRevision,
+    location,
+  ]);
+  const [previewRecord, setPreviewRecord] = useState<{
+    key: string;
+    value: PriceChangePreviewDTO;
+  } | null>(null);
+  const capability = (): Capability => {
+    if (props.sale_alert_id) return "sales.cost_alert_decide";
+    if (props.approve_request_id) return "approvals.decide";
+    if (input.mode === "regular")
+      return mayManageRegular
+        ? "pricing.regular_manage"
+        : "pricing.propose_manual";
+    if (worker && originalRequest) return "sales.request_edit_own";
+    return worker ? "sales.request" : "sales.manage";
+  };
+  const writeCapability = capability();
+  const queryScope = useMemo<ResourceScope>(
+    () => ({
+      company_id: state.config.company.seed_key,
+      kind: "location_record",
+      location_ids: input.branches,
+      entity_id: originalRequest?.id ?? originalSale?.id ?? product?.code,
+      owner_user_id: originalRequest?.requester_user_id,
+    }),
+    [
+      state.config.company.seed_key,
+      input.branches,
+      originalRequest?.id,
+      originalRequest?.requester_user_id,
+      originalSale?.id,
+      product?.code,
+    ],
+  );
+  useEffect(() => {
+    let current = true;
+    if (!context) return;
+    void query(writeCapability, queryScope, (freshState, freshActor) =>
+      queryPriceChangePreview(freshState, freshActor, input, location),
+    )
+      .then((value) => {
+        if (current) setPreviewRecord({ key: inputKey, value });
+      })
+      .catch(() => {
+        if (current) setPreviewRecord(null);
+      });
+    return () => {
+      current = false;
+    };
+  }, [
+    input,
+    inputKey,
+    writeCapability,
+    context,
+    queryScope,
+    businessRevision,
+    location,
+    query,
+  ]);
+  const preview = previewRecord?.key === inputKey ? previewRecord.value : null;
   const current =
     preview?.effects.find((effect) => effect.branch === location) ??
     preview?.effects[0];
@@ -294,8 +391,8 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       ];
     });
   };
-  const submit = () => {
-    if (!context || !product || role === "cashier") return;
+  const submit = async () => {
+    if (!context || !product) return;
     const missing = validation(preview?.issues ?? []);
     if (missing.length) {
       setIssues(missing);
@@ -306,43 +403,77 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       let snapshots:
         | Parameters<NonNullable<ChangePriceDialogProps["onSaved"]>>[0]
         | undefined;
-      update((next) => {
-        const before =
-          props.onSaved && role === "supervisor"
-            ? productEditSnapshot(next, props.product_code)
-            : "";
-        if (props.sale_alert_id) {
-          if (!originalSale) throw new SalesError("revision");
-          decideSaleCostAlert(next, context, props.sale_alert_id, {
-            decision: "change",
-            expected_sale_revision: originalSale.revision,
-            input,
-            hold_delivery: props.hold_delivery ?? false,
-          });
-        } else if (props.approve_request_id && originalRequest)
-          resolveSaleRequest(next, context, originalRequest.id, "approve", {
-            expected_revision: originalRequest.revision,
-            input,
-          });
-        else if (worker && originalRequest)
-          editSaleRequest(
-            next,
-            context,
-            originalRequest.id,
-            input,
-            originalRequest.revision,
-          );
-        else if (worker) requestSale(next, context, input);
-        else savePriceChange(next, context, input);
-        if (props.onSaved && role === "supervisor")
-          snapshots = {
-            before_product_snapshot: before,
-            after_product_snapshot: productEditSnapshot(
+      const checked = await query(
+        writeCapability,
+        queryScope,
+        (freshState, freshActor) =>
+          queryPriceChangePreview(freshState, freshActor, input, location),
+      );
+      const currentMissing = validation(checked.issues);
+      if (currentMissing.length) {
+        setIssues(currentMissing);
+        requestAnimationFrame(() =>
+          focusValidationField(currentMissing[0].fieldId),
+        );
+        return;
+      }
+      await command(
+        writeCapability,
+        { ...queryScope, mutation: true },
+        (next, freshActor) => {
+          const before =
+            props.onSaved && mayManageRegular
+              ? productEditSnapshot(next, freshActor, props.product_code)
+              : "";
+          if (props.sale_alert_id) {
+            if (!originalSale) throw new SalesError("revision");
+            decideSaleCostAlert(next, freshActor, props.sale_alert_id, {
+              decision: "change",
+              expected_sale_revision: originalSale.revision,
+              input,
+              hold_delivery: props.hold_delivery ?? false,
+            });
+          } else if (props.approve_request_id && originalRequest)
+            resolveSaleRequest(
               next,
+              freshActor,
+              originalRequest.id,
+              "approve",
+              {
+                expected_revision: originalRequest.revision,
+                input,
+              },
+            );
+          else if (worker && originalRequest && input.mode === "sale")
+            editSaleRequest(
+              next,
+              freshActor,
+              originalRequest.id,
+              input,
+              originalRequest.revision,
+            );
+          else if (input.mode === "regular" && !mayManageRegular)
+            proposeRegularPrice(
+              next,
+              freshActor,
               props.product_code,
-            ),
-          };
-      });
+              input.branches[0],
+              input.price,
+              input.price_unit,
+            );
+          else if (worker) requestSale(next, freshActor, input);
+          else savePriceChange(next, freshActor, input);
+          if (props.onSaved && mayManageRegular)
+            snapshots = {
+              before_product_snapshot: before,
+              after_product_snapshot: productEditSnapshot(
+                next,
+                freshActor,
+                props.product_code,
+              ),
+            };
+        },
+      );
       if (snapshots) props.onSaved?.(snapshots);
       props.onClose();
     } catch (cause) {
@@ -363,21 +494,26 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         );
     }
   };
-  if (!product || !context || role === "cashier") return null;
+  if (
+    !product ||
+    !context ||
+    (!can("sales.request") && !mayManageSale && !allowRegular)
+  )
+    return null;
   const isSale = input.mode === "sale";
-  const title = worker
-    ? salesText(t, "request")
-    : originalSale && isSale
-      ? salesText(t, "changeSale")
-      : salesText(t, "change");
+  const title =
+    worker && !allowRegular
+      ? salesText(t, "request")
+      : originalSale && isSale
+        ? salesText(t, "changeSale")
+        : salesText(t, "change");
   const error = (field: string) =>
     issues.find((issue) => issue.fieldId === fieldId(field))?.message;
   const belowMargin =
-    role === "supervisor" &&
+    mayManageRegular &&
     preview?.effects.some((effect) => effect.below_minimum_margin);
   const belowCost =
-    role === "supervisor" &&
-    preview?.effects.some((effect) => effect.below_cost);
+    mayManageRegular && preview?.effects.some((effect) => effect.below_cost);
   const uniformRegular =
     preview?.effects.length &&
     preview.effects.every(
@@ -455,22 +591,19 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               <SalePrice product={product} branch={location} />
             </strong>
             <SaleStatus product={product} branch={location} />
-            {product.price_provenance?.[location]?.invoice_number && (
+            {preview?.provenance?.invoice_number && (
               <p className="helper">
                 {t("Calculated from invoice", "محاسبه‌شده از فاکتور")}{" "}
-                <LtrText>
-                  {product.price_provenance[location].invoice_number}
-                </LtrText>
-                :{" "}
+                <LtrText>{preview.provenance.invoice_number}</LtrText>:{" "}
                 <ProductPrice
-                  value={product.price_provenance[location].calculated_price}
+                  value={preview.provenance.calculated_price}
                   product={product}
                   config={state.config}
                 />
               </p>
             )}
           </section>
-          {!worker && !props.approve_request_id && (
+          {allowRegular && !props.approve_request_id && (
             <div
               className="change-price-choices"
               role="radiogroup"
@@ -560,7 +693,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               (<LtrText>{current.percentage_off}%</LtrText> {t("off", "تخفیف")})
             </p>
           )}
-          {role === "supervisor" &&
+          {mayManageRegular &&
             current?.margin !== null &&
             current?.margin !== undefined && (
               <p className="helper">
@@ -781,7 +914,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               </Field>
             </section>
           )}
-          {worker && (
+          {worker && isSale && (
             <Field label={salesText(t, "why")}>
               <textarea
                 id={fieldId("why")}
@@ -791,12 +924,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               />
             </Field>
           )}
-          <Checkbox
-            checked={input.add_labels}
-            onChange={(value) => patch("add_labels", value)}
-          >
-            {salesText(t, isSale ? "promoLabels" : "regularLabels")}
-          </Checkbox>
+          {(!worker || isSale) && (
+            <Checkbox
+              checked={input.add_labels}
+              onChange={(value) => patch("add_labels", value)}
+            >
+              {salesText(t, isSale ? "promoLabels" : "regularLabels")}
+            </Checkbox>
+          )}
           <section className="change-price-summary" aria-live="polite">
             <p>
               {isSale && (
@@ -882,7 +1017,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                     {salesText(t, "saleChargeStays")}
                   </p>
                 )}
-                {regularWaitsForSale && input.add_labels && (
+                {regularWaitsForSale && input.add_labels && !worker && (
                   <p>{salesText(t, "deferredLabels")}</p>
                 )}
               </>
@@ -894,7 +1029,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
           <Button variant="neutral" onClick={props.onClose}>
             {t("Cancel", "انصراف")}
           </Button>
-          <Button type="submit">
+          <Button type="submit" disabled={!preview}>
             {worker
               ? salesText(t, "sendRequest")
               : props.approve_request_id

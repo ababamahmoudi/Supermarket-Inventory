@@ -1,7 +1,29 @@
+import { isOfferSuppressed } from "./offer-store-scopes";
 import { activeSaleAt, saleStoreDate, sellingSaleBranches } from "./sales";
 import { isOfferScheduledNow } from "./catalog";
-import type { SaleRequest, SaleSchedule, SalesContext } from "./sales";
-import type { Branch, DemoState, Offer, Product } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import type { Branch } from "./types";
+import type { ScopedReadView } from "./e1-read-model";
+import type { ProductReadDTO } from "./catalog-read-model";
+import type {
+  OfferReadDTO,
+  SaleRequestReadDTO,
+  SaleReadDTO,
+} from "./offers-read-model";
+type SalesContext = AuthenticatedActor;
+type Product = ProductReadDTO;
+type SaleSchedule = SaleReadDTO;
+type Offer = OfferReadDTO;
+type SaleRequest = SaleRequestReadDTO;
+type ListReadState = Pick<
+  ScopedReadView,
+  | "config"
+  | "products"
+  | "offers"
+  | "sales"
+  | "sale_requests"
+  | "offer_store_suppressions"
+>;
 
 export type SalesOfferFilters = {
   tab: "offers" | "past";
@@ -16,7 +38,7 @@ export type SalesOfferRow =
   | { kind: "request"; key: string; product: Product; request: SaleRequest };
 
 export function saleListStatus(
-  state: DemoState,
+  state: ListReadState,
   sale: SaleSchedule,
   now = new Date(),
 ): "active" | "scheduled" | "ended" | "expired" {
@@ -29,11 +51,12 @@ export function saleListStatus(
 
 /** The list keeps authorized stores together without turning a sale into an offer. */
 export function salesOfferRows(
-  state: DemoState,
+  state: ListReadState,
   context: SalesContext | null,
   branch: Branch,
   filters: SalesOfferFilters,
   now = new Date(),
+  mayReadAllRequests = false,
 ): SalesOfferRow[] {
   if (
     !context ||
@@ -44,7 +67,7 @@ export function salesOfferRows(
   const allowed = sellingSaleBranches(state).filter(
     (store) =>
       context.allowed_branches.includes(store) &&
-      (context.role === "supervisor" || store === context.branch) &&
+      (context.branch === "all" || store === context.branch) &&
       (branch === "all" || branch === store),
   );
   const needle = filters.search.trim().toLocaleLowerCase();
@@ -108,8 +131,7 @@ export function salesOfferRows(
       request.company_id !== context.company_id ||
       request.status !== "pending" ||
       !allowed.includes(request.branch) ||
-      (context.role !== "supervisor" &&
-        request.requester_username !== context.username) ||
+      (!mayReadAllRequests && request.requester_user_id !== context.user_id) ||
       (request.last_day &&
         request.last_day < saleStoreDate(state.config, request.branch, now))
     )
@@ -132,10 +154,10 @@ export function salesOfferRows(
 
 /** A company multi-buy may pause at one store and remain active at another. */
 export function offerPausedStores(
-  state: DemoState,
+  state: ListReadState,
   offer: Offer,
   branch: Branch,
-  allowedBranches: Branch[],
+  allowedBranches: readonly Branch[],
   now = new Date(),
 ): Branch[] {
   if (
@@ -150,6 +172,7 @@ export function offerPausedStores(
       allowedBranches.includes(store) &&
       (branch === "all" || store === branch) &&
       (offer.scope === "all" || offer.branch === store) &&
+      !isOfferSuppressed(state, offer, store) &&
       Boolean(activeSaleAt(state, offer.product_code, store, now)),
   );
 }

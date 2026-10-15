@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import { effectiveOffer, effectivePrice } from "./catalog";
-import { configuredBranches } from "./settings";
+import { configuredBranches, branchSellsToCustomers } from "./settings";
+import {
+  catalogTestActor,
+  foreignCatalogManager,
+} from "./catalog-authority-test-fixture";
+import { actorAtLocation } from "./authority";
 import { savePriceChange } from "./sales";
 import { resolveApproval } from "./approvals";
 import {
@@ -13,17 +18,10 @@ import {
 } from "./product-editor";
 import type { DemoState } from "./types";
 let state: DemoState;
-const context: ProductEditorContext = {
-  company_id: "",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  branch: "Branch 1",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-};
+let context: ProductEditorContext;
 beforeEach(() => {
   state = initialState();
-  context.company_id = state.config.company.seed_key;
-  context.allowed_branches = configuredBranches(state.config);
+  context = catalogTestActor(state, "manager");
 });
 function edits(code = "0009"): ProductEdits {
   const product = state.products.find((item) => item.code === code)!;
@@ -46,7 +44,7 @@ function save(
   patch: Partial<ProductEdits> = {},
   actor = context,
   code = "0009",
-  expected = productEditSnapshot(state, code),
+  expected = productEditSnapshot(state, context, code),
 ) {
   saveProductEdits(
     state,
@@ -91,26 +89,35 @@ describe("shared Supervisor product editor", () => {
   it("rejects direct worker/cashier calls without changing business records", () => {
     const before = structuredClone(state);
     for (const role of ["floor_worker", "cashier"] as const)
-      expect(() => save({ name_en: "Changed" }, { ...context, role })).toThrow(
-        "permission",
-      );
+      expect(() =>
+        save({ name_en: "Changed" }, catalogTestActor(state, role)),
+      ).toThrow("capability");
     expect(state).toEqual(before);
   });
   it("enforces company, selected branch and full company-price scope", () => {
-    expect(() => save({}, { ...context, company_id: "foreign" })).toThrow(
-      "company",
-    );
+    expect(() => save({}, foreignCatalogManager(state))).toThrow("company");
     expect(() =>
       save(
         {},
-        { ...context, branch: "Branch 2", allowed_branches: ["Branch 1"] },
+        actorAtLocation(
+          state,
+          catalogTestActor(state, "floor_worker"),
+          "Branch 2",
+        ),
       ),
-    ).toThrow("branch");
+    ).toThrow("location");
     expect(() =>
-      save({}, { ...context, branch: "all", allowed_branches: ["Branch 1"] }),
-    ).toThrow("branch");
+      save(
+        {},
+        catalogTestActor(state, "floor_worker", "all", {
+          locations: ["Branch 1", "Branch 2"],
+          user_id: "test-editor-worker",
+          username: "test-editor-worker",
+        }),
+      ),
+    ).toThrow("capability");
     expect(() =>
-      priceChange("3.29", "branch", { ...context, branch: "all" }),
+      priceChange("3.29", "branch", catalogTestActor(state, "manager", "all")),
     ).toThrow("stores");
     const foreign = {
       ...state.products[0],
@@ -177,9 +184,16 @@ describe("shared Supervisor product editor", () => {
       "Branch 1": { invoice_number: "INV-A", calculated_price: "6.49" },
       "Branch 2": { invoice_number: "INV-B", calculated_price: "6.99" },
     };
-    priceChange("7.29", "all", { ...context, branch: "all" }, product.code);
+    priceChange(
+      "7.29",
+      "all",
+      catalogTestActor(state, "manager", "all"),
+      product.code,
+    );
     product = state.products.find((item) => item.code === product.code)!;
-    for (const branch of context.allowed_branches)
+    for (const branch of context.allowed_branches.filter((branch) =>
+      branchSellsToCustomers(state.config, branch),
+    ))
       expect(effectivePrice(state, product, branch)).toBe("7.29");
     expect(product.branch_prices).toEqual({});
     expect(product.price_provenance!["Branch 2"]).toMatchObject({
@@ -249,7 +263,7 @@ describe("shared Supervisor product editor", () => {
     expect(state).toEqual(before);
   });
   it("rejects an intervening product or derived decision change without overwriting it", () => {
-    const oldSnapshot = productEditSnapshot(state, "0009");
+    const oldSnapshot = productEditSnapshot(state, context, "0009");
     state.products.find((item) => item.code === "0009")!.name_en =
       "Changed elsewhere";
     expect(() =>
@@ -293,11 +307,11 @@ it("records a duplicate-barcode queue once without transferring either mapping",
   expect(() =>
     recordProductBarcodeConflict(
       state,
-      { ...context, role: "cashier" },
+      catalogTestActor(state, "cashier"),
       product.code,
       existing.barcode,
     ),
-  ).toThrow("permission");
+  ).toThrow("capability");
 });
 
 it("scopes barcode-conflict reports by company and allowed branch", () => {
@@ -306,23 +320,25 @@ it("scopes barcode-conflict reports by company and allowed branch", () => {
   const report = (actor: ProductEditorContext, barcode = existing.barcode) =>
     recordProductBarcodeConflict(state, actor, product.code, barcode);
   const before = structuredClone(state);
-  expect(() => report({ ...context, company_id: "foreign" })).toThrow(
-    "company",
-  );
+  expect(() => report(foreignCatalogManager(state))).toThrow("company");
   expect(() =>
-    report({
-      ...context,
-      branch: "Branch 2",
-      allowed_branches: ["Branch 1"],
-    }),
-  ).toThrow("branch");
+    report(
+      actorAtLocation(
+        state,
+        catalogTestActor(state, "floor_worker"),
+        "Branch 2",
+      ),
+    ),
+  ).toThrow("location");
   expect(() =>
-    report({
-      ...context,
-      branch: "all",
-      allowed_branches: ["Branch 1"],
-    }),
-  ).toThrow("branch");
+    report(
+      catalogTestActor(state, "floor_worker", "all", {
+        locations: ["Branch 1", "Branch 2"],
+        user_id: "test-editor-worker",
+        username: "test-editor-worker",
+      }),
+    ),
+  ).toThrow("capability");
   expect(state).toEqual(before);
   state.products.push({
     ...existing,
@@ -336,7 +352,7 @@ it("scopes barcode-conflict reports by company and allowed branch", () => {
   expect(state.approvals).toEqual(before.approvals);
   report(context);
   report(context);
-  report({ ...context, branch: "Branch 2" });
+  report(actorAtLocation(state, context, "Branch 2"));
   const reports = state.approvals.filter(
     (item) =>
       item.type === "barcode_conflict" && item.product_code === product.code,
@@ -363,7 +379,7 @@ it.each(["approve", "reject"] as const)(
       offers: state.offers,
       alerts: state.alerts,
     });
-    resolveApproval(state, approval.id, decision, "all", "all");
+    resolveApproval(state, context, approval.id, decision, "all", "all");
     expect(approval.status).toBe(
       decision === "approve" ? "approved" : "rejected",
     );

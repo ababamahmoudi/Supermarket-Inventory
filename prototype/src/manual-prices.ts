@@ -1,3 +1,10 @@
+import { freshActor, decisionAttribution } from "./authority";
+import type {
+  AuthenticatedActor,
+  DecisionAttribution,
+} from "./authority-types";
+import { requireCapability } from "./permissions";
+import { domainScope } from "./domain-authority";
 import Decimal from "decimal.js";
 import { regularPrice, lookupBranch } from "./catalog";
 import { calculatePrice } from "./pricing";
@@ -10,6 +17,9 @@ export interface ManualPriceMarker {
   rule_price: string;
   set_by: string;
   set_at: string;
+  set_by_user_id?: string;
+  set_by_role_snapshot?: AuthenticatedActor["role"];
+  decision_attribution?: DecisionAttribution;
 }
 
 /** The rule is a comparison value; a changing rule never changes price provenance. */
@@ -135,13 +145,25 @@ export function manualPrice(
 /** Capture provenance in the same product snapshot as the approved price. */
 export function setManualPriceMarker(
   state: DemoState,
+  actor: AuthenticatedActor,
   product: Product,
   branch: Branch,
   price: string,
-  actor: string,
   now = new Date(),
   cost = product.last_cost_before_tax,
 ): void {
+  actor = freshActor(state, actor);
+  const canonical = state.products.find(
+    (item) =>
+      item.company_id === state.config.company.seed_key &&
+      item.code === product.code,
+  );
+  if (canonical !== product)
+    throw new Error("Product changed. Refresh the price preview");
+  requireCapability(state, actor, "pricing.regular_manage", {
+    ...domainScope(state, { ...product, branch }, true),
+    location_ids: branch === "all" ? sellingBranches(state.config) : [branch],
+  });
   if (product.company_id !== state.config.company.seed_key) return;
   hydrateProductManualPriceMarkers(state, product);
   const calculated = rulePrice(state, product, cost);
@@ -150,7 +172,10 @@ export function setManualPriceMarker(
       ? {
           price: new Decimal(price).toFixed(2),
           rule_price: calculated,
-          set_by: actor,
+          set_by: actor.actor,
+          set_by_user_id: actor.user_id,
+          set_by_role_snapshot: actor.role,
+          decision_attribution: decisionAttribution(state, actor, now),
           set_at: now.toISOString(),
         }
       : null;
@@ -170,7 +195,19 @@ export function setManualPriceMarker(
 }
 
 /** An explicit empty map prevents a prior manual decision from resurfacing. */
-export function clearManualPriceMarker(product: Product, branch: Branch): void {
+export function clearManualPriceMarker(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  product: Product,
+  branch: Branch,
+): void {
+  actor = freshActor(state, actor);
+  requireCapability(
+    state,
+    actor,
+    "pricing.regular_manage",
+    domainScope(state, { ...product, branch }, true),
+  );
   if (branch === "all") product.manual_prices = {};
   else {
     product.manual_prices ??= {};

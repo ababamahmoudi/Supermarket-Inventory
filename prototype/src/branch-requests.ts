@@ -1,19 +1,14 @@
 import DecimalLibrary from "decimal.js";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
-import type { Branch, DemoState, Role } from "./types";
+import type { Branch, DemoState } from "./types";
+import type { AuthenticatedActor, Capability } from "./authority-types";
+import { freshActor } from "./authority";
+import { can, requireCapability, requireConcreteLocation } from "./permissions";
 // Keep quantity arithmetic independent of the pricing engine's Decimal settings.
 const Decimal = DecimalLibrary.clone({ precision: 80 });
 
-export interface BranchRequestContext {
-  company_id: string;
-  role: Role;
-  actor: string;
-  username?: string;
-  device?: string;
-  branch: Branch;
-  allowed_branches: readonly Branch[];
-}
+export type BranchRequestContext = AuthenticatedActor;
 export type BranchRequestStatus =
   "draft" | "requested" | "sent" | "received" | "closed" | "cancelled";
 export interface BranchRequestItem {
@@ -48,18 +43,24 @@ export interface BranchRequest {
   revision: number;
   created_at: string;
   created_by: string;
+  created_by_user_id?: string;
   updated_at: string;
   items: BranchRequestItem[];
   requested_at?: string;
   requested_by?: string;
+  requested_by_user_id?: string;
   sent_at?: string;
   sent_by?: string;
+  sent_by_user_id?: string;
   received_at?: string;
   received_by?: string;
+  received_by_user_id?: string;
   closed_at?: string;
   closed_by?: string;
+  closed_by_user_id?: string;
   cancelled_at?: string;
   cancelled_by?: string;
+  cancelled_by_user_id?: string;
   cancellation_reason?: string;
   source_request_id?: string;
   source_revision?: number;
@@ -85,6 +86,7 @@ export interface RequestTransferEvent {
   normalized_units: number | null;
   at: string;
   by: string;
+  by_user_id?: string;
   username?: string;
   device?: string;
 }
@@ -128,46 +130,57 @@ function fail(code: BranchRequestError["code"]): never {
   throw new BranchRequestError(code);
 }
 function authorized(state: DemoState, context: BranchRequestContext) {
-  if (context.role === "cashier" || !context.actor.trim()) fail("permission");
   if (context.company_id !== state.config.company.seed_key) fail("scope");
+  if (!can(state, context, "branch_requests.read").allowed) fail("permission");
 }
 function endpoint(
   state: DemoState,
   context: BranchRequestContext,
   location: Branch,
+  capability: Capability = "branch_requests.send",
 ) {
   authorized(state, context);
-  if (
-    location === "all" ||
-    !configuredBranches(state.config).includes(location) ||
-    !context.allowed_branches.includes(location) ||
-    context.branch !== location
-  )
+  const actor = freshActor(state, context);
+  if (actor.branch !== location || location === "all") fail("location");
+  try {
+    const concrete = requireConcreteLocation(state, actor, location);
+    requireCapability(state, actor, capability, {
+      company_id: state.config.company.seed_key,
+      kind: "location_record",
+      location_ids: [concrete],
+      mutation: true,
+    });
+  } catch {
     fail("location");
+  }
 }
 function canRead(
   state: DemoState,
   context: BranchRequestContext,
   request: BranchRequest,
 ) {
-  if (
-    context.role === "cashier" ||
-    context.company_id !== state.config.company.seed_key ||
-    request.company_id !== context.company_id
-  )
-    return false;
   const unsent =
     request.status === "draft" ||
     (request.status === "cancelled" && !request.requested_at);
   const relevant = unsent
     ? [request.from_branch]
     : [request.from_branch, request.to_branch];
+  if (
+    !can(state, context, "branch_requests.read", {
+      company_id: request.company_id,
+      kind: "request_endpoints",
+      location_ids: relevant,
+      entity_id: request.id,
+      status: request.status,
+      version: request.revision,
+      location_policy: "retained_read",
+    }).allowed
+  )
+    return false;
   return relevant.some(
     (location) =>
-      configuredBranches(state.config, true).includes(location) &&
       context.allowed_branches.includes(location) &&
-      (context.branch === location ||
-        (context.role === "supervisor" && context.branch === "all")),
+      (context.branch === "all" || context.branch === location),
   );
 }
 function record(
@@ -315,7 +328,9 @@ function audit(
     action,
     by: context.actor,
     actor_username: context.username,
-    device: context.device,
+    actor_user_id: context.user_id,
+    actor_role: context.role,
+    device: "Browser",
     at: request.updated_at,
     entity_type: "branch_request",
     entity_id: request.id,
@@ -339,13 +354,19 @@ function transition(
 }
 export function listBranchRequests(
   state: DemoState,
-  context: BranchRequestContext,
+  context: BranchRequestContext | null,
   filters: {
     tab?: "incoming" | "outgoing";
     status?: BranchRequestStatus | "open" | "all";
     query?: string;
   } = {},
 ) {
+  if (!context) return [];
+  try {
+    context = freshActor(state, context);
+  } catch {
+    return [];
+  }
   const query = filters.query?.trim().toLocaleLowerCase() ?? "";
   return (state.branch_requests ?? [])
     .filter((request) => {
@@ -355,8 +376,7 @@ export function listBranchRequests(
           filters.tab === "incoming" ? request.to_branch : request.from_branch;
         if (!(
           context.branch === location ||
-          (context.role === "supervisor" &&
-            context.branch === "all" &&
+          (context.branch === "all" &&
             context.allowed_branches.includes(location))
         ))
           return false;
@@ -384,8 +404,14 @@ export function listBranchRequests(
 }
 export function branchRequestCount(
   state: DemoState,
-  context: BranchRequestContext,
+  context: BranchRequestContext | null,
 ) {
+  if (!context) return 0;
+  try {
+    context = freshActor(state, context);
+  } catch {
+    return 0;
+  }
   return listBranchRequests(state, context).filter((request) => {
     const responsible =
       request.status === "requested"
@@ -397,8 +423,7 @@ export function branchRequestCount(
       responsible &&
       context.allowed_branches.includes(responsible) &&
       configuredBranches(state.config).includes(responsible) &&
-      (context.branch === responsible ||
-        (context.role === "supervisor" && context.branch === "all"))
+      (context.branch === responsible || context.branch === "all")
     );
   }).length;
 }
@@ -407,6 +432,7 @@ export function saveBranchRequestDraft(
   context: BranchRequestContext,
   input: BranchRequestDraftInput,
 ) {
+  context = freshActor(state, context);
   endpoint(state, context, input.from_branch);
   if (
     input.to_branch === input.from_branch ||
@@ -445,6 +471,7 @@ export function saveBranchRequestDraft(
     revision: 1,
     created_at: now,
     created_by: context.actor,
+    created_by_user_id: context.user_id,
     updated_at: now,
     items: nextItems,
   };
@@ -459,6 +486,7 @@ export function sendBranchRequest(
   id: string,
   revision: number,
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
   endpoint(state, context, request.from_branch);
   status(request, "draft");
@@ -467,6 +495,7 @@ export function sendBranchRequest(
   const before = structuredClone(request);
   request.requested_at = new Date().toISOString();
   request.requested_by = context.actor;
+  request.requested_by_user_id = context.user_id;
   transition(state, context, request, "requested", "Send request", before);
   return request;
 }
@@ -531,8 +560,9 @@ function transfer(
     normalized_units,
     at: new Date().toISOString(),
     by: context.actor,
+    by_user_id: context.user_id,
     username: context.username,
-    device: context.device,
+    device: "Browser",
   };
   state.request_transfer_events ??= [];
   state.request_transfer_events.push(event);
@@ -558,6 +588,7 @@ export function markBranchRequestSent(
   revision: number,
   decisions: SendingDecision[],
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
   endpoint(state, context, request.to_branch);
   status(request, "requested");
@@ -602,6 +633,7 @@ export function markBranchRequestSent(
   }
   request.sent_at = new Date().toISOString();
   request.sent_by = context.actor;
+  request.sent_by_user_id = context.user_id;
   transition(state, context, request, "sent", "Mark as sent", before);
   return request;
 }
@@ -612,8 +644,9 @@ export function markBranchRequestReceived(
   revision: number,
   decisions: ReceivingDecision[],
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
-  endpoint(state, context, request.from_branch);
+  endpoint(state, context, request.from_branch, "branch_requests.receive");
   status(request, "sent");
   const shipped = request.items.filter((item) =>
     new Decimal(item.sent_quantity ?? "0").gt(0),
@@ -665,6 +698,7 @@ export function markBranchRequestReceived(
   }
   request.received_at = new Date().toISOString();
   request.received_by = context.actor;
+  request.received_by_user_id = context.user_id;
   transition(state, context, request, "received", "Mark as received", before);
   return request;
 }
@@ -674,12 +708,14 @@ export function closeBranchRequest(
   id: string,
   revision: number,
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
-  endpoint(state, context, request.from_branch);
+  endpoint(state, context, request.from_branch, "branch_requests.receive");
   status(request, "received");
   const before = structuredClone(request);
   request.closed_at = new Date().toISOString();
   request.closed_by = context.actor;
+  request.closed_by_user_id = context.user_id;
   transition(state, context, request, "closed", "Close request", before);
   return request;
 }
@@ -690,6 +726,7 @@ export function cancelBranchRequest(
   revision: number,
   reason: string,
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
   endpoint(state, context, request.from_branch);
   if (!["draft", "requested"].includes(request.status)) fail("status");
@@ -698,6 +735,7 @@ export function cancelBranchRequest(
   request.cancellation_reason = reason.trim();
   request.cancelled_at = new Date().toISOString();
   request.cancelled_by = context.actor;
+  request.cancelled_by_user_id = context.user_id;
   transition(state, context, request, "cancelled", "Cancel request", before);
   return request;
 }
@@ -730,6 +768,7 @@ export function copyBranchRequestResidual(
   id: string,
   revision: number,
 ) {
+  context = freshActor(state, context);
   const request = record(state, context, id, revision);
   endpoint(state, context, request.from_branch);
   const existing = state.branch_requests?.find(
@@ -771,7 +810,7 @@ export function copyBranchRequestResidual(
   return copied;
 }
 export function availableBranchRequestResidual(
-  state: DemoState,
+  state: Readonly<Pick<DemoState, "branch_requests">>,
   request: BranchRequest,
 ) {
   return branchRequestResidual(request).flatMap((item) => {

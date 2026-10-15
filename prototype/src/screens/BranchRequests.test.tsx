@@ -1,30 +1,38 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
-import { DemoProvider, STORAGE_KEY, useDemo } from "../store";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { useDemo } from "../store";
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+  waitForSharedUiActor,
+  sharedUiSessionId,
+  sharedUiCanonical,
+} from "../shared-ui-provider-test-fixture";
 import BranchRequests from "./BranchRequests";
 
 function SessionControls() {
-  const { signIn, setBranch } = useDemo();
+  const { switchDemoUser, demoUsers, setBranch } = useDemo();
+  const switchTo = (role: "manager" | "floor_worker" | "cashier") => {
+    const person = demoUsers.find((row) => row.role === role);
+    if (!person) throw new Error("Configured demo person is not ready");
+    return switchDemoUser(person.username);
+  };
   return (
     <>
-      <button onClick={() => signIn("floorworker", "demo1234")}>
-        Worker session
-      </button>
-      <button onClick={() => signIn("supervisor", "demo1234")}>
-        Supervisor session
-      </button>
-      <button onClick={() => signIn("cashier", "demo1234")}>
-        Cashier session
-      </button>
+      <button onClick={() => switchTo("floor_worker")}>Worker session</button>
+      <button onClick={() => switchTo("manager")}>Supervisor session</button>
+      <button onClick={() => switchTo("cashier")}>Cashier session</button>
       <button onClick={() => setBranch("Branch 2")}>
         Choose other location
       </button>
     </>
   );
 }
-function mount() {
-  render(
+async function mount() {
+  await render(
     <DemoProvider>
       <SessionControls />
       <BranchRequests />
@@ -42,8 +50,10 @@ beforeEach(() => {
 });
 describe("Branch requests presentation", () => {
   it("creates and sends free-text requests without inventing catalog units or costs", async () => {
-    mount();
+    await mount();
+    const sessionBeforeSwitch1 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch1);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
     await choose("Sending location", "Warehouse");
     await userEvent.type(
@@ -55,13 +65,15 @@ describe("Branch requests presentation", () => {
     await userEvent.clear(screen.getByLabelText("Quantity"));
     await userEvent.type(screen.getByLabelText("Quantity"), "3");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByText("Requested")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("Requested")).toBeInTheDocument(),
+    );
     expect(screen.getByText("Small paper bags")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Mark as sent" }),
     ).not.toBeInTheDocument();
-    const state = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-    expect(state.branch_requests.at(-1)).toMatchObject({
+    const state = await sharedUiCanonical();
+    expect(state.branch_requests?.at(-1)).toMatchObject({
       status: "requested",
       to_branch: "Warehouse",
       items: [
@@ -78,8 +90,10 @@ describe("Branch requests presentation", () => {
     ).not.toBeInTheDocument();
   });
   it("keeps invalid quantities unposted and explains the blocker", async () => {
-    mount();
+    await mount();
+    const sessionBeforeSwitch2 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch2);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
     await choose("Sending location", "Warehouse");
     await userEvent.type(screen.getByLabelText("Free-text item"), "Bread");
@@ -90,9 +104,7 @@ describe("Branch requests presentation", () => {
     expect(
       screen.getByRole("alert", { name: "What's missing" }),
     ).toHaveTextContent("positive whole number of units");
-    expect(
-      JSON.parse(localStorage.getItem(STORAGE_KEY)!).branch_requests ?? [],
-    ).toHaveLength(0);
+    expect((await sharedUiCanonical()).branch_requests ?? []).toHaveLength(0);
     expect(screen.getByLabelText("Quantity")).toHaveValue("1.5");
     expect(screen.getByLabelText("Quantity")).toHaveAttribute(
       "aria-invalid",
@@ -109,9 +121,12 @@ describe("Branch requests presentation", () => {
     expect(screen.getByLabelText("Quantity")).toHaveFocus();
   });
   it("clears draft editor when the acting user or endpoint changes, and blocks Cashier", async () => {
-    mount();
+    await mount();
+    const sessionBeforeSwitch3 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Supervisor session"));
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch3);
     fireEvent.click(screen.getByText("Choose other location"));
+    await waitForSharedUiActor("manager", "Branch 2");
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
     await userEvent.type(
       screen.getByLabelText("Free-text item"),
@@ -121,12 +136,16 @@ describe("Branch requests presentation", () => {
     expect(
       screen.getByText("Other location private draft"),
     ).toBeInTheDocument();
+    const sessionBeforeSwitch4 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch4);
     expect(
       screen.queryByText("Other location private draft"),
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Free-text item")).not.toBeInTheDocument();
+    const sessionBeforeSwitch5 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Cashier session"));
+    await waitForSharedUiActor("cashier", undefined, sessionBeforeSwitch5);
     expect(
       screen.getByText("You do not have access to Branch requests."),
     ).toBeInTheDocument();
@@ -134,4 +153,11 @@ describe("Branch requests presentation", () => {
       screen.queryByRole("button", { name: "New request" }),
     ).not.toBeInTheDocument();
   });
+});
+
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

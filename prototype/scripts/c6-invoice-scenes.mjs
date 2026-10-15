@@ -1,5 +1,6 @@
-/* global URL, localStorage */
+/* global URL */
 import { fileURLToPath } from "node:url";
+import { readC8State, waitForC8BusinessEvidence } from "./capture-c8-proof.mjs";
 
 const click = (page, name) =>
   page.getByRole("button", { name, exact: true }).click();
@@ -35,12 +36,8 @@ async function date(page, control, wanted) {
   throw new Error(`The requested invoice date ${wanted} was unavailable.`);
 }
 async function state(page) {
-  await page.waitForFunction(
-    () => localStorage.getItem("supermarket-prototype-v1") !== null,
-  );
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")),
-  );
+  await waitForC8BusinessEvidence(page);
+  return readC8State(page);
 }
 
 /** Real UI fixtures shared by C6 and C7; the caller changes language/theme afterward. */
@@ -175,10 +172,7 @@ export async function setupDatedReceipt(page, helpers = {}) {
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
   await page.locator(".posted-invoice-document").waitFor();
-  await page.waitForFunction(() => {
-    const saved = JSON.parse(localStorage.getItem("supermarket-prototype-v1"));
-    return saved?.invoice?.status === "posted";
-  });
+  await waitForC8BusinessEvidence(page, "posted");
   const saved = await state(page);
   if (saved.invoice.status !== "posted")
     throw new Error("The dated receipt did not post.");

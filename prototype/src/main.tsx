@@ -13,6 +13,7 @@ import "@fontsource/vazirmatn/arabic-800.css";
 import "./styles.css";
 import App from "./App";
 import { DemoProvider } from "./store";
+import { createBrowserProviderOptions } from "./e1-application-options";
 
 // Load both scripts while online so switching language needs no later requests.
 if (document.fonts) {
@@ -22,9 +23,11 @@ if (document.fonts) {
   }
 }
 
+const providerOptions = createBrowserProviderOptions();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <DemoProvider>
+    <DemoProvider options={providerOptions}>
       <App />
     </DemoProvider>
   </StrictMode>,

@@ -1,3 +1,7 @@
+import {
+  configuredRoleLabel,
+  readConfiguredRoleDefinitions,
+} from "../src/role-config";
 import { expect, test, type Page } from "@playwright/test";
 import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
@@ -369,7 +373,10 @@ test("Part 1 purchase charts show week dates and hover/focus amounts with equal-
   await expect(chart.getByRole("tooltip")).toContainText("$");
   await expect(chart.getByRole("tooltip")).toContainText(/\d{4}-\d{2}-\d{2}/);
   await page
-    .getByRole("heading", { name: "Supervisor dashboard", exact: true })
+    .getByRole("heading", {
+      name: `${configuredRoleLabel(readConfiguredRoleDefinitions(configuration.roles), "manager", "en")} dashboard`,
+      exact: true,
+    })
     .click();
   await expect(chart.getByRole("tooltip")).toHaveCount(0);
   await point.hover();

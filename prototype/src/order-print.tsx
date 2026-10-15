@@ -5,22 +5,25 @@ import {
 import { formatMoney } from "./formatters";
 import { ProductName, UnitSize } from "./presentation";
 import { branchLabel } from "./settings";
-import type { Order } from "./orders";
-import type { CompanyConfig, Language } from "./types";
+import type { OrderReadDTO } from "./purchase-projections";
+import type { OrderPrintConfig } from "./orders-board";
+import type { Language } from "./types";
 
 export function OrderPrintDocument({
   order,
   config,
   language,
 }: {
-  order: Order;
-  config: CompanyConfig;
+  order: OrderReadDTO;
+  config: OrderPrintConfig;
   language: Language;
 }) {
   const documentLanguage = config.supplier_documents?.supplier_order ?? "en";
   const printLanguage = documentLanguage === "en" ? "en" : language;
-  const amount = (value: string | null) =>
-    value === null ? "—" : formatMoney(value, { currency: order.currency });
+  const amount = (value: string | null | undefined) =>
+    value === null || value === undefined
+      ? "—"
+      : formatMoney(value, { currency: order.currency });
   return (
     <div className="order-print-output">
       <OperationalPrintDocument

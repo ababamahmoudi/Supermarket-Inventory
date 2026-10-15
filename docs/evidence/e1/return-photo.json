@@ -1,0 +1,34 @@
+{
+  "started_at": "2026-10-13T22:45:57.270653+00:00",
+  "ended_at": "2026-10-13T22:46:03.626801+00:00",
+  "actual_exit": 0,
+  "command": [
+    "/workspace/scratch/supermarket-review-node/bin/node",
+    "/workspace/Supermarket-Inventory/prototype/node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "/tmp/e1-root-return-photo-final-v1/target.config.mts",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/tmp/e1-root-return-photo-final-v1/vitest-result.json",
+    "--maxWorkers=1",
+    "src/return-photo-authority.test.ts",
+    "src/ReturnEvidenceImage.privacy.test.tsx"
+  ],
+  "workers": 1,
+  "source_files": 546,
+  "source_fingerprint": "195c3486201eed7e5ac942b8346435f0273ddcf2b199ebed54b60aea89b8f370",
+  "source_unchanged": true,
+  "changed": [],
+  "counts": {
+    "numTotalTests": 13,
+    "numPassedTests": 13,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTodoTests": 0,
+    "numTotalTestSuites": 4,
+    "numPassedTestSuites": 4,
+    "numFailedTestSuites": 0,
+    "success": true
+  }
+}

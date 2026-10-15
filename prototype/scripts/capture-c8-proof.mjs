@@ -1,7 +1,29 @@
-/* global document, window, getComputedStyle, localStorage, indexedDB, Blob, crypto */
+/* global document, window, getComputedStyle, indexedDB, Blob, crypto */
+import { readFileSync } from "node:fs";
+import { URL } from "node:url";
 import { expect } from "@playwright/test";
+import sourceConfig from "../../seed/arzon-config.json" with { type: "json" };
+import retainedConfig from "../src/compat/configuration.json" with { type: "json" };
+
 import { button, choose, field, settled } from "./c5-browser-proof.mjs";
 import { inspectResponsiveLayout } from "./c6-layout-proof.mjs";
+
+// Standalone Node capture cannot import the app's TypeScript modules. Read the
+// actual repository constant, rather than trusting a second database-name copy.
+const authoritySource = readFileSync(
+  new URL("../src/authority-repository.ts", import.meta.url),
+  "utf8",
+);
+const authorityDatabaseDeclaration = authoritySource.match(
+  /^export const AUTHORITY_DATABASE_NAME = ("[^"\n]+");$/m,
+);
+if (!authorityDatabaseDeclaration)
+  throw new Error("The actual authority database declaration is missing.");
+const authorityDatabaseName = JSON.parse(authorityDatabaseDeclaration[1]);
+const configuredCompanyId = {
+  ...retainedConfig.company,
+  ...sourceConfig.company,
+}.seed_key;
 
 export const C8_SCENES = [
   "edit-product-dates",
@@ -28,12 +50,122 @@ export const C8_VARIANTS = [
   "phone-dark",
 ];
 
+/** Read the genuine company snapshot without initializing or mutating it. */
 export async function readC8State(page) {
-  return page.evaluate(() => {
-    const raw = localStorage.getItem("supermarket-prototype-v1");
-    if (!raw) throw new Error("The actual durable demo state is not ready.");
-    return JSON.parse(raw);
-  });
+  return page.evaluate(
+    ({ databaseName, companyId }) =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open(databaseName);
+        const fail = (message, database) => {
+          database?.close();
+          reject(new Error(message));
+        };
+        open.onupgradeneeded = () => {
+          // Evidence must never create or upgrade the business database.
+          open.transaction?.abort();
+          fail("The canonical business database has not been initialized.");
+        };
+        open.onerror = () =>
+          fail("Cannot open the canonical business database.");
+        open.onblocked = () =>
+          fail("The canonical business database is blocked.");
+        open.onsuccess = () => {
+          const database = open.result;
+          database.onversionchange = () => database.close();
+          if (!database.objectStoreNames.contains("business")) {
+            fail("The canonical business store is missing.", database);
+            return;
+          }
+          const transaction = database.transaction("business", "readonly");
+          const request = transaction.objectStore("business").get(companyId);
+          let state;
+          request.onsuccess = () => {
+            const record = request.result;
+            if (
+              record?.company_id !== companyId ||
+              record.state?.config?.company?.seed_key !== companyId ||
+              !Number.isSafeInteger(record.revision)
+            ) {
+              transaction.abort();
+              return;
+            }
+            state = record.state;
+          };
+          transaction.oncomplete = () => {
+            database.close();
+            if (!state) {
+              reject(
+                new Error(
+                  "The configured company's business record is missing.",
+                ),
+              );
+              return;
+            }
+            resolve(state);
+          };
+          transaction.onabort = transaction.onerror = () =>
+            fail(
+              "Cannot read the configured company's canonical business record.",
+              database,
+            );
+        };
+      }),
+    { databaseName: authorityDatabaseName, companyId: configuredCompanyId },
+  );
+}
+
+/** Preserve the caller's actual waitForFunction timeout and polling policy. */
+export async function waitForC8BusinessEvidence(page, invoiceStatus) {
+  const ready = await page.waitForFunction(
+    ({ databaseName, companyId, expectedInvoiceStatus }) =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open(databaseName);
+        open.onupgradeneeded = () => {
+          open.transaction?.abort();
+          reject(
+            new Error("The canonical business database is not initialized."),
+          );
+        };
+        open.onerror = () => reject(open.error);
+        open.onblocked = () =>
+          reject(new Error("The canonical business database is blocked."));
+        open.onsuccess = () => {
+          const database = open.result;
+          database.onversionchange = () => database.close();
+          if (!database.objectStoreNames.contains("business")) {
+            database.close();
+            reject(new Error("The canonical business store is missing."));
+            return;
+          }
+          const transaction = database.transaction("business", "readonly");
+          const request = transaction.objectStore("business").get(companyId);
+          let matches = false;
+          request.onsuccess = () => {
+            const record = request.result;
+            matches =
+              record?.company_id === companyId &&
+              record.state?.config?.company?.seed_key === companyId &&
+              Number.isSafeInteger(record.revision) &&
+              (expectedInvoiceStatus === undefined ||
+                record.state?.invoice?.status === expectedInvoiceStatus);
+          };
+          transaction.oncomplete = () => {
+            database.close();
+            resolve(matches);
+          };
+          transaction.onabort = transaction.onerror = () => {
+            database.close();
+            reject(new Error("Cannot read canonical business readiness."));
+          };
+        };
+      }),
+    {
+      databaseName: authorityDatabaseName,
+      companyId: configuredCompanyId,
+      expectedInvoiceStatus: invoiceStatus,
+    },
+  );
+  await ready.dispose();
 }
 
 export async function visitC8(page, route) {
@@ -191,19 +323,51 @@ export async function prepareC8NewOrder(page) {
 
 export async function prepareC8ManualInvoice(page) {
   await visitC8(page, "invoices");
+  const previous = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  await expect
+    .poll(async () => {
+      const invoice = (await readC8State(page)).invoice;
+      const routed =
+        new URL(page.url()).hash ===
+        "#invoices?id=" + encodeURIComponent(invoice.id);
+      return (
+        invoice.id !== previous && invoice.entry_mode === "upload" && routed
+      );
+    })
+    .toBe(true);
+  const uploadId = (await readC8State(page)).invoice.id;
   await button(page, "Manual entry", "ورود دستی").click();
+  await expect
+    .poll(async () => {
+      const invoice = (await readC8State(page)).invoice;
+      const routed =
+        new URL(page.url()).hash ===
+        "#invoices?id=" + encodeURIComponent(invoice.id);
+      return (
+        invoice.id !== uploadId &&
+        invoice.entry_mode === "manual" &&
+        routed &&
+        invoice.lines.length === 0
+      );
+    })
+    .toBe(true);
   const details = page.locator("#invoice-details-fields");
   await choose(
     page,
     field(details, "Supplier", "تأمین‌کننده"),
     /Fresh Valley Foods/,
   );
-  await field(
-    page,
+  const number = field(
+    details,
     "Supplier invoice number (optional)",
     "شماره فاکتور تأمین‌کننده (اختیاری)",
-  ).fill("C8-QA-CONTAINMENT");
+  );
+  await expect(number).toBeEnabled();
+  await number.fill("C8-QA-CONTAINMENT");
+  await expect
+    .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
+    .toBe("C8-QA-CONTAINMENT");
   await button(page, "Add line", "افزودن ردیف").click();
   await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
     1,
@@ -264,17 +428,44 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     sale_price: "16.99",
   });
   await visitC8(page, "invoices");
+  const previousInvoice = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  await expect
+    .poll(async () => {
+      const current = (await readC8State(page)).invoice;
+      return (
+        current.id !== previousInvoice &&
+        current.entry_mode === "upload" &&
+        new URL(page.url()).hash ===
+          "#invoices?id=" + encodeURIComponent(current.id)
+      );
+    })
+    .toBe(true);
   await field(
     page,
     "Upload a PDF or photo",
     "بارگذاری PDF یا عکس",
   ).setInputFiles(originalPath);
+  const reviewDeadline = Date.now() + 15000;
+  await expect
+    .poll(
+      async () => {
+        const current = (await readC8State(page)).invoice;
+        return (
+          current.id === "demo-c8-hw-5012" &&
+          current.status === "review" &&
+          current.lines.length === 1 &&
+          new URL(page.url()).hash === "#invoices?id=demo-c8-hw-5012"
+        );
+      },
+      { timeout: Math.max(1, reviewDeadline - Date.now()) },
+    )
+    .toBe(true);
   await expect(
     page.getByRole("heading", {
       name: /^(Review invoice lines|بررسی ردیف‌های فاکتور)$/,
     }),
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: Math.max(1, reviewDeadline - Date.now()) });
   await expect
     .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
     .toBe("HW-5012");

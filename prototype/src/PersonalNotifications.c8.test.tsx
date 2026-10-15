@@ -1,27 +1,35 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it } from "vitest";
-import { SESSION_KEY } from "./auth";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import i18n from "./i18n";
 import { PersonalNotifications } from "./PersonalNotifications";
 import { requestSale, saleDateAfter, saleStoreDate } from "./sales";
-import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
+import { DemoProvider, initialState, useDemo } from "./store";
+import { authenticatedTestFixture } from "./authority-test-fixture";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import { Menu } from "./ui";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "./test/rendered-ui-readiness";
 
-beforeEach(() => {
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   window.location.hash = "";
-  void i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "Branch 2",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
+  await i18n.changeLanguage("en");
+});
+afterEach(() => {
+  clearRenderedUiReadiness();
+  cleanup();
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+  vi.unstubAllGlobals();
 });
 
 function Harness() {
@@ -42,62 +50,71 @@ function Harness() {
 it("opens the notified location before navigating to its approval and marks the actual record read", async () => {
   const state = initialState();
   state.notifications = [];
+  const manager = authenticatedTestFixture(state, "manager", {
+    selection: { kind: "location", location_id: "Branch 2" },
+  });
+  const floorWorker = authenticatedTestFixture(state, "floor_worker", {
+    locations: ["Branch 1"],
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
   const today = saleStoreDate(state.config, "Branch 1");
-  requestSale(
-    state,
-    {
-      company_id: state.config.company.seed_key,
-      role: "floor_worker",
-      actor: "Demo Floor Worker",
-      username: "floorworker",
-      branch: "Branch 1",
-      allowed_branches: ["Branch 1"],
-      notification_recipients: [
-        {
-          username: "supervisor",
-          role: "supervisor",
-          allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-        },
-      ],
-    },
-    {
-      product_code: "0006",
-      mode: "sale",
-      scope: "current",
-      price: "1.19",
-      price_unit: "each",
-      branches: ["Branch 1"],
-      starts_on: today,
-      last_day: saleDateAfter(today, 7),
-      accept_below_margin: false,
-      below_cost_reason: "",
-      add_labels: false,
-      why: "slow seller",
-    },
-  );
-  const notification = state.notifications![0];
+  requestSale(state, floorWorker.actor, {
+    product_code: "0006",
+    mode: "sale",
+    scope: "current",
+    price: "1.19",
+    price_unit: "each",
+    branches: ["Branch 1"],
+    starts_on: today,
+    last_day: saleDateAfter(today, 7),
+    accept_below_margin: false,
+    below_cost_reason: "",
+    add_labels: false,
+    why: "slow seller",
+  });
+  const notification = state.notifications!.find(
+    (item) => item.recipient_user_id === manager.actor.user_id,
+  )!;
   expect(notification.branch).toBe("Branch 1");
-  expect(notification.target_username).toBe("supervisor");
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  expect(notification.recipient_user_id).toBe(manager.actor.user_id);
+  const fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: { selection: { kind: "location", location_id: "Branch 2" } },
+  });
+  fixtures.push(fixture);
   render(
-    <DemoProvider>
+    <DemoProvider options={fixture.options}>
       <Harness />
     </DemoProvider>,
   );
-  expect(screen.getByLabelText("Selected location")).toHaveTextContent(
-    "Branch 2",
+  await waitFor(() =>
+    expect(screen.getByLabelText("Selected location")).toHaveTextContent(
+      "Branch 2",
+    ),
   );
   fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
   fireEvent.click(
     await screen.findByRole("menuitem", { name: /Sale request.*Lavash Bread/ }),
   );
-  await waitFor(() => {
+  // Read acknowledgement and selected-location adoption are two real IDB
+  // operations. Await the actual rendered location before the original oracle.
+  await renderedUiReady(
+    () =>
+      screen.queryByLabelText("Selected location")?.textContent === "Branch 1",
+  );
+  await waitFor(async () => {
     expect(screen.getByLabelText("Selected location")).toHaveTextContent(
       "Branch 1",
     );
-    expect(
-      screen.getByLabelText("Unread personal notifications"),
-    ).toHaveTextContent("0");
+    expect([
+      screen.getByLabelText("Unread personal notifications").textContent,
+      Boolean(
+        (await fixture.readCanonical()).notifications?.find(
+          (item) => item.id === notification.id,
+        )?.read_at,
+      ),
+    ]).toEqual(["0", true]);
   });
   expect(window.location.hash).toBe(`#${notification.href}`);
   expect(window.location.hash).toMatch(/^#approvals/);

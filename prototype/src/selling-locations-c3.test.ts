@@ -11,16 +11,17 @@ import {
   syncPriceConflicts,
 } from "./approvals";
 import { effectiveOffer, effectivePrice } from "./catalog";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import {
   branchAllowsRole,
   branchSellsToCustomers,
   sellingBranches,
 } from "./settings";
 import type { Approval, DemoState, Offer } from "./types";
+import { catalogTestActor } from "./catalog-authority-test-fixture";
 
 function proposal(state: DemoState): Approval {
-  return {
+  const approval: Approval = {
     id: "approval:c3-retail",
     company_id: state.config.company.seed_key,
     branch: "Branch 1",
@@ -31,6 +32,9 @@ function proposal(state: DemoState): Approval {
     current_price: "1.99",
     unit_cost: "1.5500",
   };
+  // The real preview resolves the canonical pending approval, not a detached object.
+  state.approvals = [approval];
+  return approval;
 }
 function candidate(state: DemoState, branch = "Warehouse"): Offer {
   return {
@@ -70,8 +74,10 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("groups identical retail consequences and does not invent override-removal rows or warehouse effects", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const effects = approvalLocationEffects(
       state,
+      actor,
       proposal(state),
       "all",
       "Branch 1",
@@ -93,10 +99,12 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("separates actual overrides and differing offers instead of grouping merely matching prices", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const product = state.products.find((item) => item.code === "0006")!;
     product.branch_prices = { "Branch 2": "1.99" };
     const effects = approvalLocationEffects(
       state,
+      actor,
       proposal(state),
       "all",
       "Branch 1",
@@ -109,7 +117,13 @@ describe("C3 selling locations and approval consequences", () => {
       effects.find((effect) => !effect.override_removed)?.locations,
     ).toEqual(["Branch 1", "Branch 3"]);
     expect(
-      approvalLocationEffects(state, proposal(state), "branch", "Branch 2"),
+      approvalLocationEffects(
+        state,
+        actor,
+        proposal(state),
+        "branch",
+        "Branch 2",
+      ),
     ).toEqual([
       expect.objectContaining({
         locations: ["Branch 2"],
@@ -120,6 +134,7 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("replaces active retail overrides while preserving inactive and non-selling historical prices and provenance", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const product = state.products.find((item) => item.code === "0006")!;
     state.config.branches[2].active = false;
     product.branch_prices = {
@@ -136,7 +151,7 @@ describe("C3 selling locations and approval consequences", () => {
     product.manual_prices = { Warehouse: retainedMarker };
     const originalLedger = structuredClone(state.ledger);
     const originalReceipts = structuredClone(state.stock_movements);
-    applyApprovedPrice(state, product.code, "2.99", "all", "all");
+    applyApprovedPrice(state, actor, product.code, "2.99", "all", "all");
     expect(product.branch_prices).toEqual({
       "Branch 3": "4.99",
       Warehouse: "8.99",
@@ -149,14 +164,22 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("blocks a warehouse-only price decision atomically while allowing its purchase evidence to inform the company default", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const approval = { ...proposal(state), branch: "Warehouse" };
     state.approvals = [approval];
     const before = structuredClone(state);
     expect(() =>
-      resolveApproval(state, approval.id, "approve", "branch", "Branch 1"),
+      resolveApproval(
+        state,
+        actor,
+        approval.id,
+        "approve",
+        "branch",
+        "Branch 1",
+      ),
     ).toThrow("sells to customers");
     expect(state).toEqual(before);
-    resolveApproval(state, approval.id, "approve", "all", "all");
+    resolveApproval(state, actor, approval.id, "approve", "all", "all");
     expect(state.approvals[0]).toMatchObject({
       branch: "Warehouse",
       status: "approved",
@@ -168,9 +191,10 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("invalidates an approval preview when Settings changes the locations that actually sell", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const approval = proposal(state);
     state.approvals = [approval];
-    const snapshot = approvalSnapshot(state, approval.product_code);
+    const snapshot = approvalSnapshot(state, actor, approval.product_code);
     state.config.branches.find(
       (item) => item.type === "warehouse",
     )!.sells_to_customers = true;
@@ -178,6 +202,7 @@ describe("C3 selling locations and approval consequences", () => {
     expect(() =>
       resolveApproval(
         state,
+        actor,
         approval.id,
         "approve",
         "all",
@@ -191,12 +216,11 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("does not offer or mix retail promotions in a non-selling warehouse, with explicit opt-in available", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const offer = candidate(state);
     expect(offerReadiness(state, offer)).toBe("location_not_selling");
     const before = structuredClone(state);
-    expect(() => activateOffer(state, offer, "supervisor")).toThrow(
-      "not ready",
-    );
+    expect(() => activateOffer(state, actor, offer)).toThrow("not ready");
     expect(state).toEqual(before);
     expect(effectiveOffer(state, "0006", "Warehouse")).toBeNull();
     expect(
@@ -211,19 +235,20 @@ describe("C3 selling locations and approval consequences", () => {
       (item) => item.type === "warehouse",
     )!.sells_to_customers = true;
     expect(offerReadiness(state, offer)).toBe("ready");
-    activateOffer(state, offer, "supervisor");
+    activateOffer(state, actor, offer);
     expect(effectiveOffer(state, "0006", "Warehouse")?.id).toBe(offer.id);
     expect(branchAllowsRole(state.config, "Warehouse", "cashier")).toBe(false);
   });
 
   it("preserves an old non-selling warehouse offer as evidence and creates no warehouse replacement suggestion", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const historic = { ...candidate(state), status: "active" as const };
     state.offers.push(historic);
     const product = state.products.find((item) => item.code === "0006")!;
     product.branch_prices = { Warehouse: "1.99" };
     product.selling_price = "2.99";
-    reconcileOffers(state, product.code);
+    reconcileOffers(state, actor, product.code);
     expect(historic.status).toBe("active");
     expect(state.offers.filter((item) => item.branch === "Warehouse")).toEqual([
       historic,
@@ -233,15 +258,16 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("ignores warehouse-only price differences and includes them only after an explicit selling opt-in", () => {
     const state = initialState();
+    const actor = catalogTestActor(state, "manager", "all");
     const product = state.products.find((item) => item.code === "0006")!;
     product.branch_prices = { Warehouse: "8.99" };
     state.alerts = [];
-    syncPriceConflicts(state, product.code);
+    syncPriceConflicts(state, actor, product.code);
     expect(state.alerts).toEqual([]);
     state.config.branches.find(
       (item) => item.type === "warehouse",
     )!.sells_to_customers = true;
-    syncPriceConflicts(state, product.code);
+    syncPriceConflicts(state, actor, product.code);
     expect(state.alerts[0].branch_prices).toMatchObject({
       Warehouse: "8.99",
       "Branch 1": "1.99",
@@ -250,20 +276,21 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("keeps foreign company approvals outside retail previews and prevents price changes when no active location sells", () => {
     const state = initialState();
-    expect(
-      approvalLocationEffects(
-        state,
-        { ...proposal(state), company_id: "foreign-company" },
-        "all",
-        "Branch 1",
-      ),
-    ).toEqual([]);
+    const actor = catalogTestActor(state, "manager", "all");
+    const foreignApproval = {
+      ...proposal(state),
+      company_id: "foreign-company",
+    };
+    state.approvals = [foreignApproval];
+    expect(() =>
+      approvalLocationEffects(state, actor, foreignApproval, "all", "Branch 1"),
+    ).toThrow("company");
     state.config.branches.forEach((location) => {
       location.sells_to_customers = false;
     });
     const before = structuredClone(state);
     expect(() =>
-      applyApprovedPrice(state, "0006", "2.99", "all", "all"),
+      applyApprovedPrice(state, actor, "0006", "2.99", "all", "all"),
     ).toThrow("sells to customers");
     expect(state).toEqual(before);
   });

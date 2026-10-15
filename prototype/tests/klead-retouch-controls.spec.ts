@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openShellAction, setLanguage, signIn } from "./helpers";
 import {
@@ -66,8 +67,8 @@ async function editor(page: Page) {
 }
 
 async function stored(page: Page) {
-  return page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+  return readCanonicalBusinessEvidence(page).then((canonicalState) => {
+    const state = JSON.parse(JSON.stringify(canonicalState)!);
     return { lines: state.invoice.lines, ledger: state.ledger };
   });
 }
@@ -413,14 +414,14 @@ for (const language of ["en", "fa"] as const) {
           dialog = await editor(page);
         } else {
           await page.goto("/#product?code=0001");
-          const product = await page.evaluate(() => {
-            const saved = JSON.parse(
-              localStorage.getItem("supermarket-prototype-v1")!,
-            );
-            return saved.products.find(
-              (item: { code: string }) => item.code === "0001",
-            ) as { name_en: string; name_fa: string };
-          });
+          const product = await readCanonicalBusinessEvidence(page).then(
+            (canonicalState) => {
+              const saved = JSON.parse(JSON.stringify(canonicalState)!);
+              return saved.products.find(
+                (item: { code: string }) => item.code === "0001",
+              ) as { name_en: string; name_fa: string };
+            },
+          );
           await page
             .locator(".page-header")
             .getByRole("button", {
@@ -811,19 +812,21 @@ for (const language of ["en", "fa"] as const) {
       .soft((await appearance(feedback)).contrast)
       .toBeGreaterThanOrEqual(4.5);
 
-    const documentReferences = await page.evaluate(() => {
-      const saved = JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      );
-      const record = saved.returns.find(
-        (item: { id: string }) => item.id === "demo-return-1",
-      );
-      return ["pickup", "replacement"].map(
-        (kind) =>
-          record.evidence.find((event: { kind: string }) => event.kind === kind)
-            .document as string,
-      );
-    });
+    const documentReferences = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        page.evaluate((canonicalState) => {
+          const saved = JSON.parse(JSON.stringify(canonicalState)!);
+          const record = saved.returns.find(
+            (item: { id: string }) => item.id === "demo-return-1",
+          );
+          return ["pickup", "replacement"].map(
+            (kind) =>
+              record.evidence.find(
+                (event: { kind: string }) => event.kind === kind,
+              ).document as string,
+          );
+        }, canonicalState),
+    );
     expect(documentReferences).toEqual([
       "C7-SIGNED-PAPER-001",
       "C7-ACTUAL-REPLACEMENT-001",
@@ -900,20 +903,20 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(print.borderVisible).toBe(false);
     expect.soft(print.outlineVisible).toBe(false);
     expect.soft(print.contrast).toBeGreaterThanOrEqual(4.5);
-    const state = await page.evaluate(() => {
-      const saved = JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      );
-      const record = saved.returns.find(
-        (item: { id: string }) => item.id === "demo-return-1",
-      );
-      return {
-        ledger: saved.ledger,
-        pickedUp: record.lines[0].picked_up,
-        resolved: record.lines[0].settled,
-        replacement: record.replacement_received.qty,
-      };
-    });
+    const state = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => {
+        const saved = JSON.parse(JSON.stringify(canonicalState)!);
+        const record = saved.returns.find(
+          (item: { id: string }) => item.id === "demo-return-1",
+        );
+        return {
+          ledger: saved.ledger,
+          pickedUp: record.lines[0].picked_up,
+          resolved: record.lines[0].settled,
+          replacement: record.replacement_received.qty,
+        };
+      },
+    );
     expect(state).toEqual({
       ledger: before.ledger,
       pickedUp: 3,

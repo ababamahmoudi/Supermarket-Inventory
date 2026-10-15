@@ -1,19 +1,46 @@
 import Decimal from "decimal.js";
-import { demoSeed } from "./config";
-import { effectiveApprovalLocation } from "./received";
+import {
+  isOfferSuppressed,
+  type OfferSuppressionReadState,
+} from "./offer-store-scopes";
+import {
+  effectiveApprovalLocation,
+  type InvoiceLocationReadState,
+} from "./received";
 import { branchSellsToCustomers } from "./settings";
-import type { Branch, DemoState, Offer, Product } from "./types";
-import { activeSaleAt, saleCanonicalPrice } from "./sales";
+import type { Approval, Branch, Offer, Product } from "./types";
+import {
+  activeSaleAt,
+  saleCanonicalPrice,
+  type SaleClockConfig,
+  type TemporalSale,
+} from "./sales";
 
-/** The all-branches lookup previews the first configured demo branch. */
+/** Aggregates stay aggregates; customer Lookup must choose a concrete Store. */
 export function lookupBranch(branch: Branch): Branch {
-  return branch === "all" ? (demoSeed.branches[0] as Branch) : branch;
+  return branch;
+}
+export type PriceProduct = Pick<
+  Product,
+  "company_id" | "code" | "status" | "selling_price" | "branch_prices"
+>;
+export type ProductSearchFields = Pick<
+  Product,
+  "name_en" | "name_fa" | "code" | "barcode" | "unit_size"
+>;
+export interface CatalogPriceReadState<
+  P extends PriceProduct = PriceProduct,
+> extends OfferSuppressionReadState {
+  config: SaleClockConfig;
+  products: readonly P[];
+  offers: readonly Offer[];
+  sales?: readonly TemporalSale[];
 }
 
-function resolveProduct(
-  state: DemoState,
-  productOrCode: Product | string,
-): Product | null {
+function resolveProduct<P extends PriceProduct>(
+  state: CatalogPriceReadState<P>,
+  productOrCode: P | string,
+): P | null {
   const product =
     typeof productOrCode === "string"
       ? state.products.find(
@@ -28,9 +55,9 @@ function resolveProduct(
 }
 
 /** Approved branch prices win; pending proposals never become the register price. */
-export function regularPrice(
-  state: DemoState,
-  productOrCode: Product | string,
+export function regularPrice<P extends PriceProduct>(
+  state: CatalogPriceReadState<P>,
+  productOrCode: P | string,
   branch: Branch,
 ): string | null {
   const product = resolveProduct(state, productOrCode);
@@ -43,9 +70,9 @@ export function regularPrice(
 }
 
 /** Temporary sale overlays never mutate the approved regular basis. */
-export function effectivePrice(
-  state: DemoState,
-  productOrCode: Product | string,
+export function effectivePrice<P extends PriceProduct>(
+  state: CatalogPriceReadState<P>,
+  productOrCode: P | string,
   branch: Branch,
   now = new Date(),
 ): string | null {
@@ -76,9 +103,9 @@ export function isOfferScheduledNow(
 }
 
 /** Resolve one eligible offer, keeping branch pools and approved prices separate. */
-export function effectiveOffer(
-  state: DemoState,
-  productOrCode: Product | string,
+export function effectiveOffer<P extends PriceProduct>(
+  state: CatalogPriceReadState<P>,
+  productOrCode: P | string,
   branch: Branch,
   now = new Date(),
 ): Offer | null {
@@ -96,6 +123,7 @@ export function effectiveOffer(
       !offer.clearance &&
       !offer.lot_id &&
       offer.status === "active" &&
+      !isOfferSuppressed(state, offer, selectedBranch) &&
       offer.currency === state.config.company.currency &&
       isOfferScheduledNow(offer, state.config.company.timezone, now) &&
       new Decimal(offer.price).equals(price) &&
@@ -109,9 +137,27 @@ export function effectiveOffer(
   );
 }
 
+export interface PendingPriceReadState extends InvoiceLocationReadState {
+  readonly config: { readonly company: { readonly seed_key: string } };
+  readonly approvals: readonly Pick<
+    Approval,
+    | "company_id"
+    | "product_code"
+    | "status"
+    | "type"
+    | "branch"
+    | "proposed_price"
+    | "source_invoice_id"
+    | "invoice_ids"
+    | "invoice_number"
+  >[];
+}
 export function pendingPrice(
-  state: DemoState,
-  product: Product,
+  state: PendingPriceReadState,
+  product: Pick<
+    Product,
+    "company_id" | "code" | "pending_price" | "pending_branch"
+  >,
   branch: Branch,
 ): string | null {
   if (product.company_id !== state.config.company.seed_key) return null;
@@ -152,7 +198,10 @@ export function normalizeSearch(value: string): string {
     .trim();
 }
 
-export function matchesProduct(product: Product, query: string): boolean {
+export function matchesProduct(
+  product: ProductSearchFields,
+  query: string,
+): boolean {
   const words = normalizeSearch(query).split(/\s+/).filter(Boolean);
   const searchable = normalizeSearch(
     [
@@ -167,7 +216,10 @@ export function matchesProduct(product: Product, query: string): boolean {
 }
 
 /** A scanned identifier must not select another product's barcode substring. */
-export function searchProducts(products: Product[], query: string): Product[] {
+export function searchProducts<P extends ProductSearchFields>(
+  products: readonly P[],
+  query: string,
+): P[] {
   const identifier = normalizeSearch(query);
   if (identifier) {
     const exact = products.filter(

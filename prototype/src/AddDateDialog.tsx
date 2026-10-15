@@ -3,15 +3,12 @@ import { useState } from "react";
 import { companyDate } from "./invoice";
 import {
   addTrackedDate,
-  allowedDateLocations,
   dateRemovalReasonLabel,
   dateRemovalReasons,
   DateTrackingError,
   dateTrackingErrorMessage,
-  nextTrackedDate,
   productReminderDays,
   removeTrackedDate,
-  scopedTrackedDates,
   stopProductDateTracking,
   trackedDateDaysLeft,
   validTrackedDate,
@@ -20,6 +17,12 @@ import {
 } from "./date-tracking";
 import { DateText, ProductName } from "./presentation";
 import { branchLabel } from "./settings";
+import {
+  nextTrackedDateView,
+  trackedDateView,
+  permittedLocationIdsView,
+} from "./notes-dates-read";
+import { actorAtLocation } from "./authority";
 import { useDemo } from "./store";
 import type { Branch } from "./types";
 import {
@@ -50,15 +53,21 @@ function AddDateForm({
   defaultLocation,
   onAdded,
 }: AddDateDialogProps) {
-  const { state, update, historyContext, branch, lang, t } = useDemo();
-  const locations = historyContext
-    ? allowedDateLocations(state, historyContext)
-    : [];
+  const { state, command, historyContext, can, branch, lang, t } = useDemo();
+  const locations = permittedLocationIdsView(
+    state,
+    historyContext,
+    can,
+    "dates.add",
+    { mutation: true },
+  );
   const [draft, setDraft] = useState<AddTrackedDateInput>({
     product_code: productCode ?? "",
     branch: locations.includes(defaultLocation ?? branch)
       ? (defaultLocation ?? branch)
-      : (locations[0] ?? ""),
+      : locations.length === 1
+        ? locations[0]
+        : "",
     date_type: "expiry",
     date: "",
     quantity: "",
@@ -78,7 +87,7 @@ function AddDateForm({
       product.company_id === state.config.company.seed_key &&
       product.status !== "archived",
   );
-  const save = () => {
+  const save = async () => {
     const required: Record<string, string> = {};
     if (!products.some((product) => product.code === draft.product_code))
       required.product_code = dateTrackingErrorMessage(
@@ -101,10 +110,21 @@ function AddDateForm({
     }
     try {
       if (!historyContext) throw new DateTrackingError("permission");
-      let id = "";
-      update((next) => {
-        id = addTrackedDate(next, historyContext, draft).id;
-      });
+      const id = await command(
+        "dates.add",
+        {
+          company_id: state.config.company.seed_key,
+          kind: "location_record",
+          location_ids: [draft.branch],
+          mutation: true,
+        },
+        (next, freshActor) =>
+          addTrackedDate(
+            next,
+            actorAtLocation(next, freshActor, draft.branch),
+            draft,
+          ).id,
+      );
       onAdded?.(id, draft.branch);
       onOpenChange(false);
     } catch (error) {
@@ -231,10 +251,7 @@ function AddDateForm({
           >
             {t("Cancel", "لغو")}
           </Button>
-          <Button
-            type="submit"
-            disabled={!historyContext || historyContext.role === "cashier"}
-          >
+          <Button type="submit" disabled={!can("dates.add")}>
             {t("Add date", "افزودن تاریخ")}
           </Button>
         </div>
@@ -252,7 +269,7 @@ export function NextTrackedDate({
 }) {
   const { state, historyContext, lang, t } = useDemo();
   const entry = historyContext
-    ? nextTrackedDate(state, historyContext, productCode)
+    ? nextTrackedDateView(state, productCode)
     : undefined;
   if (!entry) return null;
   const days = trackedDateDaysLeft(entry.date, companyDate(state.config));
@@ -294,11 +311,9 @@ function RemoveDateForm({
   onOpenChange,
   onSaved,
 }: DateActionDialogProps & { entryId: string }) {
-  const { state, update, historyContext, lang, t } = useDemo();
+  const { state, command, historyContext, lang, t } = useDemo();
   const entry = historyContext
-    ? scopedTrackedDates(state, historyContext, true).find(
-        (item) => item.id === entryId,
-      )
+    ? trackedDateView(state, true).find((item) => item.id === entryId)
     : undefined;
   const product = state.products.find(
     (item) =>
@@ -357,16 +372,26 @@ function RemoveDateForm({
         </Button>
         <Button
           variant="danger"
-          onClick={() => {
+          onClick={async () => {
             try {
               if (!historyContext) throw new DateTrackingError("permission");
-              update((draft) =>
-                removeTrackedDate(
-                  draft,
-                  historyContext,
-                  entryId,
-                  reason as DateRemovalReason,
-                ),
+              await command(
+                "dates.remove",
+                {
+                  company_id: state.config.company.seed_key,
+                  kind: "location_record",
+                  location_ids: entry ? [entry.branch] : [],
+                  entity_id: entryId,
+                  mutation: true,
+                  location_policy: "retained_correction",
+                },
+                (draft, freshActor) =>
+                  removeTrackedDate(
+                    draft,
+                    freshActor,
+                    entryId,
+                    reason as DateRemovalReason,
+                  ),
               );
               onSaved?.();
               onOpenChange(false);
@@ -397,7 +422,7 @@ function StopTrackingForm({
   onOpenChange,
   onSaved,
 }: DateActionDialogProps & { productCode: string }) {
-  const { state, update, historyContext, t } = useDemo();
+  const { state, command, historyContext, t } = useDemo();
   const product = state.products.find(
     (item) =>
       item.company_id === state.config.company.seed_key &&
@@ -467,17 +492,24 @@ function StopTrackingForm({
         </Button>
         <Button
           variant="danger"
-          onClick={() => {
+          onClick={async () => {
             try {
               if (!historyContext) throw new DateTrackingError("permission");
               if (!choice) throw new DateTrackingError("stop_choice");
-              update((draft) =>
-                stopProductDateTracking(
-                  draft,
-                  historyContext,
-                  productCode,
-                  choice,
-                ),
+              await command(
+                "catalog.tracking_preference_edit",
+                {
+                  company_id: state.config.company.seed_key,
+                  kind: "company_shared",
+                  mutation: true,
+                },
+                (draft, freshActor) =>
+                  stopProductDateTracking(
+                    draft,
+                    freshActor,
+                    productCode,
+                    choice,
+                  ),
               );
               onSaved?.();
               onOpenChange(false);

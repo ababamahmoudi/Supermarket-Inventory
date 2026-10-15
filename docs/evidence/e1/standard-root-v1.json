@@ -1,0 +1,68 @@
+{
+  "recorded_at_utc": "2026-10-14T01:31:35.063057+00:00",
+  "source_kind": "Actual Root current worktree; no candidate, source overlay or SDK substitution",
+  "observed_root_head": "0e3c3312ae26b4bc69370e0767749a0690c4d940",
+  "observed_branch": "feat/prototype-e1-location-roles",
+  "source_files": 553,
+  "source_fingerprint_sha256": "b9e004415e3abe1a2cb718d309860a285f71387bee907c9e9b66f13b428d09e8",
+  "versions": {
+    "node": "v22.23.3",
+    "npm": "10.9.9",
+    "resolved_node": "/workspace/scratch/supermarket-review-node/bin/node",
+    "resolved_npm": "/workspace/scratch/supermarket-review-node/bin/npm"
+  },
+  "commands": [
+    {
+      "command": "npm run lint",
+      "argv": ["npm", "run", "lint"],
+      "cwd": "/workspace/Supermarket-Inventory/prototype",
+      "exit_code": 1,
+      "elapsed_seconds": 106.445,
+      "log": "/tmp/e1-final-standard-root-checks-v1/lint.log",
+      "source_unchanged": true,
+      "source_differences": []
+    },
+    {
+      "command": "npm run test:sdk",
+      "argv": ["npm", "run", "test:sdk"],
+      "cwd": "/workspace/Supermarket-Inventory/prototype",
+      "exit_code": 0,
+      "elapsed_seconds": 6.461,
+      "log": "/tmp/e1-final-standard-root-checks-v1/test-sdk.log",
+      "source_unchanged": true,
+      "source_differences": []
+    },
+    {
+      "command": "npm run build",
+      "argv": ["npm", "run", "build"],
+      "cwd": "/workspace/Supermarket-Inventory/prototype",
+      "exit_code": 0,
+      "elapsed_seconds": 53.454,
+      "log": "/tmp/e1-final-standard-root-checks-v1/build.log",
+      "source_unchanged": true,
+      "source_differences": []
+    }
+  ],
+  "source_mutations_performed": false,
+  "browser_server_lifecycle_changed": false,
+  "status": "Completed all three required standard commands; individual exits retained",
+  "source_unchanged": true,
+  "source_differences": [],
+  "production_build_assets": 55,
+  "test_sdk_actual_count": {
+    "test_files_passed": 6,
+    "test_files_total": 6,
+    "tests_passed": 75,
+    "tests_total": 75,
+    "source": "Actual required npm run test:sdk log; not a previous hash-equivalence proof."
+  },
+  "source_comparison_to_native_v12": {
+    "other_snapshot": "/tmp/e1-retained-full-current-root-v12/source-before.json",
+    "other_source_fingerprint": "5d8efcb521cbcd1712cda7dee891507a245e2d2f07e19e812355a2dae7601db2",
+    "all_path_sha256_equal": true,
+    "files": 553,
+    "differences": [],
+    "our_normalized_sha_only_fingerprint": "53d90798d7adc4403e6d241d95871569da23b5a6e3f138ca0ba8eebc5a647abe",
+    "notes": "Own b9e fingerprint includes byte lengths; peer fingerprint is SHA-only map. Compare underlying path hashes explicitly."
+  }
+}

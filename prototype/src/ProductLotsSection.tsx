@@ -2,39 +2,44 @@ import { useState } from "react";
 import { effectivePrice } from "./catalog";
 import { useDemo } from "./store";
 import {
-  effectiveClearanceOffers,
+  effectiveProjectedClearanceOffers,
   receiptLotsForProduct,
   setLotClearance,
   ClearanceError,
-  type ReceiptLot,
 } from "./receipt-lots";
 import { addClearanceLabelToWaitlist } from "./label-workflow";
 import { branchLabel } from "./settings";
 import { DateText, LtrText, Money } from "./presentation";
 import { formatQuantity } from "./formatters";
 import { ProductCost, ProductPrice } from "./weight-price-presentation";
-import type { Product } from "./types";
+import type { ProductReadDTO } from "./catalog-read-model";
+import { useProtectedQuery } from "./use-protected-query";
 import { Badge, Button, DataTable, Dialog, Field, NumberField } from "./ui";
 import { WhatsMissing } from "./WhatsMissing";
 
-export function ProductLotsSection({ product }: { product: Product }) {
-  const {
-    state,
-    historyContext,
-    role,
-    user,
-    lang,
-    t,
-    update,
-    setBranch,
-    navigate,
-  } = useDemo();
-  const [selected, setSelected] = useState<ReceiptLot | null>(null);
+export function ProductLotsSection({ product }: { product: ProductReadDTO }) {
+  const { state, actor, can, command, lang, t, setBranch, navigate } =
+    useDemo();
+  const [selectedId, setSelected] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const [price, setPrice] = useState("");
   const [error, setError] = useState("");
   const [validation, setValidation] = useState(false);
-  if (role !== "supervisor" || !historyContext) return null;
-  const lots = receiptLotsForProduct(state, historyContext, product.code);
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+  };
+  const lotsRead = useProtectedQuery(
+    "lots.read",
+    scope,
+    (canonical, currentActor) =>
+      receiptLotsForProduct(canonical, currentActor, product.code),
+    product.code,
+  );
+  const lots = lotsRead.data ?? [];
+  const selected = lotsRead.data?.find((lot) => lot.id === selectedId);
+  const costs = can("lots.cost_read", scope);
+  if (!actor || !can("lots.read", scope)) return null;
   const message = (cause: unknown) =>
     cause instanceof ClearanceError && cause.code === "price"
       ? t(
@@ -83,13 +88,17 @@ export function ProductLotsSection({ product }: { product: Product }) {
               priority: 5,
               align: "end",
             },
-            {
-              label: t("Unit cost", "هزینهٔ واحد"),
-              width: 120,
-              minWidth: 104,
-              priority: 6,
-              align: "end",
-            },
+            ...(costs
+              ? [
+                  {
+                    label: t("Unit cost", "هزینهٔ واحد"),
+                    width: 120,
+                    minWidth: 104,
+                    priority: 6,
+                    align: "end" as const,
+                  },
+                ]
+              : []),
             {
               label: t("Clearance price", "قیمت فروش ویژه"),
               width: 150,
@@ -112,14 +121,14 @@ export function ProductLotsSection({ product }: { product: Product }) {
               <th>{t("Location", "مکان")}</th>
               <th>{t("Supplier", "تأمین‌کننده")}</th>
               <th>{t("Quantity received", "مقدار دریافت‌شده")}</th>
-              <th>{t("Unit cost", "هزینهٔ واحد")}</th>
+              {costs && <th>{t("Unit cost", "هزینهٔ واحد")}</th>}
               <th>{t("Clearance price", "قیمت فروش ویژه")}</th>
               <th>{t("Actions", "عملیات")}</th>
             </tr>
           </thead>
           <tbody>
             {lots.map((lot) => {
-              const clearance = effectiveClearanceOffers(
+              const clearance = effectiveProjectedClearanceOffers(
                 state,
                 product,
                 lot.branch,
@@ -142,13 +151,19 @@ export function ProductLotsSection({ product }: { product: Product }) {
                       )}
                     </LtrText>
                   </td>
-                  <td>
-                    <ProductCost
-                      value={lot.unit_cost}
-                      product={product}
-                      config={state.config}
-                    />
-                  </td>
+                  {costs && (
+                    <td>
+                      {lot.unit_cost !== undefined ? (
+                        <ProductCost
+                          value={lot.unit_cost}
+                          product={product}
+                          config={state.config}
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  )}
                   <td>
                     {clearance ? (
                       <Badge tone="info">
@@ -165,37 +180,59 @@ export function ProductLotsSection({ product }: { product: Product }) {
                   <td>
                     <div className="actions">
                       <Button
+                        disabled={
+                          pending ||
+                          !can(
+                            clearance
+                              ? "labels.queue_write"
+                              : "offers.clearance_create",
+                            {
+                              company_id: lot.company_id,
+                              kind: "location_record",
+                              location_ids: [lot.branch],
+                              mutation: true,
+                            },
+                          )
+                        }
                         variant={clearance ? "tinted" : "neutral"}
                         size="sm"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!clearance) {
-                            setSelected(lot);
+                            setSelected(lot.id);
                             setPrice("");
                             setError("");
                             setValidation(false);
                             return;
                           }
+                          if (pending) return;
+                          setPending(true);
                           try {
-                            update((next) =>
-                              addClearanceLabelToWaitlist(
-                                next,
-                                product.code,
-                                lot.id,
-                                1,
-                                lot.branch,
-                                {
-                                  name: user!.name,
-                                  role: "supervisor",
-                                  branch: lot.branch,
-                                },
-                              ),
+                            await command(
+                              "labels.queue_write",
+                              {
+                                company_id: lot.company_id,
+                                kind: "location_record",
+                                location_ids: [lot.branch],
+                                mutation: true,
+                              },
+                              (next, currentActor) =>
+                                addClearanceLabelToWaitlist(
+                                  next,
+                                  product.code,
+                                  lot.id,
+                                  1,
+                                  lot.branch,
+                                  currentActor,
+                                ),
                             );
-                            setBranch(lot.branch);
+                            await setBranch(lot.branch);
                             navigate(
                               `labels?tab=waitlist&lot=${encodeURIComponent(lot.id)}`,
                             );
                           } catch (cause) {
                             setError(message(cause));
+                          } finally {
+                            setPending(false);
                           }
                         }}
                       >
@@ -226,13 +263,24 @@ export function ProductLotsSection({ product }: { product: Product }) {
         >
           <form
             noValidate
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
               setValidation(false);
               setError("");
+              if (pending) return;
+              setPending(true);
               try {
-                update((next) =>
-                  setLotClearance(next, historyContext, selected.id, price),
+                await command(
+                  "offers.clearance_create",
+                  {
+                    company_id: selected.company_id,
+                    kind: "location_record",
+                    location_ids: [selected.branch],
+                    entity_id: selected.id,
+                    mutation: true,
+                  },
+                  (next, currentActor) =>
+                    setLotClearance(next, currentActor, selected.id, price),
                 );
                 setSelected(null);
               } catch (cause) {
@@ -240,6 +288,8 @@ export function ProductLotsSection({ product }: { product: Product }) {
                 setValidation(
                   cause instanceof ClearanceError && cause.code === "price",
                 );
+              } finally {
+                setPending(false);
               }
             }}
           >
@@ -294,7 +344,7 @@ export function ProductLotsSection({ product }: { product: Product }) {
               <Button variant="neutral" onClick={() => setSelected(null)}>
                 {t("Cancel", "لغو")}
               </Button>
-              <Button type="submit">
+              <Button disabled={pending} type="submit">
                 {t("Create clearance offer", "ایجاد پیشنهاد فروش ویژه")}
               </Button>
             </div>

@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
   chooseOption,
@@ -27,7 +28,6 @@ async function columnValue(
 }
 
 test.setTimeout(60000);
-const storage = "supermarket-prototype-v1";
 
 test("Supervisor adds a quoted supplier item without invented purchases and worker views stay nonfinancial", async ({
   page,
@@ -95,9 +95,8 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   await expect(history).toContainText("$3.55");
   await page.keyboard.press("Escape");
   await expect(history).not.toBeVisible();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(
     saved.supplier_items.find(
@@ -151,9 +150,8 @@ test("remembered pack and supplier code edits preserve posted history and remain
   await setBranch(page, "all");
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
-  const original = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoices,
-    storage,
+  const original = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoices,
   );
   const table = page.locator(".supplier-items-table");
   const row = table.getByRole("row").filter({ hasText: "0002" }).first();
@@ -219,9 +217,8 @@ test("remembered pack and supplier code edits preserve posted history and remain
   expect(geometry.textFragments).toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(history).not.toBeVisible();
-  const after = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).invoices,
-    storage,
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoices,
   );
   expect(after).toEqual(original);
   await (await openShellAction(page, "Switch to dark theme")).click();

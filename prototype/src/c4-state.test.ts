@@ -1,9 +1,10 @@
 import { createElement } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import fixture from "./fixtures/a2-demo-data.json";
-import { AUTH_STORAGE_KEY, SESSION_KEY } from "./auth";
+import { LEGACY_AUTH_STORAGE_KEY as AUTH_STORAGE_KEY } from "./authority-initialization";
+import { legacySessionKey as SESSION_KEY } from "./shell-provider-test-fixture";
 import {
   C4_BACKUP_KEY,
   hydrateC4State,
@@ -18,6 +19,12 @@ import {
 import { configSeed, demoSeed } from "./config";
 import { branchLabel } from "./settings";
 import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
+import { shellProviderFixture } from "./shell-provider-test-fixture";
+import { createAuthenticationService } from "./authentication-service";
+import { writeIdentity } from "./auth-preferences.e1";
+import { readFileStorageBackup } from "./file-database";
+import { sha256Bytes } from "./sha256";
+import { useProtectedQuery } from "./use-protected-query";
 import type { DemoInvoice, DemoState } from "./types";
 
 function savedC3State(): DemoState {
@@ -65,6 +72,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe("C4 verified backup and additive migration", () => {
@@ -202,24 +210,83 @@ describe("C4 verified backup and additive migration", () => {
     expect(migrated.config.company).toEqual(before.config.company);
   });
 
-  it("provider startup passes the raw persisted document to backup before publishing migrated state", () => {
+  it("provider startup passes the raw persisted document to backup before publishing migrated state", async () => {
+    vi.useRealTimers();
     const old = savedC3State();
     const raw = ` ${JSON.stringify(old, null, 2)}\n`;
     localStorage.setItem(STORAGE_KEY, raw);
     function Probe() {
       const { state } = useDemo();
+      const version = useProtectedQuery(
+        "settings.manage",
+        { company_id: state.config.company.seed_key, kind: "company_shared" },
+        (canonical) => canonical.prototype_c4_schema,
+        "c4-migration-version",
+      );
       return createElement(
         "output",
         { "data-testid": "migration-version" },
-        state.prototype_c4_schema,
+        version.data,
       );
     }
-    render(createElement(DemoProvider, null, createElement(Probe)));
-    expect(screen.getByTestId("migration-version")).toHaveTextContent("1");
-    expect(localStorage.getItem(C4_BACKUP_KEY)).toBe(raw);
-    expect(
-      JSON.parse(localStorage.getItem(STORAGE_KEY)!).prototype_c4_schema,
-    ).toBe(1);
+    const fixture = shellProviderFixture();
+    try {
+      const view = render(
+        createElement(DemoProvider, {
+          options: fixture.options,
+          children: createElement(Probe),
+        }),
+      );
+      await waitFor(
+        async () =>
+          expect(
+            (
+              await fixture.repository.loadBusiness<DemoState>(
+                fixture.options.companyId,
+              )
+            ).state.prototype_c4_schema,
+          ).toBe(1),
+        { timeout: 10000 },
+      );
+      view.unmount();
+      const signedIn = await createAuthenticationService({
+        repository: fixture.repository,
+      }).switchDemoUser(fixture.options.companyId, "manager");
+      writeIdentity(signedIn.identity);
+      render(
+        createElement(DemoProvider, {
+          options: fixture.options,
+          children: createElement(Probe),
+        }),
+      );
+      await waitFor(
+        () =>
+          expect(screen.getByTestId("migration-version")).toHaveTextContent(
+            "1",
+          ),
+        { timeout: 10000 },
+      );
+      const backupReference = `idb-backup:v1:${encodeURIComponent(fixture.options.companyId)}:${encodeURIComponent(C4_BACKUP_KEY)}:${sha256Bytes(new TextEncoder().encode(raw))}`;
+      expect(
+        await readFileStorageBackup(backupReference, fixture.options.companyId),
+      ).toBe(raw);
+      expect(
+        (
+          await fixture.repository.loadBusiness<DemoState>(
+            fixture.options.companyId,
+          )
+        ).state.prototype_c4_schema,
+      ).toBe(1);
+      const primaryReference = `idb-backup:v1:${encodeURIComponent(fixture.options.companyId)}:${encodeURIComponent(STORAGE_KEY)}:${sha256Bytes(new TextEncoder().encode(raw))}`;
+      expect(
+        await readFileStorageBackup(
+          primaryReference,
+          fixture.options.companyId,
+        ),
+      ).toBe(raw);
+    } finally {
+      fixture.dispose();
+    }
   });
 });
 

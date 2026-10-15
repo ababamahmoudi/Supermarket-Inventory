@@ -1,3 +1,4 @@
+import { useSettingsConfiguration } from "../settings-configuration";
 import { useState } from "react";
 import { configSeed } from "../config";
 import { saveSalesSettings } from "../sales";
@@ -6,8 +7,9 @@ import { WhatsMissing } from "../WhatsMissing";
 import { Button, Card, Field, NumberField, Switch } from "../ui";
 
 export function SalesSettings() {
-  const { state, update, historyContext, t } = useDemo();
-  const current = state.config.sales ?? configSeed.sales;
+  const { command, t } = useDemo();
+  const configuration = useSettingsConfiguration();
+  const current = configuration.sales ?? configSeed.sales;
   const [length, setLength] = useState(String(current.default_length_days));
   const [reminder, setReminder] = useState(
     String(current.open_ended_reminder_days),
@@ -51,27 +53,33 @@ export function SalesSettings() {
     reminder !== String(current.open_ended_reminder_days) ||
     promo !== current.add_promo_labels_on_start ||
     regular !== current.add_regular_labels_on_end;
-  const save = () => {
+  const save = async () => {
     setSubmitted(true);
     if (invalid.length) return;
-    if (!historyContext) return;
     try {
-      update((draft) =>
-        saveSalesSettings(draft, historyContext, {
-          ...current,
-          default_length_days: Number(length),
-          open_ended_reminder_days: Number(reminder),
-          add_promo_labels_on_start: promo,
-          add_regular_labels_on_end: regular,
-        }),
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (draft, freshActor) =>
+          saveSalesSettings(draft, freshActor, {
+            ...current,
+            default_length_days: Number(length),
+            open_ended_reminder_days: Number(reminder),
+            add_promo_labels_on_start: promo,
+            add_regular_labels_on_end: regular,
+          }),
       );
       setSubmitted(false);
       setMessage(t("Saved changes", "تغییرات ذخیره شد"));
     } catch {
       setMessage(
         t(
-          "Ask your Supervisor to save these settings.",
-          "برای ذخیره این تنظیمات از سرپرست خود بخواهید.",
+          "Ask an Owner or Manager to save these settings.",
+          "برای ذخیره این تنظیمات از مالک یا مدیر بخواهید.",
         ),
       );
     }

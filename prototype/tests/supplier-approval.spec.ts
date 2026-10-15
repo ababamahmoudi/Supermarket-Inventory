@@ -1,16 +1,76 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 async function proposeSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const selected = new URLSearchParams(parameters).get("id");
+    return (
+      route === "invoices" &&
+      Boolean(selected && selected !== previousInvoiceId)
+    );
+  });
+  const newInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!newInvoiceId)
+    throw new Error("The accepted invoice route is missing its ID.");
+  await expect
+    .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice.id)
+    .toBe(newInvoiceId);
   await page.getByRole("button", { name: "Upload", exact: true }).click();
-  if (!(await page.locator("#invoice-details-fields").isVisible()))
-    await page
-      .getByRole("button", { name: "Invoice details", exact: true })
-      .click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const selected = new URLSearchParams(parameters).get("id");
+    return (
+      route === "invoices" && Boolean(selected && selected !== newInvoiceId)
+    );
+  });
+  const uploadInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  if (!uploadInvoiceId)
+    throw new Error("The accepted upload-entry route is missing its ID.");
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        mode: invoice.entry_mode,
+        status: invoice.status,
+        lines: invoice.lines.length,
+      };
+    })
+    .toEqual({
+      id: uploadInvoiceId,
+      mode: "upload",
+      status: "draft",
+      lines: 6,
+    });
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
+    6,
+  );
+  const detailsToggle = page.getByRole("button", {
+    name: "Invoice details",
+    exact: true,
+  });
+  await expect(detailsToggle).toHaveAttribute(
+    "aria-expanded",
+    /^(true|false)$/,
+  );
+  if ((await detailsToggle.getAttribute("aria-expanded")) === "false")
+    await detailsToggle.click();
+  await expect(page.locator("#invoice-details-fields")).toBeVisible();
   await chooseOption(
     page,
     page
@@ -88,9 +148,8 @@ test("Supervisor confirms a worker supplier from Approvals without product-price
     .getByRole("button", { name: "Confirm supplier", exact: true })
     .click();
   await expect(card).toHaveCount(0);
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const supplier = saved.suppliers.find(
     (record: { name: string }) => record.name === "Orchard Confirmation Supply",
@@ -106,7 +165,7 @@ test("Supervisor confirms a worker supplier from Approvals without product-price
     saved.activity.find(
       (record: { action: string }) => record.action === "Confirm supplier",
     ).by,
-  ).toBe("Demo Supervisor");
+  ).toBe(configuredPersonExpectation("manager").name_en);
   await page.getByRole("tab", { name: "Approved", exact: true }).click();
   await expect(
     page
@@ -137,9 +196,8 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
     .getByRole("button", { name: "Reject proposal", exact: true })
     .click();
   await expect(card).toHaveCount(0);
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    storage,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   const supplier = saved.suppliers.find(
     (record: { name: string }) => record.name === "Orchard Rejection Supply",

@@ -8,7 +8,7 @@ export class CompanyLocalTimeError extends Error {
 
 /** Formatting and entry use the configured store zone; persisted instants stay UTC. */
 export function companyDateTime(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "company">,
   value: string | Date | undefined,
 ): { date: string; time: string } {
   if (!value) return { date: "", time: "" };
@@ -32,7 +32,7 @@ export function companyDateTime(
 }
 
 export function companyTimestampText(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "company">,
   value?: string,
 ): string {
   const local = companyDateTime(config, value);
@@ -40,7 +40,7 @@ export function companyTimestampText(
 }
 
 export function companyCalendarDate(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "company">,
   value?: string,
 ): string {
   return value && /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -50,7 +50,7 @@ export function companyCalendarDate(
 
 /** Reject DST gaps. Preserve a retained ambiguous instant, otherwise use the earlier occurrence. */
 export function companyLocalToUtc(
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "company">,
   date: string,
   time: string,
   preferred?: string,

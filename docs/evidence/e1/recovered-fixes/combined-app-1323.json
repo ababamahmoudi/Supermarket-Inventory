@@ -1,0 +1,10 @@
+{
+  "source_commit": "1c842165eef6370d575c6e836fc755e6bd914f4e",
+  "actual_exit": 0,
+  "success": true,
+  "total": 1323,
+  "passed": 1323,
+  "failed": 0,
+  "pending": 0,
+  "scope": "Full actual E1 app source suite; SDK is separate."
+}

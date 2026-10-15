@@ -1,8 +1,5 @@
 import "../c3-tables.css";
-import {
-  branchLabel as configuredBranchLabel,
-  configuredBranches,
-} from "../settings";
+import { branchLabel as configuredBranchLabel } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
@@ -18,11 +15,14 @@ import { companyDate } from "../invoice";
 import { RemoveDateDialog, StopTrackingDialog } from "../AddDateDialog";
 import {
   dateRemovalReasonLabel,
-  scopedTrackedDates,
-  activeTrackedDates,
   productReminderDays,
   trackedDateDaysLeft,
 } from "../date-tracking";
+import {
+  trackedDateView,
+  activeTrackedDateView,
+  permittedLocationIdsView,
+} from "../notes-dates-read";
 import { DateQuickAdd } from "../DateQuickAdd";
 import { formatQuantity } from "../formatters";
 import { categoryLabel, DateText, LtrText, ProductName } from "../presentation";
@@ -42,9 +42,22 @@ import {
   useTableColumns,
 } from "../ui";
 export function Expiry() {
-  const { state, branch, setBranch, role, user, historyContext, lang, t } =
-    useDemo();
-  const branches = configuredBranches(state.config);
+  const {
+    state,
+    branch,
+    setBranch,
+    actor,
+    can,
+    user,
+    historyContext,
+    lang,
+    t,
+  } = useDemo();
+  const branches = permittedLocationIdsView(state, actor, can, "dates.read");
+  const aggregateLabel =
+    actor?.location_scope.kind === "company"
+      ? t("All locations", "همهٔ مکان‌ها")
+      : t("All my locations", "همهٔ مکان‌های من");
   const [window, setWindow] = useListState("expiry.window", "soon");
   const [category, setCategory] = useListState("expiry.category", "all");
   const [search, setSearch] = useListState("expiry.search", "");
@@ -122,8 +135,8 @@ export function Expiry() {
   const entries = (
     historyContext
       ? window === "removed" || window === "cleared"
-        ? scopedTrackedDates(state, historyContext, true)
-        : activeTrackedDates(state, historyContext)
+        ? trackedDateView(state, true)
+        : activeTrackedDateView(state)
       : []
   )
     .filter((entry) => {
@@ -167,7 +180,7 @@ export function Expiry() {
                 )?.name_en ?? "",
               ),
     );
-  if (!role || role === "cashier")
+  if (!can("dates.read"))
     return (
       <EmptyState>
         {t(
@@ -196,7 +209,7 @@ export function Expiry() {
             setSearch("");
             setCategory("all");
             if (
-              role === "supervisor" &&
+              branches.includes(location) &&
               branch !== "all" &&
               branch !== location
             ) {
@@ -296,11 +309,11 @@ export function Expiry() {
             aria-label={t("Date tracking location", "مکان پیگیری تاریخ")}
             value={branch}
             onChange={(value) => setBranch(value as Branch)}
-            disabled={role !== "supervisor"}
+            disabled={branches.length < 2}
             options={
-              role === "supervisor"
+              branches.length > 1
                 ? [
-                    { value: "all", label: t("All branches", "همه شعبه‌ها") },
+                    { value: "all", label: aggregateLabel },
                     ...branches.map((value) => ({
                       value,
                       label: configuredBranchLabel(state.config, value, lang),
@@ -330,7 +343,7 @@ export function Expiry() {
               setCategory("all");
               setWindow("soon");
               setSort("date");
-              if (role === "supervisor") setBranch("all");
+              if (branches.length > 1) setBranch("all");
             }}
           >
             {t("Clear filters", "پاک کردن فیلترها")}
@@ -377,8 +390,8 @@ export function Expiry() {
                     state.invoice,
                   ].find(
                     (item) =>
-                      item.company_id === entry.company_id &&
-                      item.id === entry.invoice_id,
+                      item?.company_id === entry.company_id &&
+                      item?.id === entry.invoice_id,
                   );
                   const retainedSupplier = (
                     entry as typeof entry & { supplier?: string }
@@ -547,17 +560,26 @@ export function Expiry() {
                         <div className="actions">
                           {entry.status === "active" && (
                             <>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => {
-                                  setRemoving(entry.id);
-                                  setMessage("");
-                                }}
-                              >
-                                {t("Remove", "حذف")}
-                              </Button>
-                              {role === "supervisor" && (
+                              {can("dates.remove", {
+                                company_id: entry.company_id,
+                                kind: "location_record",
+                                location_ids: [entry.branch],
+                                entity_id: entry.id,
+                                mutation: true,
+                                location_policy: "retained_correction",
+                              }) && (
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={() => {
+                                    setRemoving(entry.id);
+                                    setMessage("");
+                                  }}
+                                >
+                                  {t("Remove", "حذف")}
+                                </Button>
+                              )}
+                              {can("catalog.tracking_preference_edit") && (
                                 <Menu
                                   iconOnly
                                   showChevron={false}

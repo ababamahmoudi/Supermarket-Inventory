@@ -4,38 +4,32 @@ import { setBranch, setLanguage, signIn } from "./helpers";
 /** Retain the named field check when its authorized value moves into a card or row disclosure. */
 async function expectSupplierField(table: Locator, label: string) {
   const heading = table.getByRole("columnheader", { name: label, exact: true });
-  if (await heading.isVisible()) {
-    await expect(heading).toBeVisible();
-    return;
-  }
-  const cell = table
-    .locator(`td[data-column-label=${JSON.stringify(label)}]:visible`)
-    .first();
-  if (await cell.count()) {
-    await expect(cell).toBeVisible();
-    expect(
-      await cell.evaluate(
-        (element) => getComputedStyle(element, "::before").content,
-      ),
-    ).toBe(`"${label}"`);
-    return;
-  }
   const caption = table
     .locator(".table-expanded-row dt")
     .filter({ hasText: label });
-  if (!(await caption.first().isVisible())) {
-    const disclosures = table.getByRole("button", {
-      name: "Show details",
-      exact: true,
-    });
-    const count = await disclosures.count();
-    for (let index = 0; index < count; index += 1) {
-      await disclosures.first().click();
-      if (await caption.first().isVisible()) break;
-    }
-  }
-  await expect(caption.first()).toBeVisible();
-  await expect(caption.first()).toHaveText(label);
+  // The scoped tab query and responsive column measurement settle separately.
+  // Verify the exact named field in its current visible representation.
+  await expect
+    .poll(async () => {
+      if (await heading.isVisible()) return heading.innerText();
+      const cell = table
+        .locator(`td[data-column-label=${JSON.stringify(label)}]:visible`)
+        .first();
+      if (await cell.count()) {
+        const generated = await cell.evaluate(
+          (element) => getComputedStyle(element, "::before").content,
+        );
+        if (generated === `"${label}"`) return label;
+      }
+      if (await caption.first().isVisible()) return caption.first().innerText();
+      const disclosures = table.getByRole("button", {
+        name: "Show details",
+        exact: true,
+      });
+      if (await disclosures.count()) await disclosures.first().click();
+      return undefined;
+    })
+    .toBe(label);
 }
 
 test("Supervisor supplier overview reconciles balances and opens financial tabs", async ({
@@ -163,6 +157,11 @@ test("Cashier cannot open Suppliers through a direct address", async ({
     page.locator(".suppliers-overview, .supplier-header-card"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Cashier lookup", exact: true }),
+    page.getByText("You do not have permission for this action.", {
+      exact: true,
+    }),
   ).toBeVisible();
+  await expect(
+    page.locator("main .money, main .supplier-tab-card"),
+  ).toHaveCount(0);
 });

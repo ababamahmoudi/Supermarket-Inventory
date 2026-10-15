@@ -1,5 +1,16 @@
 import { ChevronRight, MoreHorizontal } from "lucide-react";
-import type { SaleRequest, SaleSchedule, SalesContext } from "../sales";
+import type {
+  AuthenticatedActor,
+  Capability,
+  ResourceScope,
+} from "../authority-types";
+import type {
+  SaleRequestReadDTO as SaleRequest,
+  SaleReadDTO as SaleSchedule,
+} from "../offers-read-model";
+import type { ProductReadDTO as Product } from "../catalog-read-model";
+import type { ScopedReadView as SalesView } from "../e1-read-model";
+type SalesContext = AuthenticatedActor;
 import { salePriceDisplay } from "../sales";
 import { branchLabel } from "../settings";
 import { regularPrice } from "../catalog";
@@ -11,11 +22,11 @@ import {
 import { saleCalendarDate, salesText } from "../sales-locale";
 import { ProductPrice } from "../weight-price-presentation";
 import { SalePrice } from "../sales-presentation";
-import type { DemoState, Language, Product } from "../types";
+import type { Language } from "../types";
 import { Badge, IconButton, Menu, MenuItem } from "../ui";
 
 type Presentation = {
-  state: DemoState;
+  state: SalesView;
   lang: Language;
   t: (en: string, fa: string) => string;
 };
@@ -24,7 +35,7 @@ function RecordedSalePrice({
   state,
   sale,
 }: {
-  state: DemoState;
+  state: SalesView;
   sale: Pick<SaleSchedule, "sale_price" | "price_unit">;
 }) {
   const display = salePriceDisplay(sale, state.config);
@@ -105,6 +116,7 @@ export function SalesOfferRow({
   lang,
   t,
   context,
+  can,
   onOpen,
   onChange,
   onEnd,
@@ -112,6 +124,7 @@ export function SalesOfferRow({
 }: Presentation & {
   row: SaleRow;
   context: SalesContext | null;
+  can: (capability: Capability, scope?: ResourceScope) => boolean;
   onOpen: (row: SaleRow) => void;
   onChange: (row: SaleSchedule | SaleRequest) => void;
   onEnd: (sale: SaleSchedule) => void;
@@ -119,10 +132,24 @@ export function SalesOfferRow({
 }) {
   const owner =
     row.kind === "request" &&
-    row.request.requester_username === context?.username;
+    row.request.requester_user_id === context?.user_id &&
+    can("sales.request_edit_own", {
+      company_id: row.request.company_id,
+      kind: "location_record",
+      location_ids: [row.request.branch],
+      owner_user_id: row.request.requester_user_id,
+      entity_id: row.request.id,
+    });
   const actionableSale =
     row.kind === "sale" &&
-    context?.role === "supervisor" &&
+    row.sales.some((sale) =>
+      can("sales.manage", {
+        company_id: sale.company_id,
+        kind: "location_record",
+        location_ids: [sale.branch],
+        entity_id: sale.id,
+      }),
+    ) &&
     row.sales.some((sale) =>
       ["active", "scheduled"].includes(saleListStatus(state, sale)),
     );
@@ -350,12 +377,14 @@ function SaleRecordPrice({
             )}
           </dd>
         </div>
-        <div>
-          <dt>{t("Created by", "ایجادشده توسط")}</dt>
-          <dd>
-            <bdi dir="auto">{sale.created_by}</bdi>
-          </dd>
-        </div>
+        {sale.created_by && (
+          <div>
+            <dt>{t("Created by", "ایجادشده توسط")}</dt>
+            <dd>
+              <bdi dir="auto">{sale.created_by}</bdi>
+            </dd>
+          </div>
+        )}
       </dl>
     </section>
   );
@@ -419,12 +448,14 @@ export function SalesOfferRecord({
                 )}
               </dd>
             </div>
-            <div>
-              <dt>{t("Requested by", "درخواست‌شده توسط")}</dt>
-              <dd>
-                <bdi dir="auto">{row.request.requester}</bdi>
-              </dd>
-            </div>
+            {row.request.requester && (
+              <div>
+                <dt>{t("Requested by", "درخواست‌شده توسط")}</dt>
+                <dd>
+                  <bdi dir="auto">{row.request.requester}</bdi>
+                </dd>
+              </div>
+            )}
             {row.request.why && (
               <div>
                 <dt>{t("Why?", "چرا؟")}</dt>

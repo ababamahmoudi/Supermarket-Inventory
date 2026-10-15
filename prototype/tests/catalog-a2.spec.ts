@@ -1,6 +1,7 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
-const STORAGE_KEY = "supermarket-prototype-v1";
 
 async function stopTrackingKeepDates(page: Page, editor: Locator) {
   await editor
@@ -97,6 +98,13 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
     .getByRole("main")
     .getByLabel("Search products", { exact: true })
     .fill("0009");
+  // Aggregate Lookup requires an actual selling store before prices/actions.
+  await chooseOption(
+    page,
+    page.locator(".lookup-page").getByLabel("Location", { exact: true }),
+    "Branch 1",
+    "North York",
+  );
   const editor = await openRegularPrice(page);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await expect(
@@ -109,14 +117,14 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
-  const audit = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).activity.at(-1),
-    STORAGE_KEY,
+  const audit = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).activity.at(-1),
   );
   expect(audit).toMatchObject({
     action: "Set regular price",
-    by: "Demo Supervisor",
-    actor_username: "supervisor",
+    by: configuredPersonExpectation("manager").name_en,
+    actor_username: configuredPersonExpectation("manager").username,
     reversible: true,
     branch: "all",
     entity_type: "product",
@@ -137,9 +145,8 @@ test("Change price changes this store only, and validation stays inside the open
     .getByLabel("Search products", { exact: true })
     .fill("0009");
   const editor = await openRegularPrice(page);
-  const before = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).products,
-    STORAGE_KEY,
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );
   await editor.getByLabel("Price", { exact: true }).fill("3.291");
   await editor
@@ -150,9 +157,8 @@ test("Change price changes this store only, and validation stays inside the open
   ).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
   expect(
-    await page.evaluate(
-      (key) => JSON.parse(localStorage.getItem(key)!).products,
-      STORAGE_KEY,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
     ),
   ).toEqual(before);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
@@ -243,9 +249,8 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     .getByRole("main")
     .getByLabel("Search products", { exact: true })
     .fill("0009");
-  const before = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).products,
-    STORAGE_KEY,
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );
   const owner = before.find(
     (product: { code: string }) => product.code === "0001",
@@ -269,9 +274,8 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
       editor.getByRole("alert", { name: "What's missing", exact: true }),
     ).toContainText("This barcode belongs to another product");
   }
-  const blocked = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    STORAGE_KEY,
+  const blocked = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(blocked.products).toEqual(before);
   expect(
@@ -284,16 +288,15 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     branch: "Branch 1",
     barcode: owner.barcode,
     conflicting_product_code: owner.code,
-    triggered_by: "Demo Supervisor",
+    triggered_by: configuredPersonExpectation("manager").name_en,
   });
   await editor.getByLabel("Barcode", { exact: true }).fill("new-chips-barcode");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).products,
-    STORAGE_KEY,
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );
   expect(
     saved.find((product: { code: string }) => product.code === "0009"),

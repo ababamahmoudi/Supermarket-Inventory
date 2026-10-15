@@ -1,0 +1,83 @@
+{
+  "status": "Completed v5 proof remains preserved; current-source differences explicitly classified. No fresh whole-unit or whole-browser run claimed.",
+  "recorded_at_utc": "2026-10-14T01:48:16.861846+00:00",
+  "tested_full_app_proof": "app-full-v5.json",
+  "tested_source_fingerprint": "2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539",
+  "source_files_compared": 553,
+  "seed_assets_unchanged": true,
+  "production_differences": [
+    {
+      "path": "prototype/src/e1-shell-runtime.ts",
+      "change": "Prettier removes a redundant TypeScript generic-parameter comma; this is source formatting/type syntax only",
+      "emitted_javascript_check": {
+        "method": "Lightweight TypeScript transpile of the only production source difference; not a full typecheck/build or runtime test",
+        "source": "prototype/src/e1-shell-runtime.ts",
+        "before_emitted_sha256": "c705637b21af9a88bf27257d07a9172e29e464123daefa8ecbc39b1a8d83a66b",
+        "current_emitted_sha256": "c705637b21af9a88bf27257d07a9172e29e464123daefa8ecbc39b1a8d83a66b",
+        "emitted_javascript_identical": true,
+        "before_diagnostics": 0,
+        "current_diagnostics": 0
+      }
+    }
+  ],
+  "test_differences": [
+    {
+      "path": "prototype/src/CashierRouteFallback.e1.test.tsx",
+      "change": "Seven unsupported ByRole exact options removed; same accessible-name strings, assertions and test budgets",
+      "runtime_reason": "Installed queryAllByRole destructures no exact option and retains exact string-name matches."
+    },
+    {
+      "path": "prototype/tests/branch-invoice-b.spec.ts",
+      "change": "Genuine accepted same-store draft and exact original foreign-record route; test now asserts unavailable Demo menu action and dispatches its actual public event, preserving real-actor/company/location/immutable-source guards.",
+      "proof_status": "Actual final two-case native v14 passed2/2, TSC/Vite/browser exits0, zero retries/skips/unhandled; original-record/event tampering retains real authority and immutable evidence."
+    },
+    {
+      "path": "prototype/tests/c5-conditional-audit.spec.ts",
+      "change": "Actual selected Store before aggregate Lookup catalog editing; original historical/source/rollback/assertion oracles retained",
+      "proof_status": "Original C5 cases genuinely passed among eight v13 successes; current files/oracles unchanged since that run"
+    },
+    {
+      "path": "prototype/tests/c5-presentation.spec.ts",
+      "change": "Actual persisted pickup completion and real Returns list barrier; no fixture result or status fabrication",
+      "proof_status": "Original C5 cases genuinely passed among eight v13 successes; current files/oracles unchanged since that run"
+    }
+  ],
+  "all_other_test_helper_and_production_inputs_unchanged": true,
+  "exact_differences": [
+    {
+      "path": "prototype/src/CashierRouteFallback.e1.test.tsx",
+      "tested_sha256": "8af3f439d9a1b9b6955081af4066104a9742a9a0a5e903f15ddec1529a55f96f",
+      "current_sha256": "77cbabd4657c8a005f52f774c7f5c929cfe1ed255c355d628d9c53bb4a44a521",
+      "diff": "--- completed-v5\n+++ current\n@@ -36,7 +36,7 @@\n   );\n   await screen.findByRole(\n     \"heading\",\n-    { name: \"Cashier lookup\", exact: true },\n+    { name: \"Cashier lookup\" },\n     { timeout: 10000 },\n   );\n }\n@@ -49,13 +49,13 @@\n   await actualCashierHome();\n   visit(\"received\");\n   expect(\n-    await screen.findByRole(\"heading\", { name: \"Cashier lookup\", exact: true }),\n+    await screen.findByRole(\"heading\", { name: \"Cashier lookup\" }),\n   ).toBeVisible();\n   expect(\n-    screen.queryByRole(\"heading\", { name: \"Received\", exact: true }),\n+    screen.queryByRole(\"heading\", { name: \"Received\" }),\n   ).not.toBeInTheDocument();\n   expect(\n-    screen.queryByRole(\"link\", { name: \"Received\", exact: true }),\n+    screen.queryByRole(\"link\", { name: \"Received\" }),\n   ).not.toBeInTheDocument();\n   expect(\n     screen.queryByText(\"You do not have permission for this action.\"),\n@@ -77,13 +77,13 @@\n       await screen.findByText(\"You do not have permission for this action.\"),\n     ).toBeVisible();\n     expect(\n-      screen.queryByRole(\"heading\", { name: \"Cashier lookup\", exact: true }),\n+      screen.queryByRole(\"heading\", { name: \"Cashier lookup\" }),\n     ).not.toBeInTheDocument();\n     expect(\n-      screen.queryByRole(\"heading\", { name: \"Received\", exact: true }),\n+      screen.queryByRole(\"heading\", { name: \"Received\" }),\n     ).not.toBeInTheDocument();\n     expect(\n-      screen.queryByRole(\"link\", { name: \"Received\", exact: true }),\n+      screen.queryByRole(\"link\", { name: \"Received\" }),\n     ).not.toBeInTheDocument();\n     expect(\n       screen.queryByText(\"Store cost\", { exact: true }),\n"
+    },
+    {
+      "path": "prototype/src/e1-shell-runtime.ts",
+      "tested_sha256": "320b1b478db6b6b6b9c7b58a16bca51dbdbae8769a59e6180418eb9c0439face",
+      "current_sha256": "0b521cdb48dc977e20660c8fb9db0311807a844de3519d22928b09870283e0c5",
+      "diff": "--- completed-v5\n+++ current\n@@ -273,7 +273,7 @@\n       controller.dispose();\n       if (ownsRepository) repository.dispose();\n     };\n-    const request = <T,>(\n+    const request = <T>(\n       identity: { company_id: string; session_id: string },\n       input: T,\n     ) => ({ identity, input, request_id: newAuthorityId(\"request\") });\n"
+    },
+    {
+      "path": "prototype/tests/branch-invoice-b.spec.ts",
+      "tested_sha256": "ad5d00d3a34204da43d8efee5bb312a799b7cb2cebd54074a84a3dd1df7f7b6e",
+      "current_sha256": "f511ee605ce7dc6d1975996cbcfcfd76ef08d22ac57bb3755b43d84002207a57",
+      "diff": "--- completed-v5\n+++ current\n@@ -71,6 +71,27 @@\n   await signIn(page, \"Supervisor\");\n   await setBranch(page, \"Richmond Hill\");\n   await page.goto(\"/#invoices\");\n+  // The original blank seed workspace belongs to North York. Create an actual\n+  // selected-store draft instead of uploading into that existing origin.\n+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice\n+    .id;\n+  await page.getByRole(\"button\", { name: \"New invoice\", exact: true }).click();\n+  await expect(page).toHaveURL((url) => {\n+    const [route, parameters] = url.hash.slice(1).split(\"?\");\n+    const id = new URLSearchParams(parameters).get(\"id\");\n+    return route === \"invoices\" && Boolean(id && id !== previousInvoiceId);\n+  });\n+  const acceptedInvoiceId = new URLSearchParams(\n+    new URL(page.url()).hash.split(\"?\")[1],\n+  ).get(\"id\");\n+  if (!acceptedInvoiceId)\n+    throw new Error(\"The accepted foreign-store draft ID is missing.\");\n+  await expect\n+    .poll(async () => {\n+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;\n+      return { id: invoice.id, branch: invoice.branch, status: invoice.status };\n+    })\n+    .toEqual({ id: acceptedInvoiceId, branch: \"Branch 2\", status: \"draft\" });\n   await openInvoiceUpload(page);\n   await page.clock.install();\n   await page.clock.pauseAt(new Date(Date.now() + 1000));\n@@ -84,14 +105,25 @@\n     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,\n   );\n   expect(original.status).toBe(\"reading\");\n+  expect(original.branch).toBe(\"Branch 2\");\n   await signIn(page, \"Floor Worker\");\n+  await page.goto(`/#invoices?id=${encodeURIComponent(original.id)}`);\n   await expect(\n     page.getByLabel(\"Upload a PDF or photo\", { exact: true }),\n   ).toHaveCount(0);\n   await (await openShellAction(page, \"Demo\")).click();\n-  await page\n-    .getByRole(\"menuitem\", { name: \"Use fictional demo answer\", exact: true })\n-    .click();\n+  await expect(\n+    page.getByRole(\"menuitem\", {\n+      name: \"Use fictional demo answer\",\n+      exact: true,\n+    }),\n+  ).toHaveCount(0);\n+  await page.keyboard.press(\"Escape\");\n+  // Attempt the exact public UI event used by the production Demo menu even\n+  // though the foreign-record action is hidden. No actor or command is forged.\n+  await page.evaluate(() =>\n+    window.dispatchEvent(new Event(\"arzon:demo-invoice-answer\")),\n+  );\n   await page.clock.runFor(2800);\n   const untouched = await readCanonicalBusinessEvidence(page).then(\n     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,\n"
+    },
+    {
+      "path": "prototype/tests/c5-conditional-audit.spec.ts",
+      "tested_sha256": "9b31e63b3919704cf5336f19b385e740ad1a8201cd69f254ca1adb4f5c6e229a",
+      "current_sha256": "3f29238ee44c242d710f702ce55941e0194471070b79430b67a064dda774a760",
+      "diff": "--- completed-v5\n+++ current\n@@ -365,6 +365,16 @@\n         },\n       };\n     },\n+  );\n+  // Aggregate Lookup requires an explicitly selected Store before catalog editing.\n+  await setBranch(page, \"Branch 1\");\n+  await expect(\n+    page.locator(\".topbar\").getByRole(\"combobox\", {\n+      name: \"Location\",\n+      exact: true,\n+    }),\n+  ).toContainText(\n+    configuration.branches.find((location) => location.id === \"Branch 1\")!.name,\n   );\n   await page.goto(\"/#lookup\");\n   await page.getByLabel(\"Search products\", { exact: true }).fill(\"0006\");\n"
+    },
+    {
+      "path": "prototype/tests/c5-presentation.spec.ts",
+      "tested_sha256": "0e4ff2117e04ffe50afd1069810b38c24dcfa709890134ea8724c34df485e9d2",
+      "current_sha256": "e464dbd1364285446caa6617208186aef6152dd30f7f35721f58d50726824fba",
+      "diff": "--- completed-v5\n+++ current\n@@ -155,7 +155,12 @@\n       \"SIGNED-C5-COLOR-001\",\n     );\n     await button(pickup, \"Record pickup\").click();\n+    // This existing status is published only after the actual command completes.\n+    await expect(page.getByRole(\"status\")).toHaveText(\n+      \"Recorded pickup and retained Return memo.\",\n+    );\n     await page.goto(\"/#returns\");\n+    await expect(page.locator(\".returns-overview-table\")).toBeVisible();\n     await appearance(page, variant);\n     const proof = await assertContract(\n       page,\n"
+    }
+  ],
+  "limits": [
+    "Completed full app/pricing 1,294 includes all 14 genuine History recovery cases; no new whole-unit run is claimed after test-only changes.",
+    "Only production source difference remains optional TypeScript generic comma; previously verified emitted JavaScript remains identical.",
+    "Eight C5 native cases passed in v13; final two foreign-event cases passed separately in v14. Complete retained742/CI and original20 screenshots remain pending; no overlapping count is summed."
+  ]
+}

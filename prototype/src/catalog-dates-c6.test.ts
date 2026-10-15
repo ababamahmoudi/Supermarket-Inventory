@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
-import { configuredBranches } from "./settings";
-import type { HistoryContext } from "./history";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation, freshActor } from "./authority";
+import { reconcileFixture } from "./system-reconciliation-test-fixture";
+import type { AuthenticatedActor, RoleId } from "./authority-types";
 import type { DemoInvoice, DemoState, Product } from "./types";
 import {
   activeTrackedDates,
@@ -12,7 +14,7 @@ import {
   productDateDrafts,
   productReminderDays,
   stopProductDateTracking,
-  syncDateReminderAlerts,
+  syncDateReminderAlerts as syncCanonicalDateReminderAlerts,
   dateReminderMessage,
 } from "./date-tracking";
 import {
@@ -35,6 +37,8 @@ import {
 } from "./receipt-lots";
 import { reconcileOffers, setAlertStatus } from "./approvals";
 import { supplierRecords } from "./supplier-editor";
+import { createReadModel } from "./e1-read-model";
+import { completeReadModelProjectors } from "./e1-projectors";
 import {
   addClearanceLabelToWaitlist,
   addLabelsToWaitlist,
@@ -42,19 +46,45 @@ import {
 } from "./label-workflow";
 
 const now = new Date("2026-10-12T16:00:00Z");
+const actors = new WeakMap<DemoState, Map<string, AuthenticatedActor>>();
 function actor(
   state: DemoState,
-  overrides: Partial<HistoryContext> = {},
-): HistoryContext {
-  return {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    actor: "Demo Supervisor",
-    username: "supervisor",
-    branch: "all",
-    allowed_branches: configuredBranches(state.config),
-    ...overrides,
-  };
+  options: { role?: RoleId; branch?: string; allowed_branches?: string[] } = {},
+): AuthenticatedActor {
+  const role = options.role ?? "manager";
+  const location = options.branch ?? "Branch 1";
+  const key = JSON.stringify([role, location, options.allowed_branches]);
+  let fixtures = actors.get(state);
+  if (!fixtures) {
+    fixtures = new Map();
+    actors.set(state, fixtures);
+  }
+  const existing = fixtures.get(key);
+  if (existing) return freshActor(state, existing);
+  const genuine = authenticatedTestActor(state, role, {
+    locations: options.allowed_branches,
+    selection:
+      location === "all"
+        ? { kind: "all_locations" }
+        : { kind: "location", location_id: location },
+    name_en: role === "manager" ? "Demo Manager" : `Test ${role}`,
+  });
+  fixtures.set(key, genuine);
+  return genuine;
+}
+function foreignActor(state: DemoState): AuthenticatedActor {
+  const foreign = structuredClone(state);
+  foreign.config.company.seed_key = "other-company";
+  return authenticatedTestActor(foreign, "manager");
+}
+async function syncDateReminderAlerts(state: DemoState, at: Date) {
+  return reconcileFixture(
+    state,
+    "date_reminders",
+    (canonical, witness) =>
+      syncCanonicalDateReminderAlerts(canonical, witness, at),
+    at,
+  );
 }
 function edits(product: Product): ProductEdits {
   return {
@@ -136,7 +166,7 @@ describe("C6 atomic catalog and date editing", () => {
       actor(state),
       product.code,
       { ...edits(product), name_fa: "", ai_category: "" },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, actor(state), product.code),
       now,
     );
     expect(product.name_fa).toBe("");
@@ -197,7 +227,7 @@ describe("C6 atomic catalog and date editing", () => {
           },
         ],
       },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, actor(state), product.code),
       now,
     );
     expect(product.name_en).toBe("Updated rice");
@@ -250,7 +280,7 @@ describe("C6 atomic catalog and date editing", () => {
               { product_code: product.code, date_type: "expiry", ...values },
             ],
           },
-          productEditSnapshot(state, product.code),
+          productEditSnapshot(state, actor(state), product.code),
           now,
         ),
       ).toThrow();
@@ -331,7 +361,7 @@ describe("C6 atomic catalog and date editing", () => {
         actor(state),
         target.code,
         { ...edits(target), barcode: " ＡＢＣ-１２３ " },
-        productEditSnapshot(state, target.code),
+        productEditSnapshot(state, actor(state), target.code),
         now,
       ),
     ).toThrow("barcode_conflict");
@@ -348,7 +378,7 @@ describe("C6 tracking stop and reminders", () => {
       actor(state),
       product.code,
       { ...edits(product), date_reminder_days: 4000 },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, actor(state), product.code),
       now,
     );
     expect(product.date_reminder_days).toBe(4000);
@@ -369,14 +399,14 @@ describe("C6 tracking stop and reminders", () => {
             name_en: "Must not save",
             date_reminder_days: days,
           },
-          productEditSnapshot(state, product.code),
+          productEditSnapshot(state, actor(state), product.code),
           now,
         ),
       ).toThrow("reminder");
       expect(state).toEqual(before);
     },
   );
-  it("restores one suppressed reminder after tracking resumes and keeps a manually resolved reminder closed", () => {
+  it("restores one suppressed reminder after tracking resumes and keeps a manually resolved reminder closed", async () => {
     const state = initialState();
     state.expiry = [];
     const context = actor(state, { branch: "Branch 1" });
@@ -387,16 +417,24 @@ describe("C6 tracking stop and reminders", () => {
       date_type: "expiry",
       date: "2026-10-17",
     });
-    syncDateReminderAlerts(state, now);
-    const alert = state.alerts.find((item) => item.expiry_id === entry.id)!;
-    const originalId = alert.id;
+    await syncDateReminderAlerts(state, now);
+    const alert = () =>
+      state.alerts.find((item) => item.expiry_id === entry.id)!;
+    const originalId = alert().id;
     stopProductDateTracking(state, context, product.code, "keep");
-    syncDateReminderAlerts(state, now);
-    expect(alert).toMatchObject({ status: "resolved", date_suppressed: true });
-    product.date_tracking = true;
-    syncDateReminderAlerts(state, now);
-    syncDateReminderAlerts(state, now);
-    expect(alert).toMatchObject({
+    await syncDateReminderAlerts(state, now);
+    expect(alert()).toMatchObject({
+      status: "resolved",
+      date_suppressed: true,
+    });
+    state.products.find(
+      (item) =>
+        item.code === product.code &&
+        item.company_id === state.config.company.seed_key,
+    )!.date_tracking = true;
+    await syncDateReminderAlerts(state, now);
+    await syncDateReminderAlerts(state, now);
+    expect(alert()).toMatchObject({
       id: originalId,
       status: "pending",
       date_suppressed: false,
@@ -404,12 +442,20 @@ describe("C6 tracking stop and reminders", () => {
     expect(
       state.alerts.filter((item) => item.expiry_id === entry.id),
     ).toHaveLength(1);
-    setAlertStatus(state, originalId, "resolved");
-    product.date_tracking = false;
-    syncDateReminderAlerts(state, now);
-    product.date_tracking = true;
-    syncDateReminderAlerts(state, now);
-    expect(alert).toMatchObject({
+    setAlertStatus(state, actor(state), originalId, "resolved");
+    state.products.find(
+      (item) =>
+        item.code === product.code &&
+        item.company_id === state.config.company.seed_key,
+    )!.date_tracking = false;
+    await syncDateReminderAlerts(state, now);
+    state.products.find(
+      (item) =>
+        item.code === product.code &&
+        item.company_id === state.config.company.seed_key,
+    )!.date_tracking = true;
+    await syncDateReminderAlerts(state, now);
+    expect(alert()).toMatchObject({
       id: originalId,
       status: "resolved",
       date_suppressed: false,
@@ -417,7 +463,7 @@ describe("C6 tracking stop and reminders", () => {
   });
   it.each(["keep", "clear"] as const)(
     "%s always leaves all active queues and stops reminders",
-    (choice) => {
+    async (choice) => {
       const state = initialState();
       state.expiry = [];
       const context = actor(state, { branch: "Branch 1" });
@@ -428,7 +474,7 @@ describe("C6 tracking stop and reminders", () => {
         date_type: "expiry",
         date: "2026-10-17",
       });
-      syncDateReminderAlerts(state, now);
+      await syncDateReminderAlerts(state, now);
       expect(
         state.alerts.filter(
           (alert) =>
@@ -441,7 +487,7 @@ describe("C6 tracking stop and reminders", () => {
         ledger: state.ledger,
       });
       stopProductDateTracking(state, context, product.code, choice);
-      syncDateReminderAlerts(state, now);
+      await syncDateReminderAlerts(state, now);
       expect(activeTrackedDates(state, context)).toEqual([]);
       expect(
         state.alerts.find((alert) => alert.expiry_id === entry.id)?.status,
@@ -467,7 +513,11 @@ describe("C6 tracking stop and reminders", () => {
     const state = initialState();
     const context = actor(state);
     const product = state.products[0];
-    product.date_tracking = true;
+    state.products.find(
+      (item) =>
+        item.code === product.code &&
+        item.company_id === state.config.company.seed_key,
+    )!.date_tracking = true;
     const before = structuredClone(state);
     expect(() =>
       saveProductEdits(
@@ -475,13 +525,13 @@ describe("C6 tracking stop and reminders", () => {
         context,
         product.code,
         { ...edits(product), name_en: "Must not save", date_tracking: false },
-        productEditSnapshot(state, product.code),
+        productEditSnapshot(state, actor(state), product.code),
         now,
       ),
     ).toThrow("stop_choice");
     expect(state).toEqual(before);
   });
-  it("uses the product window, emits once when entering it, and updates the same alert across days", () => {
+  it("uses the product window, emits once when entering it, and updates the same alert across days", async () => {
     const state = initialState();
     state.expiry = [];
     const context = actor(state, { branch: "Branch 1" });
@@ -497,31 +547,31 @@ describe("C6 tracking stop and reminders", () => {
       state.config.expiry.expiring_soon_days,
     );
     expect(dateIsDueSoon(state, entry, now)).toBe(false);
-    syncDateReminderAlerts(state, now);
+    await syncDateReminderAlerts(state, now);
     expect(state.alerts.some((alert) => alert.expiry_id === entry.id)).toBe(
       false,
     );
     const next = new Date("2026-10-13T16:00:00Z");
-    syncDateReminderAlerts(state, next);
-    syncDateReminderAlerts(state, next);
+    await syncDateReminderAlerts(state, next);
+    await syncDateReminderAlerts(state, next);
     expect(
       state.alerts.filter((alert) => alert.expiry_id === entry.id),
     ).toHaveLength(1);
     const id = state.alerts.find((alert) => alert.expiry_id === entry.id)!.id;
-    syncDateReminderAlerts(state, new Date("2026-10-14T16:00:00Z"));
+    await syncDateReminderAlerts(state, new Date("2026-10-14T16:00:00Z"));
     expect(state.alerts.find((alert) => alert.id === id)).toMatchObject({
       days_left: 4,
     });
     expect(
       dateReminderMessage(
-        state,
+        createReadModel(completeReadModelProjectors())(state, actor(state)),
         state.alerts.find((alert) => alert.id === id)!,
         "en",
         new Date("2026-10-14T16:00:00Z"),
       ),
     ).toContain("expires in 4 days");
   });
-  it("foreign or stopped dates never generate reminders", () => {
+  it("foreign or stopped dates never generate reminders", async () => {
     const state = initialState();
     state.expiry = [];
     const context = actor(state, { branch: "Branch 1" });
@@ -533,8 +583,12 @@ describe("C6 tracking stop and reminders", () => {
       date: "2026-10-17",
     });
     state.expiry.push({ ...entry, id: "foreign", company_id: "foreign" });
-    product.date_tracking = false;
-    syncDateReminderAlerts(state, now);
+    state.products.find(
+      (item) =>
+        item.code === product.code &&
+        item.company_id === state.config.company.seed_key,
+    )!.date_tracking = false;
+    await syncDateReminderAlerts(state, now);
     expect(
       state.alerts.some(
         (alert) =>
@@ -547,14 +601,15 @@ describe("C6 tracking stop and reminders", () => {
 describe("C6 recent dates, invoice lots and scoped clearance", () => {
   it("keeps receipt supplier identity and evidence isolated when another company has the same supplier name", () => {
     const state = lotState();
-    state.suppliers = structuredClone(supplierRecords(state));
+    const suppliers = structuredClone([...supplierRecords(state)]);
+    state.suppliers = suppliers;
     const baseline = structuredClone(receiptLots(state));
-    const ownSupplier = state.suppliers.find(
+    const ownSupplier = suppliers.find(
       (supplier) =>
         supplier.company_id === state.config.company.seed_key &&
         supplier.name === state.invoices![0].supplier,
     )!;
-    state.suppliers.unshift({
+    suppliers.unshift({
       ...structuredClone(ownSupplier),
       company_id: "foreign-company",
       id: "foreign-supplier-secret-id",
@@ -628,10 +683,14 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
     expect(JSON.stringify(results)).not.toContain("quantity");
     expect(JSON.stringify(results)).not.toContain("invoice");
     expect(JSON.stringify(results)).not.toContain("cost");
-    expect(
+    expect(() =>
       reusableOtherLocationDates(
         state,
-        { ...worker, role: "cashier" },
+        actor(state, {
+          role: "cashier",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
         {
           product_code: product.code,
           supplier: "Fresh Valley Foods",
@@ -639,7 +698,7 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
         },
         now,
       ),
-    ).toEqual([]);
+    ).toThrow("capability");
   });
   it("groups identical expiry receipts at one store with exact immutable source costs and idempotence", () => {
     const state = lotState();
@@ -728,27 +787,22 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
     expect(effectiveClearanceOffers(state, "0003", "Branch 2", now)).toEqual(
       [],
     );
-    expect(
+    expect(() =>
       scopedClearanceOffers(
         state,
-        { ...cashier, branch: "Branch 2" },
+        actorAtLocation(state, cashier, "Branch 2"),
         "0003",
         now,
       ),
-    ).toEqual([]);
+    ).toThrow("location");
     expect(receiptLotsForProduct(state, cashier, "0003")).toEqual([]);
     expect(effectivePrice(state, "0003", "Branch 1")).toBe(price);
     expect(effectiveOffer(state, "0003", "Branch 1")).toEqual(normalOffer);
     const metadata = lookupLastReceipt(state, cashier, "0003");
     expect(metadata).toEqual({ date: "2026-10-12" });
-    expect(
-      scopedClearanceOffers(
-        state,
-        { ...cashier, company_id: "foreign" },
-        "0003",
-        now,
-      ),
-    ).toEqual([]);
+    expect(() =>
+      scopedClearanceOffers(state, foreignActor(state), "0003", now),
+    ).toThrow("company");
   });
   it("clearance is explicit, idempotent, one per product/store, and independent of regular repricing", () => {
     const state = lotState();
@@ -764,27 +818,25 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
     expect(offer.status).toBe("stopped");
     expect(replacement.id).not.toBe(offer.id);
     state.products.find((item) => item.code === "0003")!.selling_price = "3.99";
-    reconcileOffers(state, "0003");
+    reconcileOffers(state, context, "0003");
     expect(replacement.status).toBe("active");
     const before = structuredClone(state);
     expect(() =>
       setLotClearance(
         state,
-        { ...context, role: "floor_worker" },
+        actor(state, {
+          role: "floor_worker",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
         lot.id,
         "1.49",
         now,
       ),
-    ).toThrow("permission");
+    ).toThrow("capability");
     expect(() =>
-      setLotClearance(
-        state,
-        { ...context, company_id: "foreign" },
-        lot.id,
-        "1.49",
-        now,
-      ),
-    ).toThrow("scope");
+      setLotClearance(state, foreignActor(state), lot.id, "1.49", now),
+    ).toThrow("company");
     expect(() => setLotClearance(state, context, lot.id, "9.99", now)).toThrow(
       "price",
     );
@@ -809,11 +861,7 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
       const context = actor(state);
       const offer = setLotClearance(state, context, lot.id, "2.49", now);
       const evidence = structuredClone(offer);
-      const labelActor = {
-        name: context.actor,
-        role: "supervisor" as const,
-        branch: "Branch 1",
-      };
+      const labelActor = actorAtLocation(state, context, "Branch 1");
       addClearanceLabelToWaitlist(
         state,
         product.code,
@@ -829,7 +877,7 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
         prepareLabelPrint(state, "Branch 1", promo, 1, labelActor).pages[0][0],
       ).toMatchObject({ label_lot_id: lot.id });
       product.selling_price = regular;
-      reconcileOffers(state, product.code);
+      reconcileOffers(state, context, product.code);
       expect(offer).toEqual(evidence);
       expect(effectiveClearanceOffers(state, product, "Branch 1", now)).toEqual(
         [],
@@ -844,11 +892,7 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
     const lot = receiptLots(state)[0];
     const context = actor(state);
     setLotClearance(state, context, lot.id, "2.49", now);
-    const labelActor = {
-      name: context.actor,
-      role: "supervisor" as const,
-      branch: "Branch 1",
-    };
+    const labelActor = actorAtLocation(state, context, "Branch 1");
     addLabelsToWaitlist(state, ["0003"], 1, "Branch 1", labelActor);
     addClearanceLabelToWaitlist(
       state,
@@ -877,12 +921,19 @@ describe("C6 recent dates, invoice lots and scoped clearance", () => {
     expect(snapshot.template).toMatchObject({ width: 210, height: 148.5 });
     const before = structuredClone(state);
     expect(() =>
-      addClearanceLabelToWaitlist(state, "0003", lot.id, 1, "Branch 2", {
-        ...labelActor,
-        role: "floor_worker",
-        branch: "Branch 1",
-      }),
-    ).toThrow("branch");
+      addClearanceLabelToWaitlist(
+        state,
+        "0003",
+        lot.id,
+        1,
+        "Branch 2",
+        actor(state, {
+          role: "floor_worker",
+          branch: "Branch 1",
+          allowed_branches: ["Branch 1"],
+        }),
+      ),
+    ).toThrow("location");
     expect(state).toEqual(before);
   });
 });

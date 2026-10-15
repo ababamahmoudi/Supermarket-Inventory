@@ -17,11 +17,9 @@ import {
   setBranchActive,
 } from "./settings";
 import type { Role } from "./types";
-const actor = {
-  role: "supervisor" as Role,
-  company_id: "super-arzon",
-  by: "Settings Supervisor",
-};
+import { authenticatedTestActor } from "./authority-test-fixture";
+const actor = (state: ReturnType<typeof initialState>) =>
+  authenticatedTestActor(state, "manager", { name_en: "Settings Manager" });
 
 describe("company-scoped, reversible Settings", () => {
   it("preserves the supplied pricing and approved prices while company details change", () => {
@@ -35,14 +33,14 @@ describe("company-scoped, reversible Settings", () => {
         name_en: "Arzon Market",
         name_fa: "فروشگاه ارزان",
       },
-      actor,
+      actor(state),
     );
     expect(state.config.company.name).toBe("Arzon Market");
     expect(state.products).toEqual(products);
     expect(state.config.pricing_categories).toEqual(rules);
     expect(state.activity[0]).toMatchObject({
-      by: actor.by,
-      company_id: actor.company_id,
+      by: "Settings Manager",
+      company_id: state.config.company.seed_key,
       branch: "all",
       reversible: true,
       entity_type: "settings",
@@ -68,7 +66,7 @@ describe("company-scoped, reversible Settings", () => {
         name_en: "Downtown",
         name_fa: "مرکز شهر",
       },
-      actor,
+      actor(state),
     );
     expect(configuredBranches(state.config)[0]).toBe("Branch 1");
     expect(branchLabel(state.config, "Branch 1", "en")).toBe("Downtown");
@@ -78,10 +76,10 @@ describe("company-scoped, reversible Settings", () => {
       name_en: "North Market",
       name_fa: "بازار شمال",
     };
-    saveBranchSettings(state, branch, actor);
+    saveBranchSettings(state, branch, actor(state));
     expect(configuredBranches(state.config)).toContain("Branch 4");
     expect(branchLabel(state.config, "Branch 4", "en")).toBe("North Market");
-    setBranchActive(state, "B4", false, actor);
+    setBranchActive(state, "B4", false, actor(state));
     expect(branchIsActive(state.config, "Branch 4")).toBe(false);
     expect(configuredBranches(state.config, true)).toContain("Branch 4");
     expect(newBranch(state.config).code).toBe("B5");
@@ -100,7 +98,7 @@ describe("company-scoped, reversible Settings", () => {
           name_en: state.config.branches[0].name_en,
           name_fa: "شعبه",
         },
-        actor,
+        actor(state),
       ),
     ).toThrow("duplicate");
     expect(state).toEqual(previous);
@@ -108,13 +106,13 @@ describe("company-scoped, reversible Settings", () => {
       saveBranchSettings(
         state,
         { ...state.config.branches[0], id: "unrelated", name_en: "Updated" },
-        actor,
+        actor(state),
       ),
     ).toThrow("branch");
-    setBranchActive(state, "B2", false, actor);
-    setBranchActive(state, "B3", false, actor);
-    setBranchActive(state, "W1", false, actor);
-    expect(() => setBranchActive(state, "B1", false, actor)).toThrow(
+    setBranchActive(state, "B2", false, actor(state));
+    setBranchActive(state, "B3", false, actor(state));
+    setBranchActive(state, "W1", false, actor(state));
+    expect(() => setBranchActive(state, "B1", false, actor(state))).toThrow(
       "last_branch",
     );
     expect(configuredBranches(state.config)).toEqual(["Branch 1"]);
@@ -131,7 +129,7 @@ describe("company-scoped, reversible Settings", () => {
       cost_divisor: "0.50",
       minimum_margin: "0.25",
     });
-    savePricingSettings(state, candidate, actor);
+    savePricingSettings(state, candidate, actor(state));
     expect(activePricingCategories(state.config).at(-1)?.key).toBe("bakery");
     expect(calculatePrice("1.00", "bakery", state.config).selling_price).toBe(
       "1.99",
@@ -147,7 +145,7 @@ describe("company-scoped, reversible Settings", () => {
     archived.pricing_categories.find(
       (category) => category.key === "bakery",
     )!.archived = true;
-    savePricingSettings(state, archived, actor);
+    savePricingSettings(state, archived, actor(state));
     expect(
       activePricingCategories(state.config).some(
         (category) => category.key === "bakery",
@@ -173,7 +171,9 @@ describe("company-scoped, reversible Settings", () => {
       const before = structuredClone(state);
       const candidate = structuredClone(state.config);
       change(candidate);
-      expect(() => savePricingSettings(state, candidate, actor)).toThrow();
+      expect(() =>
+        savePricingSettings(state, candidate, actor(state)),
+      ).toThrow();
       expect(state).toEqual(before);
     }
   });
@@ -195,7 +195,7 @@ describe("company-scoped, reversible Settings", () => {
           },
         ],
       },
-      actor,
+      actor(state),
     );
     expect(state.config.promotions.ai_suggestions_enabled).toBe(false);
     expect(state.config.promotions.price_to_offer).toHaveLength(4);
@@ -210,7 +210,7 @@ describe("company-scoped, reversible Settings", () => {
             { ...state.config.promotions.price_to_offer[0], price: "1.990" },
           ],
         },
-        actor,
+        actor(state),
       ),
     ).toThrow("mapping");
   });
@@ -219,19 +219,19 @@ describe("company-scoped, reversible Settings", () => {
     saveModuleSettings(
       state,
       { ...state.config.modules, returns: false, register: true },
-      actor,
+      actor(state),
     );
     expect(moduleEnabled(state.config, "returns")).toBe(false);
     expect(moduleEnabled(state.config, "products")).toBe(true);
     expect(state.config.modules.register).toBe(false);
     expect(state.returns.length).toBeGreaterThan(0);
   });
-  it.each(["floor_worker", "cashier"] as Role[])(
+  it.each(["branch_supervisor", "floor_worker", "cashier"] as Role[])(
     "blocks every mutation for %s",
     (role) => {
       const state = initialState();
       const before = structuredClone(state);
-      const unauthorized = { ...actor, role };
+      const unauthorized = authenticatedTestActor(state, role);
       for (const mutate of [
         () => saveCompanySettings(state, state.config.company, unauthorized),
         () => saveBranchSettings(state, state.config.branches[0], unauthorized),
@@ -248,7 +248,7 @@ describe("company-scoped, reversible Settings", () => {
     const before = structuredClone(state);
     expect(() =>
       saveCompanySettings(state, state.config.company, {
-        ...actor,
+        ...actor(state),
         company_id: "other-store",
       }),
     ).toThrow("company");
@@ -256,14 +256,14 @@ describe("company-scoped, reversible Settings", () => {
       saveCompanySettings(
         state,
         { ...state.config.company, timezone: "Invalid/Zone" },
-        actor,
+        actor(state),
       ),
     ).toThrow("timezone");
     expect(() =>
       saveCompanySettings(
         state,
         { ...state.config.company, currency: "bad" },
-        actor,
+        actor(state),
       ),
     ).toThrow("currency");
     for (const key of ["primary_color", "dark_primary_color"] as const) {
@@ -277,7 +277,7 @@ describe("company-scoped, reversible Settings", () => {
               [key]: "invalid color",
             },
           },
-          actor,
+          actor(state),
         ),
       ).toThrow("color");
       expect(state).toEqual(before);

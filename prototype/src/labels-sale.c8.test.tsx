@@ -1,14 +1,29 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  configure,
+  act,
+  getConfig,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { demoSeed } from "./config";
+import { configuredDemoPeople } from "./e1-seed-fixtures";
+import {
+  catalogTestActor,
+  foreignCatalogManager,
+} from "./catalog-authority-test-fixture";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import { initialState } from "./e1-bootstrap";
 import i18n from "./i18n";
 import {
   addLabelsToWaitlist,
   branchLabelWaitlist,
   confirmLabelsPrinted,
   prepareLabelPrint,
-  type LabelActor,
 } from "./label-workflow";
 import { labelLayout } from "./labels";
 import { dashboardPriceChanges } from "./dashboard-data";
@@ -18,30 +33,17 @@ import {
   endSale,
   savePriceChange,
   type ChangePriceInput,
-  type SalesContext,
 } from "./sales";
 import { Labels, ShelfLabel } from "./screens/Labels";
-import { DemoProvider, initialState, useDemo } from "./store";
+import { DemoProvider, useDemo } from "./store";
 import type { DemoState } from "./types";
 
+const previousAsyncTimeout = getConfig().asyncUtilTimeout;
 const now = new Date("2026-10-12T16:00:00Z");
-const manager: SalesContext = {
-  company_id: "super-arzon",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  username: "supervisor",
-  branch: "Branch 1",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-};
-const actor: LabelActor = {
-  name: manager.actor,
-  role: manager.role,
-  branch: manager.branch,
-};
 const templateFor = (state: DemoState, style: "regular" | "promo") =>
   state.templates.find(
     (template) =>
-      template.company_id === manager.company_id &&
+      template.company_id === state.config.company.seed_key &&
       template.built_in === style &&
       !template.archived,
   )!;
@@ -60,6 +62,7 @@ const regularInput = (price = "22.99"): ChangePriceInput => ({
 });
 
 beforeEach(async () => {
+  configure({ asyncUtilTimeout: 3000 });
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(now);
   localStorage.clear();
@@ -67,44 +70,119 @@ beforeEach(async () => {
   window.location.hash = "#labels";
   await i18n.changeLanguage("en");
 });
-afterEach(() => vi.useRealTimers());
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  cleanup();
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+  vi.unstubAllGlobals();
+  configure({ asyncUtilTimeout: previousAsyncTimeout });
+  vi.useRealTimers();
+});
 
+let testControlCommandCompleted: Promise<unknown> = Promise.resolve();
+let testControlFailure: { error: unknown } | null = null;
 function TestControls() {
-  const { state, signIn, update } = useDemo();
-  const supervisor = demoSeed.demo_users.find(
-    (user) => user.role === "supervisor",
-  )!;
+  const { state, actor, command } = useDemo();
   return (
     <>
-      <button
-        onClick={() =>
-          expect(signIn(supervisor.username, supervisor.password!)).toBeNull()
-        }
-      >
-        Sign in for label test
-      </button>
-      <button
-        onClick={() =>
-          update((next) =>
-            addLabelsToWaitlist(next, ["0003"], 3, "Branch 1", actor),
-          )
-        }
-      >
-        Add regular copies for label test
-      </button>
+      {actor && (
+        <button
+          onClick={() => {
+            testControlFailure = null;
+            // React does not await an event handler's returned promise. Track
+            // the real SDK command through reconcile/refresh and capture a
+            // rejection immediately; the awaiting test rethrows any failure.
+            testControlCommandCompleted = command(
+              "labels.queue_write",
+              {
+                company_id: state.config.company.seed_key,
+                kind: "location_record",
+                location_ids: ["Branch 1"],
+                mutation: true,
+              },
+              (next, currentActor) =>
+                addLabelsToWaitlist(
+                  next,
+                  ["0003"],
+                  3,
+                  "Branch 1",
+                  currentActor,
+                ),
+            ).then(
+              () => undefined,
+              (error) => {
+                testControlFailure = { error };
+              },
+            );
+          }}
+        >
+          Add regular copies for label test
+        </button>
+      )}
       <output data-testid="waiting-evidence">
         {JSON.stringify(branchLabelWaitlist(state, "Branch 1"))}
       </output>
     </>
   );
 }
-function showLabels() {
-  return render(
-    <DemoProvider>
+async function completeLabelTestControl(
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  await user.click(
+    screen.getByRole("button", { name: "Add regular copies for label test" }),
+  );
+  await act(async () => {
+    await testControlCommandCompleted;
+  });
+  if (testControlFailure) throw testControlFailure.error;
+}
+
+function ReadyLabelScreen() {
+  const { actor } = useDemo();
+  return actor ? (
+    <>
       <TestControls />
       <Labels />
+    </>
+  ) : null;
+}
+async function showLabels() {
+  const fixture = await authenticatedProviderFixture({
+    state: initialState(),
+    role: "manager",
+    actorOptions: {
+      selection: { kind: "location", location_id: "Branch 1" },
+      now,
+    },
+  });
+  fixtures.push(fixture);
+  const result = render(
+    <DemoProvider options={fixture.options}>
+      <ReadyLabelScreen />
     </DemoProvider>,
   );
+  await screen.findByRole("tab", { name: "Products" });
+  expect(fixture.actor.user_id).toBe(
+    configuredDemoPeople().find((person) => person.role === "manager")!.id,
+  );
+  return result;
+}
+function FrozenLabelProof({
+  product,
+  template,
+}: {
+  product: ReturnType<typeof prepareLabelPrint>["products"][number];
+  template: DemoState["templates"][number];
+}) {
+  const { state, actor } = useDemo();
+  return actor ? (
+    <ShelfLabel
+      product={product}
+      state={state}
+      branch="Branch 1"
+      template={template}
+    />
+  ) : null;
 }
 
 describe("C8 label styles follow real sale lifecycle and scoped printing", () => {
@@ -118,14 +196,14 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
         "Branch 1",
         templateFor(state, "promo"),
         1,
-        actor,
+        catalogTestActor(state, "manager"),
         [printed.id],
       );
       const sale = activeSaleAt(state, "0012", "Branch 1", now)!;
       if (transition === "end")
         endSale(
           state,
-          manager,
+          catalogTestActor(state, "manager"),
           sale.id,
           { expected_revision: sale.revision },
           now,
@@ -133,7 +211,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       else
         changeSale(
           state,
-          manager,
+          catalogTestActor(state, "manager"),
           sale.id,
           {
             ...regularInput("17.49"),
@@ -152,8 +230,8 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       expect(newer.preferred_template).toBe(
         transition === "end" ? "regular" : "promo",
       );
-      confirmLabelsPrinted(state, snapshot, actor);
-      confirmLabelsPrinted(state, snapshot, actor);
+      confirmLabelsPrinted(state, snapshot, catalogTestActor(state, "manager"));
+      confirmLabelsPrinted(state, snapshot, catalogTestActor(state, "manager"));
       expect(branchLabelWaitlist(state, "Branch 1")).toEqual([newer]);
       const audit = state.activity.filter(
         (item) => item.action === "Print labels",
@@ -177,10 +255,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
 
   it("keeps Products as the default and automatically selects Promo for a sale-start waitlist", async () => {
     const user = userEvent.setup();
-    const { container } = showLabels();
-    await user.click(
-      screen.getByRole("button", { name: "Sign in for label test" }),
-    );
+    const { container } = await showLabels();
     expect(screen.getByRole("tab", { name: "Products" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -210,12 +285,16 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
 
   it("separates mixed copies, auto-selects each style and retains explicit template/slot choices in its own group", async () => {
     const user = userEvent.setup();
-    const { container } = showLabels();
-    await user.click(
-      screen.getByRole("button", { name: "Sign in for label test" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Add regular copies for label test" }),
+    const { container } = await showLabels();
+    await completeLabelTestControl(user);
+    await waitFor(() =>
+      expect(
+        JSON.parse(screen.getByTestId("waiting-evidence").textContent!),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ product_code: "0003", copies: 3 }),
+        ]),
+      ),
     );
     await user.click(screen.getByRole("tab", { name: /^Waitlist/ }));
     const styles = screen.getByRole("tablist", { name: "Label styles" });
@@ -273,12 +352,16 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
   it("previews and prints only the selected group, then keeps the other group and its copies waiting", async () => {
     const user = userEvent.setup();
     const print = vi.spyOn(window, "print").mockImplementation(() => {});
-    const { container } = showLabels();
-    await user.click(
-      screen.getByRole("button", { name: "Sign in for label test" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Add regular copies for label test" }),
+    const { container } = await showLabels();
+    await completeLabelTestControl(user);
+    await waitFor(() =>
+      expect(
+        JSON.parse(screen.getByTestId("waiting-evidence").textContent!),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ product_code: "0003", copies: 3 }),
+        ]),
+      ),
     );
     await user.click(screen.getByRole("tab", { name: /^Waitlist/ }));
     expect(
@@ -288,20 +371,22 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       container.querySelector(".label-bilingual-preview"),
     ).not.toHaveTextContent("0003");
     await user.click(screen.getByRole("button", { name: "Print labels" }));
-    expect(print).toHaveBeenCalledOnce();
+    await waitFor(() => expect(print).toHaveBeenCalledOnce());
     expect(document.querySelector(".label-print-output")).toHaveTextContent(
       "0012",
     );
     expect(document.querySelector(".label-print-output")).not.toHaveTextContent(
       "0003",
     );
-    const confirmation = screen.getByRole("dialog", {
+    const confirmation = await screen.findByRole("dialog", {
       name: "Did the labels print correctly?",
     });
     await user.click(within(confirmation).getByRole("button", { name: "Yes" }));
-    expect(
-      JSON.parse(screen.getByTestId("waiting-evidence").textContent!),
-    ).toEqual([expect.objectContaining({ product_code: "0003", copies: 3 })]);
+    await waitFor(() =>
+      expect(
+        JSON.parse(screen.getByTestId("waiting-evidence").textContent!),
+      ).toEqual([expect.objectContaining({ product_code: "0003", copies: 3 })]),
+    );
     expect(
       screen.getByRole("combobox", { name: "Saved template" }),
     ).toHaveTextContent("Regular");
@@ -310,7 +395,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
     );
   });
 
-  it("freezes the printed sale and regular prices even after the real regular price changes and the sale ends", () => {
+  it("freezes the printed sale and regular prices even after the real regular price changes and the sale ends", async () => {
     const state = initialState();
     const entry = branchLabelWaitlist(state, "Branch 1").find(
       (item) => item.preferred_template === "promo",
@@ -320,26 +405,49 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       "Branch 1",
       templateFor(state, "promo"),
       1,
-      actor,
+      catalogTestActor(state, "manager"),
       [entry.id],
     );
     expect(snapshot.products[0].label_sale?.sale_price).toBe("16.99");
     expect(snapshot.products[0].label_regular_price).toBe("20.99");
-    savePriceChange(state, manager, regularInput(), now);
+    savePriceChange(
+      state,
+      catalogTestActor(state, "manager"),
+      regularInput(),
+      now,
+    );
     const sale = activeSaleAt(state, "0012", "Branch 1", now)!;
-    endSale(state, manager, sale.id, { expected_revision: sale.revision }, now);
+    endSale(
+      state,
+      catalogTestActor(state, "manager"),
+      sale.id,
+      { expected_revision: sale.revision },
+      now,
+    );
     expect(branchLabelWaitlist(state, "Branch 1")[0].preferred_template).toBe(
       "regular",
     );
+    const fixture = await authenticatedProviderFixture({
+      state,
+      role: "manager",
+      actorOptions: {
+        selection: { kind: "location", location_id: "Branch 1" },
+        now,
+      },
+    });
+    fixtures.push(fixture);
     const { container } = render(
-      <DemoProvider>
-        <ShelfLabel
+      <DemoProvider options={fixture.options}>
+        <FrozenLabelProof
           product={snapshot.products[0]}
-          state={state}
-          branch="Branch 1"
           template={snapshot.template}
         />
       </DemoProvider>,
+    );
+    await waitFor(() =>
+      expect(container.querySelector(".promo-label-price")).toHaveTextContent(
+        "$16.99",
+      ),
     );
     expect(container.querySelector(".promo-label-price")).toHaveTextContent(
       "$16.99",
@@ -354,11 +462,20 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
 
   it("keeps manual Promo overrides and exact Regular geometry while confirmation removes only the scoped snapshot", () => {
     const state = initialState();
-    addLabelsToWaitlist(state, ["0003"], 3, "Branch 1", actor);
-    addLabelsToWaitlist(state, ["0003"], 2, "Branch 2", {
-      ...actor,
-      branch: "Branch 2",
-    });
+    addLabelsToWaitlist(
+      state,
+      ["0003"],
+      3,
+      "Branch 1",
+      catalogTestActor(state, "manager"),
+    );
+    addLabelsToWaitlist(
+      state,
+      ["0003"],
+      2,
+      "Branch 2",
+      catalogTestActor(state, "manager", "Branch 2"),
+    );
     const regularEntry = branchLabelWaitlist(state, "Branch 1").find(
       (item) => item.product_code === "0003",
     )!;
@@ -370,7 +487,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       "Branch 1",
       templateFor(state, "promo"),
       1,
-      actor,
+      catalogTestActor(state, "manager"),
       [regularEntry.id],
     );
     expect(snapshot.products).toHaveLength(3);
@@ -385,13 +502,19 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
         "Branch 1",
         templateFor(state, "promo"),
         1,
-        actor,
+        catalogTestActor(state, "manager"),
         [foreignEntry.id],
       ),
     ).toThrow("permission");
-    addLabelsToWaitlist(state, ["0003"], 2, "Branch 1", actor);
-    confirmLabelsPrinted(state, snapshot, actor);
-    confirmLabelsPrinted(state, snapshot, actor);
+    addLabelsToWaitlist(
+      state,
+      ["0003"],
+      2,
+      "Branch 1",
+      catalogTestActor(state, "manager"),
+    );
+    confirmLabelsPrinted(state, snapshot, catalogTestActor(state, "manager"));
+    confirmLabelsPrinted(state, snapshot, catalogTestActor(state, "manager"));
     expect(branchLabelWaitlist(state, "Branch 1")).toEqual([
       expect.objectContaining({ id: promoEntry.id, copies: 1 }),
       expect.objectContaining({ id: regularEntry.id, copies: 2 }),
@@ -409,8 +532,19 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
 
   it("counts the actual Set regular price action in this week's dashboard changes", () => {
     const state = initialState();
-    savePriceChange(state, manager, regularInput(), now);
-    expect(dashboardPriceChanges(state, manager, "2026-10-12")).toEqual(
+    savePriceChange(
+      state,
+      catalogTestActor(state, "manager"),
+      regularInput(),
+      now,
+    );
+    expect(
+      dashboardPriceChanges(
+        state,
+        catalogTestActor(state, "manager"),
+        "2026-10-12",
+      ),
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           action: "Set regular price",
@@ -419,14 +553,7 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       ]),
     );
     expect(() =>
-      dashboardPriceChanges(
-        state,
-        {
-          ...manager,
-          company_id: "other-company",
-        },
-        "2026-10-12",
-      ),
+      dashboardPriceChanges(state, foreignCatalogManager(state), "2026-10-12"),
     ).toThrow();
   });
 });

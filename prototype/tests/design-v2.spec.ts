@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import {
   chooseOption,
   setLanguage,
@@ -13,6 +14,64 @@ async function userAction(page: Page, action: string) {
   await page.getByRole("menuitem", { name: action, exact: true }).click();
   if (await page.locator(".sidebar.is-open").count())
     await page.keyboard.press("Escape");
+}
+
+const managerRole = configuration.roles.find((role) => role.key === "manager")!;
+const managerNotesHeading = `Notes for ${managerRole.label}`;
+
+async function inviteNewEmployee(page: Page) {
+  // Fresh E1 has exactly six completed demo people. Create the temporary
+  // password case through a real Owner invitation, never an auth flag or seed.
+  await signIn(page, "Owner");
+  await page.goto("/#settings?group=people");
+  await page.getByRole("button", { name: "Add person", exact: true }).click();
+  const editor = page.getByRole("dialog", { name: "Add person", exact: true });
+  await editor
+    .getByLabel("English name", { exact: true })
+    .fill("Demo New Employee");
+  await editor.getByLabel("Username", { exact: true }).fill("newemployee");
+  await editor
+    .getByLabel("Email", { exact: true })
+    .fill("newemployee@example.test");
+  const workerRole = configuration.roles.find(
+    (role) => role.key === "floor_worker",
+  )!;
+  await chooseOption(
+    page,
+    editor.locator("#person-role"),
+    "floor_worker",
+    workerRole.label,
+  );
+  const location = configuration.branches.find(
+    (branch) => branch.id === "Branch 1",
+  )!;
+  await editor
+    .getByRole("checkbox", { name: location.name, exact: true })
+    .check();
+  await editor.getByRole("button", { name: "Save", exact: true }).click();
+  const codeDialog = page.getByRole("dialog", {
+    name: "One-time setup code",
+    exact: true,
+  });
+  await expect(codeDialog).toBeVisible();
+  const setupCode = (
+    await codeDialog.locator(".one-time-setup-code").innerText()
+  ).trim();
+  expect(setupCode).not.toBe("");
+  await codeDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(codeDialog).not.toBeVisible();
+  // Closing and reloading People cannot reveal the successful result again.
+  await page.reload();
+  await expect(page.locator(".people-e1")).toBeVisible();
+  await expect(
+    page.getByRole("row").filter({ hasText: "newemployee" }),
+  ).toHaveCount(1);
+  await expect(codeDialog).not.toBeVisible();
+  await userAction(page, "Sign out");
+  await expect(
+    page.getByRole("heading", { name: "Sign in", exact: true }),
+  ).toBeVisible();
+  return setupCode;
 }
 
 async function expectNoPageOverflow(page: Page) {
@@ -111,9 +170,9 @@ test("keyboard sign-in explains a wrong password and opens the cashier's approve
 test("temporary-password users cannot bypass the new password form through routes or a reload", async ({
   page,
 }) => {
-  await page.goto("/");
+  const setupCode = await inviteNewEmployee(page);
   await page.getByLabel("Username", { exact: true }).fill("newemployee");
-  await page.getByLabel("Password", { exact: true }).fill("temp1234");
+  await page.getByLabel("Password", { exact: true }).fill(setupCode);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   for (const route of ["dashboard", "lookup", "invoices", "payables"]) {
     await page.goto(`/#${route}`);
@@ -157,7 +216,7 @@ test("temporary-password users cannot bypass the new password form through route
   await page.keyboard.press("Escape");
   await userAction(page, "Sign out");
   await page.getByLabel("Username", { exact: true }).fill("newemployee");
-  await page.getByLabel("Password", { exact: true }).fill("temp1234");
+  await page.getByLabel("Password", { exact: true }).fill(setupCode);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("incorrect");
   await page.getByLabel("Password", { exact: true }).fill("NewStorePass2026!");
@@ -269,7 +328,7 @@ test("the topbar product search opens an encoded English or Persian lookup query
     testInfo.project.name === "phone",
     "The phone uses the hero product search.",
   );
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await page.locator("#main-content").focus();
   await page.keyboard.press("/");
   const shellSearch = page.getByLabel("Search all products", { exact: true });
@@ -291,7 +350,7 @@ test("the four redesigned screens use styled controls and borderless cards witho
   await expectStyledControls(page);
   await expectBorderlessCards(page);
   await expectNoPageOverflow(page);
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   for (const route of ["dashboard", "lookup", "invoices"]) {
     await page.goto(`/#${route}`);
     if (route === "invoices") {
@@ -322,7 +381,7 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   expect(
     (await page.locator(".signin-card").boundingBox())!.width,
   ).toBeLessThanOrEqual(420);
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
   await expect(page.locator(".kpi-label")).toHaveText([
     "Approvals waiting",
@@ -412,14 +471,14 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
 test("dashboard approvals and notes have actions that change the actual records and navigate to their lists", async ({
   page,
 }) => {
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   for (const heading of [
     "Approvals queue",
     "Alerts",
     "Recent invoices",
     "Returns",
     "Supplier balances",
-    "Notes for Supervisor",
+    managerNotesHeading,
     "Activity",
   ])
     await expect(
@@ -427,7 +486,7 @@ test("dashboard approvals and notes have actions that change the actual records 
     ).toBeVisible();
   const notes = page.locator(".dashboard-aside .card").filter({
     has: page.getByRole("heading", {
-      name: "Notes for Supervisor",
+      name: managerNotesHeading,
       exact: true,
     }),
   });

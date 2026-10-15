@@ -3,9 +3,23 @@ import { readFile, writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { resetDemo, signIn } from "./helpers";
 import { selectLabelGroup } from "./label-selection";
+import { AUTHORITY_DATABASE_NAME } from "../src/authority-repository";
+import { AUTH_IDENTITY_KEY } from "../src/auth-preferences.e1";
+import sourceConfig from "../../seed/arzon-config.json" with { type: "json" };
+import retainedConfig from "../src/compat/configuration.json" with { type: "json" };
+import {
+  decodeHistoryStorage,
+  encodeHistoryStorage,
+} from "../src/history-storage";
+import type { DemoState } from "../src/types";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 const mainKey = "supermarket-prototype-v1";
+const companyId = { ...retainedConfig.company, ...sourceConfig.company }
+  .seed_key;
 const databaseName = "supermarket-prototype-files-v1";
+const storageFailure =
+  /Browser storage (?:is full or disabled|could not be read or updated)/;
 const digest = (bytes: Buffer | string) =>
   createHash("sha256").update(bytes).digest("hex");
 
@@ -79,9 +93,71 @@ async function makePhoto(page: Page, index: number, target = 3_000_000) {
   };
 }
 async function saved(page: Page) {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key) ?? "null"),
-    mainKey,
+  return readCanonicalBusinessEvidence(page);
+}
+
+/** Test-only first-import surface. Unload all app connections before preparing
+ * actual retained legacy text. FileDB, originals and verified backups stay.
+ * Damaged-History recovery keeps its real authority/person/password/SID and
+ * removes only this company's business record; other first-import cases remove
+ * only the authority database and sign in normally after bootstrap.
+ */
+async function freshMigrationSurface(page: Page, retainAuthority = false) {
+  const origin = new URL(page.url()).origin;
+  const setup = `${origin}/__e1-migration-setup`;
+  await page.route(setup, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<!doctype html><title>Retained migration setup</title>",
+    }),
+  );
+  await page.goto(setup);
+  await page.evaluate(
+    ({ databaseName, identityKey, companyId, retainAuthority }) =>
+      new Promise<void>((resolve, reject) => {
+        if (!retainAuthority) {
+          const request = indexedDB.deleteDatabase(databaseName);
+          request.onerror = () => reject(request.error);
+          request.onblocked = () =>
+            reject(new Error("The app has an open authority connection."));
+          request.onsuccess = () => {
+            sessionStorage.removeItem(identityKey);
+            resolve();
+          };
+          return;
+        }
+        const request = indexedDB.open(databaseName);
+        request.onupgradeneeded = () => {
+          request.transaction?.abort();
+          reject(new Error("The real authority directory must already exist."));
+        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction("business", "readwrite");
+          transaction.objectStore("business").delete(companyId);
+          transaction.oncomplete = () => {
+            database.close();
+            resolve();
+          };
+          transaction.onabort = transaction.onerror = () => {
+            database.close();
+            reject(
+              transaction.error ??
+                new Error(
+                  "Cannot prepare the deliberate first business import.",
+                ),
+            );
+          };
+        };
+      }),
+    {
+      databaseName: AUTHORITY_DATABASE_NAME,
+      identityKey: AUTH_IDENTITY_KEY,
+      companyId: companyId,
+      retainAuthority,
+    },
   );
 }
 async function waitForSavedFiles(page: Page) {
@@ -161,9 +237,112 @@ async function textBytes(page: Page) {
     ),
   );
 }
+
+async function retainedRawBackups(page: Page) {
+  return page.evaluate(async (databaseName) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(databaseName);
+      request.onupgradeneeded = () => {
+        request.transaction?.abort();
+        reject(
+          new Error("Backup evidence must not initialize a file database."),
+        );
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const records = await new Promise<
+        { company_id: string; storage_key: string; raw: Blob; sha256: string }[]
+      >((resolve, reject) => {
+        const request = database
+          .transaction("backups", "readonly")
+          .objectStore("backups")
+          .getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return Promise.all(
+        records.map(async (record) => ({
+          company_id: record.company_id,
+          storage_key: record.storage_key,
+          raw: await record.raw.text(),
+          sha256: record.sha256,
+        })),
+      );
+    } finally {
+      database.close();
+    }
+  }, databaseName);
+}
+
+async function canonicalBusinessExists(page: Page) {
+  return page.evaluate(
+    ({ databaseName, companyId }) =>
+      new Promise<boolean>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+        request.onupgradeneeded = () => {
+          request.transaction?.abort();
+          reject(new Error("Evidence must not create a canonical database."));
+        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction("business", "readonly");
+          const read = transaction.objectStore("business").get(companyId);
+          let exists = false;
+          read.onsuccess = () => {
+            exists = read.result !== undefined;
+          };
+          transaction.oncomplete = () => {
+            database.close();
+            resolve(exists);
+          };
+          transaction.onabort = transaction.onerror = () => {
+            database.close();
+            reject(
+              transaction.error ??
+                new Error("Cannot inspect canonical publication."),
+            );
+          };
+        };
+      }),
+    {
+      databaseName: AUTHORITY_DATABASE_NAME,
+      companyId: companyId,
+    },
+  );
+}
 async function openManual(page: Page) {
+  const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  // New and Manual entry are two real persisted commands. Do not choose the
+  // old invoice's entry method while New is still committing its replacement.
+  await expect
+    .poll(async () => (await saved(page)).invoice.id)
+    .not.toBe(previousInvoiceId);
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  // A retained large original is still reconciling when its reference appears.
+  // The real entry barrier releases only when route and projection agree.
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousInvoiceId &&
+        current.entry_mode === "manual" &&
+        current.status === "draft"
+      );
+    })
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
 }
 
 test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews", async ({
@@ -198,7 +377,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
     const invoice = (await saved(page)).invoice;
     uploaded.push({
       id: invoice.id,
-      reference: invoice.file_data,
+      reference: invoice.file_data!,
       sha256: photo.sha256,
       size: photo.size,
       name: photo.name,
@@ -213,9 +392,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
         image.evaluate((element: HTMLImageElement) => element.naturalWidth),
       )
       .toBe(2000);
-    await expect(
-      page.getByText(/Browser storage is full or disabled/),
-    ).toHaveCount(0);
+    await expect(page.getByText(storageFailure)).toHaveCount(0);
   }
   expect(new Set(uploaded.map((file) => file.sha256)).size).toBe(20);
   expect(new Set(uploaded.map((file) => file.reference)).size).toBe(20);
@@ -235,31 +412,33 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   }
   const bytesBefore = await textBytes(page);
   if (bytesBefore >= 5 * 1024 * 1024) {
-    const profile = await page.evaluate((mainKey) => {
-      const state = JSON.parse(localStorage.getItem(mainKey)!);
-      const fields = Object.entries(state)
-        .map(([key, value]) => ({
+    const profile = await page.evaluate(
+      (state) => {
+        const fields = Object.entries(state)
+          .map(([key, value]) => ({
+            key,
+            bytes: JSON.stringify(value).length * 2,
+          }))
+          .sort((a, b) => b.bytes - a.bytes);
+        const keys = Array.from({ length: localStorage.length }, (_, index) =>
+          localStorage.key(index)!,
+        ).map((key) => ({
           key,
-          bytes: JSON.stringify(value).length * 2,
-        }))
-        .sort((a, b) => b.bytes - a.bytes);
-      const keys = Array.from({ length: localStorage.length }, (_, index) =>
-        localStorage.key(index)!,
-      ).map((key) => ({
-        key,
-        bytes: (key.length + localStorage.getItem(key)!.length) * 2,
-      }));
-      const actions: Record<string, number> = {};
-      for (const entry of state.activity)
-        actions[entry.action] =
-          (actions[entry.action] ?? 0) + JSON.stringify(entry).length * 2;
-      return {
-        keys,
-        fields,
-        activity_count: state.activity.length,
-        action_bytes: actions,
-      };
-    }, mainKey);
+          bytes: (key.length + localStorage.getItem(key)!.length) * 2,
+        }));
+        const actions: Record<string, number> = {};
+        for (const entry of state.activity)
+          actions[entry.action] =
+            (actions[entry.action] ?? 0) + JSON.stringify(entry).length * 2;
+        return {
+          keys,
+          fields,
+          activity_count: state.activity.length,
+          action_bytes: actions,
+        };
+      },
+      await saved(page),
+    );
     await testInfo.attach("Text storage size profile", {
       body: JSON.stringify(profile, null, 2),
       contentType: "application/json",
@@ -274,11 +453,11 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   );
   expect(after).toEqual(before);
   const state = await saved(page);
-  const allInvoices = [...state.invoices, state.invoice];
+  const allInvoices = [...state.invoices!, state.invoice];
   for (const file of uploaded)
     expect(
       allInvoices.some(
-        (invoice: { id: string; file_data: string }) =>
+        (invoice: { id: string; file_data?: string }) =>
           invoice.id === file.id && invoice.file_data === file.reference,
       ),
     ).toBe(true);
@@ -301,10 +480,29 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   expect(download.suggestedFilename()).toBe(uploaded.at(-1)!.name);
   // The dictionary must hydrate real History actions and their conflict guards
   // before a user can revert after refresh; merely retaining files is not enough.
-  expect(state.prototype_history_dictionary?.version).toBe(1);
+  // E1 persists the real decoded History in canonical IDB. Keep the original
+  // dictionary losslessness oracle against that same actual History, then
+  // exercise its real retained reversal after reload below.
+  const encoded = encodeHistoryStorage(state) as DemoState & {
+    prototype_history_dictionary?: { version: number };
+  };
+  // The codec's public contract retains small/nonprofitable histories exactly.
+  // E1's scoped command snapshots no longer guarantee a repeated large block.
+  if (Object.hasOwn(encoded, "prototype_history_dictionary")) {
+    expect(encoded.prototype_history_dictionary?.version).toBe(1);
+    expect(JSON.stringify(encoded).length).toBeLessThan(
+      JSON.stringify(state).length,
+    );
+  } else {
+    expect(encoded).toBe(state);
+  }
+  expect(decodeHistoryStorage(encoded)).toEqual(state);
+  expect(JSON.stringify(encoded).length).toBeLessThanOrEqual(
+    JSON.stringify(state).length,
+  );
   const originalName = state.products.find(
     (product: { code: string }) => product.code === "0006",
-  ).name_en;
+  )!.name_en;
   await page.goto("/#lookup");
   await page
     .getByRole("combobox", { name: "Search products", exact: true })
@@ -325,7 +523,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       async () =>
         (await saved(page)).products.find(
           (product: { code: string }) => product.code === "0006",
-        ).name_en,
+        )!.name_en,
     )
     .toContain("storage reload proof");
   await page.reload();
@@ -336,6 +534,9 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       has: page.getByRole("button", { name: "Revert", exact: true }),
     })
     .first();
+  // A negative isVisible check also matches History before its rows mount.
+  // Observe the actual retained Revert row before deciding whether to expand.
+  await expect(row).toBeVisible();
   if (!(await row.getByText("Save product", { exact: true }).isVisible())) {
     const details = row.getByRole("button", {
       name: "Show details",
@@ -359,7 +560,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       async () =>
         (await saved(page)).products.find(
           (product: { code: string }) => product.code === "0006",
-        ).name_en,
+        )!.name_en,
     )
     .toBe(originalName);
   expect(
@@ -447,7 +648,7 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
   await expect
     .poll(async () => (await saved(page))?.config.company.logo_data)
     .toMatch(new RegExp(`^idb-file:v1:.*:${photo.sha256}$`));
-  const reference = (await saved(page)).config.company.logo_data;
+  const reference = (await saved(page)).config.company.logo_data!;
   await page.goto("/#labels");
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "New template", exact: true }).click();
@@ -467,7 +668,7 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
     .click();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
   await selectLabelGroup(page, "regular", "Template 1");
-  const promoBefore = (await saved(page)).label_waitlist.filter(
+  const promoBefore = (await saved(page)).label_waitlist!.filter(
     (item: { preferred_template?: string }) =>
       item.preferred_template === "promo",
   );
@@ -494,7 +695,7 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
     expect(image.source).toBe(true);
   }
   expect(
-    (await saved(page)).label_waitlist.filter(
+    (await saved(page)).label_waitlist!.filter(
       (item: { preferred_template?: string }) =>
         item.preferred_template === "promo",
     ),
@@ -528,23 +729,49 @@ test("C6 retains malformed History text until an explicit Reset, verifying its r
 }, testInfo) => {
   await signIn(page, "Supervisor");
   await waitForSavedFiles(page);
-  const malformed = await page.evaluate((mainKey) => {
-    const state = JSON.parse(localStorage.getItem(mainKey)!);
-    state.prototype_history_dictionary = {
+  await page.clock.setFixedTime(
+    new Date(await page.evaluate(() => Date.now())),
+  );
+  const before = await saved(page);
+  const malformed = JSON.stringify({
+    ...encodeHistoryStorage(before),
+    prototype_history_dictionary: {
       version: 1,
       blocks: [],
       bindings: [],
       integrity: "deliberate-corruption-fixture",
-    };
-    const raw = JSON.stringify(state);
-    localStorage.setItem(mainKey, raw);
-    return raw;
-  }, mainKey);
+    },
+  });
+  // A healthy canonical database must ignore a stale damaged legacy key.
+  await page.evaluate(
+    ({ mainKey, raw }) => localStorage.setItem(mainKey, raw),
+    { mainKey, raw: malformed },
+  );
   await page.reload();
-  await expect(page.getByText(/Saved history could not be read/)).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(page.getByText(/Saved history could not be read/)).toHaveCount(
+    0,
+  );
+  expect(await saved(page)).toEqual(before);
   expect(await page.evaluate((key) => localStorage.getItem(key), mainKey)).toBe(
     malformed,
   );
+  // Deliberately missing business state now exercises actual first-import
+  // quarantine while the genuine Manager directory/password/session survives.
+  await freshMigrationSurface(page, true);
+  await page.goto("/#lookup");
+  await expect(page.getByText(/Saved history could not be read/)).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
+  expect(await page.evaluate((key) => localStorage.getItem(key), mainKey)).toBe(
+    malformed,
+  );
+  const beforeResetBackups = await retainedRawBackups(page);
+  expect(beforeResetBackups).toContainEqual({
+    company_id: companyId,
+    storage_key: mainKey,
+    raw: malformed,
+    sha256: digest(malformed),
+  });
   // A valid in-memory action must not overwrite the unreadable saved history.
   await page.goto("/#lookup");
   await page
@@ -638,23 +865,24 @@ test("C6 migrates a near-full 5MiB legacy text store with verified raw backups a
   await waitForSavedFiles(page);
   const photo = await makePhoto(page, 77, 400_000);
   const inline = `data:image/jpeg;base64,${photo.base64}`;
+  const legacyState = await saved(page);
+  legacyState.invoice.file_data = inline;
+  legacyState.invoice.file_name = "legacy-immutable-original.jpg";
+  legacyState.invoice.file_type = "image/jpeg";
+  legacyState.invoice.legacy_demo_original = {
+    file_name: "legacy-preserved.jpg",
+    file_type: "image/jpeg",
+    file_data: inline,
+  };
+  legacyState.config.company.logo_data = inline;
+  const raw = JSON.stringify(encodeHistoryStorage(legacyState));
+  const legacyBackup = structuredClone(legacyState);
+  delete legacyBackup.invoice.legacy_demo_original;
+  delete legacyBackup.config.company.logo_data;
+  const backupRaw = JSON.stringify(encodeHistoryStorage(legacyBackup));
+  await freshMigrationSurface(page);
   const prepared = await page.evaluate(
-    ({ inline, mainKey }) => {
-      const state = JSON.parse(localStorage.getItem(mainKey)!);
-      state.invoice.file_data = inline;
-      state.invoice.file_name = "legacy-immutable-original.jpg";
-      state.invoice.file_type = "image/jpeg";
-      state.invoice.legacy_demo_original = {
-        file_name: "legacy-preserved.jpg",
-        file_type: "image/jpeg",
-        file_data: inline,
-      };
-      state.config.company.logo_data = inline;
-      const raw = JSON.stringify(state);
-      const backup = structuredClone(state);
-      delete backup.invoice.legacy_demo_original;
-      delete backup.config.company.logo_data;
-      const backupRaw = JSON.stringify(backup);
+    ({ raw, backupRaw, mainKey }) => {
       localStorage.setItem(mainKey, raw);
       localStorage.setItem("supermarket-prototype-before-c4", backupRaw);
       const used = Array.from({ length: localStorage.length }, (_, index) =>
@@ -675,7 +903,7 @@ test("C6 migrates a near-full 5MiB legacy text store with verified raw backups a
       localStorage.setItem(fillerKey, "x".repeat(padding));
       return { raw, backupRaw, usedBefore: 5 * 1024 * 1024 - 4096 };
     },
-    { inline, mainKey },
+    { raw, backupRaw, mainKey },
   );
   // Safari's relevant text quota is stricter than Chromium's. Enforce 5MiB on
   // actual Storage writes while using the browser's real IndexedDB/Blobs.
@@ -696,15 +924,18 @@ test("C6 migrates a near-full 5MiB legacy text store with verified raw backups a
       return original.call(this, key, value);
     };
   });
-  await page.reload();
+  await signIn(page, "Manager");
   await waitForSavedFiles(page);
   const state = await saved(page);
+  expect(await page.evaluate((key) => localStorage.getItem(key), mainKey)).toBe(
+    prepared.raw,
+  );
   expect(state.invoice.file_data).toMatch(/^idb-file:v1:/);
-  expect(state.invoice.legacy_demo_original.file_data).toBe(
+  expect(state.invoice.legacy_demo_original!.file_data).toBe(
     state.invoice.file_data,
   );
   expect(state.config.company.logo_data).toBe(state.invoice.file_data);
-  const files = await retainedFiles(page, [state.invoice.file_data]);
+  const files = await retainedFiles(page, [state.invoice.file_data!]);
   expect(files[0].hash).toBe(photo.sha256);
   expect(files[0].size).toBe(photo.size);
   const backups = await page.evaluate(async (databaseName) => {
@@ -750,13 +981,11 @@ test("C6 migrates a near-full 5MiB legacy text store with verified raw backups a
   for (const backup of backups) expect(digest(backup.raw)).toBe(backup.digest);
   const text = await textBytes(page);
   expect(text).toBeLessThan(5 * 1024 * 1024);
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toHaveCount(0);
+  await expect(page.getByText(storageFailure)).toHaveCount(0);
   await page.reload();
   await waitForSavedFiles(page);
   expect((await saved(page)).invoice.file_data).toBe(state.invoice.file_data);
-  expect((await retainedFiles(page, [state.invoice.file_data]))[0].hash).toBe(
+  expect((await retainedFiles(page, [state.invoice.file_data!]))[0].hash).toBe(
     photo.sha256,
   );
   await testInfo.attach("Strict 5MiB migration and verified restore evidence", {
@@ -783,26 +1012,32 @@ test("C6 keeps legacy inline evidence intact when the file database is disabled"
 }) => {
   await signIn(page, "Supervisor");
   await waitForSavedFiles(page);
-  const before = await page.evaluate((mainKey) => {
-    const state = JSON.parse(localStorage.getItem(mainKey)!);
-    state.invoice.file_data =
-      "data:application/pdf;base64,JVBERi0xLjcKJUZpY3Rpb25hbCBkZW1v";
-    state.invoice.file_name = "retained-on-failure.pdf";
-    state.invoice.file_type = "application/pdf";
-    const raw = JSON.stringify(state);
-    localStorage.setItem(mainKey, raw);
-    return raw;
-  }, mainKey);
-  await page.addInitScript(() => {
-    indexedDB.open = () => {
-      throw new DOMException("File database disabled", "SecurityError");
+  const legacyState = await saved(page);
+  legacyState.invoice.file_data =
+    "data:application/pdf;base64,JVBERi0xLjcKJUZpY3Rpb25hbCBkZW1v";
+  legacyState.invoice.file_name = "retained-on-failure.pdf";
+  legacyState.invoice.file_type = "application/pdf";
+  const before = JSON.stringify(encodeHistoryStorage(legacyState));
+  await freshMigrationSurface(page);
+  await page.evaluate(
+    ({ mainKey, raw }) => localStorage.setItem(mainKey, raw),
+    { mainKey, raw: before },
+  );
+  await page.addInitScript((fileDatabaseName) => {
+    const originalOpen = indexedDB.open.bind(indexedDB);
+    indexedDB.open = (name, version) => {
+      if (name === fileDatabaseName)
+        throw new DOMException("File database disabled", "SecurityError");
+      return version === undefined
+        ? originalOpen(name)
+        : originalOpen(name, version);
     };
-  });
-  await page.reload();
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toBeVisible();
+  }, databaseName);
+  await page.goto("/#invoices");
+  await expect(page.getByText(storageFailure)).toBeVisible();
   expect(await page.evaluate((key) => localStorage.getItem(key), mainKey)).toBe(
     before,
   );
+  expect(await canonicalBusinessExists(page)).toBe(false);
+  await expect(page.locator(".topbar")).toHaveCount(0);
 });

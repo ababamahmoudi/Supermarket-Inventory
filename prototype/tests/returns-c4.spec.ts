@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, signIn, visitPage } from "./helpers";
 
@@ -6,8 +7,8 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#return?id=demo-return-1");
-  const ledgerBefore = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).ledger,
+  const ledgerBefore = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).ledger,
   );
   await page
     .locator(".return-header-card")
@@ -34,17 +35,17 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
     .getByRole("button", { name: "Record pickup", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText("retained Return memo");
-  const memo = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-      .returns.find((record: { id: string }) => record.id === "demo-return-1")
-      .pickup_memos.at(-1),
+  const memo = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!)
+        .returns.find((record: { id: string }) => record.id === "demo-return-1")
+        .pickup_memos.at(-1),
   );
   expect(memo.reference).toMatch(/^RM-\d{4,}$/);
   expect(memo.signed_evidence_reference).toBe("SIGNED-C4-BROWSER-001");
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).ledger,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).ledger,
     ),
   ).toEqual(ledgerBefore);
   await page.reload();

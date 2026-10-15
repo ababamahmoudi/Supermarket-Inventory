@@ -1,16 +1,20 @@
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+} from "./shared-ui-provider-test-fixture";
 import { useState, type ReactNode } from "react";
 import {
   act,
   fireEvent,
-  render,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import i18n from "./i18n";
-import { DemoProvider } from "./store";
 import {
   Money,
   UnitSize,
@@ -41,17 +45,14 @@ import {
   Switch,
   Tabs,
 } from "./ui";
-
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   await i18n.changeLanguage("en");
 });
-
-function show(children: ReactNode) {
-  return render(<DemoProvider>{children}</DemoProvider>);
+async function show(children: ReactNode) {
+  return await render(<DemoProvider>{children}</DemoProvider>);
 }
-
 it.each([
   ["Waiting for pickup", "info"],
   ["در انتظار جمع‌آوری", "info"],
@@ -72,20 +73,18 @@ it.each([
   ["لغوشده", "neutral"],
 ])(
   "gives %s its canonical tone despite a conflicting legacy tone",
-  (label, tone) => {
-    show(<Badge tone="danger">{label}</Badge>);
+  async (label, tone) => {
+    await show(<Badge tone="danger">{label}</Badge>);
     expect(screen.getByText(label)).toHaveClass(tone);
     expect(screen.getByText(label)).not.toHaveClass("danger");
   },
 );
-
 const statuses = [
   { value: "draft", label: "Draft" },
   { value: "blocked", label: "Blocked", disabled: true },
   { value: "posted", label: "Posted" },
   { value: "cancelled", label: "Cancelled" },
 ];
-
 function StatusSelect({ disabled = false }: { disabled?: boolean }) {
   const [value, setValue] = useState("draft");
   return (
@@ -102,7 +101,6 @@ function StatusSelect({ disabled = false }: { disabled?: boolean }) {
     </>
   );
 }
-
 function InvoiceStatusDialog() {
   const [open, setOpen] = useState(true);
   const [value, setValue] = useState("draft");
@@ -122,16 +120,14 @@ function InvoiceStatusDialog() {
     </ConfirmDialog>
   );
 }
-
 describe("styled Select", () => {
   it("labels the custom combobox and skips disabled options with the keyboard", async () => {
     const user = userEvent.setup();
-    const view = show(<StatusSelect />);
+    const view = await show(<StatusSelect />);
     const select = screen.getByRole("combobox", { name: "Invoice status" });
     expect(view.container.querySelector("select")).toBeNull();
     expect(select).toHaveTextContent("Draft");
     expect(select).toHaveAttribute("aria-expanded", "false");
-
     await user.tab();
     expect(select).toHaveFocus();
     await user.keyboard("{Enter}");
@@ -145,17 +141,15 @@ describe("styled Select", () => {
     expect(select).toHaveTextContent("Posted");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(select).toHaveFocus();
-
     await user.keyboard("{ArrowDown}{End}{Enter}");
     expect(screen.getByTestId("selected-status")).toHaveTextContent(
       "cancelled",
     );
   });
-
   it("searches lists with more than eight options and keeps the value on Escape", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    show(
+    await show(
       <Select
         aria-label="Supplier"
         value="supplier-1"
@@ -175,7 +169,6 @@ describe("styled Select", () => {
     await user.keyboard("{ArrowDown}{Enter}");
     expect(onChange).toHaveBeenCalledWith("supplier-9");
     expect(select).toHaveFocus();
-
     await user.click(select);
     await user.type(screen.getByRole("textbox"), "Missing supplier");
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
@@ -185,20 +178,18 @@ describe("styled Select", () => {
     expect(select).toHaveFocus();
     expect(onChange).toHaveBeenCalledTimes(1);
   });
-
   it("does not open or change a disabled selection", async () => {
     const user = userEvent.setup();
-    show(<StatusSelect disabled />);
+    await show(<StatusSelect disabled />);
     const select = screen.getByRole("combobox", { name: "Invoice status" });
     expect(select).toBeDisabled();
     await user.click(select);
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(screen.getByTestId("selected-status")).toHaveTextContent("draft");
   });
-
   it("preserves a supplied accessible label and description alongside field help", async () => {
     const user = userEvent.setup();
-    show(
+    await show(
       <>
         <p id="supplier-policy">Choose a confirmed supplier.</p>
         <Field label="Supplier" hint="Search by supplier name.">
@@ -221,10 +212,9 @@ describe("styled Select", () => {
       screen.getByRole("listbox", { name: "Invoice supplier" }),
     ).toBeVisible();
   });
-
   it("keeps its options inside a modal dialog and restores focus on Escape", async () => {
     const user = userEvent.setup();
-    show(<InvoiceStatusDialog />);
+    await show(<InvoiceStatusDialog />);
     const dialog = screen.getByRole("dialog", {
       name: "Review invoice status",
     });
@@ -238,7 +228,6 @@ describe("styled Select", () => {
     await user.click(within(listbox).getByRole("option", { name: "Posted" }));
     expect(screen.getByTestId("dialog-status")).toHaveTextContent("posted");
     expect(select).toHaveTextContent("Posted");
-
     await user.click(select);
     expect(
       within(dialog).getByRole("listbox", { name: "Invoice status" }),
@@ -250,7 +239,6 @@ describe("styled Select", () => {
     expect(screen.getByTestId("dialog-status")).toHaveTextContent("posted");
   });
 });
-
 function MixAndMatch({ disabled = false }: { disabled?: boolean }) {
   const [checked, setChecked] = useState(false);
   return (
@@ -259,11 +247,10 @@ function MixAndMatch({ disabled = false }: { disabled?: boolean }) {
     </Checkbox>
   );
 }
-
 describe("styled Checkbox", () => {
   it("exposes its checked state and toggles using Space and its label", async () => {
     const user = userEvent.setup();
-    const view = show(<MixAndMatch />);
+    const view = await show(<MixAndMatch />);
     const checkbox = screen.getByRole("checkbox", { name: "Mix and match" });
     expect(view.container.querySelector('input[type="checkbox"]')).toBeNull();
     expect(checkbox).not.toBeChecked();
@@ -274,10 +261,9 @@ describe("styled Checkbox", () => {
     await user.click(screen.getByText("Mix and match"));
     expect(checkbox).not.toBeChecked();
   });
-
   it("keeps disabled checkboxes unchanged", async () => {
     const user = userEvent.setup();
-    show(<MixAndMatch disabled />);
+    await show(<MixAndMatch disabled />);
     const checkbox = screen.getByRole("checkbox", { name: "Mix and match" });
     expect(checkbox).toBeDisabled();
     await user.click(checkbox);
@@ -285,7 +271,6 @@ describe("styled Checkbox", () => {
     expect(checkbox).not.toBeChecked();
   });
 });
-
 function ApprovalScope() {
   const [scope, setScope] = useState("all");
   return (
@@ -305,11 +290,10 @@ function ApprovalScope() {
     </div>
   );
 }
-
 describe("styled Radio", () => {
   it("changes one radio at a time with arrow keys and skips disabled choices", async () => {
     const user = userEvent.setup();
-    const view = show(<ApprovalScope />);
+    const view = await show(<ApprovalScope />);
     const group = within(
       screen.getByRole("radiogroup", { name: "Approval scope" }),
     );
@@ -327,7 +311,6 @@ describe("styled Radio", () => {
     expect(
       group.getByRole("radio", { name: "Archived branch" }),
     ).not.toBeChecked();
-
     await user.keyboard("{ArrowLeft}");
     expect(all).toHaveFocus();
     expect(all).toBeChecked();
@@ -340,7 +323,6 @@ describe("styled Radio", () => {
     expect(secondBranch).not.toBeChecked();
   });
 });
-
 function RememberDevice() {
   const [checked, setChecked] = useState(false);
   return (
@@ -349,12 +331,11 @@ function RememberDevice() {
     </Switch>
   );
 }
-
 describe("styled Switch", () => {
   it("toggles on Space while a disabled switch remains unchanged", async () => {
     const user = userEvent.setup();
     const onDisabledChange = vi.fn();
-    show(
+    await show(
       <>
         <RememberDevice />
         <Switch disabled checked onChange={onDisabledChange}>
@@ -380,7 +361,6 @@ describe("styled Switch", () => {
     expect(onDisabledChange).not.toHaveBeenCalled();
   });
 });
-
 function SupplierTabs({ rtl = false }: { rtl?: boolean }) {
   const [tab, setTab] = useState("overview");
   return (
@@ -399,11 +379,10 @@ function SupplierTabs({ rtl = false }: { rtl?: boolean }) {
     </div>
   );
 }
-
 describe("styled Tabs", () => {
   it("moves focus and selection together, skipping disabled tabs", async () => {
     const user = userEvent.setup();
-    show(<SupplierTabs />);
+    await show(<SupplierTabs />);
     const tabs = within(
       screen.getByRole("tablist", { name: "Supplier details" }),
     );
@@ -429,10 +408,9 @@ describe("styled Tabs", () => {
       "false",
     );
   });
-
   it("mirrors arrow navigation within a Persian right-to-left layout", async () => {
     const user = userEvent.setup();
-    show(<SupplierTabs rtl />);
+    await show(<SupplierTabs rtl />);
     await user.tab();
     await user.keyboard("{ArrowLeft}");
     const invoices = screen.getByRole("tab", { name: "Invoices" });
@@ -446,10 +424,9 @@ describe("styled Tabs", () => {
     );
   });
 });
-
 describe("status badges", () => {
-  it("keeps fixed status meanings in English and Persian despite caller tones", () => {
-    show(
+  it("keeps fixed status meanings in English and Persian despite caller tones", async () => {
+    await show(
       <>
         <Badge tone="approved">Waiting for supplier</Badge>
         <Badge tone="danger">ثبت‌شده</Badge>
@@ -463,7 +440,6 @@ describe("status badges", () => {
     expect(screen.getByText("پیش‌نویس")).toHaveClass("neutral");
   });
 });
-
 function InvoiceDate() {
   const [value, setValue] = useState("2026-10-15");
   return (
@@ -480,11 +456,10 @@ function InvoiceDate() {
     </>
   );
 }
-
 describe("styled DateField", () => {
   it("uses a constrained calendar and selects a date with arrow keys", async () => {
     const user = userEvent.setup();
-    const view = show(<InvoiceDate />);
+    const view = await show(<InvoiceDate />);
     const trigger = screen.getByRole("button", { name: "Invoice date" });
     expect(view.container.querySelector('input[type="date"]')).toBeNull();
     expect(trigger).toHaveTextContent("2026-10-15");
@@ -510,10 +485,9 @@ describe("styled DateField", () => {
     ).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
-
   it("closes the calendar on Escape without changing the date", async () => {
     const user = userEvent.setup();
-    show(<InvoiceDate />);
+    await show(<InvoiceDate />);
     const trigger = screen.getByRole("button", { name: "Invoice date" });
     await user.click(trigger);
     await waitFor(() =>
@@ -527,7 +501,6 @@ describe("styled DateField", () => {
     expect(trigger).toHaveFocus();
   });
 });
-
 function UnitCost() {
   const [value, setValue] = useState("1.80");
   return (
@@ -536,11 +509,10 @@ function UnitCost() {
     </Field>
   );
 }
-
 describe("styled NumberField", () => {
   it("allows decimal text entry without a native number stepper", async () => {
     const user = userEvent.setup();
-    const view = show(<UnitCost />);
+    const view = await show(<UnitCost />);
     const input = screen.getByRole("textbox", { name: "Unit cost before tax" });
     expect(input).toHaveAttribute("type", "text");
     expect(input).toHaveAttribute("inputmode", "decimal");
@@ -551,7 +523,6 @@ describe("styled NumberField", () => {
     expect(input).toHaveValue("2.35");
   });
 });
-
 function InvoiceUpload() {
   const [file, setFile] = useState<File | null>(null);
   return (
@@ -568,11 +539,10 @@ function InvoiceUpload() {
     </>
   );
 }
-
 describe("styled Dropzone", () => {
   it("uses a hidden file chooser and allows removing an uploaded document", async () => {
     const user = userEvent.setup();
-    const view = show(<InvoiceUpload />);
+    const view = await show(<InvoiceUpload />);
     const fileInput =
       view.container.querySelector<HTMLInputElement>('input[type="file"]');
     expect(fileInput).not.toBeNull();
@@ -592,9 +562,8 @@ describe("styled Dropzone", () => {
     expect(screen.getByTestId("invoice-file")).toHaveTextContent("No invoice");
     expect(screen.queryByText("invoice.pdf")).not.toBeInTheDocument();
   });
-
-  it("accepts a document dropped onto the upload control", () => {
-    show(<InvoiceUpload />);
+  it("accepts a document dropped onto the upload control", async () => {
+    await show(<InvoiceUpload />);
     const file = new File(["fictional invoice photo"], "invoice.jpg", {
       type: "image/jpeg",
     });
@@ -604,12 +573,11 @@ describe("styled Dropzone", () => {
     expect(screen.getByTestId("invoice-file")).toHaveTextContent("invoice.jpg");
   });
 });
-
 describe("styled Menu", () => {
   it("keeps icon-menu text accessible, preserves rich badges and restores keyboard focus", async () => {
     const user = userEvent.setup();
     const action = vi.fn();
-    show(
+    await show(
       <>
         <Menu
           iconOnly
@@ -649,7 +617,7 @@ describe("styled Menu", () => {
   it("moves among enabled actions and restores trigger focus after Escape", async () => {
     const user = userEvent.setup();
     const onLock = vi.fn();
-    show(
+    await show(
       <Menu label="User menu">
         <MenuItem onClick={onLock}>Lock</MenuItem>
         <MenuItem disabled onClick={vi.fn()}>
@@ -673,7 +641,6 @@ describe("styled Menu", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
     expect(onLock).not.toHaveBeenCalled();
-
     await user.keyboard("{ArrowDown}");
     await waitFor(() =>
       expect(screen.getByRole("menuitem", { name: "Lock" })).toHaveFocus(),
@@ -683,10 +650,9 @@ describe("styled Menu", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
-
   it("can omit its decorative chevron while keeping keyboard menu behavior", async () => {
     const user = userEvent.setup();
-    show(
+    await show(
       <Menu label="Notifications" showChevron={false}>
         <MenuItem onClick={vi.fn()}>Review alert</MenuItem>
       </Menu>,
@@ -698,8 +664,7 @@ describe("styled Menu", () => {
       screen.getByRole("menuitem", { name: "Review alert" }),
     ).toBeVisible();
   });
-
-  it("closes a just-opened nested menu before its focus frame without closing the parent", () => {
+  it("closes a just-opened nested menu before its focus frame without closing the parent", async () => {
     const frames = new Map<number, FrameRequestCallback>();
     let nextFrame = 0;
     const request = vi
@@ -721,7 +686,7 @@ describe("styled Menu", () => {
           direction === "rtl" ? "ArrowRight" : "ArrowLeft",
         ]) {
           const action = vi.fn();
-          const view = show(
+          const view = await show(
             <Menu label="More">
               <MenuItem onClick={vi.fn()}>Search</MenuItem>
               <MenuSubmenu label="Demo">
@@ -766,12 +731,11 @@ describe("styled Menu", () => {
       cancel.mockRestore();
     }
   });
-
   for (const direction of ["ltr", "rtl"] as const)
     it(`keeps nested Demo navigation at its own level and restores focus (${direction})`, async () => {
       const user = userEvent.setup();
       const action = vi.fn();
-      show(
+      await show(
         <Menu label="More">
           <MenuItem onClick={vi.fn()}>Search</MenuItem>
           <MenuSubmenu label="Demo">
@@ -819,11 +783,10 @@ describe("styled Menu", () => {
       document.documentElement.dir = "ltr";
     });
 });
-
 it("detail-opening rows navigate by click and keyboard while child actions remain independent", async () => {
   const user = userEvent.setup();
   const action = vi.fn();
-  show(
+  await show(
     <DataTable>
       <thead>
         <tr>
@@ -862,7 +825,6 @@ it("detail-opening rows navigate by click and keyboard while child actions remai
   );
   window.location.hash = "";
 });
-
 describe("shared language and number presentation", () => {
   it("formats money without losing Decimal precision, with Western digits and the symbol first", () => {
     expect(formatMoney("2.99", { currency: "CAD" })).toBe("$2.99");
@@ -885,15 +847,13 @@ describe("shared language and number presentation", () => {
       "Money must be finite",
     );
   });
-
   it("keeps recorded date-only values in YYYY-MM-DD when timestamps or languages change", () => {
     expect(formatDate("2026-10-07")).toBe("2026-10-07");
     expect(formatDate("2026-10-07T23:50:00-04:00")).toBe("2026-10-07");
     expect(formatDate(undefined)).toBe("—");
   });
-
-  it("isolates mixed Latin prices, dates and unit sizes inside Persian text", () => {
-    const view = show(
+  it("isolates mixed Latin prices, dates and unit sizes inside Persian text", async () => {
+    const view = await show(
       <div dir="rtl">
         <Money value="2.99" currency="CAD" />
         <UnitSize value="1 L" />
@@ -920,9 +880,8 @@ describe("shared language and number presentation", () => {
     );
     expect(view.container).toHaveTextContent("۲ عدد $5.00");
   });
-
-  it("uses the current language name first and translates branch and demo-user names", () => {
-    const view = show(
+  it("uses the current language name first and translates branch and demo-user names", async () => {
+    const view = await show(
       <ProductName
         product={{ name_en: "Milk", name_fa: "شیر" }}
         language="fa"
@@ -935,9 +894,8 @@ describe("shared language and number presentation", () => {
     expect(demoUserLabel("Demo Supervisor", "fa")).toBe("سرپرست نمایشی");
     expect(demoUserLabel("floorworker", "fa")).toBe("کارمند سالن نمایشی");
   });
-
-  it("puts a notebook count in its own pill beside the translated tab name", () => {
-    show(
+  it("puts a notebook count in its own pill beside the translated tab name", async () => {
+    await show(
       <Tabs
         aria-label="Notebooks"
         value="supervisor"
@@ -952,10 +910,9 @@ describe("shared language and number presentation", () => {
     );
   });
 });
-
-it("keeps header and financial body fragments in the same shared table columns", () => {
+it("keeps header and financial body fragments in the same shared table columns", async () => {
   const warn = vi.spyOn(console, "error");
-  show(
+  await show(
     <DataTable
       columns={[
         { width: 180 },
@@ -997,8 +954,7 @@ it("keeps header and financial body fragments in the same shared table columns",
   }
   expect(warn).not.toHaveBeenCalled();
 });
-
-it("reflows weighted columns on resize and column changes while reserving intrinsic actions", () => {
+it("reflows weighted columns on resize and column changes while reserving intrinsic actions", async () => {
   let width = 900;
   const observers = new Set<ResizeObserverCallback>();
   vi.stubGlobal(
@@ -1057,7 +1013,7 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     </DataTable>
   );
   try {
-    const rendered = show(contents(false));
+    const rendered = await show(contents(false));
     const widths = () =>
       Array.from(rendered.container.querySelectorAll("col")).map((column) => {
         expect(column.style.width).toMatch(/^\d+(?:\.\d+)?px$/);
@@ -1070,7 +1026,6 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     expect(measured[1]).toBeGreaterThanOrEqual(180);
     expect(measured[2]).toBeGreaterThanOrEqual(160);
     expect(measured[3]).toBe(104);
-
     width = 640;
     act(() => {
       for (const callback of Array.from(observers))
@@ -1103,4 +1058,10 @@ it("reflows weighted columns on resize and column changes while reserving intrin
     rectangle.mockRestore();
     vi.unstubAllGlobals();
   }
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

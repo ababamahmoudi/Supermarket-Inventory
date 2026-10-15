@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -10,7 +11,7 @@ import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice, regularPrice } from "../catalog";
 import { activeSaleAt, salePriceDisplay } from "../sales";
 import { SalePrice, SaleStatus } from "../sales-presentation";
-import { effectiveClearanceOffers } from "../receipt-lots";
+import { effectiveProjectedClearanceOffers } from "../receipt-lots";
 import { useRouteParam } from "../navigation";
 import { ProductPrice } from "../weight-price-presentation";
 import { translateCount } from "../i18n";
@@ -37,7 +38,6 @@ import {
   setLabelTemplateArchived,
   setLabelWaitlistLot,
   validateLabelTemplate,
-  type LabelActor,
   type LabelPrintSnapshot,
   type LabelPrintProduct,
 } from "../label-workflow";
@@ -45,6 +45,14 @@ import { createId } from "../ids";
 import { ManualPricePill } from "../manual-price-presentation";
 import { categoryLabel } from "../formatters";
 import { useDemo } from "../store";
+import { useCatalogQuery } from "../catalog-query";
+import type { AuthenticatedActor, ResourceScope } from "../authority-types";
+import { actorAudit } from "../domain-authority";
+import {
+  projectProductReadDTO,
+  type ProductReadDTO,
+} from "../catalog-read-model";
+import type { ScopedReadView } from "../e1-read-model";
 import { StoredFileImage } from "../stored-file";
 import { isStoredFileReference } from "../file-database";
 import { waitForPrintImages } from "../print-images";
@@ -54,7 +62,6 @@ import type {
   DemoState,
   LabelTemplate,
   LabelWaitlistItem,
-  Product,
 } from "../types";
 import {
   Badge,
@@ -110,14 +117,13 @@ const countText = (
     count,
     lang,
   );
-function actorFor(
-  user: ReturnType<typeof useDemo>["user"],
-  branch: Branch,
-): LabelActor {
+function labelScope(company_id: string, branch = "all"): ResourceScope {
   return {
-    name: user?.name ?? "",
-    role: user?.role ?? "cashier",
-    branch: user?.role === "supervisor" ? branch : (user?.branch as Branch),
+    company_id,
+    kind: branch === "all" ? "company_shared" : "location_record",
+    location_ids: branch === "all" ? [] : [branch],
+    mutation: true,
+    location_policy: "active_only",
   };
 }
 function templateName(
@@ -207,8 +213,8 @@ export function ShelfLabel({
   branch,
   template,
 }: {
-  product: Product;
-  state: DemoState;
+  product: ProductReadDTO;
+  state: ScopedReadView;
   branch: Branch;
   template: LabelTemplate;
 }) {
@@ -225,17 +231,22 @@ export function ShelfLabel({
     template.width,
     Math.max(0.1, template.height - (showLogo ? 9 : 0)),
   );
-  const lotOffer = (product as LabelPrintProduct).label_clearance_offer;
-  const offer = lotOffer ?? effectiveOffer(state, product, branch);
-  const snapshot = product as LabelPrintProduct;
+  const snapshot: Partial<LabelPrintProduct> = product;
+  const lotOffer = snapshot.label_clearance_offer;
+  const ordinaryOffer = Object.hasOwn(snapshot, "label_offer")
+    ? snapshot.label_offer
+    : effectiveOffer(state, product, branch);
+  const offer = lotOffer ?? ordinaryOffer;
   const sale = Object.hasOwn(snapshot, "label_sale")
     ? snapshot.label_sale
     : activeSaleAt(state, product, branch);
   const promotional = Boolean(offer || sale);
-  const regular =
-    snapshot.label_regular_price ?? regularPrice(state, product, branch);
-  const effective =
-    snapshot.label_effective_price ?? effectivePrice(state, product, branch);
+  const regular = Object.hasOwn(snapshot, "label_regular_price")
+    ? (snapshot.label_regular_price ?? null)
+    : regularPrice(state, product, branch);
+  const effective = Object.hasOwn(snapshot, "label_effective_price")
+    ? (snapshot.label_effective_price ?? null)
+    : effectivePrice(state, product, branch);
   const saleDisplay = sale ? salePriceDisplay(sale, state.config) : null;
   const saleAmount = saleDisplay && (
     <span className={product.sold_by === "weight" ? "weight-price" : undefined}>
@@ -481,8 +492,8 @@ function PhysicalSheet({
   alignment = false,
 }: {
   template: LabelTemplate;
-  products: (Product | null)[];
-  state: DemoState;
+  products: (ProductReadDTO | null)[];
+  state: ScopedReadView;
   branch: Branch;
   alignment?: boolean;
 }) {
@@ -544,8 +555,8 @@ function SheetPreview({
   template: LabelTemplate;
   startSlot: number;
   onStartSlot: (slot: number) => void;
-  entries?: Product[];
-  state: DemoState;
+  entries?: ProductReadDTO[];
+  state: ScopedReadView;
   branch: Branch;
 }) {
   const { t, lang } = useDemo();
@@ -698,7 +709,7 @@ function TemplateDesigner({
 }: {
   onSaved?: (template: LabelTemplate) => void;
 }) {
-  const { state, update, branch, user, t } = useDemo();
+  const { state, command, query, can, branch, t } = useDemo();
   const initialTemplate = state.templates.find(
     (item) =>
       item.company_id === state.config.company.seed_key && !item.archived,
@@ -771,17 +782,19 @@ function TemplateDesigner({
       setStartSlot(5);
     }
   };
-  const duplicate = () => {
+  const duplicate = async () => {
     try {
-      let copy: LabelTemplate | undefined;
-      update((current) => {
-        copy = duplicateLabelTemplate(
-          current,
-          id,
-          actorFor(user, branch),
-          `${templateName(draft, t)} ${t("copy", "کپی")}`,
-        );
-      });
+      const copy = await command(
+        "labels.templates_create",
+        labelScope(state.config.company.seed_key),
+        (current, freshActor) =>
+          duplicateLabelTemplate(
+            current,
+            id,
+            freshActor,
+            `${templateName(draft, t)} ${t("copy", "کپی")}`,
+          ),
+      );
       if (copy) {
         setId(copy.id);
         setDraft(copy);
@@ -794,10 +807,13 @@ function TemplateDesigner({
       showError(cause);
     }
   };
-  const setArchived = (archived: boolean) => {
+  const setArchived = async (archived: boolean) => {
     try {
-      update((current) =>
-        setLabelTemplateArchived(current, id, archived, actorFor(user, branch)),
+      await command(
+        "labels.templates_archive",
+        labelScope(state.config.company.seed_key),
+        (current, freshActor) =>
+          setLabelTemplateArchived(current, id, archived, freshActor),
       );
       setDraft({ ...draft, archived });
       setShowArchived(archived || showArchived);
@@ -807,7 +823,7 @@ function TemplateDesigner({
       showError(cause);
     }
   };
-  const save = () => {
+  const save = async () => {
     if (draft.archived) {
       setError(
         t(
@@ -826,8 +842,10 @@ function TemplateDesigner({
       };
       if (!next.name.trim()) throw new LabelWorkflowError("template");
       validateLabelTemplate(next, state.label_settings?.fields?.logo !== false);
-      update((current) =>
-        saveLabelTemplate(current, next, actorFor(user, branch)),
+      await command(
+        id ? "labels.templates_edit" : "labels.templates_create",
+        labelScope(state.config.company.seed_key),
+        (current, freshActor) => saveLabelTemplate(current, next, freshActor),
       );
       setId(next.id);
       setDraft(next);
@@ -838,25 +856,34 @@ function TemplateDesigner({
       showError(cause);
     }
   };
-  const printAlignment = () => {
+  const printAlignment = async () => {
     try {
-      validateLabelTemplate(
-        draft,
-        state.label_settings?.fields?.logo !== false,
+      await query(
+        "labels.calibrate",
+        labelScope(state.config.company.seed_key),
+        (current) =>
+          validateLabelTemplate(
+            draft,
+            current.label_settings?.fields?.logo !== false,
+          ),
       );
       flushSync(() => setAlignmentTemplate(structuredClone(draft)));
       window.print();
-      update((next) =>
-        next.activity.push({
-          id: createId("label-test-print"),
-          company_id: next.config.company.seed_key,
-          branch,
-          action: "Print test alignment page",
-          by: user?.name ?? "",
-          at: new Date().toISOString(),
-          reversible: false,
-          after: { template: structuredClone(draft) },
-        }),
+      await command(
+        "labels.calibrate",
+        labelScope(state.config.company.seed_key),
+        (next, freshActor) =>
+          next.activity.push({
+            id: createId("label-test-print"),
+            company_id: next.config.company.seed_key,
+            branch,
+            action: "Print test alignment page",
+            by: freshActor.actor,
+            ...actorAudit(next, freshActor),
+            at: new Date().toISOString(),
+            reversible: false,
+            after: { template: structuredClone(draft) },
+          }),
       );
     } catch (cause) {
       showError(cause);
@@ -936,7 +963,7 @@ function TemplateDesigner({
             <input
               id="label-template-name"
               value={draft.name}
-              disabled={draft.archived}
+              disabled={draft.archived || !can("labels.calibrate")}
               onChange={(event) => {
                 setDraft({ ...draft, name: event.target.value });
                 setSaved(false);
@@ -1034,7 +1061,7 @@ function TemplateDesigner({
               <Button
                 variant="neutral"
                 onClick={duplicate}
-                disabled={draft.archived}
+                disabled={draft.archived || !can("labels.templates_create")}
               >
                 {t("Duplicate template", "کپی قالب")}
               </Button>
@@ -1050,7 +1077,14 @@ function TemplateDesigner({
                   : t("Archive template", "بایگانی قالب")}
               </Button>
             )}
-            <Button onClick={save}>{t("Save template", "ذخیره قالب")}</Button>
+            <Button
+              onClick={save}
+              disabled={
+                !can(id ? "labels.templates_edit" : "labels.templates_create")
+              }
+            >
+              {t("Save template", "ذخیره قالب")}
+            </Button>
           </DialogActions>
         </div>
         <SheetPreview
@@ -1079,7 +1113,8 @@ function TemplateDesigner({
 }
 
 export function LabelsSettings() {
-  const { state, update, user, branch, t, role } = useDemo();
+  const { state, command, can, branch, t } = useDemo();
+  const [saveError, setSaveError] = useState("");
   const [days, setDays] = useState(
     state.label_settings?.recent_price_days ?? 3,
   );
@@ -1181,51 +1216,72 @@ export function LabelsSettings() {
         {dirty && (
           <div className="label-designer-actions">
             <Button
-              onClick={() =>
-                role === "supervisor" &&
-                update((next) => {
-                  const before = structuredClone(next.label_settings);
-                  next.label_settings = {
-                    recent_price_days: days,
-                    auto_add_approved: auto,
-                    fields,
-                    languages: languages as ("en" | "fa")[],
-                  };
-                  next.activity.push({
-                    id: createId("label-settings"),
-                    company_id: next.config.company.seed_key,
-                    branch: "all",
-                    action: "Save label settings",
-                    by: user?.name ?? "",
-                    at: new Date().toISOString(),
-                    reversible: true,
-                    before,
-                    after: next.label_settings,
-                  });
-                })
-              }
+              onClick={async () => {
+                try {
+                  if (!can("labels.settings_manage")) return;
+                  await command(
+                    "labels.settings_manage",
+                    labelScope(state.config.company.seed_key),
+                    (next, freshActor) => {
+                      const before = structuredClone(next.label_settings);
+                      next.label_settings = {
+                        recent_price_days: days,
+                        auto_add_approved: auto,
+                        fields,
+                        languages: languages as ("en" | "fa")[],
+                      };
+                      next.activity.push({
+                        id: createId("label-settings"),
+                        company_id: next.config.company.seed_key,
+                        branch: "all",
+                        action: "Save label settings",
+                        by: freshActor.actor,
+                        ...actorAudit(next, freshActor),
+                        at: new Date().toISOString(),
+                        reversible: true,
+                        before,
+                        after: next.label_settings,
+                      });
+                    },
+                  );
+                  setSaveError("");
+                } catch (cause) {
+                  setSaveError(errorText(cause, t));
+                }
+              }}
             >
               {t("Save changes", "ذخیره تغییرات")}
             </Button>
           </div>
         )}
       </Card>
+      {saveError && (
+        <p className="form-error" role="alert">
+          {saveError}
+        </p>
+      )}
       <TemplateDesigner key={`settings:${branch}`} />
     </div>
   );
 }
 
+const waitlistStyle = (item: LabelWaitlistItem) =>
+  item.lot_id ? "promo" : (item.preferred_template ?? "regular");
+
 export function Labels() {
-  const { state, update, branch, lang, user, t } = useDemo();
+  const { state, command, query, branch, lang, t } = useDemo();
   const requestedLot = useRouteParam("lot");
-  const allWaiting = branch === "all" ? [] : branchLabelWaitlist(state, branch);
-  const labelStyle = (item: LabelWaitlistItem) =>
-    item.lot_id ? "promo" : (item.preferred_template ?? "regular");
-  const regularWaiting = allWaiting.filter(
-    (item) => labelStyle(item) === "regular",
+  const allWaiting = useMemo(
+    () => (branch === "all" ? [] : branchLabelWaitlist(state, branch)),
+    [state, branch],
   );
-  const promoWaiting = allWaiting.filter(
-    (item) => labelStyle(item) === "promo",
+  const regularWaiting = useMemo(
+    () => allWaiting.filter((item) => waitlistStyle(item) === "regular"),
+    [allWaiting],
+  );
+  const promoWaiting = useMemo(
+    () => allWaiting.filter((item) => waitlistStyle(item) === "promo"),
+    [allWaiting],
   );
   const requestedPromo =
     requestedLot &&
@@ -1241,7 +1297,7 @@ export function Labels() {
   const defaultStyle = requestedPromo
     ? "promo"
     : allWaiting[0]
-      ? labelStyle(allWaiting[0])
+      ? waitlistStyle(allWaiting[0])
       : "regular";
   const groupScope = `${state.config.company.seed_key}:${branch}`;
   const [selectedGroup, setSelectedGroup] = useState<{
@@ -1288,10 +1344,9 @@ export function Labels() {
   const [pendingPrint, setPendingPrint] = useState<LabelPrintSnapshot | null>(
     null,
   );
-  const [printState, setPrintState] = useState<DemoState | null>(null);
+  const [printState, setPrintState] = useState<ScopedReadView | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [printing, setPrinting] = useState(false);
-  const actor = actorFor(user, branch);
   const templates = state.templates.filter(
     (item) =>
       item.company_id === state.config.company.seed_key && !item.archived,
@@ -1314,7 +1369,16 @@ export function Labels() {
   const setStartSlot = (slot: number) =>
     setStartingSlots((slots) => ({ ...slots, [groupKey]: slot }));
   const template = templates.find((item) => item.id === templateId);
-  const products = filterLabelProducts(state, branch, filters);
+  const filteredProducts = useCatalogQuery(
+    "labels.read",
+    { ...labelScope(state.config.company.seed_key, branch), mutation: false },
+    JSON.stringify(filters),
+    (canonical, freshActor) =>
+      filterLabelProducts(canonical, branch, filters).map((product) =>
+        projectProductReadDTO(canonical, freshActor, product),
+      ),
+  );
+  const products = filteredProducts.data ?? [];
   const queueProducts = waiting.flatMap((item) => {
     const product = state.products.find(
       (candidate) =>
@@ -1323,7 +1387,7 @@ export function Labels() {
     );
     if (!product) return [];
     const clearance = item.lot_id
-      ? effectiveClearanceOffers(state, product, branch).find(
+      ? effectiveProjectedClearanceOffers(state, product, branch).find(
           (offer) => offer.lot_id === item.lot_id,
         )
       : undefined;
@@ -1334,9 +1398,16 @@ export function Labels() {
       label_clearance_offer: clearance,
     });
   });
-  const run = (action: (next: DemoState) => void) => {
+  const run = async (
+    action: (next: DemoState, freshActor: AuthenticatedActor) => void,
+    capability: "labels.queue_write" | "labels.print" = "labels.queue_write",
+  ) => {
     try {
-      update(action);
+      await command(
+        capability,
+        labelScope(state.config.company.seed_key, branch),
+        action,
+      );
       setError("");
       return true;
     } catch (cause) {
@@ -1344,7 +1415,7 @@ export function Labels() {
       return false;
     }
   };
-  const allowed = (product: Product) =>
+  const allowed = (product: ProductReadDTO) =>
     product.status === "active" &&
     branch !== "all" &&
     effectivePrice(state, product, branch) !== null;
@@ -1385,7 +1456,7 @@ export function Labels() {
         allowed(product) &&
         (!item.lot_id ||
           (template?.style === "promo" &&
-            effectiveClearanceOffers(state, product, branch).some(
+            effectiveProjectedClearanceOffers(state, product, branch).some(
               (offer) => offer.lot_id === item.lot_id,
             )))
       );
@@ -1395,13 +1466,18 @@ export function Labels() {
     setPrinting(true);
     try {
       if (!template) throw new LabelWorkflowError("template");
-      const snapshot = prepareLabelPrint(
-        state,
-        branch,
-        template,
-        startSlot,
-        actor,
-        waiting.map((item) => item.id),
+      const snapshot = await query(
+        "labels.print",
+        labelScope(state.config.company.seed_key, branch),
+        (current, freshActor) =>
+          prepareLabelPrint(
+            current,
+            branch,
+            template,
+            startSlot,
+            freshActor,
+            waiting.map((item) => item.id),
+          ),
       );
       flushSync(() => {
         setPendingPrint(snapshot);
@@ -1435,20 +1511,30 @@ export function Labels() {
       setPrinting(false);
     }
   };
-  let previewPages: (Product | null)[][] = [];
-  if (template && printable)
-    try {
-      previewPages = prepareLabelPrint(
-        state,
+  const previewKey = JSON.stringify({
+    branch,
+    template,
+    startSlot,
+    waiting,
+    printable,
+  });
+  const preview = useCatalogQuery(
+    "labels.print",
+    { ...labelScope(state.config.company.seed_key, branch), mutation: false },
+    previewKey,
+    (canonical, freshActor) => {
+      if (!template || !printable) return [];
+      return prepareLabelPrint(
+        canonical,
         branch,
         template,
         startSlot,
-        actor,
+        freshActor,
         waiting.map((item) => item.id),
       ).pages;
-    } catch {
-      /* Inline preview supplies geometry errors. */
-    }
+    },
+  );
+  const previewPages = preview.data ?? [];
   return (
     <>
       <PageHeader
@@ -1783,15 +1869,15 @@ export function Labels() {
                 </Field>
                 <Button
                   variant="tinted"
-                  onClick={() => {
+                  onClick={async () => {
                     if (
-                      run((next) =>
+                      await run((next, freshActor) =>
                         addLabelsToWaitlist(
                           next,
                           selectedCodes,
                           allCopies,
                           branch,
-                          actor,
+                          freshActor,
                         ),
                       )
                     )
@@ -1888,7 +1974,9 @@ export function Labels() {
                   variant="destructive"
                   disabled={allWaiting.length === 0}
                   onClick={() =>
-                    run((next) => clearLabelWaitlist(next, branch, actor))
+                    run((next, freshActor) =>
+                      clearLabelWaitlist(next, branch, freshActor),
+                    )
                   }
                 >
                   {t("Clear waitlist", "پاک کردن فهرست انتظار")}
@@ -1930,7 +2018,7 @@ export function Labels() {
                       );
                       const lotOffer =
                         product && item.lot_id
-                          ? effectiveClearanceOffers(
+                          ? effectiveProjectedClearanceOffers(
                               state,
                               product,
                               branch,
@@ -1946,8 +2034,11 @@ export function Labels() {
                             )}
                             {product &&
                               (item.lot_id ||
-                                effectiveClearanceOffers(state, product, branch)
-                                  .length > 0) && (
+                                effectiveProjectedClearanceOffers(
+                                  state,
+                                  product,
+                                  branch,
+                                ).length > 0) && (
                                 <Select
                                   aria-label={t(
                                     `Label price for ${item.product_code}`,
@@ -1955,13 +2046,13 @@ export function Labels() {
                                   )}
                                   value={item.lot_id ?? ""}
                                   onChange={(value) =>
-                                    run((next) =>
+                                    run((next, freshActor) =>
                                       setLabelWaitlistLot(
                                         next,
                                         item.id,
                                         value || undefined,
                                         branch,
-                                        actor,
+                                        freshActor,
                                       ),
                                     )
                                   }
@@ -1970,7 +2061,7 @@ export function Labels() {
                                       value: "",
                                       label: t("Regular price", "قیمت عادی"),
                                     },
-                                    ...effectiveClearanceOffers(
+                                    ...effectiveProjectedClearanceOffers(
                                       state,
                                       product,
                                       branch,
@@ -2028,13 +2119,13 @@ export function Labels() {
                               step="1"
                               value={item.copies}
                               onChange={(value) =>
-                                run((next) =>
+                                run((next, freshActor) =>
                                   editLabelWaitlist(
                                     next,
                                     item.id,
                                     Number(value),
                                     branch,
-                                    actor,
+                                    freshActor,
                                   ),
                                 )
                               }
@@ -2045,13 +2136,13 @@ export function Labels() {
                               variant="destructive"
                               size="sm"
                               onClick={() =>
-                                run((next) =>
+                                run((next, freshActor) =>
                                   editLabelWaitlist(
                                     next,
                                     item.id,
                                     null,
                                     branch,
-                                    actor,
+                                    freshActor,
                                   ),
                                 )
                               }
@@ -2231,15 +2322,16 @@ export function Labels() {
             {t("No", "خیر")}
           </Button>
           <Button
-            onClick={() => {
-              if (pendingPrint)
-                run((next) =>
-                  confirmLabelsPrinted(
-                    next,
-                    pendingPrint,
-                    actorFor(user, pendingPrint.branch),
-                  ),
-                );
+            onClick={async () => {
+              if (
+                pendingPrint &&
+                !(await run(
+                  (next, freshActor) =>
+                    confirmLabelsPrinted(next, pendingPrint, freshActor),
+                  "labels.print",
+                ))
+              )
+                return;
               setConfirmationOpen(false);
               setPendingPrint(null);
               setPrintState(null);

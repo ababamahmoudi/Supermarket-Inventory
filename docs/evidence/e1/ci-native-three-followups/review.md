@@ -1,0 +1,11 @@
+# E1 retained native CI follow-ups
+
+The original E1 CI run at 38b8c0c reported genuine test failures as well as a separate 30-minute workflow timeout. This packet addresses the remaining Orders, Settings groups and Suppliers failures. The PDF-upload and Grocery-save failures have separate evidence. None of these bounded results replaces the original failed/canceled CI result.
+
+The Warehouse order test read its print flag immediately after clicking Print. The production handler performs a fresh scoped authority query before rendering and calling the real print boundary. The fixture now polls that same exact flag with the existing expectation budget before performing every original paper, Decimal, bilingual, print geometry, filter and unchanged-ledger assertion.
+
+The Settings groups test still classified People as planned after E1 implemented People. E1 now checks the actual six people, Add person, registered store computers and Register computer, and absence of the planned placeholder. Every other original planned-group restriction remains, including Notifications, which E2 implements later. The exact 13 group names and weighed-item defaults remain checked.
+
+The Suppliers helper used a one-time visibility probe of the header, then assumed any visible labeled cell had a phone-generated caption. CI encountered a visible desktop cell whose generated caption was `none`. The helper now waits for the exact named field in the actual visible column header, generated phone caption or opened row details. It retains real disclosure clicks and all original financial amounts, overview reconciliation, filters, branch scope and English/Persian Floor Worker and Cashier financial-data exclusions.
+
+The isolated candidate starts with exact committed E1 ca00c5a, then applies only the three recorded test overlays. The normal `npm run build` runs TypeScript and Vite without overrides. Both original browser projects run with one worker, no retries/skips, and the original 60-second test and 5-second expectation budgets. The packet retains the actual CLI exit, all 12 outcomes, source fingerprints, built distribution fingerprints, all served HTTP bytes before/after, unmodified raw reporter output, exact patch and private runner.

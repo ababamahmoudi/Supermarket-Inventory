@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState as pureInitialState } from "./notes-dates-fixture.e1";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { inheritAuthoritySnapshot } from "./authority";
 import { branchId, newBranch, saveBranchSettings } from "./settings";
 import {
   addNotebookEntry,
@@ -16,28 +18,62 @@ import {
   type NotebookContext,
   type NotebookInput,
 } from "./notebooks";
-const supervisor: NotebookContext = {
-  company_id: "super-arzon",
-  branch: "Branch 1",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-};
-const worker: NotebookContext = {
-  ...supervisor,
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
-};
-const cashier: NotebookContext = {
-  ...supervisor,
-  role: "cashier",
-  actor: "Demo Cashier",
-};
+let supervisor: NotebookContext;
+let worker: NotebookContext;
+let cashier: NotebookContext;
+function foreignActor(state: ReturnType<typeof pureInitialState>) {
+  const foreign = structuredClone(state);
+  foreign.config.company.seed_key = "foreign-company";
+  return authenticatedTestActor(foreign, "manager", {
+    selection: { kind: "all_locations" },
+  });
+}
+function locationWorker(
+  state: ReturnType<typeof pureInitialState>,
+  location: string,
+  userId = `test-worker-${location}`,
+) {
+  return authenticatedTestActor(state, "floor_worker", {
+    user_id: userId,
+    locations: [location],
+    selection: { kind: "location", location_id: location },
+    name_en: "Demo Floor Worker",
+  });
+}
+function aggregateWorker(state: ReturnType<typeof pureInitialState>) {
+  return authenticatedTestActor(state, "floor_worker", {
+    user_id: "test-aggregate-worker",
+    locations: ["Branch 1", "Branch 2"],
+    selection: { kind: "all_my_locations" },
+    name_en: "Demo Floor Worker",
+  });
+}
+function initialState() {
+  const state = pureInitialState();
+  supervisor = authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    username: "supervisor",
+    locations: ["Branch 1", "Branch 2", "Branch 3"],
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
+  worker = authenticatedTestActor(state, "floor_worker", {
+    name_en: "Demo Floor Worker",
+    username: "floorworker",
+    locations: ["Branch 1"],
+  });
+  cashier = authenticatedTestActor(state, "cashier", {
+    name_en: "Demo Cashier",
+    username: "cashier",
+    locations: ["Branch 1"],
+  });
+  return state;
+}
 const input = (values: Partial<NotebookInput> = {}): NotebookInput => ({
   name_en: "Cleaning log",
   name_fa: "دفتر نظافت",
   branch: "all",
-  read_roles: ["supervisor", "floor_worker", "cashier"],
-  add_roles: ["supervisor", "floor_worker"],
+  read_roles: ["owner", "manager", "floor_worker", "cashier"],
+  add_roles: ["owner", "manager", "floor_worker"],
   fields: {
     product: false,
     quantity: false,
@@ -102,15 +138,15 @@ describe("custom notebook permissions and retained records", () => {
     const state = initialState();
     for (const context of [worker, cashier])
       expect(() => createNotebook(state, context, input())).toThrow(
-        "supervisor",
+        "capability",
       );
     const record = createNotebook(state, supervisor, input());
     for (const context of [worker, cashier]) {
       expect(() => editNotebook(state, context, record.id, input())).toThrow(
-        "supervisor",
+        "capability",
       );
       expect(() => archiveNotebook(state, context, record.id)).toThrow(
-        "supervisor",
+        "capability",
       );
     }
     archiveNotebook(state, supervisor, record.id);
@@ -123,7 +159,7 @@ describe("custom notebook permissions and retained records", () => {
     expect(visibleNotebooks(state, cashier).map((item) => item.id)).toEqual([
       record.id,
     ]);
-    expect(canAddNotebookEntry(record, cashier)).toBe(false);
+    expect(canAddNotebookEntry(state, record, cashier)).toBe(false);
     expect(() =>
       addNotebookEntry(state, cashier, record.id, { text: "Cashier entry" }),
     ).toThrow("add_permission");
@@ -139,10 +175,10 @@ describe("custom notebook permissions and retained records", () => {
       record.id,
       input({ read_roles: [], add_roles: [] }),
     );
-    expect(record.read_roles).toEqual(["supervisor"]);
-    expect(record.add_roles).toEqual(["supervisor"]);
+    expect(record.read_roles).toEqual(["owner", "manager"]);
+    expect(record.add_roles).toEqual(["owner", "manager"]);
     expect(visibleNotebooks(state, cashier)).toEqual([]);
-    expect(canAddNotebookEntry(record, supervisor)).toBe(true);
+    expect(canAddNotebookEntry(state, record, supervisor)).toBe(true);
   });
   it("enables Cashier contributions only through explicit permissions", () => {
     const state = initialState(),
@@ -162,21 +198,21 @@ describe("custom notebook permissions and retained records", () => {
   it("blocks foreign company reads and mutations even with a known ID", () => {
     const state = initialState(),
       record = createNotebook(state, supervisor, input());
-    const foreign = { ...supervisor, company_id: "another-company" };
+    const foreign = foreignActor(state);
     expect(visibleNotebooks(state, foreign)).toEqual([]);
     expect(readableNotebookEntries(state, foreign)).toEqual([]);
     expect(() =>
       addNotebookEntry(state, foreign, record.id, { text: "Wrong company" }),
-    ).toThrow("scope");
+    ).toThrow("company");
     expect(() => editNotebook(state, foreign, record.id, input())).toThrow(
-      "scope",
+      "company",
     );
   });
   it("scopes definitions and entries by selected and explicitly allowed branches", () => {
     const state = initialState(),
       record = createNotebook(state, supervisor, input({ branch: "Branch 1" }));
     addNotebookEntry(state, worker, record.id, { text: "Branch one only" });
-    const branchTwo = { ...worker, branch: "Branch 2" };
+    const branchTwo = locationWorker(state, "Branch 2");
     expect(
       visibleNotebooks(state, branchTwo).map((item) => item.id),
     ).not.toContain(record.id);
@@ -184,16 +220,12 @@ describe("custom notebook permissions and retained records", () => {
       addNotebookEntry(state, branchTwo, record.id, { text: "Wrong branch" }),
     ).toThrow("scope");
     expect(
-      readableNotebookEntries(state, {
-        ...worker,
-        branch: "all",
-        allowed_branches: ["Branch 2"],
-      }),
+      readableNotebookEntries(state, locationWorker(state, "Branch 2")),
     ).toEqual([]);
     expect(() =>
       addNotebookEntry(
         state,
-        { ...worker, branch: "all" },
+        aggregateWorker(state),
         "demo-deli-temperatures",
         { text: "Unscoped" },
       ),
@@ -315,7 +347,10 @@ describe("custom notebook permissions and retained records", () => {
         text: "Saved on this computer",
       });
     entry.archived = true;
-    const restored = hydrateNotebooks(JSON.parse(JSON.stringify(state)));
+    const restored = inheritAuthoritySnapshot(
+      state,
+      hydrateNotebooks(JSON.parse(JSON.stringify(state))),
+    );
     expect(restored.notebooks).toEqual(state.notebooks);
     expect(
       readableNotebookEntries(restored, worker).map((item) => item.id),
@@ -331,21 +366,18 @@ describe("custom notebook permissions and retained records", () => {
       configured = newBranch(state.config);
     configured.name_en = "New store";
     configured.name_fa = "فروشگاه جدید";
-    saveBranchSettings(state, configured, {
-      role: "supervisor",
-      company_id: supervisor.company_id,
-      by: supervisor.actor,
-    });
+    saveBranchSettings(state, configured, supervisor);
     const branch = branchId(configured),
       record = createNotebook(state, supervisor, input({ branch })),
-      actor = { ...worker, branch };
+      actor = authenticatedTestActor(state, "floor_worker", {
+        user_id: "test-new-store-worker",
+        locations: [branch],
+        selection: { kind: "location", location_id: branch },
+        name_en: worker.actor,
+      });
     addNotebookEntry(state, actor, record.id, { text: "New store check" });
     configured.name_en = "Renamed store";
-    saveBranchSettings(state, configured, {
-      role: "supervisor",
-      company_id: supervisor.company_id,
-      by: supervisor.actor,
-    });
+    saveBranchSettings(state, configured, supervisor);
     expect(
       readableNotebookEntries(state, actor).map((item) => item.notebook_id),
     ).toContain(record.id);
@@ -402,11 +434,10 @@ describe("custom notebook permissions and retained records", () => {
     updateNotebookEntryStatus(state, worker, entry.id, "done");
     const before = structuredClone(entry),
       originalActivity = structuredClone(state.activity);
-    const actor = {
-      ...supervisor,
-      branch: "all",
-      allowed_branches: ["Branch 1"],
-    };
+    const actor = authenticatedTestActor(state, "manager", {
+      name_en: supervisor.actor,
+      selection: { kind: "all_locations" },
+    });
     const later = new Date(Date.parse(entry.created_at) + 86400000);
     expect(canEditNotebookEntry(state, actor, entry.id, later)).toBe(true);
     editNotebookEntry(
@@ -448,11 +479,15 @@ describe("custom notebook permissions and retained records", () => {
     });
     const now = new Date(Date.parse(entry.created_at) + 1);
     for (const context of [
-      { ...worker, actor: "Another worker" },
-      { ...worker, company_id: "foreign-company" },
-      { ...worker, branch: "Branch 2" },
-      { ...supervisor, branch: "all", allowed_branches: ["Branch 2"] },
-      { ...cashier, actor: worker.actor },
+      locationWorker(state, "Branch 1", "test-other-author"),
+      foreignActor(state),
+      locationWorker(state, "Branch 2"),
+      locationWorker(state, "Branch 2", "test-second-branch-other-author"),
+      authenticatedTestActor(state, "cashier", {
+        user_id: "test-cashier-same-name",
+        name_en: worker.actor,
+        locations: ["Branch 1"],
+      }),
     ]) {
       const before = structuredClone(state);
       expect(canEditNotebookEntry(state, context, entry.id, now)).toBe(false);

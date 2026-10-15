@@ -6,7 +6,8 @@ import { LtrText, Money } from "./presentation";
 import { ProductPrice } from "./weight-price-presentation";
 import { Badge } from "./ui";
 import { saleCalendarDate, salesText } from "./sales-locale";
-import type { Branch, Product } from "./types";
+import type { Branch } from "./types";
+import type { ProductReadDTO } from "./catalog-read-model";
 
 export function SalePrice({
   product,
@@ -15,7 +16,7 @@ export function SalePrice({
   className,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
-  product: Product;
+  product: ProductReadDTO;
   branch?: Branch;
   stacked?: boolean;
 }) {
@@ -82,7 +83,7 @@ export function SaleStatus({
   branch: selected,
   compact = false,
 }: {
-  product: Product;
+  product: ProductReadDTO;
   branch?: Branch;
   compact?: boolean;
 }) {
@@ -127,7 +128,7 @@ export function PendingSalePill({
   branch: selected,
   compact = false,
 }: {
-  product: Product;
+  product: ProductReadDTO;
   branch?: Branch;
   compact?: boolean;
 }) {

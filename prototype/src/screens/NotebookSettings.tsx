@@ -25,12 +25,12 @@ import {
   newNotebookInput,
   notebookError,
   NotebookError,
-  visibleNotebooks,
   type NotebookDefinition,
   type NotebookInput,
-  type NotebookContext,
 } from "../notebooks";
 import type { Role } from "../types";
+import { visibleNotebookView } from "../notes-dates-read";
+import { configuredRoleLabel } from "../role-config";
 import { branchId, branchLabel } from "../settings";
 import "./notebooks-b.css";
 
@@ -43,18 +43,12 @@ export function NotebookEditor({
   onOpenChange: (open: boolean) => void;
   onSaved?: (id: string) => void;
 }) {
-  const { state, update, role, user, branch, lang, t } = useDemo();
+  const { state, command, lang, t } = useDemo();
   const [form, setForm] = useState<NotebookInput>(() =>
     notebook ? structuredClone(notebook) : newNotebookInput(),
   );
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState("");
-  const context: NotebookContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-  };
   const field = <K extends keyof NotebookInput>(
     key: K,
     value: NotebookInput[K],
@@ -73,11 +67,15 @@ export function NotebookEditor({
     }
     setForm((current) => ({ ...current, [key]: value }));
   };
-  const labels: Record<Role, string> = {
-    supervisor: t("Supervisor", "سرپرست"),
-    floor_worker: t("Floor Worker", "کارمند فروشگاه"),
-    cashier: t("Cashier", "صندوق‌دار"),
-  };
+  const configuredRoles = state.config.roles.map(
+    (definition) => definition.key,
+  );
+  const labels = Object.fromEntries(
+    configuredRoles.map((role) => [
+      role,
+      configuredRoleLabel(state.config.roles, role, lang),
+    ]),
+  );
   const toggleRole = (
     kind: "read_roles" | "add_roles",
     value: Role,
@@ -126,18 +124,29 @@ export function NotebookEditor({
     >
       <form
         noValidate
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           try {
             let id = notebook?.id ?? "";
-            update((draft) => {
-              if (notebook) editNotebook(draft, context, notebook.id, form);
-              else id = createNotebook(draft, context, form).id;
-            });
+            id = await command(
+              "notebooks.definition_manage",
+              {
+                company_id: state.config.company.seed_key,
+                kind: "company_shared",
+                mutation: true,
+              },
+              (draft, freshActor) => {
+                if (notebook) {
+                  editNotebook(draft, freshActor, notebook.id, form);
+                  return notebook.id;
+                }
+                return createNotebook(draft, freshActor, form).id;
+              },
+            );
             onSaved?.(id);
             onOpenChange(false);
           } catch (caught) {
-            setError(notebookError(caught, t));
+            setError(notebookError(caught, t, state.config));
             setErrorField(
               caught instanceof NotebookError ? caught.key : "scope",
             );
@@ -219,35 +228,29 @@ export function NotebookEditor({
         >
           <fieldset>
             <legend>{t("Who can read", "چه کسی می‌تواند بخواند")}</legend>
-            {(["supervisor", "floor_worker", "cashier"] as Role[]).map(
-              (item) => (
-                <Checkbox
-                  key={item}
-                  checked={form.read_roles.includes(item)}
-                  disabled={item === "supervisor"}
-                  onChange={(checked) =>
-                    toggleRole("read_roles", item, checked)
-                  }
-                >
-                  {labels[item]}
-                </Checkbox>
-              ),
-            )}
+            {configuredRoles.map((item) => (
+              <Checkbox
+                key={item}
+                checked={form.read_roles.includes(item)}
+                disabled={item === "owner" || item === "manager"}
+                onChange={(checked) => toggleRole("read_roles", item, checked)}
+              >
+                {labels[item]}
+              </Checkbox>
+            ))}
           </fieldset>
           <fieldset>
             <legend>{t("Who can add", "چه کسی می‌تواند اضافه کند")}</legend>
-            {(["supervisor", "floor_worker", "cashier"] as Role[]).map(
-              (item) => (
-                <Checkbox
-                  key={item}
-                  checked={form.add_roles.includes(item)}
-                  disabled={item === "supervisor"}
-                  onChange={(checked) => toggleRole("add_roles", item, checked)}
-                >
-                  {labels[item]}
-                </Checkbox>
-              ),
-            )}
+            {configuredRoles.map((item) => (
+              <Checkbox
+                key={item}
+                checked={form.add_roles.includes(item)}
+                disabled={item === "owner" || item === "manager"}
+                onChange={(checked) => toggleRole("add_roles", item, checked)}
+              >
+                {labels[item]}
+              </Checkbox>
+            ))}
           </fieldset>
         </div>
         <fieldset className="notebook-field-options">
@@ -326,23 +329,17 @@ export function NotebookEditor({
   );
 }
 export function NotebookSettings() {
-  const { state, update, branch, role, user, lang, t } = useDemo();
+  const { state, command, can, lang, t } = useDemo();
   const [editor, setEditor] = useState<NotebookDefinition | "new" | null>(null);
   const [archive, setArchive] = useState<NotebookDefinition | null>(null);
   const [error, setError] = useState("");
-  const context: NotebookContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-  };
-  const records = visibleNotebooks(state, context, { includeArchived: true });
-  if (role !== "supervisor")
+  const records = visibleNotebookView(state, { includeArchived: true });
+  if (!can("notebooks.definition_manage"))
     return (
       <EmptyState>
         {t(
-          "Only the Supervisor can change notebook settings.",
-          "فقط سرپرست می‌تواند تنظیمات دفترچه را تغییر دهد.",
+          `Only an ${configuredRoleLabel(state.config.roles, "owner", "en")} or ${configuredRoleLabel(state.config.roles, "manager", "en")} can change notebook settings.`,
+          `فقط ${configuredRoleLabel(state.config.roles, "owner", "fa")} یا ${configuredRoleLabel(state.config.roles, "manager", "fa")} می‌تواند تنظیمات دفترچه را تغییر دهد.`,
         )}
       </EmptyState>
     );
@@ -393,11 +390,7 @@ export function NotebookSettings() {
                   ·{" "}
                   {item.read_roles
                     .map((value) =>
-                      value === "supervisor"
-                        ? t("Supervisor", "سرپرست")
-                        : value === "floor_worker"
-                          ? t("Floor Worker", "کارمند فروشگاه")
-                          : t("Cashier", "صندوق‌دار"),
+                      configuredRoleLabel(state.config.roles, value, lang),
                     )
                     .join(" · ")}
                 </p>
@@ -439,18 +432,25 @@ export function NotebookSettings() {
                 >
                   <MenuItem
                     className={item.archived ? undefined : "menu-item-danger"}
-                    onClick={() => {
+                    onClick={async () => {
                       if (!item.archived) {
                         setArchive(item);
                         return;
                       }
                       try {
-                        update((draft) =>
-                          archiveNotebook(draft, context, item.id, false),
+                        await command(
+                          "notebooks.definition_manage",
+                          {
+                            company_id: item.company_id,
+                            kind: "company_shared",
+                            mutation: true,
+                          },
+                          (draft, freshActor) =>
+                            archiveNotebook(draft, freshActor, item.id, false),
                         );
                         setError("");
                       } catch (caught) {
-                        setError(notebookError(caught, t));
+                        setError(notebookError(caught, t, state.config));
                       }
                     }}
                   >
@@ -489,14 +489,23 @@ export function NotebookSettings() {
           "یادداشت‌ها قابل جستجو می‌مانند. هر زمان تیم دوباره نیاز داشت، دفترچه را بازیابی کنید.",
         )}
         confirmLabel={t("Archive notebook", "بایگانی دفترچه")}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!archive) return;
           try {
-            update((draft) => archiveNotebook(draft, context, archive.id));
+            await command(
+              "notebooks.definition_manage",
+              {
+                company_id: archive.company_id,
+                kind: "company_shared",
+                mutation: true,
+              },
+              (draft, freshActor) =>
+                archiveNotebook(draft, freshActor, archive.id),
+            );
             setArchive(null);
             setError("");
           } catch (caught) {
-            setError(notebookError(caught, t));
+            setError(notebookError(caught, t, state.config));
           }
         }}
       />

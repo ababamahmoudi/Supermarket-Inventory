@@ -5,11 +5,20 @@ import {
   encodeHistoryStorage,
 } from "../src/history-storage";
 import type { DemoState } from "../src/types";
+import { AUTHORITY_DATABASE_NAME } from "../src/authority-repository";
+import { AUTH_IDENTITY_KEY } from "../src/auth-preferences.e1";
+import sourceConfig from "../../seed/arzon-config.json" with { type: "json" };
+import retainedConfig from "../src/compat/configuration.json" with { type: "json" };
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { invoiceImage, setBranch, signIn } from "./helpers";
 
 const mainKey = "supermarket-prototype-v1";
+const companyId = { ...retainedConfig.company, ...sourceConfig.company }
+  .seed_key;
 const databaseName = "supermarket-prototype-files-v1";
 const recoveryKey = "c8-migration-proof-allow-backup";
+const storageFailure =
+  /Browser storage (?:is full or disabled|could not be read or updated)/;
 const digest = (bytes: Buffer | string) =>
   createHash("sha256").update(bytes).digest("hex");
 
@@ -29,11 +38,81 @@ type ProofWindow = Window & { __c8MigrationProof?: MigrationProbe };
 
 async function savedRaw(page: Page) {
   const raw = await page.evaluate((key) => localStorage.getItem(key), mainKey);
-  expect(raw, "The real durable snapshot must exist").not.toBeNull();
+  expect(raw, "The exact retained legacy source must exist").not.toBeNull();
   return raw!;
 }
 async function saved(page: Page) {
-  return decodeHistoryStorage(JSON.parse(await savedRaw(page))) as DemoState;
+  return readCanonicalBusinessEvidence(page);
+}
+
+/** This isolated test deliberately exercises the real first import. The app is
+ * unloaded before its authority database alone is removed; immutable files,
+ * raw legacy sources and every file backup remain in their existing database.
+ */
+async function freshMigrationSurface(page: Page) {
+  const origin = new URL(page.url()).origin;
+  const setup = `${origin}/__e1-migration-setup`;
+  await page.route(setup, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<!doctype html><title>Retained migration setup</title>",
+    }),
+  );
+  await page.goto(setup);
+  await page.evaluate(
+    ({ databaseName, identityKey }) =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(databaseName);
+        request.onerror = () => reject(request.error);
+        request.onblocked = () =>
+          reject(new Error("The app has an open authority connection."));
+        request.onsuccess = () => {
+          sessionStorage.removeItem(identityKey);
+          resolve();
+        };
+      }),
+    { databaseName: AUTHORITY_DATABASE_NAME, identityKey: AUTH_IDENTITY_KEY },
+  );
+  return origin;
+}
+
+async function canonicalBusinessExists(page: Page) {
+  return page.evaluate(
+    ({ databaseName, companyId }) =>
+      new Promise<boolean>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+        request.onupgradeneeded = () => {
+          request.transaction?.abort();
+          reject(new Error("Evidence must not create a canonical database."));
+        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction("business", "readonly");
+          const read = transaction.objectStore("business").get(companyId);
+          let exists = false;
+          read.onsuccess = () => {
+            exists = read.result !== undefined;
+          };
+          transaction.oncomplete = () => {
+            database.close();
+            resolve(exists);
+          };
+          transaction.onabort = transaction.onerror = () => {
+            database.close();
+            reject(
+              transaction.error ??
+                new Error("Cannot inspect canonical publication."),
+            );
+          };
+        };
+      }),
+    {
+      databaseName: AUTHORITY_DATABASE_NAME,
+      companyId: companyId,
+    },
+  );
 }
 
 async function readBackup(page: Page, reference: string) {
@@ -163,8 +242,24 @@ async function prepareRetainedState(page: Page) {
     .toBe("8.79");
 
   await page.goto("/#invoices");
+  const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  // The two guarded commands finish asynchronously. Select a file only after
+  // their real canonical manual draft and current protected editor agree.
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousInvoiceId &&
+        current.entry_mode === "manual" &&
+        current.status === "draft"
+      );
+    })
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })
     .setInputFiles(invoiceImage);
@@ -182,11 +277,12 @@ async function prepareRetainedState(page: Page) {
       image.evaluate((element: HTMLImageElement) => element.naturalWidth),
     )
     .toBe(1);
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toHaveCount(0);
+  await expect(page.getByText(storageFailure)).toHaveCount(0);
 
-  const originalRaw = await savedRaw(page);
+  // E1's real durable snapshot is canonical IndexedDB. Serialize that exact
+  // UI-produced state solely to prepare an explicit legacy migration fixture;
+  // no live localStorage business mirror is created.
+  const originalRaw = JSON.stringify(encodeHistoryStorage(await saved(page)));
   const state = decodeHistoryStorage(JSON.parse(originalRaw)) as DemoState;
   expect(state.prototype_c6_schema).toBe(1);
   expect(state.prototype_c8_schema).toBe(1);
@@ -224,6 +320,7 @@ async function prepareSchemaBoundary(page: Page, state: DemoState) {
   const sha256 = digest(raw);
   const reference = `idb-backup:v1:${encodeURIComponent(state.config.company.seed_key)}:${encodeURIComponent(mainKey)}:${sha256}`;
   expect(await readBackup(page, reference)).toBeNull();
+  await freshMigrationSurface(page);
   const written = await page.evaluate(
     ({ mainKey, raw }) => {
       localStorage.setItem(mainKey, raw);
@@ -242,7 +339,13 @@ async function observeMigration(
   failBackup = false,
 ) {
   await page.addInitScript(
-    ({ mainKey, databaseName, reference, failBackup, recoveryKey }) => {
+    ({
+      databaseName,
+      authorityDatabaseName,
+      reference,
+      failBackup,
+      recoveryKey,
+    }) => {
       const proof: MigrationProbe = { events: [] };
       (window as ProofWindow).__c8MigrationProof = proof;
       const retainedBackupBlobs = new WeakSet<Blob>();
@@ -306,19 +409,36 @@ async function observeMigration(
             "QuotaExceededError",
           );
         }
-        return originalPut.call(this, value, key);
-      };
-      const originalSet = Storage.prototype.setItem;
-      Storage.prototype.setItem = function (key, value) {
-        originalSet.call(this, key, value);
-        if (this === localStorage && key === mainKey)
-          proof.events.push({
-            kind: "publish",
-            schema: JSON.parse(value).prototype_c8_schema,
-          });
+        const request = originalPut.call(this, value, key);
+        if (
+          this.transaction.db.name === authorityDatabaseName &&
+          this.name === "business" &&
+          value !== null &&
+          typeof value === "object" &&
+          "state" in value
+        ) {
+          const snapshot = value as { state: { prototype_c8_schema?: number } };
+          this.transaction.addEventListener(
+            "complete",
+            () => {
+              proof.events.push({
+                kind: "publish",
+                schema: snapshot.state.prototype_c8_schema,
+              });
+            },
+            { once: true },
+          );
+        }
+        return request;
       };
     },
-    { mainKey, databaseName, reference, failBackup, recoveryKey },
+    {
+      databaseName,
+      authorityDatabaseName: AUTHORITY_DATABASE_NAME,
+      reference,
+      failBackup,
+      recoveryKey,
+    },
   );
 }
 
@@ -375,11 +495,20 @@ test("C8 schema-only boundary preserves real saved settings, manual prices, all 
   const prepared = await prepareRetainedState(page);
   const boundary = await prepareSchemaBoundary(page, prepared.state);
   await observeMigration(page, boundary.reference);
-  await page.reload();
+  await signIn(page, "Manager");
+  // E1's root invoice route is the Drafts list. Open this actual retained
+  // invoice's protected workspace before asserting its original is visible.
+  await page.goto(
+    `/#invoices?id=${encodeURIComponent(prepared.state.invoice.id)}`,
+  );
   await expect
     .poll(async () => (await saved(page)).prototype_c8_schema)
     .toBe(1);
   const proof = await assertVerifiedBeforePublish(page, boundary);
+  expect(
+    await savedRaw(page),
+    "First import must preserve its exact legacy source",
+  ).toBe(boundary.raw);
   expect(
     await saved(page),
     "Every decoded saved field must survive the additive boundary",
@@ -390,9 +519,7 @@ test("C8 schema-only boundary preserves real saved settings, manual prices, all 
   await expect(
     page.getByRole("img", { name: "Original invoice image", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toHaveCount(0);
+  await expect(page.getByText(storageFailure)).toHaveCount(0);
   await page.reload();
   await expect.poll(async () => await saved(page)).toEqual(prepared.state);
   expect(await readOriginal(page, prepared.state.invoice.file_data!)).toEqual(
@@ -410,7 +537,7 @@ test("C8 schema-only boundary preserves real saved settings, manual prices, all 
       JSON.stringify(
         {
           fixture:
-            "Real C8 UI state with only prototype_c8_schema removed; not an archived C7 snapshot",
+            "Actual UI-produced E1 business state with only prototype_c8_schema removed; not an archived C7 snapshot",
           saved_sha256_before: digest(prepared.originalRaw),
           exact_boundary_backup_sha256: boundary.sha256,
           source_sha256: prepared.sourceHash,
@@ -442,10 +569,8 @@ test("C8 backup write failure blocks schema replacement and retains exact state 
   const prepared = await prepareRetainedState(page);
   const boundary = await prepareSchemaBoundary(page, prepared.state);
   await observeMigration(page, boundary.reference, true);
-  await page.reload();
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toBeVisible();
+  await page.goto("/#invoices");
+  await expect(page.getByText(storageFailure)).toBeVisible();
   await expect
     .poll(
       async () =>
@@ -462,15 +587,20 @@ test("C8 backup write failure blocks schema replacement and retains exact state 
   expect(await readOriginal(page, prepared.state.invoice.file_data!)).toEqual(
     prepared.original,
   );
+  // A failed first import cannot expose private invoice data before a genuine
+  // authority/session exists. Retained bytes above are still verified exactly.
+  expect(await canonicalBusinessExists(page)).toBe(false);
+  await expect(page.locator(".topbar")).toHaveCount(0);
   await expect(
     page.getByRole("img", { name: "Original invoice image", exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   const failureEvents = await migrationEvents(page);
 
   // Release only the injected environmental fault; recovery still runs the
   // actual app migration and must verify its real IndexedDB backup first.
   await page.evaluate((key) => sessionStorage.setItem(key, "yes"), recoveryKey);
-  await page.reload();
+  await signIn(page, "Manager");
+  await page.goto("/#invoices");
   await expect
     .poll(async () => (await saved(page)).prototype_c8_schema)
     .toBe(1);
@@ -479,9 +609,7 @@ test("C8 backup write failure blocks schema replacement and retains exact state 
   expect(await readOriginal(page, prepared.state.invoice.file_data!)).toEqual(
     prepared.original,
   );
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toHaveCount(0);
+  await expect(page.getByText(storageFailure)).toHaveCount(0);
   expect(errors).toEqual([]);
   await testInfo.attach("c8-backup-failure-recovery-proof.json", {
     contentType: "application/json",
@@ -489,7 +617,7 @@ test("C8 backup write failure blocks schema replacement and retains exact state 
       JSON.stringify(
         {
           fixture:
-            "Real C8 UI state with only prototype_c8_schema removed; actual backup put throws QuotaExceededError",
+            "Actual UI-produced E1 business state with only prototype_c8_schema removed; actual backup put throws QuotaExceededError",
           boundary_sha256: boundary.sha256,
           source_sha256: prepared.sourceHash,
           exact_raw_preserved_during_failure: true,

@@ -5,80 +5,89 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { beforeEach, expect, it } from "vitest";
-import { SESSION_KEY } from "./auth";
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { useProtectedQuery } from "./use-protected-query";
+import { domainScope } from "./domain-authority";
 import i18n from "./i18n";
 import { regularPrice } from "./catalog";
 import { manualPrice } from "./manual-prices";
 import { demoSaleCostInvoice, postInvoice } from "./invoice";
 import { savePriceChange, saleStoreDate } from "./sales";
 import { Approvals } from "./screens/Approvals";
-import { DemoProvider, initialState, STORAGE_KEY, useDemo } from "./store";
+import { DemoProvider, initialState, useDemo } from "./store";
 
-beforeEach(() => {
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+});
+beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   window.location.hash = "approvals";
-  void i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "Branch 1",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
+  await i18n.changeLanguage("en");
 });
 
 function Harness() {
   const { state } = useDemo();
-  const product = state.products.find((item) => item.code === "0012")!;
+  const saved = useProtectedQuery(
+    "catalog.cost_read",
+    domainScope(state),
+    (canonical, actor) => {
+      const product = canonical.products.find(
+        (item) => item.company_id === actor.company_id && item.code === "0012",
+      )!;
+      return {
+        price: regularPrice(canonical, product, "Branch 1"),
+        marker: manualPrice(canonical, product, "Branch 1")?.price ?? "none",
+        decision:
+          canonical.approvals.find((item) => item.manual_price_review)
+            ?.manual_price_review?.decision ?? "pending",
+      };
+    },
+    "0012:Branch 1",
+  );
   return (
     <>
       <output aria-label="Actual regular price">
-        {regularPrice(state, product, "Branch 1")}
+        {saved.data?.price ?? "pending"}
       </output>
       <output aria-label="Manual marker">
-        {manualPrice(state, product, "Branch 1")?.price ?? "none"}
+        {saved.data?.marker ?? "pending"}
       </output>
       <output aria-label="Final regular decision">
-        {state.approvals.find((item) => item.manual_price_review)
-          ?.manual_price_review?.decision ?? "pending"}
+        {saved.data?.decision ?? "pending"}
       </output>
       <Approvals />
     </>
   );
 }
 
-function prepare() {
+async function prepare() {
   const state = initialState();
-  savePriceChange(
-    state,
-    {
-      company_id: state.config.company.seed_key,
-      role: "supervisor",
-      actor: "Demo Supervisor",
-      username: "supervisor",
-      branch: "Branch 1",
-      allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-    },
-    {
-      product_code: "0012",
-      mode: "regular",
-      scope: "current",
-      price: "24.99",
-      price_unit: "each",
-      branches: ["Branch 1"],
-      starts_on: saleStoreDate(state.config, "Branch 1"),
-      last_day: null,
-      accept_below_margin: false,
-      below_cost_reason: "",
-      add_labels: false,
-    },
-  );
-  state.invoice = demoSaleCostInvoice(state);
+  const manager = authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
+  const worker = authenticatedTestActor(state, "floor_worker", {
+    name_en: "Demo Floor Worker",
+    locations: ["Branch 1"],
+  });
+  savePriceChange(state, manager, {
+    product_code: "0012",
+    mode: "regular",
+    scope: "current",
+    price: "24.99",
+    price_unit: "each",
+    branches: ["Branch 1"],
+    starts_on: saleStoreDate(state.config, "Branch 1"),
+    last_day: null,
+    accept_below_margin: false,
+    below_cost_reason: "",
+    add_labels: false,
+  });
+  state.invoice = demoSaleCostInvoice(state, worker, "Branch 1");
   state.invoice.file_name = "retained-unit-original.pdf";
   state.invoice.file_data = "data:application/pdf;base64,QzhIVw==";
   state.invoice.receiving_employee = "Demo Floor Worker";
@@ -87,7 +96,7 @@ function prepare() {
   state.invoice.lines[0].date_confirmed = true;
   state.invoice.lines[0].manual_price_decision = "keep";
   state.invoice.lower_price_answers = { same_expiry: "no_previous_stock" };
-  postInvoice(state, "floor_worker", "Branch 1", "Demo Floor Worker");
+  postInvoice(state, worker);
   const approval = state.approvals.find(
     (item) =>
       item.source_invoice_id === state.invoice.id &&
@@ -95,23 +104,33 @@ function prepare() {
   )!;
   expect(approval.manual_price_review?.receiver_recommendation).toBe("keep");
   expect(approval.proposed_price).toBe("23.49");
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: {
+      selection: { kind: "location", location_id: "Branch 1" },
+      name_en: "Demo Supervisor",
+    },
+  });
+  fixtures.push(fixture);
   render(
-    <DemoProvider>
+    <DemoProvider options={fixture.options}>
       <Harness />
     </DemoProvider>,
   );
-  const card = screen
-    .getByText("Stainless Steel Pot 24 cm", { selector: "h2" })
-    .closest(".approval-card")!;
+  const title = await screen.findByText("Stainless Steel Pot 24 cm", {
+    selector: "h2",
+  });
+  const card = title.closest(".approval-card")!;
   fireEvent.click(
     within(card as HTMLElement).getByRole("button", { name: "Approve price" }),
   );
+  await screen.findByRole("combobox", { name: "Selling price" });
   return screen.getByRole("dialog", { name: "Review approval" });
 }
 
 it("offers calculated price by default despite receiver Keep, and applies it only after the manager confirms", async () => {
-  const dialog = prepare();
+  const dialog = await prepare();
   expect(
     within(dialog).getByRole("combobox", { name: "Selling price" }),
   ).toHaveTextContent("Use the new calculated price $23.49");
@@ -137,7 +156,7 @@ it("offers calculated price by default despite receiver Keep, and applies it onl
 });
 
 it("explicit Keep locks the decision to its original store and preserves the manual price and marker", async () => {
-  const dialog = prepare();
+  const dialog = await prepare();
   fireEvent.click(
     within(dialog).getByRole("combobox", { name: "Selling price" }),
   );

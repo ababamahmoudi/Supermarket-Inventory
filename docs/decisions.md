@@ -225,3 +225,83 @@ Individual review of the corrected C6 Persian Received screenshot found that iso
 **Decision:** Every accepted normal changed-cost receipt with retained manual price creates a versioned approval. Store both price/cost snapshots and the receiver's recommendation in `manual_price_review`; the authorised approver defaults to Use calculated or explicitly Keeps at the original store, retaining manual provenance. Either selected choice requires a reason when below the configured minimum margin or below cost, with the shared **Add a reason. / یک دلیل اضافه کنید.** error. Use a pure `manualRegularApprovalPreview` and the optional final `resolveApproval` decision argument. Same-cost and short-dated evidence stays unchanged. Resolve actual linked approval status in sale-alert presentation, using the current regular amount and **Current regular price / قیمت عادی فعلی** when it is no longer pending. Preserve receipt and alert source evidence.
 
 **Why:** Receiving remains practical without making a recommendation the price approval, and alerts describe their actual state. This specification records no test counts, screenshots or completion claim.
+
+## 032 — Five roles, current actor resolution and atomic People safety (E1, 2026-10-12)
+
+**Context:** The owner replaces Supervisor with five configured roles and grants Branch Supervisor a narrow own-location purchase-cost exception. Static demo accounts, role proxies and scattered Supervisor predicates cannot enforce current assignments or immediate revocation. Existing Floor Worker operations, retained signed evidence and financial privacy must survive.
+
+**Decision:** Use stable Owner/Manager/Branch Supervisor/Floor Worker/Cashier IDs and one explicit capability/field-projection layer without role inheritance. Owner/Manager share current/future company location scope; other people have validated assignment sets. Resolve privately branded AuthenticatedActor from the current company Person/session/setup/epoch for every protected query and command. Await serialized Store.command/query through an IndexedDB readwrite authority transaction, derive canonical resource scope in each domain, and reject stale/forged/missing actors. UI can() is an affordance. actorAtLocation permits only concrete allowed rescope, never a new role/assignment. Preserve narrow retained-inactive correction/settlement policies and active relocation destinations.
+
+**Decision:** People changes, target-version checks, at least one usable Active Owner and session/challenge revocation commit atomically. Count only Active Owners with complete password and required second-step setup; Invited/Deactivated/setup-incomplete placeholders do not count. Floor Worker promotion to Owner/Manager/Branch Supervisor stays Invited until setup completes and revokes former sessions. Nonsecret People/device audit is written in the successful transaction, then exposed by fresh protected authorityHistory summaries without credentials/challenges/sessions/setup internals/private aliases or a generic directory inverse. Latest business and authority share the lock and commit before React; publish cross-tab invalidation after commit and re-read authority on later operations. Raw setup code returns once and is not audited/exported; password and simulated privileged second-step setup precede business access. Separate credentials from ordinary business state. Branch Supervisor invoice/Supplier items/Orders costs are independent of balances/margins/catalog costs/approvals. Their sale hold is a separate instruction command; their return authority stops at signed pickup. Floor Worker replacement/ordinary-offer/template/calibration grants remain independent. General Settings/financial/price decisions remain Owner/Manager.
+
+**Decision:** Normal verified migration retains legacy people/passwords/forced newemployee setup/preferences and immutable business/file/History evidence; supervisor aliases the same Manager. New audit carries stable actor IDs plus immutable display/role snapshots. Only explicit Reset restores six configured fictional users and revokes replaced sessions; demo.reset requires the fresh canonical Active/setup-complete demo_fixture person, not a role literal or familiar username. Registered computer defaults only if allowed; otherwise sole assignment or All my locations/company All locations. rh-supervisor on North York starts at All my locations for Richmond Hill/Newmarket, never a silent first store. Isolated phones cannot share records or demonstrate remote logout; production authenticated server, real passkeys/invites/push remain later.
+
+**Why:** Reuses the exact capability/domain rules in a future authenticated server without trusting browser role claims, accidentally granting Branch Supervisor another role's powers, racing the last Owner or rewriting historical authors. This entry records the E1 source specification before code; actual implementation and evidence are added separately after verification.
+
+### E1 scoped ordinary-offer Stop and internal jobs
+
+Retain Floor Worker own-store Stop with exact company/store/Offer ID+version suppression, preserving the global Offer and other stores. Clear rather than delete suppression during valid Undo; Sale pausing does not advance Offer version. Internal clock jobs require a repository-minted current-draft witness, never a Manager role proxy. These choices retain operational behavior while enforcing scope and original history.
+
+## 033 — Explicit damaged-History quarantine and ordered Reset retirement (E1, 2026-10-13)
+
+A healthy existing canonical IndexedDB business record takes precedence over any retired legacy text. Do not read a stale legacy dictionary, falsely quarantine healthy data, recreate people, reset a password, or replace existing company business records during normal startup.
+
+When the company has no canonical business record and its retained legacy History dictionary is invalid, retain that exact legacy string. Before creating a separate fictional quarantine demo, save its exact UTF-8 bytes as a company/storage-key/SHA256 addressed FileDB backup; wait for the write transaction, read it back and verify both exact text and hash. If this verification fails, startup remains blocked, the original text/file bytes stay retained, and no usable business view or fabricated authentication is published. This is not a completed migration or recovery of the damaged business data.
+
+After successful verification, persist a private canonical recovery marker containing only its schema, legacy source key, original digest, verified backup reference and phase. The quarantined business is explicitly a separate fictional demo. Normal sign-in/setup and protected queries/commands use the genuine current company directory, credentials, sessions and capabilities. Existing people, passwords and sessions are preserved. Valid demo edits may persist in the separate canonical quarantine demo; they never overwrite the unreadable legacy string. Reload retains both the private marker and the visible recovery notice. Public business projections contain neither that marker, the raw damaged history nor credential data.
+
+Only an explicitly confirmed, fresh authorized `demo.reset` command can replace the canonical demo and six configured people. Reverify the exact original backup and any remaining legacy source before that transaction. A backup/check/authority/canonical-transaction rejection leaves the current canonical data, directory, original text and recovery notice unchanged. Keep all immutable files and backups.
+
+Canonical Reset and legacy localStorage retirement are different storage transactions. After a successful canonical Reset, persist the `reset_committed` recovery phase until a current authorized command verifies the backup again, retires only the matching old legacy source and clears the marker. Failure in retirement is a **committed Reset with retirement pending**, not a rejected Reset or a silent completed recovery. Retain the original backup and explicit notice; the old text also remains whenever removal did not succeed. A partial retirement can have removed the old text before the marker write failed; its exact verified backup remains and the notice persists. Retry only this already-authorized retirement after a genuine allowed session resumes or signs in, without resetting business or people again. Never remove changed/unverified legacy text.
+
+Recovery notice (English): **Saved history could not be read. Your original data is retained. You are using a separate fictional demo. Allow browser storage, then reload, or choose Reset demo.**
+
+Recovery notice (Persian): **سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. اکنون از یک دموی ساختگی جداگانه استفاده می‌کنید. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید، یا بازنشانی دمو را انتخاب کنید.**
+
+Committed Reset with retirement pending (English): **Demo reset is complete. Your original history is backed up, but its old browser copy could not be retired. Allow browser storage, then reload.**
+
+Committed Reset with retirement pending (Persian): **بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید.**
+
+Specification first; implementation and tests require separate actual-source evidence. No service, account, deployment, or recovery of unreadable financial/physical evidence is implied.
+
+## 036 — Retain public Cashier product links without private Product access (E1)
+
+**Context:** the blanket E1 route denial removed the existing C8 public Product Code shortcut. **Decision:** accept only the exact one-code product route for an existing non-archived protected same-company public product and genuine Lookup grant, then replace it with the existing Lookup search route. All additional/duplicate/private/location parameters and unknown/foreign products remain denied. Aggregate Lookup still needs explicit Store selection. **Why:** retain working public navigation while never mounting private Product details or leaking cost/history/editing.
+
+## 037 — Preserve the retained handling-origin receiving exception (E1)
+
+**Context:** C8 expressly permits a handling worker to retarget and post their own unposted invoice at any active same-company receiving location without destination browsing. E1 must keep existing Floor Worker operations; review-only narrowing was a regression. **Decision:** restore destination selection and posting only for the canonical creator/handler/reviewer with an active assigned retained origin. Verify active same-company destination and current genuine actor at each boundary. Branch Supervisor assignment rules, unrelated Orders/destination records, posted visibility, Short receiving and reviewer reassignment remain unchanged. **Why:** retain the approved Warehouse receiving workflow without adding general location access.
+
+**Note status audit correction:** successful status actions retain the exact note entity ID/type and actual note location on their newly appended immutable audit entry. Undo resolves that exact source through current capability, actor and conflict checks; it does not require the acting Manager to be the note author. Existing audit events and money/physical records are unchanged.
+
+## 038 — Retain explicitly shared Cashier notebooks and public manual-price comparisons (E1)
+
+**Context:** the full retained browser checks found that the new shell denied Cashier Notes even when the current protected notebook projection contained an explicit custom read grant. The new catalog DTO also retained the manual badge while suppressing the public Rule price / Manual price pair required by the existing requirements.
+
+**Decision:** allow the Cashier Notes route only when its fresh protected view contains an actual permitted custom notebook. The existing company/location/ACL projection and command checks continue to exclude built-in Notes, private routes and unauthorized contributions. Revoking the grant removes the route without deleting the entry. Project only the two retained selling amounts for each currently visible active selling Store; canonical manual markers, actor/decision metadata, costs and margins remain private. Render the permitted public comparison without calling the financial query; keep the existing private Manager comparison/margin path.
+
+**Why:** restore approved staff workflows without broadening financial authority or recreating prices from hidden costs. Regression checks cover real Provider routes, current ACL and company/location denials, public-pair isolation and retained native workflows. Executed results are recorded separately.
+
+## 039 — Print the complete permitted table independently of phone layout
+
+**Context:** the retained phone Payables print check found that responsive JavaScript removed the cheque column before the print stylesheet ran. The amount and payment record were intact, but the original cheque reference was absent from the printed DOM.
+
+**Decision:** the shared table observes native beforeprint/afterprint and print-media changes. Commit all currently permitted, explicitly enabled columns synchronously before print capture, suspend screen-only collapsing/compact rows, and release fixed screen column widths for the paper layout. Keep explicit hidden columns excluded and restore screen layout plus expanded rows afterward. This changes presentation only; protected queries, payment data, scope and money remain unchanged.
+
+**Why:** a phone viewport must not remove payment evidence from an authorized printed report. Regression checks retain DEMO-1001, the exact -$50.00 amount, worker Payables denial and ordinary desktop/phone controls. Physical printer alignment remains an unperformed hardware check.
+
+## 040 — One route change when opening a posted invoice
+
+**Context:** the posted invoice name link both navigated immediately and started an asynchronous workspace selection that navigated again when it finished. A quick browser Back could return to the list and then be undone by that late completion.
+
+**Decision:** the name link and end chevron navigate once. The existing route effect selects the invoice through the current protected workspace command. Its eventual completion does not push another route. Keep the Posted tab, per-user column preferences, current authority and original invoice evidence intact.
+
+**Why:** browser Back follows the user's latest action. A regression delays delivery of a genuine authenticated repository command after its real permission check and durable work, then exercises browser Back before releasing it. The original implementation fails with the exact unwanted detail route; the correction retains the list.
+
+## 041 — Retain Payables input when the location does not change
+
+**Context:** selecting the already selected Payables location unnecessarily adopted another authority projection. That refresh could replace the enabled search input during typing and lose its text and focus.
+
+**Decision:** ignore the unchanged location when the action is an ordinary location selection. Explicit Clear filters and actual location changes keep their existing behavior. Every query, financial action and current-authority check remains on its original protected path.
+
+**Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.

@@ -3,9 +3,16 @@ import { readFile, writeFile } from "node:fs/promises";
 import { networkInterfaces } from "node:os";
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { AUTHORITY_DATABASE_NAME } from "../src/authority-repository";
+import { AUTH_IDENTITY_KEY } from "../src/auth-preferences.e1";
+import { encodeHistoryStorage } from "../src/history-storage";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 const mainKey = "supermarket-prototype-v1";
 const databaseName = "supermarket-prototype-files-v1";
+const storageFailure =
+  /Browser storage (?:is full or disabled|could not be read or updated)/;
 const sha = (bytes: Uint8Array | string) =>
   createHash("sha256").update(bytes).digest("hex");
 
@@ -23,9 +30,65 @@ function lanAddress(baseURL: string) {
 }
 
 async function saved(page: Page) {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key) ?? "null"),
-    mainKey,
+  return readCanonicalBusinessEvidence(page);
+}
+
+async function signInManager(page: Page, origin: string) {
+  const account = demoSeed.demo_users.find(
+    (user) => user.username === "manager",
+  );
+  if (!account) throw new Error("The configured Manager fixture is missing.");
+  if (page.url() !== new URL(origin).href) await page.goto(origin);
+  await expect(
+    page.getByRole("heading", { name: "Sign in", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Username", { exact: true }).fill(account.username);
+  await page
+    .getByLabel("Password", { exact: true })
+    .fill(account.password ?? "demo1234");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  if (account.setup.second_step_method === "authenticator") {
+    await page
+      .getByLabel("Authenticator app code", { exact: true })
+      .fill(configuration.session.simulated_authenticator_code);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+  } else {
+    await page
+      .getByRole("button", { name: "Use simulated passkey", exact: true })
+      .click();
+  }
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".user-chip-copy strong")).toHaveText(
+    account.name_en,
+  );
+}
+
+/** Unload the actual app before a deliberate first-import fixture. Keep its
+ * existing file database, backups and raw text; remove only the authority DB.
+ */
+async function freshMigrationSurface(page: Page, origin: string) {
+  const setup = `${origin}/__e1-migration-setup`;
+  await page.route(setup, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<!doctype html><title>Retained migration setup</title>",
+    }),
+  );
+  await page.goto(setup);
+  await page.evaluate(
+    ({ databaseName, identityKey }) =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(databaseName);
+        request.onerror = () => reject(request.error);
+        request.onblocked = () =>
+          reject(new Error("The app has an open authority connection."));
+        request.onsuccess = () => {
+          sessionStorage.removeItem(identityKey);
+          resolve();
+        };
+      }),
+    { databaseName: AUTHORITY_DATABASE_NAME, identityKey: AUTH_IDENTITY_KEY },
   );
 }
 
@@ -176,21 +239,27 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   expect(capabilities.secure).toBe(false);
   expect(capabilities.subtle).toBe(false);
   expect(capabilities.indexedDB).toBe(true);
-  const account = demoSeed.demo_users.find(
-    (user) => user.role === "supervisor",
-  )!;
-  await page.getByLabel("Username", { exact: true }).fill(account.username);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill(account.password ?? "demo1234");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.locator(".topbar")).toBeVisible();
+  await signInManager(page, origin);
   await expect
     .poll(async () => Boolean((await saved(page))?.products))
     .toBe(true);
   await page.goto(`${origin}/#invoices`);
+  const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousInvoiceId &&
+        current.entry_mode === "manual" &&
+        current.status === "draft"
+      );
+    })
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
   const photo = await photoFixture(page, true);
   await page
     .getByLabel("Upload a PDF or photo", { exact: true })
@@ -203,7 +272,7 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     .poll(async () => (await saved(page))?.invoice.file_data)
     .toMatch(new RegExp(`^idb-file:v1:.*:${photo.hash}$`));
   const uploaded = (await saved(page)).invoice;
-  const source = await retained(page, uploaded.file_data);
+  const source = await retained(page, uploaded.file_data!);
   expect(source.company_id).toBe(uploaded.company_id);
   expect(source.sha256).toBe(photo.hash);
   expect(source.source_size).toBe(photo.buffer.length);
@@ -221,7 +290,7 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     )
     .toBe(2000);
   expect((await saved(page)).invoice.file_data).toBe(uploaded.file_data);
-  expect((await retained(page, uploaded.file_data)).bytes).toEqual(
+  expect((await retained(page, uploaded.file_data!)).bytes).toEqual(
     photo.buffer,
   );
   const downloadEvent = page.waitForEvent("download");
@@ -234,24 +303,26 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   expect(await readFile((await download.path())!)).toEqual(photo.buffer);
 
   const legacy = await photoFixture(page, false);
+  const legacyState = await saved(page);
+  const inline = `data:image/jpeg;base64,${legacy.base64}`;
+  legacyState.invoice.file_data = inline;
+  legacyState.invoice.file_name = "legacy-lan-original.jpg";
+  legacyState.invoice.file_type = "image/jpeg";
+  legacyState.invoice.file_size = undefined;
+  legacyState.invoice.legacy_demo_original = {
+    file_name: "legacy-preserved.jpg",
+    file_type: "image/jpeg",
+    file_data: inline,
+  };
+  legacyState.config.company.logo_data = inline;
+  const raw = JSON.stringify(encodeHistoryStorage(legacyState));
+  const legacyBackup = structuredClone(legacyState);
+  delete legacyBackup.invoice.legacy_demo_original;
+  delete legacyBackup.config.company.logo_data;
+  const backupRaw = JSON.stringify(encodeHistoryStorage(legacyBackup));
+  await freshMigrationSurface(page, origin);
   const prepared = await page.evaluate(
-    ({ inline, mainKey }) => {
-      const state = JSON.parse(localStorage.getItem(mainKey)!);
-      state.invoice.file_data = inline;
-      state.invoice.file_name = "legacy-lan-original.jpg";
-      state.invoice.file_type = "image/jpeg";
-      state.invoice.file_size = undefined;
-      state.invoice.legacy_demo_original = {
-        file_name: "legacy-preserved.jpg",
-        file_type: "image/jpeg",
-        file_data: inline,
-      };
-      state.config.company.logo_data = inline;
-      const raw = JSON.stringify(state);
-      const backup = structuredClone(state);
-      delete backup.invoice.legacy_demo_original;
-      delete backup.config.company.logo_data;
-      const backupRaw = JSON.stringify(backup);
+    ({ raw, backupRaw, mainKey }) => {
       localStorage.setItem(mainKey, raw);
       localStorage.setItem("supermarket-prototype-before-c4", backupRaw);
       const used = Array.from({ length: localStorage.length }, (_, index) =>
@@ -270,7 +341,7 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
       localStorage.setItem(paddingKey, "x".repeat(padding));
       return { raw, backupRaw };
     },
-    { inline: `data:image/jpeg;base64,${legacy.base64}`, mainKey },
+    { raw, backupRaw, mainKey },
   );
   await page.addInitScript(() => {
     const original = Storage.prototype.setItem;
@@ -288,16 +359,19 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
       return original.call(this, key, value);
     };
   });
-  await page.reload();
+  await signInManager(page, origin);
   await expect
     .poll(async () => (await saved(page))?.invoice.file_data)
     .toMatch(new RegExp(`^idb-file:v1:.*:${legacy.hash}$`));
   const migrated = await saved(page);
-  expect(migrated.invoice.legacy_demo_original.file_data).toBe(
+  expect(await page.evaluate((key) => localStorage.getItem(key), mainKey)).toBe(
+    prepared.raw,
+  );
+  expect(migrated.invoice.legacy_demo_original!.file_data).toBe(
     migrated.invoice.file_data,
   );
   expect(migrated.config.company.logo_data).toBe(migrated.invoice.file_data);
-  expect((await retained(page, migrated.invoice.file_data)).bytes).toEqual(
+  expect((await retained(page, migrated.invoice.file_data!)).bytes).toEqual(
     legacy.buffer,
   );
   const backups = await page.evaluate(async (databaseName) => {
@@ -350,17 +424,15 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     ),
   );
   expect(textBytes).toBeLessThan(5 * 1024 * 1024);
-  await expect(
-    page.getByText(/Browser storage is full or disabled/),
-  ).toHaveCount(0);
+  await expect(page.getByText(storageFailure)).toHaveCount(0);
   await page.reload();
   await expect
     .poll(async () => (await saved(page))?.invoice.file_data)
     .toBe(migrated.invoice.file_data);
-  expect((await retained(page, migrated.invoice.file_data)).bytes).toEqual(
+  expect((await retained(page, migrated.invoice.file_data!)).bytes).toEqual(
     legacy.buffer,
   );
-  expect((await retained(page, uploaded.file_data)).bytes).toEqual(
+  expect((await retained(page, uploaded.file_data!)).bytes).toEqual(
     photo.buffer,
   );
   expect(errors).toEqual([]);

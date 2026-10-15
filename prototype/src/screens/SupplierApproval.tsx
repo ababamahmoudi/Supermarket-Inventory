@@ -6,7 +6,6 @@ import { demoUserLabel, LtrText } from "../presentation";
 import {
   resolveSupplierApproval,
   supplierApprovalSnapshot,
-  supplierRecords,
   missingInvoiceSupplierDetails,
 } from "../supplier-editor";
 import type { Approval } from "../types";
@@ -27,29 +26,53 @@ export function SupplierApproval({
 }) {
   const {
     state,
-    role,
+    actor,
     branch,
-    user,
+    can,
+    authorityGeneration,
+    businessRevision,
+    authorityDirectoryVersion,
+    locationSelection,
     lang,
     t,
-    update,
+    command,
+    query,
     needsReauthentication,
     navigate,
   } = useDemo();
   const [preview, setPreview] = useState<{
     decision: "approve" | "reject";
     snapshot: string;
+    key: string;
   } | null>(null);
   const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const supplier = supplierRecords(state).find(
+  const supplier = state.suppliers?.find(
     (item) =>
       item.company_id === state.config.company.seed_key &&
       item.id === approval.supplier_id,
   );
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+    entity_id: approval.id,
+  };
+  const key = JSON.stringify([
+    actor?.user_id,
+    actor?.session_id,
+    actor?.authority_epoch,
+    actor?.person_version,
+    authorityGeneration,
+    businessRevision,
+    authorityDirectoryVersion,
+    locationSelection,
+    approval.id,
+  ]);
+  const visiblePreview = preview?.key === key ? preview : null;
   if (
-    role !== "supervisor" ||
-    !user ||
+    !actor ||
+    !can("suppliers.confirm", scope) ||
     !supplier ||
     approval.company_id !== state.config.company.seed_key ||
     approval.type !== "new_supplier" ||
@@ -65,7 +88,7 @@ export function SupplierApproval({
     [t("Sales rep phone", "تلفن نماینده فروش"), supplier.sales_rep_phone],
     [t("Payment terms", "شرایط پرداخت"), supplier.payment_terms],
   ];
-  const open = (decision: "approve" | "reject") => {
+  const open = async (decision: "approve" | "reject") => {
     if (needsReauthentication("approvals")) {
       navigate("approvals");
       return;
@@ -79,34 +102,46 @@ export function SupplierApproval({
       setEditorOpen(true);
       return;
     }
-    setPreview({
-      decision,
-      snapshot: supplierApprovalSnapshot(state, approval.id),
-    });
+    setPending(true);
+    try {
+      const snapshot = await query(
+        "suppliers.confirm",
+        scope,
+        (canonical, currentActor) =>
+          supplierApprovalSnapshot(canonical, currentActor, approval.id),
+      );
+      setPreview({ decision, snapshot, key });
+    } catch {
+      setError(
+        t(
+          "Supplier changed. Review the supplier again.",
+          "تأمین‌کننده تغییر کرده است. آن را دوباره بررسی کنید.",
+        ),
+      );
+      setPreview(null);
+    } finally {
+      setPending(false);
+    }
   };
-  const confirm = () => {
-    if (!preview) return;
+  const confirm = async () => {
+    if (!visiblePreview || pending) return;
     if (needsReauthentication("approvals")) {
       setPreview(null);
       navigate("approvals");
       return;
     }
+    setPending(true);
     try {
-      update((draft) =>
+      await command("suppliers.confirm", scope, (draft, currentActor) =>
         resolveSupplierApproval(
           draft,
-          {
-            company_id: state.config.company.seed_key,
-            branch,
-            role,
-            actor: user.name,
-          },
+          currentActor,
           approval.id,
-          preview.decision,
-          preview.snapshot,
+          visiblePreview.decision,
+          visiblePreview.snapshot,
         ),
       );
-      onResolved?.(preview.decision);
+      onResolved?.(visiblePreview.decision);
       setPreview(null);
     } catch {
       setError(
@@ -116,6 +151,8 @@ export function SupplierApproval({
         ),
       );
       setPreview(null);
+    } finally {
+      setPending(false);
     }
   };
   const status =
@@ -126,7 +163,11 @@ export function SupplierApproval({
         : t("Rejected", "ردشده");
   const actions = approval.status === "pending" && (
     <div className={`actions${compact ? " dashboard-inline-actions" : ""}`}>
-      <Button size={compact ? "sm" : "default"} onClick={() => open("approve")}>
+      <Button
+        disabled={pending}
+        size={compact ? "sm" : "default"}
+        onClick={() => void open("approve")}
+      >
         {compact
           ? t("Approve", "تأیید")
           : t("Confirm supplier", "تأیید تأمین‌کننده")}
@@ -139,13 +180,17 @@ export function SupplierApproval({
         >
           <MenuItem
             className="supplier-destructive-action"
-            onClick={() => open("reject")}
+            onClick={() => void open("reject")}
           >
             {t("Reject", "رد کردن")}
           </MenuItem>
         </Menu>
       ) : (
-        <Button variant="destructive" onClick={() => open("reject")}>
+        <Button
+          disabled={pending}
+          variant="destructive"
+          onClick={() => void open("reject")}
+        >
           {t("Reject", "رد کردن")}
         </Button>
       )}
@@ -228,20 +273,20 @@ export function SupplierApproval({
           {actions}
         </Card>
       )}
-      {preview && (
+      {visiblePreview && (
         <ConfirmDialog
           open
           onOpenChange={(isOpen) => {
             if (!isOpen) setPreview(null);
           }}
           title={
-            preview.decision === "approve"
+            visiblePreview.decision === "approve"
               ? t("Confirm supplier", "تأیید تأمین‌کننده")
               : t("Reject proposal", "رد پیشنهاد")
           }
           description={supplier.name}
           confirmLabel={
-            preview.decision === "approve"
+            visiblePreview.decision === "approve"
               ? t("Confirm supplier", "تأیید تأمین‌کننده")
               : t("Reject proposal", "رد پیشنهاد")
           }

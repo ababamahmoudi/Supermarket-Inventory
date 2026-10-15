@@ -1,3 +1,14 @@
+import { requireSystemReconciliation } from "./authority-repository";
+import { businessFingerprint } from "./business-fingerprint";
+import type { SystemAttribution, Capability } from "./authority-types";
+import { freshActor } from "./authority";
+import {
+  pickupLineValuations,
+  returnEvidenceActor,
+  type InternalPurchaseEvidence,
+} from "./purchase-evidence.internal";
+import { requireCapability } from "./permissions";
+import { actorAudit, domainScope } from "./domain-authority";
 import Decimal from "decimal.js";
 import { retainedReturnSettlementEvidence } from "./signed-return-pickups";
 import { companyDate } from "./invoice";
@@ -7,7 +18,6 @@ import {
   type OperationsContext,
 } from "./operations";
 import { branchLabel } from "./settings";
-import { supplierItemFacts } from "./supplier-items";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import type { DemoState, ReturnRecord } from "./types";
 
@@ -34,6 +44,8 @@ export interface ReturnMemo {
   picked_up_at: string;
   date: string;
   created_by: string;
+  created_by_user_id?: string;
+  created_by_role_snapshot?: OperationsContext["role"];
   representative: string;
   signed_evidence_reference: string;
   currency: string;
@@ -74,7 +86,9 @@ export interface PendingReturnCredit {
   picked_up_at: string;
 }
 
-export function returnUiStatus(record: ReturnRecord): ReturnUiStatus {
+export function returnUiStatus(
+  record: Pick<ReturnRecord, "status" | "lines">,
+): ReturnUiStatus {
   if (record.status === "cancelled") return "cancelled";
   if (record.status === "resolved") return "closed";
   if (
@@ -85,10 +99,10 @@ export function returnUiStatus(record: ReturnRecord): ReturnUiStatus {
   return "waiting_for_credit";
 }
 export function returnClosureSubtype(
-  record: ReturnRecord,
+  record: Omit<OperationalReturn, "pickup_memos">,
 ): ReturnClosureSubtype | undefined {
   if (record.status !== "resolved") return undefined;
-  const events = (record as OperationalReturn).evidence ?? [];
+  const events = record.evidence ?? [];
   const actualKinds = new Set(
     events
       .filter(
@@ -98,7 +112,7 @@ export function returnClosureSubtype(
       .map((event) =>
         event.kind === "replacement"
           ? "replaced"
-          : (record as OperationalReturn).claims?.find(
+          : record.claims?.find(
                 (claim) =>
                   claim.document === event.document &&
                   claim.status === "posted",
@@ -117,7 +131,7 @@ export function returnClosureSubtype(
     actualKinds.add("written_off");
   if (actualKinds.size > 1) return undefined;
   if (record.closure_subtype) return record.closure_subtype;
-  const claims = (record as OperationalReturn).claims ?? [];
+  const claims = record.claims ?? [];
   if (
     claims.some(
       (claim) => claim.status === "posted" && claim.type !== "no_compensation",
@@ -154,7 +168,7 @@ export function returnUiStatusLabel(
   );
 }
 export function returnStatusLabel(
-  record: ReturnRecord,
+  record: Omit<OperationalReturn, "pickup_memos">,
   t: (en: string, fa: string) => string,
 ) {
   const status = returnUiStatus(record);
@@ -171,7 +185,8 @@ export function updateReturnSettings(
   context: OperationsContext,
   settings: NonNullable<DemoState["config"]["returns"]>,
 ) {
-  if (context.role !== "supervisor") throw new OperationError("supervisor");
+  context = freshActor(state, context);
+  requireCapability(state, context, "settings.manage", domainScope(state));
   if (context.company_id !== state.config.company.seed_key)
     throw new OperationError("scope");
   if (
@@ -182,13 +197,14 @@ export function updateReturnSettings(
     throw new OperationError("return_days");
   const before = structuredClone(returnSettings(state));
   state.config.returns = structuredClone(settings);
-  syncReturnCreditAlerts(state);
+  syncReturnCreditAlertsForSettings(state, context);
   state.activity.unshift({
     id: `return-settings-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     company_id: context.company_id,
     branch: "all",
     action: "Return settings changed",
     by: context.actor,
+    ...actorAudit(state, context),
     at: new Date().toISOString(),
     reversible: true,
     scope: "all",
@@ -209,13 +225,20 @@ export function createReturnMemo(
     representative: string;
     slip: string;
   },
+  evidence: InternalPurchaseEvidence,
   at = new Date().toISOString(),
 ): ReturnMemo {
+  context = freshActor(state, context);
   if (
     context.company_id !== state.config.company.seed_key ||
     record.company_id !== context.company_id ||
-    context.branch !== record.branch ||
-    context.role === "cashier"
+    !state.returns.includes(record)
+  )
+    throw new OperationError("scope");
+  const evidenceActor = returnEvidenceActor(state, evidence, record);
+  if (
+    evidenceActor.user_id !== context.user_id ||
+    evidenceActor.session_id !== context.session_id
   )
     throw new OperationError("scope");
   const sameSupplier = supplierRecords(state).find(
@@ -223,16 +246,7 @@ export function createReturnMemo(
       supplier.company_id === context.company_id &&
       supplierMatches(supplier, record.supplier),
   );
-  const matches = (name: string) =>
-    sameSupplier
-      ? supplierMatches(sameSupplier, name)
-      : name === record.supplier;
-  const facts = supplierItemFacts(
-    state,
-    context.company_id,
-    record.supplier,
-    record.branch,
-  );
+  const valuations = pickupLineValuations(state, evidence);
   const lines = record.lines
     .filter((line) => (input.quantities[line.product_code] ?? 0) > 0)
     .map((line) => {
@@ -242,44 +256,11 @@ export function createReturnMemo(
           item.code === line.product_code,
       );
       if (!product) throw new OperationError("product");
-      const purchases = facts
-        .filter((fact) => fact.product_code === line.product_code)
-        .flatMap((fact) => fact.history)
-        .filter(
-          (purchase) =>
-            !record.linked_invoice ||
-            purchase.invoice_id === record.linked_invoice,
-        )
-        .sort((a, b) => b.at.localeCompare(a.at));
-      const purchase = purchases[0];
-      const sameLatest = purchases.filter((item) => item.at === purchase?.at);
-      if (
-        sameLatest.some(
-          (item) =>
-            item.unit_cost_before_tax !== purchase?.unit_cost_before_tax,
-        )
-      )
-        throw new OperationError("return_cost");
-      const storedCost = (line as typeof line & { unit_cost?: string })
-        .unit_cost;
-      const sourceCost =
-        storedCost ??
-        purchase?.unit_cost_before_tax ??
-        (matches(product.main_supplier)
-          ? product.last_cost_before_tax
-          : undefined);
-      if (!sourceCost) throw new OperationError("return_cost");
-      let cost: Decimal;
-      try {
-        cost = new Decimal(sourceCost).toDecimalPlaces(
-          4,
-          Decimal.ROUND_HALF_UP,
-        );
-      } catch {
-        throw new OperationError("return_cost");
-      }
-      if (!cost.isFinite() || cost.lt(0))
-        throw new OperationError("return_cost");
+      const valuation = valuations.find(
+        (item) => item.product_code === line.product_code,
+      );
+      if (!valuation) throw new OperationError("return_cost");
+      const cost = new Decimal(valuation.unit_cost);
       const quantity = input.quantities[line.product_code];
       return {
         product_code: line.product_code,
@@ -289,11 +270,7 @@ export function createReturnMemo(
         quantity_unit:
           line.quantity_unit ?? (product.sold_by === "weight" ? "lb" : "units"),
         unit_cost: cost.toFixed(4),
-        cost_source: storedCost
-          ? `return-line:${record.id}:${line.product_code}`
-          : purchase
-            ? `invoice:${purchase.invoice_id}:${purchase.line_index}`
-            : `catalog-last-cost:${product.code}`,
+        cost_source: valuation.cost_source,
         expected_credit: cost
           .times(quantity)
           .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
@@ -323,6 +300,8 @@ export function createReturnMemo(
     picked_up_at: at,
     date: companyDate(state.config),
     created_by: context.actor,
+    created_by_user_id: context.user_id,
+    created_by_role_snapshot: context.role,
     representative: input.representative.trim(),
     signed_evidence_reference: input.slip.trim(),
     currency: state.config.company.currency,
@@ -350,14 +329,17 @@ export function pendingReturnCredits(
   context: OperationsContext,
   throughDate?: string,
 ): PendingReturnCredit[] {
-  if (context.role !== "supervisor") throw new OperationError("supervisor");
+  context = freshActor(state, context);
+  requireCapability(state, context, "returns.amount_read", domainScope(state));
   if (context.company_id !== state.config.company.seed_key)
     throw new OperationError("scope");
   return state.returns
     .filter(
       (record) =>
         record.company_id === context.company_id &&
-        (context.branch === "all" || record.branch === context.branch),
+        (context.branch === "all"
+          ? context.allowed_branches.includes(record.branch)
+          : record.branch === context.branch),
     )
     .flatMap((record) => {
       const evidence = (record as OperationalReturn).evidence ?? [];
@@ -455,14 +437,17 @@ export function pendingReturnCredits(
 }
 
 /** System reconciliation uses a stable return ID; never modifies other companies. */
-export function syncReturnCreditAlerts(
+function syncReturnCreditAlertsDraft(
   state: DemoState,
   asOf = companyDate(state.config),
+  changedReturn?: ReturnRecord,
 ) {
   const company = state.config.company.seed_key;
   const threshold = returnSettings(state).waiting_credit_days;
   for (const record of state.returns.filter(
-    (item) => item.company_id === company,
+    (item) =>
+      item.company_id === company &&
+      (changedReturn === undefined || item === changedReturn),
   )) {
     const pickup =
       record.pickup_memos?.[0]?.date ??
@@ -488,12 +473,13 @@ export function syncReturnCreditAlerts(
       : 0;
     const overdue =
       returnUiStatus(record) === "waiting_for_credit" && days > threshold;
-    const id = `return-credit-overdue:${company}:${record.id}`;
+    const id = `return-credit-overdue:${company}:${record.branch}:${record.id}`;
     const existing = state.alerts.filter(
       (alert) =>
         alert.company_id === company &&
         alert.type === "return_credit_overdue" &&
-        alert.return_id === record.id,
+        alert.return_id === record.id &&
+        alert.branch === record.branch,
     );
     const canonical = (existing.find((alert) => alert.id === id) ??
       existing[0]) as
@@ -523,12 +509,30 @@ export function syncReturnCreditAlerts(
   }
 }
 
-export function returnFinancialFingerprint(state: DemoState, id: string) {
-  const record = state.returns.find(
+export function returnFinancialFingerprint(
+  state: DemoState,
+  context: OperationsContext,
+  id: string,
+) {
+  context = freshActor(state, context);
+  const records = state.returns.filter(
     (item) =>
-      item.id === id && item.company_id === state.config.company.seed_key,
+      item.id === id &&
+      item.company_id === context.company_id &&
+      item.company_id === state.config.company.seed_key &&
+      (context.branch === "all"
+        ? context.allowed_branches.includes(item.branch)
+        : item.branch === context.branch),
   );
-  return JSON.stringify({
+  if (records.length !== 1) throw new OperationError("scope");
+  const record = records[0];
+  requireCapability(
+    state,
+    context,
+    "returns.amount_read",
+    domainScope(state, record),
+  );
+  return businessFingerprint({
     record,
     currency: state.config.company.currency,
     ledger: state.ledger.filter(
@@ -538,4 +542,66 @@ export function returnFinancialFingerprint(state: DemoState, id: string) {
         entry.branch === record?.branch,
     ),
   });
+}
+
+/** Only the active repository callback reconciles automatic reminders company-wide. */
+export function syncReturnCreditAlerts(
+  state: DemoState,
+  attribution: SystemAttribution,
+  asOf = companyDate(state.config, new Date(attribution.applied_at)),
+) {
+  requireSystemReconciliation(state, attribution, "return_credit_reminders");
+  return syncReturnCreditAlertsDraft(state, asOf);
+}
+export function syncReturnCreditAlertsForSettings(
+  state: DemoState,
+  actor: OperationsContext,
+) {
+  actor = freshActor(state, actor);
+  requireCapability(
+    state,
+    actor,
+    "settings.manage",
+    domainScope(state, undefined, true),
+  );
+  return syncReturnCreditAlertsDraft(state);
+}
+/** Reconcile only the canonical return changed by an authorised transaction. */
+export function syncReturnCreditAlertsForReturn(
+  state: DemoState,
+  actor: OperationsContext,
+  record: ReturnRecord,
+  source:
+    | "returns.pickup_record"
+    | "returns.pickup_correct"
+    | "returns.operational_resolve"
+    | "returns.credit_post"
+    | "returns.financial_cancel_review",
+) {
+  actor = freshActor(state, actor);
+  const allowed: readonly Capability[] = [
+    "returns.pickup_record",
+    "returns.pickup_correct",
+    "returns.operational_resolve",
+    "returns.credit_post",
+    "returns.financial_cancel_review",
+  ];
+  if (!allowed.includes(source)) throw new OperationError("scope");
+  if (
+    !state.returns.includes(record) ||
+    record.company_id !== actor.company_id ||
+    record.company_id !== state.config.company.seed_key
+  )
+    throw new OperationError("scope");
+  requireCapability(state, actor, source, {
+    ...domainScope(state, record, true),
+    location_policy: [
+      "returns.pickup_correct",
+      "returns.credit_post",
+      "returns.financial_cancel_review",
+    ].includes(source)
+      ? "retained_correction"
+      : "active_only",
+  });
+  return syncReturnCreditAlertsDraft(state, companyDate(state.config), record);
 }

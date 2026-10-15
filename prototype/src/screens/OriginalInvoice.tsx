@@ -5,8 +5,9 @@ import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useDemo } from "../store";
 import { Button, Card, IconButton } from "../ui";
 import { LtrText } from "../presentation";
-import type { DemoInvoice } from "../types";
-import { useStoredFile } from "../use-stored-file";
+import type { InvoiceReadDTO } from "../invoice-projections";
+import { loadInvoiceOriginal } from "../invoice-file-access";
+import { useInvoiceOriginal } from "../use-invoice-original";
 import "./invoice-document-c4.css";
 import "./invoices-c7.css";
 
@@ -16,15 +17,17 @@ export function OriginalInvoice({
   children,
   bare = false,
 }: {
-  invoice: DemoInvoice;
+  invoice: InvoiceReadDTO;
   onAttach?: () => void;
   children?: ReactNode;
   bare?: boolean;
 }) {
+  const file = useInvoiceOriginal(invoice);
   return (
     <OriginalInvoiceContent
-      key={invoice.file_data ?? invoice.id}
+      key={file.key}
       invoice={invoice}
+      file={file}
       onAttach={onAttach}
       bare={bare}
     >
@@ -35,17 +38,18 @@ export function OriginalInvoice({
 
 function OriginalInvoiceContent({
   invoice,
+  file,
   onAttach,
   children,
   bare,
 }: {
-  invoice: DemoInvoice;
+  invoice: InvoiceReadDTO;
+  file: ReturnType<typeof useInvoiceOriginal>;
   onAttach?: () => void;
   children?: ReactNode;
   bare: boolean;
 }) {
-  const { t } = useDemo();
-  const file = useStoredFile(invoice.file_data, invoice.company_id);
+  const { t, query } = useDemo();
   const media = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(400);
@@ -67,7 +71,7 @@ function OriginalInvoiceContent({
   const [page, setPage] = useState(1);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(
-    invoice.file_type === "application/pdf" && !!invoice.file_data,
+    invoice.file_type === "application/pdf" && invoice.original_available,
   );
   useEffect(() => {
     const node = media.current;
@@ -78,7 +82,7 @@ function OriginalInvoiceContent({
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [invoice.file_data]);
+  }, [invoice.id, invoice.original_available]);
   useEffect(() => {
     if (!file.source || invoice.file_type !== "application/pdf") return;
     let cancelled = false;
@@ -154,10 +158,22 @@ function OriginalInvoiceContent({
       render?.cancel();
     };
   }, [document, page, width, zoom]);
-  const download = () => {
+  const download = async () => {
     if (!file.source) return;
+    let source: Blob;
+    try {
+      source = (
+        await loadInvoiceOriginal(query, {
+          company_id: invoice.company_id,
+          invoice_id: invoice.id,
+        })
+      ).source;
+    } catch {
+      setError(true);
+      return;
+    }
     const anchor = window.document.createElement("a");
-    const url = URL.createObjectURL(file.source);
+    const url = URL.createObjectURL(source);
     anchor.href = url;
     anchor.download = invoice.file_name ?? "invoice";
     window.document.body.append(anchor);
@@ -168,7 +184,7 @@ function OriginalInvoiceContent({
   const content = (
     <>
       {children}
-      {!invoice.file_data ? (
+      {!invoice.original_available ? (
         <>
           <p className="muted">
             {t("No original attached", "اصل فاکتور پیوست نشده است")}

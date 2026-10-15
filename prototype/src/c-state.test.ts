@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { AUTH_STORAGE_KEY } from "./auth";
+import { LEGACY_AUTH_STORAGE_KEY as AUTH_STORAGE_KEY } from "./authority-initialization";
 import { C1_BACKUP_KEY, hydrateCState, restoreCState } from "./c-state";
 import { branchLabel } from "./settings";
 import { initialState } from "./store";

@@ -1,9 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import Decimal from "decimal.js";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { configSeed, demoSeed as demo } from "../config";
 import { sha256Bytes } from "../sha256";
-import { useDemo, demoUsers } from "../store";
+import { useDemo } from "../store";
+import { useProtectedQuery } from "../use-protected-query";
+import {
+  invoiceWorkspaceRead,
+  selectInvoiceWorkspace,
+  invoiceMoveRead,
+  applyReviewedInvoiceMove,
+  type InvoiceWorkspaceRead,
+} from "../invoice-workspace-read";
+import {
+  requireInvoiceAuthority,
+  type InvoiceCapability,
+} from "../invoice-authority";
+import {
+  storeInvoiceUpload,
+  consumeInvoiceUpload,
+} from "../invoice-file-access";
+import type { AuthenticatedActor } from "../authority-types";
+import type { InvoiceReadDTO } from "../invoice-projections";
+import type { InvoiceEditableLine } from "../invoice-edit-types";
 import {
   configuredBranches,
   branchLabel as configuredBranchLabel,
@@ -34,11 +59,7 @@ import {
   focusValidationField,
   type ValidationIssue,
 } from "../WhatsMissing";
-import {
-  INCLUDED_COST_INVOICE_SHA256,
-  storeUploadedFile,
-} from "../file-database";
-import { reusableOtherLocationDates } from "../receipt-lots";
+import { INCLUDED_COST_INVOICE_SHA256 } from "../file-database";
 import { ProductEditor } from "./Catalog";
 import "./manual-entry.css";
 import "./invoice-entry-c6.css";
@@ -78,7 +99,6 @@ import {
 import "./invoice-settings-labels.css";
 import "./invoice-a2.css";
 import {
-  invoiceLineCalculation,
   initializeInvoiceWeight,
   setInvoiceWeightQuantity,
   setInvoiceWeightReceived,
@@ -91,11 +111,6 @@ import {
 } from "../weighed";
 import { ProductPrice } from "../weight-price-presentation";
 import { trackingChoiceForProduct, validTrackedDate } from "../date-tracking";
-import {
-  invoiceVersion,
-  invoiceContentVersions,
-  effectiveInvoiceVersion,
-} from "../invoice-version";
 import { OriginalInvoice } from "./OriginalInvoice";
 import { PostedInvoice } from "./PostedInvoice";
 import { InvoiceCorrectionDialog } from "./InvoiceCorrectionDialog";
@@ -106,11 +121,8 @@ import {
   createInvoice,
   demoSaleCostInvoice,
   dateAfter,
-  invoiceBlockers,
   lineShort,
-  lowerPriceLines,
   postInvoice,
-  previousReceiptCost,
   recalculateInvoice,
   receiveShort,
   shortTotals,
@@ -124,43 +136,24 @@ import {
   removeInvoiceLine,
   markInvoiceSupplierReview,
   confirmInvoiceSupplierReview,
-  manualDecisionForLine,
   initializeInvoiceManualPriceDecisions,
 } from "../invoice";
-import { manualPrice } from "../manual-prices";
 import {
   ManualPriceDetails,
   ManualPricePill,
 } from "../manual-price-presentation";
-import {
-  effectiveInvoiceLocation,
-  invoiceLocationMovePreview,
-  movePostedInvoice,
-  setInvoiceLocation,
-  suggestedInvoiceLocation,
-  type InvoiceMovePreview,
-} from "../received";
+import { effectiveInvoiceLocation, setInvoiceLocation } from "../received";
 import "./received-c.css";
 import {
   costPerCase,
   costPerUnit,
   resolveSupplierItem,
-  supplierItemFacts,
 } from "../supplier-items";
 import { clearInvoiceOrder, clearInvoiceOrderLine } from "../invoice-orders";
 import { InvoiceOrderReview } from "./InvoiceOrderReview";
 import "./invoice-c3.css";
 import "./invoices-c7.css";
-import type {
-  Branch,
-  DemoInvoice,
-  DemoState,
-  InvoiceLine,
-  Language,
-  Product,
-  Role,
-  SupplierRecord,
-} from "../types";
+import type { DemoState, Language, Product, SupplierRecord } from "../types";
 
 type Translate = (en: string, fa: string) => string;
 function invoiceProductOption(
@@ -288,22 +281,6 @@ function categoryText(key: string, label: string, t: Translate) {
   return t(label, fa[key] ?? label);
 }
 
-type InvoiceReader = { role: Role | null; branch?: Branch };
-function readableInvoice(
-  invoice: DemoInvoice,
-  company: string,
-  reader: InvoiceReader,
-  state: DemoState,
-) {
-  return (
-    invoice.company_id === company &&
-    (reader.role === "supervisor" ||
-      (reader.role === "floor_worker" &&
-        (invoice.status === "posted"
-          ? effectiveInvoiceLocation(state, invoice)
-          : (invoice.handling_branch ?? invoice.branch)) === reader.branch))
-  );
-}
 /** Keep the previous workspace as a resumable record before opening another. */
 function retainInvoiceWorkspace(draft: DemoState) {
   if (
@@ -323,10 +300,185 @@ function retainInvoiceWorkspace(draft: DemoState) {
 }
 
 export default function Invoices() {
+  const { state, actor, can, command, navigate, t, authorityGeneration } =
+    useDemo();
+  const routeId = useRouteParam("id"),
+    routeVersion = useRouteParam("version");
+  const [entryPending, setEntryPending] = useState<{
+    targetId: string | null;
+  } | null>(null);
+  const entryPendingRef = useRef(false);
+  useLayoutEffect(() => {
+    entryPendingRef.current = entryPending !== null;
+  }, [entryPending]);
+  const startEntry = useCallback(
+    async (operation: () => Promise<string | null>) => {
+      if (entryPendingRef.current) return;
+      entryPendingRef.current = true;
+      setEntryPending({ targetId: null });
+      try {
+        const targetId = await operation();
+        if (targetId) setEntryPending({ targetId });
+        else {
+          entryPendingRef.current = false;
+          setEntryPending(null);
+        }
+      } catch (error) {
+        entryPendingRef.current = false;
+        setEntryPending(null);
+        throw error;
+      }
+    },
+    [],
+  );
+  const id = routeId ?? state.invoice?.id;
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+    entity_id: id,
+  };
+  useEffect(() => {
+    if (entryPending || !routeId || !actor || state.invoice?.id === routeId)
+      return;
+    // The protected read below renders the same canonical denial without retaining a prior workspace.
+    void command(
+      "invoices.read",
+      {
+        company_id: state.config.company.seed_key,
+        kind: "company_shared",
+        entity_id: routeId,
+      },
+      (draft, currentActor) =>
+        selectInvoiceWorkspace(draft, currentActor, routeId),
+    ).catch(() => undefined);
+  }, [
+    entryPending,
+    routeId,
+    state.invoice?.id,
+    state.config.company.seed_key,
+    actor,
+    command,
+  ]);
+  const read = useProtectedQuery(
+    id && routeVersion ? "invoices.cost_read" : null,
+    scope,
+    (canonical, currentActor) =>
+      invoiceWorkspaceRead(canonical, currentActor, id, routeVersion),
+    `${id ?? ""}:${routeVersion ?? ""}`,
+  );
+  const projected =
+    state.invoice_workspace?.invoice.id === id ? state.invoice_workspace : null;
+  const workspace = routeVersion ? read.data : projected;
+  // Clear only when the accepted route and both current projections agree.
+  // This render-time adjustment does not retain an obsolete protected DTO.
+  if (
+    entryPending?.targetId &&
+    routeId === entryPending.targetId &&
+    state.invoice?.id === entryPending.targetId &&
+    workspace?.invoice.id === entryPending.targetId
+  )
+    setEntryPending(null);
+  if (!actor || !can("invoices.read", scope))
+    return (
+      <EmptyState>
+        {t(
+          "Sign in as a Floor Worker or Supervisor to receive invoices.",
+          "برای دریافت فاکتور به عنوان کارمند فروشگاه یا سرپرست وارد شوید.",
+        )}
+      </EmptyState>
+    );
+  if (!workspace)
+    return (
+      <>
+        <PageHeader
+          title={t("Invoices", "فاکتورها")}
+          actions={
+            <Button
+              disabled={
+                entryPending !== null ||
+                actor.selection.kind !== "location" ||
+                !can("invoices.enter", scope)
+              }
+              onClick={async () => {
+                if (actor.selection.kind !== "location") return;
+                const location = actor.selection.location_id;
+                await startEntry(async () => {
+                  const newId = await command(
+                    "invoices.enter",
+                    {
+                      company_id: actor.company_id,
+                      kind: "location_record",
+                      location_ids: [location],
+                      mutation: true,
+                      location_policy: "active_only",
+                    },
+                    (draft, currentActor) => {
+                      retainInvoiceWorkspace(draft);
+                      draft.invoice = createInvoice(
+                        draft,
+                        currentActor,
+                        location,
+                      );
+                      draft.invoice.receiving_employee = currentActor.actor;
+                      return draft.invoice.id;
+                    },
+                  );
+                  navigate(`invoices?id=${encodeURIComponent(newId)}`);
+                  return newId;
+                });
+              }}
+            >
+              {t("New invoice", "فاکتور جدید")}
+            </Button>
+          }
+        />
+        {!read.pending && (
+          <EmptyState>
+            {t(
+              "Choose an invoice in your branch, or start a new invoice.",
+              "فاکتوری در شعبه خود انتخاب کنید یا فاکتور جدید شروع کنید.",
+            )}
+          </EmptyState>
+        )}
+        {state.invoices.map((invoice) => (
+          <Card key={invoice.id}>
+            <TableRowLink
+              aria-label={t("View invoice", "مشاهده فاکتور")}
+              href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+            >
+              {invoice.supplier_invoice_number} · {invoice.supplier}
+            </TableRowLink>
+          </Card>
+        ))}
+      </>
+    );
+  return (
+    <div aria-busy={entryPending !== null} inert={entryPending !== null}>
+      <InvoiceWorkspace
+        key={`${actor.session_id}:${actor.authority_epoch}:${authorityGeneration}:${workspace.invoice.id}`}
+        workspace={workspace}
+        startEntry={startEntry}
+        entryPending={entryPending !== null}
+      />
+    </div>
+  );
+}
+function InvoiceWorkspace({
+  workspace,
+  startEntry,
+  entryPending,
+}: {
+  workspace: InvoiceWorkspaceRead;
+  startEntry: (operation: () => Promise<string | null>) => Promise<void>;
+  entryPending: boolean;
+}) {
   const {
     state,
-    update,
-    role,
+    actor,
+    command,
+    query,
+    can,
+    demoUsers,
     branch,
     lang,
     t,
@@ -336,7 +488,6 @@ export default function Invoices() {
     navigate,
   } = useDemo();
   const routeId = useRouteParam("id");
-  const routeVersion = useRouteParam("version");
   const supplierFilter = useRouteParam("supplier");
   const fromFilter = useRouteParam("from");
   const toFilter = useRouteParam("to");
@@ -392,8 +543,8 @@ export default function Invoices() {
     },
   ]);
   const branches = configuredBranches(state.config);
-  const invoiceLocation = effectiveInvoiceLocation(state, state.invoice);
-  const locationSuggestion = suggestedInvoiceLocation(state, state.invoice);
+  const invoiceLocation = workspace.invoice.branch;
+  const locationSuggestion = workspace.locationSuggestion;
   const [supplierEditorOpen, setSupplierEditorOpen] = useState(false);
   const [supplierToEdit, setSupplierToEdit] = useState<SupplierRecord>();
   const [attemptedPost, setAttemptedPost] = useState(false);
@@ -405,43 +556,63 @@ export default function Invoices() {
   const [receivedError, setReceivedError] =
     useState<CompanyLocalTimeError["code"]>();
   const [productEditorOpen, setProductEditorOpen] = useState(false);
-  const invoice = state.invoice;
-  const reader = { role, branch: user?.branch };
-  const readerRef = useRef<InvoiceReader>(reader);
-  useEffect(() => {
-    readerRef.current = { role, branch: user?.branch };
-  }, [role, user]);
-  const canReadWorkspace = readableInvoice(
-    invoice,
-    state.config.company.seed_key,
-    reader,
-    state,
-  );
+  const invoice = workspace.invoice;
+  const scope = {
+    company_id: invoice.company_id,
+    kind: "company_shared" as const,
+    entity_id: invoice.id,
+  };
+  const canReadWorkspace = true;
+  const [message, setMessage] = useState("");
   const updateInvoice = useCallback(
-    (mutator: (draft: DemoState) => void) => {
-      update((draft) => {
-        if (
-          !readableInvoice(
-            draft.invoice,
-            draft.config.company.seed_key,
-            readerRef.current,
-            draft,
-          )
-        )
-          throw new Error("Choose an invoice in your allowed branch.");
-        mutator(draft);
-        initializeInvoiceManualPriceDecisions(draft);
-      });
+    async <T,>(
+      mutator: (draft: DemoState, currentActor: AuthenticatedActor) => T,
+      capability: InvoiceCapability | "suppliers.confirm" = "invoices.edit",
+    ): Promise<T | undefined> => {
+      try {
+        return await command(
+          capability,
+          {
+            company_id: invoice.company_id,
+            kind: "company_shared",
+            entity_id: invoice.id,
+          },
+          (draft, currentActor) => {
+            if (draft.invoice.id !== invoice.id)
+              selectInvoiceWorkspace(draft, currentActor, invoice.id);
+            requireInvoiceAuthority(
+              draft,
+              currentActor,
+              capability === "suppliers.confirm" ? "invoices.read" : capability,
+              invoice.id,
+              capability !== "suppliers.confirm",
+            );
+            const result = mutator(draft, currentActor);
+            if (
+              draft.invoice.status !== "posted" &&
+              capability === "invoices.edit"
+            )
+              initializeInvoiceManualPriceDecisions(draft, currentActor);
+            return result;
+          },
+        );
+      } catch (cause) {
+        setMessage(
+          cause instanceof Error
+            ? cause.message
+            : t("The invoice changed.", "فاکتور تغییر کرد."),
+        );
+        return undefined;
+      }
     },
-    [update],
+    [command, invoice.id, invoice.company_id, t],
   );
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveTarget, setMoveTarget] = useState("");
   const [moveReason, setMoveReason] = useState("");
   const [moveError, setMoveError] = useState("");
   const [moveAttempted, setMoveAttempted] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(!invoice.file_data);
-  const [message, setMessage] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(!invoice.original_available);
   const [postOpen, setPostOpen] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadPending, setUploadPending] = useState(false);
@@ -454,7 +625,7 @@ export default function Invoices() {
   const [deliveryErrors, setDeliveryErrors] = useState<
     Record<string, { quantity?: string; reference?: string }>
   >({});
-  const blockers = role ? invoiceBlockers(state, role, branch) : [];
+  const blockers = workspace.blockers;
   const currentTab: InvoiceTab =
     invoice.status === "reading"
       ? "processing"
@@ -506,30 +677,23 @@ export default function Invoices() {
         .minus(refused.total)
         .toFixed(2)
     : "0.00";
-  const lowerLines = lowerPriceLines(state);
+  const lowerLines = workspace.lowerLineIndexes.map((index) => ({
+    line: invoice.lines[index],
+    index,
+  }));
   const locked = invoice.status === "posted";
-  const displayedVersion = invoiceVersion(state, invoice, routeVersion);
+  const displayedVersion = workspace.displayedVersion;
   const active = invoice.status !== "empty";
-  const unreadOriginal = (item: DemoInvoice) =>
-    item.status === "empty" && Boolean(item.file_data);
-  let movePreview: InvoiceMovePreview | null = null;
-  if (moveOpen && role === "supervisor" && moveTarget) {
-    try {
-      movePreview = invoiceLocationMovePreview(
-        state,
-        {
-          company_id: state.config.company.seed_key,
-          role,
-          branch,
-          actor: user?.name ?? "",
-        },
-        invoice.id,
-        moveTarget,
-      );
-    } catch {
-      movePreview = null;
-    }
-  }
+  const unreadOriginal = (item: InvoiceReadDTO) =>
+    item.status === "empty" && item.original_available;
+  const moveRead = useProtectedQuery(
+    moveOpen && moveTarget ? "invoices.relocate" : null,
+    scope,
+    (canonical, currentActor) =>
+      invoiceMoveRead(canonical, currentActor, invoice.id, moveTarget),
+    `${invoice.id}:${moveTarget}`,
+  );
+  const movePreview = moveRead.data;
   const moveIssues: ValidationIssue[] = moveAttempted
     ? [
         ...(!movePreview
@@ -558,15 +722,7 @@ export default function Invoices() {
           : []),
       ]
     : [];
-  const fileSize =
-    invoice.file_size ??
-    (invoice.file_data?.startsWith("data:")
-      ? Math.floor(
-          ((invoice.file_data.split(",")[1] ?? "").replace(/=+$/, "").length *
-            3) /
-            4,
-        )
-      : undefined);
+  const fileSize = invoice.file_size;
   const supplierRecord = supplierRecords(state).find(
     (record) =>
       record.company_id === invoice.company_id &&
@@ -728,21 +884,13 @@ export default function Invoices() {
         add("matching", "matching");
       if (!validInvoiceLineQuantity(line)) add("quantity", "invoiced");
       else if (!validInvoiceLineReceived(line)) add("quantity", "delivered");
-      try {
-        invoiceLineCalculation(
-          line,
-          line.pricing_category ?? product?.pricing_category ?? "",
-          state.config,
-        );
-      } catch {
-        add("cost", "cost");
-      }
+      if (!workspace.lineDetails[index]?.costValid) add("cost", "cost");
       if (!line.review_confirmed) add("review", "confirm");
       if (!line.date_confirmed) add("date", "track");
       else if (line.date_tracking && !line.date_value) add("date", "date");
       if (
         product &&
-        manualPrice(state, product, invoice.branch) &&
+        workspace.lineDetails[index]?.manual &&
         acceptedInvoiceUnits(line) > 0 &&
         !line.short_dated &&
         !line.manual_price_decision
@@ -802,205 +950,167 @@ export default function Invoices() {
       window.removeEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
   }, [active, locked, lowerLines.length, canReadWorkspace, updateInvoice]);
 
-  useEffect(() => {
-    const loadLinkedInvoice = () => {
-      const [, query = ""] = window.location.hash.split("?");
-      const id = new URLSearchParams(query).get("id");
-      const linked = state.invoices?.find(
-        (item) =>
-          item.id === id &&
-          item.company_id === state.config.company.seed_key &&
-          (branch === "all" ||
-            effectiveInvoiceLocation(state, item) === branch) &&
-          readableInvoice(
-            item,
-            state.config.company.seed_key,
-            readerRef.current,
-            state,
-          ),
-      );
-      if (!linked || linked.id === invoice.id) return;
-      update((draft) => {
-        if (
-          !readableInvoice(
-            linked,
-            draft.config.company.seed_key,
-            readerRef.current,
-            draft,
-          )
-        )
-          return;
-        retainInvoiceWorkspace(draft);
-        draft.invoice = structuredClone(linked);
-        initializeInvoiceManualPriceDecisions(draft);
+  async function start(manual = false) {
+    if (!actor || actor.selection.kind !== "location") return;
+    const location = actor.selection.location_id;
+    try {
+      await startEntry(async () => {
+        const id = await command(
+          manual ? "invoices.enter_manual" : "invoices.enter",
+          {
+            company_id: actor.company_id,
+            kind: "location_record",
+            location_ids: [location],
+            mutation: true,
+            location_policy: "active_only",
+          },
+          (draft, currentActor) => {
+            retainInvoiceWorkspace(draft);
+            draft.invoice = createInvoice(
+              draft,
+              currentActor,
+              location,
+              manual,
+            );
+            draft.invoice.receiving_employee = currentActor.actor;
+            initializeInvoiceManualPriceDecisions(draft, currentActor);
+            return draft.invoice.id;
+          },
+        );
+        setSelectedView(null);
+        navigate(`invoices?id=${encodeURIComponent(id)}`);
+        setDetailsOpen(manual);
+        setMessage("");
+        setUploadError("");
+        setOpenLines({});
+        setAttemptedPost(false);
+        setReceivedEdit(undefined);
+        setReceivedError(undefined);
+        return id;
       });
-      setDetailsOpen(false);
-    };
-    loadLinkedInvoice();
-    window.addEventListener("hashchange", loadLinkedInvoice);
-    return () => window.removeEventListener("hashchange", loadLinkedInvoice);
-  }, [state, branch, invoice.id, update]);
-
-  if (role === "cashier" || !role)
-    return (
-      <EmptyState>
-        {t(
-          "Sign in as a Floor Worker or Supervisor to receive invoices.",
-          "برای دریافت فاکتور به عنوان کارمند فروشگاه یا سرپرست وارد شوید.",
-        )}
-      </EmptyState>
-    );
-
-  function start(manual = false) {
-    let id = "";
-    update((draft) => {
-      const currentReader = readerRef.current;
-      if (
-        currentReader.role !== "supervisor" &&
-        currentReader.role !== "floor_worker"
-      )
-        return;
-      const targetBranch =
-        currentReader.role === "supervisor"
-          ? currentReader.branch && currentReader.branch !== "all"
-            ? currentReader.branch
-            : branch === "all"
-              ? configuredBranches(draft.config)[0]
-              : branch
-          : currentReader.branch;
-      if (
-        !targetBranch ||
-        !configuredBranches(draft.config).includes(targetBranch)
-      )
-        return;
-      retainInvoiceWorkspace(draft);
-      draft.invoice = createInvoice(draft, targetBranch, manual);
-      draft.invoice.receiving_employee = user?.name;
-      initializeInvoiceManualPriceDecisions(draft);
-      id = draft.invoice.id;
-    });
-    setSelectedView(null);
-    if (id) navigate(`invoices?id=${encodeURIComponent(id)}`);
-    setDetailsOpen(manual);
-    setMessage("");
-    setUploadError("");
-    setOpenLines({});
-    setAttemptedPost(false);
-    setReceivedEdit(undefined);
-    setReceivedError(undefined);
+    } catch (cause) {
+      setMessage(
+        cause instanceof Error
+          ? cause.message
+          : t("The invoice changed.", "فاکتور تغییر کرد."),
+      );
+    }
   }
 
   async function attachFile(file: File) {
     const targetInvoiceId = invoice.id;
     setUploadPending(true);
     try {
-      const includedSvg =
-        file.type === "image/svg+xml" &&
-        sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
-          INCLUDED_COST_INVOICE_SHA256;
-      if (
-        !includedSvg &&
-        !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
-        file.type !== "application/pdf"
-      ) {
-        setUploadError(
-          t(
-            "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
-            "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
-          ),
-        );
-        return;
-      }
-      const retained = await storeUploadedFile(
-        file,
-        state.config.company.seed_key,
-        { purpose: "invoice" },
-      );
-      const data = retained.reference;
-      let attachedId = "";
-      updateInvoice((draft) => {
-        const existing = draft.invoice;
-        if (existing.id !== targetInvoiceId)
-          throw new Error("The invoice changed while the original was saving.");
-        if (existing.status === "posted") {
-          attachPostedInvoiceOriginal(
-            draft,
-            {
-              company_id: draft.config.company.seed_key,
-              role: role!,
-              branch,
-              actor: user?.name ?? "",
-            },
-            existing.id,
-            {
-              file_name: file.name,
-              file_type: file.type,
-              file_data: data,
-              file_size: retained.size,
-            },
+      await startEntry(async () => {
+        const includedSvg =
+          file.type === "image/svg+xml" &&
+          sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
+            INCLUDED_COST_INVOICE_SHA256;
+        if (
+          !includedSvg &&
+          !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
+          file.type !== "application/pdf"
+        ) {
+          setUploadError(
+            t(
+              "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
+              "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
+            ),
           );
-          attachedId = existing.id;
-          return;
+          return null;
         }
-        const recognizedOriginal =
-          data.endsWith(`:${INCLUDED_COST_INVOICE_SHA256}`) &&
-          draft.config.company.seed_key === configSeed.company.seed_key;
-        let next = existing;
-        if (recognizedOriginal && existing.entry_mode !== "manual") {
-          const retainedInvoice = [
-            draft.invoice,
-            ...(draft.invoices ?? []),
-          ].find(
-            (item) =>
-              item.company_id === draft.config.company.seed_key &&
-              item.id === demo.sales_demo.cost_increase_invoice.id,
-          );
-          if (retainedInvoice) {
-            if (retainedInvoice.id !== existing.id)
-              retainInvoiceWorkspace(draft);
-            next = structuredClone(retainedInvoice);
-            if (next.status === "posted") {
-              draft.invoice = next;
-              attachedId = next.id;
-              return;
+        const retained = await storeInvoiceUpload(query, file, {
+          company_id: invoice.company_id,
+          invoice_id: targetInvoiceId,
+        });
+        const attachedId = await updateInvoice(
+          (draft, currentActor) => {
+            const stored = consumeInvoiceUpload(draft, currentActor, retained);
+            const data = stored.file_data;
+            const existing = draft.invoice;
+            if (existing.id !== targetInvoiceId)
+              throw new Error(
+                "The invoice changed while the original was saving.",
+              );
+            if (existing.status === "posted") {
+              attachPostedInvoiceOriginal(
+                draft,
+                currentActor,
+                existing.id,
+                stored,
+              );
+              return existing.id;
             }
-          } else {
-            retainInvoiceWorkspace(draft);
-            next = demoSaleCostInvoice(draft, existing.branch);
-            next.receiving_employee = user?.name;
-          }
-        } else if (existing.status === "empty") {
-          retainInvoiceWorkspace(draft);
-          next = createInvoice(
-            draft,
-            user?.branch && user.branch !== "all"
-              ? user.branch
-              : branch === "all"
-                ? branches[0]
-                : branch,
-          );
-        }
-        if (existing.status === "empty") next.receiving_employee = user?.name;
-        next.file_name = file.name;
-        next.file_type = file.type;
-        next.file_data = data;
-        next.file_size = retained.size;
-        // Existing manual entries stay intact when their original is attached.
-        next.status =
-          next.entry_mode === "manual"
-            ? "review"
-            : next.lines.length
-              ? "reading"
-              : "draft";
-        draft.invoice = next;
-        attachedId = next.id;
+            const recognizedOriginal =
+              data.endsWith(`:${INCLUDED_COST_INVOICE_SHA256}`) &&
+              draft.config.company.seed_key === configSeed.company.seed_key;
+            let next = existing;
+            if (recognizedOriginal && existing.entry_mode !== "manual") {
+              const retainedInvoice = [
+                draft.invoice,
+                ...(draft.invoices ?? []),
+              ].find(
+                (item) =>
+                  item.company_id === draft.config.company.seed_key &&
+                  item.id === demo.sales_demo.cost_increase_invoice.id,
+              );
+              if (retainedInvoice) {
+                requireInvoiceAuthority(
+                  draft,
+                  currentActor,
+                  "invoices.cost_read",
+                  retainedInvoice.id,
+                );
+                if (retainedInvoice.id !== existing.id)
+                  retainInvoiceWorkspace(draft);
+                next = structuredClone(retainedInvoice);
+                if (next.status === "posted") {
+                  draft.invoice = next;
+                  return next.id;
+                }
+              } else {
+                retainInvoiceWorkspace(draft);
+                next = demoSaleCostInvoice(
+                  draft,
+                  currentActor,
+                  existing.branch,
+                );
+                next.receiving_employee = user?.name;
+              }
+            } else if (existing.status === "empty") {
+              retainInvoiceWorkspace(draft);
+              next = createInvoice(draft, currentActor, existing.branch);
+            }
+            if (existing.status === "empty")
+              next.receiving_employee = user?.name;
+            next.file_name = file.name;
+            next.file_type = file.type;
+            next.file_data = data;
+            next.file_size = stored.file_size;
+            // Existing manual entries stay intact when their original is attached.
+            next.status =
+              next.entry_mode === "manual"
+                ? "review"
+                : next.lines.length
+                  ? "reading"
+                  : "draft";
+            draft.invoice = next;
+            return next.id;
+          },
+          invoice.status === "posted"
+            ? "invoices.attach_posted_original"
+            : "invoices.edit",
+        );
+        if (!attachedId) return null;
+        setUploadError("");
+        setMessage("");
+        setSelectedView(null);
+        setDetailsOpen(false);
+        // The retained original and its review have a distinct browser-history entry.
+        if (attachedId)
+          navigate(`invoices?id=${encodeURIComponent(attachedId)}`);
+        return attachedId ?? null;
       });
-      setUploadError("");
-      setMessage("");
-      setSelectedView(null);
-      setDetailsOpen(false);
-      // The retained original and its review have a distinct browser-history entry.
-      if (attachedId) navigate(`invoices?id=${encodeURIComponent(attachedId)}`);
     } catch {
       setUploadError(
         t(
@@ -1014,9 +1124,9 @@ export default function Invoices() {
   }
 
   function setInvoiceLineQuantity(
-    line: InvoiceLine,
+    line: InvoiceEditableLine,
     value: string | number,
-    unit: NonNullable<InvoiceLine["quantity_unit"]>,
+    unit: NonNullable<InvoiceEditableLine["quantity_unit"]>,
     pack?: number,
   ) {
     if (line.sold_by === "weight")
@@ -1037,13 +1147,17 @@ export default function Invoices() {
 
   function editLine(
     index: number,
-    change: (line: InvoiceLine) => void,
+    change: (
+      line: InvoiceEditableLine,
+      draft: DemoState,
+      currentActor: AuthenticatedActor,
+    ) => void,
     recalculate = false,
   ) {
-    updateInvoice((draft) => {
+    updateInvoice((draft, currentActor) => {
       if (draft.invoice.status === "posted") return;
       const before = draft.invoice.lines[index];
-      const fingerprint = (line: InvoiceLine) =>
+      const fingerprint = (line: InvoiceEditableLine) =>
         JSON.stringify([
           line.product_code,
           line.supplier_item_id,
@@ -1064,7 +1178,7 @@ export default function Invoices() {
           line.case_weight_unit,
         ]);
       const old = fingerprint(before);
-      change(draft.invoice.lines[index]);
+      change(draft.invoice.lines[index], draft, currentActor);
       if (fingerprint(before) !== old) {
         clearInvoiceOrderLine(before);
         draft.invoice.order_missing_decisions = undefined;
@@ -1077,7 +1191,7 @@ export default function Invoices() {
     setMessage("");
   }
 
-  function post() {
+  async function post() {
     if (blockers.length) {
       setAttemptedPost(true);
       setDetailsOpen(true);
@@ -1089,9 +1203,11 @@ export default function Invoices() {
       );
       return;
     }
-    updateInvoice((draft) => {
-      postInvoice(draft, role!, branch, user?.name);
-    });
+    const posted = await updateInvoice(
+      (draft, currentActor) => postInvoice(draft, currentActor),
+      "invoices.post",
+    );
+    if (!posted) return;
     setSelectedView(null);
     navigate(`invoices?id=${encodeURIComponent(invoice.id)}`);
     setMessage(
@@ -1102,7 +1218,10 @@ export default function Invoices() {
     );
   }
 
-  function sourceDeliveryQuantity(line: InvoiceLine, canonical: number) {
+  function sourceDeliveryQuantity(
+    line: InvoiceEditableLine,
+    canonical: number,
+  ) {
     return line.sold_by === "weight"
       ? new Decimal(
           weightQuantityFromLb(
@@ -1116,8 +1235,8 @@ export default function Invoices() {
       : canonical;
   }
 
-  function receive(index: number) {
-    const line = effectiveInvoiceVersion(state, invoice).lines[index];
+  async function receive(index: number) {
+    const line = invoice.lines[index];
     const code = line.product_code;
     const remaining = lineShort(line).quantity - (line.qty_later_received ?? 0);
     const enteredQuantity =
@@ -1166,20 +1285,24 @@ export default function Invoices() {
       }));
       return;
     }
-    // The amount is a pure allocation preview; posting stores the same result once.
-    const oldLedgerIds = new Set(state.ledger.map((entry) => entry.id));
-    const preview = structuredClone(state);
-    const restored = receiveShort(
-      preview,
-      code,
-      quantity,
-      receipt,
-      role!,
-      branch,
-      index,
-      user?.name ?? "",
-    );
-    if (preview.ledger.every((entry) => oldLedgerIds.has(entry.id))) {
+    const outcome = await updateInvoice((draft, currentActor) => {
+      const oldIds = new Set(draft.ledger.map((row) => row.id));
+      const restored = receiveShort(
+        draft,
+        code,
+        quantity,
+        receipt,
+        currentActor,
+        index,
+      );
+      return {
+        restored,
+        duplicate: draft.ledger.every((row) => oldIds.has(row.id)),
+      };
+    }, "invoices.short_resolve");
+    if (!outcome) return;
+    const restored = outcome.restored;
+    if (outcome.duplicate) {
       setMessage(
         t(
           "This delivery reference was already recorded. No delivery or money was added.",
@@ -1188,18 +1311,6 @@ export default function Invoices() {
       );
       return;
     }
-    updateInvoice((draft) => {
-      receiveShort(
-        draft,
-        code,
-        quantity,
-        receipt,
-        role!,
-        branch,
-        index,
-        user?.name ?? "",
-      );
-    });
     setMessage(
       `${t("Received short delivery. Payable restored:", "تحویل کسری دریافت شد. مبلغ بدهی بازگردانده‌شده:")} \u2066${money(restored)}\u2069`,
     );
@@ -1212,7 +1323,6 @@ export default function Invoices() {
       (item) =>
         item.company_id === state.config.company.seed_key &&
         item.status === "posted" &&
-        readableInvoice(item, state.config.company.seed_key, reader, state) &&
         (branch === "all" ||
           effectiveInvoiceLocation(state, item) === branch) &&
         (!supplierFilter ||
@@ -1239,8 +1349,9 @@ export default function Invoices() {
         item.id !== invoice.id &&
         (item.status !== "empty" || unreadOriginal(item)) &&
         item.status !== "posted" &&
-        readableInvoice(item, state.config.company.seed_key, reader, state) &&
-        (role === "floor_worker" || branch === "all" || item.branch === branch),
+        (branch === "all" ||
+          item.branch === branch ||
+          item.reviewer_origin_location_id === branch),
     ) ?? []),
     ...(!routeId &&
     (active || unreadOriginal(invoice)) &&
@@ -1254,28 +1365,22 @@ export default function Invoices() {
       return saved.status === "draft" || unreadOriginal(saved);
     if (tab === "processing") return saved.status === "reading";
     if (saved.status !== "review") return false;
-    const needsReview =
-      invoiceBlockers({ ...state, invoice: saved }, role!, branch).length > 0;
+    const needsReview = (workspace.blockersById[saved.id] ?? []).length > 0;
     return tab === "needs_review"
       ? needsReview
       : tab === "ready_to_post" && !needsReview;
   });
-  const resume = (saved: DemoInvoice) => {
-    update((draft) => {
-      if (
-        !readableInvoice(
-          saved,
-          draft.config.company.seed_key,
-          readerRef.current,
-          draft,
-        )
-      )
-        return;
-      retainInvoiceWorkspace(draft);
-      draft.invoice = structuredClone(saved);
-      if (unreadOriginal(saved)) draft.invoice.status = "reading";
-      initializeInvoiceManualPriceDecisions(draft);
-    });
+  const resume = async (saved: InvoiceReadDTO) => {
+    await command(
+      "invoices.read",
+      {
+        company_id: saved.company_id,
+        kind: "company_shared",
+        entity_id: saved.id,
+      },
+      (draft, currentActor) =>
+        selectInvoiceWorkspace(draft, currentActor, saved.id),
+    );
     setDetailsOpen(true);
     setSelectedView(null);
     navigate(`invoices?id=${encodeURIComponent(saved.id)}`);
@@ -1343,8 +1448,8 @@ export default function Invoices() {
   const laterShortDeliveries = (
     <>
       {locked &&
-        effectiveInvoiceVersion(state, invoice)
-          .lines.map((line, index) => ({ line, index }))
+        invoice.lines
+          .map((line, index) => ({ line, index }))
           .filter(({ line }) => lineShort(line).quantity > 0)
           .map(({ line, index }) => {
             const remaining =
@@ -1450,7 +1555,7 @@ export default function Invoices() {
                     <Button
                       variant="neutral"
                       onClick={() => receive(index)}
-                      disabled={branch !== invoiceLocation}
+                      disabled={!can("invoices.short_resolve", scope)}
                     >
                       {t("Receive short delivery", "دریافت تحویل کسری")}
                     </Button>
@@ -1525,8 +1630,8 @@ export default function Invoices() {
           invoiceQuickAdd
           onClose={() => setProductEditorOpen(false)}
           onCreated={(product) =>
-            updateInvoice((draft) => {
-              addManualLine(draft, product.code);
+            updateInvoice((draft, currentActor) => {
+              addManualLine(draft, currentActor, product.code);
             })
           }
         />
@@ -1554,8 +1659,8 @@ export default function Invoices() {
           <Button
             variant={active && !locked ? "neutral" : "primary"}
             onClick={() => start()}
-            disabled={uploadPending}
-            aria-busy={uploadPending}
+            disabled={uploadPending || entryPending}
+            aria-busy={uploadPending || entryPending}
           >
             {t("New invoice", "فاکتور جدید")}
           </Button>
@@ -1643,10 +1748,9 @@ export default function Invoices() {
                           href={`#invoices?id=${encodeURIComponent(item.id)}`}
                           onClick={(event) => {
                             event.preventDefault();
-                            updateInvoice((draft) => {
-                              retainInvoiceWorkspace(draft);
-                              draft.invoice = structuredClone(item);
-                            });
+                            // The route effect selects the protected workspace.
+                            // Starting resume() here also navigated after its
+                            // async command, which could undo browser Back.
                             chooseTab("posted", true);
                             setDetailsOpen(false);
                             navigate(
@@ -1724,8 +1828,7 @@ export default function Invoices() {
                 setMoveOpen(true);
               }}
             >
-              {displayedVersion.version_id ===
-                invoiceContentVersions(state, invoice).at(-1)!.version_id &&
+              {displayedVersion.version_id === workspace.latestVersionId &&
                 laterShortDeliveries}
             </PostedInvoice>
           </div>
@@ -1736,7 +1839,8 @@ export default function Invoices() {
             <OriginalInvoice
               invoice={invoice}
               onAttach={
-                !invoice.file_data && role === "supervisor"
+                !invoice.original_available &&
+                can("invoices.attach_posted_original", scope)
                   ? () => originalInput.current?.click()
                   : undefined
               }
@@ -1781,7 +1885,7 @@ export default function Invoices() {
                       "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
                     )}
                   </p>
-                  {!invoice.file_data &&
+                  {!invoice.original_available &&
                     (invoice.entry_mode !== "manual" ||
                       !invoice.lines.length) && (
                       <div
@@ -1798,10 +1902,12 @@ export default function Invoices() {
                               : "primary"
                           }
                           onClick={() => start(false)}
+                          disabled={entryPending}
+                          aria-busy={entryPending}
                         >
                           {t("Upload", "بارگذاری")}
                         </Button>
-                        {role === "supervisor" && (
+                        {can("invoices.enter_manual", scope) && (
                           <Button
                             variant={
                               invoice.entry_mode === "manual"
@@ -1809,6 +1915,8 @@ export default function Invoices() {
                                 : "neutral"
                             }
                             onClick={() => start(true)}
+                            disabled={entryPending}
+                            aria-busy={entryPending}
                           >
                             {t("Manual entry", "ورود دستی")}
                           </Button>
@@ -1833,7 +1941,7 @@ export default function Invoices() {
                         onChange={(file) => {
                           void attachFile(file);
                         }}
-                        disabled={invoice.status === "reading"}
+                        disabled={invoice.status === "reading" || entryPending}
                         onRemove={() => {
                           updateInvoice((draft) => {
                             if (draft.invoice.status === "posted") return;
@@ -1853,7 +1961,7 @@ export default function Invoices() {
                 invoice={invoice}
                 bare
                 onAttach={
-                  !invoice.file_data && invoice.entry_mode === "manual"
+                  !invoice.original_available && invoice.entry_mode === "manual"
                     ? () =>
                         window.document
                           .querySelector<HTMLInputElement>(
@@ -2033,7 +2141,7 @@ export default function Invoices() {
                     {configuredBranchLabel(state.config, invoiceLocation, lang)}{" "}
                     · <DateText value={invoice.invoice_date} />
                   </p>
-                  {locked && role === "supervisor" && (
+                  {locked && can("invoices.relocate", scope) && (
                     <div className="invoice-location-correction">
                       <Button
                         variant="neutral"
@@ -2070,13 +2178,14 @@ export default function Invoices() {
                         <Button
                           variant="neutral"
                           onClick={() =>
-                            updateInvoice((draft) =>
-                              setInvoiceLocation(
-                                draft,
-                                role!,
-                                user?.branch ?? branch,
-                                locationSuggestion,
-                              ),
+                            updateInvoice(
+                              (draft, currentActor) =>
+                                setInvoiceLocation(
+                                  draft,
+                                  currentActor,
+                                  locationSuggestion,
+                                ),
+                              "invoices.assign_receiving_location",
                             )
                           }
                         >
@@ -2186,12 +2295,13 @@ export default function Invoices() {
                         <input
                           dir="ltr"
                           value={invoice.supplier_invoice_number}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const inputValue = event.currentTarget.value;
                             updateInvoice((draft) => {
                               draft.invoice.supplier_invoice_number =
-                                event.target.value;
-                            })
-                          }
+                                inputValue;
+                            });
+                          }}
                           placeholder={t(
                             "Assigned on posting if blank",
                             "اگر خالی باشد هنگام ثبت تعیین می‌شود",
@@ -2301,16 +2411,14 @@ export default function Invoices() {
                         <Select
                           id="invoice-location"
                           value={invoiceLocation}
-                          disabled={locked}
+                          disabled={
+                            locked ||
+                            !can("invoices.assign_receiving_location", scope)
+                          }
                           onChange={(value) => {
-                            updateInvoice((draft) => {
-                              setInvoiceLocation(
-                                draft,
-                                role!,
-                                user?.branch ?? branch,
-                                value,
-                              );
-                            });
+                            updateInvoice((draft, currentActor) => {
+                              setInvoiceLocation(draft, currentActor, value);
+                            }, "invoices.assign_receiving_location");
                           }}
 
                           options={branches.map((item) => ({
@@ -2329,11 +2437,12 @@ export default function Invoices() {
                         <input
                           value={invoice.ship_to ?? ""}
                           disabled={locked}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const inputValue = event.currentTarget.value;
                             updateInvoice((draft) => {
-                              draft.invoice.ship_to = event.target.value;
-                            })
-                          }
+                              draft.invoice.ship_to = inputValue;
+                            });
+                          }}
                         />
                       </Field>
                       <Field
@@ -2346,15 +2455,16 @@ export default function Invoices() {
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.subtotal}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const inputValue = event.currentTarget.value;
                             updateInvoice((draft) => {
                               setInvoiceAmount(
                                 draft.invoice,
                                 "subtotal",
-                                event.target.value,
+                                inputValue,
                               );
-                            })
-                          }
+                            });
+                          }}
                         />
                       </Field>
                       <Field
@@ -2367,15 +2477,16 @@ export default function Invoices() {
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.tax}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const inputValue = event.currentTarget.value;
                             updateInvoice((draft) => {
                               setInvoiceAmount(
                                 draft.invoice,
                                 "tax",
-                                event.target.value,
+                                inputValue,
                               );
-                            })
-                          }
+                            });
+                          }}
                         />
                       </Field>
                       <Field
@@ -2388,15 +2499,16 @@ export default function Invoices() {
                           className="control-narrow"
                           inputMode="decimal"
                           value={invoice.final_total}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const inputValue = event.currentTarget.value;
                             updateInvoice((draft) => {
                               setInvoiceAmount(
                                 draft.invoice,
                                 "final_total",
-                                event.target.value,
+                                inputValue,
                               );
-                            })
-                          }
+                            });
+                          }}
                         />
                       </Field>
                       <Field
@@ -2454,7 +2566,7 @@ export default function Invoices() {
                             "در انتظار تکمیل و تأیید اطلاعات تأمین‌کننده توسط سرپرست.",
                           )}
                         </p>
-                        {role === "supervisor" && (
+                        {can("suppliers.confirm", scope) && (
                           <div className="actions">
                             <Button
                               variant="neutral"
@@ -2476,13 +2588,13 @@ export default function Invoices() {
                                   setSupplierEditorOpen(true);
                                   return;
                                 }
-                                updateInvoice((draft) =>
-                                  confirmInvoiceSupplierReview(draft, {
-                                    company_id: draft.config.company.seed_key,
-                                    role,
-                                    branch,
-                                    actor: user?.name ?? "",
-                                  }),
+                                updateInvoice(
+                                  (draft, currentActor) =>
+                                    confirmInvoiceSupplierReview(
+                                      draft,
+                                      currentActor,
+                                    ),
+                                  "suppliers.confirm",
                                 );
                               }}
                             >
@@ -2563,26 +2675,13 @@ export default function Invoices() {
                       const short = lineShort(line);
                       const refusedLine = lineRefused(line);
                       const manual = product
-                        ? manualPrice(state, product, invoice.branch)
+                        ? workspace.lineDetails[index]?.manual
                         : null;
-                      const manualReplacement = manualDecisionForLine(
-                        state,
-                        line,
-                        invoiceLocation,
-                      );
-                      let price: string | null = null;
-                      let costValid = true;
-                      try {
-                        price = locked
-                          ? line.calculated_selling_price
-                          : invoiceLineCalculation(
-                              line,
-                              category.key,
-                              state.config,
-                            ).selling_price;
-                      } catch {
-                        costValid = false;
-                      }
+                      const manualReplacement =
+                        workspace.lineDetails[index]?.manualReplacement;
+                      const price = workspace.lineDetails[index]?.price ?? null;
+                      const costValid =
+                        workspace.lineDetails[index]?.costValid ?? false;
                       const oldPrice =
                         product?.branch_prices?.[invoice.branch] ||
                         product?.selling_price ||
@@ -2594,31 +2693,7 @@ export default function Invoices() {
                             line.description)
                           : (product?.name_en ?? line.description);
                       const dateSuggestions =
-                        line.date_tracking && !locked && product
-                          ? reusableOtherLocationDates(
-                              state,
-                              {
-                                company_id: invoice.company_id,
-                                role: role!,
-                                branch,
-                                actor: user?.name ?? "",
-                                username: user?.username,
-                                allowed_branches:
-                                  role === "supervisor"
-                                    ? branches
-                                    : [user?.branch ?? branch],
-                              },
-                              {
-                                product_code: product.code,
-                                supplier: invoice.supplier,
-                                branch: invoiceLocation,
-                              },
-                            ).filter(
-                              (entry) =>
-                                !line.short_dated ||
-                                entry.date_type === "expiry",
-                            )
-                          : [];
+                        workspace.lineDetails[index]?.dateSuggestions ?? [];
                       const lineKey = `${invoice.id}:${index}`;
                       const needsDecision =
                         !locked &&
@@ -2900,21 +2975,23 @@ export default function Invoices() {
                                         ? (line.source_cost_before_tax ?? "")
                                         : line.unit_cost_before_tax
                                     }
-                                    onChange={(event) =>
+                                    onChange={(event) => {
+                                      const inputValue =
+                                        event.currentTarget.value;
                                       editLine(
                                         index,
                                         (item) => {
                                           if (item.sold_by === "weight") {
                                             setInvoiceWeightCost(
                                               item,
-                                              event.target.value,
+                                              inputValue,
                                               item.source_cost_unit ?? "lb",
                                               state.config,
                                             );
                                             return;
                                           }
                                           item.unit_cost_before_tax =
-                                            event.target.value;
+                                            inputValue;
                                           if (
                                             item.quantity_unit === "cases" &&
                                             /^\d+(?:\.\d{1,4})?$/.test(
@@ -2928,8 +3005,8 @@ export default function Invoices() {
                                               );
                                         },
                                         true,
-                                      )
-                                    }
+                                      );
+                                    }}
                                   />
                                 </Field>
                               )}
@@ -3253,25 +3330,30 @@ export default function Invoices() {
                                         dir="ltr"
                                         disabled={locked}
                                         value={line.supplier_item_code ?? ""}
-                                        onChange={(event) =>
-                                          editLine(index, (item) => {
-                                            item.supplier_item_code =
-                                              event.target.value;
-                                            item.supplier_item_id =
-                                              resolveSupplierItem(
-                                                state,
-                                                invoice.company_id,
-                                                invoice.supplier,
-                                                invoice.branch,
-                                                {
-                                                  product_code:
-                                                    item.product_code,
-                                                  supplier_item_code:
-                                                    event.target.value,
-                                                },
-                                              )?.id;
-                                          })
-                                        }
+                                        onChange={(event) => {
+                                          const inputValue =
+                                            event.currentTarget.value;
+                                          editLine(
+                                            index,
+                                            (item, draft, currentActor) => {
+                                              item.supplier_item_code =
+                                                inputValue;
+                                              item.supplier_item_id =
+                                                resolveSupplierItem(
+                                                  draft,
+                                                  currentActor,
+                                                  draft.invoice.supplier,
+                                                  draft.invoice.branch,
+                                                  {
+                                                    product_code:
+                                                      item.product_code,
+                                                    supplier_item_code:
+                                                      inputValue,
+                                                  },
+                                                )?.id;
+                                            },
+                                          );
+                                        }}
                                       />
                                     </Field>
                                     {line.sold_by !== "weight" &&
@@ -3290,16 +3372,18 @@ export default function Invoices() {
                                             value={
                                               line.case_cost_before_tax ?? ""
                                             }
-                                            onChange={(event) =>
+                                            onChange={(event) => {
+                                              const inputValue =
+                                                event.currentTarget.value;
                                               editLine(
                                                 index,
                                                 (item) => {
                                                   item.case_cost_before_tax =
-                                                    event.target.value;
+                                                    inputValue;
                                                   try {
                                                     item.unit_cost_before_tax =
                                                       costPerUnit(
-                                                        event.target.value,
+                                                        inputValue,
                                                         item.units_per_case ??
                                                           1,
                                                       );
@@ -3309,8 +3393,8 @@ export default function Invoices() {
                                                   }
                                                 },
                                                 true,
-                                              )
-                                            }
+                                              );
+                                            }}
                                           />
                                         </Field>
                                       )}
@@ -3348,12 +3432,20 @@ export default function Invoices() {
                                         onChange={(value) =>
                                           editLine(
                                             index,
-                                            (item) => {
+                                            (item, draft) => {
                                               item.product_code = value;
                                               const chosen =
-                                                state.products.find(
+                                                draft.products.find(
                                                   (entry) =>
-                                                    entry.code === value,
+                                                    entry.code === value &&
+                                                    entry.company_id ===
+                                                      draft.invoice
+                                                        .company_id &&
+                                                    entry.status !== "archived",
+                                                );
+                                              if (value !== "NEW" && !chosen)
+                                                throw new Error(
+                                                  "Choose a product.",
                                                 );
                                               if (chosen) {
                                                 item.pricing_category =
@@ -3367,7 +3459,7 @@ export default function Invoices() {
                                               if (item.sold_by === "weight")
                                                 initializeInvoiceWeight(
                                                   item,
-                                                  state.config,
+                                                  draft.config,
                                                 );
                                               else {
                                                 item.quantity_unit = "units";
@@ -3447,12 +3539,13 @@ export default function Invoices() {
                                         >
                                           <input
                                             value={line.new_name_en ?? ""}
-                                            onChange={(event) =>
+                                            onChange={(event) => {
+                                              const inputValue =
+                                                event.currentTarget.value;
                                               editLine(index, (item) => {
-                                                item.new_name_en =
-                                                  event.target.value;
-                                              })
-                                            }
+                                                item.new_name_en = inputValue;
+                                              });
+                                            }}
                                           />
                                         </Field>
                                         <Field
@@ -3464,12 +3557,13 @@ export default function Invoices() {
                                           <input
                                             dir="rtl"
                                             value={line.new_name_fa ?? ""}
-                                            onChange={(event) =>
+                                            onChange={(event) => {
+                                              const inputValue =
+                                                event.currentTarget.value;
                                               editLine(index, (item) => {
-                                                item.new_name_fa =
-                                                  event.target.value;
-                                              })
-                                            }
+                                                item.new_name_fa = inputValue;
+                                              });
+                                            }}
                                           />
                                         </Field>
                                       </>
@@ -3481,16 +3575,10 @@ export default function Invoices() {
                                       className="invoice-remove-line"
                                       size="sm"
                                       onClick={() => {
-                                        updateInvoice((draft) =>
+                                        updateInvoice((draft, currentActor) =>
                                           removeInvoiceLine(
                                             draft,
-                                            {
-                                              company_id:
-                                                draft.config.company.seed_key,
-                                              role: role!,
-                                              branch,
-                                              actor: user?.name ?? "",
-                                            },
+                                            currentActor,
                                             index,
                                           ),
                                         );
@@ -3575,11 +3663,8 @@ export default function Invoices() {
                                     </p>
                                   )}
                                   {(() => {
-                                    const previous = previousReceiptCost(
-                                      state,
-                                      line.product_code,
-                                      line,
-                                    );
+                                    const previous =
+                                      workspace.lineDetails[index]?.previous;
                                     const lower =
                                       previous &&
                                       /^\d+(?:\.\d{1,4})?$/.test(
@@ -3769,12 +3854,13 @@ export default function Invoices() {
                                             <input
                                               dir="ltr"
                                               value={line.lot_number ?? ""}
-                                              onChange={(event) =>
+                                              onChange={(event) => {
+                                                const inputValue =
+                                                  event.currentTarget.value;
                                                 editLine(index, (item) => {
-                                                  item.lot_number =
-                                                    event.target.value;
-                                                })
-                                              }
+                                                  item.lot_number = inputValue;
+                                                });
+                                              }}
                                             />
                                           </Field>
                                         </div>
@@ -3943,12 +4029,7 @@ export default function Invoices() {
 
                           disabled={locked}
                           options={[
-                            ...supplierItemFacts(
-                              state,
-                              invoice.company_id,
-                              invoice.supplier,
-                              invoice.branch,
-                            ).map((item) => ({
+                            ...workspace.supplierItems.map((item) => ({
                               value: `supplier-item:${item.id}`,
                               label: `${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`} · \u2066${item.supplier_item_code || item.product_code}\u2069 · ${t("Case of", "کارتنِ")} ${item.units_per_case}`,
                             })),
@@ -3972,13 +4053,13 @@ export default function Invoices() {
                       <Button
                         variant="neutral"
                         onClick={() =>
-                          updateInvoice((draft) => {
+                          updateInvoice((draft, currentActor) => {
                             const selectedItem = manualCode.startsWith(
                               "supplier-item:",
                             )
                               ? resolveSupplierItem(
                                   draft,
-                                  draft.invoice.company_id,
+                                  currentActor,
                                   draft.invoice.supplier,
                                   draft.invoice.branch,
                                   {
@@ -3990,6 +4071,7 @@ export default function Invoices() {
                               : null;
                             addManualLine(
                               draft,
+                              currentActor,
                               selectedItem?.product_code ?? manualCode,
                               selectedItem?.id,
                             );
@@ -4015,7 +4097,7 @@ export default function Invoices() {
                     )}
                     className="invoice-lower-price-card"
                   >
-                    {lowerLines.map((line, index) => {
+                    {lowerLines.map(({ line, index }) => {
                       const product = state.products.find(
                         (item) => item.code === line.product_code,
                       )!;
@@ -4026,13 +4108,16 @@ export default function Invoices() {
                           </bdi>{" "}
                           · <LtrText>{invoice.supplier}</LtrText> ·{" "}
                           {t("Old", "قبلی")}{" "}
-                          <Money
-                            value={
-                              previousReceiptCost(state, product.code, line)
-                                ?.cost ?? product.last_cost_before_tax
-                            }
-                            currency={state.config.company.currency}
-                          />{" "}
+                          {workspace.lineDetails[index]?.previous ? (
+                            <Money
+                              value={
+                                workspace.lineDetails[index]!.previous!.cost
+                              }
+                              currency={state.config.company.currency}
+                            />
+                          ) : (
+                            <span className="muted">—</span>
+                          )}{" "}
                           · {t("New", "جدید")}{" "}
                           <Money
                             value={line.unit_cost_before_tax}
@@ -4192,12 +4277,13 @@ export default function Invoices() {
                                   )
                                 : (invoice.lower_price_answers.note ?? "")
                             }
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
                               updateInvoice((draft) => {
                                 draft.invoice.lower_price_answers!.note =
-                                  event.target.value;
-                              })
-                            }
+                                  inputValue;
+                              });
+                            }}
                           />
                         </Field>
                       )}
@@ -4396,25 +4482,22 @@ export default function Invoices() {
             {t("Cancel", "انصراف")}
           </Button>
           <Button
-            onClick={() => {
+            onClick={async () => {
               setMoveAttempted(true);
               if (!movePreview || !moveReason.trim()) return;
               try {
-                updateInvoice((draft) =>
-                  movePostedInvoice(
+                const moved = await updateInvoice((draft, currentActor) => {
+                  applyReviewedInvoiceMove(
                     draft,
-                    {
-                      company_id: draft.config.company.seed_key,
-                      role: readerRef.current.role ?? "cashier",
-                      branch,
-                      actor: user?.name ?? "",
-                    },
+                    currentActor,
                     invoice.id,
                     moveTarget,
                     moveReason,
                     movePreview.snapshot,
-                  ),
-                );
+                  );
+                  return true;
+                }, "invoices.relocate");
+                if (!moved) return;
                 setMoveOpen(false);
                 setMessage(
                   t(

@@ -5,6 +5,10 @@ import type { inspectResponsiveLayout } from "./c6-layout-proof.mjs";
 export const C8_SCENES: readonly string[];
 export const C8_VARIANTS: readonly string[];
 export function readC8State(page: Page): Promise<DemoState>;
+export function waitForC8BusinessEvidence(
+  page: Page,
+  invoiceStatus?: string,
+): Promise<void>;
 export function visitC8(page: Page, route: string): Promise<void>;
 export function chooseC8Date(
   page: Page,

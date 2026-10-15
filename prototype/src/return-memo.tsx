@@ -1,6 +1,6 @@
 import { BilingualPrintText } from "./operational-print";
 import { formatMoney } from "./formatters";
-import type { ReturnMemo } from "./return-workflow";
+import type { ReturnMemoRead } from "./return-projections";
 import type { Language } from "./types";
 import { useEffect, useRef, useState } from "react";
 import "./return-memo.css";
@@ -11,7 +11,7 @@ export function ReturnMemoPreview({
   language,
   documentLanguage,
 }: {
-  memo: ReturnMemo;
+  memo: ReturnMemoRead;
   language: Language;
   documentLanguage?: "en" | "bilingual";
 }) {
@@ -83,7 +83,7 @@ export function ReturnMemoDocument({
   language,
   documentLanguage,
 }: {
-  memo: ReturnMemo;
+  memo: ReturnMemoRead;
   language: Language;
   documentLanguage?: "en" | "bilingual";
 }) {
@@ -99,6 +99,13 @@ export function ReturnMemoDocument({
     );
   const amount = (value: string) =>
     formatMoney(value, { currency: memo.currency });
+  const showMoney =
+    typeof memo.expected_credit === "string" &&
+    memo.lines.every(
+      (line) =>
+        typeof line.unit_cost === "string" &&
+        typeof line.expected_credit === "string",
+    );
   return (
     <article
       className="operational-print-document return-memo-document"
@@ -144,8 +151,10 @@ export function ReturnMemoDocument({
             <th>{text("Product", "کالا")}</th>
             <th>{text("Product Code", "کد کالا")}</th>
             <th>{text("Quantity", "تعداد")}</th>
-            <th>{text("Unit cost", "هزینهٔ واحد")}</th>
-            <th>{text("Credit expected", "اعتبار مورد انتظار")}</th>
+            {showMoney && <th>{text("Unit cost", "هزینهٔ واحد")}</th>}
+            {showMoney && (
+              <th>{text("Credit expected", "اعتبار مورد انتظار")}</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -161,25 +170,31 @@ export function ReturnMemoDocument({
                   {line.quantity_unit === "lb" ? " lb" : ""}
                 </bdi>
               </td>
-              <td>
-                <bdi dir="ltr">
-                  {amount(line.unit_cost)}
-                  {line.quantity_unit === "lb" ? " / lb" : ""}
-                </bdi>
-              </td>
-              <td>
-                <bdi dir="ltr">{amount(line.expected_credit)}</bdi>
-              </td>
+              {showMoney && line.unit_cost !== undefined && (
+                <td>
+                  <bdi dir="ltr">
+                    {amount(line.unit_cost)}
+                    {line.quantity_unit === "lb" ? " / lb" : ""}
+                  </bdi>
+                </td>
+              )}
+              {showMoney && line.expected_credit !== undefined && (
+                <td>
+                  <bdi dir="ltr">{amount(line.expected_credit)}</bdi>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="return-memo-total">
-        {text("Total credit expected", "جمع اعتبار مورد انتظار")}
-        <strong>
-          <bdi dir="ltr">{amount(memo.expected_credit)}</bdi>
-        </strong>
-      </div>
+      {showMoney && memo.expected_credit !== undefined && (
+        <div className="return-memo-total">
+          {text("Total credit expected", "جمع اعتبار مورد انتظار")}
+          <strong>
+            <bdi dir="ltr">{amount(memo.expected_credit)}</bdi>
+          </strong>
+        </div>
+      )}
       <p>
         {text("Signed paper evidence", "مدرک کاغذی امضاشده")}:{" "}
         <bdi>{memo.signed_evidence_reference}</bdi>
