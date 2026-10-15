@@ -212,6 +212,7 @@ function PayablesContent() {
     setValidationIssues([]);
   };
   const changeBranch = async (value: string, clear = false) => {
+    if (value === branch && !clear) return;
     // This explicit filter change keeps the other filters and selected report.
     // A top-bar/session switch still reads its separately scoped preferences.
     for (const [field, retained] of Object.entries({
