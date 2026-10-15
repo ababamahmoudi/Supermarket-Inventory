@@ -1,0 +1,23 @@
+{
+  "commit": "ca00c5a68eddb12aaaec9c35c6d4f4b39f01ad4d",
+  "archive_sha256": "f65e1e0cb403cd4ac7787b0ff2ef60861405aa54467a67e367c13887e90b3591",
+  "manifest_sha256": "4d156c3ffeb90dc5f250d3c9de7d1fa3ae80a7b27e19900f18d2768058795e38",
+  "overlay": {
+    "prototype/tests/suppliers-a2.spec.ts": {
+      "committed": "b2f2bf39be0fcffe609762a450a701cd2d949add3d7c1477dcb1d5f1911dedd6",
+      "candidate": "559be0fe16f4bdb3bbb6d25abd3dc43fd391023b7812a5acf1486c5ca58c8d64"
+    },
+    "prototype/tests/settings-b.spec.ts": {
+      "committed": "8b02081753ef2a0df2e1dac265a7ee89e45a029d709fd2c2a881840c6515c7ac",
+      "candidate": "4b5bae225ed6f49fbf0f762ffea59166b65ce49fa7fe97577807ac01e2de0230"
+    },
+    "prototype/tests/orders-c2.spec.ts": {
+      "committed": "21d80c6c25fffe1b787f9794b53098c24309946c172078585bdf1dcc68dc5de6",
+      "candidate": "2fae1c5e6821d1fe51fe6590a1c9ef73dbbe66bb41f534dee660d5ae13cb96fd"
+    }
+  },
+  "expected_cases": 12,
+  "production_source": "Exact E1ca00c5a with3recorded test-only overlays; fresh normal npmrunbuild",
+  "budgets": "Original60000ms tests/5000ms expect,0retries,0skip,1worker; bothoriginalDesktopChrome/iPhone13Chromium projects",
+  "transport": "Loopback actual Vitepreview; preserved explicit .invalid nonsecure-responsefixture if exercised"
+}

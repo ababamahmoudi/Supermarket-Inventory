@@ -1,0 +1,65 @@
+{
+  "scope": "E1three remaining genuine native CI failures; independent bounded follow-up, not fullsuite/CI success",
+  "original_ci_source_commit": "38b8c0ccd6faef296179c42d75274322f7de5b15",
+  "original_ci_run_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38788357861",
+  "candidate_source_commit": "ca00c5a68eddb12aaaec9c35c6d4f4b39f01ad4d",
+  "source_manifest_sha256": "4d156c3ffeb90dc5f250d3c9de7d1fa3ae80a7b27e19900f18d2768058795e38",
+  "candidate_file_count": 3,
+  "changed_production_files": 0,
+  "original_cases": [
+    {
+      "file": "tests/orders-c2.spec.ts",
+      "title": "Supervisor creates a Warehouse fractional-case draft, places it, filters it and prints the bilingual retained estimate",
+      "projects": [
+        "desktop",
+        "phone"
+      ]
+    },
+    {
+      "file": "tests/settings-b.spec.ts",
+      "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+      "projects": [
+        "desktop",
+        "phone"
+      ]
+    },
+    {
+      "file": "tests/suppliers-a2.spec.ts",
+      "selection": "Entire original file, including Supervisor financial values, both English/Persian Floor Worker financial DOM exclusions, and direct-address Cashier denial",
+      "projects": [
+        "desktop",
+        "phone"
+      ],
+      "cases": 8
+    }
+  ],
+  "oracles_preserved": {
+    "orders": "All whole-unit rejection, exact6units/12percase/0.5cases/21.30Decimal amounts, actualpersisted draft/reload/placement, bilingualactualpaper/retainedtotal/repeatingheaders/avoidbreaks/afterprintclear, orderedstatusfilters, and unchangedledger/stockmovement assertions",
+    "settings": "Exact13groups; originalplannedno-save/no-inputrestrictions remainforPricingandapprovals/Taxes/Receiving/Notifications/Data; E1implementedPeoplegets6actualpeople/Add/Registercomputers/no-placeholder assertions; allweigheddefaults retained",
+    "suppliers": "Exactnamedvisiblefinancialfieldheader/generatedcaption/disclosedcaption; all169.79/842.10amountreconciliation,filters/invoice outstanding,locationprivacy,EN/FAWorker nofinancialDOM/tabs/foreignbranches,andCashierdirectroute denial unchanged"
+  },
+  "budgets": "Original60000ms test and5000ms expect; originalDesktopChrome andiPhone13Chromium projects;1worker;0retries;0skips; no productionauth/storage mocks",
+  "actual": {
+    "actual_exit_code": 0,
+    "seconds": 99.95389151573181,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "dist_asset_count": 55,
+    "expected_cases": 12,
+    "stats": {
+      "startTime": "2026-10-15T19:26:05.186Z",
+      "duration": 70462.844,
+      "expected": 12,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "global_errors": [],
+    "commit": "ca00c5a68eddb12aaaec9c35c6d4f4b39f01ad4d",
+    "manifest_sha256": "4d156c3ffeb90dc5f250d3c9de7d1fa3ae80a7b27e19900f18d2768058795e38",
+    "production_changes": 0,
+    "normal_build_exit_code": 0
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "actual_exit_code": 0,
+  "seconds": 99.95389151573181,
+  "source_unchanged": true,
+  "http_matches_dist_before": true,
+  "http_unchanged": true,
+  "dist_unchanged": true,
+  "dist_asset_count": 55,
+  "expected_cases": 12,
+  "stats": {
+    "startTime": "2026-10-15T19:26:05.186Z",
+    "duration": 70462.844,
+    "expected": 12,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "global_errors": [],
+  "commit": "ca00c5a68eddb12aaaec9c35c6d4f4b39f01ad4d",
+  "manifest_sha256": "4d156c3ffeb90dc5f250d3c9de7d1fa3ae80a7b27e19900f18d2768058795e38",
+  "production_changes": 0,
+  "normal_build_exit_code": 0
+}
