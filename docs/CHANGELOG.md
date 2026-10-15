@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-15 — Retained staff notebook and manual-price presentation
+
+- Restore the Cashier's explicitly shared custom-notebook route through the existing protected ACL/location projection, with revocation and built-in/private-route denials retained.
+- Restore staff Rule price / Manual price comparisons using only two public selling amounts per visible active Store; private costs, margins and decision provenance remain excluded.
+- Added current-Provider and DTO isolation regressions and retained the native read/revoke workflow. This corrects existing requirements rather than adding a new permission.
+
+
+
 
 ## 2026-10-15 — E2 source-first price work and personal-notification contract
 

@@ -215,11 +215,21 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Upload", exact: true }).click();
   await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
+  await expect(
     page.getByRole("button", { name: "Manual entry", exact: true }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Invoice details", exact: true })
-    .click();
+  // A fresh draft already opens its details. Only expand a closed section;
+  // toggling an open one hides the real Supplier control before quick-add.
+  const details = page.getByRole("button", {
+    name: "Invoice details",
+    exact: true,
+  });
+  if ((await details.getAttribute("aria-expanded")) === "false")
+    await details.click();
+  await expect(details).toHaveAttribute("aria-expanded", "true");
   await chooseOption(
     page,
     page

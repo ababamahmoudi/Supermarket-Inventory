@@ -281,6 +281,7 @@ export function ProductEditor({
     tax_profile: "",
     date_tracking: false,
     manual_price_scopes: [],
+    manual_price_comparisons: {},
   };
   const [cost, setCost] = useState("");
   const [costUnit, setCostUnit] = useState<WeightUnit>("lb");

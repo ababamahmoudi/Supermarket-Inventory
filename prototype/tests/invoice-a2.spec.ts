@@ -119,11 +119,13 @@ test("Persian signed money, line numbers and deduction parentheses stay isolated
   page,
 }) => {
   await review(page);
-  await page
+  const markShort = page
     .locator(".invoice-line")
     .nth(5)
-    .getByRole("checkbox", { name: "Mark as short", exact: true })
-    .check();
+    .getByRole("checkbox", { name: "Mark as short", exact: true });
+  await expect(markShort).not.toBeChecked();
+  await markShort.click();
+  await expect(markShort).toBeChecked();
   await setLanguage(page, "fa");
   const deduction = page
     .locator(".invoice-summary-grid .ui-summary-tile")
