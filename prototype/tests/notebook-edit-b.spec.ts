@@ -135,7 +135,9 @@ test("an already-open worker editor expires after ten seconds and Cancel keeps t
   await editor
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
-  await expect(editor.getByRole("alert")).toContainText("Ask the Supervisor");
+  await expect(editor.getByRole("alert")).toHaveText(
+    "The ten-second edit window has ended. Ask an Owner or Manager to edit this note.",
+  );
   expect(await storedEntry(page, "Unchanged saved check")).toEqual(original);
   await editor.getByRole("button", { name: "Cancel", exact: true }).click();
   expect(await storedEntry(page, "Unchanged saved check")).toEqual(original);

@@ -452,7 +452,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByRole("button", { name: "Record resolution", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Recorded item resolutions. Credit claims require Supervisor verification.",
+    "Recorded item resolutions. Credit claims require Owner / Manager verification.",
   );
   const received = await snapshot(page);
   expect(received.ledger).toEqual(before.ledger);
@@ -492,7 +492,7 @@ test("Supplier-held cancellation keeps stock and compensation unchanged and requ
     })
     .click();
   await expect(page.locator(".return-review-card")).toContainText(
-    "Supervisor review required.",
+    "Owner / Manager review required.",
   );
   await expect(
     page.getByRole("button", { name: "Approve cancellation", exact: true }),

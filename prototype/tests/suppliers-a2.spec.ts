@@ -163,6 +163,11 @@ test("Cashier cannot open Suppliers through a direct address", async ({
     page.locator(".suppliers-overview, .supplier-header-card"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Cashier lookup", exact: true }),
+    page.getByText("You do not have permission for this action.", {
+      exact: true,
+    }),
   ).toBeVisible();
+  await expect(
+    page.locator("main .money, main .supplier-tab-card"),
+  ).toHaveCount(0);
 });

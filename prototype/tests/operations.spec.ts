@@ -112,7 +112,9 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
       exact: true,
     })
     .click();
-  await expect(page.getByText(/Supervisor review required/)).toBeVisible();
+  await expect(
+    page.getByText(/Owner \/ Manager review required/),
+  ).toBeVisible();
   const cancelled = await stored(page);
   expect(cancelled.stock["Branch 1:0001"]).toBe(before.stock["Branch 1:0001"]);
   expect(cancelled.returns[1].status).toBe("cancellation_review");

@@ -24,26 +24,57 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     .locator("tbody tr")
     .filter({ hasText: "0009" })
     .first();
-  for (const label of ["Store cost", "Margin %"]) {
-    const heading = table.getByRole("columnheader", {
-      name: label,
-      exact: true,
-    });
-    const cell = productRow.locator(`td[data-column-label="${label}"]`);
-    if (await heading.count()) await expect(heading).toBeVisible();
-    else if (await cell.isVisible()) {
-      await expect(cell).toHaveAttribute("data-column-label", label);
-      await expect(cell).not.toBeEmpty();
-    } else {
-      await productRow
-        .getByRole("button", { name: "Show details", exact: true })
-        .click();
-      await expect(
-        table.locator(".table-expanded-row").getByText(label, { exact: true }),
-      ).toBeVisible();
-      await productRow
-        .getByRole("button", { name: "Hide details", exact: true })
-        .click();
+  const compact = await productRow.evaluate((element) =>
+    element.matches(".phone-list-row"),
+  );
+  if (compact) {
+    // E3 omits private operational columns from the short phone list. The
+    // Manager still reads the same cost and margin in the actual record.
+    await productRow.locator(".phone-list-chevron .table-row-link").click();
+    await expect(page).toHaveURL(/#product\?code=0009$/);
+    await setBranch(page, "Branch 1");
+    const card = page.locator(".product-page-cost-card");
+    for (const label of ["Store cost", "Margin %"]) {
+      const field = card
+        .locator("dl > div")
+        .filter({ has: page.getByText(label, { exact: true }) });
+      await expect(field.locator("dt")).toHaveText(label);
+      await expect(field.locator("dd")).toBeVisible();
+      await expect(field.locator("dd")).not.toBeEmpty();
+      await expect(field.locator("dd")).toContainText(
+        label === "Store cost" ? "$" : "%",
+      );
+    }
+    await page
+      .getByRole("link", { name: "Back to Products", exact: true })
+      .click();
+    await expect(
+      page.getByLabel("Search products", { exact: true }),
+    ).toHaveValue("0009");
+  } else {
+    for (const label of ["Store cost", "Margin %"]) {
+      const heading = table.getByRole("columnheader", {
+        name: label,
+        exact: true,
+      });
+      const cell = productRow.locator(`td[data-column-label="${label}"]`);
+      if (await heading.count()) await expect(heading).toBeVisible();
+      else if (await cell.isVisible()) {
+        await expect(cell).toHaveAttribute("data-column-label", label);
+        await expect(cell).not.toBeEmpty();
+      } else {
+        await productRow
+          .getByRole("button", { name: "Show details", exact: true })
+          .click();
+        await expect(
+          table
+            .locator(".table-expanded-row")
+            .getByText(label, { exact: true }),
+        ).toBeVisible();
+        await productRow
+          .getByRole("button", { name: "Hide details", exact: true })
+          .click();
+      }
     }
   }
   await page
@@ -84,6 +115,8 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await expect(
     page.getByRole("heading", { name: "Stock estimate", exact: true }),
   ).toHaveCount(0);
+  // Aggregate prices require an explicit selling location before a customer price.
+  await setBranch(page, "North York");
   await expect(page.locator(".manual-price-comparison")).toHaveText(
     "Rule price $2.99 · Manual price $3.29",
   );
