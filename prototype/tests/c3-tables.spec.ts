@@ -307,6 +307,12 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
     page.locator(".catalog-products-table th[data-column-key=price]"),
   ).toHaveCount(0);
   await page.reload();
+  // An absent optional header also matches an app that has not resumed yet.
+  // Assert the real signed-in catalog before checking its persisted columns.
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(
+    page.locator(".catalog-products-table tbody tr").first(),
+  ).toBeVisible();
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),
   ).toHaveCount(0);

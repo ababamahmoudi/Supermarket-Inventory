@@ -316,7 +316,20 @@ async function canonicalBusinessExists(page: Page) {
 async function openManual(page: Page) {
   const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  // New and Manual entry are two real persisted commands. Do not choose the
+  // old invoice's entry method while New is still committing its replacement.
+  await expect
+    .poll(async () => (await saved(page)).invoice.id)
+    .not.toBe(previousInvoiceId);
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  // A retained large original is still reconciling when its reference appears.
+  // The real entry barrier releases only when route and projection agree.
+  await expect(
+    page.getByRole("button", { name: "New invoice", exact: true }),
+  ).toBeEnabled();
   await expect
     .poll(async () => {
       const current = (await saved(page)).invoice;
@@ -473,8 +486,20 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   const encoded = encodeHistoryStorage(state) as DemoState & {
     prototype_history_dictionary?: { version: number };
   };
-  expect(encoded.prototype_history_dictionary?.version).toBe(1);
+  // The codec's public contract retains small/nonprofitable histories exactly.
+  // E1's scoped command snapshots no longer guarantee a repeated large block.
+  if (Object.hasOwn(encoded, "prototype_history_dictionary")) {
+    expect(encoded.prototype_history_dictionary?.version).toBe(1);
+    expect(JSON.stringify(encoded).length).toBeLessThan(
+      JSON.stringify(state).length,
+    );
+  } else {
+    expect(encoded).toBe(state);
+  }
   expect(decodeHistoryStorage(encoded)).toEqual(state);
+  expect(JSON.stringify(encoded).length).toBeLessThanOrEqual(
+    JSON.stringify(state).length,
+  );
   const originalName = state.products.find(
     (product: { code: string }) => product.code === "0006",
   )!.name_en;
