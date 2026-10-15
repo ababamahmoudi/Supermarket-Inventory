@@ -68,7 +68,13 @@ export default function UndoToasts() {
     const chooseHost = () => {
       const dialogs =
         document.querySelectorAll<HTMLDialogElement>("dialog[open]");
-      setHost(dialogs.item(dialogs.length - 1) ?? document.body);
+      const dialog = dialogs.item(dialogs.length - 1);
+      setHost(
+        dialog?.querySelector<HTMLElement>(".ui-dialog-actions") ??
+          dialog ??
+          document.querySelector<HTMLElement>("[data-undo-toast-host]") ??
+          document.body,
+      );
     };
     chooseHost();
     const observer = new MutationObserver(chooseHost);
@@ -92,7 +98,7 @@ export default function UndoToasts() {
         let offset = 24;
         // Reserve the real footer geometry rather than placing a message over its controls.
         for (const bar of document.querySelectorAll<HTMLElement>(
-          ".bottom-bar, .invoice-action-footer, .labels-selection-bar, .sticky-actions, [data-sticky-actions], dialog[open] .dialog-actions, dialog[open] .c3-dialog-actions, dialog[open] .product-editor-actions",
+          ".bottom-bar, .invoice-action-footer, .labels-selection-bar, .sticky-actions, [data-sticky-actions], dialog[open] .dialog-actions, dialog[open] .ui-dialog-actions, dialog[open] .c3-dialog-actions, dialog[open] .product-editor-actions",
         )) {
           const style = getComputedStyle(bar);
           const bounds = bar.getBoundingClientRect();

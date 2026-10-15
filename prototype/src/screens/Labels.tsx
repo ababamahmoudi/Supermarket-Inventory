@@ -1,3 +1,4 @@
+import { beginAppWork } from "../app-work";
 import {
   useEffect,
   useMemo,
@@ -1465,6 +1466,7 @@ export function Labels() {
   const print = async () => {
     if (printing) return;
     setPrinting(true);
+    const release = beginAppWork();
     try {
       if (!template) throw new LabelWorkflowError("template");
       const snapshot = await query(
@@ -1509,6 +1511,7 @@ export function Labels() {
     } catch (cause) {
       setError(errorText(cause, t));
     } finally {
+      release();
       setPrinting(false);
     }
   };
@@ -1713,6 +1716,12 @@ export function Labels() {
             </div>
             <DataTable
               className="labels-product-table"
+              phoneList={{
+                name: "product",
+                value: "price",
+                secondary: ["code", "offer"],
+                selection: "selection",
+              }}
               columns={[
                 {
                   key: "selection",
@@ -1771,7 +1780,10 @@ export function Labels() {
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.code}>
+                  <tr
+                    key={product.code}
+                    data-row-href={`#product?code=${encodeURIComponent(product.code)}`}
+                  >
                     <td>
                       <Checkbox
                         aria-label={t(
@@ -1844,6 +1856,7 @@ export function Labels() {
             {selectedCodes.length > 0 && (
               <div
                 className="labels-selection-bar"
+                data-pwa-unsaved="true"
                 role="region"
                 aria-label={t("Add to waitlist", "افزودن به فهرست انتظار")}
               >

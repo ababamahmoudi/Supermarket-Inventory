@@ -660,6 +660,11 @@ function PayablesContent() {
         </FilterToolbar>
         <DataTable
           className="payables-overview-table"
+          phoneList={{
+            name: "supplier",
+            value: "balance",
+            secondary: ["branch", "due"],
+          }}
           columns={tableColumns.columns}
         >
           <thead>

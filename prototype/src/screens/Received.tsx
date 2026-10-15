@@ -109,7 +109,15 @@ export function ReceivedTable({
     );
   return (
     <>
-      <DataTable className="received-table" columns={columns}>
+      <DataTable
+        className="received-table"
+        columns={columns}
+        phoneList={{
+          name: "product",
+          value: "quantity",
+          secondary: ["location", "supplier", "date"],
+        }}
+      >
         <thead>
           <tr>
             <th>{t("Product", "کالا")}</th>

@@ -3075,6 +3075,11 @@ export function Products() {
             <div className="stack">
               <DataTable
                 className={`catalog-products-table${mayReadCost ? " with-store-cost" : ""}`}
+                phoneList={{
+                  name: "name",
+                  value: "price",
+                  secondary: ["code", "status"],
+                }}
                 columns={tableColumns.columns}
               >
                 <thead>

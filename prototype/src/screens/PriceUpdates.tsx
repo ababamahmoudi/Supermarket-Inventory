@@ -681,7 +681,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
         </dl>
       </Card>
       <Card>
-        <div className="price-update-checks">
+        <div className="price-update-checks" data-undo-toast-host>
           <div className="price-update-check-row">
             <div>
               <Checkbox

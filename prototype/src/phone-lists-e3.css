@@ -1,0 +1,174 @@
+/* E3 list rows use the same already-authorized cells as their desktop table. */
+@media screen and (max-width: 759px) {
+  :root .price-update-detail .ltr-fragment {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list {
+    overflow: visible;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list table,
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list tbody {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    table-layout: auto;
+  }
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list colgroup,
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list thead {
+    display: none;
+  }
+  :root .ui-data-table.is-responsive.is-mobile.is-phone-list tr.phone-list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 28px;
+    grid-template-areas: "name value chevron" "secondary secondary chevron";
+    align-items: center;
+    gap: 6px 8px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    padding: 14px 12px;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-none);
+    box-shadow: var(--shadow-row-divider);
+    box-sizing: border-box;
+    background: var(--color-clear);
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list.has-phone-selection
+    tr.phone-list-row {
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, max-content) 28px;
+    grid-template-areas: "selection name value chevron" "selection secondary secondary chevron";
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    .phone-list-row
+    > td {
+    display: block;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: var(--color-clear);
+    box-shadow: var(--shadow-none);
+    text-align: start;
+    overflow: visible;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    .phone-list-row
+    > td::before,
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    .phone-list-row
+    > td::after {
+    content: none;
+    display: none;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-name {
+    grid-area: name;
+    font-weight: var(--font-weight-headline);
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-name
+    a {
+    color: var(--text);
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-name
+    p {
+    margin: 3px 0 0;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-value {
+    grid-area: value;
+    text-align: end;
+    max-inline-size: 140px;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-value
+    .catalog-charge-and-request {
+    align-items: flex-end;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list.has-phone-selection
+    td.phone-list-value {
+    max-inline-size: 104px;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-secondary {
+    grid-area: secondary;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: var(--font-weight-body);
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-secondary
+    > span {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-chevron {
+    grid-area: chevron;
+    align-self: center;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-chevron
+    .table-row-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 28px;
+    min-inline-size: 28px;
+    block-size: 44px;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-selection {
+    grid-area: selection;
+    align-self: center;
+  }
+  :root .dashboard-returns .dashboard-list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 28px;
+    align-items: center;
+    gap: 8px;
+  }
+  :root .dashboard-returns .dashboard-list-copy,
+  :root .dashboard-returns .dashboard-list-copy > .muted {
+    min-inline-size: 0;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  :root .dashboard-returns .dashboard-list-pill {
+    max-inline-size: 140px;
+  }
+}
