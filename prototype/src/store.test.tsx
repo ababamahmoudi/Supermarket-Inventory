@@ -97,9 +97,11 @@ describe("fictional data and storage", () => {
     const fixture = await authenticated(state);
     await show(fixture.options);
     const style = document.documentElement.style;
-    expect(style.getPropertyValue("--company-primary")).toBe("#0F766E");
-    expect(style.getPropertyValue("--company-dark-primary")).toBe("#5EEAD4");
-    expect(style.getPropertyValue("--company-kpi-accent-end")).toBe("#0D9488");
+    await waitFor(() => {
+      expect(style.getPropertyValue("--company-primary")).toBe("#0F766E");
+      expect(style.getPropertyValue("--company-dark-primary")).toBe("#5EEAD4");
+      expect(style.getPropertyValue("--company-kpi-accent-end")).toBe("#0D9488");
+    });
   });
   it("seeds approvals, scoped returns and the existing replacement once", () => {
     const state = initialState();
