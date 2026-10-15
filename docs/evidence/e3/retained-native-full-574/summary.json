@@ -1,0 +1,1625 @@
+{
+  "scope": "Completed diagnostic run on older exact574 source, not final branch validation.",
+  "commit": "5741353f47457842f925df623f35e44135a250e5",
+  "counts": {
+    "PASS": 710,
+    "FAIL": 60,
+    "INTENTIONAL_SKIP": 42
+  },
+  "total_discovered": 812,
+  "seconds": 3615.2366695404053,
+  "actual_exit_code": 1,
+  "configured_workers": 2,
+  "configured_retries": 0,
+  "global_errors": [],
+  "no_not_run_or_interrupted": true,
+  "intentional_skip_boundary": "42 unchanged source-declared desktop layout checks or phone-specific presentation replacements in the phone project; each exact source location and reason retained in outcomes. None introduced by this work.",
+  "source_guard_result": {
+    "source_before": true,
+    "http_before": {
+      "assets/index-BuTl-pKw.css": {
+        "sha256": "af53e9dac295c1ad2a73a0b8509531a408ab5e21d1e2e46bfaa84108ee9bc64d",
+        "status": 200
+      },
+      "assets/index-D7MpYOMx.js": {
+        "sha256": "8ad11c6f9291fa6836ef6db8b2471d093796a3f4a55e0deb5149051152f79d00",
+        "status": 200
+      },
+      "assets/manrope-latin-400-normal-8tf8FM3T.woff": {
+        "sha256": "1bf66c29a29f1b71d507cb97fc138cd130b856ed05b55decd3a2944b413cb636",
+        "status": 200
+      },
+      "assets/manrope-latin-400-normal-PaqtzbVb.woff2": {
+        "sha256": "849290ef12a2eeb9af5c11924120d11aa4ae8b435ed3347d7fc8bc240c293ca3",
+        "status": 200
+      },
+      "assets/manrope-latin-500-normal-BYYD-dBL.woff2": {
+        "sha256": "19874318747181a650eda439c37955220b849d9c4797c9e0718ee67d4bf929bc",
+        "status": 200
+      },
+      "assets/manrope-latin-500-normal-DMZssgOp.woff": {
+        "sha256": "c805ac8fd73fb95ddba74e624500c7d7d9a8ec6434d723bb6a9b76173c9e41b4",
+        "status": 200
+      },
+      "assets/manrope-latin-600-normal-4f0koTD-.woff2": {
+        "sha256": "f7ac6258da20ab7541939b59851155753d1d24f1b30cbcb949077a3faa3d1593",
+        "status": 200
+      },
+      "assets/manrope-latin-600-normal-BqgrALkZ.woff": {
+        "sha256": "8d1f509774bca963fa02faf674678ce9244474306361ca2798583fa600346df6",
+        "status": 200
+      },
+      "assets/manrope-latin-700-normal-BZp_XxE4.woff2": {
+        "sha256": "d2a12c85a831e4b5db341767d0347fa3d1361d22a1fcb3e361a16b6c90080f71",
+        "status": 200
+      },
+      "assets/manrope-latin-700-normal-DGRFkw-m.woff": {
+        "sha256": "e5d35fda4759b0d63ebcc6cca0627d98d9208254ce851c85df29e4d12aeafb61",
+        "status": 200
+      },
+      "assets/manrope-latin-800-normal-BfWYOv1c.woff2": {
+        "sha256": "74c161dbcbce7c3590803cc72dc1f63313c360e13367aba5075a7b7b3818ea49",
+        "status": 200
+      },
+      "assets/manrope-latin-800-normal-uHUdIJgA.woff": {
+        "sha256": "ce954acb78379d559111a15d29925f3390b69161b2b1365c38b0f19c76991bac",
+        "status": 200
+      },
+      "assets/pdf-BxY_f-wb.js": {
+        "sha256": "f1ed500d684e0aeb7f8463c85b8360552e6b75fe29f2a2013c93bd82754ab1ae",
+        "status": 200
+      },
+      "assets/pdf.worker.min-wgc6bjNh.mjs": {
+        "sha256": "f499515a0dc93d97787d693a75218a439675719283f56812067c036dcae1f8d5",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-400-normal-C4W5XURk.woff": {
+        "sha256": "e46907c6be3f55854c0b154b9502b5bf0d686063d1154bc2dcc27a9322ebf73e",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-400-normal-DMZFCm7K.woff2": {
+        "sha256": "e31830d3a52e0259b176326385d82bc469581a9898046300de46e5c00f6b7064",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-500-normal-C_lbnnKa.woff2": {
+        "sha256": "d3bc3b18900b56552fe1e02f899a22a4fc34203f6fb65218d482afaa6deb46a0",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-500-normal-Dqq3-xo3.woff": {
+        "sha256": "19683c8f3edd6e70ccb2a42d4fc7e63a04a061bd607f70065319ef0b12b8553a",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-600-normal-CPKvAnd1.woff2": {
+        "sha256": "98a9ca6ced63728b3b407877eda9896ccc9d88e3fc19a469e4e590cc40499605",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-600-normal-CWYTfCgi.woff": {
+        "sha256": "deb40bb396720d9f2824532699a385b4ebce69ab88621e7e31703e1e0fc50e5c",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-700-normal-B5nPuCFv.woff": {
+        "sha256": "6d54a13cdc3e0889cc12392a23dd742fb580a80fc5d45e7e9c99d7436941f227",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-700-normal-Dge_DOjm.woff2": {
+        "sha256": "aa79f9419fa0f5efcf301158b7405d188c4d434c86c32efad1e8669752feb344",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-800-normal-BH12s3-y.woff": {
+        "sha256": "80adb84b89271cbb1e5f2e3cef3235e46f25ed6ab99712070897c9452ec5718b",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-800-normal-Bwnt96zj.woff2": {
+        "sha256": "63d5a16d0e9741a61628af09df781d4419010ec098445c7b236d6ba4da300f16",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20241.png": {
+        "sha256": "b1d7ade89d7a6dd252c779aeb6e7155a68049e8392f6d6bb5ed92d848bd41abf",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20241.svg": {
+        "sha256": "3a39ab1c1033abd677bd3772a747e98cc398d2703a1c19c3279373e2b0fe262f",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20296.png": {
+        "sha256": "b1cc88fe358a549080cf179ae293186a6271553a2d1bd7581143deb52dff2b0a",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20296.svg": {
+        "sha256": "b5c7a858ff4dd04324420b46bd4a9fd3b95af26fe49528807adfefc046c907d6",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20390.png": {
+        "sha256": "429e19e160ac3c911829acbbd10dafc3b66981ece01f0dbebcca337dd865c220",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20390.svg": {
+        "sha256": "59ca485b33e7272e4dd4ddcd202ea513b41f67d9cde1c47a690ad22558469939",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20417.png": {
+        "sha256": "3c8c2680796cf9504e6b2dc61210aed1f0dc8f56badc0209ce6844eea575e545",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20417.svg": {
+        "sha256": "7972357237d9eac3c7290f94ca1b341dc72edafa5811058345deaa16cafb8296",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-weight-demo.png": {
+        "sha256": "f5def115506b01e34c0a1744cffd3ab4aee5338db64f1326ae4ab1255affab17",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-weight-demo.svg": {
+        "sha256": "0a5792772e53b2b4c2552922ab4e4c0025cee39dcf96dc652bcd640444e456c7",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11794.png": {
+        "sha256": "4bc49bbda206b3c7ec5230228d5ffc0bc38a8d2493aa7c76cb61a124ef264cba",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11794.svg": {
+        "sha256": "b09249c71fb6e30ec6ff21be37341c25433385fc553e6a507b05b3655d9a667d",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11810.png": {
+        "sha256": "d6b56d61375f0c9e950d1fdc6ef3ef8a22937ec5eb1d9c3e8a3b5595a531d6c9",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11810.svg": {
+        "sha256": "e03ec730d418840b6abf4d65ec0b8a3e94f725d17d7f8529eec1bb816fa4ff72",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11842.png": {
+        "sha256": "5319d02d3b6c31364b74b09df812e1a6d5a9c476cb98f7582d2704e29f64d8ba",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11842.svg": {
+        "sha256": "d8702967c86efcf067ccaaedd4fb5147718118d9b37aa066e2e875c159f319ac",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11879.png": {
+        "sha256": "c5ae0d572b1f96f448ccf9ff380ddc3bc8aa026089fa903bd695c3c84fbd531a",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11879.svg": {
+        "sha256": "52a10c2519ee7403f80a2e82cd53166a7339e8957057b247cf020c0e6780d362",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4910.png": {
+        "sha256": "37f3ff09dfda26b863716d8b7da6ec710ae82488bee9acc551c2e37508d15d40",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4910.svg": {
+        "sha256": "ebbd731b8caecb3260cfc071309bec6b899d8ebdfb5c7b3e4ac5f3af5862e8b5",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4936.png": {
+        "sha256": "b792983969f8b1189f446460ea60e866edb55726df5c43dd660399a4460381be",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4936.svg": {
+        "sha256": "f0b0810b719b57fbbc3746c3fe997ded4005dfb8f9260ce6b86a8fb08b88718e",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-5012.svg": {
+        "sha256": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7801.png": {
+        "sha256": "5d99f999827ea63a135ac822682f63f375697f56a1fbf76707888731d3267898",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7801.svg": {
+        "sha256": "582e016a24aea6af5ca54cb233b40cfb1622214d1075eb6b59002766135efa11",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7848.png": {
+        "sha256": "1acb2f133d0b552876c95469b48d4460352033d63a50b8233395bbb4fa14502f",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7848.svg": {
+        "sha256": "1c1b0b5d820dcf32fcbde29f0eaf1caa9ce1f23ffefc587cbff369ef4c200be9",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7862.png": {
+        "sha256": "fee8a9439785a7289c123a1cdcd853da4315981cccbd26e47809fb79033f795c",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7862.svg": {
+        "sha256": "0598ca08e77b29dabd69f5ebd23bc33c366e547f48707909abc12262bc7cd446",
+        "status": 200
+      },
+      "demo-originals/manifest.json": {
+        "sha256": "5380699d14573f214e486351de1b660123437248f11b6a999b6c4fedea080fb5",
+        "status": 200
+      },
+      "icons/company-192.png": {
+        "sha256": "24d9858ae874d2f39d253580f57c762209cf681735250a2bbda6b1307d2429d0",
+        "status": 200
+      },
+      "icons/company-512.png": {
+        "sha256": "4d246e34c2cc8b44bbfedb8e95eef1387f39c99d95b0fa66febae0ed40bfb630",
+        "status": 200
+      },
+      "index.html": {
+        "sha256": "65935a9f03ba30cca8cb663a1e41bae411bbdd03a70bda09cdd674d4a61c367f",
+        "status": 200
+      },
+      "manifest.webmanifest": {
+        "sha256": "9ff1c304449963c514141b014aa4ce2dd6f71aff44ccd746e771f036ba74ca11",
+        "status": 200
+      },
+      "offline.css": {
+        "sha256": "966b640ce44b5a667ae3b4a98f9fb8fd68f79102a5f1b913eb222e176f9477f0",
+        "status": 200
+      },
+      "offline.html": {
+        "sha256": "92a9e593b9110e500df64b0a3479fcbd41a6cf5bd2c4f8c0087371761c8fae25",
+        "status": 200
+      },
+      "service-worker.js": {
+        "sha256": "e53498c7a3ef403d454bf498bc4e38bc8beaee5ff1b17a2115c976611958bcb5",
+        "status": 200
+      }
+    },
+    "native_success": false,
+    "source_after": true,
+    "dist_after": true,
+    "http_after": {
+      "assets/index-BuTl-pKw.css": {
+        "sha256": "af53e9dac295c1ad2a73a0b8509531a408ab5e21d1e2e46bfaa84108ee9bc64d",
+        "status": 200
+      },
+      "assets/index-D7MpYOMx.js": {
+        "sha256": "8ad11c6f9291fa6836ef6db8b2471d093796a3f4a55e0deb5149051152f79d00",
+        "status": 200
+      },
+      "assets/manrope-latin-400-normal-8tf8FM3T.woff": {
+        "sha256": "1bf66c29a29f1b71d507cb97fc138cd130b856ed05b55decd3a2944b413cb636",
+        "status": 200
+      },
+      "assets/manrope-latin-400-normal-PaqtzbVb.woff2": {
+        "sha256": "849290ef12a2eeb9af5c11924120d11aa4ae8b435ed3347d7fc8bc240c293ca3",
+        "status": 200
+      },
+      "assets/manrope-latin-500-normal-BYYD-dBL.woff2": {
+        "sha256": "19874318747181a650eda439c37955220b849d9c4797c9e0718ee67d4bf929bc",
+        "status": 200
+      },
+      "assets/manrope-latin-500-normal-DMZssgOp.woff": {
+        "sha256": "c805ac8fd73fb95ddba74e624500c7d7d9a8ec6434d723bb6a9b76173c9e41b4",
+        "status": 200
+      },
+      "assets/manrope-latin-600-normal-4f0koTD-.woff2": {
+        "sha256": "f7ac6258da20ab7541939b59851155753d1d24f1b30cbcb949077a3faa3d1593",
+        "status": 200
+      },
+      "assets/manrope-latin-600-normal-BqgrALkZ.woff": {
+        "sha256": "8d1f509774bca963fa02faf674678ce9244474306361ca2798583fa600346df6",
+        "status": 200
+      },
+      "assets/manrope-latin-700-normal-BZp_XxE4.woff2": {
+        "sha256": "d2a12c85a831e4b5db341767d0347fa3d1361d22a1fcb3e361a16b6c90080f71",
+        "status": 200
+      },
+      "assets/manrope-latin-700-normal-DGRFkw-m.woff": {
+        "sha256": "e5d35fda4759b0d63ebcc6cca0627d98d9208254ce851c85df29e4d12aeafb61",
+        "status": 200
+      },
+      "assets/manrope-latin-800-normal-BfWYOv1c.woff2": {
+        "sha256": "74c161dbcbce7c3590803cc72dc1f63313c360e13367aba5075a7b7b3818ea49",
+        "status": 200
+      },
+      "assets/manrope-latin-800-normal-uHUdIJgA.woff": {
+        "sha256": "ce954acb78379d559111a15d29925f3390b69161b2b1365c38b0f19c76991bac",
+        "status": 200
+      },
+      "assets/pdf-BxY_f-wb.js": {
+        "sha256": "f1ed500d684e0aeb7f8463c85b8360552e6b75fe29f2a2013c93bd82754ab1ae",
+        "status": 200
+      },
+      "assets/pdf.worker.min-wgc6bjNh.mjs": {
+        "sha256": "f499515a0dc93d97787d693a75218a439675719283f56812067c036dcae1f8d5",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-400-normal-C4W5XURk.woff": {
+        "sha256": "e46907c6be3f55854c0b154b9502b5bf0d686063d1154bc2dcc27a9322ebf73e",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-400-normal-DMZFCm7K.woff2": {
+        "sha256": "e31830d3a52e0259b176326385d82bc469581a9898046300de46e5c00f6b7064",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-500-normal-C_lbnnKa.woff2": {
+        "sha256": "d3bc3b18900b56552fe1e02f899a22a4fc34203f6fb65218d482afaa6deb46a0",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-500-normal-Dqq3-xo3.woff": {
+        "sha256": "19683c8f3edd6e70ccb2a42d4fc7e63a04a061bd607f70065319ef0b12b8553a",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-600-normal-CPKvAnd1.woff2": {
+        "sha256": "98a9ca6ced63728b3b407877eda9896ccc9d88e3fc19a469e4e590cc40499605",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-600-normal-CWYTfCgi.woff": {
+        "sha256": "deb40bb396720d9f2824532699a385b4ebce69ab88621e7e31703e1e0fc50e5c",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-700-normal-B5nPuCFv.woff": {
+        "sha256": "6d54a13cdc3e0889cc12392a23dd742fb580a80fc5d45e7e9c99d7436941f227",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-700-normal-Dge_DOjm.woff2": {
+        "sha256": "aa79f9419fa0f5efcf301158b7405d188c4d434c86c32efad1e8669752feb344",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-800-normal-BH12s3-y.woff": {
+        "sha256": "80adb84b89271cbb1e5f2e3cef3235e46f25ed6ab99712070897c9452ec5718b",
+        "status": 200
+      },
+      "assets/vazirmatn-arabic-800-normal-Bwnt96zj.woff2": {
+        "sha256": "63d5a16d0e9741a61628af09df781d4419010ec098445c7b236d6ba4da300f16",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20241.png": {
+        "sha256": "b1d7ade89d7a6dd252c779aeb6e7155a68049e8392f6d6bb5ed92d848bd41abf",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20241.svg": {
+        "sha256": "3a39ab1c1033abd677bd3772a747e98cc398d2703a1c19c3279373e2b0fe262f",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20296.png": {
+        "sha256": "b1cc88fe358a549080cf179ae293186a6271553a2d1bd7581143deb52dff2b0a",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20296.svg": {
+        "sha256": "b5c7a858ff4dd04324420b46bd4a9fd3b95af26fe49528807adfefc046c907d6",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20390.png": {
+        "sha256": "429e19e160ac3c911829acbbd10dafc3b66981ece01f0dbebcca337dd865c220",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20390.svg": {
+        "sha256": "59ca485b33e7272e4dd4ddcd202ea513b41f67d9cde1c47a690ad22558469939",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20417.png": {
+        "sha256": "3c8c2680796cf9504e6b2dc61210aed1f0dc8f56badc0209ce6844eea575e545",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-20417.svg": {
+        "sha256": "7972357237d9eac3c7290f94ca1b341dc72edafa5811058345deaa16cafb8296",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-weight-demo.png": {
+        "sha256": "f5def115506b01e34c0a1744cffd3ab4aee5338db64f1326ae4ab1255affab17",
+        "status": 200
+      },
+      "demo-originals/fictional-fv-weight-demo.svg": {
+        "sha256": "0a5792772e53b2b4c2552922ab4e4c0025cee39dcf96dc652bcd640444e456c7",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11794.png": {
+        "sha256": "4bc49bbda206b3c7ec5230228d5ffc0bc38a8d2493aa7c76cb61a124ef264cba",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11794.svg": {
+        "sha256": "b09249c71fb6e30ec6ff21be37341c25433385fc553e6a507b05b3655d9a667d",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11810.png": {
+        "sha256": "d6b56d61375f0c9e950d1fdc6ef3ef8a22937ec5eb1d9c3e8a3b5595a531d6c9",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11810.svg": {
+        "sha256": "e03ec730d418840b6abf4d65ec0b8a3e94f725d17d7f8529eec1bb816fa4ff72",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11842.png": {
+        "sha256": "5319d02d3b6c31364b74b09df812e1a6d5a9c476cb98f7582d2704e29f64d8ba",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11842.svg": {
+        "sha256": "d8702967c86efcf067ccaaedd4fb5147718118d9b37aa066e2e875c159f319ac",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11879.png": {
+        "sha256": "c5ae0d572b1f96f448ccf9ff380ddc3bc8aa026089fa903bd695c3c84fbd531a",
+        "status": 200
+      },
+      "demo-originals/fictional-gg-11879.svg": {
+        "sha256": "52a10c2519ee7403f80a2e82cd53166a7339e8957057b247cf020c0e6780d362",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4910.png": {
+        "sha256": "37f3ff09dfda26b863716d8b7da6ec710ae82488bee9acc551c2e37508d15d40",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4910.svg": {
+        "sha256": "ebbd731b8caecb3260cfc071309bec6b899d8ebdfb5c7b3e4ac5f3af5862e8b5",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4936.png": {
+        "sha256": "b792983969f8b1189f446460ea60e866edb55726df5c43dd660399a4460381be",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-4936.svg": {
+        "sha256": "f0b0810b719b57fbbc3746c3fe997ded4005dfb8f9260ce6b86a8fb08b88718e",
+        "status": 200
+      },
+      "demo-originals/fictional-hw-5012.svg": {
+        "sha256": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7801.png": {
+        "sha256": "5d99f999827ea63a135ac822682f63f375697f56a1fbf76707888731d3267898",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7801.svg": {
+        "sha256": "582e016a24aea6af5ca54cb233b40cfb1622214d1075eb6b59002766135efa11",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7848.png": {
+        "sha256": "1acb2f133d0b552876c95469b48d4460352033d63a50b8233395bbb4fa14502f",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7848.svg": {
+        "sha256": "1c1b0b5d820dcf32fcbde29f0eaf1caa9ce1f23ffefc587cbff369ef4c200be9",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7862.png": {
+        "sha256": "fee8a9439785a7289c123a1cdcd853da4315981cccbd26e47809fb79033f795c",
+        "status": 200
+      },
+      "demo-originals/fictional-sb-7862.svg": {
+        "sha256": "0598ca08e77b29dabd69f5ebd23bc33c366e547f48707909abc12262bc7cd446",
+        "status": 200
+      },
+      "demo-originals/manifest.json": {
+        "sha256": "5380699d14573f214e486351de1b660123437248f11b6a999b6c4fedea080fb5",
+        "status": 200
+      },
+      "icons/company-192.png": {
+        "sha256": "24d9858ae874d2f39d253580f57c762209cf681735250a2bbda6b1307d2429d0",
+        "status": 200
+      },
+      "icons/company-512.png": {
+        "sha256": "4d246e34c2cc8b44bbfedb8e95eef1387f39c99d95b0fa66febae0ed40bfb630",
+        "status": 200
+      },
+      "index.html": {
+        "sha256": "65935a9f03ba30cca8cb663a1e41bae411bbdd03a70bda09cdd674d4a61c367f",
+        "status": 200
+      },
+      "manifest.webmanifest": {
+        "sha256": "9ff1c304449963c514141b014aa4ce2dd6f71aff44ccd746e771f036ba74ca11",
+        "status": 200
+      },
+      "offline.css": {
+        "sha256": "966b640ce44b5a667ae3b4a98f9fb8fd68f79102a5f1b913eb222e176f9477f0",
+        "status": 200
+      },
+      "offline.html": {
+        "sha256": "92a9e593b9110e500df64b0a3479fcbd41a6cf5bd2c4f8c0087371761c8fae25",
+        "status": 200
+      },
+      "service-worker.js": {
+        "sha256": "e53498c7a3ef403d454bf498bc4e38bc8beaee5ff1b17a2115c976611958bcb5",
+        "status": 200
+      }
+    },
+    "http_unchanged": true,
+    "root_head_after": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d"
+  },
+  "failures_by_file": {
+    "alignment-a2.spec.ts": 2,
+    "b-polish.spec.ts": 1,
+    "c3-tables.spec.ts": 2,
+    "c5-button-audit.spec.ts": 3,
+    "c5-conditional-audit.spec.ts": 1,
+    "c5-presentation.spec.ts": 6,
+    "c8-layout-display.spec.ts": 4,
+    "catalog-a2.spec.ts": 3,
+    "filters-a2.spec.ts": 1,
+    "history-b.spec.ts": 2,
+    "invoice-a2.spec.ts": 2,
+    "invoice-orders-c2.spec.ts": 5,
+    "invoices.spec.ts": 2,
+    "manual-entry.spec.ts": 2,
+    "manual-prices-c1.spec.ts": 2,
+    "notebook-edit-b.spec.ts": 2,
+    "notebooks-b.spec.ts": 2,
+    "operations.spec.ts": 3,
+    "receiving-c.spec.ts": 4,
+    "returns-a2.spec.ts": 5,
+    "settings-b.spec.ts": 2,
+    "storage-c6.spec.ts": 2,
+    "suppliers-a2.spec.ts": 2
+  },
+  "failure_diagnoses": [
+    {
+      "id": "3f6635d19ee95a180195-c5047f0fad3279789d36",
+      "title": "table columns align and phone cards retain labelled contained values (en)",
+      "file": "alignment-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "3f6635d19ee95a180195-e054225a26ccb5e5ec86",
+      "title": "table columns align and phone cards retain labelled contained values (fa)",
+      "file": "alignment-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "d6c99d8674fe08ace5e5-1130cf182bc387987ecb",
+      "title": "Part 1 pills and dashboard branch values stay on one line",
+      "file": "b-polish.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "395df1b82e7dbfc62c65-129a6fbf116d7f5a1f45",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "file": "c3-tables.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Negative absent header check matched shell before reload resumed",
+        "resolution": "90ad awaits genuine signed-in Products row before unchanged persisted-column/privacy oracles; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "395df1b82e7dbfc62c65-ef8ac45b395f9edac878",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "file": "c3-tables.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Negative absent header check matched shell before reload resumed",
+        "resolution": "90ad awaits genuine signed-in Products row before unchanged persisted-column/privacy oracles; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "ea6e84828c1d06944850-1dd0ceb5cee789b9f835",
+      "title": "C5 button contract covers Suppliers, every supplier tab and item dialogs",
+      "file": "c5-button-audit.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "ea6e84828c1d06944850-9475b9bb1df467259bf2",
+      "title": "C5 button contract covers Labels, Notes, History, Received and ledger forms",
+      "file": "c5-button-audit.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "ea6e84828c1d06944850-68b682e48118e2909537",
+      "title": "C5 button contract covers primary product, date, approval and invoice dialogs",
+      "file": "c5-button-audit.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Same E3 compact Products editor entry-path assumption",
+        "resolution": "Incrementalv11 retains unchanged complete shared-dialog audit after actual record navigation; boundedv5 phone pending."
+      }
+    },
+    {
+      "id": "f01ae16c82f3d9a08d05-d7a2a25e97b7269a955f",
+      "title": "C5 conditional label selection, template restore, and print confirmation",
+      "file": "c5-conditional-audit.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-0722e28e679922eacda7",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-light)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-ce9b6ff61b96df913690",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-3e78fa2da3b2234b391d",
+      "title": "C5 Waiting for credit is amber for different retained return states (en-dark)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-0b835dc64fa44b2d6255",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-f8564bb6fa3f030f559b",
+      "title": "C5 Waiting for credit is amber for different retained return states (fa-light)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "0ced034a5c1535935284-9f6f7f6db8309657e29f",
+      "title": "C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)",
+      "file": "c5-presentation.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "534a02de3f153c5b41b6-c1ec88515826d2bb4fc9",
+      "title": "C8 Received uses whole cases and retained loose units (en)",
+      "file": "c8-layout-display.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "534a02de3f153c5b41b6-4577e696e86008117326",
+      "title": "C8 list navigation and disclosure stay at the row end (en)",
+      "file": "c8-layout-display.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "534a02de3f153c5b41b6-ecfe507bfa981b0e8a17",
+      "title": "C8 Received uses whole cases and retained loose units (fa)",
+      "file": "c8-layout-display.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "534a02de3f153c5b41b6-c5c1c090c8303adf6dbe",
+      "title": "C8 list navigation and disclosure stay at the row end (fa)",
+      "file": "c8-layout-display.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 authorized compact-row semantics replace old labels/DOM-last-cell/private-list-column assumptions",
+        "resolution": "90ad retains exact values, authorized record detail access, original desktop predicates and physical RTL/LTR end/2px containment checks. Actual boundedv4 compact cases16/17 passed; only primary editor entry remains separately addressed."
+      }
+    },
+    {
+      "id": "e7386dd79e53a6b9768d-eafdad0def32f8507ebd",
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "file": "catalog-a2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E2 derived price-task audit follows actual causal price/Undo audit",
+        "resolution": "90ad selects exactly one newly appended causal product decision or linked reversal ID, preserving all actor/value/financial/Undo-timer assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "e7386dd79e53a6b9768d-c6a3a38bc06b743a1cdd",
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "file": "catalog-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E2 derived price-task audit follows actual causal price/Undo audit",
+        "resolution": "90ad selects exactly one newly appended causal product decision or linked reversal ID, preserving all actor/value/financial/Undo-timer assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "e7386dd79e53a6b9768d-d32c1e79d4886461a9b1",
+      "title": "duplicate barcode reports one scoped conflict and allows a corrected save",
+      "file": "catalog-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 compact Products opens its real record before the shared editor",
+        "resolution": "90ad preserves every exact barcode-conflict/one-approval/unchanged-products oracle and uses actual record chevron on compact rows; boundedv5 phone pending."
+      }
+    },
+    {
+      "id": "ac597fb86d6413fdffea-9f5949627d574e77dff9",
+      "title": "Payables filters supplier totals and keeps selected report in the same branch",
+      "file": "filters-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 compact Payables scope/balance replaces old column captions",
+        "resolution": "Incrementalv11 maps actual visible regions; exact Richmond Hill and $0.00 expectations unchanged; current boundedv5 phone pending."
+      }
+    },
+    {
+      "id": "c469c8974af40fae3884-b91e96a0c6f83f148595",
+      "title": "Undo stays above a native modal and keyboard focus pauses its own timer",
+      "file": "history-b.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E2 derived price-task audit follows actual causal price/Undo audit",
+        "resolution": "90ad selects exactly one newly appended causal product decision or linked reversal ID, preserving all actor/value/financial/Undo-timer assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "c469c8974af40fae3884-3044d741182033bab18f",
+      "title": "Undo stays above a native modal and keyboard focus pauses its own timer",
+      "file": "history-b.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E2 derived price-task audit follows actual causal price/Undo audit",
+        "resolution": "90ad selects exactly one newly appended causal product decision or linked reversal ID, preserving all actor/value/financial/Undo-timer assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "1b0ec9cfebb11564caa1-52888deabc59b87d9be1",
+      "title": "Persian signed money, line numbers and deduction parentheses stay isolated",
+      "file": "invoice-a2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "1b0ec9cfebb11564caa1-17814814418e4fa0dbfe",
+      "title": "Persian signed money, line numbers and deduction parentheses stay isolated",
+      "file": "invoice-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a515dfb8df5e297f69c2-0f531a16c09b7e1d9999",
+      "title": "retained case quote bills exactly, remembers the pack and leaves the posted snapshot intact",
+      "file": "invoice-orders-c2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a515dfb8df5e297f69c2-2b8403595fdf9210da70",
+      "title": "order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts",
+      "file": "invoice-orders-c2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a515dfb8df5e297f69c2-e570558512d5b0eea2fc",
+      "title": "short-dated expiry discount requires a real date and preserves an existing manual selling price",
+      "file": "invoice-orders-c2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a515dfb8df5e297f69c2-831b4a379c65b57694ba",
+      "title": "order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts",
+      "file": "invoice-orders-c2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a515dfb8df5e297f69c2-0e7252fab1b6ecc5ba94",
+      "title": "short-dated expiry discount requires a real date and preserves an existing manual selling price",
+      "file": "invoice-orders-c2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "bf10ff72eb560ee5dde5-8ead06bdf8ca40c1a9de",
+      "title": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+      "file": "invoices.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "bf10ff72eb560ee5dde5-48f64c73564534200abf",
+      "title": "simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents",
+      "file": "invoices.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "991ef8dcc903c9ee8261-cd19fdaaf3807a6ee036",
+      "title": "worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances",
+      "file": "manual-entry.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "991ef8dcc903c9ee8261-4e9f6b52fab2fb685fcc",
+      "title": "worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances",
+      "file": "manual-entry.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "5f6b3e98e64a0de485d7-9533887bba016bced7ef",
+      "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+      "file": "manual-prices-c1.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine safe public rule/manual pair missing, plus explicit Store and E3 private-column presentation assumptions",
+        "resolution": "Narrow public DTO/presentation repair committed90ad; explicit Store and actual compact-record private cost path retained. Native desktop passed in boundedv5, phone pending."
+      }
+    },
+    {
+      "id": "5f6b3e98e64a0de485d7-cc1789fa2d8fd05f2c39",
+      "title": "manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only",
+      "file": "manual-prices-c1.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine safe public rule/manual pair missing, plus explicit Store and E3 private-column presentation assumptions",
+        "resolution": "Narrow public DTO/presentation repair committed90ad; explicit Store and actual compact-record private cost path retained. Native desktop passed in boundedv5, phone pending."
+      }
+    },
+    {
+      "id": "2df9f6c39993f091524e-3a449f6cb916979265f0",
+      "title": "an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact",
+      "file": "notebook-edit-b.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "2df9f6c39993f091524e-26fd97efe88c835a0f22",
+      "title": "an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact",
+      "file": "notebook-edit-b.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "d2ad8ecc63c2804d452e-d6743f327599e1550ab4",
+      "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+      "file": "notebooks-b.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine Cashier custom-notebook route denied despite actual ACL",
+        "resolution": "Narrow production query/route repair committed90ad; native grant/revoke desktop passed in current boundedv5, phone pending."
+      }
+    },
+    {
+      "id": "d2ad8ecc63c2804d452e-4a405e5dacaf12ba6409",
+      "title": "Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks",
+      "file": "notebooks-b.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "timedOut",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine Cashier custom-notebook route denied despite actual ACL",
+        "resolution": "Narrow production query/route repair committed90ad; native grant/revoke desktop passed in current boundedv5, phone pending."
+      }
+    },
+    {
+      "id": "4f8fd72df7d8ab107a64-4ad23eb4bee8e71ce3fa",
+      "title": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+      "file": "operations.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "4f8fd72df7d8ab107a64-6265a865387416da511e",
+      "title": "supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals",
+      "file": "operations.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "4f8fd72df7d8ab107a64-ce181e152874f3546a60",
+      "title": "Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables",
+      "file": "operations.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine phone print omits layout-collapsed cheque evidence",
+        "resolution": "Central print-mode presentation repair + four unit regressions staged separately; original DEMO-1001 and amount checks retained; child bounded build/unit/native pending."
+      }
+    },
+    {
+      "id": "895646cd521928cd084b-fdeff760b9b39fa27b32",
+      "title": "a worker retargets their own invoice to Warehouse without gaining Warehouse access",
+      "file": "receiving-c.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "895646cd521928cd084b-6e4c883fcb2d6a421769",
+      "title": "invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting",
+      "file": "receiving-c.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "895646cd521928cd084b-264764006ce2ea9fcd71",
+      "title": "a worker retargets their own invoice to Warehouse without gaining Warehouse access",
+      "file": "receiving-c.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "895646cd521928cd084b-451fcbb90a1b2898668d",
+      "title": "invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting",
+      "file": "receiving-c.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Genuine async command/readiness control used as synchronous fixture; receiving topbar picker scope distinction",
+        "resolution": "90ad awaits exact accepted original/ID/hash/route, projected unit/checkbox and real expanded state; recipient scope remains exact North York-only. Exact quantities, costs, cents, stock, original bytes and current permissions unchanged; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a29327b5fc09aae5978c-7c4a094e5d2533fd4759",
+      "title": "Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger",
+      "file": "returns-a2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a29327b5fc09aae5978c-d4e2ea1af88145bf0d53",
+      "title": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+      "file": "returns-a2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a29327b5fc09aae5978c-574c0cf4ba11110491a6",
+      "title": "Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian",
+      "file": "returns-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E3 compact phone rows replace obsolete label/value-card captions",
+        "resolution": "Separate incremental Returns oracle preserves every existing 2px glyph/control/cell/page guard; requires all four unique regions/no captions/one actual end chevron; native pending."
+      }
+    },
+    {
+      "id": "a29327b5fc09aae5978c-83b180d625b71d98eec4",
+      "title": "Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger",
+      "file": "returns-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "a29327b5fc09aae5978c-57f27bc72304d4ffa100",
+      "title": "Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review",
+      "file": "returns-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Configured current Owner / Manager role copy supersedes Supervisor",
+        "resolution": "90ad exact copy adaptation preserves original author windows, cancellation/credit/stock/cents/audit assertions; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "1ef711489f5b7c6f0dbf-0052c2ce7cb9276c6904",
+      "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+      "file": "settings-b.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "People and Notifications became implemented in authorized E1/E2",
+        "resolution": "90ad retains all four genuinely planned groups no-save/no-input checks, adds positive six-person/device/24h/48h/Floor completion setting/recipient controls expectations; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "1ef711489f5b7c6f0dbf-72bd022eab5bf81f1cd5",
+      "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+      "file": "settings-b.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "People and Notifications became implemented in authorized E1/E2",
+        "resolution": "90ad retains all four genuinely planned groups no-save/no-input checks, adds positive six-person/device/24h/48h/Floor completion setting/recipient controls expectations; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "0c9eefa7183abf26d2b6-c4bb0a65636ccbd5f126",
+      "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "file": "storage-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Async New/Manual/original publication readiness; later bounded attempts exposed optional profitable History codec and absent-row visibility assumptions",
+        "resolution": "Real current-ID/original/route readiness, strict lossless/no-expansion codec contract and awaited actual History row retain all twenty distinct3MB sources/hash/reload/download/Revert/budget checks; final boundedv5 pending."
+      }
+    },
+    {
+      "id": "0c9eefa7183abf26d2b6-6950e18f2a89017ed6fa",
+      "title": "C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "file": "storage-c6.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "Async New/Manual/original publication readiness; later bounded attempts exposed optional profitable History codec and absent-row visibility assumptions",
+        "resolution": "Real current-ID/original/route readiness, strict lossless/no-expansion codec contract and awaited actual History row retain all twenty distinct3MB sources/hash/reload/download/Revert/budget checks; final boundedv5 pending."
+      }
+    },
+    {
+      "id": "0c6784b2e4caa94bff85-e5cc16795ed37549710b",
+      "title": "Cashier cannot open Suppliers through a direct address",
+      "file": "suppliers-a2.spec.ts",
+      "project": "desktop",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E1 private route fails closed with permission feedback instead of an implicit Lookup redirect",
+        "resolution": "90ad retains no private supplier/money DOM and exact permission message; actual targeted desktop pass."
+      }
+    },
+    {
+      "id": "0c6784b2e4caa94bff85-170a298ab71812c5a17e",
+      "title": "Cashier cannot open Suppliers through a direct address",
+      "file": "suppliers-a2.spec.ts",
+      "project": "phone",
+      "outcome": "FAIL",
+      "actual_status": "failed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": [],
+      "diagnosis": {
+        "family": "E1 private route fails closed with permission feedback instead of an implicit Lookup redirect",
+        "resolution": "90ad retains no private supplier/money DOM and exact permission message; actual targeted desktop pass."
+      }
+    }
+  ],
+  "warning": "A full final-current-source replay is still required after reviewed repairs. Bounded suites overlap and cannot be added to710 into a total pass count."
+}
