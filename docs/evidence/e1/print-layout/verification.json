@@ -1,0 +1,18 @@
+{
+  "baseline": "c341931a6e164f8e2de3c83803b92c517a02382a",
+  "scope": "Actual E1 generic print lifecycle, exact cheque/payment, explicit hidden-column exclusion and existing disclosure tests. No E3 phone-list prop added to E1.",
+  "tests": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "command": "npm exec vitest -- run src/table-print.test.tsx src/table-disclosure.c8.test.tsx --maxWorkers=1",
+  "exit_code": 0,
+  "normal_build": {
+    "command": "npm run build",
+    "exit_code": 0,
+    "includes": "TypeScript and Vite"
+  }
+}

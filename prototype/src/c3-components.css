@@ -221,3 +221,13 @@
     transition: none;
   }
 }
+
+/* Printing uses the full permitted table, independent of the phone viewport. */
+@media print {
+  :root .ui-data-table.is-printing table.has-defined-columns {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    table-layout: auto;
+  }
+}
