@@ -1,0 +1,53 @@
+{
+  "kind": "read-only actual trace diagnosis; no source staged or tests run",
+  "base_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "trace_path": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/storage-c6-C6-migrates-a-n-59454-ps-and-no-lost-source-bytes-desktop/trace.zip",
+  "trace_sha256": "ed9d67354e706bfc8915ad0fc2f708e78c53332a7e529b38d17f050a77d57fd1",
+  "failure": "TypeError reading invoice.legacy_demo_original.file_data at storage-c6.spec.ts934",
+  "actual_cause": "The test-only first-import page was served the real app through an already controlling service worker. That app raced authority database deletion and initialized canonical seeded business before legacy source text was installed. saved-files generic wait then accepted old canonical file refs.",
+  "setup_document": {
+    "bytes": 9039,
+    "sha256": "30a844817b1ccc35fb2cefefb705de3e982e31aa8173cd7a01c35da449a55dc8",
+    "equals_exact_built_index": true,
+    "service_worker_fetch_record": true,
+    "module_assets_loaded_with_setup_referrer": [
+      "assets/index-CIY_SBFo.css",
+      "assets/index-DX541Ird.js"
+    ],
+    "requested_inert_title": "Retained migration setup"
+  },
+  "timeline_ms": {
+    "call@633": 1702122.286,
+    "call@637": 1702502.033,
+    "call@639": 1702549.875,
+    "call@641": 1702893.44,
+    "call@669": 1705389.951,
+    "call@671": 1705523.346
+  },
+  "prepared_source": {
+    "text_bytes_target": 5238784,
+    "exact_5MiB_minus4096": true,
+    "main_raw_sha256": "ad8857bed4002483671da45ae57c115a2879f857103eb24dded663236c4ecb87",
+    "legacy_backup_raw_sha256": "cb2b969bc4bc74246b96a17e7859551ae8c62e0e5f4026a10470df00552afd3c",
+    "file_name": "legacy-immutable-original.jpg",
+    "photo_bytes": 408165,
+    "photo_sha256": "fc99a2f63476bd699771b3336f5cbf0ff8fa0ad3291effdf8830993340f595eb",
+    "legacy_demo_original_present": true,
+    "same_invoice_legacy_logo_inline_bytes": true
+  },
+  "canonical_after": {
+    "invoice_id": "demo-fv-20417",
+    "file_name": "fictional-fv-20417.svg",
+    "file_data": "idb-file:v1:super-arzon:802606a39038b45b595555ba29af99f0c031e945d25d2d671a3b3862ed407ece",
+    "legacy_demo_original_present": false,
+    "logo_data": null,
+    "same_old_invoice_ref": true
+  },
+  "proposal": "Use the already approved c8 first-import isolation pattern inside this file freshMigrationSurface: unregister existing service worker, navigate about:blank to leave its controlling document, navigate routed inert setup, assert exact inert title/no module script/no topbar, then perform unchanged authority-only delete/business removal and original text preparation. Do not block service workers globally; normal app navigation must re-register. Preserve all source/backup/hash/size/5MiB/reload oracles and120000ms case budget.",
+  "affected_helper_call_sites": [
+    761,
+    883,
+    1021
+  ],
+  "not_claimed": "No proof of production data loss or migration bug is established by this failing setup; no corrected runtime has been run."
+}
