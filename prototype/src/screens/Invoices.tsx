@@ -1748,7 +1748,9 @@ function InvoiceWorkspace({
                           href={`#invoices?id=${encodeURIComponent(item.id)}`}
                           onClick={(event) => {
                             event.preventDefault();
-                            void resume(item);
+                            // The route effect selects the protected workspace.
+                            // Starting resume() here also navigated after its
+                            // async command, which could undo browser Back.
                             chooseTab("posted", true);
                             setDetailsOpen(false);
                             navigate(
