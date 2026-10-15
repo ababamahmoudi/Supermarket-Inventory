@@ -1,0 +1,23 @@
+{
+  "kind": "Narrow Payables same-location presentation repair with actual Provider delayed-refresh regression",
+  "proof_baseline_commit": "eb68cdca6345295a199819294f35b1cad34e6130",
+  "files": [
+    {
+      "path": "prototype/src/screens/Payables.tsx",
+      "source": "/tmp/e3-payables-reselection-fix/staged/prototype/src/screens/Payables.tsx",
+      "baseline_sha256": "0af28648519c2490441bbe2e9c08fd4850784448ba2f7501de2dfbd1323fcf9d",
+      "sha256": "ee1f6a1e191f327682506fcbfa154e23ed1875a681dc99cbf30b8b4181b79863"
+    },
+    {
+      "path": "prototype/src/screens/Payables.reselection.e1.test.tsx",
+      "source": "/tmp/e3-payables-reselection-fix/staged/prototype/src/screens/Payables.reselection.e1.test.tsx",
+      "baseline_sha256": null,
+      "sha256": "90960fa663db35be3457389609b15bb01ff91f94049e7a2c0a1a1b9243b11923"
+    }
+  ],
+  "affected_route": "#payables only; reselecting the already selected location in the Payables list filter",
+  "reason": "Same-location selection invoked real authority setLocation/resume/adopt unnecessarily. Generation invalidation replaced the enabled search input while the user typed and reset text/focus. Ignore unchanged branch only when clear=false; real location changes and explicit Clear filters remain unchanged.",
+  "production_change": "Exactly one line: if (value === branch && !clear) return;",
+  "authority": "No role, capability, query, command, canonical financial data or session authority is changed. The regression wraps only delivery of a genuine repository projection after actual IDB/current-authority execution, never fabricating its result.",
+  "verification": "Actual same-final-test old1FAIL/2PASS versus patched3PASS/0FAIL; full TypeScript, changed-file ESLint and Prettier all exit0; source595files unchanged in both runs. No native browser run or full app suite is claimed."
+}

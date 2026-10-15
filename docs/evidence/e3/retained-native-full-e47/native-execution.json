@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/tmp/e3-complete-final-proof-v2/source/prototype/playwright.immutable-proof.config.ts",
+    "--workers=2",
+    "--reporter=line,json",
+    "--output",
+    "/tmp/e3-complete-final-proof-v2/native-run-001/native-output"
+  ],
+  "actual_exit_code": 1,
+  "seconds": 3201.37637090683,
+  "interrupted": false
+}

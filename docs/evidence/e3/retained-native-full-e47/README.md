@@ -1,0 +1,7 @@
+# Completed historical retained browser run on e47
+
+Actual full terminal result: **759 passed,11 failed,42 original intentional skips**,812 discovered, actual CLI exit1. The run completed all cases in3201.38seconds with two workers, no retries, no interrupted/not-run/flaky cases and no global errors. The original frozen e47 Git source, normal-built files and all61served HTTP asset hashes remained unchanged.
+
+Every original failure remains a failure in the raw report and matrix. Separate scoped replays diagnose and verify fixture setup/readiness, stronger unit detection and compact selectors; they do not turn this into one clean run. One failure exposed a genuine Payables no-op selection race. A separately diagnosed genuine invoice navigation race also requires a production repair. Because those later repairs change application production, this packet is historical evidence only and cannot establish final current-source success. A fresh exact-source normal build and full verification are required.
+
+All12 authority native cases actually ran in each project. The42 intentional skips are unchanged phone/desktop geometry boundary cases, with exact reasons retained separately. Raw full JSON, log, matrix, source/build/dist/HTTP guards, all11failure contexts and trace hashes are included. Both real twenty-photo proof attachments are preserved when emitted. Raw files are compressed to preserve exact bytes through formatting hooks; original full traces remain at the recorded execution artifact paths.
