@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import {
   act,
   cleanup,
@@ -33,8 +34,11 @@ afterEach(async () => {
 });
 
 function ActualInvoices() {
-  currentDemo = useDemo();
-  return currentDemo.actor && currentDemo.authStage === "complete" ? (
+  const context = useDemo();
+  useLayoutEffect(() => {
+    currentDemo = context;
+  }, [context]);
+  return context.actor && context.authStage === "complete" ? (
     <Invoices />
   ) : null;
 }
