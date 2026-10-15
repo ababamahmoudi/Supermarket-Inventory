@@ -1,0 +1,55 @@
+{
+  "source_commit": "f61a8bed12e816141b0fc69e101a368de0007270",
+  "commands": [
+    {
+      "name": "native-sdk",
+      "command": [
+        "npm",
+        "run",
+        "test:sdk",
+        "--",
+        "--reporter=json",
+        "--outputFile=/tmp/e1-sdk-current-fix/sdk-results.json"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/e1-sdk-current-fix/native-sdk.log"
+    },
+    {
+      "name": "scoped-eslint",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/e1-authority/permissions.test.mjs",
+        "--max-warnings",
+        "0"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/e1-sdk-current-fix/scoped-eslint.log"
+    },
+    {
+      "name": "scoped-format",
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/e1-authority/permissions.test.mjs"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/e1-sdk-current-fix/scoped-format.log"
+    }
+  ],
+  "sdk": {
+    "numTotalTestSuites": 6,
+    "numPassedTestSuites": 6,
+    "numFailedTestSuites": 0,
+    "numTotalTests": 75,
+    "numPassedTests": 75,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "candidate_files": 557,
+  "candidate_unchanged": true,
+  "root_files_changed_during_checks": [],
+  "checked_at_utc": "2026-10-15T17:26:51.531931+00:00"
+}

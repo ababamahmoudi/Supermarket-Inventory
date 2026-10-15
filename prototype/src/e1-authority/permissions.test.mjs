@@ -399,60 +399,85 @@ test("inactive ordinary targets denied; Owner/Manager retained corrections expli
     true,
   );
 });
-test("FW reviewer origin retains own unposted draft read/edit but never foreign physical posting or assignments", () => {
+test("FW canonical handling origin permits own active receiving and posting without destination access", () => {
   const fw = fixture("floor_worker"),
     bs = fixture("branch_supervisor");
-  const draft = scope(["nm"], {
+  const draft = scope(["wh"], {
     entity_id: "invoice-1",
     status: "draft",
+    owner_user_id: fw.person.id,
+    handling_user_ids: [],
     invoice_reviewer_origin_location_id: "ny",
     mutation: true,
   });
-  for (const capability of [
+  const retainedCapabilities = [
     "invoices.read",
     "invoices.edit",
     "invoices.cost_read",
-  ])
+    "invoices.assign_receiving_location",
+    "invoices.post",
+  ];
+  for (const capability of retainedCapabilities) {
+    const target = {
+      ...draft,
+      mutation: !["invoices.read", "invoices.cost_read"].includes(capability),
+    };
+    assert.equal(allowed(fw, capability, target), true, capability);
     assert.equal(
       allowed(fw, capability, {
-        ...draft,
-        mutation: capability === "invoices.edit",
+        ...target,
+        owner_user_id: "another-person",
+        handling_user_ids: [fw.person.id],
       }),
       true,
-      capability,
+      `canonical handler: ${capability}`,
     );
+    assert.equal(allowed(bs, capability, target), false, capability);
+    for (const denied of [
+      { owner_user_id: undefined, handling_user_ids: [] },
+      { owner_user_id: "another-person", handling_user_ids: ["someone-else"] },
+      { entity_id: undefined },
+      { company_id: "other-company" },
+      { location_ids: ["unknown-location"] },
+      { status: "posted" },
+      { status: "voided" },
+      { invoice_reviewer_origin_location_id: "rh" },
+    ])
+      assert.equal(
+        allowed(fw, capability, { ...target, ...denied }),
+        false,
+        `unrelated, invalid or no longer unposted: ${capability} ${JSON.stringify(denied)}`,
+      );
+  }
   for (const capability of [
-    "invoices.post",
-    "invoices.assign_receiving_location",
     "invoices.assign_reviewer",
+    "invoices.short_resolve",
+    "received.read",
   ]) {
     assert.equal(allowed(fw, capability, draft), false, capability);
     assert.equal(allowed(bs, capability, draft), false, capability);
     assert.equal(
       allowed(fw, capability, { ...draft, location_ids: ["ny"] }),
       true,
-      `own allowed physical target: ${capability}`,
+      `unchanged assigned physical target: ${capability}`,
     );
   }
-  assert.equal(
-    allowed(fw, "invoices.read", {
-      ...draft,
-      status: "posted",
-      mutation: false,
-    }),
-    false,
-  );
-  assert.equal(
-    allowed(fw, "invoices.edit", {
-      ...draft,
-      invoice_reviewer_origin_location_id: "rh",
-    }),
-    false,
-  );
-  assert.equal(
-    allowed(fw, "received.read", { ...draft, mutation: false }),
-    false,
-  );
+  fw.state.config.orders.allow_floor_worker = true;
+  for (const capability of ["orders.read", "orders.cost_read", "orders.write"])
+    assert.equal(allowed(fw, capability, draft), false, capability);
+  for (const locationId of ["ny", "wh"]) {
+    const location = fw.state.config.branches.find(
+      (item) => item.id === locationId,
+    );
+    location.active = false;
+    for (const capability of retainedCapabilities)
+      assert.equal(
+        allowed(fw, capability, draft),
+        false,
+        `inactive origin or destination ${locationId}: ${capability}`,
+      );
+    location.active = true;
+  }
 });
 test("branch request endpoint read does not authorize acting at foreign endpoint", () => {
   const f = fixture("floor_worker");
