@@ -1,0 +1,167 @@
+{
+  "source_commit": "03bc896e7e48668c36bd90ba75cb5a764abf6853",
+  "review_passed": true,
+  "screens": [
+    {
+      "filename": "people-en-light.png",
+      "sha256": "a30b90cf15a03d45295445b67d73a982f7784fe736bd3b50f1842ad8fd8b0019",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "add-person-en-light.png",
+      "sha256": "b99583cc92dfc7a434e0367eaf3b2e23463730aea7a27868cf3e7793ba23f9d1",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "edit-person-en-light.png",
+      "sha256": "e093c03b7244e68fcf3a1dcd5b7fa704ec98a7906229f3640b4ca5d99bbfe596",
+      "verdict": "pass",
+      "personal_review": "Individually reopened final committed capture; no clipping, overlap or copy mismatch.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "location-picker-en-light.png",
+      "sha256": "294d5582c32cb3f4192963b7b89ab7fbb222751e5601fdc4b7188d7926a4f322",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "branch-supervisor-dashboard-en-light.png",
+      "sha256": "46a87f6e471afa86fd87de76c8566424c7f451fb430a3feaada288a3fbb210bb",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "people-en-dark.png",
+      "sha256": "d533fd96b1e24a244e52df4a3ba3c2b44461bbc43650ea7553c8f272044e1be8",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "add-person-en-dark.png",
+      "sha256": "2f69c959e9a0dac1ee77fb420876557bb1465f8010e09766eb2ceae01daff2b8",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "edit-person-en-dark.png",
+      "sha256": "b851b425d3e22fb99eaba4cd30727bf9ff788a76d3a1f0fdc14b813fe5164274",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "location-picker-en-dark.png",
+      "sha256": "64902fbfa40a05da8e921c4f6d47e64a25917da3795b6f7566e5ef021b16fe8d",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "branch-supervisor-dashboard-en-dark.png",
+      "sha256": "4dc8a03c421aa7bc9a9e782db1f6ffd442a4eabfb85ab1a7d1b8b05cb1f7d0b0",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "people-fa-light.png",
+      "sha256": "4531b21a809a958bb6b1e971423210e237ce22fd9ecee28532a87233125d1cfc",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "add-person-fa-light.png",
+      "sha256": "5fa65494a16fa292a245ca75c52d39deaee7ad3ee9106dd076a2dcb7eb4e47a1",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "edit-person-fa-light.png",
+      "sha256": "4273ddd40d2c79cb536ebecd2c884d87d4fd3a7191388a49d55602904f92c4f9",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "location-picker-fa-light.png",
+      "sha256": "a2d8df4030926775bc34152496a0193977563904f3e3a9445a50a70b97bc1c9f",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "branch-supervisor-dashboard-fa-light.png",
+      "sha256": "6b4da0ce8d8d2c1e4ea8c44202471615d0fe00da8cd8fa75d596f22db2850fca",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "people-phone-dark.png",
+      "sha256": "adb79f500beb58f57313dcce281519ee1e2e70486738ece71e645a3cd8b45ab8",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "add-person-phone-dark.png",
+      "sha256": "b72fe1a032a94dd188f745c468a8c02ccdb0d5883d1ef869af9d54031a3dc3bd",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Native phone dialog body scrolls; screenshot retains actual viewport, without editing the image."
+    },
+    {
+      "filename": "edit-person-phone-dark.png",
+      "sha256": "0385395786aa2e0ded48691e95b1184eea930c811f685df4844a3af060082113",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Native phone dialog body scrolls; screenshot retains actual viewport, without editing the image."
+    },
+    {
+      "filename": "location-picker-phone-dark.png",
+      "sha256": "0d48363309f88a1756dec035d98f8e94b13b1776af49d2323bd9ac74f4a06264",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    },
+    {
+      "filename": "branch-supervisor-dashboard-phone-dark.png",
+      "sha256": "2f48ed807b522d6a5b823fc97314817fc70779d6e09317f2457183fead7064d3",
+      "verdict": "pass",
+      "personal_review": "Individually opened earlier identical PNG; exact byte match rechecked.",
+      "actual_findings": [],
+      "framing": "Unedited real screenshot."
+    }
+  ],
+  "scope": "20 actual screenshots, with 19 exact byte matches to individually reviewed earlier images and one newly opened final image. Branch Supervisor seed aggregate is honestly empty; no invented chart values. Physical phone not tested."
+}
