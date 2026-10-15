@@ -1,0 +1,2106 @@
+{
+  "commit": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d",
+  "reviewed_at_utc": "2026-10-15T18:31:54.890873+00:00",
+  "method": "All79 exact PNG byte streams were individually opened through view_image:18 changed final90ad files freshly opened,61 original715 files previously opened and reused only after exact scene-name and SHA256 match of both prior and final actual files. Failed715 Received frames were never reused. Different commits are not claimed to have identical source.",
+  "images_total": 79,
+  "fresh_current_files_individually_opened": 18,
+  "previously_opened_exact_byte_identical_passing_reused": 61,
+  "prior_source_commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+  "outcomes": {
+    "passed_visual_review_with_limits": 56,
+    "pass": 23
+  },
+  "physical_home_screen_installation": "NOT PERFORMED; app-phone-dark ordinary Chromium browser standaloneDisplayMode:false",
+  "entries": [
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "sha256": "7558c555552a2d3f3d876857d6f5a499538354241eb2208529445a5314010017",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Exactly four KPI cards are visible.",
+        "The requested Recent invoices list places supplier names at logical start, Posted status at logical end, a single end chevron, and muted invoice/location/date facts below.",
+        "The requested Returns list now places Open / Partially resolved pills at logical end alongside an end chevron; status is not under the start column.",
+        "Cards, charts and other visible dashboard content remain inside the viewport."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "The owner E3 phone-list request names Dashboard Recent invoices and Returns specifically. Existing Supplier balances uses its retained label/value card presentation and separate navigation/menu glyphs; that section was not claimed to have been converted to the new compact-list pattern.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "bytes": 377436,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+        "sha256": "7558c555552a2d3f3d876857d6f5a499538354241eb2208529445a5314010017",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+      "sha256": "60f401046581460a6a0b14edb5a7ec70649f8d69a5ba5faf86c635ace208b36c",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+      "bytes": 57642,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+        "sha256": "60f401046581460a6a0b14edb5a7ec70649f8d69a5ba5faf86c635ace208b36c",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+      "sha256": "39cc18251e2ad42cfa5e685af87ec4243843a3c06d9c0ae2939dc339ad045f32",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Product names and available second-language names occupy the logical start; prices or their truthful absent-price state occupy the logical end with one end chevron.",
+        "The Stainless Steel Pot name retains the complete 24 cm fragment on one line at this width.",
+        "Product codes and status/offer details retain their secondary hierarchy; sale metadata wraps without collision."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+      "bytes": 199252,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+        "sha256": "39cc18251e2ad42cfa5e685af87ec4243843a3c06d9c0ae2939dc339ad045f32",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+      "sha256": "ee0534d23e5eff0aee2ac892236ea695dc32503086f77056145c0545152a88dd",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start; status pill sits at logical end with a single end chevron; reference/location/date form muted secondary facts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+      "bytes": 42496,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+        "sha256": "ee0534d23e5eff0aee2ac892236ea695dc32503086f77056145c0545152a88dd",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+      "sha256": "c4008d565bc8dd7c0dfe1fb1f3d4a7acab78129ead65dfdda90dbcaaca289bc0",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+      "bytes": 54390,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+        "sha256": "c4008d565bc8dd7c0dfe1fb1f3d4a7acab78129ead65dfdda90dbcaaca289bc0",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "sha256": "7b86a215b8ad50c6c4bf07fad413519a2def48cc342fa8b469da36af8a3ab853",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Exactly four KPI cards are visible.",
+        "The requested Recent invoices list places supplier names at logical start, Posted status at logical end, a single end chevron, and muted invoice/location/date facts below.",
+        "The requested Returns list now places Open / Partially resolved pills at logical end alongside an end chevron; status is not under the start column.",
+        "Cards, charts and other visible dashboard content remain inside the viewport."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "The owner E3 phone-list request names Dashboard Recent invoices and Returns specifically. Existing Supplier balances uses its retained label/value card presentation and separate navigation/menu glyphs; that section was not claimed to have been converted to the new compact-list pattern.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "bytes": 359418,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+        "sha256": "7b86a215b8ad50c6c4bf07fad413519a2def48cc342fa8b469da36af8a3ab853",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+      "sha256": "0d9e240a24f2dc51b2b31f02a9e49fcd74a0adf8bfa837a54c0d75bca275c5d8",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+      "bytes": 59402,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+        "sha256": "0d9e240a24f2dc51b2b31f02a9e49fcd74a0adf8bfa837a54c0d75bca275c5d8",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+      "sha256": "82347728a53ff045fce0fb5e0e538f4e8092f71670163767e9a1298c3fe0ba96",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Product names and available second-language names occupy the logical start; prices or their truthful absent-price state occupy the logical end with one end chevron.",
+        "The Stainless Steel Pot name retains the complete 24 cm fragment on one line at this width.",
+        "Product codes and status/offer details retain their secondary hierarchy; sale metadata wraps without collision."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+      "bytes": 193399,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+        "sha256": "82347728a53ff045fce0fb5e0e538f4e8092f71670163767e9a1298c3fe0ba96",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+      "sha256": "980bca456b034708080bbe7a43c9852d906bb78a1eda447fcb8f8bd234dbca7e",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start; status pill sits at logical end with a single end chevron; reference/location/date form muted secondary facts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+      "bytes": 43781,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+        "sha256": "980bca456b034708080bbe7a43c9852d906bb78a1eda447fcb8f8bd234dbca7e",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+      "sha256": "2606f029b71ffa4f87b3d8ae197c51fa7b01a53440906a9c38668ef34d8adb83",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+      "bytes": 57197,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+        "sha256": "2606f029b71ffa4f87b3d8ae197c51fa7b01a53440906a9c38668ef34d8adb83",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "sha256": "db54c3426f210daa7ed5496d335bea6ec86f3beba9fbc100b33fc81e08a36ec1",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Exactly four KPI cards are visible.",
+        "The requested Recent invoices list places supplier names at logical start, Posted status at logical end, a single end chevron, and muted invoice/location/date facts below.",
+        "The requested Returns list now places Open / Partially resolved pills at logical end alongside an end chevron; status is not under the start column.",
+        "Cards, charts and other visible dashboard content remain inside the viewport."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "The owner E3 phone-list request names Dashboard Recent invoices and Returns specifically. Existing Supplier balances uses its retained label/value card presentation and separate navigation/menu glyphs; that section was not claimed to have been converted to the new compact-list pattern.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "bytes": 375644,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+        "sha256": "db54c3426f210daa7ed5496d335bea6ec86f3beba9fbc100b33fc81e08a36ec1",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+      "sha256": "df8e693b0378206298875e8ddca961e78b9d6dda15e4407c26dcb178909d84e9",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+      "bytes": 57717,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+        "sha256": "df8e693b0378206298875e8ddca961e78b9d6dda15e4407c26dcb178909d84e9",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "sha256": "3e341fde511ec6d0d96c18bb55d34b2c8e24ec4fd6b31475f7859cfde507b099",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Product names and available second-language names occupy the logical start; prices or their truthful absent-price state occupy the logical end with one end chevron.",
+        "The Stainless Steel Pot name retains the complete 24 cm fragment on one line at this width.",
+        "Product codes and status/offer details retain their secondary hierarchy; sale metadata wraps without collision."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "bytes": 197141,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+        "sha256": "3e341fde511ec6d0d96c18bb55d34b2c8e24ec4fd6b31475f7859cfde507b099",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+      "sha256": "958ba2f21c857bd528b12ba498e158ce9881b1fe5deba816155e04fa649a670d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start; status pill sits at logical end with a single end chevron; reference/location/date form muted secondary facts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+      "bytes": 41521,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+        "sha256": "958ba2f21c857bd528b12ba498e158ce9881b1fe5deba816155e04fa649a670d",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+      "sha256": "f714634bc72ce49ebad7bd4f1045b0c983281bad4d20b08b7400e446e06fcb0b",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+      "bytes": 53317,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+        "sha256": "f714634bc72ce49ebad7bd4f1045b0c983281bad4d20b08b7400e446e06fcb0b",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "sha256": "104df1402344cc41e4c5addd47f89e9565239c93125f15e8c3fe7d2ffd3b9a08",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Exactly four KPI cards are visible.",
+        "The requested Recent invoices list places supplier names at logical start, Posted status at logical end, a single end chevron, and muted invoice/location/date facts below.",
+        "The requested Returns list now places Open / Partially resolved pills at logical end alongside an end chevron; status is not under the start column.",
+        "Cards, charts and other visible dashboard content remain inside the viewport."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "The owner E3 phone-list request names Dashboard Recent invoices and Returns specifically. Existing Supplier balances uses its retained label/value card presentation and separate navigation/menu glyphs; that section was not claimed to have been converted to the new compact-list pattern.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "bytes": 358943,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+        "sha256": "104df1402344cc41e4c5addd47f89e9565239c93125f15e8c3fe7d2ffd3b9a08",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+      "sha256": "e70b4e2f9023af6f24dbc9bb7926bb23ad594057890bd75f7e40312a147a24c4",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+      "bytes": 59523,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+        "sha256": "e70b4e2f9023af6f24dbc9bb7926bb23ad594057890bd75f7e40312a147a24c4",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "sha256": "d2b5d175ecace989df9c8eb4d17d1a0a482618bdad64b6e950a964dacf0d171d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Product names and available second-language names occupy the logical start; prices or their truthful absent-price state occupy the logical end with one end chevron.",
+        "The Stainless Steel Pot name retains the complete 24 cm fragment on one line at this width.",
+        "Product codes and status/offer details retain their secondary hierarchy; sale metadata wraps without collision."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "bytes": 193680,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+        "sha256": "d2b5d175ecace989df9c8eb4d17d1a0a482618bdad64b6e950a964dacf0d171d",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+      "sha256": "68b194e0f33d14951087535d0a037ed1aa6e6dc8b3297c682414eee7f9a4819c",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start; status pill sits at logical end with a single end chevron; reference/location/date form muted secondary facts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+      "bytes": 43429,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+        "sha256": "68b194e0f33d14951087535d0a037ed1aa6e6dc8b3297c682414eee7f9a4819c",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+      "sha256": "245d612db17b4d98ddaf29bda62ed3113b76a8fae3a1469bae3fdf877d965c90",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL PNG with view_image; source hash matches the capture manifest.",
+        "Visible content stays within the phone-width card and viewport; no overlapping list copy, value, or chevron is visible.",
+        "Supplier name remains at logical start, money amount at logical end, one end chevron, with muted date/location facts below.",
+        "Long supplier names remain legible and do not collide with amounts."
+      ],
+      "limitations": [
+        "Static Chromium screenshot only: touch behavior, screen readers, physical phone hardware, Safari, Home Screen installation and standalone display were not tested by this visual review.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+      "bytes": 57708,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+        "sha256": "245d612db17b4d98ddaf29bda62ed3113b76a8fae3a1469bae3fdf877d965c90",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+      "sha256": "68a840128d3b4433d3d5b38814a7d8d9f3248a652c217f0c8b07303da0c375c4",
+      "bytes": 62882,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Change sale modal has a bounded single-column body, readable product/current-sale details, custom choice cards, price field and four preset-discount controls.",
+        "The actual active Undo capsule occupies a separate footer row above Cancel and Start sale; the capsule and both actions are visible and do not overlap.",
+        "Persian RTL, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual viewport modal capture: lower scrollable body content is outside this PNG; the fixed footer and active Undo are evaluated only where visible.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+        "sha256": "68a840128d3b4433d3d5b38814a7d8d9f3248a652c217f0c8b07303da0c375c4",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+      "sha256": "9405338c1a3bd7039f2fc4210e7a9e878c4d4645ff27ef1e19e6822c7abd2d61",
+      "bytes": 39953,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Pending/Done, location and date filters wrap inside the bounded card without text/control collision.",
+        "The genuine Black Tea task shows the current-language name plus other-language name, whole location/date, old $6.99 → new $6.49 pair, start selection and one end chevron; the active Undo remains below the content.",
+        "Persian RTL, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+        "sha256": "9405338c1a3bd7039f2fc4210e7a9e878c4d4645ff27ef1e19e6822c7abd2d61",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+      "sha256": "26e7d751ecd366dcee7945aa3df1e8f0288a2b9ab1af07824357507a2ff314ff",
+      "bytes": 78560,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual posted HW-5012 alert shows the whole bilingual Pot name, real cost $12.60 → $14.20, sale $16.99, margin 26% → 16%, after-sale $20.99 → $23.49 and pending-approval link without clipped prices.",
+        "The keep-delivery checkbox and all three real decision actions fit the card. Compact date-tracking rows retain names, muted expiry/location facts, status at end and one chevron without text overlap.",
+        "Persian RTL, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+        "sha256": "26e7d751ecd366dcee7945aa3df1e8f0288a2b9ab1af07824357507a2ff314ff",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+      "sha256": "6b1179bd571c6c564c011741d87e295af24afc81fdaa814557233bedc77f6e6e",
+      "bytes": 33191,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Manager progress view shows Black Tea, Richmond Hill, old $6.99 → new $6.49 and Pending inside a bounded card; no completion actor/time has been fabricated for this pending state.",
+        "The active Undo capsule remains separate from the price-progress card and the visible controls.",
+        "Persian RTL, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+        "sha256": "6b1179bd571c6c564c011741d87e295af24afc81fdaa814557233bedc77f6e6e",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+      "sha256": "a7d4bcee2a0834d5d3bff560269dc66abf7b49a6173bd8f74b244ba58644a43e",
+      "bytes": 62499,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Change sale modal has a bounded single-column body, readable product/current-sale details, custom choice cards, price field and four preset-discount controls.",
+        "The actual active Undo capsule occupies a separate footer row above Cancel and Start sale; the capsule and both actions are visible and do not overlap.",
+        "Persian RTL, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual viewport modal capture: lower scrollable body content is outside this PNG; the fixed footer and active Undo are evaluated only where visible.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+        "sha256": "a7d4bcee2a0834d5d3bff560269dc66abf7b49a6173bd8f74b244ba58644a43e",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+      "sha256": "880a9a6a72e7eab3a26b46d2beb7f2f2cc54a599a268aeaf4788b99f2fcdeb4d",
+      "bytes": 39781,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Pending/Done, location and date filters wrap inside the bounded card without text/control collision.",
+        "The genuine Black Tea task shows the current-language name plus other-language name, whole location/date, old $6.99 → new $6.49 pair, start selection and one end chevron; the active Undo remains below the content.",
+        "Persian RTL, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+        "sha256": "880a9a6a72e7eab3a26b46d2beb7f2f2cc54a599a268aeaf4788b99f2fcdeb4d",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+      "sha256": "dc14aed7715f4fd5b72e0a903b536e10c32b7e62b72467b5dd5a917ea1e4c6c2",
+      "bytes": 79560,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual posted HW-5012 alert shows the whole bilingual Pot name, real cost $12.60 → $14.20, sale $16.99, margin 26% → 16%, after-sale $20.99 → $23.49 and pending-approval link without clipped prices.",
+        "The keep-delivery checkbox and all three real decision actions fit the card. Compact date-tracking rows retain names, muted expiry/location facts, status at end and one chevron without text overlap.",
+        "Persian RTL, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+        "sha256": "dc14aed7715f4fd5b72e0a903b536e10c32b7e62b72467b5dd5a917ea1e4c6c2",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+      "sha256": "bbd236075362b51feea0598415b57c9e1fab886529b4c33d8a37653831f194f7",
+      "bytes": 33301,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Manager progress view shows Black Tea, Richmond Hill, old $6.99 → new $6.49 and Pending inside a bounded card; no completion actor/time has been fabricated for this pending state.",
+        "The active Undo capsule remains separate from the price-progress card and the visible controls.",
+        "Persian RTL, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+        "sha256": "bbd236075362b51feea0598415b57c9e1fab886529b4c33d8a37653831f194f7",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+      "sha256": "5dc9c120838b8a4cbb7f2689a2c622c182541fc6f139940bab26a58bb1b1f721",
+      "bytes": 62527,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Change sale modal has a bounded single-column body, readable product/current-sale details, custom choice cards, price field and four preset-discount controls.",
+        "The actual active Undo capsule occupies a separate footer row above Cancel and Start sale; the capsule and both actions are visible and do not overlap.",
+        "English LTR, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual viewport modal capture: lower scrollable body content is outside this PNG; the fixed footer and active Undo are evaluated only where visible.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+        "sha256": "5dc9c120838b8a4cbb7f2689a2c622c182541fc6f139940bab26a58bb1b1f721",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+      "sha256": "6fb97255ec4bfdb5efea32200a6e8ded868e166c5297b22c50698aa4694cfa8a",
+      "bytes": 37659,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Pending/Done, location and date filters wrap inside the bounded card without text/control collision.",
+        "The genuine Black Tea task shows the current-language name plus other-language name, whole location/date, old $6.99 → new $6.49 pair, start selection and one end chevron; the active Undo remains below the content.",
+        "English LTR, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+        "sha256": "6fb97255ec4bfdb5efea32200a6e8ded868e166c5297b22c50698aa4694cfa8a",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+      "sha256": "40b3923df96f089bae20e9e9bdc5706df45feda9a301bce640747f9503fa7e74",
+      "bytes": 76310,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual posted HW-5012 alert shows the whole bilingual Pot name, real cost $12.60 → $14.20, sale $16.99, margin 26% → 16%, after-sale $20.99 → $23.49 and pending-approval link without clipped prices.",
+        "The keep-delivery checkbox and all three real decision actions fit the card. Compact date-tracking rows retain names, muted expiry/location facts, status at end and one chevron without text overlap.",
+        "English LTR, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+        "sha256": "40b3923df96f089bae20e9e9bdc5706df45feda9a301bce640747f9503fa7e74",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+      "sha256": "8a7198d9724b160dcad80e7bcc30b9dc28729450a03d7f0bea2808259952e7ca",
+      "bytes": 31535,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Manager progress view shows Black Tea, Richmond Hill, old $6.99 → new $6.49 and Pending inside a bounded card; no completion actor/time has been fabricated for this pending state.",
+        "The active Undo capsule remains separate from the price-progress card and the visible controls.",
+        "English LTR, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+        "sha256": "8a7198d9724b160dcad80e7bcc30b9dc28729450a03d7f0bea2808259952e7ca",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+      "sha256": "58eee6b0fe131749516292da5a6cb7d4ac5362a5f8d6191b3942c15c96b03479",
+      "bytes": 37822,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Pending/Done, location and date filters wrap inside the bounded card without text/control collision.",
+        "The genuine Black Tea task shows the current-language name plus other-language name, whole location/date, old $6.99 → new $6.49 pair, start selection and one end chevron; the active Undo remains below the content.",
+        "English LTR, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+        "sha256": "58eee6b0fe131749516292da5a6cb7d4ac5362a5f8d6191b3942c15c96b03479",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+      "sha256": "c1815c54c03c630e9a6ea1f755bf3fa7f51a437fd3e64672f46673326e5fcdba",
+      "bytes": 76616,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual posted HW-5012 alert shows the whole bilingual Pot name, real cost $12.60 → $14.20, sale $16.99, margin 26% → 16%, after-sale $20.99 → $23.49 and pending-approval link without clipped prices.",
+        "The keep-delivery checkbox and all three real decision actions fit the card. Compact date-tracking rows retain names, muted expiry/location facts, status at end and one chevron without text overlap.",
+        "English LTR, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+        "sha256": "c1815c54c03c630e9a6ea1f755bf3fa7f51a437fd3e64672f46673326e5fcdba",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+      "sha256": "b0461b67338371e0adb83d88ac67356602988b034a7ee681087bd35cf6f02719",
+      "bytes": 31359,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Manager progress view shows Black Tea, Richmond Hill, old $6.99 → new $6.49 and Pending inside a bounded card; no completion actor/time has been fabricated for this pending state.",
+        "The active Undo capsule remains separate from the price-progress card and the visible controls.",
+        "English LTR, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+        "sha256": "b0461b67338371e0adb83d88ac67356602988b034a7ee681087bd35cf6f02719",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+      "sha256": "38d5220f44a5475194596550fa29f0bc0ae69ecd93de8bde1ed757436b881f29",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded rounded dialog has clear spacing, custom role/location controls, and visible Cancel and Save actions.",
+        "Location choices wrap within the field group without overlapping labels.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+      "bytes": 32010,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+        "sha256": "38d5220f44a5475194596550fa29f0bc0ae69ecd93de8bde1ed757436b881f29",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+      "sha256": "1f0cb30fd37c2f3f056e23cd1ca7f63f814f8f75d405be803b5b8c2a574c3d33",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded edit dialog keeps the focused name field, mixed-script identity fields, role, and location choices readable.",
+        "The longer edit form continues beyond the captured dialog viewport at the Reason field without spilling across the dialog boundary.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This initial scroll position does not show lower form actions; the still alone cannot verify scrolling to or using them.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+      "bytes": 40492,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+        "sha256": "1f0cb30fd37c2f3f056e23cd1ca7f63f814f8f75d405be803b5b8c2a574c3d33",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+      "sha256": "dabd1df52093193b42190518c513e7b96da8d5903354b22779d42606ed438784",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Exactly four KPI cards form a two-column phone grid.",
+        "Section cards stack with consistent gutters and readable empty-state copy; View all actions fit alongside headings.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This is the genuine empty aggregate/location state; this image does not establish populated-row behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+      "bytes": 89640,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+        "sha256": "dabd1df52093193b42190518c513e7b96da8d5903354b22779d42606ed438784",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+      "sha256": "ec6103e87d96b9710517c675b146e72b8f1841db3d6243e9b6ecce3175daa147",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled location menu is fully opaque, bounded within the phone width, and has readable location choices and selected checkmark.",
+        "Underlying content is obscured by the menu normally rather than showing through an entrance-animation frame.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "The screenshot shows the expanded menu, not selection or keyboard behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+      "bytes": 95133,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+        "sha256": "ec6103e87d96b9710517c675b146e72b8f1841db3d6243e9b6ecce3175daa147",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+      "sha256": "3964abc38415c1db7d4fe65214d04ee6824993f87df7ff040564356b5f21be41",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled notification popover is fully opaque and remains within the phone width.",
+        "The empty-notification message fits without collision with top-bar controls.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine empty personal-bell state, not populated notifications or navigation.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+      "bytes": 94689,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+        "sha256": "3964abc38415c1db7d4fe65214d04ee6824993f87df7ff040564356b5f21be41",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+      "sha256": "8c9160b335b38231570f18de13e1882f81abb6f1bcea8df1774cdb82a5d6a87d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Page heading, supporting copy, and Store progress action fit with intentional wrapping.",
+        "Custom Pending/Done segment, location filter, and date control wrap without overlap; empty-state copy remains within the borderless card.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine filtered empty state, not populated tasks or completion.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+      "bytes": 33254,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+        "sha256": "8c9160b335b38231570f18de13e1882f81abb6f1bcea8df1774cdb82a5d6a87d",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+      "sha256": "6b71b28f08d6919d481de35fe612f1c6e48f4341c8a7d28409f61c2a42e25c1b",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "People and registered-computer records use stacked cards with readable names, roles, status, and actions.",
+        "Add person and Register computer actions fit their heading rows, with heading wrapping where needed.",
+        "The settings tab strip is intentionally horizontally scrollable at phone widths (settings-b.css mobile settings-group-menu overflow-x:auto); a partial next tab at its edge is not page overflow.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "Only the current settings-strip scroll position is pictured; this still cannot verify scrolling to other settings groups.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+      "bytes": 104976,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+        "sha256": "6b71b28f08d6919d481de35fe612f1c6e48f4341c8a7d28409f61c2a42e25c1b",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+      "sha256": "80060bb2c232ff59bf27220772bfcebefd7c15a722af03b9da3258458ceadd61",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded rounded dialog has clear spacing, custom role/location controls, and visible Cancel and Save actions.",
+        "Location choices wrap within the field group without overlapping labels.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+      "bytes": 30319,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+        "sha256": "80060bb2c232ff59bf27220772bfcebefd7c15a722af03b9da3258458ceadd61",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+      "sha256": "896ad10e98f3c7945026ccb35a5bd391d49ffe299244647def88ab4d22455f2a",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded edit dialog keeps the focused name field, mixed-script identity fields, role, and location choices readable.",
+        "The longer edit form continues beyond the captured dialog viewport at the Reason field without spilling across the dialog boundary.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This initial scroll position does not show lower form actions; the still alone cannot verify scrolling to or using them.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+      "bytes": 40056,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+        "sha256": "896ad10e98f3c7945026ccb35a5bd391d49ffe299244647def88ab4d22455f2a",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+      "sha256": "9d96e9a5c62c8e95c1a44b072798fe47335e27368cc379b6739182ec44c6db26",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Exactly four KPI cards form a two-column phone grid.",
+        "Section cards stack with consistent gutters and readable empty-state copy; View all actions fit alongside headings.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This is the genuine empty aggregate/location state; this image does not establish populated-row behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+      "bytes": 100012,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+        "sha256": "9d96e9a5c62c8e95c1a44b072798fe47335e27368cc379b6739182ec44c6db26",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "sha256": "145c62aac716595b55e7a3d171e662cc063e6e2083d56a65d0ac7223478acfa8",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled location menu is fully opaque, bounded within the phone width, and has readable location choices and selected checkmark.",
+        "Underlying content is obscured by the menu normally rather than showing through an entrance-animation frame.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "The screenshot shows the expanded menu, not selection or keyboard behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "bytes": 105983,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+        "sha256": "145c62aac716595b55e7a3d171e662cc063e6e2083d56a65d0ac7223478acfa8",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+      "sha256": "1b7ce5ba2e9cefee893a41d19f81772ab55be52286a18fd454e096c6664924be",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled notification popover is fully opaque and remains within the phone width.",
+        "The empty-notification message fits without collision with top-bar controls.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine empty personal-bell state, not populated notifications or navigation.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+      "bytes": 105333,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+        "sha256": "1b7ce5ba2e9cefee893a41d19f81772ab55be52286a18fd454e096c6664924be",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+      "sha256": "1b4a099cd9cc0746a1b83bbf410dea2158b99c4d257c597ecdfa05d55fdf7f65",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Page heading, supporting copy, and Store progress action fit with intentional wrapping.",
+        "Custom Pending/Done segment, location filter, and date control wrap without overlap; empty-state copy remains within the borderless card.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine filtered empty state, not populated tasks or completion.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+      "bytes": 35550,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+        "sha256": "1b4a099cd9cc0746a1b83bbf410dea2158b99c4d257c597ecdfa05d55fdf7f65",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+      "sha256": "a1b3e94aa0ad8510d730fb190903fdca1eadb83e8dc04936070be9cd084325d1",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Exactly four KPI cards form a two-column phone grid.",
+        "Section cards stack with consistent gutters and readable empty-state copy; View all actions fit alongside headings.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This is the genuine empty aggregate/location state; this image does not establish populated-row behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+      "bytes": 89037,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+        "sha256": "a1b3e94aa0ad8510d730fb190903fdca1eadb83e8dc04936070be9cd084325d1",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "sha256": "c0ae5f96184bc9bf15f8dc897676f0bb5efa2354a8b93371c90f5a208140d87e",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled location menu is fully opaque, bounded within the phone width, and has readable location choices and selected checkmark.",
+        "Underlying content is obscured by the menu normally rather than showing through an entrance-animation frame.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "The screenshot shows the expanded menu, not selection or keyboard behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "bytes": 94669,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+        "sha256": "c0ae5f96184bc9bf15f8dc897676f0bb5efa2354a8b93371c90f5a208140d87e",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+      "sha256": "c75c766c2c7d8f983bdcfce21dd5f8fd6e5929f11b26665b7551486bb050de77",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled notification popover is fully opaque and remains within the phone width.",
+        "The empty-notification message fits without collision with top-bar controls.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine empty personal-bell state, not populated notifications or navigation.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+      "bytes": 94206,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+        "sha256": "c75c766c2c7d8f983bdcfce21dd5f8fd6e5929f11b26665b7551486bb050de77",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+      "sha256": "0a134a16e51af8e093f36f12e8c203ed3831c9160b441af0d4d572728476889d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Page heading, supporting copy, and Store progress action fit with intentional wrapping.",
+        "Custom Pending/Done segment, location filter, and date control wrap without overlap; empty-state copy remains within the borderless card.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine filtered empty state, not populated tasks or completion.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+      "bytes": 33460,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+        "sha256": "0a134a16e51af8e093f36f12e8c203ed3831c9160b441af0d4d572728476889d",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+      "sha256": "592c464644937fc60b9cccfb258cf8a1678255b6ae8b9e5dca99afd7970bc7cf",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded rounded dialog has clear spacing, custom role/location controls, and visible Cancel and Save actions.",
+        "Location choices wrap within the field group without overlapping labels.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+      "bytes": 29923,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+        "sha256": "592c464644937fc60b9cccfb258cf8a1678255b6ae8b9e5dca99afd7970bc7cf",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+      "sha256": "30d7060484e265f9cf8be10e8c4b67541b8dda8e02f83945c70295d680d53c40",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded edit dialog keeps the focused name field, mixed-script identity fields, role, and location choices readable.",
+        "The longer edit form continues beyond the captured dialog viewport at the Reason field without spilling across the dialog boundary.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This initial scroll position does not show lower form actions; the still alone cannot verify scrolling to or using them.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+      "bytes": 39815,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+        "sha256": "30d7060484e265f9cf8be10e8c4b67541b8dda8e02f83945c70295d680d53c40",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+      "sha256": "7cd4044e141a0b2c5250609c06b75a5e104564895ade2119a614a24b8d8fd2d3",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Exactly four KPI cards form a two-column phone grid.",
+        "Section cards stack with consistent gutters and readable empty-state copy; View all actions fit alongside headings.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This is the genuine empty aggregate/location state; this image does not establish populated-row behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+      "bytes": 99567,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+        "sha256": "7cd4044e141a0b2c5250609c06b75a5e104564895ade2119a614a24b8d8fd2d3",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "sha256": "bce7cd5e2d9e2ecca7f2f139cfc3bf9f072b508624050fc0b1eec7d4939d7229",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled location menu is fully opaque, bounded within the phone width, and has readable location choices and selected checkmark.",
+        "Underlying content is obscured by the menu normally rather than showing through an entrance-animation frame.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "The screenshot shows the expanded menu, not selection or keyboard behavior.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "bytes": 105901,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+        "sha256": "bce7cd5e2d9e2ecca7f2f139cfc3bf9f072b508624050fc0b1eec7d4939d7229",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+      "sha256": "7fd0b895b2cf363c6a97252acdb468b4a9aa4b623406335ed0874fa8c7700359",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "The settled notification popover is fully opaque and remains within the phone width.",
+        "The empty-notification message fits without collision with top-bar controls.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine empty personal-bell state, not populated notifications or navigation.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+      "bytes": 105048,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+        "sha256": "7fd0b895b2cf363c6a97252acdb468b4a9aa4b623406335ed0874fa8c7700359",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+      "sha256": "9c41d51ecb8ba819e69bf2bca476f19ab6b9fabead8c325ed69f7c4d68ae2adf",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this exact original PNG and verified its SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Page heading, supporting copy, and Store progress action fit with intentional wrapping.",
+        "Custom Pending/Done segment, location filter, and date control wrap without overlap; empty-state copy remains within the borderless card.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This image covers the genuine filtered empty state, not populated tasks or completion.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+      "bytes": 35727,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+        "sha256": "9c41d51ecb8ba819e69bf2bca476f19ab6b9fabead8c325ed69f7c4d68ae2adf",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+      "sha256": "7515657808e392cb4cbf31b233363b8a4411a74bbf200e3823541ae73ffb46c7",
+      "bytes": 53045,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual ordinary Chromium dark phone viewport shows the Products header, normal one-account top bar, bounded search/custom filters, checkbox controls and compact product rows with readable dark-theme contrast.",
+        "The first Basmati row keeps bilingual name at start, $23.99 at end, one trailing chevron and muted code/approval facts; the next row continues below the actual viewport.",
+        "English LTR, actual phone-width viewport: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "This is an ordinary browser view, standaloneDisplayMode:false; it is NOT evidence of Add to Home Screen or physical-device installation. Product rows below the actual viewport are not evaluated from this image.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+        "sha256": "7515657808e392cb4cbf31b233363b8a4411a74bbf200e3823541ae73ffb46c7",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+      "sha256": "23ebe500c3adc3c87a09a93d8bb3e47e3da291b208326660f6d15a71ab0f675a",
+      "bytes": 16192,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real English offline page displays the Arzon logo, exact No connection / Reconnect, then try again. copy, Try again and EN | فا control in a bounded centered white card with no business data.",
+        "English LTR, actual phone-width viewport: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Availability/reconnect screen only; no stale authenticated business page or offline server synchronization is claimed. This still does not establish successful reconnection.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+        "sha256": "23ebe500c3adc3c87a09a93d8bb3e47e3da291b208326660f6d15a71ab0f675a",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+      "sha256": "ddcbce2bb0afdb2b106c6befa30221b0ee86a63a0ddb3289b08443d77e9436ab",
+      "bytes": 18062,
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Persian offline page displays the Arzon logo, Persian No connection/reconnect/try-again copy and فا | EN control with correct RTL alignment in a bounded centered white card and no signed-in business data.",
+        "Persian RTL, actual phone-width viewport: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens."
+      ],
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Availability/reconnect screen only; no stale authenticated business page or offline server synchronization is claimed. This still does not establish successful reconnection.",
+        "This exact PNG byte stream was individually opened during the715b8dc review and matches this actual 90ad0f5a1bb67fbc4b56653dbdc911707c57c98d capture byte for byte. This is visual review reuse only; different commits are not claimed to have identical production source."
+      ],
+      "issues": [],
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Exact same original PNG bytes previously individually opened through view_image; SHA256 of prior file and new actual capture both verified. No source-byte-equivalence claim is made.",
+      "prior_view": {
+        "commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+        "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+        "absolute": "/tmp/e3-final-committed-corrected-v2/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+        "sha256": "ddcbce2bb0afdb2b106c6befa30221b0ee86a63a0ddb3289b08443d77e9436ab",
+        "reviewer": "Recorded in715 individual-review report"
+      }
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/labels-en-390.png",
+      "sha256": "fe7b2385eae505ba57f8acdfae7847e39b798b9ac1a62340579d34ad28259574",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The checkbox occupies its own logical-start selection column with visible spacing from product copy; all16 product rows retain a checkbox.",
+        "The enlarged selection column does not overlap product names or prices. Product names wrap within the remaining column; 24 cm remains a complete fragment in the Stainless Steel Pot row.",
+        "Long Dried Barberries and translated Kitchen Sponge names wrap without clipping."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/received-en-390.png",
+      "sha256": "6a759dcada33e527e1380ed85b60f36c8e4bb3561205681cfe70d6b062d25633",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px English LTR capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The cases and loose-unit groups remain distinct and on one line in the compound Basmati and Kidney Beans examples, with totals retained underneath.",
+        "Each number is visually attached to its own unit label rather than the neighboring group.",
+        "English compound quantities retain7cases+2units and3cases+4units in normal left-to-right group order."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/labels-fa-390.png",
+      "sha256": "b29c2e5819fc689b7a8257b7ee8d34439e01b9d6d71f89c234fa3f7735fb5063",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The checkbox occupies its own logical-start selection column with visible spacing from product copy; all16 product rows retain a checkbox.",
+        "The enlarged selection column does not overlap product names or prices. Product names wrap within the remaining column; 24 cm remains a complete fragment in the Stainless Steel Pot row.",
+        "Long Dried Barberries and translated Kitchen Sponge names wrap without clipping."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/received-fa-390.png",
+      "sha256": "57601c9fd584e7815c40f6c8d8dd7175deed4b507e47160f6f2bb638776766d2",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 390px Persian RTL capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The cases and loose-unit groups remain distinct and on one line in the compound Basmati and Kidney Beans examples, with totals retained underneath.",
+        "Each number is visually attached to its own unit label rather than the neighboring group.",
+        "The previously flagged Basmati example now reads7کارتن then+then2واحد in right-to-left group order, with30واحد total. The Kidney Beans example reads3کارتن then+then4واحد, with40واحد total.",
+        "Single-quantity labels also keep their number together in Persian, including2کارتن,1واحد and20واحد."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/labels-en-430.png",
+      "sha256": "517bab1b3aa8b3b8098887a356fd175b2ebcdc6b0166353e858d8c6d052f83fc",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The checkbox occupies its own logical-start selection column with visible spacing from product copy; all16 product rows retain a checkbox.",
+        "The enlarged selection column does not overlap product names or prices. Product names wrap within the remaining column; 24 cm remains a complete fragment in the Stainless Steel Pot row.",
+        "Long Dried Barberries and translated Kitchen Sponge names wrap without clipping."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/received-en-430.png",
+      "sha256": "5dbfb50913b1c130c76ad676731ad8698e8e2660392c03da1c2cd4ebfbbc8df1",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px English LTR capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The cases and loose-unit groups remain distinct and on one line in the compound Basmati and Kidney Beans examples, with totals retained underneath.",
+        "Each number is visually attached to its own unit label rather than the neighboring group.",
+        "English compound quantities retain7cases+2units and3cases+4units in normal left-to-right group order."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/labels-fa-430.png",
+      "sha256": "a419a050def7481da5658f952567b41736437b074b6d0f2d4c5dc0d3ff6713ae",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The checkbox occupies its own logical-start selection column with visible spacing from product copy; all16 product rows retain a checkbox.",
+        "The enlarged selection column does not overlap product names or prices. Product names wrap within the remaining column; 24 cm remains a complete fragment in the Stainless Steel Pot row.",
+        "Long Dried Barberries and translated Kitchen Sponge names wrap without clipping."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/received-fa-430.png",
+      "sha256": "50139b27d4bcc70a050c6d08f39a3a75b43943b35164825a45502d620e131210",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened this original 430px Persian RTL capture with view_image at original detail and verified its SHA against the final90ad manifest.",
+        "The list stays inside its card and phone viewport. Names, value, secondary metadata and the single logical-end chevron are legible without collision.",
+        "The cases and loose-unit groups remain distinct and on one line in the compound Basmati and Kidney Beans examples, with totals retained underneath.",
+        "Each number is visually attached to its own unit label rather than the neighboring group.",
+        "The previously flagged Basmati example now reads7کارتن then+then2واحد in right-to-left group order, with30واحد total. The Kidney Beans example reads3کارتن then+then4واحد, with40واحد total.",
+        "Single-quantity labels also keep their number together in Persian, including2کارتن,1واحد and20واحد."
+      ],
+      "limitations": [
+        "Static Chromium screenshot review only: physical-device touch accuracy, actual measured44px hit area, screen-reader behavior, Safari and Home Screen installation are not independently proven by this image review. Root separately owns native geometry verification."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/settings-group-people-fa-390.png",
+      "sha256": "db524467df0b51dfb187e65f9e71e4af75cb4b858d784d0939f30f79963f9702",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened the new original PNG from the final 90ad replay and verified its exact SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "People and registered-computer records use stacked cards with readable names, roles, status, and actions.",
+        "Add person and Register computer actions fit their heading rows, with heading wrapping where needed.",
+        "The settings tab strip is intentionally horizontally scrollable at phone widths (settings-b.css mobile settings-group-menu overflow-x:auto); a partial next tab at its edge is not page overflow.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "Only the current settings-strip scroll position is pictured; this still cannot verify scrolling to other settings groups."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/add-person-en-430.png",
+      "sha256": "bd2ea671e08df13e7fae162c6999f5240429e0a78f4b018c535ee53a675f3144",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened the new original PNG from the final 90ad replay and verified its exact SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded rounded dialog has clear spacing, custom role/location controls, and visible Cancel and Save actions.",
+        "Location choices wrap within the field group without overlapping labels.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/edit-person-en-430.png",
+      "sha256": "6e4d8f44dbdb3b6072d01e3d2832374cd6fcf9ac6c0ffc847faa151e59d6509d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened the new original PNG from the final 90ad replay and verified its exact SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "Bounded edit dialog keeps the focused name field, mixed-script identity fields, role, and location choices readable.",
+        "The longer edit form continues beyond the captured dialog viewport at the Reason field without spilling across the dialog boundary.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "This initial scroll position does not show lower form actions; the still alone cannot verify scrolling to or using them."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/settings-group-people-en-430.png",
+      "sha256": "66108a0060e0e22eb48a6ff45985f7e8dc243d0fba3571855b856d30ab98f939",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened the new original PNG from the final 90ad replay and verified its exact SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "People and registered-computer records use stacked cards with readable names, roles, status, and actions.",
+        "Add person and Register computer actions fit their heading rows, with heading wrapping where needed.",
+        "The settings tab strip is intentionally horizontally scrollable at phone widths (settings-b.css mobile settings-group-menu overflow-x:auto); a partial next tab at its edge is not page overflow.",
+        "English labels and control ordering remain coherent in LTR."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "Only the current settings-strip scroll position is pictured; this still cannot verify scrolling to other settings groups."
+      ],
+      "issues": []
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/settings-group-people-fa-430.png",
+      "sha256": "cce057d0de1c648392800aff895bafa4fa3bab9d2a4eb9b32a3ba784919cb2f4",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Individually opened the new original PNG from the final 90ad replay and verified its exact SHA-256 before and after review.",
+        "Visible controls and text remain within the phone content area without accidental overlap or horizontal page clipping.",
+        "People and registered-computer records use stacked cards with readable names, roles, status, and actions.",
+        "Add person and Register computer actions fit their heading rows, with heading wrapping where needed.",
+        "The settings tab strip is intentionally horizontally scrollable at phone widths (settings-b.css mobile settings-group-menu overflow-x:auto); a partial next tab at its edge is not page overflow.",
+        "Persian text, headings, field labels, and control ordering mirror coherently in RTL; Latin usernames and email remain legible within mixed-script fields."
+      ],
+      "limitations": [
+        "A still image establishes visible presentation only; it does not establish interaction, authorization, installation, or physical-device behavior.",
+        "Only the current settings-strip scroll position is pictured; this still cannot verify scrolling to other settings groups."
+      ],
+      "issues": []
+    },
+    {
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual task detail shows bilingual name, Product Code/barcode, old $6.99 → new $6.49, Richmond Hill, effective timestamp, reason and Demo Manager without clipped or broken timestamp.",
+        "The genuine active Undo capsule has its own row above the actual register/label/waiver checkboxes, Print label now, Add to label waitlist and Mark as done. No physical-work control is covered.",
+        "History retains the actual price transition, reason, actor and whole timestamp; this screenshot shows Pending work and does not claim physical printing or cash-register work completed.",
+        "Persian RTL, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens.",
+        "Fresh90ad capture individually checked again: active Undo remains above actual work/dialog actions and whole timestamp text fits without collision."
+      ],
+      "issues": [],
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/task-checkboxes-fa-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/task-checkboxes-fa-430.png",
+      "sha256": "a19abb166993f80292f51e257979f5a01377fb73d9ecc0d14b6708b394659a34",
+      "bytes": 68212,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Individually opened this NEW exact original90ad PNG through view_image after actual13/13 source-pinned replay; SHA verified after viewing.",
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual Chromium CSS-width capture of exact committed source90ad0f5a1bb67fbc4b56653dbdc911707c57c98d; no hardware phone, Safari, external deployment or shared-server synchronization was used."
+      ]
+    },
+    {
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual task detail shows bilingual name, Product Code/barcode, old $6.99 → new $6.49, Richmond Hill, effective timestamp, reason and Demo Manager without clipped or broken timestamp.",
+        "The genuine active Undo capsule has its own row above the actual register/label/waiver checkboxes, Print label now, Add to label waitlist and Mark as done. No physical-work control is covered.",
+        "History retains the actual price transition, reason, actor and whole timestamp; this screenshot shows Pending work and does not claim physical printing or cash-register work completed.",
+        "Persian RTL, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens.",
+        "Fresh90ad capture individually checked again: active Undo remains above actual work/dialog actions and whole timestamp text fits without collision."
+      ],
+      "issues": [],
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/task-checkboxes-fa-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/task-checkboxes-fa-390.png",
+      "sha256": "2d494170ce63900abb07be4cd2bf0ae3665c0bad4bc85cfc442bbb5b8b245d73",
+      "bytes": 68064,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Individually opened this NEW exact original90ad PNG through view_image after actual13/13 source-pinned replay; SHA verified after viewing.",
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual Chromium CSS-width capture of exact committed source90ad0f5a1bb67fbc4b56653dbdc911707c57c98d; no hardware phone, Safari, external deployment or shared-server synchronization was used."
+      ]
+    },
+    {
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual task detail shows bilingual name, Product Code/barcode, old $6.99 → new $6.49, Richmond Hill, effective timestamp, reason and Demo Manager without clipped or broken timestamp.",
+        "The genuine active Undo capsule has its own row above the actual register/label/waiver checkboxes, Print label now, Add to label waitlist and Mark as done. No physical-work control is covered.",
+        "History retains the actual price transition, reason, actor and whole timestamp; this screenshot shows Pending work and does not claim physical printing or cash-register work completed.",
+        "English LTR, 390 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens.",
+        "Fresh90ad capture individually checked again: active Undo remains above actual work/dialog actions and whole timestamp text fits without collision."
+      ],
+      "issues": [],
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/task-checkboxes-en-390.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/task-checkboxes-en-390.png",
+      "sha256": "ddbfdfffbc39d256057c79ce6dc2c1e1714e686fde6a64b67c8d43f95775b18e",
+      "bytes": 66575,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Individually opened this NEW exact original90ad PNG through view_image after actual13/13 source-pinned replay; SHA verified after viewing.",
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual Chromium CSS-width capture of exact committed source90ad0f5a1bb67fbc4b56653dbdc911707c57c98d; no hardware phone, Safari, external deployment or shared-server synchronization was used."
+      ]
+    },
+    {
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The real Change sale modal has a bounded single-column body, readable product/current-sale details, custom choice cards, price field and four preset-discount controls.",
+        "The actual active Undo capsule occupies a separate footer row above Cancel and Start sale; the capsule and both actions are visible and do not overlap.",
+        "English LTR, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens.",
+        "Fresh90ad capture individually checked again: active Undo remains above actual work/dialog actions and whole timestamp text fits without collision."
+      ],
+      "issues": [],
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/change-price-en-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/change-price-en-430.png",
+      "sha256": "84e2b8d7ab23b941515cbed31f2bc5c21e055a37da4478536e49446650ad29fb",
+      "bytes": 63130,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Individually opened this NEW exact original90ad PNG through view_image after actual13/13 source-pinned replay; SHA verified after viewing.",
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual Chromium CSS-width capture of exact committed source90ad0f5a1bb67fbc4b56653dbdc911707c57c98d; no hardware phone, Safari, external deployment or shared-server synchronization was used.",
+        "Actual viewport modal capture: lower scrollable body content is outside this PNG; the fixed footer and active Undo are evaluated only where visible."
+      ]
+    },
+    {
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "The actual task detail shows bilingual name, Product Code/barcode, old $6.99 → new $6.49, Richmond Hill, effective timestamp, reason and Demo Manager without clipped or broken timestamp.",
+        "The genuine active Undo capsule has its own row above the actual register/label/waiver checkboxes, Print label now, Add to label waitlist and Mark as done. No physical-work control is covered.",
+        "History retains the actual price transition, reason, actor and whole timestamp; this screenshot shows Pending work and does not claim physical printing or cash-register work completed.",
+        "English LTR, 430 CSS px: visible words and controls fit without page-edge collision; one account control is visible on signed-in phone screens.",
+        "Fresh90ad capture individually checked again: active Undo remains above actual work/dialog actions and whole timestamp text fits without collision."
+      ],
+      "issues": [],
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/task-checkboxes-en-430.png",
+      "absolute": "/tmp/e3-final-committed-v3/artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/task-checkboxes-en-430.png",
+      "sha256": "668a748c89e3737116ca01b98fb997439eb0695d79e165dec7fb220143b97573",
+      "bytes": 66904,
+      "reviewer": "/root/final_phone_gallery",
+      "method": "Individually opened this NEW exact original90ad PNG through view_image after actual13/13 source-pinned replay; SHA verified after viewing.",
+      "limitations": [
+        "Individually opened this exact original PNG through view_image; static visual review does not establish click/keyboard behavior, current authorization, future data values or physical work.",
+        "Actual Chromium CSS-width capture of exact committed source90ad0f5a1bb67fbc4b56653dbdc911707c57c98d; no hardware phone, Safari, external deployment or shared-server synchronization was used."
+      ]
+    }
+  ]
+}

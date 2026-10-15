@@ -1,0 +1,54 @@
+{
+  "executions": [
+    {
+      "label": "normal-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-desktop",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-retained-bounded-v4/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=desktop",
+        "--grep",
+        "simulated upload, review|C6 keeps twenty distinct|Cashier cannot open Suppliers|worker catalog actions|a worker retargets|invoice changed regular cost|supplier pickup and partial|Return detail pickup|Supplier-held cancellation|Settings presents the exact|an already-open worker editor",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-retained-bounded-v4/desktop-output"
+      ],
+      "actual_exit_code": 1
+    },
+    {
+      "label": "native-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-retained-bounded-v4/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=phone",
+        "--grep",
+        "table columns align and phone cards retain|Part 1 pills and dashboard branch|C5 button contract covers Suppliers|C5 button contract covers Labels|C5 button contract covers primary|C5 conditional label selection|C5 Waiting for credit|C5 Klead text actions|C8 Received uses whole cases|C8 list navigation and disclosure",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-retained-bounded-v4/phone-output"
+      ],
+      "actual_exit_code": 1
+    }
+  ],
+  "seconds": 576.8870475292206,
+  "source_unchanged": true,
+  "http_matches_built_dist_before": true,
+  "http_unchanged": true,
+  "expected_tests": 28
+}

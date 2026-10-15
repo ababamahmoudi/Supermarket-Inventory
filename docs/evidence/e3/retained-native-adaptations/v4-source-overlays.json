@@ -1,0 +1,107 @@
+[
+  {
+    "path": "prototype/tests/suppliers-a2.spec.ts",
+    "base_sha256": "763531c0b979f88128b4ccfd0a160a034dff01d74d22d2ef3022750ceb331feb",
+    "tested_sha256": "b2f2bf39be0fcffe609762a450a701cd2d949add3d7c1477dcb1d5f1911dedd6"
+  },
+  {
+    "path": "prototype/tests/storage-c6.spec.ts",
+    "base_sha256": "ab6a7b4a552838cc51d2a32e76c214913ddfeed903db67917298824f7829da7c",
+    "tested_sha256": "c8813025ab6578ef91db0bdc35378cde618fa82e43f3252b4352b8d48bcb3e14"
+  },
+  {
+    "path": "prototype/tests/settings-b.spec.ts",
+    "base_sha256": "8b02081753ef2a0df2e1dac265a7ee89e45a029d709fd2c2a881840c6515c7ac",
+    "tested_sha256": "48989fde2165ad39e50fc953b778c3208eb57f57a891618d2699c915588af9b5"
+  },
+  {
+    "path": "prototype/tests/returns-a2.spec.ts",
+    "base_sha256": "609a93d1d30194e4ba665da3e5e798b096168a8dbfc2d1ae241bc4288fd80d6f",
+    "tested_sha256": "1f70b1c1e7aa9676b3f58b587534ddc4c9ad0bd4fa17e1bea56975bee5a0b7e3"
+  },
+  {
+    "path": "prototype/tests/receiving-c.spec.ts",
+    "base_sha256": "503366ddd5b2684959bb253579bfbab1bdcd685467256f63040d4d746ea97a3c",
+    "tested_sha256": "26d2f8d7ad5a54ebed04e0f9bda6a8bc1c4f06735b3a72ee18c4f52ee40fdd6c"
+  },
+  {
+    "path": "prototype/tests/operations.spec.ts",
+    "base_sha256": "5cc6644a2a2a6f5696b558cf4b6dcdb6d61779a0036f630bd944f321b4194bb7",
+    "tested_sha256": "bc4386d2a2e3dc902e33541188aad8ce0198758ddda74981639cb92a1e96b4c4"
+  },
+  {
+    "path": "prototype/tests/notebook-edit-b.spec.ts",
+    "base_sha256": "486de867d51f3fdf7e64b3908ff4cbc80af021cf12b18c51a1127fa43872df8a",
+    "tested_sha256": "c63e6f883e6f1e1a99ed484883de0ea40de75d80bd4853b73798e3e31204829b"
+  },
+  {
+    "path": "prototype/tests/manual-prices-c1.spec.ts",
+    "base_sha256": "c19baedaea164757730c5277c21cee95565a4ff2c7c2a2cbaaf74081c69e2ee4",
+    "tested_sha256": "e9ff74094eacff4ee744703ce09cc9f044fdcc3e8703fcc26735ec537bede729"
+  },
+  {
+    "path": "prototype/tests/manual-entry.spec.ts",
+    "base_sha256": "dd832afb1ab8c6c94c8ac754ea0062d27450ff2bc9c5736db6652dbe06f5ae0f",
+    "tested_sha256": "82c221b218c9e4e440a381c19b50e3a1c81105857610118e3b708382f1a0c865"
+  },
+  {
+    "path": "prototype/tests/invoices.spec.ts",
+    "base_sha256": "0f744258f5ddd15fcfbba864ebd34e2b2a634059dbeedf4f460e0bdc6cc534e2",
+    "tested_sha256": "80d4a8f1c40d550ec4d67cb482bd89cd69d815356ad885a020967e472fc4f2c2"
+  },
+  {
+    "path": "prototype/tests/invoice-orders-c2.spec.ts",
+    "base_sha256": "c15d087196477e862a657c35377b7d2a9948c32fa79d4b235031acccc09ab941",
+    "tested_sha256": "dac2ca5da52bbe89f1b617164127b92f344ca6d24d8944b7b1b739e7ceb948b2"
+  },
+  {
+    "path": "prototype/tests/invoice-a2.spec.ts",
+    "base_sha256": "159c0f679d88a362224c375aefa99c6931c0540dd245ff5471e527cc266d2cff",
+    "tested_sha256": "f0d3ede9898bbb33a1f0513942bff54cc4e3554392e0328b63fe842c5929b091"
+  },
+  {
+    "path": "prototype/tests/history-b.spec.ts",
+    "base_sha256": "d4938838313ea856e16ec613cb60f9cd80020350da3e00e21d3691270fe9b73f",
+    "tested_sha256": "ce4eb758cb92a7ca87d90bf2398301ffc76680745e373424cd6923ebc466e175"
+  },
+  {
+    "path": "prototype/tests/catalog-a2.spec.ts",
+    "base_sha256": "65a9f5298758038a68416d005c9c6bb96f298b64fee210a6d04024d11972b9e3",
+    "tested_sha256": "729c665278646c69e30230642a820665ce99306ea02922c5a07cc51f3a11f3f1"
+  },
+  {
+    "path": "prototype/tests/c8-layout-display.spec.ts",
+    "base_sha256": "df4e6bf2b3cd0c3e316cef1c427b32a241471d6111165d79e8d246b963bde761",
+    "tested_sha256": "b0adb7b40e02ccddb922f28e6d7bcfb6d460e2c7af5853070acd41c5fd037008"
+  },
+  {
+    "path": "prototype/tests/c5-presentation.spec.ts",
+    "base_sha256": "e464dbd1364285446caa6617208186aef6152dd30f7f35721f58d50726824fba",
+    "tested_sha256": "8cda859be50bf1fb165c13d987b382737857f1e567fe2d63353f2b15d1a92941"
+  },
+  {
+    "path": "prototype/tests/c3-tables.spec.ts",
+    "base_sha256": "e7e5a627ca52ddb0d4574511ce48e66297f13471231800a15d16db90bcac3c07",
+    "tested_sha256": "a05d610603babe6aade49f1d279e84e2ed4bce4b362eaf42766c2ffa121462a4"
+  },
+  {
+    "path": "prototype/tests/b-polish.spec.ts",
+    "base_sha256": "ad9123cfd42657bf6a8e93ce77235217d42b0df2d60eb3d7470e29662b57a459",
+    "tested_sha256": "672720a1a3fabd995fe67164ac14ce752f73d12c9529084925a0fe8de8a5bb40"
+  },
+  {
+    "path": "prototype/tests/alignment-a2.spec.ts",
+    "base_sha256": "b7a8ca77863c6495552444e83dd934f9507ddbb26a2c997adaf5363cc14fac9c",
+    "tested_sha256": "305a8fd2cd5879cd31a7a6a6f1d62882712449345d7d636f84c755a9d8b3a0a1"
+  },
+  {
+    "path": "prototype/src/phone-lists-e3.css",
+    "base_sha256": "26291fcd07183709c943372cf2ff9f0047080d9be1dda6a992e1f36c2baa29fd",
+    "tested_sha256": "592e0afa359205dc264f9cc4bf17c18b33293b5ed8f05d9ac11c8b6cc187bf55"
+  },
+  {
+    "path": "prototype/scripts/c5-browser-proof.mjs",
+    "base_sha256": "659fcaa370499ef0cf13b04b222c6bc33f9bdcb40d4b9c96a640001266247ad3",
+    "tested_sha256": "a442d2a41de2b11958d26e9ab6e0e4108a65d5650b4e36b9fbc9574683f3e5b1"
+  }
+]

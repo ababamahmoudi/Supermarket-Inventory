@@ -5,6 +5,19 @@ test.setTimeout(60000);
 
 async function responsiveColumn(row: Locator, label: string) {
   await expect(row).toBeVisible();
+  if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+    // E3 Payables presents the same visible balance and scope as compact
+    // value/secondary regions, with no repeated column captions.
+    if (!["Branch", "Balance"].includes(label))
+      throw new Error(`No compact field mapping for ${label}`);
+    const value =
+      label === "Balance"
+        ? row.locator(".phone-list-value")
+        : row.locator(".phone-list-secondary > span").first();
+    await expect(value).toHaveCount(1);
+    await expect(value).toBeVisible();
+    return value;
+  }
   await expect
     .poll(
       async () =>

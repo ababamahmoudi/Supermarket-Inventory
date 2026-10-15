@@ -1,0 +1,6 @@
+{
+  "encoding": "gzip; decompress to recover exact original unnormalized patch bytes",
+  "file": "v4-input.patch.gz",
+  "raw_sha256": "36f0d10300dbdd3af4484b663a2296d85cbc38e4bd07457ff446b5bee18a4a70",
+  "raw_bytes": 35533
+}
