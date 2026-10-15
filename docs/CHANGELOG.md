@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-15 — Stable posted-invoice navigation
+
+- Prevent a late invoice workspace load from reopening the detail after browser Back. The existing protected route effect now owns the single workspace selection; invoice data, permissions and money stay unchanged.
+- Add a genuine Provider/repository delayed-completion regression, reproducing the old unwanted route and verifying the corrected Posted list and column preferences.
+- Retain asynchronous upload, template, pricing-setting, print and named supplier-field assertions through their actual completion, and verify implemented People without weakening unfinished E1 Notifications restrictions.
+
 ## 2026-10-15 — Migration test isolation and final unit evidence
 
 - Make the first-import browser fixture genuinely empty before removing its authority database: unregister its old service worker, leave the controlled page, and verify the inert document. Production offline behavior and all original backup, recovery, exact-byte and permission assertions remain unchanged.

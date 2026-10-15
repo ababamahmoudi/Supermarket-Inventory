@@ -309,3 +309,11 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** the shared table observes native beforeprint/afterprint and print-media changes. Commit all currently permitted, explicitly enabled columns synchronously before print capture, suspend screen-only collapsing/compact rows, and release fixed screen column widths for the paper layout. Keep explicit hidden columns excluded and restore screen layout plus expanded rows afterward. This changes presentation only; protected queries, payment data, scope and money remain unchanged.
 
 **Why:** a phone viewport must not remove payment evidence from an authorized printed report. Regression checks retain DEMO-1001, the exact -$50.00 amount, worker Payables denial and ordinary desktop/phone controls. Physical printer alignment remains an unperformed hardware check.
+
+## 040 — One route change when opening a posted invoice
+
+**Context:** the posted invoice name link both navigated immediately and started an asynchronous workspace selection that navigated again when it finished. A quick browser Back could return to the list and then be undone by that late completion.
+
+**Decision:** the name link and end chevron navigate once. The existing route effect selects the invoice through the current protected workspace command. Its eventual completion does not push another route. Keep the Posted tab, per-user column preferences, current authority and original invoice evidence intact.
+
+**Why:** browser Back follows the user's latest action. A regression delays delivery of a genuine authenticated repository command after its real permission check and durable work, then exercises browser Back before releasing it. The original implementation fails with the exact unwanted detail route; the correction retains the list.
