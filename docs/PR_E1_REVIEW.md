@@ -1,55 +1,37 @@
-# Pull request E1 — roles, locations and People
+# E1: roles, People and locations
 
-E1 stacks on C8 and defines five configured roles, assigned locations, People/setup/sign-in and current actor enforcement. The implementation is present. The latest completed full app/pricing run passed 1,294/1,294 on unchanged production sources. Four repaired native desktop/phone checks passed. Current-root SDK passed 75/75 and full build exited 0. Final required lint passed after its recorded formatting-only correction. The 742-case retained-browser attempt was interrupted with unresolved failures; corrected complete browser verification and the original screenshots remain pending. [Exact results and source fingerprints](evidence/e1/verification.json) distinguish executed checks from pending work. Owner approval is not implied. E2 store price tasks and E3 phone installation/private hosting are separate authorised stages, built without an intermediate review pause.
+[Pull request #22](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22) · Branch `feat/prototype-e1-location-roles` · Base C8.
 
-## What changes
+## What changed
 
-Owner and Manager share former Supervisor company access, including future locations. Branch Supervisor receives an operational dashboard, own-location invoice/Supplier items/Orders purchase costs, pending read-only approvals, requests and a separate sale-cost delivery-hold instruction; no supplier balances, margins, price decisions, credit closing or pickup correction. Existing Floor Worker operational/template/calibration grants remain. Cashier stays Store-only Lookup/custom-note access. People supports invitation/setup, reasoned scope changes, deactivation/reactivation and registered-computer locations, with atomic last-active-Owner/self-change/session checks. Browser data remains separate on each device.
+Five configured roles replace the former three-role model. People, assigned-location selection, setup/password/second-step flows, registered computers, protected queries and local account revocation now use genuine current browser authority. Owner/Manager retain company-wide access; operational roles retain only their documented locations and actions. Existing invoice receiving-origin behavior, public Cashier product links, note-status Undo and order-cost review remain functional. New/Manual/original attachment transitions protect the old form until the accepted workspace is ready. Pricing, money and immutable original evidence remain intact.
 
-## Run on Ubuntu
+## How to test on Ubuntu
 
-No Docker is needed for the browser prototype. This branch is `feat/prototype-e1-location-roles`; its pull request is still being prepared. Once published, use the following commands in Terminal with the existing repository and Node 22.22.2 or newer in the 22 series:
+Use the [complete combined-branch installation guide](phone-demo-hosting.md), then run this PR's branch if reviewing E1 alone. From the repository: `git fetch origin`, `git switch feat/prototype-e1-location-roles`, `cd prototype`, `npm ci`, `npm run dev`. Open http://localhost:5174/; Docker and make setup are unnecessary.
 
-```bash
-cd ~/Supermarket-Inventory
-git fetch origin
-git switch feat/prototype-e1-location-roles
-git pull --ff-only
-cd prototype
-npm ci
-npm run dev
-```
+1. Sign in as `manager`, password `demo1234`. Choose **Use simulated passkey** when the second step appears.
+2. Open **Settings → People**. Six demo people appear. Open **Add person**, choose Floor Worker and locations; save using fictional details. Record the one-time setup code shown once, then sign out and use that account/code to set a password.
+3. As Manager, edit a person with a reason. Do not change your own role or deactivate yourself. Deactivation preserves records and revokes that person's local sessions. Owner/Manager safety rules reject removing the last usable Owner.
+4. In the small **Demo** menu, switch to the Richmond Hill Supervisor. The picker offers Richmond Hill, Newmarket and All my locations. North York/Warehouse and company-wide All locations are absent. Dashboard has operational cards without supplier money.
+5. Switch to Cashier. Lookup works; operational/private detail links stay denied. An exact public Product Code link opens its Lookup search without private Product content.
+6. As Manager, open Invoices and start New invoice, then Manual entry. Wait for the accepted form before typing. Details stay on the new draft; attachment and order-cost decisions retain original evidence and disclosure.
+7. Repeat the People/picker screens in Persian and dark theme and resize the browser to phone width. Phone dialogs scroll normally.
 
-Vite should show `http://localhost:5174/`. Open that address in Firefox or Chrome inside Ubuntu and leave Terminal open. Press Ctrl+C in Terminal to stop it. If `node --version` does not start with `v22`, install the supported Node version before `npm ci`. If port 5174 is occupied, stop the earlier prototype with Ctrl+C and retry. The final joint guide will use the E3 branch so all four stages can be reviewed together.
+## Tests added and executed
 
-## Click-by-click review
+- Complete actual E1 app source suite: **1,323/1,323 passed**, zero failures/pending. Pricing fixtures are included.
+- Separate native permission SDK: **75/75 passed**, zero failures/skips, after correcting its obsolete synthetic reviewer-origin fixture with stronger canonical identity/negative checks.
+- Actual full build and required lint: **exit 0**. Source hashes and raw results are retained under evidence/e1/recovered-fixes.
+- Existing E1 sign-in/setup/reset browser checks: **12/12 passed**. Final committed capture: **20/20 images**, zero browser errors or geometry findings, all individually reviewed or reverified as byte-identical to individually reviewed originals.
+- A complete E1-only browser attempt was deliberately stopped to run every retained assertion on the final E3 stack: **36 passed, 2 interrupted, 740 not run**, not a whole-suite pass. Final combined browser/CI results are recorded separately. Do not sum overlapping scoped runs or infer a complete browser pass.
 
-1. Sign in as **owner**, password **demo1234**, then click **Use simulated passkey**. Open **Settings → People**. Check six configured people, role/location/status/last-sign-in, search and role/location filters. Sign in as **supervisor** and confirm the same Manager identity rather than a seventh fixture.
-2. In **Add person**, enter an English name, username and phone or email. Choose Cashier: Warehouse must be absent; choose one or more Stores. Switch role to Owner/Manager: assignments disappear and company scope is explicit. Save: setup code appears once. Close and reopen People: it must not be listed again.
-3. Sign out. Sign in with that new username/setup code. Choose a new password; business access waits. A new Branch Supervisor/Manager/Owner must also finish the explicitly simulated Passkey/Authenticator step. Reload mid-setup to check resume. Sign out and retry consumed code: it must fail; use the chosen password instead.
-4. As owner/manager edit another person's locations/role with a reason. Check old → new in protected History after commit, without raw authority/setup/session data. Try changing your own role/deactivating yourself and removing/resetting the last usable Active Owner: each fails without partial mutation. Promote a Floor Worker to Owner: they stay Invited until required second-step setup completes, old sessions are revoked, and they cannot yet justify removing the last usable Owner.
-5. Open a second tab with the same browser data, sign in as the new person, then deactivate them from owner/manager's tab. The person tab must sign out; even a missed notification/stale route cannot save/read protected data. Reactivate: old session remains revoked, and a new sign-in is required. This does not test logout across separate phone/browser databases.
-6. Demo → **rh-supervisor** on the North York demo computer. The safe default is **All my locations**, containing Richmond Hill and Newmarket only, without North York/Warehouse/company-wide selection or a silent first-store fallback. View location dashboard arrivals/sales/dates/returns/requests/notes. Check absence of supplier balances/margins/Payables/Settings/People and decision controls.
-7. At Richmond Hill open an allowed invoice, Supplier items and Orders: purchase costs are visible there, while Products catalog costs/margins and supplier Balance/Payments stay absent. Pending approvals are read-only. Try a North York direct link: it must be denied, not silently moved to another store.
-8. Branch Supervisor can create/record signed return pickup, but cannot correct pickup, record replacements or close with credit. **ny-floor** retains their existing permitted replacement/ordinary-offer and Labels template/calibration actions without access to Company Settings.
-9. At an allowed sale-cost alert, Branch Supervisor can tick **Keep this delivery in the back** and save that instruction independently. The Manager's alert decision stays pending; no Keep/Change/End sale or margin/minimum fields appear for Branch Supervisor. Request a sale: pending is shown beside the approved charge, not charged immediately. Separately open **Change price → New regular price**, propose an amount and **Send request** at one assigned Store. The approved amount/manual flag stay until Owner/Manager's guarded approval; no labels/price execution happens on submission.
-10. Demo → **wh-floor**: only Warehouse operations, no selling-price action. Demo → **cashier**: North York/Richmond Hill only, read-only sales/pending display. Device defaults must not broaden either person's assignments; aggregate Lookup needs a concrete Store or explicit comparison.
-11. Open an existing saved browser state: people/passwords/forced newemployee setup/preferences and invoice/return/price/files/History must remain. Explicit **Reset demo** states its People effect, restores the six fictional users and revokes replaced sessions. All six Active/setup-complete canonical demo fixtures may reset via demo.reset; custom/invited people cannot obtain this capability by choosing a familiar username or role. Historical author names/records remain unchanged by person edits.
+## Docs updated
 
-## Verification and screenshots
+Requirements, workflows, screens, decisions, changelog, authority handoff, raw test evidence and the screenshot gallery document current behavior. The owner request and superseded failed diagnostics remain retained.
 
-Executed: [full app/pricing v5](evidence/e1/app-full-v5.json) passed **1,294/1,294**, zero failures, pending tests or todos, actual exit 0. Its 553 source files stayed unchanged, fingerprint `2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539`. [Current-source comparison](evidence/e1/app-v5-current-source-match.json) records the seven unsupported ByRole-option removals, subsequent runtime formatting with identical emitted JavaScript, and three retained browser fixture/readiness changes. Seed/assets and all other inputs remain unchanged; eight original C5 cases passed in v13 and the final two foreign-event cases passed separately in v14; the complete retained742 result remains pending. This comparison is not a new whole-unit run.
+## Open questions and limits
 
-[Repaired native cases v11](evidence/e1/native-repaired-v11.json) passed **4/4**, zero failures, skips, flaky outcomes, retries or unhandled errors. These are the location-type and worker-supplier confirmation cases in desktop and phone. Full TypeScript and Vite build exited 0; all 553 frozen/current source inputs and 55 production assets remained unchanged, with the same bytes served before and after. This bounded proof does not replace the full browser suite.
+No blocking product question. Sign-in/passkeys/invites and colleague switching are browser-local simulation; there is no authenticated server or cross-phone synchronisation. Physical phone installation and printer alignment were not tested. Current GitHub CI status is separate from the passing local checks; the initial saved E1 browser job was cancelled before completion. No new stage was merged into main.
 
-[Required standard commands](evidence/e1/final-standard-checks.json): final `npm run lint` **exit 0** on its recorded v2 inputs; SDK **75/75 passed** and `npm run build` **exit 0** on their separately recorded v1 inputs. The earlier formatting-only lint failure remains preserved. These are actual separate runs, not one rerun on identical inputs. Only the optional TypeScript generic comma changed in production; its emitted JavaScript is unchanged. Earlier native authority **24/24** and shell **14/14** remain separate original-source evidence.
-
-[Bounded native v13](evidence/e1/native-diagnostic-v13-summary.json) completed with **8 passed, 2 failed**, actual browser **exit 1**, zero skips/flaky/retries/unhandled errors; TypeScript/Vite **exit 0**, unchanged **553** inputs and **55** built/served assets. All eight original C5 cases passed and remain unchanged. Only the two foreign-reading cases failed selecting an unavailable Demo action. The revised same-path test now asserts that action is absent and attempts the real public event; its [final genuine v14 proof](evidence/e1/native-foreign-event-v14.json) passed **2/2**, actual TypeScript/Vite/browser **exit0**, zero skips/flaky/retries/unhandled, unchanged **553** inputs / `c0f0377b65dcce57e202f8adebc5509bfccbe4fc1507d77f84a5354064b38abd` and **55** built/served assets. The eight C5 and two foreign results are separate bounded runs, not a complete retained742 pass.
-
-The full retained **742-case** attempt was deliberately stopped with actual **exit 130**. [Actual attempts](evidence/e1/retained-full-v12-classification.json) show **95 passed, 4 failed, 1 interrupted, 642 not run and zero actual conditional skips**. The raw reporter calls interrupted/not-run cases “skipped” (643); they are not 643 intentional skips. Failed traces and the source/asset guards are preserved. The three C5 readiness cases now have their separate eight-case bilingual/width native pass; the final private-original foreign-event fixture passed separately **2/2** in v14. Assertions, permissions, money and test budgets remain intact. A corrected complete browser pass is still required.
-
-The original **20** E1 screenshots and individual review, normal final source commit, stacked draft pull request and exact-head CI remain pending. No overlapping run counts are summed. Damaged-History recovery is implemented and its 14 genuine cases are covered by the completed full app run; the full long-photo/quota browser result remains separate. E2 tasks and E3 installed-phone proof are separate stages. No external account or resource has been created.
-
-## What is outside E1
-
-No production backend/authentication, real text/email invitations, real passkey/authenticator verification or remote synchronized records. Browser storage demonstrates role flows, not tamper-proof server security. Damaged legacy History recovery is implemented and covered by the completed app run: own-company original bytes are verified and backed up before explicit quarantine, normal sign-in uses genuine authority, and guarded Reset preserves source/backup evidence on failure. The final long-photo/quota/migration browser results remain pending. No physical phone installation result is claimed here. Owner review is joint after all four stacked PRs; no local testing is required from the owner while development continues.
+[All twenty screenshots](redesign-screenshots/pr-e1/README.md)
