@@ -121,6 +121,8 @@ const invoiceOriginCapabilities = new Set<Capability>([
   "invoices.cost_read",
   "invoices.product_propose",
   "invoices.supplier_propose",
+  "invoices.assign_receiving_location",
+  "invoices.post",
 ]);
 const retainedCorrections = new Set<Capability>([
   "dates.remove",
@@ -350,7 +352,14 @@ export function can(
       resource.status !== "posted" &&
       resource.status !== "voided" &&
       Boolean(resource.invoice_reviewer_origin_location_id) &&
-      assigned.has(resource.invoice_reviewer_origin_location_id!);
+      assigned.has(resource.invoice_reviewer_origin_location_id!) &&
+      locations.some(
+        (location) =>
+          location.id === resource.invoice_reviewer_origin_location_id &&
+          location.active !== false,
+      ) &&
+      (resource.owner_user_id === current.user_id ||
+        Boolean(resource.handling_user_ids?.includes(current.user_id)));
     const endpointRead =
       resource.kind === "request_endpoints" &&
       !resource.mutation &&

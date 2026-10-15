@@ -80,6 +80,13 @@ import "./c6-shared.css";
 import "./c7-shared.css";
 import "./c8-catalog.css";
 
+function CashierPublicProductLookup({ code }: { code: string }) {
+  useEffect(() => {
+    window.location.replace(`#lookup?search=${encodeURIComponent(code)}`);
+  }, [code]);
+  return null;
+}
+
 export const pages: {
   key: string;
   en: string;
@@ -928,6 +935,21 @@ export default function App() {
     allowed.some(
       (candidate) => candidate.key === "lookup" && !candidate.disabled,
     );
+  const cashierPublicProductLookup =
+    requestedKnownRouteDenied &&
+    role === "cashier" &&
+    routeKey === "product" &&
+    Array.from(routeParams.keys()).length === 1 &&
+    routeParams.has("code") &&
+    Boolean(routeParams.get("code")) &&
+    currentProduct?.status !== "archived" &&
+    Boolean(currentProduct) &&
+    page.key === "lookup" &&
+    !page.disabled &&
+    can("lookup.read", {
+      company_id: actor.company_id,
+      kind: "company_shared",
+    });
   const routeDetailId = routeParams.get("id");
   const detailInvoice =
     page.key === "invoices" && routeDetailId
@@ -1467,7 +1489,9 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
+          {cashierPublicProductLookup && currentProduct ? (
+            <CashierPublicProductLookup code={currentProduct.code} />
+          ) : requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
             <Card>
               <p>
                 {parentKey === "settings"

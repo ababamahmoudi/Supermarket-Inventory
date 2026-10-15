@@ -69,14 +69,7 @@ export function requireInvoiceAuthority(
     capability === "invoices.correct" ||
     capability === "invoices.attach_posted_original";
   const scope = invoiceAuthorityScope(state, invoiceId, mutation, correction);
-  if (
-    [
-      "invoices.post",
-      "invoices.short_resolve",
-      "invoices.short_close",
-      "invoices.assign_receiving_location",
-    ].includes(capability)
-  )
+  if (["invoices.short_resolve", "invoices.short_close"].includes(capability))
     delete scope.invoice_reviewer_origin_location_id;
   requireCapability(state, actor, capability, scope);
   return freshActor(state, actor);
@@ -95,14 +88,7 @@ export function canInvoiceAuthority(
       capability === "invoices.correct" ||
       capability === "invoices.attach_posted_original";
     const scope = invoiceAuthorityScope(state, invoiceId, mutation, correction);
-    if (
-      [
-        "invoices.post",
-        "invoices.short_resolve",
-        "invoices.short_close",
-        "invoices.assign_receiving_location",
-      ].includes(capability)
-    )
+    if (["invoices.short_resolve", "invoices.short_close"].includes(capability))
       delete scope.invoice_reviewer_origin_location_id;
     return can(state, actor, capability, scope).allowed;
   } catch {

@@ -621,9 +621,9 @@ function sourceCapability(
       (item) =>
         item.company_id === entry.company_id && item.id === entry.entity_id,
     );
-    const statusAction = /status|resolved|ordered|done|open/i.test(
-      entry.action,
-    );
+    const statusAction =
+      entry.action === "note_seen" ||
+      /status|resolved|ordered|done|open/i.test(entry.action);
     if (!statusAction) return "notes.entry_add";
     if (!note) return null;
     return note.type === "note_to_supervisor"

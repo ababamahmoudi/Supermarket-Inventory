@@ -28,6 +28,8 @@ export function InvoiceOrderReview() {
   const { state, command, lang, t } = useDemo();
   const [matchErrors, setMatchErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string>();
+  // UI keys survive a fresh protected read; invoice data never does.
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const invoiceId = state.invoice?.id;
   const scope = {
     company_id: state.config.company.seed_key,
@@ -294,6 +296,8 @@ export function InvoiceOrderReview() {
       {comparison && (
         <DataTable
           className="invoice-order-table"
+          expandedRowKeys={expandedRowKeys}
+          onExpandedRowKeysChange={setExpandedRowKeys}
           columns={[
             { width: "30%" },
             { width: 140, align: "end" },

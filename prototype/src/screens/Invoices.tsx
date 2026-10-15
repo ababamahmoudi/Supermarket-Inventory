@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import Decimal from "decimal.js";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { configSeed, demoSeed as demo } from "../config";
@@ -298,6 +304,33 @@ export default function Invoices() {
     useDemo();
   const routeId = useRouteParam("id"),
     routeVersion = useRouteParam("version");
+  const [entryPending, setEntryPending] = useState<{
+    targetId: string | null;
+  } | null>(null);
+  const entryPendingRef = useRef(false);
+  useLayoutEffect(() => {
+    entryPendingRef.current = entryPending !== null;
+  }, [entryPending]);
+  const startEntry = useCallback(
+    async (operation: () => Promise<string | null>) => {
+      if (entryPendingRef.current) return;
+      entryPendingRef.current = true;
+      setEntryPending({ targetId: null });
+      try {
+        const targetId = await operation();
+        if (targetId) setEntryPending({ targetId });
+        else {
+          entryPendingRef.current = false;
+          setEntryPending(null);
+        }
+      } catch (error) {
+        entryPendingRef.current = false;
+        setEntryPending(null);
+        throw error;
+      }
+    },
+    [],
+  );
   const id = routeId ?? state.invoice?.id;
   const scope = {
     company_id: state.config.company.seed_key,
@@ -305,7 +338,8 @@ export default function Invoices() {
     entity_id: id,
   };
   useEffect(() => {
-    if (!routeId || !actor || state.invoice?.id === routeId) return;
+    if (entryPending || !routeId || !actor || state.invoice?.id === routeId)
+      return;
     // The protected read below renders the same canonical denial without retaining a prior workspace.
     void command(
       "invoices.read",
@@ -318,6 +352,7 @@ export default function Invoices() {
         selectInvoiceWorkspace(draft, currentActor, routeId),
     ).catch(() => undefined);
   }, [
+    entryPending,
     routeId,
     state.invoice?.id,
     state.config.company.seed_key,
@@ -334,6 +369,15 @@ export default function Invoices() {
   const projected =
     state.invoice_workspace?.invoice.id === id ? state.invoice_workspace : null;
   const workspace = routeVersion ? read.data : projected;
+  // Clear only when the accepted route and both current projections agree.
+  // This render-time adjustment does not retain an obsolete protected DTO.
+  if (
+    entryPending?.targetId &&
+    routeId === entryPending.targetId &&
+    state.invoice?.id === entryPending.targetId &&
+    workspace?.invoice.id === entryPending.targetId
+  )
+    setEntryPending(null);
   if (!actor || !can("invoices.read", scope))
     return (
       <EmptyState>
@@ -351,33 +395,37 @@ export default function Invoices() {
           actions={
             <Button
               disabled={
+                entryPending !== null ||
                 actor.selection.kind !== "location" ||
                 !can("invoices.enter", scope)
               }
               onClick={async () => {
                 if (actor.selection.kind !== "location") return;
                 const location = actor.selection.location_id;
-                const newId = await command(
-                  "invoices.enter",
-                  {
-                    company_id: actor.company_id,
-                    kind: "location_record",
-                    location_ids: [location],
-                    mutation: true,
-                    location_policy: "active_only",
-                  },
-                  (draft, currentActor) => {
-                    retainInvoiceWorkspace(draft);
-                    draft.invoice = createInvoice(
-                      draft,
-                      currentActor,
-                      location,
-                    );
-                    draft.invoice.receiving_employee = currentActor.actor;
-                    return draft.invoice.id;
-                  },
-                );
-                navigate(`invoices?id=${encodeURIComponent(newId)}`);
+                await startEntry(async () => {
+                  const newId = await command(
+                    "invoices.enter",
+                    {
+                      company_id: actor.company_id,
+                      kind: "location_record",
+                      location_ids: [location],
+                      mutation: true,
+                      location_policy: "active_only",
+                    },
+                    (draft, currentActor) => {
+                      retainInvoiceWorkspace(draft);
+                      draft.invoice = createInvoice(
+                        draft,
+                        currentActor,
+                        location,
+                      );
+                      draft.invoice.receiving_employee = currentActor.actor;
+                      return draft.invoice.id;
+                    },
+                  );
+                  navigate(`invoices?id=${encodeURIComponent(newId)}`);
+                  return newId;
+                });
               }}
             >
               {t("New invoice", "فاکتور جدید")}
@@ -405,13 +453,25 @@ export default function Invoices() {
       </>
     );
   return (
-    <InvoiceWorkspace
-      key={`${actor.session_id}:${actor.authority_epoch}:${authorityGeneration}:${workspace.invoice.id}`}
-      workspace={workspace}
-    />
+    <div aria-busy={entryPending !== null} inert={entryPending !== null}>
+      <InvoiceWorkspace
+        key={`${actor.session_id}:${actor.authority_epoch}:${authorityGeneration}:${workspace.invoice.id}`}
+        workspace={workspace}
+        startEntry={startEntry}
+        entryPending={entryPending !== null}
+      />
+    </div>
   );
 }
-function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
+function InvoiceWorkspace({
+  workspace,
+  startEntry,
+  entryPending,
+}: {
+  workspace: InvoiceWorkspaceRead;
+  startEntry: (operation: () => Promise<string | null>) => Promise<void>;
+  entryPending: boolean;
+}) {
   const {
     state,
     actor,
@@ -893,138 +953,164 @@ function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
   async function start(manual = false) {
     if (!actor || actor.selection.kind !== "location") return;
     const location = actor.selection.location_id;
-    const id = await command(
-      manual ? "invoices.enter_manual" : "invoices.enter",
-      {
-        company_id: actor.company_id,
-        kind: "location_record",
-        location_ids: [location],
-        mutation: true,
-        location_policy: "active_only",
-      },
-      (draft, currentActor) => {
-        retainInvoiceWorkspace(draft);
-        draft.invoice = createInvoice(draft, currentActor, location, manual);
-        draft.invoice.receiving_employee = currentActor.actor;
-        initializeInvoiceManualPriceDecisions(draft, currentActor);
-        return draft.invoice.id;
-      },
-    );
-    setSelectedView(null);
-    navigate(`invoices?id=${encodeURIComponent(id)}`);
-    setDetailsOpen(manual);
-    setMessage("");
-    setUploadError("");
-    setOpenLines({});
-    setAttemptedPost(false);
-    setReceivedEdit(undefined);
-    setReceivedError(undefined);
+    try {
+      await startEntry(async () => {
+        const id = await command(
+          manual ? "invoices.enter_manual" : "invoices.enter",
+          {
+            company_id: actor.company_id,
+            kind: "location_record",
+            location_ids: [location],
+            mutation: true,
+            location_policy: "active_only",
+          },
+          (draft, currentActor) => {
+            retainInvoiceWorkspace(draft);
+            draft.invoice = createInvoice(
+              draft,
+              currentActor,
+              location,
+              manual,
+            );
+            draft.invoice.receiving_employee = currentActor.actor;
+            initializeInvoiceManualPriceDecisions(draft, currentActor);
+            return draft.invoice.id;
+          },
+        );
+        setSelectedView(null);
+        navigate(`invoices?id=${encodeURIComponent(id)}`);
+        setDetailsOpen(manual);
+        setMessage("");
+        setUploadError("");
+        setOpenLines({});
+        setAttemptedPost(false);
+        setReceivedEdit(undefined);
+        setReceivedError(undefined);
+        return id;
+      });
+    } catch (cause) {
+      setMessage(
+        cause instanceof Error
+          ? cause.message
+          : t("The invoice changed.", "فاکتور تغییر کرد."),
+      );
+    }
   }
 
   async function attachFile(file: File) {
     const targetInvoiceId = invoice.id;
     setUploadPending(true);
     try {
-      const includedSvg =
-        file.type === "image/svg+xml" &&
-        sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
-          INCLUDED_COST_INVOICE_SHA256;
-      if (
-        !includedSvg &&
-        !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
-        file.type !== "application/pdf"
-      ) {
-        setUploadError(
-          t(
-            "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
-            "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
-          ),
-        );
-        return;
-      }
-      const retained = await storeInvoiceUpload(query, file, {
-        company_id: invoice.company_id,
-        invoice_id: targetInvoiceId,
-      });
-      const attachedId = await updateInvoice(
-        (draft, currentActor) => {
-          const stored = consumeInvoiceUpload(draft, currentActor, retained);
-          const data = stored.file_data;
-          const existing = draft.invoice;
-          if (existing.id !== targetInvoiceId)
-            throw new Error(
-              "The invoice changed while the original was saving.",
-            );
-          if (existing.status === "posted") {
-            attachPostedInvoiceOriginal(
-              draft,
-              currentActor,
-              existing.id,
-              stored,
-            );
-            return existing.id;
-          }
-          const recognizedOriginal =
-            data.endsWith(`:${INCLUDED_COST_INVOICE_SHA256}`) &&
-            draft.config.company.seed_key === configSeed.company.seed_key;
-          let next = existing;
-          if (recognizedOriginal && existing.entry_mode !== "manual") {
-            const retainedInvoice = [
-              draft.invoice,
-              ...(draft.invoices ?? []),
-            ].find(
-              (item) =>
-                item.company_id === draft.config.company.seed_key &&
-                item.id === demo.sales_demo.cost_increase_invoice.id,
-            );
-            if (retainedInvoice) {
-              requireInvoiceAuthority(
+      await startEntry(async () => {
+        const includedSvg =
+          file.type === "image/svg+xml" &&
+          sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
+            INCLUDED_COST_INVOICE_SHA256;
+        if (
+          !includedSvg &&
+          !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
+          file.type !== "application/pdf"
+        ) {
+          setUploadError(
+            t(
+              "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
+              "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
+            ),
+          );
+          return null;
+        }
+        const retained = await storeInvoiceUpload(query, file, {
+          company_id: invoice.company_id,
+          invoice_id: targetInvoiceId,
+        });
+        const attachedId = await updateInvoice(
+          (draft, currentActor) => {
+            const stored = consumeInvoiceUpload(draft, currentActor, retained);
+            const data = stored.file_data;
+            const existing = draft.invoice;
+            if (existing.id !== targetInvoiceId)
+              throw new Error(
+                "The invoice changed while the original was saving.",
+              );
+            if (existing.status === "posted") {
+              attachPostedInvoiceOriginal(
                 draft,
                 currentActor,
-                "invoices.cost_read",
-                retainedInvoice.id,
+                existing.id,
+                stored,
               );
-              if (retainedInvoice.id !== existing.id)
-                retainInvoiceWorkspace(draft);
-              next = structuredClone(retainedInvoice);
-              if (next.status === "posted") {
-                draft.invoice = next;
-                return next.id;
-              }
-            } else {
-              retainInvoiceWorkspace(draft);
-              next = demoSaleCostInvoice(draft, currentActor, existing.branch);
-              next.receiving_employee = user?.name;
+              return existing.id;
             }
-          } else if (existing.status === "empty") {
-            retainInvoiceWorkspace(draft);
-            next = createInvoice(draft, currentActor, existing.branch);
-          }
-          if (existing.status === "empty") next.receiving_employee = user?.name;
-          next.file_name = file.name;
-          next.file_type = file.type;
-          next.file_data = data;
-          next.file_size = stored.file_size;
-          // Existing manual entries stay intact when their original is attached.
-          next.status =
-            next.entry_mode === "manual"
-              ? "review"
-              : next.lines.length
-                ? "reading"
-                : "draft";
-          draft.invoice = next;
-          return next.id;
-        },
-        invoice.status === "posted"
-          ? "invoices.attach_posted_original"
-          : "invoices.edit",
-      );
-      setUploadError("");
-      setMessage("");
-      setSelectedView(null);
-      setDetailsOpen(false);
-      // The retained original and its review have a distinct browser-history entry.
-      if (attachedId) navigate(`invoices?id=${encodeURIComponent(attachedId)}`);
+            const recognizedOriginal =
+              data.endsWith(`:${INCLUDED_COST_INVOICE_SHA256}`) &&
+              draft.config.company.seed_key === configSeed.company.seed_key;
+            let next = existing;
+            if (recognizedOriginal && existing.entry_mode !== "manual") {
+              const retainedInvoice = [
+                draft.invoice,
+                ...(draft.invoices ?? []),
+              ].find(
+                (item) =>
+                  item.company_id === draft.config.company.seed_key &&
+                  item.id === demo.sales_demo.cost_increase_invoice.id,
+              );
+              if (retainedInvoice) {
+                requireInvoiceAuthority(
+                  draft,
+                  currentActor,
+                  "invoices.cost_read",
+                  retainedInvoice.id,
+                );
+                if (retainedInvoice.id !== existing.id)
+                  retainInvoiceWorkspace(draft);
+                next = structuredClone(retainedInvoice);
+                if (next.status === "posted") {
+                  draft.invoice = next;
+                  return next.id;
+                }
+              } else {
+                retainInvoiceWorkspace(draft);
+                next = demoSaleCostInvoice(
+                  draft,
+                  currentActor,
+                  existing.branch,
+                );
+                next.receiving_employee = user?.name;
+              }
+            } else if (existing.status === "empty") {
+              retainInvoiceWorkspace(draft);
+              next = createInvoice(draft, currentActor, existing.branch);
+            }
+            if (existing.status === "empty")
+              next.receiving_employee = user?.name;
+            next.file_name = file.name;
+            next.file_type = file.type;
+            next.file_data = data;
+            next.file_size = stored.file_size;
+            // Existing manual entries stay intact when their original is attached.
+            next.status =
+              next.entry_mode === "manual"
+                ? "review"
+                : next.lines.length
+                  ? "reading"
+                  : "draft";
+            draft.invoice = next;
+            return next.id;
+          },
+          invoice.status === "posted"
+            ? "invoices.attach_posted_original"
+            : "invoices.edit",
+        );
+        if (!attachedId) return null;
+        setUploadError("");
+        setMessage("");
+        setSelectedView(null);
+        setDetailsOpen(false);
+        // The retained original and its review have a distinct browser-history entry.
+        if (attachedId)
+          navigate(`invoices?id=${encodeURIComponent(attachedId)}`);
+        return attachedId ?? null;
+      });
     } catch {
       setUploadError(
         t(
@@ -1573,8 +1659,8 @@ function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
           <Button
             variant={active && !locked ? "neutral" : "primary"}
             onClick={() => start()}
-            disabled={uploadPending}
-            aria-busy={uploadPending}
+            disabled={uploadPending || entryPending}
+            aria-busy={uploadPending || entryPending}
           >
             {t("New invoice", "فاکتور جدید")}
           </Button>
@@ -1814,6 +1900,8 @@ function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
                               : "primary"
                           }
                           onClick={() => start(false)}
+                          disabled={entryPending}
+                          aria-busy={entryPending}
                         >
                           {t("Upload", "بارگذاری")}
                         </Button>
@@ -1825,6 +1913,8 @@ function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
                                 : "neutral"
                             }
                             onClick={() => start(true)}
+                            disabled={entryPending}
+                            aria-busy={entryPending}
                           >
                             {t("Manual entry", "ورود دستی")}
                           </Button>
@@ -1849,7 +1939,7 @@ function InvoiceWorkspace({ workspace }: { workspace: InvoiceWorkspaceRead }) {
                         onChange={(file) => {
                           void attachFile(file);
                         }}
-                        disabled={invoice.status === "reading"}
+                        disabled={invoice.status === "reading" || entryPending}
                         onRemove={() => {
                           updateInvoice((draft) => {
                             if (draft.invoice.status === "posted") return;

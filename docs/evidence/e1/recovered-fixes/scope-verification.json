@@ -1,0 +1,89 @@
+{
+  "kind": "staged candidate only, not combined Root source/native/CI",
+  "created_utc": "2026-10-15T14:20:24.187286+00:00",
+  "source_manifest_sha256": "4e8e672950be4b9462378863752ee9df3bbef4b24748819c63a80a6cd00f5fed",
+  "source_and_candidate_files_match": true,
+  "root_source_baselines_unchanged": true,
+  "checks": [
+    {
+      "path": "/tmp/recovered-e1-scope/targeted-final.json",
+      "sha256": "3f7f51d5f1374c09fc64cfba8f9093272695653060e3ccf416c2099aeb4241a2",
+      "success": true,
+      "total": 133,
+      "passed": 133,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "path": "/tmp/recovered-e1-scope/seen-followup.json",
+      "sha256": "40d8c9c9b4e838f0e9dd1590d2b8af1c585429e3f0a887b95ef4aef92ebedaab",
+      "success": true,
+      "total": 55,
+      "passed": 55,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "overlap_warning": "Do not sum counts. 133-test run preceded only narrow note_seen classification and its new regression; 55 followup validates that exact final change plus old History suites.",
+  "static": [
+    {
+      "check": "tsc-final",
+      "command": [
+        "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 17.875
+    },
+    {
+      "check": "eslint-final",
+      "command": [
+        "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/App.tsx",
+        "src/operations.ts",
+        "src/permissions.ts",
+        "src/invoice-authority.ts",
+        "src/received.ts",
+        "src/invoice-family.e1-prep.test.ts",
+        "src/InvoiceReceivingOrigin.e1.test.ts",
+        "src/NoteStatusUndo.e1.test.tsx",
+        "src/CashierPublicProductLink.e1.test.tsx",
+        "src/history.ts",
+        "--max-warnings",
+        "0"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.603
+    },
+    {
+      "check": "prettier-final",
+      "command": [
+        "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/App.tsx",
+        "src/operations.ts",
+        "src/permissions.ts",
+        "src/invoice-authority.ts",
+        "src/received.ts",
+        "src/invoice-family.e1-prep.test.ts",
+        "src/InvoiceReceivingOrigin.e1.test.ts",
+        "src/NoteStatusUndo.e1.test.tsx",
+        "src/CashierPublicProductLink.e1.test.tsx",
+        "src/history.ts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.014
+    }
+  ],
+  "native_test_unchanged": "prototype/tests/receiving-c.spec.ts",
+  "runner_only_configuration": "candidate Vite server.fs.allow adds actual symlink target Root node_modules to load real PDF worker; never staged or applied to Root.",
+  "earlier_failed_diagnostics": [
+    "tsc-initial.log",
+    "targeted-initial.json",
+    "targeted-v2.json",
+    "targeted-v3.json"
+  ]
+}

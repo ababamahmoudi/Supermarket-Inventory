@@ -249,6 +249,7 @@ function audit(
     at: now(),
     product_code,
   });
+  return state.activity[0];
 }
 export interface PhysicalStockMovement {
   id: string;
@@ -1461,12 +1462,15 @@ export function updateNoteStatus(
     recordedNote.done_by = context.actor;
     recordedNote.done_at = now();
   }
-  audit(
+  const entry = audit(
     state,
     context,
     status === "read" ? "note_seen" : "note_resolved",
     note.product_code,
+    note.branch,
   );
+  entry.entity_type = "note";
+  entry.entity_id = note.id;
 }
 export function clearExpiry(
   state: DemoState,

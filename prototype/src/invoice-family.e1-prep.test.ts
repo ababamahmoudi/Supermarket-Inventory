@@ -5,7 +5,6 @@ import { authenticatedTestActor } from "./authority-test-fixture";
 import { bindAuthoritySnapshot, authoritySnapshot } from "./authority";
 import {
   createInvoice,
-  postInvoice,
   receiveShort,
   demoSaleCostInvoice,
   previousReceiptCost,
@@ -30,7 +29,7 @@ import {
   effectiveProjectedClearanceOffers,
   setLotClearance,
 } from "./receipt-lots";
-import { receivedLog, setInvoiceLocation } from "./received";
+import { receivedLog } from "./received";
 import { createOrder, orderCandidates, placeOrder } from "./orders";
 import { invoiceWorkspaceRead } from "./invoice-workspace-read";
 import {
@@ -326,7 +325,7 @@ describe("E1 invoice-family concrete preparation (not app integration proof)", (
     expect(unchanged(state)).toBe(before);
     expect(() => createInvoice(state, actor, "Branch 1", true)).toThrow();
   });
-  it("retained own review at an unassigned destination is readable, but posting/receiving/reassignment cannot change physical records", () => {
+  it("retained own review permits the documented draft post while later receiving remains assigned", () => {
     const state = business(),
       actor = actorFor(state, "floor_worker", ["Warehouse"]);
     state.invoice.branch = "Branch 1";
@@ -345,12 +344,27 @@ describe("E1 invoice-family concrete preparation (not app integration proof)", (
       ),
     ).toBe(true);
     const before = unchanged(state);
-    expect(() => postInvoice(state, actor)).toThrow();
+    expect(
+      canInvoiceAuthority(
+        state,
+        actor,
+        "invoices.post",
+        state.invoice.id,
+        true,
+      ),
+    ).toBe(true);
     expect(() => receiveShort(state, "0009", 1, "E1-DENIED", actor)).toThrow();
-    expect(() => setInvoiceLocation(state, actor, "Branch 2")).toThrow();
-    expect(() =>
-      invoicePurchaseEvidence(state, actor, state.invoice.id, "invoice_post"),
-    ).toThrow();
+    const evidence = invoicePurchaseEvidence(
+      state,
+      actor,
+      state.invoice.id,
+      "invoice_post",
+    );
+    expect(
+      invoiceEvidenceActor(state, evidence, state.invoice.id, "invoice_post")
+        .user_id,
+    ).toBe(actor.user_id);
+    closePurchaseEvidence(evidence);
     expect(unchanged(state)).toBe(before);
     const manager = actorFor(state, "manager");
     expect(
@@ -441,7 +455,7 @@ describe("E1 invoice-family concrete preparation (not app integration proof)", (
     expect(currentInvoiceOrderComparison(state, actor)).toBeNull();
     expect(Object.hasOwn(view.invoice, "order_comparison")).toBe(false);
     expect(view.lineDetails.every((row) => row.previous === null)).toBe(true);
-    expect(view.blockers).toContain("permission");
+    expect(view.blockers).toContain("order");
     expect(unchanged(state)).toBe(before);
   });
   it("the private lower-price option stays available after Short-dated without returning its Catalog calculation basis", () => {

@@ -503,7 +503,6 @@ export function setInvoiceLocation(
   if (invoice.status === "posted")
     throw new Error("Choose an allowed receiving location for your draft.");
   const scope = invoiceAuthorityScope(state, invoice.id, true);
-  delete scope.invoice_reviewer_origin_location_id;
   requireCapability(state, current, "invoices.assign_receiving_location", {
     ...scope,
     location_ids: [destination],

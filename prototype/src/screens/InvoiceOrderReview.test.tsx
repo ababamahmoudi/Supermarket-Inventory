@@ -4,6 +4,7 @@ import {
   screen,
   cleanup,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { DemoProvider, initialState } from "../store";
@@ -38,6 +39,7 @@ afterEach(() => {
   clearRenderedUiReadiness();
   cleanup();
   for (const fixture of providers.splice(0)) fixture.dispose();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 async function provider(
@@ -269,4 +271,99 @@ it("shows every invalid total together as a field link and local error without c
       "true",
     );
   }
+});
+
+it("retains only the expanded order row keys during a fresh protected read so a real Manager can accept the changed cost", async () => {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: HTMLElement) {
+      return {
+        width: this.classList.contains("ui-data-table") ? 460 : 0,
+        height: 36,
+      } as DOMRect;
+    },
+  );
+  const state = initialState(),
+    context = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+      name_en: "Ali",
+    });
+  state.invoice = createInvoice(state, context, "Branch 1", true);
+  state.invoice.supplier = "Fresh Valley Foods";
+  state.invoice.supplier_confirmed = true;
+  addManualLine(state, context, "0002");
+  setInvoiceLineQuantity(state.invoice.lines[0], "12", "units", 12);
+  state.invoice.lines[0].unit_cost_before_tax = "0.9800";
+  recalculateInvoice(state.invoice, state.config);
+  const item = supplierItemFacts(
+    state,
+    context,
+    state.invoice.supplier,
+    "all",
+  ).find((record) => record.product_code === "0002")!;
+  const order = createOrder(state, context, {
+    branch: "Branch 1",
+    supplier: state.invoice.supplier,
+    lines: [
+      {
+        supplier_item_id: item.id,
+        cases: String(12 / item.units_per_case),
+        expected_unit_cost: "0.9800",
+      },
+    ],
+  });
+  placeOrder(state, context, order.id);
+  setInvoiceOrder(state, context, order.id);
+  window.location.hash = `#invoices?id=${encodeURIComponent(state.invoice.id)}`;
+  const fixture = await provider(state, "manager");
+  const view = render(
+    <DemoProvider options={fixture.options}>
+      <Invoices />
+    </DemoProvider>,
+  );
+  await screen.findByRole("heading", { name: "Compare with order" });
+  const table = () =>
+    view.container.querySelector<HTMLElement>(".invoice-order-table")!;
+  fireEvent.click(
+    within(table()).getByRole("button", { name: "Show details" }),
+  );
+  expect(
+    within(table()).getByRole("button", { name: "Hide details" }),
+  ).toHaveAttribute("aria-expanded", "true");
+  fireEvent.change(screen.getByLabelText("Unit cost before tax"), {
+    target: { value: "1.3000" },
+  });
+  await waitFor(async () =>
+    expect(
+      (await fixture.readCanonical()).invoice.lines[0].unit_cost_before_tax,
+    ).toBe("1.3000"),
+  );
+  await waitFor(() =>
+    expect(
+      within(table()).getByRole("button", { name: "Hide details" }),
+    ).toHaveAttribute("aria-expanded", "true"),
+  );
+  await waitFor(() =>
+    expect(
+      within(table()).getByRole("button", { name: "Accept new cost" }),
+    ).toBeVisible(),
+  );
+  fireEvent.click(
+    within(table()).getByRole("button", { name: "Accept new cost" }),
+  );
+  await waitFor(async () => {
+    const current = await fixture.readCanonical();
+    expect(current.invoice.id).toBe(state.invoice.id);
+    expect(current.invoice.order_id).toBe(order.id);
+    expect(current.invoice.lines[0].order_price_decision).toBe("accept");
+    expect(current.orders!.find((row) => row.id === order.id)?.lines).toEqual(
+      order.lines,
+    );
+    expect(current.ledger).toEqual(state.ledger);
+    expect(current.stock).toEqual(state.stock);
+  });
+  await waitFor(() =>
+    expect(
+      within(table()).getByRole("button", { name: "Hide details" }),
+    ).toHaveAttribute("aria-expanded", "true"),
+  );
 });

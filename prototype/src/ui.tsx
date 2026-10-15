@@ -393,17 +393,22 @@ export function DataTable({
   className,
   columns,
   responsive = true,
+  expandedRowKeys,
+  onExpandedRowKeysChange,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: ResponsiveColumn[];
   responsive?: boolean;
+  expandedRowKeys?: string[];
+  onExpandedRowKeysChange?: (keys: string[]) => void;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
   const [availableWidth, setAvailableWidth] = useState(0);
   const [mobile, setMobile] = useState(() => window.innerWidth < 760);
-  const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [localExpandedRows, setLocalExpandedRows] = useState<string[]>([]);
+  const expandedRows = expandedRowKeys ?? localExpandedRows;
   const detailsId = useId();
   useEffect(() => {
     const resize = () => setMobile(window.innerWidth < 760);
@@ -671,11 +676,11 @@ export function DataTable({
             aria-controls={rowId}
             onClick={(event) => {
               event.stopPropagation();
-              setExpandedRows((previous) =>
-                expanded
-                  ? previous.filter((key) => key !== rowKey)
-                  : [...previous, rowKey],
-              );
+              const next = expanded
+                ? expandedRows.filter((key) => key !== rowKey)
+                : [...expandedRows, rowKey];
+              if (expandedRowKeys === undefined) setLocalExpandedRows(next);
+              onExpandedRowKeysChange?.(next);
             }}
           >
             <ChevronDown size={16} aria-hidden="true" />
