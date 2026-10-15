@@ -57,6 +57,17 @@ for (const width of [390, 430])
             secondaryDirection: "row",
           });
         }
+        if (scene.page === "products" || scene.page === "labels") {
+          const size = rows
+            .filter({ hasText: "Stainless Steel Pot" })
+            .first()
+            .locator('.product-name [lang="en"] .unit-fragment')
+            .filter({ hasText: /^24 cm$/ });
+          await expect(size).toBeVisible();
+          expect(
+            await size.evaluate((element) => element.getClientRects().length),
+          ).toBe(1);
+        }
         if (scene.page === "labels") {
           const checkbox = rows.first().getByRole("checkbox");
           await checkbox.check();
@@ -90,6 +101,28 @@ for (const width of [390, 430])
         await expect(
           returns.first().locator(".dashboard-list-copy"),
         ).toBeVisible();
+        const positions = await returns.first().evaluate((row) => {
+          const copy = row
+            .querySelector(".dashboard-list-copy")!
+            .getBoundingClientRect();
+          const pill = row
+            .querySelector(".dashboard-list-pill")!
+            .getBoundingClientRect();
+          return {
+            copyStart: copy.left,
+            copyEnd: copy.right,
+            pillStart: pill.left,
+            pillEnd: pill.right,
+          };
+        });
+        if (language === "fa")
+          expect(positions.pillEnd).toBeLessThanOrEqual(
+            positions.copyStart + 1,
+          );
+        else
+          expect(positions.copyEnd).toBeLessThanOrEqual(
+            positions.pillStart + 1,
+          );
       }
       await signIn(page, "ny-floor");
       await page.goto("/#suppliers");
@@ -204,6 +237,10 @@ for (const width of [390, 430])
         })
         .click();
       await expect(page.getByRole("listbox")).toBeVisible();
+      await expect(page.locator(".ui-select-popover")).toHaveCSS(
+        "opacity",
+        "1",
+      );
       const pickerLayout = await inspectC8Layout(
         page,
         "e3-location-picker",
@@ -222,6 +259,7 @@ for (const width of [390, 430])
       });
       await bell.click();
       await expect(page.getByRole("menu").last()).toBeVisible();
+      await expect(page.locator(".ui-menu-popover")).toHaveCSS("opacity", "1");
       layout = await inspectC8Layout(
         page,
         "e3-notification-bell",

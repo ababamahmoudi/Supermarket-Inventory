@@ -132,7 +132,7 @@ export function ProductName({
 function productNameUnits(value: string): ReactNode[] {
   const fragments: ReactNode[] = [];
   const units =
-    /(\p{N}+(?:[.,\u066B\u066C]\p{N}+)*)(\s+)(kg|g|ml|mL|L|lb|lbs|oz|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
+    /(\p{N}+(?:[.,\u066B\u066C]\p{N}+)*)(\s+)(kg|g|ml|mL|L|lb|lbs|oz|cm|mm|units?|cases?|packs?|pieces?|گرمی?|کیلوگرمی?|لیتری?|پوندی?|واحد|کارتن|بسته)(?=$|[\s.,()])/gu;
   let start = 0;
   for (const match of value.matchAll(units)) {
     fragments.push(value.slice(start, match.index));

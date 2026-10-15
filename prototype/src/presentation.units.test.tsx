@@ -59,6 +59,8 @@ describe("scalar unit sizes inside RTL display text", () => {
     ["۱۵۰ گرمی", "۱۵۰ گرمی", "۱۵۰"],
     ["۴٫۵ کیلوگرمی", "۴٫۵ کیلوگرمی", "۴٫۵"],
     ["1 L", "1 L", "1"],
+    ["24 cm", "24 cm", "24"],
+    ["2 mm", "2 mm", "2"],
   ])(
     "keeps %s together without changing its text or unit order",
     (value, text, number) => {

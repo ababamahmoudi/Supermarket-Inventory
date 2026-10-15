@@ -159,6 +159,7 @@
   :root .dashboard-returns .dashboard-list-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 28px;
+    grid-template-areas: "copy pill action";
     align-items: center;
     gap: 8px;
   }
@@ -170,5 +171,6 @@
   }
   :root .dashboard-returns .dashboard-list-pill {
     max-inline-size: 140px;
+    justify-self: end;
   }
 }
