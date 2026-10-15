@@ -379,10 +379,10 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
     new URL("../public/demo-originals/fictional-hw-5012.svg", import.meta.url),
   );
   await (await openInvoiceUpload(page)).setInputFiles(original);
-  await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect(
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect
     .poll(async () => (await saved(page)).invoice.supplier_invoice_number)
     .toBe("HW-5012");
