@@ -1,0 +1,597 @@
+{
+  "observed_at_utc": "2026-10-15T20:27:32.486458+00:00",
+  "scope": "Read-only exact-head GitHub status; no tracked edit, workflow mutation, PR write or deployment.",
+  "branches": {
+    "22": {
+      "head_sha": "f9cdd1d0840c6e3ff3079a38691b398c5915cabd",
+      "run_id": 38797564811,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38797564811",
+      "conclusion": "cancelled",
+      "updated_at": "2026-10-15T20:25:07Z",
+      "prototype_timeout_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/f9cdd1d0840c6e3ff3079a38691b398c5915cabd/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The job has exceeded the maximum execution time of 30m0s",
+          "raw_details": ""
+        }
+      ],
+      "prototype_cancel_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/f9cdd1d0840c6e3ff3079a38691b398c5915cabd/.github",
+          "start_line": 18,
+          "start_column": null,
+          "end_line": 18,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The operation was canceled.",
+          "raw_details": ""
+        }
+      ],
+      "reported_browser_assertions": [],
+      "jobs": [
+        {
+          "name": "Lint, tests, build, and service smoke checks",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Prepare the environment",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run lint checks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run unit and integration tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the frontend",
+              "conclusion": "success"
+            },
+            {
+              "name": "Start and check services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check hooks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run browser smoke tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Audit runtime dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload browser results",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Show logs and stop services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Prototype lint, pricing and unit tests, build, and browsers",
+          "conclusion": "cancelled",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Read the prototype Node.js requirement",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up the prototype Node.js version",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install frozen prototype dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check prototype lint and formatting",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run prototype unit tests and every seed pricing case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the prototype",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Chromium and browser dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Test desktop and phone browser workflows",
+              "conclusion": "cancelled"
+            },
+            {
+              "name": "Upload prototype browser failures",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Set up the prototype Node.js version",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "23": {
+      "head_sha": "b59de2266b55d1939b5e533d925f1a9ecd7738b4",
+      "run_id": 38797563056,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38797563056",
+      "conclusion": "cancelled",
+      "updated_at": "2026-10-15T20:25:02Z",
+      "prototype_timeout_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/b59de2266b55d1939b5e533d925f1a9ecd7738b4/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The job has exceeded the maximum execution time of 30m0s",
+          "raw_details": ""
+        }
+      ],
+      "prototype_cancel_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/b59de2266b55d1939b5e533d925f1a9ecd7738b4/.github",
+          "start_line": 16,
+          "start_column": null,
+          "end_line": 16,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The operation was canceled.",
+          "raw_details": ""
+        }
+      ],
+      "reported_browser_assertions": [],
+      "jobs": [
+        {
+          "name": "Prototype lint, pricing and unit tests, build, and browsers",
+          "conclusion": "cancelled",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Read the prototype Node.js requirement",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up the prototype Node.js version",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install frozen prototype dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check prototype lint and formatting",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run prototype unit tests and every seed pricing case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the prototype",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Chromium and browser dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Test desktop and phone browser workflows",
+              "conclusion": "cancelled"
+            },
+            {
+              "name": "Upload prototype browser failures",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Set up the prototype Node.js version",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Lint, tests, build, and service smoke checks",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Prepare the environment",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run lint checks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run unit and integration tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the frontend",
+              "conclusion": "success"
+            },
+            {
+              "name": "Start and check services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check hooks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run browser smoke tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Audit runtime dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload browser results",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Show logs and stop services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "24": {
+      "head_sha": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+      "run_id": 38797561832,
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38797561832",
+      "conclusion": "cancelled",
+      "updated_at": "2026-10-15T20:25:05Z",
+      "prototype_timeout_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The job has exceeded the maximum execution time of 30m0s",
+          "raw_details": ""
+        }
+      ],
+      "prototype_cancel_annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76/.github",
+          "start_line": 17,
+          "start_column": null,
+          "end_line": 17,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The operation was canceled.",
+          "raw_details": ""
+        }
+      ],
+      "reported_browser_assertions": [],
+      "jobs": [
+        {
+          "name": "Prototype lint, pricing and unit tests, build, and browsers",
+          "conclusion": "cancelled",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Read the prototype Node.js requirement",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up the prototype Node.js version",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install frozen prototype dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check prototype lint and formatting",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run prototype unit tests and every seed pricing case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the prototype",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Chromium and browser dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Test desktop and phone browser workflows",
+              "conclusion": "cancelled"
+            },
+            {
+              "name": "Upload prototype browser failures",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Set up the prototype Node.js version",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Lint, tests, build, and service smoke checks",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Prepare the environment",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run lint checks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run unit and integration tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the frontend",
+              "conclusion": "success"
+            },
+            {
+              "name": "Start and check services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check hooks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run browser smoke tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Audit runtime dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload browser results",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Show logs and stop services",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Node.js",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Set up Python",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "browser_assertions_observed_in_terminal_annotations": [],
+  "limitations": [
+    "Zero browser-assertion annotations is an observation about the returned annotations, not proof of a completed passing browser suite or absence of failures in unreturned logs.",
+    "All three required prototype jobs were cancelled in their browser step at the configured 30-minute limit.",
+    "Separate local f154 phone run has a real SalesAlerts 24 cm unit-wrap finding under investigation; this is not a reported GitHub annotation.",
+    "No workflow edit is authorized by prototype/docs/seed-only scope. Prepared prototype-only timeout30\u219290 patch remains unapplied."
+  ],
+  "newest_documentation_head_observation": {
+    "checked_at_utc": "20261015T202728Z",
+    "head": "1bfa28d51163f124b5482f6c34566071bcfea9be",
+    "runs": [
+      {
+        "id": 38802075638,
+        "head_sha": "1bfa28d51163f124b5482f6c34566071bcfea9be",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38802075638",
+        "created_at": "2026-10-15T20:27:19Z",
+        "updated_at": "2026-10-15T20:27:23Z",
+        "jobs": [
+          {
+            "id": 116653405971,
+            "name": "Prototype lint, pricing and unit tests, build, and browsers",
+            "status": "in_progress",
+            "conclusion": null,
+            "started_at": "2026-10-15T20:27:22Z",
+            "completed_at": null,
+            "active_steps": [
+              "Install frozen prototype dependencies"
+            ],
+            "failed_steps": [],
+            "timeout_annotations": [],
+            "assertion_annotations": [],
+            "other_failure_annotations": [],
+            "annotation_count": 0
+          },
+          {
+            "id": 116653406328,
+            "name": "Lint, tests, build, and service smoke checks",
+            "status": "in_progress",
+            "conclusion": null,
+            "started_at": "2026-10-15T20:27:22Z",
+            "completed_at": null,
+            "active_steps": [
+              "Set up Python"
+            ],
+            "failed_steps": [],
+            "timeout_annotations": [],
+            "assertion_annotations": [],
+            "other_failure_annotations": [],
+            "annotation_count": 0
+          }
+        ]
+      }
+    ],
+    "note": "Later documentation-only head observed separately; its pending CI does not replace the exact f154 terminal timeout. Root separately audits unchanged production pins."
+  }
+}
