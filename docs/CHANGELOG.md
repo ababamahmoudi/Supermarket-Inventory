@@ -1,5 +1,12 @@
 # Project changelog
 
+
+## 2026-10-15 — E2 source-first price work and personal-notification contract
+
+- Activated E2 requirements before code: one canonical public selling-term source for store tasks, no Warehouse/no-op/backlog, retained coalescing/Undo/source attribution and local Sale end preparation.
+- Defined current-version register plus actual label/waiver confirmation, floor-worker limits, protected bulk/print flow, personal bell/event adapters and mandatory deduplicated 24/48-hour recipients.
+- Recorded verified additive migration, exact shared/bilingual copy, normal dashboard/Cashier integration and 24 requested screenshot states. This is specification only; implementation and executed tests/screenshots are recorded separately. E3 remains the next authorized stage, with no owner review pause or resource creation.
+
 ## E1 retained workflow corrections — verification pending
 
 - Restore the exact public Cashier Product Code shortcut through protected Lookup, with private/extra/foreign routes denied and explicit Store selection retained.
