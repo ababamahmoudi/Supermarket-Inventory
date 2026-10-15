@@ -1,0 +1,19 @@
+{
+  "pid": 170752,
+  "command": [
+    "node",
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/tmp/e1-ci-native-three-bounded-v1/source/prototype/playwright.ci-native-proof.config.ts",
+    "tests/orders-c2.spec.ts",
+    "tests/settings-b.spec.ts",
+    "tests/suppliers-a2.spec.ts",
+    "--grep",
+    "Supervisor creates a Warehouse fractional-case draft|Settings presents the exact 13 groups|Supervisor supplier overview reconciles balances|Floor Worker supplier overview and every tab omit financial DOM|Cashier cannot open Suppliers through a direct address",
+    "--workers=1",
+    "--reporter=line,json",
+    "--output",
+    "/tmp/e1-ci-native-three-bounded-v1/native-output"
+  ]
+}

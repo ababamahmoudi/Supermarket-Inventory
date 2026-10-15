@@ -161,11 +161,15 @@ test("Supervisor creates a Warehouse fractional-case draft, places it, filters i
     };
   });
   await print.getByRole("button", { name: "Print", exact: true }).click();
-  expect(
-    await page.evaluate(
-      () => (window as unknown as { printRequested: boolean }).printRequested,
-    ),
-  ).toBe(true);
+  // Print rechecks the current actor through the asynchronous authority query.
+  // Observe the actual print boundary before checking its unchanged document.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as unknown as { printRequested: boolean }).printRequested,
+      ),
+    )
+    .toBe(true);
   const output = page.locator(
     "body > .operational-print-output .order-print-output",
   );

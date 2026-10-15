@@ -35,8 +35,8 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
     "Modules",
     "Data",
   ]);
+  // E1 implements People. Notifications remains planned until E2.
   for (const label of [
-    "People",
     "Pricing and approvals",
     "Taxes",
     "Receiving",
@@ -75,6 +75,29 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
       ).toBeChecked();
     }
   }
+  await group(page, "People");
+  const people = page.getByRole("region", { name: "People", exact: true });
+  await expect(
+    people.getByRole("button", { name: "Add person", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    people.locator(".people-e1 tbody tr:not(.table-expanded-row)"),
+  ).toHaveCount(6);
+  await expect(
+    people.getByRole("heading", {
+      name: "Registered store computers",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    people.getByRole("button", { name: "Register computer", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    people.getByText(
+      "These settings are planned. Changes are not available yet.",
+      { exact: true },
+    ),
+  ).toHaveCount(0);
 });
 test("company settings save deliberately, persist and record before/after History", async ({
   page,
