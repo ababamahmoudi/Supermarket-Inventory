@@ -179,9 +179,32 @@ test("built-in templates can be duplicated, edited, archived and restored withou
   await page
     .getByRole("button", { name: "Save template", exact: true })
     .click();
+  await expect(
+    page
+      .locator(".labels-template-designer")
+      .getByText("Template saved.", { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(async () =>
+      (await readCanonicalBusinessEvidence(page)).templates.find(
+        (template) => template.name === "Weekend Promo",
+      ),
+    )
+    .toMatchObject({ name: "Weekend Promo", style: "promo" });
   await page
     .getByRole("button", { name: "Archive template", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Restore template", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).templates.find(
+          (template) => template.name === "Weekend Promo",
+        )?.archived,
+    )
+    .toBe(true);
   const archivedState = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.stringify(canonicalState),
   );
@@ -205,6 +228,17 @@ test("built-in templates can be duplicated, edited, archived and restored withou
   await page
     .getByRole("button", { name: "Restore template", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Archive template", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).templates.find(
+          (template) => template.name === "Weekend Promo",
+        )?.archived,
+    )
+    .toBe(false);
   await expect(
     page.getByRole("button", { name: "Save template", exact: true }),
   ).toBeEnabled();

@@ -50,19 +50,50 @@ async function prepareSupplierShorts(page: Page) {
   await field(page, "Supplier invoice number (optional)").fill(
     "C8-QA-SHORT-LAYOUT",
   );
+  const manualId = (await readC8State(page)).invoice.id;
   // A real manual fixture carries its own clearly fictional original and passes
   // the normal receiving gates. No saved invoice or stock record is injected.
   await field(page, "Upload a PDF or photo").setInputFiles({
     ...invoiceImage,
     name: "fictional-c8-short-layout.png",
   });
+  // setInputFiles returns before native original retention and its protected
+  // workspace refresh finish. Observe the accepted invoice before editing it.
+  await expect
+    .poll(async () => {
+      const invoice = (await readC8State(page)).invoice;
+      return {
+        id: invoice.id,
+        status: invoice.status,
+        fileName: invoice.file_name,
+        originalRetained: invoice.file_data?.startsWith("idb-file:v1:"),
+      };
+    })
+    .toEqual({
+      id: manualId,
+      status: "review",
+      fileName: "fictional-c8-short-layout.png",
+      originalRetained: true,
+    });
+  await expect(button(page, "New invoice")).toBeEnabled();
   const line = page.locator(".invoice-line");
   await expect(line).toHaveCount(1);
   await expect(line).toContainText("0002");
   await choose(page, field(line, "Quantity unit"), "Units");
   const cost = (await readC8State(page)).invoice.lines[0].unit_cost_before_tax;
   await field(line, "Invoiced").fill("6");
+  await expect
+    .poll(async () => (await readC8State(page)).invoice.lines[0].qty_invoiced)
+    .toBe(6);
+  await expect(field(line, "Invoiced")).toHaveValue("6");
   await field(line, "Delivered").fill("2");
+  await expect
+    .poll(
+      async () =>
+        (await readC8State(page)).invoice.lines[0].qty_received_at_posting,
+    )
+    .toBe(2);
+  await expect(field(line, "Delivered")).toHaveValue("2");
   await expect(
     line.getByRole("checkbox", { name: "Mark as short", exact: true }),
   ).toHaveAttribute("aria-checked", "true");
