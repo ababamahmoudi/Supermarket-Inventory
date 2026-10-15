@@ -1,0 +1,490 @@
+[
+  {
+    "path": "freeze.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/freeze.json",
+    "original_sha256": "c0bc55a3fe24336790f134164ad4d628143e0eaaa5c2704acad64ecc531b2213",
+    "original_bytes": 407514,
+    "gzip_sha256": "c6aff24ab27223c4b284a3714034ed1aa7823f608b41c627810e0f77405050e7",
+    "gzip_bytes": 78973
+  },
+  {
+    "path": "source-pins.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/source-pins.json",
+    "original_sha256": "ada50b45a20fa7c199144b17dea67de76069751c02e4a16422c2de2200d6adff",
+    "original_bytes": 557423,
+    "gzip_sha256": "93de79842c2c79768c83a5353fc794f33b3668d0c7c54b7265a2f0743c39efe2",
+    "gzip_bytes": 185454
+  },
+  {
+    "path": "dist-pins.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/dist-pins.json",
+    "original_sha256": "9746394c0cf417fc0c29039937b6612e94828d24c2c5e8694ef111d8b4c297dd",
+    "original_bytes": 6776,
+    "gzip_sha256": "d6f1891bbdbc50b40606b02c4cbe0efa19ea5ae0cd5d6959c006d103e9821c9a",
+    "gzip_bytes": 3088
+  },
+  {
+    "path": "private-harness.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/private-harness.json",
+    "original_sha256": "eb06aef4eb95d68960b53b30b4191b2d1f91e5c3b1980e9a139f2bce4a31a366",
+    "original_bytes": 320,
+    "gzip_sha256": "947c96cadb20a054481e5f2d5207b728072d591ad0eb8d175ae170a10b292c93",
+    "gzip_bytes": 245
+  },
+  {
+    "path": "lifecycle-reporter.cjs.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/lifecycle-reporter.cjs",
+    "original_sha256": "d053138c707c01ea9f150a74bff07b806966595056746470867a4ce53114940a",
+    "original_bytes": 1089,
+    "gzip_sha256": "1b0533d4181068c99bbc9e1ce5e1a601a6892dba3d92988efc754de072454fa4",
+    "gzip_bytes": 515
+  },
+  {
+    "path": "runtime-harness-build.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/runtime-harness-build.json",
+    "original_sha256": "fa1409d65744e6b16f612f4d09d4a73ab98efde47aab6fbe06ec99349fe134b2",
+    "original_bytes": 654,
+    "gzip_sha256": "3db40a3ccea7dd665432545f8174ff074a5750ac862e35c49be637675864c544",
+    "gzip_bytes": 390
+  },
+  {
+    "path": "runtime-harness-desktop.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/runtime-harness-desktop.json",
+    "original_sha256": "fa1409d65744e6b16f612f4d09d4a73ab98efde47aab6fbe06ec99349fe134b2",
+    "original_bytes": 654,
+    "gzip_sha256": "3db40a3ccea7dd665432545f8174ff074a5750ac862e35c49be637675864c544",
+    "gzip_bytes": 390
+  },
+  {
+    "path": "runtime-harness-phone.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/runtime-harness-phone.json",
+    "original_sha256": "fa1409d65744e6b16f612f4d09d4a73ab98efde47aab6fbe06ec99349fe134b2",
+    "original_bytes": 654,
+    "gzip_sha256": "3db40a3ccea7dd665432545f8174ff074a5750ac862e35c49be637675864c544",
+    "gzip_bytes": 390
+  },
+  {
+    "path": "native-driver-tool-results.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/native-driver-tool-results.json",
+    "original_sha256": "440854de56da4453984c5140a39cec6b21e05344cc8d10757c56b6c985bd71b4",
+    "original_bytes": 457,
+    "gzip_sha256": "82e5d2e02d69f8d904e6fe902b7ac8906402adc89be53257c51603ca5f15a9f2",
+    "gzip_bytes": 259
+  },
+  {
+    "path": "full-to-followup-input-delta.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/full-to-followup-input-delta.json",
+    "original_sha256": "8b40123f1bc0c2671b5f585ba46a7bb4211226f0c72a656f32b0c0824dc1c653",
+    "original_bytes": 2567,
+    "gzip_sha256": "0c0acab122deab99df957870c46a2c3146cc6716031210a63cc40b1b8edb1fe2",
+    "gzip_bytes": 1186
+  },
+  {
+    "path": "exact-driver.py.gz",
+    "original_path": "/tmp/run-final-shared-unit-native-files.py",
+    "original_sha256": "84a9e20c7fad3d87248f6817109de08c932f93cac56653b3eb2e6127bfe017ad",
+    "original_bytes": 20596,
+    "gzip_sha256": "0ec6e4ce96fd5b2fd9eee0885d96c9fbf4625ae1ee19310846f149eb6f8cacac",
+    "gzip_bytes": 6804
+  },
+  {
+    "path": "original-all812-case-keys.json.gz",
+    "original_path": "/tmp/e3-phone-project-e47/all-expected-cases.json",
+    "original_sha256": "c9b59c704538fa2b9e2062fe33a07eb56f78e9c08b36c7eddc2e3429a7887d55",
+    "original_bytes": 368152,
+    "gzip_sha256": "1fb7184fd5ca9655829f96b43dffa586b5adaf42f840bbea3b41053068c81f15",
+    "gzip_bytes": 32769
+  },
+  {
+    "path": "original-phone-skips.json.gz",
+    "original_path": "/tmp/e3-exact-project-combiner/expected-original-phone-skips.json",
+    "original_sha256": "28468df1be138334f13a82c78bb7e795b60aa5c473149f0bbeaaa6ccdd0e78ce",
+    "original_bytes": 27467,
+    "gzip_sha256": "f3b92154cd100322f3bb1b2bc4b433be5b37b43c85668a2f7c1b22e00f9f201d",
+    "gzip_bytes": 2559
+  },
+  {
+    "path": "build/normal-build-execution.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/build/normal-build-execution.json",
+    "original_sha256": "2de61b3cda6a41536157545e1eb5c343bd79e82649356574e6314365b6507130",
+    "original_bytes": 139,
+    "gzip_sha256": "81f8f86273b5012c1664edb1d3a09abab4dcf57c18444fd8c065ab7541b883aa",
+    "gzip_bytes": 131
+  },
+  {
+    "path": "build/normal-build-running.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/build/normal-build-running.json",
+    "original_sha256": "4d27fb5b6379d9d83527cb9b928f66efe5543b6902a328558f74b6e95f1b03f1",
+    "original_bytes": 117,
+    "gzip_sha256": "831326719558db02dc015ea37722107e18b81b40866b3b2308508a9a7e070a15",
+    "gzip_bytes": 114
+  },
+  {
+    "path": "build/normal-build.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/build/normal-build.log",
+    "original_sha256": "742dcfd4b693747b6fea8ff89f132e0de961796227dc032d5b3bcfa832b6360e",
+    "original_bytes": 2902,
+    "gzip_sha256": "237a3ace744dca91403b4cffd3806f62f2180c4af64bdc81832ee13297b65398",
+    "gzip_bytes": 1049
+  },
+  {
+    "path": "build/source-guard.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/build/source-guard.json",
+    "original_sha256": "b0e6441d60620d199b35f72b1de7b68b7c421699cf7915b24c37c1b5af9e0c9c",
+    "original_bytes": 123,
+    "gzip_sha256": "6bfd9747152f1443bfc9c41ad2672527eb40482656ee8db90b5f24c385a0adf4",
+    "gzip_bytes": 122
+  },
+  {
+    "path": "desktop-run-001/canonical-case-keys.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/canonical-case-keys.json",
+    "original_sha256": "9fc0be236fc3a908518cdf1a7031071bf0afdf8d96b9e1d513354bb1b4f145b9",
+    "original_bytes": 14143,
+    "gzip_sha256": "807c99cc6347996247ac80e941ccdd478e65247b781e19eb15ccd919761a8dac",
+    "gzip_bytes": 943
+  },
+  {
+    "path": "desktop-run-001/discovery-execution.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/discovery-execution.json",
+    "original_sha256": "73404137e0059d8e4b53ea67c8e7dff7d52f327b3ba3308d046d858182d3e3f9",
+    "original_bytes": 503,
+    "gzip_sha256": "9f2f9f58400c9d02708539293016436e4a94f739d5fa7ca5852976a15e7235c8",
+    "gzip_bytes": 288
+  },
+  {
+    "path": "desktop-run-001/discovery-running.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/discovery-running.json",
+    "original_sha256": "50c2cbdef03404275a98a62b7f65780f492700eb5d616cb41374e4b7ad556a87",
+    "original_bytes": 481,
+    "gzip_sha256": "88409c82c037d5c830d8adf062d79b1edb85ab9599e96e6a7d6ede7b8c580e93",
+    "gzip_bytes": 277
+  },
+  {
+    "path": "desktop-run-001/discovery.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/discovery.json",
+    "original_sha256": "ba0796c9960a70df6a07bfe74bee4e031a14a860bddcaac4594485c2f75d3a36",
+    "original_bytes": 25763,
+    "gzip_sha256": "4faa6b730bf836a8da96ba459c0fcdab2b8a582d10747f13fdc683a683392ead",
+    "gzip_bytes": 2360
+  },
+  {
+    "path": "desktop-run-001/discovery.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/discovery.log",
+    "original_sha256": "93b8ca0750446751db4eec0a5f564257ebcd182b2d6411ed14df7cdace559d83",
+    "original_bytes": 4748,
+    "gzip_sha256": "77c5842b8718f89a6094f5f221d6da29fcf26a778f905ce37833cf0d818954f7",
+    "gzip_bytes": 729
+  },
+  {
+    "path": "desktop-run-001/execution-result.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/execution-result.json",
+    "original_sha256": "599aecafa0541857b2db9aa92631400f5cf062cb8dbcd118b98bdeef1e9baa7f",
+    "original_bytes": 21814,
+    "gzip_sha256": "fd035c347b91e96e7b8a7e88b9943dc55e5dabdde2c87232a6b8716f3a72a002",
+    "gzip_bytes": 4028
+  },
+  {
+    "path": "desktop-run-001/expected-cases.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/expected-cases.json",
+    "original_sha256": "76839868ca29b2a46a9cb309652db292e89eab1410821ad7af97a98234194a16",
+    "original_bytes": 14862,
+    "gzip_sha256": "6c6a87cfc1e5207f40c2bc482df5f995a1a2da7c1efd0f4c7267fb16ac7a13a1",
+    "gzip_bytes": 984
+  },
+  {
+    "path": "desktop-run-001/guards-before.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/guards-before.json",
+    "original_sha256": "009347463e52116bcde09e897d525bcb26c1f19c024114e3c398c8f1458360c3",
+    "original_bytes": 9691,
+    "gzip_sha256": "c3b773dd8981697d35f2c91585c0e7edffba3d07f54a24cf4aa089e6f1b97334",
+    "gzip_bytes": 3190
+  },
+  {
+    "path": "desktop-run-001/lifecycle.ndjson.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/lifecycle.ndjson",
+    "original_sha256": "d8028fdeb2849043bc829cbe73cec17c9ed47d78601e3438d0a8e99b1771aa77",
+    "original_bytes": 49501,
+    "gzip_sha256": "2ac2044226a9d26a733be1149a0c6ef6ce9cf9e180fe10d809081bf90b654034",
+    "gzip_bytes": 2773
+  },
+  {
+    "path": "desktop-run-001/native-execution.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/native-execution.json",
+    "original_sha256": "575357bd74c070a341ac7bd7bcd569adebf87557b06b9469e9e09de16891ecef",
+    "original_bytes": 689,
+    "gzip_sha256": "b0ccd2b0b55f2e81a27068f28b9f2204f293c3e980e765ea6ee9837cce5d2a6e",
+    "gzip_bytes": 338
+  },
+  {
+    "path": "desktop-run-001/native-outcomes.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/native-outcomes.json",
+    "original_sha256": "fc41b39fe7b6a24d6adef721c0837646194d97f6f82b41be6e48779062c71ba5",
+    "original_bytes": 15642,
+    "gzip_sha256": "4d3e5f9bfe1a46e677b2c1e514d1b03547de9a9f1dff4043e8f6760f3aae6012",
+    "gzip_bytes": 1655
+  },
+  {
+    "path": "desktop-run-001/native-running.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/native-running.json",
+    "original_sha256": "b0831a60b41153003e261d275472c74a9972a95db84e9806e1b440458722f101",
+    "original_bytes": 667,
+    "gzip_sha256": "3ac6da96420283e2d87a0f9142417859ab8128d62a87fe6c502b7b4baa48d9a7",
+    "gzip_bytes": 326
+  },
+  {
+    "path": "desktop-run-001/native.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/native.log",
+    "original_sha256": "c9002cca541fbe025e5edc9613717017ae2c283b53e1181628d69805e1a15ca4",
+    "original_bytes": 5517,
+    "gzip_sha256": "cc06f2addb579164609075d2dd4af1174eb24748fd3a2b39291091d44f8c6cf9",
+    "gzip_bytes": 932
+  },
+  {
+    "path": "desktop-run-001/owned-preview.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/owned-preview.json",
+    "original_sha256": "4e4cf6519c8b8813253b3de5f97f90d86473ccb711064505aed6839461628a3b",
+    "original_bytes": 59,
+    "gzip_sha256": "a7a4f6c2b04d94b6df6c838bf1a531e5184f76404383381ce662cee20dcd7faa",
+    "gzip_bytes": 74
+  },
+  {
+    "path": "desktop-run-001/playwright.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/playwright.json",
+    "original_sha256": "001c9b63bfd0d83fcb23c3242bbb4a720998b9b89e21933dcb2bf54817240607",
+    "original_bytes": 1908100,
+    "gzip_sha256": "78d93dcea06b9608af33ddacb7b5071b2486766e3c8dc10b5e0bc8b89e01276f",
+    "gzip_bytes": 157091
+  },
+  {
+    "path": "desktop-run-001/preview.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/preview.log",
+    "original_sha256": "3c1983eb0470a520a60f5b3db253696544869e3e9a7c9b78929351d9b114058b",
+    "original_bytes": 137,
+    "gzip_sha256": "7105014f1c400664bf771eb9b57c613642d318f0a59c151e09f891fb5a47841d",
+    "gzip_bytes": 107
+  },
+  {
+    "path": "desktop-run-001/private-reporter.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/private-reporter.json",
+    "original_sha256": "349fa15e4762470861a579e6563a06248f27c9bbbe13534d13d1764f69bd4103",
+    "original_bytes": 226,
+    "gzip_sha256": "6832e6ace18f3dd1e5fb642ba467aeca59319a739842aeecce85a93443436db6",
+    "gzip_bytes": 193
+  },
+  {
+    "path": "desktop-run-001/runner-adapter.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/desktop-run-001/runner-adapter.json",
+    "original_sha256": "1ff840e0c113adb93bbac9ead9d41f52b904b12e3e62fc9384a6a65d648bf032",
+    "original_bytes": 685,
+    "gzip_sha256": "cdaf44883a2898be46e9522d72902fd2e8b10d2b08c6d4bab5ed5c4b8ee664f8",
+    "gzip_bytes": 450
+  },
+  {
+    "path": "phone-run-001/canonical-case-keys.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/canonical-case-keys.json",
+    "original_sha256": "308d6dfdd994231415bca02343c3ec18691350cf93a95dee49e930f4fdd09fc3",
+    "original_bytes": 13999,
+    "gzip_sha256": "fb0554369bc49e951df611bb97f39dac5f0803e757bd6beaea7b4ce59d8d4753",
+    "gzip_bytes": 941
+  },
+  {
+    "path": "phone-run-001/discovery-execution.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/discovery-execution.json",
+    "original_sha256": "e68f21410249e6d70ddf547201949d8d5508ecfcf4c4ec166e50fc78ecb9b8a2",
+    "original_bytes": 499,
+    "gzip_sha256": "a26f3f0c8d47191ac1bdb7e6491e7fc614a568916b11548f0262eef4b14a789f",
+    "gzip_bytes": 286
+  },
+  {
+    "path": "phone-run-001/discovery-running.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/discovery-running.json",
+    "original_sha256": "2a37e3cb2929b829bb09deb6ee3346a7420e50468ee445d7037ec1e8da2ce31e",
+    "original_bytes": 477,
+    "gzip_sha256": "fcd6e00eccb9b92f4775a3497a77e99851d5ad484c567968a115e6ec57011456",
+    "gzip_bytes": 275
+  },
+  {
+    "path": "phone-run-001/discovery.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/discovery.json",
+    "original_sha256": "16f5ff00feb779803ffbbc9eadd8154b46e1555006666a22780e831849ec361d",
+    "original_bytes": 25613,
+    "gzip_sha256": "9cb12ff13c759f02fa0fbe7575c5579a0b922ee637c4965818581b15f61b0ed4",
+    "gzip_bytes": 2354
+  },
+  {
+    "path": "phone-run-001/discovery.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/discovery.log",
+    "original_sha256": "6aedce549714d6c8e1cd634de4e972b750903d3ae3a9a2fcfaadd5b27c7f8ddd",
+    "original_bytes": 4676,
+    "gzip_sha256": "b7a936d7f36ad1ed36d27e6220948091257554b87f0c5c3a0d0d85c81d6ba8e3",
+    "gzip_bytes": 725
+  },
+  {
+    "path": "phone-run-001/execution-result.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/execution-result.json",
+    "original_sha256": "81990fca1ab9fa40ce5a685860cfcc65baab65cfbd3ebf9749191eefb7e0eb93",
+    "original_bytes": 21805,
+    "gzip_sha256": "deae93c077c18942b4ae6068ff6b96f2944bf5688d7da3252059c789131b25ff",
+    "gzip_bytes": 4024
+  },
+  {
+    "path": "phone-run-001/expected-cases.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/expected-cases.json",
+    "original_sha256": "8e7525f5ae8921d6f93ce6fdc07de546a5d38881a9648d41aea8a5b223a0e96a",
+    "original_bytes": 14718,
+    "gzip_sha256": "f1559e2883352a788d184e06853b39ad7d598ad06cc0ccbd0eecb49245669a4b",
+    "gzip_bytes": 982
+  },
+  {
+    "path": "phone-run-001/guards-before.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/guards-before.json",
+    "original_sha256": "009347463e52116bcde09e897d525bcb26c1f19c024114e3c398c8f1458360c3",
+    "original_bytes": 9691,
+    "gzip_sha256": "c3b773dd8981697d35f2c91585c0e7edffba3d07f54a24cf4aa089e6f1b97334",
+    "gzip_bytes": 3190
+  },
+  {
+    "path": "phone-run-001/lifecycle.ndjson.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/lifecycle.ndjson",
+    "original_sha256": "e094bbed4741fe4b3807e5deda2808d2a2fa8150403da07009713eb2fc3ca9cc",
+    "original_bytes": 49070,
+    "gzip_sha256": "f94ed1d7656b5f3028419cb0b476966b6a4b9233f5ddf9b808d41c445a0af268",
+    "gzip_bytes": 2749
+  },
+  {
+    "path": "phone-run-001/native-execution.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native-execution.json",
+    "original_sha256": "a36b1536399d192a5123ab51101dc1fa4a8c46e91159fe45c07c0472b43ce05c",
+    "original_bytes": 682,
+    "gzip_sha256": "910cf859fdca977d66a16794183044b8a7a6814a4845d8ef5cc0a5ffa37d60ad",
+    "gzip_bytes": 336
+  },
+  {
+    "path": "phone-run-001/native-outcomes.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native-outcomes.json",
+    "original_sha256": "28e5400cda984b66b90ede9628212bda77586bd66c5a9c07fe4267160491df90",
+    "original_bytes": 15571,
+    "gzip_sha256": "5927d307214e488d4b03e895833357b530a5e23faf7c22a42d5725ae273dbfc5",
+    "gzip_bytes": 1655
+  },
+  {
+    "path": "phone-run-001/native-running.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native-running.json",
+    "original_sha256": "980e85c1f242e825dcee85e0a0532732b8141f53ffcc8cec8a86924b0a61ac77",
+    "original_bytes": 661,
+    "gzip_sha256": "7bd8e6cf3de8b3eead6583795bec249fdd7465c149a88e7b19ae44bdcb6df29d",
+    "gzip_bytes": 325
+  },
+  {
+    "path": "phone-run-001/native.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native.log",
+    "original_sha256": "8ad1564a60b6f1afe2ca73dc0a7ef2bb7c730f8376c67fb881fed3bd0c5450ca",
+    "original_bytes": 5445,
+    "gzip_sha256": "678849c34bcdb56f37625bf4b2ca357afec484ca3602c10886dd74b471f11aa3",
+    "gzip_bytes": 930
+  },
+  {
+    "path": "phone-run-001/owned-preview.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/owned-preview.json",
+    "original_sha256": "b27bcdd613ad5e52ccb83b4ee563287e1c8129b70f21c96dbc252d80640d1a05",
+    "original_bytes": 59,
+    "gzip_sha256": "572aa4a35888e6debc9b8b91131a7c6525127d430ac31a9e9c8efbed0208acd6",
+    "gzip_bytes": 74
+  },
+  {
+    "path": "phone-run-001/playwright.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/playwright.json",
+    "original_sha256": "1268bbb3acb3e5d0aabd14e87f408c97d52ce3c7ca715df5e8425cf6b6a21e7a",
+    "original_bytes": 1907777,
+    "gzip_sha256": "55764e0da3b69d14854d833f6d9429bb7424db2522e4b976f0bc528945d41317",
+    "gzip_bytes": 157009
+  },
+  {
+    "path": "phone-run-001/preview.log.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/preview.log",
+    "original_sha256": "de0ac1b2d3e0731fdf961a203ade895253228c9b93ec52d965e47403ae01c083",
+    "original_bytes": 137,
+    "gzip_sha256": "22c4e2652f005773ea682950e29b3d22ca4680f1840c18c6b879bc6378bfd0b2",
+    "gzip_bytes": 107
+  },
+  {
+    "path": "phone-run-001/private-reporter.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/private-reporter.json",
+    "original_sha256": "349fa15e4762470861a579e6563a06248f27c9bbbe13534d13d1764f69bd4103",
+    "original_bytes": 226,
+    "gzip_sha256": "6832e6ace18f3dd1e5fb642ba467aeca59319a739842aeecce85a93443436db6",
+    "gzip_bytes": 193
+  },
+  {
+    "path": "phone-run-001/runner-adapter.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/runner-adapter.json",
+    "original_sha256": "407390e8b3a1b8cae125c98948b8a1360b80a8eebfce13abcc4e059352e8a333",
+    "original_bytes": 681,
+    "gzip_sha256": "05f9a96fe96ad5d99dd79ff214fe72d24c1b8bc9a1546272c21887ab539c7fb2",
+    "gzip_bytes": 448
+  },
+  {
+    "path": "passing-release-traces/phone-en-release.trace.zip.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native-output/c8-sales-C8-actual-cost-up-59225-nvoice-money-and-source-en--phone/trace.zip",
+    "original_sha256": "eb13cdb452b5de58fc722bd743b40b62870f49a2833c816e8749a55e74d75b4d",
+    "original_bytes": 4101081,
+    "gzip_sha256": "1a62eeb0eb56a95a0f941b14d38a427256100d046ccd153a972c47deef145f76",
+    "gzip_bytes": 3728237
+  },
+  {
+    "path": "passing-release-traces/phone-fa-release.trace.zip.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/phone-run-001/native-output/c8-sales-C8-actual-cost-up-f695a-nvoice-money-and-source-fa--phone/trace.zip",
+    "original_sha256": "dc73bce77cf4c65a454a1db1276f1b30dfda83129ed5056b919a8aa5f2230948",
+    "original_bytes": 4712825,
+    "gzip_sha256": "b89b25b8063063fbb120618e70130ede6a276c79addc6a958384ecfc828cf81c",
+    "gzip_bytes": 4375269
+  },
+  {
+    "path": "release-frame-evidence/derived-en-geometry.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/release-frame-evidence/derived-en-geometry.json",
+    "original_sha256": "cae28ce15f884e740e0daba5602f86143c39e0460ab87d70411d825a3b167d67",
+    "original_bytes": 2057,
+    "gzip_sha256": "3a3502bd328b580891ce054cda80fcf01a1a3eb216de8686eba8d04574e6ed5c",
+    "gzip_bytes": 604
+  },
+  {
+    "path": "release-frame-evidence/derived-fa-geometry.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/release-frame-evidence/derived-fa-geometry.json",
+    "original_sha256": "5446f350a08776b4ba31b6b7a322ac80ddf8ca2782ccbaef7e1eca8c8ed5759f",
+    "original_bytes": 2098,
+    "gzip_sha256": "0a818afea9f484513a5ea01ee2cae356fe9005033426e1dac6834fee6b6a4542",
+    "gzip_bytes": 606
+  },
+  {
+    "path": "release-frame-evidence/derived-original-en-geometry-trace-record.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/release-frame-evidence/derived-original-en-geometry-trace-record.json",
+    "original_sha256": "28eeca83669e8d6ea91c468d4eea8f51a83ee41229298a8dd2236db0fb1daa93",
+    "original_bytes": 2761,
+    "gzip_sha256": "de7db7216f863c0405722a6b1d6c37a7c7568a2143083c193386d3a3189461fc",
+    "gzip_bytes": 740
+  },
+  {
+    "path": "release-frame-evidence/derived-original-fa-geometry-trace-record.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/release-frame-evidence/derived-original-fa-geometry-trace-record.json",
+    "original_sha256": "5411ae58cc83e1668b9349e14c4ea05ca39288de15701829e447c1e660461c0c",
+    "original_bytes": 2802,
+    "gzip_sha256": "fd0e7a25e2fe9218c461d13400c51f45bc096289298b58a6a6cc2eda8490ff5d",
+    "gzip_bytes": 741
+  },
+  {
+    "path": "release-frame-evidence/frame-provenance.json.gz",
+    "original_path": "/tmp/e3-final-shared-persian-unit-native/release-frame-evidence/frame-provenance.json",
+    "original_sha256": "f76e72089eb78629c36264b0a28a611c024dd22eed009c3c20b52a47af95eb2a",
+    "original_bytes": 8168,
+    "gzip_sha256": "3fecb3c8ecc403f6760b8610f81354cbbd3a2bbcab3d741ad82a8b12bee45a8d",
+    "gzip_bytes": 1557
+  },
+  {
+    "path": "frame-extractor.py.gz",
+    "original_path": "/tmp/extract-final-persian-release-trace-frames.py",
+    "original_sha256": "0adb90fbbb3e045bd6c522578149649470ef1b028bed2fb783e46b8f21280d54",
+    "original_bytes": 3946,
+    "gzip_sha256": "8dd2c7effc56281cec8a67337c4e8d45849a059bbbf11501bbd46f05f21a58ff",
+    "gzip_bytes": 1771
+  }
+]

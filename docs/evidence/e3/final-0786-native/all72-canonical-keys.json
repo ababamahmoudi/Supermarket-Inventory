@@ -1,0 +1,650 @@
+[
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 390px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 390px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 900px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 900px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px\"]]",
+    "project": "desktop",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)\"]]",
+    "project": "desktop",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"rendered en glyph proof distinguishes separate bilingual lines from real overlap\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "rendered en glyph proof distinguishes separate bilingual lines from real overlap"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"rendered fa glyph proof distinguishes separate bilingual lines from real overlap\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "rendered fa glyph proof distinguishes separate bilingual lines from real overlap"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"product-name size and unit stay together in en, and a split is detected\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "product-name size and unit stay together in en, and a split is detected"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"product-name size and unit stay together in fa, and a split is detected\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "product-name size and unit stay together in fa, and a split is detected"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"ordinary en Activity sizes stay together and an unmarked split is detected\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "ordinary en Activity sizes stay together and an unmarked split is detected"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"ordinary fa Activity sizes stay together and an unmarked split is detected\"]]",
+    "project": "desktop",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "ordinary fa Activity sizes stay together and an unmarked split is detected"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 390px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 390px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 768px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 768px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 900px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 900px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1024px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1024px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1180px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1180px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1280px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1280px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1440px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1440px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1920px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1920px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 390px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 390px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 768px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 768px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 900px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 900px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1024px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1024px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1180px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1180px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1280px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1280px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1440px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1440px"
+    ]
+  },
+  {
+    "key": "[\"desktop\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1920px\"]]",
+    "project": "desktop",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1920px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 390px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 390px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 900px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 900px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-layout-proof.spec.ts\",[\"c8-layout-proof.spec.ts\",\"C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px\"]]",
+    "project": "phone",
+    "file": "c8-layout-proof.spec.ts",
+    "titles": [
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"c8-sales.spec.ts\",[\"c8-sales.spec.ts\",\"C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)\"]]",
+    "project": "phone",
+    "file": "c8-sales.spec.ts",
+    "titles": [
+      "c8-sales.spec.ts",
+      "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"rendered en glyph proof distinguishes separate bilingual lines from real overlap\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "rendered en glyph proof distinguishes separate bilingual lines from real overlap"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"rendered fa glyph proof distinguishes separate bilingual lines from real overlap\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "rendered fa glyph proof distinguishes separate bilingual lines from real overlap"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"product-name size and unit stay together in en, and a split is detected\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "product-name size and unit stay together in en, and a split is detected"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"product-name size and unit stay together in fa, and a split is detected\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "product-name size and unit stay together in fa, and a split is detected"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"ordinary en Activity sizes stay together and an unmarked split is detected\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "ordinary en Activity sizes stay together and an unmarked split is detected"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"layout-proof-c6.spec.ts\",[\"layout-proof-c6.spec.ts\",\"ordinary fa Activity sizes stay together and an unmarked split is detected\"]]",
+    "project": "phone",
+    "file": "layout-proof-c6.spec.ts",
+    "titles": [
+      "layout-proof-c6.spec.ts",
+      "ordinary fa Activity sizes stay together and an unmarked split is detected"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 390px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 390px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 768px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 768px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 900px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 900px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1024px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1024px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1180px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1180px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1280px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1280px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1440px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1440px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in en at 1920px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in en at 1920px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 390px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 390px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 768px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 768px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 900px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 900px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1024px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1024px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1180px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1180px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1280px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1280px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1440px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1440px"
+    ]
+  },
+  {
+    "key": "[\"phone\",\"product-unit-order-c6.spec.ts\",[\"product-unit-order-c6.spec.ts\",\"stored Persian decimal retains its actual visual order in fa at 1920px\"]]",
+    "project": "phone",
+    "file": "product-unit-order-c6.spec.ts",
+    "titles": [
+      "product-unit-order-c6.spec.ts",
+      "stored Persian decimal retains its actual visual order in fa at 1920px"
+    ]
+  }
+]

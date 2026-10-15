@@ -1,0 +1,1016 @@
+{
+  "counts": {
+    "PASS": 72
+  },
+  "total": 72,
+  "cases": [
+    {
+      "id": "6fc4275db21e595ca86f-ae993d727b201d8e004d",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 390px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-c6c32f30c743c5dce11a",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 900px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-91f38431ead76cd53049",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-75c15fe2ca02360eb5d3",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-37e59415c0abb0bd468a",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-ea1d81405eca93bf1235",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-385d263567d1b2677198",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-6ffd7e2e42f9f0a25bda",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ce82083b30358a84f273",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-b03f3806ad09534f7a7e",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-c2deec4f76cc34e930f5",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ecc7860cd91c6d66671b",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-d438ee3cd7358a18265e",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-20db01a5f5c3201f9a80",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-6c3b4d06dbfd42e43f15",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-d75dcf732af67be32fba",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-b09df8e16fba032f9a62",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-20a58a68363fff8426a1",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-9a2d31d77da33304e23f",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-8c1095b28e83b394fe4f",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-5693ab1ca1e64f5e033c",
+      "title": "stored Persian decimal retains its actual visual order in en at 390px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-6945867c2511225794c3",
+      "title": "stored Persian decimal retains its actual visual order in en at 768px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-674976156dea87771f5e",
+      "title": "stored Persian decimal retains its actual visual order in en at 900px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-40fafe7b58197372091d",
+      "title": "stored Persian decimal retains its actual visual order in en at 1024px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-2de71ee7cac60721dfdb",
+      "title": "stored Persian decimal retains its actual visual order in en at 1180px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-679a9d9ee8c208dbcdc4",
+      "title": "stored Persian decimal retains its actual visual order in en at 1280px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-d9813e9bfe09153f74f9",
+      "title": "stored Persian decimal retains its actual visual order in en at 1440px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-6bf4b3ac2a565789546a",
+      "title": "stored Persian decimal retains its actual visual order in en at 1920px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-facc087ff5f258fc2382",
+      "title": "stored Persian decimal retains its actual visual order in fa at 390px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-6672346f08934db411bb",
+      "title": "stored Persian decimal retains its actual visual order in fa at 768px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-17363b6e7c6fa721827f",
+      "title": "stored Persian decimal retains its actual visual order in fa at 900px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-95b563096c5e0f6fdf88",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1024px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-f3a5f22d228074fdd316",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1180px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-90763f2adc369514ee73",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1280px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-c43803739d0bec18c750",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1440px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-f671b8170fce13c74c7e",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1920px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "desktop",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-51d7e09ef7a637e1d929",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 390px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-fa9082474956fb0882ec",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 900px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-8af90e1f525091adaa11",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-cbd9d0cf812f34853c52",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-6164a37be8dcd799e781",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "6fc4275db21e595ca86f-508031cbf87f2208d4b6",
+      "title": "C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px",
+      "file": "c8-layout-proof.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-0d8d02f4bb2cd1d74d29",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-215d39c1a350d7ef6366",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-ee81cd1b3da27ff3de06",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-252f790b81f509d32f46",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-1a2be8f982117c166b49",
+      "title": "C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-20e12d586854473acc63",
+      "title": "C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-73123b6763fc9b493f3e",
+      "title": "C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "2a73dce4044c9b6369eb-df73b0a4d94bfe3656f9",
+      "title": "C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)",
+      "file": "c8-sales.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-a55d9a0a1f6c5ed12616",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-71aaaed2f84766c054da",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-9bb8a06df0b3d693d33b",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-abb237399db42c804875",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-ce27eae39a75c8553cba",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "49c803e96c58287ed90f-e164db72a9d12b0ed4fb",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "file": "layout-proof-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-a812c1ead0b3905d40a3",
+      "title": "stored Persian decimal retains its actual visual order in en at 390px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-5f19e713c3a4edc122fd",
+      "title": "stored Persian decimal retains its actual visual order in en at 768px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-48b8d6fb164877759ffc",
+      "title": "stored Persian decimal retains its actual visual order in en at 900px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-9465eda11bfa2830ca33",
+      "title": "stored Persian decimal retains its actual visual order in en at 1024px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-82f1469831fbe3595f2a",
+      "title": "stored Persian decimal retains its actual visual order in en at 1180px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-116285e7d5ba952cac92",
+      "title": "stored Persian decimal retains its actual visual order in en at 1280px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-df529c6e58437b1fc586",
+      "title": "stored Persian decimal retains its actual visual order in en at 1440px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-3dc9f376b7177930b1cc",
+      "title": "stored Persian decimal retains its actual visual order in en at 1920px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-65c72974a9a81954d990",
+      "title": "stored Persian decimal retains its actual visual order in fa at 390px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-803f02db56620443c771",
+      "title": "stored Persian decimal retains its actual visual order in fa at 768px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-05afaa5ce55257ef4021",
+      "title": "stored Persian decimal retains its actual visual order in fa at 900px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-aead56d80043c545c9fe",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1024px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-cc6f694ab0e60825e377",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1180px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-acba4a99abefd6ac215e",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1280px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-ffc213386cdd95f26eb1",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1440px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    },
+    {
+      "id": "eeceb26ab643b8fbdbff-2a8b92ddb885c1d21884",
+      "title": "stored Persian decimal retains its actual visual order in fa at 1920px",
+      "file": "product-unit-order-c6.spec.ts",
+      "project": "phone",
+      "outcome": "PASS",
+      "actual_status": "passed",
+      "expected_status": "passed",
+      "attempts": 1,
+      "retry_numbers": [
+        0
+      ],
+      "annotations": []
+    }
+  ]
+}

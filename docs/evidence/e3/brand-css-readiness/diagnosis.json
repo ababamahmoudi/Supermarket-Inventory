@@ -1,0 +1,82 @@
+{
+  "ci_source_commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+  "ci_run_id": 38806913395,
+  "ci_actual_failure": {
+    "path": "prototype/src/store.test.tsx",
+    "blob_href": "https://github.com/ababamahmoudi/Supermarket-Inventory/blob/0786ea262b6ebdf573cd02f2b56479952633ee21/prototype/src/store.test.tsx",
+    "start_line": 100,
+    "start_column": null,
+    "end_line": 100,
+    "end_column": null,
+    "annotation_level": "failure",
+    "title": "src/store.test.tsx > fictional data and storage > uses the company configured light and dark brand colors",
+    "message": "AssertionError: expected '#2B59C3' to be '#0F766E' // Object.is equality\n\nExpected: \"#0F766E\"\nReceived: \"#2B59C3\"\n\n \u276f src/store.test.tsx:100:57\n\n",
+    "raw_details": ""
+  },
+  "ci_unit_step": "failure",
+  "ci_build_step": "skipped",
+  "ci_browser_step": "skipped",
+  "separate_from_job_timeout": true,
+  "source_file": "prototype/src/store.test.tsx",
+  "baseline_sha256": "7cdef1bf8850f8670c5cfbead846e01ba8518779a9ff77fa91e599e0c5911efd",
+  "candidate_sha256": "acbb2ff78e964d5842a86da1fdcd4e7866d3a401decda5b100e2be4de2665dba",
+  "identical_baseline_file_refs": {
+    "HEAD": {
+      "commit": "9fd453a4578b06d180c8e32f7d0f291c3d120fa4",
+      "fixture_sha256": "7cdef1bf8850f8670c5cfbead846e01ba8518779a9ff77fa91e599e0c5911efd"
+    },
+    "feat/prototype-e1-location-roles": {
+      "commit": "13a6ad0c32190ab1be867f0bcbd644a098811099",
+      "fixture_sha256": "7cdef1bf8850f8670c5cfbead846e01ba8518779a9ff77fa91e599e0c5911efd"
+    },
+    "feat/prototype-e2-price-updates": {
+      "commit": "ee71c6c5d1765f657ae7bfd94267a617e85b6362",
+      "fixture_sha256": "7cdef1bf8850f8670c5cfbead846e01ba8518779a9ff77fa91e599e0c5911efd"
+    }
+  },
+  "source_delta": "Only await existing waitFor around all three unchanged exact CSS property assertions.",
+  "default_waitFor_timeout_ms": 1000,
+  "show_helper_timeout_ms_unchanged": 10000,
+  "global_vitest_timeout_ms_unchanged": 30000,
+  "all_exact_color_values_and_matchers_unchanged": true,
+  "other_file_bytes_unchanged": true,
+  "new_timers_or_authority_result_mocks": false,
+  "tracked_writes": false,
+  "tests_or_builds_executed_for_candidate": false,
+  "candidate_verification": "Pending: all heavy tests held while final native72 uses four workers.",
+  "causal_observation": "show() observes rendered auth stage leaving loading; actual branding properties are written separately in DemoProvider useEffect after snapshot config changes. Stage observation alone does not establish CSS publication.",
+  "causal_limit": "CI records only default color at assertion, not authStage/effect timings; exact scheduling and CPU/resource cause are unproven.",
+  "local_full_app_context": "Root reports exact0786 application1444/1444 CLI0 locally; it is separate from this actual CI failure and does not prove candidate verification.",
+  "raw_files": {
+    "ci-originals/check-116670025819-annotations-1.json.gz": {
+      "sha256": "475c6349be66b4d1f4b388642bd0ebb6a51a7779a0cea810372b6e39e9bad2f4",
+      "bytes": 751,
+      "original_sha256": "84d046868e2c15a407b00a5a2463e33ef0e4da3fe2e51e09486ca202d2048eef",
+      "original_bytes": 2314
+    },
+    "ci-originals/run-38806913395-jobs.json.gz": {
+      "sha256": "7add430658ffa54d69d9fbce16028adc5a7aa4aca9afb00a33c73a394d92f200",
+      "bytes": 1295,
+      "original_sha256": "7af9ac114d9ec0a00ea548d42f04d675348d80ffe6512b259db82d171224e31b",
+      "original_bytes": 11336
+    },
+    "candidate-store.test.tsx.gz": {
+      "sha256": "7aff8fa932d5c68a3c54222e76161d43ee590b0760fb86cc532d687dc35f0dca",
+      "bytes": 3938,
+      "original_sha256": "acbb2ff78e964d5842a86da1fdcd4e7866d3a401decda5b100e2be4de2665dba",
+      "original_bytes": 19464
+    },
+    "fixture-only.patch.gz": {
+      "sha256": "85c0514cf905571f9445a66e8be888be3cf9df32c03a1969589550bdae61e59c",
+      "bytes": 362,
+      "original_sha256": "c9637a503e681629639200ee3b049143bed4c105c93aae87d733041aab09d9ac",
+      "original_bytes": 877
+    },
+    "stage-candidate.py.gz": {
+      "sha256": "6f443e4717a9c5c07f9ef9025d656c7626c3e8242a00bd09c4c84bae300e6a87",
+      "bytes": 2931,
+      "original_sha256": "9a57ee0f23c5fc07f53ca1a471a7a64237df414e8e98566d12f0d268480f5e4b",
+      "original_bytes": 6976
+    }
+  }
+}
