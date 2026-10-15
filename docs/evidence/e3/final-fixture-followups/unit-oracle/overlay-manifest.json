@@ -1,0 +1,19 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test inspector strengthened to detect raw cm/mm splitting",
+  "files": [
+    {
+      "path": "prototype/scripts/c6-layout-proof.mjs",
+      "source": "/tmp/e3-layout-unit-negative-oracle-fix/staged/prototype/scripts/c6-layout-proof.mjs",
+      "baseline_sha256": "3531e018397b97f987944763cb2d461d88d90b4fe8740f0ce5152424e18b4d5a",
+      "sha256": "d685fcd0eed56cfad4e685793bc72583826398d0ecaf341512d9d40e367ac33d"
+    }
+  ],
+  "reason": "Original ordinary Activity negative control strips correct .unit-fragment markup from Stainless Steel Pot24cm. The raw text inspector omits cm/mm and misses this real forced split. Extend recognized units instead of selecting another product or deleting assertion.",
+  "preserved": [
+    "all original positive/broken/restored glyph/unit/Activity assertions",
+    "every original range, line-count, glyph, cell, control and page geometry threshold",
+    "original60sec tests and5sec assertions,0retries/skips,case counts",
+    "production units markup and all application code unchanged"
+  ]
+}

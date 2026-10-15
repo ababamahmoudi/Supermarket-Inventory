@@ -1,0 +1,52 @@
+{
+  "group": "labels",
+  "actual_passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "retries": 0,
+  "global_errors": [],
+  "original_stats": {
+    "startTime": "2026-10-15T19:09:58.787Z",
+    "duration": 12014.282000000001,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 13.638375282287598,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 2,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "d3dea8e3d4f200cba0fe5424d5d40d85cbcf1201c48025a373417066d8118cb2"
+  },
+  "base_source_files": 1841,
+  "overlay_files": [
+    "prototype/tests/labels-b.spec.ts"
+  ],
+  "production_application_files_changed": [],
+  "normal_build_reused_from_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "dist_assets_verified": 61,
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "live A4 designer redraws capacity and calibration, stores editable presets and prints an alignment page",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "project": "phone",
+      "title": "live A4 designer redraws capacity and calibration, stores editable presets and prints an alignment page",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    }
+  ],
+  "original_failed_trace_sha256": "203f72c2b739ef1ec7766996ad3c600fa268d7da8f7673e7e89cf59b0dc6c403",
+  "scope": "Separate bounded original cases with explicitly recorded verification-only overlay, never a single full812 run."
+}

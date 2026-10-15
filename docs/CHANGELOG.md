@@ -5,6 +5,7 @@
 - Make the first-import browser fixture genuinely empty before removing its authority database: unregister its old service worker, leave the controlled page, and verify the inert document. Production offline behavior and all original backup, recovery, exact-byte and permission assertions remain unchanged.
 - Both original migration cases passed on desktop and phone (4/4). The complete retained browser replay remains separately recorded and is not inferred from these four cases.
 - Full post-print application verification passed 1,426/1,426, with actual process exit 0 and no unhandled errors; SDK 75/75 and normal lint also passed. Preserve the earlier unexplained exit-1 attempt rather than treating its passing assertions as a successful process.
+- Wait for the accepted manual-upload workspace and the actual completed template save in retained browser checks; preserve PDF pixels/bytes and A4 calibration assertions. Extend the layout test inspector to detect deliberately split cm/mm text. Corrected original PDF 2/2, template 2/2 and layout 12/12 cases passed.
 - Clarify the Ubuntu/phone instructions, actual menu labels and safe pause before switching a repository with local changes.
 
 ## 2026-10-15 — Complete permitted phone print tables

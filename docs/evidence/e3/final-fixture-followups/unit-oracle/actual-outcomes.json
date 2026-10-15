@@ -1,0 +1,146 @@
+{
+  "group": "unit-oracle",
+  "actual_passed": 12,
+  "failed": 0,
+  "skipped": 0,
+  "retries": 0,
+  "global_errors": [],
+  "original_stats": {
+    "startTime": "2026-10-15T19:11:12.227Z",
+    "duration": 38194.386,
+    "expected": 12,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 39.80638885498047,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 12,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "4c21ad9433dd7e7dd508deef6002d8333abd1e9d86267b70e342aee81ba3350b"
+  },
+  "base_source_files": 1841,
+  "overlay_files": [
+    "prototype/scripts/c6-layout-proof.mjs"
+  ],
+  "production_application_files_changed": [],
+  "normal_build_reused_from_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "dist_assets_verified": 61,
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-0-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-1-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-2-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-3-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-4-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/desktop-5-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "rendered en glyph proof distinguishes separate bilingual lines from real overlap",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-6-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "rendered fa glyph proof distinguishes separate bilingual lines from real overlap",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-7-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "product-name size and unit stay together in en, and a split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-8-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "product-name size and unit stay together in fa, and a split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-9-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-10-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "ordinary fa Activity sizes stay together and an unmarked split is detected",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "unit-oracle/attachments/phone-11-0.json.gz"
+      ]
+    }
+  ],
+  "original_failed_trace_sha256": "ba53f075668aff4d1135a5dfab73060ec1a0c3afe6470d1d3995f01c1487a5ae",
+  "scope": "Separate bounded original cases with explicitly recorded verification-only overlay, never a single full812 run."
+}
