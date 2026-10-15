@@ -221,11 +221,12 @@ test("Cashier gets only granted custom notebook reads and cannot add or read bui
       .getByRole("navigation", { name: "Pages", exact: true })
       .getByRole("link", { name: "Notes", exact: true }),
   ).toBeVisible();
-  if (mobile)
-    await page
-      .locator(".topbar")
-      .getByRole("button", { name: "Close menu", exact: true })
-      .click();
+  if (mobile) {
+    // The drawer covers its underlying topbar toggle. Use its genuine Escape
+    // dismissal before the next person's normal Demo action.
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".sidebar-backdrop")).toHaveCount(0);
+  }
 
   // Revoke the actual read grant through the permitted Manager definition form.
   // The same Cashier must immediately lose this route without deleting its entry.
