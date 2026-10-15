@@ -323,19 +323,51 @@ export async function prepareC8NewOrder(page) {
 
 export async function prepareC8ManualInvoice(page) {
   await visitC8(page, "invoices");
+  const previous = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  await expect
+    .poll(async () => {
+      const invoice = (await readC8State(page)).invoice;
+      const routed =
+        new URL(page.url()).hash ===
+        "#invoices?id=" + encodeURIComponent(invoice.id);
+      return (
+        invoice.id !== previous && invoice.entry_mode === "upload" && routed
+      );
+    })
+    .toBe(true);
+  const uploadId = (await readC8State(page)).invoice.id;
   await button(page, "Manual entry", "ورود دستی").click();
+  await expect
+    .poll(async () => {
+      const invoice = (await readC8State(page)).invoice;
+      const routed =
+        new URL(page.url()).hash ===
+        "#invoices?id=" + encodeURIComponent(invoice.id);
+      return (
+        invoice.id !== uploadId &&
+        invoice.entry_mode === "manual" &&
+        routed &&
+        invoice.lines.length === 0
+      );
+    })
+    .toBe(true);
   const details = page.locator("#invoice-details-fields");
   await choose(
     page,
     field(details, "Supplier", "تأمین‌کننده"),
     /Fresh Valley Foods/,
   );
-  await field(
-    page,
+  const number = field(
+    details,
     "Supplier invoice number (optional)",
     "شماره فاکتور تأمین‌کننده (اختیاری)",
-  ).fill("C8-QA-CONTAINMENT");
+  );
+  await expect(number).toBeEnabled();
+  await number.fill("C8-QA-CONTAINMENT");
+  await expect
+    .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
+    .toBe("C8-QA-CONTAINMENT");
   await button(page, "Add line", "افزودن ردیف").click();
   await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
     1,
@@ -396,17 +428,44 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     sale_price: "16.99",
   });
   await visitC8(page, "invoices");
+  const previousInvoice = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  await expect
+    .poll(async () => {
+      const current = (await readC8State(page)).invoice;
+      return (
+        current.id !== previousInvoice &&
+        current.entry_mode === "upload" &&
+        new URL(page.url()).hash ===
+          "#invoices?id=" + encodeURIComponent(current.id)
+      );
+    })
+    .toBe(true);
   await field(
     page,
     "Upload a PDF or photo",
     "بارگذاری PDF یا عکس",
   ).setInputFiles(originalPath);
+  const reviewDeadline = Date.now() + 15000;
+  await expect
+    .poll(
+      async () => {
+        const current = (await readC8State(page)).invoice;
+        return (
+          current.id === "demo-c8-hw-5012" &&
+          current.status === "review" &&
+          current.lines.length === 1 &&
+          new URL(page.url()).hash === "#invoices?id=demo-c8-hw-5012"
+        );
+      },
+      { timeout: Math.max(1, reviewDeadline - Date.now()) },
+    )
+    .toBe(true);
   await expect(
     page.getByRole("heading", {
       name: /^(Review invoice lines|بررسی ردیف‌های فاکتور)$/,
     }),
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: Math.max(1, reviewDeadline - Date.now()) });
   await expect
     .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
     .toBe("HW-5012");

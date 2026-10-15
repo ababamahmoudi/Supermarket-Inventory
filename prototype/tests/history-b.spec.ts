@@ -93,6 +93,8 @@ async function historyRow(
   include = "",
   exclude = "",
 ): Promise<Locator> {
+  // Protected reads are asynchronous; enumerate only the rendered History.
+  await expect(page.locator(".history-table")).toBeVisible();
   const rows = await page
     .locator(".history-table tbody > tr:not(.table-expanded-row)")
     .all();

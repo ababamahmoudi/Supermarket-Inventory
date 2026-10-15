@@ -227,7 +227,7 @@ for (const language of ["en", "fa"] as const)
             );
             await choose(
               page,
-              field(page, "Location", "محل"),
+              field(page.locator("main"), "Location", "محل"),
               /^(All locations|همه محل‌ها)$/,
             );
             await expect(
