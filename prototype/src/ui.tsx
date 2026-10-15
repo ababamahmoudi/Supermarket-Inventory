@@ -19,7 +19,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { clsx, type ClassValue } from "clsx";
@@ -414,14 +414,34 @@ export function DataTable({
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
   const [availableWidth, setAvailableWidth] = useState(0);
-  const [mobile, setMobile] = useState(() => window.innerWidth < 760);
+  const [screenMobile, setMobile] = useState(() => window.innerWidth < 760);
+  const [printing, setPrinting] = useState(
+    () => window.matchMedia?.("print").matches ?? false,
+  );
+  const mobile = screenMobile && !printing;
+  const layoutResponsive = responsive && !printing;
   const [localExpandedRows, setLocalExpandedRows] = useState<string[]>([]);
   const expandedRows = expandedRowKeys ?? localExpandedRows;
   const detailsId = useId();
   useEffect(() => {
     const resize = () => setMobile(window.innerWidth < 760);
+    const printMedia = window.matchMedia?.("print");
+    // Native print captures the DOM immediately after beforeprint returns.
+    // Commit the full permitted table before the browser takes that snapshot.
+    const beforePrint = () => flushSync(() => setPrinting(true));
+    const afterPrint = () => flushSync(() => setPrinting(false));
+    const printMediaChanged = () =>
+      flushSync(() => setPrinting(printMedia?.matches ?? false));
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    window.addEventListener("beforeprint", beforePrint);
+    window.addEventListener("afterprint", afterPrint);
+    printMedia?.addEventListener("change", printMediaChanged);
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("beforeprint", beforePrint);
+      window.removeEventListener("afterprint", afterPrint);
+      printMedia?.removeEventListener("change", printMediaChanged);
+    };
   }, []);
   const cells = (nodes: ReactNode, prefix = ""): ReactNode[] =>
     Children.toArray(nodes).flatMap((node, index) =>
@@ -482,7 +502,7 @@ export function DataTable({
       ? { ...column, minWidth: Math.max(240, column.minWidth ?? 0) }
       : column,
   );
-  const layout = responsive
+  const layout = layoutResponsive
     ? allocateTableColumns(
         resolvedColumns,
         availableWidth,
@@ -504,7 +524,7 @@ export function DataTable({
     .filter((index) => resolvedColumns[index].actions)
     .at(-1);
   const separateDetailsColumn =
-    responsive &&
+    layoutResponsive &&
     !(mobile && phoneList) &&
     layout.collapsed.length > 0 &&
     endActionsIndex === undefined;
@@ -672,7 +692,7 @@ export function DataTable({
             (cell.props.colSpan ?? 1) > 1,
         );
         const canExpand =
-          responsive &&
+          layoutResponsive &&
           !(mobile && phoneList) &&
           bodyRow &&
           !fullRow &&
@@ -946,8 +966,9 @@ export function DataTable({
       className={cn(
         "table-wrap",
         "ui-data-table",
-        responsive && "is-responsive",
+        layoutResponsive && "is-responsive",
         mobile && "is-mobile",
+        printing && "is-printing",
         mobile && phoneList && "is-phone-list",
         phoneList?.selection && "has-phone-selection",
         className,
@@ -976,12 +997,13 @@ export function DataTable({
               key={column.key ?? index}
               data-action-column={column.actions || undefined}
               style={{
-                width:
-                  fixedColumnWidth(column) !== null
+                width: printing
+                  ? undefined
+                  : fixedColumnWidth(column) !== null
                     ? `${fixedColumnWidth(column)}px`
                     : column.actions
                       ? `${actionWidths[columnId(column)] ?? columnWeight(column)}px`
-                      : responsive && availableWidth
+                      : layoutResponsive && availableWidth
                         ? `${layout.minimums[layout.visible[index]] + (Math.max(0, availableWidth - reservedWidth - separateDetailsWidth - flexibleMinimum) * columnWeight(column)) / Math.max(1, flexibleWeight)}px`
                         : flexibleWeight
                           ? availableWidth

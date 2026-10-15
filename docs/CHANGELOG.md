@@ -1,5 +1,10 @@
 # Project changelog
 
+## 2026-10-15 — Complete permitted phone print tables
+
+- Restore layout-collapsed cheque/payment columns for actual printing, keeping explicitly hidden columns excluded and restoring phone/expanded-row layout afterward. No payment amounts or records change.
+- Added print lifecycle/media/restore regressions and retained the original cheque, amount and worker-permission native assertions.
+
 ## 2026-10-15 — Phone verification corrections
 
 - Keep each Persian case or loose-unit quantity attached to its own translated label in Received, posted invoices, deliveries and orders. The plain-text formatter and exact Decimal decomposition remain unchanged.

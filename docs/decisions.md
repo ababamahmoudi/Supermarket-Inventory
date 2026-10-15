@@ -301,3 +301,11 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** allow the Cashier Notes route only when its fresh protected view contains an actual permitted custom notebook. The existing company/location/ACL projection and command checks continue to exclude built-in Notes, private routes and unauthorized contributions. Revoking the grant removes the route without deleting the entry. Project only the two retained selling amounts for each currently visible active selling Store; canonical manual markers, actor/decision metadata, costs and margins remain private. Render the permitted public comparison without calling the financial query; keep the existing private Manager comparison/margin path.
 
 **Why:** restore approved staff workflows without broadening financial authority or recreating prices from hidden costs. Regression checks cover real Provider routes, current ACL and company/location denials, public-pair isolation and retained native workflows. Executed results are recorded separately.
+
+## 039 — Print the complete permitted table independently of phone layout
+
+**Context:** the retained phone Payables print check found that responsive JavaScript removed the cheque column before the print stylesheet ran. The amount and payment record were intact, but the original cheque reference was absent from the printed DOM.
+
+**Decision:** the shared table observes native beforeprint/afterprint and print-media changes. Commit all currently permitted, explicitly enabled columns synchronously before print capture, suspend screen-only collapsing/compact rows, and release fixed screen column widths for the paper layout. Keep explicit hidden columns excluded and restore screen layout plus expanded rows afterward. This changes presentation only; protected queries, payment data, scope and money remain unchanged.
+
+**Why:** a phone viewport must not remove payment evidence from an authorized printed report. Regression checks retain DEMO-1001, the exact -$50.00 amount, worker Payables denial and ordinary desktop/phone controls. Physical printer alignment remains an unperformed hardware check.
