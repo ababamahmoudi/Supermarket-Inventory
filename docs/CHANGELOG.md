@@ -1,5 +1,10 @@
 # Project changelog
 
+## 2026-10-15 — Retain Payables typing on a location reselect
+
+- Keep supplier search text and focus when the current Payables location is selected again. Actual location changes and Clear filters retain their existing behavior.
+- Add actual Provider/repository delayed-refresh coverage, with unchanged ledger/product evidence, Clear filters and genuine Floor Worker denial checks. No pricing, financial authority or business records change.
+
 ## 2026-10-15 — Stable posted-invoice navigation
 
 - Prevent a late invoice workspace load from reopening the detail after browser Back. The existing protected route effect now owns the single workspace selection; invoice data, permissions and money stay unchanged.
