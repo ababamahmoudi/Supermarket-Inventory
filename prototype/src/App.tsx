@@ -162,7 +162,7 @@ export const pages: {
     fa: "پیگیری تاریخ",
     icon: Archive,
     group: "Daily",
-    capabilities: ["dates.read"],
+    capabilities: ["dates.read", "dates.add"],
   },
   {
     key: "notes",

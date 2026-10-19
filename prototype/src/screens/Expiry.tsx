@@ -183,6 +183,27 @@ export function Expiry() {
                 )?.name_en ?? "",
               ),
     );
+  if (!can("dates.read") && can("dates.add"))
+    // Everyone may add a date (recorded with who added it); the full list
+    // with other people's evidence stays with roles that may read it.
+    return (
+      <div className="date-tracking-page">
+        <PageHeader
+          title={t("Date tracking", "پیگیری تاریخ")}
+          description={t(
+            "Add an expiry or best-before date you found on the shelf.",
+            "تاریخ انقضا یا بهترین زمان مصرفی را که روی قفسه دیدید اضافه کنید.",
+          )}
+        />
+        <Card className="date-quick-card" title={t("Add date", "افزودن تاریخ")}>
+          <DateQuickAdd
+            key={requestedProduct ?? ""}
+            productCode={requestedProduct ?? undefined}
+            defaultLocation={branch}
+          />
+        </Card>
+      </div>
+    );
   if (!can("dates.read"))
     return (
       <EmptyState>

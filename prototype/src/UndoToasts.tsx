@@ -134,7 +134,11 @@ export default function UndoToasts() {
       cancelAnimationFrame(frame);
     };
   }, [host, undoToasts.length, user, locked, mustChangePassword]);
-  if (!user || locked || mustChangePassword || !undoToasts.length) return null;
+  // Only the person who did the action is offered its Undo.
+  const own = undoToasts.filter(
+    (item) => !item.actor_username || item.actor_username === user?.username,
+  );
+  if (!user || locked || mustChangePassword || !own.length) return null;
   return createPortal(
     <aside
       ref={stackRef}
@@ -142,7 +146,7 @@ export default function UndoToasts() {
       aria-label={t("Recent actions", "کارهای اخیر")}
     >
       <div aria-live="polite" aria-atomic="true">
-        <UndoToastItem key={undoToasts[0].id} toast={undoToasts[0]} />
+        <UndoToastItem key={own[0].id} toast={own[0]} />
       </div>
     </aside>,
     host,

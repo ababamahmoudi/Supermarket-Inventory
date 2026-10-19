@@ -33,11 +33,13 @@ import {
 import { demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
   addNote,
+  builtInNotebookKind,
   operationError,
   companyTimestamp,
   markNoteSeen,
   updateNoteStatus,
 } from "../operations";
+import { doneRuleDecision, isNoteAuthor } from "../note-engagement";
 import {
   addNotebookEntry,
   archiveNotebook,
@@ -54,7 +56,7 @@ import { configuredRoleLabel } from "../role-config";
 import { branchLabel } from "../settings";
 import { translateCount } from "../i18n";
 import { notesText } from "../c-notes-i18n";
-import { NotebookEditor } from "./NotebookSettings";
+import { BuiltInNoteSettings, NotebookEditor } from "./NotebookSettings";
 import {
   visibleNotebookView,
   readableNotebookEntryView,
@@ -212,6 +214,7 @@ export function Notes() {
   >({});
   const [message, setMessage] = useState<[string, string] | null>(null);
   const [editor, setEditor] = useState<NotebookDefinition | "new" | null>(null);
+  const [builtinSettings, setBuiltinSettings] = useState<string | null>(null);
   const [archiving, setArchiving] = useState<NotebookDefinition | null>(null);
   const [editing, setEditing] = useState<{
     entry: NotebookEntry;
@@ -473,6 +476,32 @@ export function Notes() {
     entity_id: item.id,
     mutation: true,
   });
+  // Done follows the notebook's "Who can mark notes done" setting.
+  const builtInDoneCapability = (item: NoteRecord): Capability | null => {
+    if (!actor) return null;
+    const rule = state.config.notebooks?.built_in?.find(
+      (record) => record.kind === builtInNotebookKind(item.type),
+    )?.done_rule;
+    const decision = doneRuleDecision(rule, actor);
+    if (decision === "denied") return null;
+    if (decision === "allowed") return "notes.read";
+    return item.type === "note_to_supervisor"
+      ? "notes.status_manage"
+      : "notes.operational_status";
+  };
+  const notebookDoneCapability = (
+    owner: NotebookDefinition,
+    item: NotebookEntry,
+  ): Capability | null => {
+    if (!actor) return null;
+    const decision = doneRuleDecision(owner.done_rule, actor);
+    if (decision === "denied") return null;
+    if (decision === "allowed")
+      return can("notebooks.read", recordScope(item)) ? "notebooks.read" : null;
+    return canAddNotebookEntryView(state, owner, context, can, item.branch)
+      ? "notebooks.entry_add"
+      : null;
+  };
   const seenByMe = (item: NoteEvidenceRecord) =>
     Boolean(
       item.seen_receipts?.some(
@@ -550,6 +579,16 @@ export function Notes() {
                   : undefined,
           }))}
         />
+        {isBuiltin && canManageNotebooks && activeTab !== "store_use" && (
+          <div className="actions notebook-manage-actions">
+            <Button
+              variant="plain"
+              onClick={() => setBuiltinSettings(activeTab)}
+            >
+              {t("Notebook settings", "تنظیمات دفترچه")}
+            </Button>
+          </div>
+        )}
         {notebook && canManageNotebooks && (
           <div className="actions notebook-manage-actions">
             <Button variant="plain" onClick={() => setEditor(notebook)}>
@@ -1031,7 +1070,11 @@ export function Notes() {
             ordered={item.type === "to_order" && noteIsDone(item)}
           />
           <div className="actions note-card-footer">
-            {seenByMe(item) ? (
+            {actor && isNoteAuthor(item, actor) ? (
+              <span className="muted note-own-hint">
+                {t("Your note", "یادداشت شما")}
+              </span>
+            ) : seenByMe(item) ? (
               <Button
                 variant="plain"
                 size="sm"
@@ -1067,12 +1110,8 @@ export function Notes() {
                 </Button>
               )
             )}
-            {can(
-              item.type === "note_to_supervisor"
-                ? "notes.status_manage"
-                : "notes.operational_status",
-              recordScope(item),
-            ) && (
+            {builtInDoneCapability(item) &&
+              can(builtInDoneCapability(item)!, recordScope(item)) && (
               <Button
                 variant={noteIsDone(item) ? "plain" : "tinted"}
                 size="sm"
@@ -1091,9 +1130,7 @@ export function Notes() {
                         ? ["Marked ordered.", "سفارش‌داده‌شده علامت‌گذاری شد."]
                         : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
                     false,
-                    item.type === "note_to_supervisor"
-                      ? "notes.status_manage"
-                      : "notes.operational_status",
+                    builtInDoneCapability(item)!,
                     item.branch,
                     item.id,
                   )
@@ -1196,7 +1233,11 @@ export function Notes() {
               canEditNotebookEntryView(state, context, can, item.id)) && (
               <div className="actions note-card-footer">
                 {owner.status_enabled &&
-                  (seenByMe(item) ? (
+                  (actor && isNoteAuthor(item, actor) ? (
+                    <span className="muted note-own-hint">
+                      {t("Your note", "یادداشت شما")}
+                    </span>
+                  ) : seenByMe(item) ? (
                     <Button
                       variant="plain"
                       size="sm"
@@ -1234,13 +1275,7 @@ export function Notes() {
                     )
                   ))}
                 {owner.status_enabled &&
-                  canAddNotebookEntryView(
-                    state,
-                    owner,
-                    context,
-                    can,
-                    item.branch,
-                  ) && (
+                  notebookDoneCapability(owner, item) && (
                     <Button
                       variant={noteIsDone(item) ? "plain" : "tinted"}
                       size="sm"
@@ -1257,7 +1292,7 @@ export function Notes() {
                             ? ["Reopened note.", "یادداشت دوباره باز شد."]
                             : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
                           true,
-                          "notebooks.entry_add",
+                          notebookDoneCapability(owner, item)!,
                           item.branch,
                           item.id,
                         )
@@ -1381,6 +1416,15 @@ export function Notes() {
             </div>
           )}
         </div>
+      )}
+      {builtinSettings && (
+        <BuiltInNoteSettings
+          kind={builtInNotebookKind(builtinSettings as NoteRecord["type"])}
+          title={tabs.find((item) => item.key === builtinSettings)?.label ?? ""}
+          onOpenChange={(open) => {
+            if (!open) setBuiltinSettings(null);
+          }}
+        />
       )}
       {editor && (
         <NotebookEditor

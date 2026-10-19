@@ -760,7 +760,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
           </div>
         </dl>
       </Card>
-      <Card className="price-update-status-card" data-undo-toast-host>
+      <Card className="price-update-status-card">
         <h2>{t("Status", "وضعیت")}</h2>
         <ol className="price-update-status-steps">
           <li className={seen || done ? "is-complete" : "is-pending"}>

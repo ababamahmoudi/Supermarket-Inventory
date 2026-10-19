@@ -10,7 +10,11 @@ import { demoSeed } from "./config";
 import { can, requireCapability, requireConcreteLocation } from "./permissions";
 import {
   appendSeenReceipt,
+  doneRuleDecision,
+  isNoteAuthor,
+  normalizeDoneRule,
   recordNoteCompletion,
+  type NoteDoneRule,
   type NoteEngagement,
 } from "./note-engagement";
 import {
@@ -40,6 +44,8 @@ export interface NotebookDefinition {
   status_enabled: boolean;
   notify_supervisor: boolean;
   notify_roles?: Role[];
+  /** Who may mark notes done; missing means anyone who can add notes. */
+  done_rule?: NoteDoneRule;
   archived: boolean;
   created_at: string;
   updated_at: string;
@@ -76,7 +82,7 @@ export type NotebookInput = Pick<
   | "fields"
   | "status_enabled"
   | "notify_supervisor"
->;
+> & { done_rule?: NoteDoneRule };
 export type NotebookEntryInput = Pick<
   NotebookEntry,
   "text" | "product_code" | "qty" | "date" | "measurement"
@@ -346,8 +352,16 @@ function validateDefinition(
     fail("roles");
   const measurement_unit = input.fields.measurement_unit.trim();
   if (input.fields.measurement && !measurement_unit) fail("unit");
+  const done_rule = normalizeDoneRule(input.done_rule);
+  if (
+    done_rule &&
+    (done_rule.roles.some((role) => !roles.includes(role)) ||
+      (!done_rule.roles.length && !done_rule.user_ids.length))
+  )
+    fail("done_rule");
   return {
     ...structuredClone(input),
+    done_rule,
     name_en,
     name_fa,
     read_roles: [...new Set([...companyRoles, ...input.read_roles])],
@@ -838,6 +852,8 @@ export function markNotebookEntrySeen(
     entity_id: record.id,
     mutation: true,
   });
+  // Seen tells the author that someone else read it; authors cannot mark their own.
+  if (isNoteAuthor(record, context)) fail("own_note");
   const receipt = appendSeenReceipt(record, context, at);
   markLinkedNoteNotificationsRead(state, context, record, at);
   if (!receipt) return;
@@ -866,15 +882,28 @@ export function updateNotebookEntryStatus(
   );
   if (!record) fail("scope");
   const notebook = definition(state, context, record.notebook_id);
-  if (!canAddNotebookEntry(state, notebook, context, record.branch))
-    fail("add_permission");
-  requireCapability(state, context, "notebooks.entry_add", {
-    company_id: record.company_id,
-    kind: "location_record",
-    location_ids: [record.branch],
-    entity_id: record.id,
-    mutation: true,
-  });
+  const decision = doneRuleDecision(notebook.done_rule, context);
+  if (decision === "denied") fail("done_permission");
+  if (decision === "allowed")
+    // Chosen people may mark done wherever they can read the note.
+    requireCapability(state, context, "notebooks.read", {
+      company_id: record.company_id,
+      kind: "location_record",
+      location_ids: [record.branch],
+      entity_id: record.id,
+      mutation: true,
+    });
+  else {
+    if (!canAddNotebookEntry(state, notebook, context, record.branch))
+      fail("add_permission");
+    requireCapability(state, context, "notebooks.entry_add", {
+      company_id: record.company_id,
+      kind: "location_record",
+      location_ids: [record.branch],
+      entity_id: record.id,
+      mutation: true,
+    });
+  }
   if (!notebook.status_enabled || !["open", "done"].includes(status))
     fail("status");
   if (record.status === status) return;
@@ -1036,6 +1065,67 @@ export function notebookError(
       "This note changed. Open it again before editing.",
       "این یادداشت تغییر کرده است. پیش از ویرایش، آن را دوباره باز کنید.",
     ],
+    own_note: [
+      "You wrote this note. Seen is for the people who read it.",
+      "این یادداشت را خودتان نوشته‌اید. «دیده‌شده» برای خوانندگان آن است.",
+    ],
+    done_permission: [
+      "Only the people chosen in this notebook's settings can mark its notes done.",
+      "فقط افرادی که در تنظیمات این دفترچه انتخاب شده‌اند می‌توانند یادداشت‌ها را انجام‌شده علامت بزنند.",
+    ],
+    done_rule: [
+      "Choose at least one role or person who can mark notes done.",
+      "دست‌کم یک نقش یا فرد را برای علامت‌گذاری انجام‌شده انتخاب کنید.",
+    ],
   };
   return t(...(messages[key] ?? messages.scope));
+}
+
+/**
+ * Owners and Managers choose who may mark a built-in notebook's notes done
+ * (for example only Supervisors, or named people). Stored in company config.
+ */
+export function saveBuiltInNoteDoneRule(
+  state: DemoState,
+  context: NotebookContext,
+  kind: string,
+  rule: NoteDoneRule | undefined,
+) {
+  context = freshActor(state, context);
+  company(state, context);
+  requireCapability(state, context, "notebooks.definition_manage", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
+  const entry = state.config.notebooks?.built_in?.find(
+    (item) => item.kind === kind,
+  );
+  if (!entry) fail("scope");
+  const done_rule = normalizeDoneRule(rule);
+  if (
+    done_rule &&
+    (done_rule.roles.some((role) => !roles.includes(role)) ||
+      (!done_rule.roles.length && !done_rule.user_ids.length))
+  )
+    fail("done_rule");
+  const before = structuredClone(entry);
+  if (done_rule) entry.done_rule = done_rule;
+  else delete entry.done_rule;
+  state.activity.unshift({
+    id: createId("activity"),
+    company_id: context.company_id,
+    branch: "all",
+    action: "notebook_updated",
+    by: context.actor,
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role: context.role,
+    at: new Date().toISOString(),
+    reversible: false,
+    before,
+    after: structuredClone(entry),
+    entity_type: "notebook",
+    entity_id: kind,
+  });
 }

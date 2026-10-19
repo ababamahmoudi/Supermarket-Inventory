@@ -43,8 +43,9 @@
     display: grid;
     grid-template-columns:
       28px minmax(140px, 1.3fr) minmax(90px, 0.8fr) minmax(128px, 1fr)
-      minmax(140px, 1.4fr) minmax(98px, 0.8fr) 160px;
-    gap: 12px;
+      minmax(140px, 1.4fr) minmax(150px, 1fr) 160px;
+    gap: 12px 20px;
+    padding-inline: 16px;
   }
   .price-updates-table-header {
     align-items: center;
@@ -74,7 +75,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    white-space: nowrap;
     font-size: var(--font-size-caption);
   }
   .price-updates-steps > span {

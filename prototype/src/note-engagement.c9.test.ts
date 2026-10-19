@@ -47,18 +47,20 @@ describe("C9 independent note seen receipts and completion", () => {
     const count = state.activity.length;
     markNoteSeen(state, manager, note.id);
     expect(state.activity).toHaveLength(count);
-    const beforeWorker = cloneWithAuthority(state);
-    markNoteSeen(state, worker, note.id, new Date("2026-10-19T13:15:00Z"));
-    attachReversals(beforeWorker, state, worker);
+    // Ali's rule (Oct 2026): the author cannot mark their own note as seen.
+    expect(() => markNoteSeen(state, worker, note.id)).toThrow("own_note");
+    const beforeOwner = cloneWithAuthority(state);
+    markNoteSeen(state, owner, note.id, new Date("2026-10-19T13:15:00Z"));
+    attachReversals(beforeOwner, state, owner);
     expect(note.status).toBe("open");
     expect(note.seen_receipts?.map((row) => row.user_id)).toEqual([
       manager.user_id,
-      worker.user_id,
+      owner.user_id,
     ]);
     reverseActivity(state, manager, managerAction.id, "undo");
     const restored = state.notes.find((row) => row.id === note.id)!;
     expect(restored.seen_receipts?.map((row) => row.user_id)).toEqual([
-      worker.user_id,
+      owner.user_id,
     ]);
     expect(
       state.notifications?.find((row) => row.id === managerNotice.id)?.read_at,
