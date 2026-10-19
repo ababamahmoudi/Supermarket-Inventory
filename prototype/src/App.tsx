@@ -566,7 +566,13 @@ function hasSessionDisplayHint() {
     return false;
   }
 }
-function PendingSessionShell({ collapsed }: { collapsed: boolean }) {
+function PendingSessionShell({
+  collapsed,
+  loading = false,
+}: {
+  collapsed: boolean;
+  loading?: boolean;
+}) {
   const { state, t, lang } = useDemo();
   return (
     <div
@@ -599,7 +605,15 @@ function PendingSessionShell({ collapsed }: { collapsed: boolean }) {
           <LanguageToggle />
           <SessionProgress label={t("Loading…", "در حال بارگذاری…")} />
         </header>
-        <main className="main-content" />
+        <main className="main-content">
+          {loading && (
+            <InitialSessionLoading>
+              <p role="status" className="sr-only">
+                {t("Loading…", "در حال بارگذاری…")}
+              </p>
+            </InitialSessionLoading>
+          )}
+        </main>
       </div>
     </div>
   );
@@ -922,7 +936,7 @@ export default function App() {
   // A returning signed-in person sees the app frame at once (never a blank
   // page), including when Safari reloads the page. The hint is display-only.
   if (authStage === "loading" && hasSessionDisplayHint())
-    return <PendingSessionShell collapsed={effectiveCollapsed} />;
+    return <PendingSessionShell collapsed={effectiveCollapsed} loading />;
   if (authStage === "loading")
     return (
       <InitialSessionLoading>

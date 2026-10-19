@@ -381,7 +381,7 @@ it("Stop requires an explicit keep or clear choice, hides retained dates, and ca
     '"removal_action":"stop_tracking"',
   );
 });
-it("workers can add and remove local dates while Cashiers only see their next scoped date", async () => {
+it("workers can add and remove local dates while Cashiers add dates but only see their next scoped date", async () => {
   const user = await show();
   await user.click(screen.getByRole("button", { name: "Seed manual date" }));
   await waitForFixtureAction("seeded");
@@ -408,6 +408,10 @@ it("workers can add and remove local dates while Cashiers only see their next sc
     () => expect(screen.getByTestId("actor-role")).toHaveTextContent("cashier"),
     { timeout: 3000 },
   );
-  expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
+  // Ali's rule (Oct 2026): everyone adds dates; Cashiers still cannot remove
+  // them or read other people's date evidence.
+  expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
+  expect(screen.queryByText("Checked shelf")).not.toBeInTheDocument();
   expect(screen.getByText(/Expires/)).toHaveTextContent("North York");
 });

@@ -6,6 +6,8 @@
   --klead-neutral: #eef0f3;
   --klead-hairline: #e6e7eb;
   --klead-row-divider: #eef0f3;
+  --klead-field-border: #dcdfe5;
+  --klead-field-border-hover: #c4c8d0;
   --klead-ink: #141a2b;
   --klead-secondary: #5a6070;
   --klead-group-text: #6b7180;
@@ -148,6 +150,8 @@
   --klead-page: #0e1117;
   --klead-surface: #181c25;
   --klead-field: #222734;
+  --klead-field-border: rgba(255, 255, 255, 0.14);
+  --klead-field-border-hover: rgba(255, 255, 255, 0.24);
   --klead-neutral: #222734;
   --klead-hairline: rgba(255, 255, 255, 0.08);
   --klead-row-divider: rgba(255, 255, 255, 0.08);

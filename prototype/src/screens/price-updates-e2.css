@@ -269,7 +269,7 @@
 }
 .price-update-status-steps > li.is-complete {
   background: var(--approved-bg);
-  border-color: transparent;
+  border-color: var(--color-clear);
 }
 .price-update-status-steps > li.is-complete .price-update-status-icon {
   background: var(--approved);

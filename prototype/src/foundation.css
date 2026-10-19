@@ -8,17 +8,13 @@
  */
 
 :root {
-  --field-border: #dcdfe5;
-  --field-border-hover: #c4c8d0;
+  --field-border: var(--klead-field-border);
+  --field-border-hover: var(--klead-field-border-hover);
   --link-text: var(--accent-tint-text);
   --list-box-border: var(--klead-hairline);
   --empty-value: var(--text-muted);
   --table-edge-padding: 16px;
   --table-cell-padding: 12px;
-}
-:root[data-theme="dark"] {
-  --field-border: rgba(255, 255, 255, 0.14);
-  --field-border-hover: rgba(255, 255, 255, 0.24);
 }
 
 /* ── Fields: always look editable, on white cards and on grey panels ── */
@@ -44,7 +40,7 @@
 :root :is(.field input, .field textarea, .password-field input, .ui-input, textarea)[aria-invalid="true"] {
   border-color: var(--danger);
   background: var(--surface);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+  box-shadow: var(--shadow-none);
 }
 :root :is(.field input, .field textarea, .ui-input, textarea):disabled {
   border-style: dashed;
