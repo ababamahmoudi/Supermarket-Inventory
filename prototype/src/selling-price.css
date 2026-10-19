@@ -114,11 +114,27 @@
   align-items: center;
 }
 .c9-hero-price > .selling-price-value {
-  font-size: var(--font-size-lookup-price);
-  line-height: var(--line-height-lookup-price);
+  font-size: var(--font-size-product-price);
+  line-height: var(--line-height-product-price);
 }
 .c9-hero-price .selling-price-current {
-  font-weight: var(--font-weight-lookup-price);
+  font-weight: var(--font-weight-product-price);
+}
+:root .product-page-price-card .c9-product-price {
+  gap: 16px;
+}
+:root .c9-product-price :is(.c9-regular-line, .c9-sale-details) {
+  margin-block: 0;
+}
+del.sale-regular-price .selling-price-current {
+  text-decoration-line: line-through;
+  font-weight: var(--font-weight-body);
+}
+:root
+  .product-page
+  .c9-sale-details
+  .ui-button.button-plain.c9-end-sale-action {
+  color: var(--danger);
 }
 .c9-regular-line {
   margin-block: 8px;

@@ -81,6 +81,9 @@
   --line-height-caption: 1rem;
   --font-weight-caption: 600;
   --font-size-label: 0.8125rem;
+  --font-size-product-price: 2.75rem;
+  --line-height-product-price: 3rem;
+  --font-weight-product-price: 800;
   --font-size-lookup-price: 3.75rem;
   --line-height-lookup-price: 3.75rem;
   --font-weight-lookup-price: 800;

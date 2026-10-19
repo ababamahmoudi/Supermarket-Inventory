@@ -126,7 +126,7 @@
   }
 }
 
-.note-card-footer .note-seen-by-you:disabled {
+:root .note-card-footer .ui-button.note-seen-by-you:disabled {
   opacity: 1;
   color: var(--approved);
 }

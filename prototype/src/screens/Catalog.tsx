@@ -1672,7 +1672,12 @@ function ProductSalePanel({ product }: { product: Product }) {
           <Button variant="neutral" size="sm" onClick={() => setChanging(true)}>
             {salesText(t, "changeSale")}
           </Button>
-          <Button variant="plain" size="sm" onClick={() => setEnding(true)}>
+          <Button
+            variant="plain"
+            size="sm"
+            className="c9-end-sale-action"
+            onClick={() => setEnding(true)}
+          >
             {salesText(t, "endNow")}
           </Button>
         </div>
@@ -1739,7 +1744,7 @@ function ProductPrice({ product }: { product: Product }) {
           .toFixed(0, Decimal.ROUND_HALF_UP)
       : null;
   return (
-    <div className="stack">
+    <div className="stack c9-product-price">
       <div className="c9-hero-price">
         {approved ? (
           <SalePrice product={product} comparison={false} />
@@ -1913,7 +1918,7 @@ function ProductDetail({ product }: { product: Product }) {
   return (
     <>
       <div
-        className={`product-page-top-cards${!mayReadCost ? " without-private-cost" : ""}`}
+        className={`product-page-top-cards${!mayReadCost || location === "all" ? " without-private-cost" : ""}`}
       >
         <Card className="product-page-price-card">
           <h2>
