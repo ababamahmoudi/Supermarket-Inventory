@@ -1,0 +1,15 @@
+{
+  "report": "c8-c5-native-seventh",
+  "source": "f4111e3",
+  "stats": {
+    "startTime": "2026-10-19T04:21:38.091Z",
+    "duration": 496942.327,
+    "expected": 58,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "global_errors": 0,
+  "report_sha256": "97a81450b4db2c1a26c704f52ea175837b0dc713bb71c4d5443c4ee69898a01a",
+  "cli_exit": 0
+}

@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-19 — C9 review and faster prototype CI
+
+- Complete separate CI PR25: static prototype checks plus four independent30-minute Playwright shards and the required aggregate browser check; foundation and original runner settings unchanged. Merge green C8,E1,E2,E3 in order after ordinary main integrations; preserve their commit histories.
+- Keep public shell chrome and restored theme during session changes; add the dark non-localhost frame/no-reload test, with WebKit scoped only to that test. Retain decided sale requests, immutable decision terms and explicit regular-price/sale conflict resolution with verified additive legacy repair.
+- Add per-person Notes seen receipts, completion attribution, independent eight-second Undo, reopen, filters and in-page notebook management. Use shared selling prices, real sale terms, cents-only read-only costs, consistent40px filters, compact request rows and one combined request item field; retain all physical, financial and permission behavior.
+- Correct reference Product/Lookup/table layouts, phone Labels allocation and Notes dates, RTL formula/date ordering and live translated decision messages. Restore Wi-Fi/VM/Network guidance without localhost-only overrides; no Internet hosting was created.
+- Publish40untouched screenshots with references, manual comparisons, source/asset hashes and source-specific local verification. C9 remains for owner review, unmerged; live GitHub Checks supply its exact-head CI result. Preserve and describe earlier failed/interrupted local attempts; no physical Safari/phone/printer claim.
+
 ## 2026-10-18 — Restore device access in the startup instructions
 
 - Remove the localhost-only override from the current Ubuntu and phone guides. The existing preview command already listens on all network interfaces; no application or pricing change is required.

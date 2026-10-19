@@ -1,6 +1,6 @@
-# C9 review — in progress
+# C9 review
 
-C9 corrects the loading flash, decided sale requests, sale/regular-price interaction, Notes engagement, selling-price display, filter bars and Branch request presentation. It keeps the existing fictional data, pricing rules, permissions, documents and financial/physical evidence. This review is being assembled; results and screenshots below must be replaced by actual executed evidence before the PR is presented as complete.
+C9 corrects the loading flash, decided sale requests, sale/regular-price interaction, Notes engagement, selling-price display, filter bars and Branch request presentation. It keeps the existing fictional data, pricing rules, permissions, documents and financial/physical evidence. The implementation and local review packet are complete. C9 stays unmerged for owner review; use its live GitHub Checks for the final exact-head CI status.
 
 Branch: `feat/prototype-c9`, created from main `d1fcb4ffdf55e4bb33792aa2564790dbac473e0b` after the approved feature merges. Settings is deferred except removing Notes; notebook management lives on Notes. No later feature PR or hosting deployment is part of C9.
 
@@ -61,6 +61,10 @@ Expect `feat/prototype-c9`, a completed install/build and **Local** and **Networ
 
 ## Tests, screenshots and comparison
 
-Pending final integration. WebKit is scoped to only the new non-localhost no-reload test; the original Chromium desktop/phone suite remains. Capture all requested Products, Product, Lookup, Labels, Notes, Price updates, Date tracking, Branch requests/new request and Rejected Approvals scenes in EN light, EN dark, Persian and phone, and inspect each beside the matching [original Prices/Notes/Lists pictures](design-references/c9/README.md). List retained function controls and every remaining visual difference honestly. Do not treat this checklist as executed proof.
+[Open all40 screenshots next to their matching references, with every recorded difference](evidence/c9/COMPARISON.md). The set covers10scenes × English light, English dark, Persian light and390px phone. The capture exited0 with unchanged clean source882a381, zero browser/console/request errors, overflow and layout failures; all40 originals were manually reviewed. [Source-specific executed tests and earlier failures](evidence/c9/README.md).
+
+Local results: full application1,504 +SDK75 at10d2667, later affected checks27/27 and15/15, final lint/build0, all61served production files matched. Original C8/C5 native58/58; separate price/Notes22passed2new duplicate-phone skips; final E2/Branch/C9 replay22passed2new duplicate-phone skips, no failures. Scopes overlap and are not summed. All23 seed pricing cases remain included. The new WebKit project runs only its one no-reload test; original Chromium desktop/phone projects and existing budgets remain. Local LAN access403prevents a local LAN/WebKit claim; require all four GitHub shards and **Prototype browsers** before treating CI as green.
+
+The reference comparison uses genuine data and retained controls. In particular, historical requests have no frozen original regular price, so their cards omit “instead of” rather than inventing a comparison. Phone forms retain quantity/unit/pack/note controls, task-detail print confirmation and existing private cost rules. Settings remains deferred except removing Notes. No next feature PR has started.
 
 Real Mac Safari, physical phone installation, printers/registers and hosted Internet access are unverified unless actual evidence is later added. C9 does not add a backend, real AI, cross-device data synchronization or camera barcode decoding.

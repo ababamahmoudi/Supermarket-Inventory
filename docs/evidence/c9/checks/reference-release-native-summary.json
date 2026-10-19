@@ -1,0 +1,15 @@
+{
+  "report": "reference-release-native",
+  "source": "882a381908b6a39c0f883319cb1a6062708b92c8",
+  "stats": {
+    "startTime": "2026-10-19T04:49:23.653Z",
+    "duration": 205995.821,
+    "expected": 22,
+    "skipped": 2,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "global_errors": 0,
+  "report_sha256": "c7d2b6fcd4c4b9ea8c88168f4bffe8a96273b1640412d774d36b306b77474254",
+  "cli_exit": 0
+}

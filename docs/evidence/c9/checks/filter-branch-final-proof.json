@@ -1,0 +1,35 @@
+{
+  "build": {
+    "command": "npm run build",
+    "runtime": "Node 22.23.3",
+    "exit_code": 0,
+    "log": "/tmp/c9-proof/filter-production-build-fifth.log"
+  },
+  "served_byte_proof": "/tmp/c9-proof/filter-production-build-fifth-served.json",
+  "browser": {
+    "command": "playwright test tests/filters-c9.spec.ts tests/branch-requests-c2.spec.ts --workers=2 --reporter=line --output=/tmp/c9-proof/filter-branch-browser-fifth-results",
+    "runtime": "Node 22.23.3",
+    "browser": "/usr/bin/chromium",
+    "exit_code": 0,
+    "passed": 12,
+    "failed": 0,
+    "scoped_skips": 6,
+    "log": "/tmp/c9-proof/filter-branch-browser-fifth.log",
+    "results": "/tmp/c9-proof/filter-branch-browser-fifth-results"
+  },
+  "geometry": {
+    "languages": [
+      "en",
+      "fa"
+    ],
+    "widths": [
+      1440,
+      900,
+      390
+    ],
+    "lists_per_case": 12,
+    "filter_control_px": 40,
+    "ordinary_phone_header_control_px": 44
+  },
+  "preserved_prior_failure": "/tmp/c9-proof/filter-branch-browser-fourth.log"
+}

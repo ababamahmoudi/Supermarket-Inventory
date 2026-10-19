@@ -1,0 +1,257 @@
+{
+  "reviewer": "c9_persian_review",
+  "reviewed_at": "2026-10-19T04:55:03.224360+00:00",
+  "source_head": "882a381908b6a39c0f883319cb1a6062708b92c8",
+  "source_fingerprint": "8a15de3634648c52a3acc9ca174414dd8b6a8e53310820beb84fd3bc7bf3a69b",
+  "variant": "fa-light",
+  "capture_root": "/tmp/c9-release-captures",
+  "method": "Actual view_image inspection of all ten release full-page PNGs at original detail, compared with the three supplied reference images already inspected in the first review. Each release PNG hash independently recomputed and matched to manifest. Read-only: no source edits, browser sessions, tests or builds during this release review.",
+  "common_remaining_differences": [
+    "Application top bar, configured Super Arzon sidebar/logo/account, breadcrumbs and real navigation remain; reference images are content excerpts without this chrome.",
+    "RTL mirroring and Vazirmatn Persian typography replace English reference direction/typography. Real records, prices, stores, people and dates are retained. Product names use Persian primary and English secondary.",
+    "Shell leaves less content width than the reference excerpts; shared filters wrap where required. Actual operational forms and lower page sections remain."
+  ],
+  "references": {
+    "Prices": {
+      "path": "/tmp/c9-release-captures/references/Prices.png",
+      "sha256": "516bd65297ade3879e8da78bc340c43c1c97a65ec6d1ffeed654087bbb452671",
+      "unedited_copy": true
+    },
+    "Notes": {
+      "path": "/tmp/c9-release-captures/references/Notes.png",
+      "sha256": "04da1723ad0bbf36d21833ead1cd8a081ddabbf6bfec2bc3d50be2bb7436dd85",
+      "unedited_copy": true
+    },
+    "Lists": {
+      "path": "/tmp/c9-release-captures/references/Lists.png",
+      "sha256": "6ccfc490ed393d5d085ca4261fdcea9b934c429197f9fa4815f65dc12905a44e",
+      "unedited_copy": true
+    }
+  },
+  "critical_checks": {
+    "arithmetic": "PASS: product formula visibly $12.60 ÷ 0.60 → $20.99.",
+    "lookup_sale_hero": "PASS: actual $16.99 hero, Sale pill, struck $20.99 and end-date line below; result price above offer.",
+    "rejected_translation_and_dates": "PASS: localized رد شد and chronological isolated 2026-10-19 – 2026-11-01.",
+    "new_request_primary_language": "PASS: Persian primary oil name and full-width location selector halves.",
+    "price_update_desktop_columns": "PASS: Product/Store/Price/Why/Done-so-far plus Print label, checkbox and chevron.",
+    "sale_regular_atomic": "PASS: compared regular/current values remain one line; weight units remain separate end-aligned lines.",
+    "offer_and_request": "PASS: blue sale/offer dots and amber requested $7.99 remain distinct from prices.",
+    "sale_margins": "PASS: Manager sees both genuine sale and regular margins.",
+    "clipping_overlap_readability": "PASS: no clipping, overlap, broken words or unreadable units found across all ten originals."
+  },
+  "historical_regular_snapshot_evidence": {
+    "source": "prototype/src/sales.ts SaleRequest and ApprovedSaleTerms; prototype/src/offers-read-model.ts SaleRequestReadDTO",
+    "finding": "No original regular-price snapshot exists on sale requests or their frozen approved terms. The frozen terms contain sale price, unit and dates only. Rejected card therefore intentionally omits the reference regular-price comparison."
+  },
+  "blocking_defects": [],
+  "scenes": [
+    {
+      "scene": "products",
+      "path": "/tmp/c9-release-captures/products-fa-light.png",
+      "sha256": "4ca352b7a6ef946a8a78c7927ac697c067cca117f2ec216c71cae1fc605648d6",
+      "manifest_hash_matches": true,
+      "reference": "Prices",
+      "dimensions": [
+        1440,
+        1929
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Full 16-row RTL list inspected. Pot $20.99 struck regular and bold $16.99 remain one atomic line. Almonds show separate end-aligned $7.49/lb and $16.51/kg. Blue offers and amber requested $7.99 are in their own Offer column; names, codes, units and actions remain readable and contained.",
+      "remaining_differences": [
+        "Actual catalog contains 16 Persian-sorted rows rather than the six selected English reference rows. Pot is lower in the list; rice is a genuine regular $23.99 item rather than the reference rice-sale example. Additional genuine offers are retained.",
+        "Page heading/description/Add product, search/category/AI-category/status/supplier controls, four filter chips, count/Columns, Edit/menu/chevron/expander actions and pagination remain. The reference is only a table excerpt.",
+        "Default visible columns omit reference Store cost, Margin and approval Status; existing Columns configuration controls those. Product names include a third package-size line. Filters wrap to two rows within the reduced app-shell content width."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "product-sale",
+      "path": "/tmp/c9-release-captures/product-sale-fa-light.png",
+      "sha256": "76c7215bcdef2f80c52ea56b9a65d777f5cb6b962cd63d64fc5e0bc397e4ccbf",
+      "manifest_hash_matches": true,
+      "reference": "Prices",
+      "dimensions": [
+        1440,
+        2240
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Mirrored 3:2 Price/Cost row and full-width Dates below are contained. Large $16.99, 19% Sale pill, struck $20.99, before-tax hint and grey Ends/Stores/Started/After panel are clear. The complete formula visibly reads $12.60 ÷ 0.60 → $20.99 in left-to-right arithmetic order. Permitted Manager sees both 25.84% sale and 39.97% regular margins. Full lower sections inspected without overlap.",
+      "remaining_differences": [
+        "Real sale ends Oct 29, started Oct 15 by Demo Manager, applies at North York, and last receipt is Sep 28; reference says Oct 28, Oct 14, all three stores and Sep 27. Actual margins use 25.84%/39.97% rather than one-decimal reference display.",
+        "Separate divisor row, company-default scope, Dates/Add date, Details, Prices by store, Deliveries, Product batches, Cost history and History remain below the two-card reference excerpt.",
+        "Provenance is one continuous line rather than a label/value pair. Last received shows date and invoice link rather than reference date/supplier. Before-tax/tax hint uses the actual localized taxable state."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "lookup-sale",
+      "path": "/tmp/c9-release-captures/lookup-sale-fa-light.png",
+      "sha256": "7f4d0c725d56e349d24c39d18fe7eb0b64be7ccb174b1354d71c3bec99097e31",
+      "manifest_hash_matches": true,
+      "reference": "Prices",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Actual selected pot sale hero is present, with 60 px $16.99, Sale pill and before-tax/taxable text. Regular $20.99 and Oct 29 end date now form the line below the charge. Selected result shows atomic struck/current prices above blue sale/end line and neutral tax text. No clipping, overlap or broken amounts.",
+      "remaining_differences": [
+        "Actual code search 0012 yields one pot result; reference illustrates three different results. Actual end is Oct 29 and last receipt Sep 28.",
+        "Cashier heading/description, search/scan, category chips, Clear filters/count, keyboard hint, Edit/overflow and original details remain.",
+        "Detail card and result card stack vertically in an 880 px measure instead of the reference side-by-side excerpts. Taxable is neutral beside blue offer text. Empty dates are a single line rather than reference Dates label/value."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "labels",
+      "path": "/tmp/c9-release-captures/labels-fa-light.png",
+      "sha256": "27ffe565fac4d698a73bf82d7339cc8b80d9d9606419522360e82d1d125191ee",
+      "manifest_hash_matches": true,
+      "reference": "Prices",
+      "dimensions": [
+        1440,
+        1632
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Full 16-row RTL list inspected. Checkbox/Product/Code/Offer/end-Price proportions remain distinct. Pot regular/current pair is atomic; blue offer dots and amber request remain readable. Both almond unit lines are end-aligned. No bunching, clipping or overlap.",
+      "remaining_differences": [
+        "All actual catalog rows are shown rather than three examples. The actual sale is pot ending Oct 29; rice remains regular $23.99. Pending barberries correctly show no approved price.",
+        "Heading/description, Products/Waitlist/Templates tabs, search/dropdowns, three filter chips, count and Select all filtered results strip remain above the reference table excerpt.",
+        "Filters wrap into two rows in the app shell. Table layout is the required RTL mirror and retains the fixed column proportions."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "notes-seen-done",
+      "path": "/tmp/c9-release-captures/notes-seen-done-fa-light.png",
+      "sha256": "1d368d2d8bb80905720cd82e47dc72de6f9d253d7f195348c04bc02c3b63c229",
+      "manifest_hash_matches": true,
+      "reference": "Notes",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "For managers wording, All segment and Not seen by me chip are localized. Actual Done card shows green actor/timestamp and plain Reopen. Actual Seen card has ordered Floor Worker/you receipts, green disabled Seen by you and explicit Mark done below a hairline. Independent Done/Not seen yet state on the first card is represented correctly. No clipped or overlapping receipt/footer text.",
+      "remaining_differences": [
+        "All is selected to show two exercised real notes, rather than reference Open selection and four illustrative Open/Seen/Ordered/custom cards. The new English note sentence is actual user-entered note data.",
+        "Real success banner and Show archived notebooks link are retained. Selected built-in notebook has no Edit notebook action. Done card still permits Mark as seen because the current Manager has no receipt, unlike the simplified reference Ordered card.",
+        "Cards use a right-aligned 960 px measure and normal shared-control geometry. This capture does not include the reference custom-notebook sample or an Ordered card."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "price-updates",
+      "path": "/tmp/c9-release-captures/price-updates-fa-light.png",
+      "sha256": "19759aa0de3300ec14220a6b0df79fc6c1a4e3820de0c955f7563bda61962ff2",
+      "manifest_hash_matches": true,
+      "reference": "Lists",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Desktop RTL Product/Store/Price/Why/Done so far columns and Print label action are now present and aligned beneath their headings. Actual historical $6.99 is struck and followed by arrow/current $6.49; the amount group remains atomic. Pending/Done, location, date, count and Store progress share the 40 px filter line. No collision, clipping or overlap.",
+      "remaining_differences": [
+        "One actual pending Black Tea task at Richmond Hill is shown rather than two illustrative tasks. Actual completion is 0 of 2 steps. Actor attribution retains its stored English Demo Manager name within the localized reason.",
+        "Original task checkbox and end chevron remain in addition to Print label; the reference excerpt has no checkbox/chevron.",
+        "Historical price transition retains an arrow between struck old and current amounts, whereas reference shows struck old then current without an arrow. Actual Why text wraps at a space over two lines within its column."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "dates",
+      "path": "/tmp/c9-release-captures/dates-fa-light.png",
+      "sha256": "97f7d5186116d0988a71ddadc43757e373d18014d551a0db063d45274156217b",
+      "manifest_hash_matches": true,
+      "reference": "Lists",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "RTL search, segmented track and dropdowns are visibly 40 px and share the first-row center line. Count and Columns stay at the end of the wrapped row. Both table records, dates, sources and actions remain contained and readable. No clipping, overlap or split date/unit.",
+      "remaining_differences": [
+        "Shows real bread Oct 24 and juice Nov 12 records with supplier/invoice/date provenance; reference only demonstrates the filter bar.",
+        "Add date form/More, real date table, remove/menu/chevron/expander actions and stock disclaimer are retained.",
+        "Count and Columns wrap to a second filter line because the retained shell narrows the list; reference has all filter controls on one line. Card/filter inset remains 20 px."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "branch-requests",
+      "path": "/tmp/c9-release-captures/branch-requests-fa-light.png",
+      "sha256": "ac8fc2102e558c78054ebe2a72bb96cb7be6f09fef39fad9d5263ba5cb3a5484",
+      "manifest_hash_matches": true,
+      "reference": "Lists",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Normal RTL row has bold REQ-0001, one-item/oil description below, source on the right and destination on the left with correct directional arrow, blue status dot/words, whole date and one end chevron. No clipping, overlap or broken name.",
+      "remaining_differences": [
+        "Actual request is dated Oct 19 rather than reference Oct 18. Same configured North York to Richmond Hill route and one oil item.",
+        "Page heading/New request remain above the card. Filter tabs/search/status/location controls remain inside it.",
+        "Row follows the reference structure after RTL mirroring; remaining size/spacing differences reflect the shared app shell and actual Persian typography."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "new-branch-request",
+      "path": "/tmp/c9-release-captures/new-branch-request-fa-light.png",
+      "sha256": "5965fe4b6f59bab54f8bf5e6a4034c7dba0829b7d905c035e5fdbd1132e5f99b",
+      "manifest_hash_matches": true,
+      "reference": "Lists",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Ask/Deliver selectors now fill both halves of the bounded form. Selected oil has Persian primary name and English secondary. One Items section contains genuine quantity 2, unit choice, Remove, optional note and combined add-product/free-text field. Mirrored footer has hairline and end-aligned Cancel/Save draft/Send actions. No clipping, overlap or broken fragments.",
+      "remaining_differences": [
+        "Actual unsaved request uses 2 units, whereas the reference example uses 2 cases. Configured Persian location/product names are retained.",
+        "Page title/Back link, quantity-unit choice, optional note and retained product code/unit size are legitimate existing controls absent from the simplified reference.",
+        "The selected-item panel is taller than the compact reference item row because it retains quantity/mode/note controls. Form is a standalone right-aligned bounded page instead of an excerpt below the list."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    },
+    {
+      "scene": "approvals-rejected",
+      "path": "/tmp/c9-release-captures/approvals-rejected-fa-light.png",
+      "sha256": "4e8e4cd31c15f5e7bc898e102a8fb484a9c43b9c0c3b041a1d22e1abcf8b06a7",
+      "manifest_hash_matches": true,
+      "reference": "Lists",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "actual_original_image_inspected": true,
+      "visual_findings": "Rejected count 1 and all other decision-tab counts are visible. Success message is now localized as رد شد. Actual request shows $7.99, store, a whole chronologically ordered 2026-10-19 – 2026-11-01 range, requester, deciding Manager, timestamp and full reason. No decision action buttons, clipping or overlap.",
+      "remaining_differences": [
+        "Real date interval is Oct 19–Nov 1 and actual decision is Oct 19. Actual entered English reason is Keep the current price until the next delivery is reviewed, rather than the reference Not now.",
+        "Page title/description, external decision tabs, Sale requests section title and real localized success message remain; reference places tabs inside the excerpt card and uses an extra Sale request badge.",
+        "Requested $7.99 has no instead of $9.49 comparison: SaleRequest/ApprovedSaleTerms store no frozen original regular price, so displaying today's mutable regular price would be historically false. This is an honest reference limitation, not a missing current-price lookup.",
+        "Full-width decided card has more vertical space than the compact reference excerpt."
+      ],
+      "defects": [],
+      "status": "Reviewed; no blocking visual defect"
+    }
+  ],
+  "summary": {
+    "images_actually_inspected": 10,
+    "hashes_matched": 10,
+    "blocking_visual_defects": 0,
+    "reference_pixel_identical": false,
+    "remaining_differences": "Explicitly listed per scene, including legitimate actual data/extra controls and the missing immutable historical regular-price comparison."
+  }
+}
