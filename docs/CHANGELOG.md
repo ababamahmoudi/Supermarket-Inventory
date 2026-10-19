@@ -1,5 +1,10 @@
 # Project changelog
 
+## 2026-10-19 — Native WebKit verified; proof-helper alignment
+
+- Wait for all four shards/seven checks on be25d01c: native WebKit's one network no-reload case passes; foundation and prototype static pass. Browser totals779passed/12failed/50existing-skipped/0flaky. Every failure is the same stale Blob-only raw inspector in the shared C8 proof script, not a demonstrated missing original.
+- Align only `readC8OriginalSHA` with legacy Blob and valid versioned ArrayBuffer rows, retaining the native SHA-256 oracle, all35existing assertion/poll calls, controls and fail-closed handling. App, tests, worker/retry/skip/time budgets and workflow are unchanged. Original12affected native cases pass12/12 with no retries/skips, actual exit0; scoped lint/formatting pass. Retain the exact failed CI, native success proof and source-bound local verification; require new exact-head CI and leave C9 unmerged. [Follow-up evidence](evidence/c9/webkit-startup/capture-helper/README.md).
+
 ## 2026-10-19 — WebKit attachment persistence repair (verification in progress)
 
 - The completed f371 diagnostic identifies IndexedDB's Blob/File preparation failure during startup. Its dates were valid ISO dates; the earlier date repair is separate hardening. All four browser shards finished: 790 passed, 50 existing skips, one WebKit failure, no flaky cases; foundation and prototype static/unit/pricing/build passed. Correct the earlier apparent queue interpretation using actual job-step timestamps.

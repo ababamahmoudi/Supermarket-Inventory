@@ -1,5 +1,7 @@
 # Confirmed WebKit attachment-storage repair
 
+**Later verification:** the complete be25d01c run passed the actual native WebKit network no-reload case. Its remaining12browser failures all came from one old raw-Blob proof helper, now aligned without changing the app or existing assertions. See the [native result and helper follow-up](../capture-helper/README.md). The original failed/local evidence below remains historical and is not relabelled.
+
 Native CI identifies the startup failure as IndexedDB `UnknownError`, code0: **Error preparing Blob/File data to be stored in object store**, followed by `FileStorageError: unavailable`. The configured/resolved Toronto date was valid `2026-10-19` in every diagnostic snapshot. The [date-format repair](../date-format/README.md) is separate portability hardening; it is not the cause observed in these native runs.
 
 All four shards finished before either diagnostic assessment was reported:

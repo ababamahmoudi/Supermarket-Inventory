@@ -403,11 +403,33 @@ export async function readC8OriginalSHA(page, reference) {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
-      if (!(record?.source instanceof Blob))
+      if (!record || typeof record !== "object" || Array.isArray(record))
         throw new Error("The original evidence is missing.");
+      let source = record.source;
+      if (!("binary_encoding" in record) && source instanceof Blob) {
+        // Retained originals from the existing Blob representation stay valid.
+      } else {
+        if (
+          record.binary_encoding !== "array-buffer-v1" ||
+          typeof record.source_mime_type !== "string"
+        )
+          throw new Error("The original evidence is missing.");
+        try {
+          const byteLength = Object.getOwnPropertyDescriptor(
+            ArrayBuffer.prototype,
+            "byteLength",
+          ).get;
+          Reflect.apply(byteLength, source, []);
+          source = new Blob([source], { type: record.source_mime_type });
+          if (source.type !== record.source_mime_type)
+            throw new Error("The original evidence is missing.");
+        } catch {
+          throw new Error("The original evidence is missing.");
+        }
+      }
       const digest = await crypto.subtle.digest(
         "SHA-256",
-        await record.source.arrayBuffer(),
+        await source.arrayBuffer(),
       );
       return Array.from(new Uint8Array(digest), (byte) =>
         byte.toString(16).padStart(2, "0"),
