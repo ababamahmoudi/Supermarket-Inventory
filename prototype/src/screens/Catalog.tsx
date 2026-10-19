@@ -14,6 +14,7 @@ import {
 } from "../catalog";
 import { useDemo } from "../store";
 import { useListState, useRouteParam } from "../navigation";
+import { permittedLocationIdsView } from "../notes-dates-read";
 import {
   configuredBranches,
   branchLabel as configuredBranchLabel,
@@ -1388,7 +1389,13 @@ function ProductActionMenu({
   const mayRequestPrice =
     can("pricing.propose_manual", scope) || can("sales.request", scope);
   const mayChange = mayManagePrice || mayRequestPrice;
-  const mayAddDate = can("dates.add", { ...scope, mutation: true });
+  // With "All my locations" selected, the date form asks which location.
+  const mayAddDate =
+    location === "all"
+      ? permittedLocationIdsView(state, actor, can, "dates.add", {
+          mutation: true,
+        }).length > 0
+      : can("dates.add", { ...scope, mutation: true });
   const requestScope: ResourceScope = {
     ...scope,
     entity_id: request?.id,
@@ -2070,12 +2077,16 @@ function ProductDetail({ product }: { product: Product }) {
               {t("Dates at", "تاریخ‌ها در")}{" "}
               {configuredBranchLabel(state.config, location, lang)}
             </h2>
-            {can("dates.add", {
-              company_id: product.company_id,
-              kind: "location_record",
-              location_ids: location === "all" ? [] : [location],
-              mutation: true,
-            }) && (
+            {(location === "all"
+              ? permittedLocationIdsView(state, actor, can, "dates.add", {
+                  mutation: true,
+                }).length > 0
+              : can("dates.add", {
+                  company_id: product.company_id,
+                  kind: "location_record",
+                  location_ids: [location],
+                  mutation: true,
+                })) && (
               <Button
                 variant="plain"
                 onClick={() =>
@@ -3477,18 +3488,18 @@ export function Products() {
                             ) : (
                               "—"
                             )}
-                            {!discountSaleAt(
-                              state,
-                              product,
-                              lookupBranch(branch),
-                            ) && <ManualPricePill product={product} />}
                           </div>
                         </td>
                         <td>
                           <ProductOfferStatus product={product} />
                         </td>
                         <td>
-                          <div className="actions">
+                          <div className="actions catalog-status-badges">
+                            {!discountSaleAt(
+                              state,
+                              product,
+                              lookupBranch(branch),
+                            ) && <ManualPricePill product={product} />}
                             {pending && (
                               <Badge tone="pending">
                                 {t("Pending", "در انتظار تأیید")}{" "}

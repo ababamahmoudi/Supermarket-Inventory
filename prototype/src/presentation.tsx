@@ -228,3 +228,20 @@ export function OfferLabel({
     </span>
   );
 }
+
+/** True when a stored text value was actually filled in. */
+export function isFilled(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+/** Foundation rule: a value that was never entered says so instead of leaving a gap. */
+export function NotAdded({ language }: { language?: Language }) {
+  return (
+    <span className="value-empty">
+      {translate("Not added", "ثبت نشده", language ?? (i18n.language as Language))}
+    </span>
+  );
+}
+/** Shows a filled value left-to-right, or "Not added". */
+export function LtrValue({ value }: { value: string | null | undefined }) {
+  return isFilled(value) ? <LtrText>{value}</LtrText> : <NotAdded />;
+}

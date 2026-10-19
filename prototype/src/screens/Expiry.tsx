@@ -486,7 +486,9 @@ export function Expiry() {
                         )}
                         <div className="muted">
                           {entry.source === "manual" ? (
-                            entry.created_by
+                            <>
+                              {t("Added by", "ثبت توسط")} {entry.created_by}
+                            </>
                           ) : (
                             <LtrText>
                               {entry.invoice_number ??

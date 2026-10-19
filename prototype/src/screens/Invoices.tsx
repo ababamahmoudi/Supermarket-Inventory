@@ -91,7 +91,9 @@ import {
   DateText,
   demoUserLabel,
   LtrText,
+  LtrValue,
   Money,
+  NotAdded,
   ProductName,
   UnitSize,
   UnitText,
@@ -432,24 +434,7 @@ export default function Invoices() {
             </Button>
           }
         />
-        {!read.pending && (
-          <EmptyState>
-            {t(
-              "Choose an invoice in your branch, or start a new invoice.",
-              "فاکتوری در شعبه خود انتخاب کنید یا فاکتور جدید شروع کنید.",
-            )}
-          </EmptyState>
-        )}
-        {state.invoices.map((invoice) => (
-          <Card key={invoice.id}>
-            <TableRowLink
-              aria-label={t("View invoice", "مشاهده فاکتور")}
-              href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-            >
-              {invoice.supplier_invoice_number} · {invoice.supplier}
-            </TableRowLink>
-          </Card>
-        ))}
+        {!read.pending && <InvoicePickerList />}
       </>
     );
   return (
@@ -461,6 +446,85 @@ export default function Invoices() {
         entryPending={entryPending !== null}
       />
     </div>
+  );
+}
+/** Invoices the person may open when no invoice workspace is selected yet. */
+function InvoicePickerList() {
+  const { state, t, lang } = useDemo();
+  const invoices = state.invoices ?? [];
+  const statusLabel = (status: InvoiceReadDTO["status"]) =>
+    status === "posted"
+      ? t("Posted", "ثبت‌شده")
+      : status === "review"
+          ? t("Needs review", "نیاز به بررسی")
+          : status === "reading"
+            ? t("Processing", "در حال پردازش")
+            : t("Draft", "پیش‌نویس");
+  return (
+    <Card className="invoice-picker">
+      <h2>{t("Invoices in your locations", "فاکتورهای مکان‌های شما")}</h2>
+      {!invoices.length ? (
+        <EmptyState>
+          {t(
+            "No invoices yet. Start a new invoice.",
+            "هنوز فاکتوری نیست. فاکتور جدید شروع کنید.",
+          )}
+        </EmptyState>
+      ) : (
+        <DataTable className="invoice-picker-table">
+          <thead>
+            <tr>
+              <th scope="col">{t("Invoice", "فاکتور")}</th>
+              <th scope="col">{t("Supplier", "تأمین‌کننده")}</th>
+              <th scope="col">{t("Location", "مکان")}</th>
+              <th scope="col">{t("Invoice date", "تاریخ فاکتور")}</th>
+              <th scope="col">{t("Status", "وضعیت")}</th>
+              <th scope="col">{t("Action", "عملیات")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((invoice) => {
+              const href = `#invoices?id=${encodeURIComponent(invoice.id)}`;
+              return (
+                <tr key={invoice.id} data-row-href={href}>
+                  <td>
+                    <a className="entity-link" href={href}>
+                      {invoice.supplier_invoice_number ? (
+                        <LtrText>{invoice.supplier_invoice_number}</LtrText>
+                      ) : (
+                        t("Draft", "پیش‌نویس")
+                      )}
+                    </a>
+                  </td>
+                  <td>
+                    <LtrValue value={invoice.supplier} />
+                  </td>
+                  <td>
+                    {configuredBranchLabel(state.config, invoice.branch, lang)}
+                  </td>
+                  <td>
+                    {invoice.invoice_date ? (
+                      <DateText value={invoice.invoice_date} />
+                    ) : (
+                      <NotAdded />
+                    )}
+                  </td>
+                  <td>
+                    <Badge>{statusLabel(invoice.status)}</Badge>
+                  </td>
+                  <td>
+                    <TableRowLink
+                      href={href}
+                      aria-label={`${t("Open invoice", "باز کردن فاکتور")} ${invoice.supplier_invoice_number}`}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </DataTable>
+      )}
+    </Card>
   );
 }
 function InvoiceWorkspace({
@@ -1398,27 +1462,64 @@ function InvoiceWorkspace({
       }
       className="invoice-saved-drafts"
     >
-      {savedDrafts.map((saved) => (
-        <div className="dialog-actions" key={saved.id}>
-          <LtrText>
-            {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
-          </LtrText>
-          <LtrText>{saved.supplier}</LtrText>
-          {unreadOriginal(saved) && (
-            <>
-              <LtrText>{saved.file_name}</LtrText>
-              <span className="muted">
-                {t("Not read yet", "هنوز خوانده نشده")}
-              </span>
-            </>
-          )}
-          <Button variant="neutral" onClick={() => resume(saved)}>
-            {unreadOriginal(saved)
-              ? t("Continue", "ادامه")
-              : t("Resume draft", "ادامه پیش‌نویس")}
-          </Button>
-        </div>
-      ))}
+      <DataTable className="invoice-saved-table">
+        <thead>
+          <tr>
+            <th scope="col">{t("Invoice", "فاکتور")}</th>
+            <th scope="col">{t("Supplier", "تأمین‌کننده")}</th>
+            <th scope="col">{t("Original file", "فایل اصلی")}</th>
+            <th scope="col">{t("Status", "وضعیت")}</th>
+            <th scope="col">{t("Action", "عملیات")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {savedDrafts.map((saved) => (
+            <tr key={saved.id}>
+              <td>
+                <strong>
+                  {saved.supplier_invoice_number ? (
+                    <LtrText>{saved.supplier_invoice_number}</LtrText>
+                  ) : (
+                    t("Draft", "پیش‌نویس")
+                  )}
+                </strong>
+              </td>
+              <td>
+                <LtrValue value={saved.supplier} />
+              </td>
+              <td>
+                {saved.file_name ? (
+                  <LtrText>{saved.file_name}</LtrText>
+                ) : (
+                  <NotAdded />
+                )}
+              </td>
+              <td>
+                <Badge tone={unreadOriginal(saved) ? "info" : "neutral"}>
+                  {unreadOriginal(saved)
+                    ? t("Not read yet", "هنوز خوانده نشده")
+                    : saved.status === "reading"
+                      ? t("Processing", "در حال پردازش")
+                      : saved.status === "review"
+                        ? t("In review", "در حال بررسی")
+                        : t("Draft", "پیش‌نویس")}
+                </Badge>
+              </td>
+              <td>
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => resume(saved)}
+                >
+                  {unreadOriginal(saved)
+                    ? t("Continue", "ادامه")
+                    : t("Resume draft", "ادامه پیش‌نویس")}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </DataTable>
     </Card>
   ) : null;
   if (!canReadWorkspace)

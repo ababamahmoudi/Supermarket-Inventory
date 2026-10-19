@@ -1,0 +1,186 @@
+/*
+ * Klead foundation — the one place for shared component rules.
+ *
+ * This file loads last (see main.tsx). Page stylesheets may arrange a page,
+ * but they must not restyle shared components (tables, fields, tabs, KPI
+ * cards, detail lists, list boxes, links). Change shared looks here only.
+ * Rules are documented in docs/design-language.md → "Foundation rules".
+ */
+
+:root {
+  --field-border: #dcdfe5;
+  --field-border-hover: #c4c8d0;
+  --link-text: var(--accent-tint-text);
+  --list-box-border: var(--klead-hairline);
+  --empty-value: var(--text-muted);
+  --table-edge-padding: 16px;
+  --table-cell-padding: 12px;
+}
+:root[data-theme="dark"] {
+  --field-border: rgba(255, 255, 255, 0.14);
+  --field-border-hover: rgba(255, 255, 255, 0.24);
+}
+
+/* ── Fields: always look editable, on white cards and on grey panels ── */
+:root :is(.field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+    .field textarea,
+    .password-field input,
+    .ui-input,
+    input.ui-input[type="text"],
+    input.ui-number[type="text"],
+    textarea):not(.filter-search-pill *, .topbar-search *, .lookup-search-pill *, .lookup-search *, .ui-select-search *) {
+  border: 1px solid var(--field-border);
+}
+:root :is(.field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+    .field textarea,
+    .password-field input,
+    .ui-input,
+    textarea):hover:not(:disabled):not(:focus-visible) {
+  border-color: var(--field-border-hover);
+}
+:root :is(.field input, .field textarea, .password-field input, .ui-input, textarea):focus-visible {
+  border-color: var(--accent);
+}
+:root :is(.field input, .field textarea, .password-field input, .ui-input, textarea)[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+:root :is(.field input, .field textarea, .ui-input, textarea):disabled {
+  border-style: dashed;
+}
+
+/* ── Tables: one rhythm for every list ── */
+@media (min-width: 761px) {
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td) {
+    padding-block: 12px;
+    padding-inline: var(--table-cell-padding);
+    vertical-align: middle;
+  }
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td):first-child {
+    padding-inline-start: var(--table-edge-padding);
+  }
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td):last-child {
+    padding-inline-end: var(--table-edge-padding);
+  }
+  :root .ui-data-table:not(.is-phone-list) thead th {
+    padding-block: 10px;
+  }
+}
+:root .ui-data-table :is(td, th).numeric,
+:root .ui-data-table :is(td, th)[style*="text-align: end"] {
+  font-variant-numeric: tabular-nums;
+}
+:root .ui-data-table td.numeric > :is(div, span):only-child {
+  justify-content: flex-end;
+  justify-items: end;
+}
+
+/* ── Clickable names are blue (Ali's rule: blue = you can open it) ── */
+:root :is(a.entity-link,
+    .catalog-product-link,
+    .invoice-list-number-link,
+    .ui-data-table tr.is-navigable .product-name > strong,
+    .ui-data-table tr.is-navigable .table-identity > a,
+    a > .product-name > strong) {
+  color: var(--link-text);
+}
+:root :is(a.entity-link, .catalog-product-link, .invoice-list-number-link):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Values that were never filled in ── */
+.value-empty {
+  color: var(--empty-value);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ── Boxed list items: everything that belongs to one item sits in one box ── */
+.list-box {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.list-box + .list-box {
+  margin-block-start: 12px;
+}
+.list-box-stack {
+  display: grid;
+  gap: 12px;
+}
+.list-box-stack > .list-box + .list-box {
+  margin-block-start: 0;
+}
+
+/* ── Tabs and segmented controls never wrap onto a second line ── */
+:root .ui-segments {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  max-inline-size: 100%;
+}
+:root .ui-segments::-webkit-scrollbar {
+  display: none;
+}
+:root .ui-segments > button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* ── KPI cards: label row, number row, detail row — numbers always line up ── */
+:root .ui-kpi {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(2.25rem, auto) 1fr auto;
+  align-content: stretch;
+  min-block-size: 8.5rem;
+}
+:root .ui-kpi-label {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+:root .ui-kpi-icon {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+:root .ui-kpi-number {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: end;
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+}
+:root .ui-kpi-breakdown {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+/* ── Detail lists (label above value) ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+.detail-grid > div {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+.detail-grid dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+.detail-grid dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

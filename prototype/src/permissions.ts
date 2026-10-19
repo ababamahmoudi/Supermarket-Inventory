@@ -103,7 +103,13 @@ const floorWorker = new Set<Capability>([
   "orders.cost_read",
   "price_updates.complete",
 ]);
-const cashier = new Set<Capability>([...common, "history.undo_own"]);
+// Ali's rule: everyone adds dates; the record keeps who added each one.
+const cashier = new Set<Capability>([
+  ...common,
+  "history.undo_own",
+  "dates.read",
+  "dates.add",
+]);
 const orderCapabilities = new Set<Capability>([
   "orders.read",
   "orders.write",
