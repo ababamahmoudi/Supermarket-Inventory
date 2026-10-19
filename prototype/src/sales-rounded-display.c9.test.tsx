@@ -57,6 +57,12 @@ it.each(["lb", "kg"] as const)(
       expect(
         container.querySelector(".sale-price .selling-price-current"),
       ).toHaveTextContent(`$${expected.main.amount}/${mainUnit}`);
+      expect(container.querySelector(".sale-price")).toHaveClass(
+        "weight-price",
+      );
+      expect(
+        container.querySelector(".sale-price .weight-price-main"),
+      ).toHaveAttribute("dir", "ltr");
       expect(
         container.querySelector(".sale-price .selling-price-secondary"),
       ).toHaveTextContent(

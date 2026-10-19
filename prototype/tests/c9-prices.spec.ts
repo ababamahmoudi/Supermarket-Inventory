@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openC8PriceDialog, visitC8 } from "../scripts/capture-c8-proof.mjs";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
@@ -115,13 +116,54 @@ for (const language of ["en", "fa"] as const) {
       await expect(line.locator("del")).toHaveText(money(regular));
       await expect(line.locator("strong")).toHaveText(money(sale.sale_price));
       await expectUnbrokenPrice(line);
-      const offer = row.locator(".product-offer-line");
+      let offer = row.locator(".product-offer-line");
+      let disclosed = false;
+      if (width === 900 && !(await offer.isVisible())) {
+        const disclosure = row.getByRole("button", {
+          name: translated(language, "Show details", "نمایش جزئیات"),
+          exact: true,
+        });
+        await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+        const detailsId = await disclosure.getAttribute("aria-controls");
+        expect(detailsId).toBeTruthy();
+        await disclosure.click();
+        const expandedDisclosure = row.getByRole("button", {
+          name: translated(language, "Hide details", "پنهان کردن جزئیات"),
+          exact: true,
+        });
+        await expect(expandedDisclosure).toHaveAttribute(
+          "aria-controls",
+          detailsId!,
+        );
+        await expect(expandedDisclosure).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        const detail = page
+          .locator(`[id="${detailsId}"]`)
+          .locator("dl > div")
+          .filter({
+            has: page.locator("dt").filter({
+              hasText: new RegExp(
+                `^${translated(language, "Offer", "پیشنهاد")}$`,
+              ),
+            }),
+          });
+        await expect(detail.locator("dt")).toHaveText(
+          translated(language, "Offer", "پیشنهاد"),
+        );
+        offer = detail.locator(".product-offer-line");
+        disclosed = true;
+      }
       await expect(offer).toBeVisible();
       await expect(offer).toContainText(translated(language, "Sale", "حراج"));
       // Offer terms must not become approval status or part of the numeric price cell.
       const placement = await row.evaluate((element) => {
         const value = element.querySelector(".selling-price-value")!;
-        const terms = element.querySelector(".product-offer-line")!;
+        const terms =
+          element.querySelector(".product-offer-line") ??
+          element.nextElementSibling?.querySelector(".product-offer-line");
+        if (!terms) throw new Error("No visible row or disclosed Offer terms");
         const priceCell = value.closest("td")!;
         const offerCell = terms.closest("td")!;
         const priceRect = value.getBoundingClientRect();
@@ -140,7 +182,13 @@ for (const language of ["en", "fa"] as const) {
         expect(placement.below).toBe(true);
       } else {
         expect(placement.priceCell).toBe("price");
-        expect(placement.offerCell).toBe("offer");
+        if (disclosed) {
+          expect(width).toBe(900);
+          await expect(offer.locator("xpath=ancestor::tr")).toHaveClass(
+            "table-expanded-row",
+          );
+          await expectUnbrokenPrice(line);
+        } else expect(placement.offerCell).toBe("offer");
       }
       expect(
         await page.evaluate(
@@ -382,23 +430,52 @@ test("C9 approved, rejected, withdrawn and expired sale requests retain their te
     )
     .toBe("expired");
 
+  // The real clock jump also expires sensitive-screen password freshness.
+  // Continue through the app's genuine confirmation rather than changing authority.
+  const confirmation = page.getByRole("dialog", {
+    name: "Confirm your password",
+    exact: true,
+  });
+  await expect(confirmation).toBeVisible();
+  const manager = demoSeed.demo_users.find(
+    (person) => person.username === "manager",
+  )!;
+  expect(manager.password).toEqual(expect.any(String));
+  await confirmation
+    .getByLabel("Password", { exact: true })
+    .fill(manager.password);
+  await confirmation
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(confirmation).toBeHidden();
+  const finalEvidence = await readCanonicalBusinessEvidence(page);
+  // Historical invoice decisions retain their recorded branch; only pending
+  // proposals follow source-invoice corrections in effectiveApprovalLocation.
+  const invoiceCount = (status: "approved" | "rejected" | "superseded") =>
+    finalEvidence.approvals.filter(
+      (entry) =>
+        entry.company_id === finalEvidence.config.company.seed_key &&
+        entry.status === status &&
+        ["all", "Branch 1"].includes(entry.branch),
+    ).length;
+
   for (const language of ["en", "fa"] as const) {
     await setLanguage(page, language);
     await visitC8(page, "approvals");
     const cases = [
       {
         label: translated(language, "Approved", "تأییدشده"),
-        count: 1,
+        count: 1 + invoiceCount("approved"),
         ids: [approval.id],
       },
       {
         label: translated(language, "Rejected", "ردشده"),
-        count: 1,
+        count: 1 + invoiceCount("rejected"),
         ids: [rejection.id],
       },
       {
         label: translated(language, "Superseded", "جایگزین‌شده"),
-        count: 2,
+        count: 2 + invoiceCount("superseded"),
         ids: [withdrawal.id, expiring.id],
       },
     ];

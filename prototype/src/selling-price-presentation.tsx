@@ -24,8 +24,14 @@ export function SellingPriceValue({
   comparison?: boolean;
 }) {
   const discounted = comparison && isDiscountPrice(current, regular);
-  const line = (amount: SellingAmount, previous?: SellingAmount | null) => (
-    <LtrText className="selling-price-line">
+  const line = (
+    amount: SellingAmount,
+    previous?: SellingAmount | null,
+    main = false,
+  ) => (
+    <LtrText
+      className={`selling-price-line${main && amount.unit !== "each" ? " weight-price-main" : ""}`}
+    >
       {discounted && previous && previous.unit === amount.unit && (
         <del className="selling-price-regular sale-regular-price">
           <Money value={previous.amount} currency={currency} decimals={2} />
@@ -50,7 +56,7 @@ export function SellingPriceValue({
         .join(" ")}
       data-sale-price={discounted || undefined}
     >
-      {line(current.main, regular?.main)}
+      {line(current.main, regular?.main, true)}
       {current.secondary && (
         <span className="selling-price-secondary weight-price-secondary">
           {line(current.secondary, regular?.secondary)}

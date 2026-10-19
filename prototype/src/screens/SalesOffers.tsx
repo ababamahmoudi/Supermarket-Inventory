@@ -156,13 +156,16 @@ export function SalesOfferRow({
       key={row.key}
       data-product-code={row.product.code}
       data-offer-kind={row.kind}
+      data-row-href={`#product?code=${encodeURIComponent(row.product.code)}`}
       tabIndex={0}
       onClick={(event) => {
         if (
           !(event.target instanceof Element) ||
           !event.target.closest("button,a,input,[role='button']")
-        )
+        ) {
+          event.preventDefault();
           onOpen(row);
+        }
       }}
       onKeyDown={(event) => {
         if (
@@ -327,7 +330,7 @@ export function SalesOfferRow({
             variant="ghost"
             aria-label={actionLabel}
             onClick={() => onOpen(row)}
-            className="table-row-link"
+            className="table-row-link offer-record-action"
           >
             <ChevronRight
               className="directional"

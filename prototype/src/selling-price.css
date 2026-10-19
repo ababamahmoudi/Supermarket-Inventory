@@ -157,10 +157,20 @@
   }
 }
 @media (max-width: 759px) {
-  :root .ui-data-table.is-phone-list td.phone-list-value {
+  :root
+    .current-offers-table.is-phone-list
+    .phone-list-secondary
+    .offer-record-action {
+    display: none;
+  }
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-value:has(.selling-price-value) {
     max-inline-size: none;
   }
-  :root .ui-data-table.is-phone-list.has-phone-selection td.phone-list-value {
+  :root
+    .ui-data-table.is-responsive.is-mobile.is-phone-list.has-phone-selection
+    td.phone-list-value:has(.selling-price-value) {
     max-inline-size: none;
   }
   .c9-sale-details dl {

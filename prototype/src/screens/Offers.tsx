@@ -62,6 +62,7 @@ import {
   EmptyState,
   Field,
   FilterToolbar,
+  useListFilterOrigin,
   PageHeader,
   Checkbox,
   DateField,
@@ -96,7 +97,8 @@ export function Offers() {
   const [category, setCategory] = useState("");
   const [supplier, setSupplier] = useState("");
   const [type, setType] = useState("");
-  const [locationFilterChanged, setLocationFilterChanged] = useState(false);
+  const { locationChanged: locationFilterChanged, resetLocation } =
+    useListFilterOrigin("offers");
   const [code, setCode] = useState("");
   const [scope, setScope] = useState<"all" | "branch">("branch");
   const [mix, setMix] = useState(true);
@@ -209,8 +211,7 @@ export function Offers() {
     setCategory("");
     setSupplier("");
     setType("");
-    setLocationFilterChanged(false);
-    if (companyLocations) void setBranch("all");
+    void resetLocation({});
   };
   if (!can("offers.read"))
     return (
@@ -493,7 +494,6 @@ export function Offers() {
         aria-label={t("Offer branch", "شعبه پیشنهاد")}
         value={branch}
         onChange={(value) => {
-          setLocationFilterChanged(true);
           void setBranch(value as Branch);
         }}
         disabled={branches.length < 2}
@@ -741,7 +741,7 @@ export function Offers() {
                 phoneList={{
                   name: "product",
                   value: "price",
-                  secondary: ["offer", "location", "status"],
+                  secondary: ["offer", "location", "status", "actions"],
                 }}
                 columns={[
                   {
@@ -824,6 +824,11 @@ export function Offers() {
                       <tr
                         key={tab === "past" ? first.id : first.product_code}
                         data-product-code={first.product_code}
+                        data-row-href={
+                          product
+                            ? `#product?code=${encodeURIComponent(product.code)}`
+                            : undefined
+                        }
                         tabIndex={0}
                         onClick={(event) => {
                           if (
@@ -831,8 +836,10 @@ export function Offers() {
                             !event.target.closest(
                               "button,a,input,[role='button']",
                             )
-                          )
+                          ) {
+                            event.preventDefault();
                             setOpenedOffer(group);
+                          }
                         }}
                         onKeyDown={(event) => {
                           if (
@@ -1027,7 +1034,7 @@ export function Offers() {
                             )}
                             <IconButton
                               variant="ghost"
-                              className="table-row-link"
+                              className="table-row-link offer-record-action"
                               aria-label={t("Open offer", "باز کردن پیشنهاد")}
                               onClick={() => setOpenedOffer(group)}
                             >

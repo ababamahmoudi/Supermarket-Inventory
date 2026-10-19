@@ -13,6 +13,7 @@ import Received from "./Received";
 import Suppliers from "./Suppliers";
 import Expiry from "./Expiry";
 import Payables from "./Payables";
+import { Offers } from "./Offers";
 import { useDemo } from "../store";
 
 function LocationControls() {
@@ -60,6 +61,13 @@ describe("C9 location filter defaults", () => {
       toolbar: "Payables filters",
       location: "Payables branch",
       search: "Search suppliers",
+    },
+    {
+      route: "offers",
+      content: <Offers />,
+      toolbar: "Offer filters",
+      location: "Offer branch",
+      search: "Search offers",
     },
   ]) {
     it(`${scenario.route} hides Clear on returning to its origin and restores the actual origin without stale saved filters`, async () => {
@@ -111,4 +119,38 @@ describe("C9 location filter defaults", () => {
       expect(after.stock).toEqual(before.stock);
     });
   }
+
+  it("Offers Clear restores its actual origin after a protected location refresh", async () => {
+    window.location.hash = "offers";
+    await renderAuthenticatedUI(
+      <AuthenticatedUiProvider>
+        <LocationControls />
+        <Offers />
+      </AuthenticatedUiProvider>,
+    );
+    const before = await sharedUiCanonical();
+    const toolbar = () => within(screen.getByLabelText("Offer filters"));
+    await userEvent.click(toolbar().getByLabelText("Offer branch"));
+    await userEvent.click(
+      screen.getByRole("option", { name: "Richmond Hill" }),
+    );
+    await waitForSharedUiActor("manager", "Branch 2");
+    await screen.findByLabelText("Offer filters");
+    await userEvent.type(toolbar().getByLabelText("Search offers"), "Oil");
+    await userEvent.click(
+      toolbar().getByRole("button", { name: "Clear filters" }),
+    );
+    await waitForSharedUiActor("manager", "Branch 1");
+    await screen.findByLabelText("Offer filters");
+    expect(toolbar().getByLabelText("Search offers")).toHaveValue("");
+    expect(
+      toolbar().queryByRole("button", { name: "Clear filters" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("filter-actual-location")).toHaveTextContent(
+      "Branch 1",
+    );
+    const after = await sharedUiCanonical();
+    expect(after.ledger).toEqual(before.ledger);
+    expect(after.stock).toEqual(before.stock);
+  });
 });

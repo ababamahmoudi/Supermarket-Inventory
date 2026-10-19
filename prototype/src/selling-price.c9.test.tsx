@@ -21,6 +21,7 @@ it.each(["en", "fa"])(
     );
     const line = container.querySelector(".selling-price-line")!;
     expect(line).toHaveAttribute("dir", "ltr");
+    expect(line).not.toHaveClass("weight-price-main");
     expect(line.children[0]).toHaveClass("selling-price-regular");
     expect(line.children[1]).toHaveClass("selling-price-current");
     expect(line.children[0]).toHaveTextContent("$20.99");
@@ -57,6 +58,17 @@ it("renders frozen task values and both unit lines directly from their snapshot"
   );
   expect(container).toHaveTextContent("$7.49/lb$6.99/lb$15.41/kg");
   expect(container.querySelectorAll(".selling-price-line")).toHaveLength(2);
+  expect(container.querySelectorAll(".weight-price-main")).toHaveLength(1);
+  expect(container.querySelector(".weight-price-main")).toHaveAttribute(
+    "dir",
+    "ltr",
+  );
+  expect(container.querySelector(".weight-price-main")).toHaveTextContent(
+    "$7.49/lb$6.99/lb",
+  );
+  expect(container.querySelector(".weight-price-secondary")).not.toHaveClass(
+    "weight-price-main",
+  );
   // A different target is explicit input, rather than a lookup of a live product.
   rerender(
     <SnapshotSellingPrice

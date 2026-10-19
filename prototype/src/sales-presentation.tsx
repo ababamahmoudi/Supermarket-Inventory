@@ -61,7 +61,12 @@ export function SalePrice({
   return (
     <SellingPriceValue
       {...props}
-      className={["sale-price", stacked && "weight-price-stacked", className]
+      className={[
+        "sale-price",
+        product.sold_by === "weight" && "weight-price",
+        stacked && "weight-price-stacked",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
       current={current}

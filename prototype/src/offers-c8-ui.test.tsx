@@ -94,6 +94,59 @@ const row = (code: string, kind: "sale" | "request") =>
     `tr[data-product-code="${code}"][data-offer-kind="${kind}"]`,
   )!;
 
+it("keeps genuine product navigation and existing offer actions available in compact phone rows", async () => {
+  vi.stubGlobal("innerWidth", 390);
+  const user = await show();
+  const before = JSON.stringify(await fixture.readCanonical());
+  const regular = document.querySelector<HTMLElement>(
+    'tr[data-product-code="0003"]:not([data-offer-kind])',
+  )!;
+  for (const offerRow of [
+    regular,
+    row("0012", "sale"),
+    row("0008", "request"),
+  ]) {
+    expect(offerRow).toHaveClass("phone-list-row");
+    const productLink = offerRow.querySelector<HTMLAnchorElement>(
+      ".phone-list-chevron a.table-row-link",
+    );
+    expect(productLink).toHaveAttribute(
+      "href",
+      `#product?code=${offerRow.dataset.productCode}`,
+    );
+    expect(
+      offerRow.querySelectorAll(".phone-list-chevron .table-row-link"),
+    ).toHaveLength(1);
+  }
+  await user.click(within(regular).getByRole("button", { name: "More" }));
+  await user.click(screen.getByRole("menuitem", { name: /^Stop offer/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Stop offer" })).getByRole(
+      "button",
+      { name: "Cancel" },
+    ),
+  );
+  const saleRow = row("0012", "sale");
+  saleRow.focus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("dialog", { name: "Offer" })).toHaveTextContent(
+    "16.99",
+  );
+  expect(window.location.hash).toBe("#offers");
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Offer" })).getByRole("button", {
+      name: "Close",
+    }),
+  );
+  await user.click(
+    saleRow.querySelector<HTMLAnchorElement>(
+      ".phone-list-chevron a.table-row-link",
+    )!,
+  );
+  await waitFor(() => expect(window.location.hash).toBe("#product?code=0012"));
+  expect(JSON.stringify(await fixture.readCanonical())).toBe(before);
+});
+
 it("creates a sale for a price outside the multi-buy mapping through the actual Offers dialog without touching regular price or financial evidence", async () => {
   const user = await show();
   const evidence = await financialEvidence();
