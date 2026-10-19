@@ -49,7 +49,11 @@ export function DoneRuleFields({
 }) {
   const { state, demoUsers, lang, t } = useDemo();
   const chosen = value?.mode === "chosen";
-  const rule: NoteDoneRule = value ?? { mode: "chosen", roles: [], user_ids: [] };
+  const rule: NoteDoneRule = value ?? {
+    mode: "chosen",
+    roles: [],
+    user_ids: [],
+  };
   const configuredRoles = state.config.roles.map((item) => item.key);
   const toggle = <K extends "roles" | "user_ids">(
     key: K,
@@ -65,18 +69,30 @@ export function DoneRuleFields({
     });
   return (
     <fieldset className="done-rule-fields" id="notebook-done-rule">
-      <legend>{t("Who can mark notes done", "چه کسی می‌تواند انجام‌شده علامت بزند")}</legend>
+      <legend>
+        {t("Who can mark notes done", "چه کسی می‌تواند انجام‌شده علامت بزند")}
+      </legend>
       <div role="radiogroup" className="done-rule-modes">
         <Radio checked={!chosen} onChange={() => onChange(undefined)}>
-          {t("Anyone who can add notes", "هر کسی که می‌تواند یادداشت اضافه کند")}
+          {t(
+            "Anyone who can add notes",
+            "هر کسی که می‌تواند یادداشت اضافه کند",
+          )}
         </Radio>
         <Radio
           checked={chosen}
           onChange={() =>
-            onChange({ mode: "chosen", roles: rule.roles, user_ids: rule.user_ids })
+            onChange({
+              mode: "chosen",
+              roles: rule.roles,
+              user_ids: rule.user_ids,
+            })
           }
         >
-          {t("Only the roles and people I choose", "فقط نقش‌ها و افرادی که انتخاب می‌کنم")}
+          {t(
+            "Only the roles and people I choose",
+            "فقط نقش‌ها و افرادی که انتخاب می‌کنم",
+          )}
         </Radio>
       </div>
       {chosen && (

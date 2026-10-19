@@ -411,7 +411,9 @@ it("workers can add and remove local dates while Cashiers add dates but only see
   // Ali's rule (Oct 2026): everyone adds dates; Cashiers still cannot remove
   // them or read other people's date evidence.
   expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Remove" }),
+  ).not.toBeInTheDocument();
   expect(screen.queryByText("Checked shelf")).not.toBeInTheDocument();
   expect(screen.getByText(/Expires/)).toHaveTextContent("North York");
 });

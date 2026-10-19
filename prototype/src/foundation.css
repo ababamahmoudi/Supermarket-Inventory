@@ -18,26 +18,52 @@
 }
 
 /* ── Fields: always look editable, on white cards and on grey panels ── */
-:root :is(.field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+:root
+  :is(
+    .field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
     .field textarea,
     .password-field input,
     .ui-input,
     input.ui-input[type="text"],
     input.ui-number[type="text"],
-    textarea):not(.filter-search-pill *, .topbar-search *, .lookup-search-pill *, .lookup-search *, .ui-select-search *) {
+    textarea
+  ):not(
+    .filter-search-pill *,
+    .topbar-search *,
+    .lookup-search-pill *,
+    .lookup-search *,
+    .ui-select-search *
+  ) {
   border: 1px solid var(--field-border);
 }
-:root :is(.field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+:root
+  :is(
+    .field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
     .field textarea,
     .password-field input,
     .ui-input,
-    textarea):hover:not(:disabled):not(:focus-visible) {
+    textarea
+  ):hover:not(:disabled):not(:focus-visible) {
   border-color: var(--field-border-hover);
 }
-:root :is(.field input, .field textarea, .password-field input, .ui-input, textarea):focus-visible {
+:root
+  :is(
+    .field input,
+    .field textarea,
+    .password-field input,
+    .ui-input,
+    textarea
+  ):focus-visible {
   border-color: var(--accent);
 }
-:root :is(.field input, .field textarea, .password-field input, .ui-input, textarea)[aria-invalid="true"] {
+:root
+  :is(
+    .field input,
+    .field textarea,
+    .password-field input,
+    .ui-input,
+    textarea
+  )[aria-invalid="true"] {
   border-color: var(--danger);
   background: var(--surface);
   box-shadow: var(--shadow-none);
@@ -73,15 +99,19 @@
 }
 
 /* ── Clickable names are blue (Ali's rule: blue = you can open it) ── */
-:root :is(a.entity-link,
+:root
+  :is(
+    a.entity-link,
     .catalog-product-link,
     .invoice-list-number-link,
     .ui-data-table tr.is-navigable .product-name > strong,
     .ui-data-table tr.is-navigable .table-identity > a,
-    a > .product-name > strong) {
+    a > .product-name > strong
+  ) {
   color: var(--link-text);
 }
-:root :is(a.entity-link, .catalog-product-link, .invoice-list-number-link):hover {
+:root
+  :is(a.entity-link, .catalog-product-link, .invoice-list-number-link):hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }

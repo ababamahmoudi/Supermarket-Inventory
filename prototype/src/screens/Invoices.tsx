@@ -456,10 +456,10 @@ function InvoicePickerList() {
     status === "posted"
       ? t("Posted", "ثبت‌شده")
       : status === "review"
-          ? t("Needs review", "نیاز به بررسی")
-          : status === "reading"
-            ? t("Processing", "در حال پردازش")
-            : t("Draft", "پیش‌نویس");
+        ? t("Needs review", "نیاز به بررسی")
+        : status === "reading"
+          ? t("Processing", "در حال پردازش")
+          : t("Draft", "پیش‌نویس");
   return (
     <Card className="invoice-picker">
       <h2>{t("Invoices in your locations", "فاکتورهای مکان‌های شما")}</h2>

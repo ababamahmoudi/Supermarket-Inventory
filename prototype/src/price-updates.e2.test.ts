@@ -439,8 +439,9 @@ describe("E2 exact staff permissions and physical label confirmation", () => {
     markPriceTaskSeen(state, supervisor, row.id);
     expect(row.seen?.by_user_id).toBe(floor.user_id);
     expect(
-      state.activity.filter((entry) => entry.action === "Mark price update seen")
-        .length,
+      state.activity.filter(
+        (entry) => entry.action === "Mark price update seen",
+      ).length,
     ).toBe(audits);
     change({ price: "5.49" });
     expect(task().seen?.version).not.toBe(task().version);

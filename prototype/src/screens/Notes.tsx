@@ -1112,38 +1112,41 @@ export function Notes() {
             )}
             {builtInDoneCapability(item) &&
               can(builtInDoneCapability(item)!, recordScope(item)) && (
-              <Button
-                variant={noteIsDone(item) ? "plain" : "tinted"}
-                size="sm"
-                onClick={() =>
-                  run(
-                    (draft, freshActor) =>
-                      updateNoteStatus(
-                        draft,
-                        actorAtLocation(draft, freshActor, item.branch),
-                        item.id,
-                        noteIsDone(item) ? "open" : "resolved",
-                      ),
-                    noteIsDone(item)
-                      ? ["Reopened note.", "یادداشت دوباره باز شد."]
-                      : item.type === "to_order"
-                        ? ["Marked ordered.", "سفارش‌داده‌شده علامت‌گذاری شد."]
-                        : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
-                    false,
-                    builtInDoneCapability(item)!,
-                    item.branch,
-                    item.id,
-                  )
-                }
-              >
-                {!noteIsDone(item) && <Check size={14} aria-hidden="true" />}
-                {noteIsDone(item)
-                  ? t("Reopen", "بازگشایی")
-                  : item.type === "to_order"
-                    ? t("Mark ordered", "علامت سفارش‌داده‌شده")
-                    : t("Mark done", "علامت انجام‌شده")}
-              </Button>
-            )}
+                <Button
+                  variant={noteIsDone(item) ? "plain" : "tinted"}
+                  size="sm"
+                  onClick={() =>
+                    run(
+                      (draft, freshActor) =>
+                        updateNoteStatus(
+                          draft,
+                          actorAtLocation(draft, freshActor, item.branch),
+                          item.id,
+                          noteIsDone(item) ? "open" : "resolved",
+                        ),
+                      noteIsDone(item)
+                        ? ["Reopened note.", "یادداشت دوباره باز شد."]
+                        : item.type === "to_order"
+                          ? [
+                              "Marked ordered.",
+                              "سفارش‌داده‌شده علامت‌گذاری شد.",
+                            ]
+                          : ["Marked done.", "انجام‌شده علامت‌گذاری شد."],
+                      false,
+                      builtInDoneCapability(item)!,
+                      item.branch,
+                      item.id,
+                    )
+                  }
+                >
+                  {!noteIsDone(item) && <Check size={14} aria-hidden="true" />}
+                  {noteIsDone(item)
+                    ? t("Reopen", "بازگشایی")
+                    : item.type === "to_order"
+                      ? t("Mark ordered", "علامت سفارش‌داده‌شده")
+                      : t("Mark done", "علامت انجام‌شده")}
+                </Button>
+              )}
           </div>
         </Card>
       ))}

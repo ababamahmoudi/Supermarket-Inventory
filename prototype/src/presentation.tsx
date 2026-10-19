@@ -237,7 +237,11 @@ export function isFilled(value: string | null | undefined): value is string {
 export function NotAdded({ language }: { language?: Language }) {
   return (
     <span className="value-empty">
-      {translate("Not added", "ثبت نشده", language ?? (i18n.language as Language))}
+      {translate(
+        "Not added",
+        "ثبت نشده",
+        language ?? (i18n.language as Language),
+      )}
     </span>
   );
 }

@@ -898,7 +898,9 @@ function PriceUpdateDetail({ id }: { id: string }) {
             {history.map((step, index) => (
               <tr key={step.version}>
                 <td>
-                  <LtrText>{companyTimestampText(state.config, step.at)}</LtrText>
+                  <LtrText>
+                    {companyTimestampText(state.config, step.at)}
+                  </LtrText>
                   {index === 0 && (
                     <>
                       {" "}
