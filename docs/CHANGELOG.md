@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-19 — Portable startup dates; exact-head CI pending
+
+- Reuse the existing ISO company-date assembler for initial relative dates; retain Date construction/day offsets, configuration, existing records and normal authentication. Controlled valid slash-formatted dates reproduce the original startup RangeError; the same new regressions change from seven failures/one pass on the original source to eight passes on the repair. Native WebKit's specific cause remains unconfirmed.
+- Preserve mixed full application runs: first1,513passed/3failed, actual exit1; second reported1,512passed/4failed plus one unhandled session-changed rejection, with process status unavailable after transport disconnection. Unchanged focused reruns passed11/11 and27/27; isolated SDK75/75, pricing68/68 including all23 seed cases, build and lint exited0. No complete-suite success or CPU-cause claim.
+- Correct the earlier queued-status interpretation: lagged GitHub high-level statuses did not reflect actual execution; detailed f371 job steps showed shards1/2/3 succeeded and4failed. Publish the [source-specific repair evidence](evidence/c9/webkit-startup/date-format/README.md). C9 remains unmerged, with new exact-head CI required.
+
 ## 2026-10-19 — Diagnose WebKit startup after complete C9 CI
 
 - Wait for all four `ac10919` shards: 1/2/3 passed, 4 failed only the new WebKit case during initial sign-in with a browser-storage error. Totals are 789 passed, one flaky, 50 existing skips and one failed; foundation and prototype static/unit/pricing/build checks passed. The browser gate failed, so C9 remains open and unmerged.

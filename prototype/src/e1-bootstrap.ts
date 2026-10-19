@@ -7,6 +7,7 @@ import { hydrateC2State, restoreC2State } from "./c2-state";
 import { hydrateC4State, restoreC4State } from "./c4-state";
 import { hydrateC6State } from "./c6-state";
 import { hydrateSalesState, hydrateSalesDemo } from "./sales";
+import { companyDate } from "./invoice";
 import { decodeHistoryStorage, HistoryStorageError } from "./history-storage";
 import {
   archiveFileStorageSnapshot,
@@ -26,12 +27,7 @@ export const branches = demoSeed.branches as Exclude<Branch, "all">[];
 export function relativeDate(days: number): string {
   const now = new Date();
   now.setDate(now.getDate() + days);
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: configSeed.company.timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
+  return companyDate(configSeed, now);
 }
 
 export function initialState(): DemoState {

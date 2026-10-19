@@ -1,0 +1,17 @@
+{
+  "proof": "simulated localized ordering; not native WebKit evidence",
+  "configuredTimeZone": "America/Toronto",
+  "localizedDate": "10/19/2026",
+  "assembledDate": "2026-10-19",
+  "failure": {
+    "name": "RangeError",
+    "message": "Invalid time value",
+    "frames": [
+      "    at ClockDate.toISOString (<anonymous>)",
+      "    at dateAfter (/workspace/Supermarket-Inventory/prototype/src/invoice.ts:403:16)",
+      "    at hydrateDemoFixture (/workspace/Supermarket-Inventory/prototype/src/demo-fixtures.ts:72:11)",
+      "    at initialState (/workspace/Supermarket-Inventory/prototype/src/e1-bootstrap.ts:90:11)",
+      "    at /tmp/c9-date-format-proof/date-format.proof.test.ts:106:5"
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "scope": "Candidate source remains unchanged; mixed full-run results are not converted to a green complete suite by focused reruns.",
+  "candidate_source_sha256": {
+    "prototype/src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "prototype/src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8"
+  },
+  "first_full_application": {
+    "files": 156,
+    "passed": 1513,
+    "failed": 3,
+    "duration_seconds": 414.19,
+    "actual_exit_code": 1,
+    "sdk": "not run because application phase failed before &&",
+    "log": "full-unit-first.txt.gz"
+  },
+  "first_failed_files_unchanged": {
+    "files": 3,
+    "passed": 11,
+    "failed": 0,
+    "duration_seconds": 16.39,
+    "actual_exit_code": 0,
+    "log": "first-failed-files-unchanged.txt.gz"
+  },
+  "second_full_application": {
+    "files": 156,
+    "reported_passed": 1512,
+    "reported_failed": 4,
+    "reported_unhandled_errors": 1,
+    "unhandled_error": "session_changed",
+    "duration_seconds": 378.21,
+    "actual_exit_code": null,
+    "exit_status_limit": "Final summary was printed, then exec-server transport disconnected and session37193 was retired before process status was retrieved. Do not assign actual exit1.",
+    "log": "full-unit-second.txt.gz"
+  },
+  "second_failed_files_unchanged": {
+    "files": 3,
+    "passed": 27,
+    "failed": 0,
+    "unhandled_errors": 0,
+    "actual_exit_code": 0,
+    "log": "second-failed-files-unchanged.txt.gz",
+    "metadata": "second-failed-files-unchanged.json"
+  },
+  "isolated_sdk": {
+    "passed": 75,
+    "failed": 0,
+    "actual_exit_code": 0,
+    "log": "sdk.txt.gz",
+    "metadata": "sdk.json"
+  },
+  "isolated_pricing": {
+    "passed": 68,
+    "failed": 0,
+    "seed_cases_included": 23,
+    "actual_exit_code": 0,
+    "log": "pricing.txt.gz",
+    "metadata": "pricing.json"
+  },
+  "normal_build": {
+    "actual_exit_code": 0,
+    "log": "candidate-build.txt.gz"
+  },
+  "normal_lint": {
+    "actual_exit_code": 0,
+    "log": "candidate-lint.txt.gz"
+  },
+  "limits": [
+    "No CPU/resource-contention cause is established.",
+    "Focused reruns preserve the original files and assertions; they do not establish full-suite success.",
+    "Native WebKit root cause remains unconfirmed; new exact-head CI is required."
+  ]
+}

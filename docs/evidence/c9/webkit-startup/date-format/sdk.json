@@ -1,0 +1,25 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:sdk"
+  ],
+  "start_utc": "2026-10-19T16:08:11.239291+00:00",
+  "duration_seconds": 3.03,
+  "exit_code": 0,
+  "source_before": {
+    "src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8",
+    "vite.config.ts": "d1622d456048d8751257f8bbe82713659bbc9056e647c1ce3c622af854fa915c",
+    "package.json": "65b19d966ffa93bcee4a46c05a3bc42c234d835dc2a276ee0eaa4cfcecb185d9",
+    "playwright.config.ts": "6995ebd4764ccadf5ec7be68970f33de0b6d1c485ef1c87eb8a1145125c87679"
+  },
+  "source_after": {
+    "src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8",
+    "vite.config.ts": "d1622d456048d8751257f8bbe82713659bbc9056e647c1ce3c622af854fa915c",
+    "package.json": "65b19d966ffa93bcee4a46c05a3bc42c234d835dc2a276ee0eaa4cfcecb185d9",
+    "playwright.config.ts": "6995ebd4764ccadf5ec7be68970f33de0b6d1c485ef1c87eb8a1145125c87679"
+  },
+  "log_sha256": "756518aab68af3a04bb1c51fef62f85f4e7f5ad77ebc9033ddadea90c74b66df"
+}

@@ -67,33 +67,6 @@
       "encoding": "gzip, unmodified original bytes"
     },
     {
-      "artifact": "native-callback.ts.gz",
-      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.ts",
-      "original_bytes": 4593,
-      "original_sha256": "47de47ca7818c2bb1e1e7e92e1fe75a3f76bf55ef2db70fea843e324b585ebd6",
-      "stored_bytes": 1356,
-      "stored_sha256": "119a6e292c66b277d69519b4ea60054b15cf8be75b802296849cdcc393a8f19e",
-      "encoding": "gzip, unmodified original bytes"
-    },
-    {
-      "artifact": "native-callback.js.gz",
-      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.js",
-      "original_bytes": 4273,
-      "original_sha256": "d8be59838004c38188a2986d6f9b353e4691fd3ccb1f105775ae48c4ef35543a",
-      "stored_bytes": 1258,
-      "stored_sha256": "995e63ec66c58e3836760582ec8bb5470aa241d5b7abfc33d01a53f262a399f9",
-      "encoding": "gzip, unmodified original bytes"
-    },
-    {
-      "artifact": "native-controls-reproduction.cjs.gz",
-      "original_source": "/tmp/c9-native-diagnostic-semantic-controls.cjs",
-      "original_bytes": 9757,
-      "original_sha256": "db098818ce868f4d3cdbeedb70fa0938a0bc04c3d0dc4e2ab9c42036e4f1fac9",
-      "stored_bytes": 3354,
-      "stored_sha256": "573726a8f395ef372fd7e6cdabb6f29ebd62bee79e161e96c57b81a144a97ca7",
-      "encoding": "gzip, unmodified original bytes"
-    },
-    {
       "artifact": "selector-privacy-intl-controls.json.gz",
       "original_source": "/tmp/c9-auth-diagnostic-selector-controls/report.json",
       "original_bytes": 3565,
@@ -118,6 +91,42 @@
       "original_sha256": "9436a1fa91763caa146c54d3f0df344bad9bea7506759210907d0a1bf130196c",
       "stored_bytes": 239,
       "stored_sha256": "8a9090d452e78c6108784b2bf6a586ef7fa7bd9353e41e902996e058563a32a0",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "final-normal-lint.txt.gz",
+      "original_source": "/tmp/c9-native-startup-final-lint.txt",
+      "original_bytes": 369,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+      "stored_bytes": 253,
+      "stored_sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-callback.ts.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.ts",
+      "original_bytes": 4593,
+      "original_sha256": "47de47ca7818c2bb1e1e7e92e1fe75a3f76bf55ef2db70fea843e324b585ebd6",
+      "stored_bytes": 1356,
+      "stored_sha256": "119a6e292c66b277d69519b4ea60054b15cf8be75b802296849cdcc393a8f19e",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-callback.js.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.js",
+      "original_bytes": 4273,
+      "original_sha256": "d8be59838004c38188a2986d6f9b353e4691fd3ccb1f105775ae48c4ef35543a",
+      "stored_bytes": 1258,
+      "stored_sha256": "995e63ec66c58e3836760582ec8bb5470aa241d5b7abfc33d01a53f262a399f9",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-controls-reproduction.cjs.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls.cjs",
+      "original_bytes": 9757,
+      "original_sha256": "db098818ce868f4d3cdbeedb70fa0938a0bc04c3d0dc4e2ab9c42036e4f1fac9",
+      "stored_bytes": 3354,
+      "stored_sha256": "573726a8f395ef372fd7e6cdabb6f29ebd62bee79e161e96c57b81a144a97ca7",
       "encoding": "gzip, unmodified original bytes"
     }
   ],
