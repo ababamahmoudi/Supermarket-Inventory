@@ -48,6 +48,103 @@ export interface FileRepository {
   getBackup(reference: string): Promise<FileBackupRecord | undefined>;
   putBackup(record: FileBackupRecord): Promise<void>;
 }
+const BINARY_ENCODING = "array-buffer-v1";
+const arrayBufferByteLength = Object.getOwnPropertyDescriptor(
+  ArrayBuffer.prototype,
+  "byteLength",
+)!.get!;
+interface EncodedFileRecord extends Omit<
+  StoredFileRecord,
+  "source" | "preview"
+> {
+  binary_encoding: typeof BINARY_ENCODING;
+  source: ArrayBuffer;
+  preview: ArrayBuffer;
+  source_mime_type: string;
+  preview_mime_type: string;
+}
+interface EncodedBackupRecord extends Omit<FileBackupRecord, "raw"> {
+  binary_encoding: typeof BINARY_ENCODING;
+  raw: ArrayBuffer;
+  raw_mime_type: string;
+}
+function decodeBinary(bytes: unknown, mimeType: unknown): Blob {
+  if (typeof mimeType !== "string") throw new FileStorageError("integrity");
+  try {
+    // The native getter checks ArrayBuffer's internal slots across realms;
+    // constructor identity would reject valid buffers from another window.
+    Reflect.apply(arrayBufferByteLength, bytes, []);
+    const blob = new Blob([bytes as ArrayBuffer], { type: mimeType });
+    if (blob.type !== mimeType) throw new FileStorageError("integrity");
+    return blob;
+  } catch {
+    throw new FileStorageError("integrity");
+  }
+}
+function decodeFile(
+  record: StoredFileRecord | EncodedFileRecord | undefined,
+): StoredFileRecord | undefined {
+  if (record === undefined) return undefined;
+  if (!record || typeof record !== "object" || Array.isArray(record))
+    throw new FileStorageError("integrity");
+  if (!("binary_encoding" in record)) {
+    if (record.source instanceof Blob && record.preview instanceof Blob)
+      return record;
+    throw new FileStorageError("integrity");
+  }
+  const {
+    binary_encoding,
+    source,
+    preview,
+    source_mime_type,
+    preview_mime_type,
+    ...metadata
+  } = record;
+  if (
+    binary_encoding !== BINARY_ENCODING ||
+    ![
+      metadata.reference,
+      metadata.company_id,
+      metadata.name,
+      metadata.type,
+      metadata.sha256,
+      metadata.saved_at,
+    ].every((value) => typeof value === "string") ||
+    !Number.isSafeInteger(metadata.source_size) ||
+    metadata.source_size < 0
+  )
+    throw new FileStorageError("integrity");
+  const original = decodeBinary(source, source_mime_type);
+  const decodedPreview =
+    source === preview && source_mime_type === preview_mime_type
+      ? original
+      : decodeBinary(preview, preview_mime_type);
+  return { ...metadata, source: original, preview: decodedPreview };
+}
+function decodeBackup(
+  record: FileBackupRecord | EncodedBackupRecord | undefined,
+): FileBackupRecord | undefined {
+  if (record === undefined) return undefined;
+  if (!record || typeof record !== "object" || Array.isArray(record))
+    throw new FileStorageError("integrity");
+  if (!("binary_encoding" in record)) {
+    if (record.raw instanceof Blob) return record;
+    throw new FileStorageError("integrity");
+  }
+  const { binary_encoding, raw, raw_mime_type, ...metadata } = record;
+  if (
+    binary_encoding !== BINARY_ENCODING ||
+    ![
+      metadata.reference,
+      metadata.company_id,
+      metadata.storage_key,
+      metadata.sha256,
+      metadata.saved_at,
+    ].every((value) => typeof value === "string")
+  )
+    throw new FileStorageError("integrity");
+  return { ...metadata, raw: decodeBinary(raw, raw_mime_type) };
+}
 function storageFailure(error: unknown): FileStorageError {
   if (error instanceof FileStorageError) return error;
   return new FileStorageError(
@@ -125,15 +222,42 @@ async function transaction<T>(
   }
 }
 export const browserFileRepository: FileRepository = {
-  getFile: (reference) =>
-    transaction("files", "readonly", (store) => store.get(reference)),
+  getFile: async (reference) =>
+    decodeFile(
+      await transaction("files", "readonly", (store) => store.get(reference)),
+    ),
   putFile: async (record) => {
-    await transaction("files", "readwrite", (store) => store.put(record));
+    // Some WebKit stores cannot prepare Blob/File values. Finish byte reads
+    // before opening a transaction; keep the public repository Blob contract.
+    const sourceBytes = record.source.arrayBuffer();
+    const previewBytes =
+      record.source === record.preview
+        ? sourceBytes
+        : record.preview.arrayBuffer();
+    const [source, preview] = await Promise.all([sourceBytes, previewBytes]);
+    const encoded: EncodedFileRecord = {
+      ...record,
+      binary_encoding: BINARY_ENCODING,
+      source,
+      preview,
+      source_mime_type: record.source.type,
+      preview_mime_type: record.preview.type,
+    };
+    await transaction("files", "readwrite", (store) => store.put(encoded));
   },
-  getBackup: (reference) =>
-    transaction("backups", "readonly", (store) => store.get(reference)),
+  getBackup: async (reference) =>
+    decodeBackup(
+      await transaction("backups", "readonly", (store) => store.get(reference)),
+    ),
   putBackup: async (record) => {
-    await transaction("backups", "readwrite", (store) => store.put(record));
+    const raw = await record.raw.arrayBuffer();
+    const encoded: EncodedBackupRecord = {
+      ...record,
+      binary_encoding: BINARY_ENCODING,
+      raw,
+      raw_mime_type: record.raw.type,
+    };
+    await transaction("backups", "readwrite", (store) => store.put(encoded));
   },
 };
 export function isStoredFileReference(value?: string): boolean {

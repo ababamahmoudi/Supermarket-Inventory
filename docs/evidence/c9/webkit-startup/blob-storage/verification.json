@@ -1,0 +1,149 @@
+{
+  "qualification": "All original post-transport logs and process reports saved in persistent workspace and archived. Earlier successful tool observations survived in conversation, but their /tmp originals were lost; see local/observed-before-transport.json.gz. Preserve both failed/replayed results; do not sum overlapping scopes or call a whole local suite green. Native WebKit requires new exact-head CI.",
+  "checks": [
+    {
+      "name": "integrations",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "src/file-database.test.ts",
+        "src/file-database.webkit.c9.test.ts",
+        "src/e1-bootstrap.c9.test.ts",
+        "src/history-recovery.e1.test.tsx",
+        "src/sha256.test.ts",
+        "src/pricing.test.ts"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 20.392,
+      "source_unchanged": true,
+      "original_metadata": "local/integrations.json.gz",
+      "log": "local/integrations.txt.gz"
+    },
+    {
+      "name": "history-unchanged",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "src/history-recovery.e1.test.tsx"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 17.234,
+      "source_unchanged": true,
+      "original_metadata": "local/history-unchanged.json.gz",
+      "log": "local/history-unchanged.txt.gz"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 28.348,
+      "source_unchanged": true,
+      "original_metadata": "local/build.json.gz",
+      "log": "local/build.txt.gz"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 50.779,
+      "source_unchanged": true,
+      "original_metadata": "local/lint.json.gz",
+      "log": "local/lint.txt.gz"
+    },
+    {
+      "name": "invoice-migration-browser",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/c8-migration.spec.ts",
+        "tests/c8-layout-display.spec.ts",
+        "tests/invoice-c4.spec.ts",
+        "tests/invoice-a2.spec.ts",
+        "--project",
+        "desktop",
+        "--project",
+        "phone",
+        "--workers",
+        "2",
+        "--grep",
+        "C8 schema-only|C8 backup write failure|C8 exact included|an uploaded PDF|Supplier invoice links|manual invoice drafts",
+        "--output",
+        "/workspace/scratch/c9-webkit-storage/invoice-migration-results"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 103.739,
+      "source_unchanged": true,
+      "original_metadata": "local/invoice-migration-browser.json.gz",
+      "log": "local/invoice-migration-browser.txt.gz"
+    },
+    {
+      "name": "storage-browser",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "--config",
+        "playwright.storage-c6.config.ts",
+        "--output",
+        "/workspace/scratch/c9-webkit-storage/storage-results"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 109.373,
+      "source_unchanged": true,
+      "original_metadata": "local/storage-browser.json.gz",
+      "log": "local/storage-browser.txt.gz"
+    },
+    {
+      "name": "phone-included-original-unchanged",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/c8-layout-display.spec.ts",
+        "--project",
+        "phone",
+        "--workers",
+        "2",
+        "--grep",
+        "C8 exact included",
+        "--output",
+        "/workspace/scratch/c9-webkit-storage/phone-original-replay-results"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 13.775,
+      "source_unchanged": true,
+      "original_metadata": "local/phone-included-original-unchanged.json.gz",
+      "log": "local/phone-included-original-unchanged.txt.gz"
+    },
+    {
+      "name": "twenty-photos-unchanged",
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "--config",
+        "playwright.storage-c6.config.ts",
+        "--grep",
+        "twenty distinct 3MB photos",
+        "--output",
+        "/workspace/scratch/c9-webkit-storage/twenty-photos-replay-results"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 128.716,
+      "source_unchanged": true,
+      "original_metadata": "local/twenty-photos-unchanged.json.gz",
+      "log": "local/twenty-photos-unchanged.txt.gz"
+    }
+  ]
+}

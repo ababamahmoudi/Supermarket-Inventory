@@ -1,0 +1,40 @@
+{
+  "scope": "Completed f371 and a1 diagnostic originals; separate from the later byte-encoding repair and its pending CI.",
+  "files": [
+    {
+      "file": "completed-f371-ci.json.gz",
+      "original_bytes": 5848,
+      "original_sha256": "a3804f8f502c40918da0fee42821ba8ef13edb874f61a0d92cd948e63f873db1",
+      "stored_sha256": "1bf983bb2e2f7ac2045fbca28f725933dc9ae9836cd31dcb870c4bf9f690ffd3",
+      "source": "/tmp/c9-final-ci-f371881/complete-assessment.json"
+    },
+    {
+      "file": "native-webkit-annotations.json.gz",
+      "original_bytes": 18867,
+      "original_sha256": "66d3ec696a6c6b1ddcea919de5778651dd4cad41cf038f316f25080011852381",
+      "stored_sha256": "d15208d5f0163494380a9f9b8dae5eb218a9c4252418a3d860d20d6eb04f83ee",
+      "source": "/tmp/c9-final-ci-f371881/annotations-all-118151499893.json"
+    },
+    {
+      "file": "metadata-lag-assessment.json.gz",
+      "original_bytes": 3854,
+      "original_sha256": "af4bb960e392b059510139dc804ab7f2cc9da8bf3c404cbb2eb1c5f960ab13ae",
+      "stored_sha256": "b48661b086ceed8a76deda86e01475e16932fa0b0e7745b7fd49609d4ff4788a",
+      "source": "/tmp/c9-final-ci-f371881/metadata-lag-assessment.json"
+    },
+    {
+      "file": "completed-a1-ci.json.gz",
+      "original_bytes": 27195,
+      "original_sha256": "1746bceab6c9217f0202da4b69208ebf7d037c331447f8b261dec8416f636320",
+      "stored_sha256": "4f53a0759502e8dc39ccedb5e58e21adc35a79b542f9db25c4686e056acec979",
+      "source": "/tmp/c9-final-ci-a1b37c3/final-exact-head.json"
+    },
+    {
+      "file": "native-a1-webkit-annotations.json.gz",
+      "original_bytes": 17693,
+      "original_sha256": "2108faf5a922a12b0c9586d9fdf435015ae6f5cc363d2663a2df0d724dbc3863",
+      "stored_sha256": "b84e36a675df3b5af973d5ee66687cca998b808d7211d46083bdaac3e37de120",
+      "source": "/tmp/c9-final-ci-a1b37c3/annotations-all-118164055401.json"
+    }
+  ]
+}

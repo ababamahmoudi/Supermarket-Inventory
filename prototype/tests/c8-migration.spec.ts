@@ -130,6 +130,25 @@ async function canonicalBusinessExists(page: Page) {
 async function readBackup(page: Page, reference: string) {
   return page.evaluate(
     async ({ databaseName, reference }) => {
+      const storedBlob = (
+        record: object,
+        field: "source" | "preview" | "raw",
+      ): Blob => {
+        const fields = record as Record<string, unknown>;
+        const value = fields[field];
+        if (!("binary_encoding" in fields) && value instanceof Blob)
+          return value;
+        const mime = fields[`${field}_mime_type`];
+        if (
+          fields.binary_encoding === "array-buffer-v1" &&
+          value instanceof ArrayBuffer &&
+          typeof mime === "string"
+        ) {
+          const blob = new Blob([value], { type: mime });
+          if (blob.type === mime) return blob;
+        }
+        throw new Error("Unexpected retained binary encoding.");
+      };
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open(databaseName, 1);
         request.onsuccess = () => resolve(request.result);
@@ -142,7 +161,9 @@ async function readBackup(page: Page, reference: string) {
               company_id: string;
               storage_key: string;
               sha256: string;
-              raw: Blob;
+              raw: Blob | ArrayBuffer;
+              raw_mime_type?: string;
+              binary_encoding?: "array-buffer-v1";
             }
           | undefined
         >((resolve, reject) => {
@@ -159,8 +180,8 @@ async function readBackup(page: Page, reference: string) {
           company_id: record.company_id,
           storage_key: record.storage_key,
           sha256: record.sha256,
-          raw: await record.raw.text(),
-          bytes: record.raw.size,
+          raw: await storedBlob(record, "raw").text(),
+          bytes: storedBlob(record, "raw").size,
         };
       } finally {
         database.close();
@@ -173,6 +194,25 @@ async function readBackup(page: Page, reference: string) {
 async function readOriginal(page: Page, reference: string) {
   return page.evaluate(
     async ({ databaseName, reference }) => {
+      const storedBlob = (
+        record: object,
+        field: "source" | "preview" | "raw",
+      ): Blob => {
+        const fields = record as Record<string, unknown>;
+        const value = fields[field];
+        if (!("binary_encoding" in fields) && value instanceof Blob)
+          return value;
+        const mime = fields[`${field}_mime_type`];
+        if (
+          fields.binary_encoding === "array-buffer-v1" &&
+          value instanceof ArrayBuffer &&
+          typeof mime === "string"
+        ) {
+          const blob = new Blob([value], { type: mime });
+          if (blob.type === mime) return blob;
+        }
+        throw new Error("Unexpected retained binary encoding.");
+      };
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open(databaseName, 1);
         request.onsuccess = () => resolve(request.result);
@@ -182,7 +222,9 @@ async function readOriginal(page: Page, reference: string) {
         const record = await new Promise<{
           reference: string;
           company_id: string;
-          source: Blob;
+          source: Blob | ArrayBuffer;
+          source_mime_type?: string;
+          binary_encoding?: "array-buffer-v1";
           source_size: number;
           sha256: string;
           name: string;
@@ -195,13 +237,15 @@ async function readOriginal(page: Page, reference: string) {
           request.onerror = () => reject(request.error);
         });
         if (!record) throw new Error("The uploaded original must be retained.");
-        const bytes = new Uint8Array(await record.source.arrayBuffer());
+        const bytes = new Uint8Array(
+          await storedBlob(record, "source").arrayBuffer(),
+        );
         return {
           reference: record.reference,
           company_id: record.company_id,
           recorded_hash: record.sha256,
           source_size: record.source_size,
-          actual_size: record.source.size,
+          actual_size: storedBlob(record, "source").size,
           name: record.name,
           base64: btoa(
             Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""),
@@ -361,6 +405,30 @@ async function observeMigration(
       const proof: MigrationProbe = { events: [] };
       (window as ProofWindow).__c8MigrationProof = proof;
       const retainedBackupBlobs = new WeakSet<Blob>();
+      const retainedBackupBuffers = new WeakSet<ArrayBuffer>();
+      const originalBlob = Blob;
+      // The public repository still returns Blob values. Track the actual
+      // reconstruction from a retained buffer so the unchanged text/hash
+      // guards observe verification before publication for either encoding.
+      window.Blob = new Proxy(originalBlob, {
+        construct(target, argumentsList, newTarget) {
+          const blob = Reflect.construct(
+            target,
+            argumentsList,
+            newTarget,
+          ) as Blob;
+          const parts = argumentsList[0] as BlobPart[] | undefined;
+          if (
+            Array.isArray(parts) &&
+            parts.some(
+              (part) =>
+                part instanceof ArrayBuffer && retainedBackupBuffers.has(part),
+            )
+          )
+            retainedBackupBlobs.add(blob);
+          return blob;
+        },
+      });
       const originalGet = IDBObjectStore.prototype.get;
       IDBObjectStore.prototype.get = function (key) {
         const request = originalGet.call(this, key);
@@ -378,6 +446,14 @@ async function observeMigration(
             });
             if (record?.raw instanceof Blob)
               retainedBackupBlobs.add(record.raw);
+            else if (
+              record?.binary_encoding === "array-buffer-v1" &&
+              record.raw instanceof ArrayBuffer &&
+              typeof record.raw_mime_type === "string"
+            )
+              retainedBackupBuffers.add(record.raw);
+            else if (record)
+              throw new Error("Unexpected retained backup encoding.");
           });
         return request;
       };

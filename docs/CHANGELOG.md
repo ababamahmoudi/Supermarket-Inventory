@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-19 — WebKit attachment persistence repair (verification in progress)
+
+- The completed f371 diagnostic identifies IndexedDB's Blob/File preparation failure during startup. Its dates were valid ISO dates; the earlier date repair is separate hardening. All four browser shards finished: 790 passed, 50 existing skips, one WebKit failure, no flaky cases; foundation and prototype static/unit/pricing/build passed. Correct the earlier apparent queue interpretation using actual job-step timestamps.
+- Keep the public Blob file API and existing database/version/references. Write new file/preview/backup rows as versioned ArrayBuffers with MIME metadata, and read old Blob rows without rewriting them. Preserve exact bytes, hashes, metadata, company access, commit/read-back verification, recovery and authentication. Invalid encodings fail integrity checks.
+- Align six raw-IDB browser inspectors with both retained formats, keeping all 413 original assertion/poll calls and 22 test declarations, including backup-before-publication and quota-failure/recovery checks. The adapter regression passes18/18; the same test against isolated old source passes one legacy-read case and fails17 write-dependent cases. Initial observed145/145 unit and12/12 browser passes precede an execution transport interruption that lost their temporary logs. Persistent repeats are mixed:144unit passes/one startup wait failure, then unchanged14/14;11browser passes/one phone wait failure, then unchanged1/1; four storage passes/one photo predicate failure, repeated in isolation. Build/lint pass. Original logs, source hashes, later correct UI evidence and limits are retained; scopes overlap and no CPU cause is claimed. New exact-head CI must still establish the full result; C9 stays unmerged. [Source-bound evidence](evidence/c9/webkit-startup/blob-storage/README.md).
+
 ## 2026-10-19 — Portable startup dates; exact-head CI pending
 
 - Reuse the existing ISO company-date assembler for initial relative dates; retain Date construction/day offsets, configuration, existing records and normal authentication. Controlled valid slash-formatted dates reproduce the original startup RangeError; the same new regressions change from seven failures/one pass on the original source to eight passes on the repair. Native WebKit's specific cause remains unconfirmed.

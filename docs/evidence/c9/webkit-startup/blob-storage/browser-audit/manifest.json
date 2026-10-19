@@ -1,0 +1,20 @@
+[
+  {
+    "file": "preservation-audit.json.gz",
+    "source": "/tmp/c9-file-bytes-browser-audit/preservation-audit.json",
+    "original_sha256": "2f5c5b0362207cfb172cbe73b75dded1774a8abc5998f1084766e3f4a6492f0d",
+    "stored_sha256": "dbc7c6d7aee2481d8f95199b45cb50b25805d267fbcf5ecd9b6a3b7c8fa4a42f"
+  },
+  {
+    "file": "preservation-audit.log.gz",
+    "source": "/tmp/c9-file-bytes-browser-audit/preservation-audit.log",
+    "original_sha256": "187b148149b3a70e662d614e999d8b1bb7e54e4dac6c3feda4822e04313e97cd",
+    "stored_sha256": "b3122976df192c869a8a22ad5cad59d3937534da99b9c96266ed47ee50e85511"
+  },
+  {
+    "file": "audit.mjs.gz",
+    "source": "/tmp/c9-file-bytes-browser-audit/audit.mjs",
+    "original_sha256": "875849a152f9121fda62cdfa2a568c5b54312ed71d338fa8cd976e8049e5289e",
+    "stored_sha256": "84531fe7358c59217c285bb7e000f5770b2b4cee36f03684f0231b1a6365397d"
+  }
+]

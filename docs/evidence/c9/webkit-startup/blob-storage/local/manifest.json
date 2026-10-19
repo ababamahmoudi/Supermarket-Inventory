@@ -1,0 +1,202 @@
+{
+  "logs_and_reports": [
+    {
+      "file": "local/build.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/build.json",
+      "original_bytes": 2871,
+      "original_sha256": "382cefd554110be946935d30e52b36f113dff527dd88e402f3bf3ec24bb3807d",
+      "stored_sha256": "0fa588b3110a9317583ebf5d6a2f171c72724e017b4fe83378d3375d30428ce1"
+    },
+    {
+      "file": "local/build.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/build.txt",
+      "original_bytes": 2902,
+      "original_sha256": "33e9c97ed360d56175d29bb13b9459ca20e7851a7b69f79b4a1bc9ce6ede89f5",
+      "stored_sha256": "523686762d3a9feb2cb54d4ac5cee1c40483ca1bd54208b2acbc226fd290627a"
+    },
+    {
+      "file": "local/failure-analysis.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/failure-analysis.json",
+      "original_bytes": 6711,
+      "original_sha256": "d73e4142978098d05a4a854a0b69841231dfcc22056933db2886a9e8c3355947",
+      "stored_sha256": "6f85fe1f2140c0a6d69ccb53f67edca2c0e06831310bf5ea31092d63c3a309dc"
+    },
+    {
+      "file": "local/history-unchanged.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/history-unchanged.json",
+      "original_bytes": 2912,
+      "original_sha256": "13c096bff529887b5df973555fe98fac38197433f499a8303291c2197c7e0174",
+      "stored_sha256": "d3e3f7e9c4d813a76d97bafc0b9cee7c27054cc999a8c99687f8838228e52aad"
+    },
+    {
+      "file": "local/history-unchanged.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/history-unchanged.txt",
+      "original_bytes": 427,
+      "original_sha256": "c99a5963e598b1ac2b7389d276e2973c3d973c32ad8e5fc107323953c7f63299",
+      "stored_sha256": "44ef4e1deb48ceb0e5d5d76c4004b84efd3119cc6f27b948c44b3cec3d71433c"
+    },
+    {
+      "file": "local/integrations.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/integrations.json",
+      "original_bytes": 3076,
+      "original_sha256": "bd1c6a0d6d504db377b9d13a8d85f97641279047099cd32033a040f50b95da74",
+      "stored_sha256": "5083dfab0c62631c29230f36f27fcb972976794ee305045790e0da812925927b"
+    },
+    {
+      "file": "local/integrations.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/integrations.txt",
+      "original_bytes": 3650,
+      "original_sha256": "fbe48fa033b41d8e6c517c10b3c56f0f8eba0696ea25d885fa8df16a42b98af6",
+      "stored_sha256": "a7e79c482d9227af8bb1a1760980e5cb04228795c8de97844ed0f5a7cd0c04f2"
+    },
+    {
+      "file": "local/invoice-migration-browser.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/invoice-migration-browser.json",
+      "original_bytes": 3328,
+      "original_sha256": "d3a0e3d2d45fe066ab29176f7874d597e775e91aa0cd2ee32c0de3cf03ef3c7f",
+      "stored_sha256": "7acfcd1886cce4cabdeec1cecd6ba35ab7b1c977c9a60526f9918f6409f7cc4c"
+    },
+    {
+      "file": "local/invoice-migration-browser.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/invoice-migration-browser.txt",
+      "original_bytes": 5343,
+      "original_sha256": "39daea3a1a88dee6fd8b420c0fe8dfaa897991e88cb9232c62542a868dac9824",
+      "stored_sha256": "7f1615ab30f086b18df8597f3f7f58a7a2da3af4942e77736256865a896b8382"
+    },
+    {
+      "file": "local/lint.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/lint.json",
+      "original_bytes": 2870,
+      "original_sha256": "5c9f4fa896f364d9446551150df739cbe885d5cb38e96a18fbf36388cc83bcc0",
+      "stored_sha256": "74e4ad3a8b98d28ad4be46056fd5400687d195cbe2d7972dded7a57d56cde264"
+    },
+    {
+      "file": "local/lint.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/lint.txt",
+      "original_bytes": 369,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+      "stored_sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe"
+    },
+    {
+      "file": "local/local-preview-probe.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/local-preview-probe.json",
+      "original_bytes": 96,
+      "original_sha256": "da3e292ca8352c134b46ef6c524801dc66d9a047de32903964c547123b8fc985",
+      "stored_sha256": "080084483cde2ecfb4acd836c6ab01b926414a27caef785bfccb794ed8ced47e"
+    },
+    {
+      "file": "local/observed-before-transport.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/observed-before-transport.json",
+      "original_bytes": 1385,
+      "original_sha256": "416f37332e5ed0bc999cc598794d0083264b5653d128697712af91a5d045d16c",
+      "stored_sha256": "2e9b0b162de518e89beaf028b09b0db920ea13c82224c14bfc606bd0da37f1d5"
+    },
+    {
+      "file": "local/phone-included-original-unchanged.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/phone-included-original-unchanged.json",
+      "original_bytes": 3101,
+      "original_sha256": "516e27c8e80a8c52d5e175ed8d7d38bb9d49bae8e01c7f4db64e8792c636fdf6",
+      "stored_sha256": "c56d0ddbb6150c024bf6c4141ba108f44a0f64cb6c478e74ef80ac547aaa3d97"
+    },
+    {
+      "file": "local/phone-included-original-unchanged.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/phone-included-original-unchanged.txt",
+      "original_bytes": 591,
+      "original_sha256": "86a03552700f38c475f9e14fed541b0a05d1a6d35af568c077b7e24b1728f639",
+      "stored_sha256": "33faede61ff0bd1ada3070a861ea080fa46dc57be755c29f7bf58f4a69a408c0"
+    },
+    {
+      "file": "local/storage-browser.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/storage-browser.json",
+      "original_bytes": 3009,
+      "original_sha256": "2de4c3b29457c04e3fd73a3fc7cea1b97e4d3fa0da460a4866c70f8927c0596f",
+      "stored_sha256": "29d2ee5e2c5d3f10e03ce350c29f66b1df413b753ae41b3aa831891ed2c6f8e4"
+    },
+    {
+      "file": "local/storage-browser.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/storage-browser.txt",
+      "original_bytes": 3347,
+      "original_sha256": "950cfefedc5ee00006c95fe3644971d07a87bec9e701a2462a80f0ff3a3e9fe5",
+      "stored_sha256": "55f41d8cd8c77ef1f4e55a4324de0514023b4637fd9e7751687162500b59be13"
+    },
+    {
+      "file": "local/twenty-photos-unchanged.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/twenty-photos-unchanged.json",
+      "original_bytes": 3070,
+      "original_sha256": "d936b1a3088db24d1721c1b4fb8d911b9deecbcabdd491ba9de64cd20f4d34cf",
+      "stored_sha256": "50179bf2dbab5c889283ed9fc2307d92c4d162897038b74c2e26f9921d28d652"
+    },
+    {
+      "file": "local/twenty-photos-unchanged.txt.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/twenty-photos-unchanged.txt",
+      "original_bytes": 2562,
+      "original_sha256": "21a52b2877dad6c3ffce5bc8a872addb5043e6e143e7c71de292876bdaf8c1f0",
+      "stored_sha256": "e5b7da2fb3f095cac4f13a6822329978a94cd6d57ebee57a1201d29a7fe4e461"
+    }
+  ],
+  "original_artifacts": [
+    {
+      "file": "local/artifacts/test-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/twenty-real-photos-proof.json.gz",
+      "source": "/workspace/Supermarket-Inventory/prototype/test-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/twenty-real-photos-proof.json",
+      "original_bytes": 9140,
+      "original_sha256": "5a8e8d5e093c34910870596615f9ffb9570653b4fd37537de265bf7ed1b3b77a",
+      "stored_sha256": "65a2d19563dd347bfd28093dde66acb62515ec0a919bfa280c9f80bd906970c2"
+    },
+    {
+      "file": "local/artifacts/test-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md.gz",
+      "source": "/workspace/Supermarket-Inventory/prototype/test-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md",
+      "original_bytes": 600,
+      "original_sha256": "63277e838b14321313df74c683b1ebf5272911dcbf0becbb561672d0d430e8eb",
+      "stored_sha256": "47ef4a819aa1a9037cf0d21ac215ff34e64ef624cb6f72adf0e9a1493a59da71"
+    },
+    {
+      "file": "local/artifacts/test-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/two-page-pdf-bytes-proof.json.gz",
+      "source": "/workspace/Supermarket-Inventory/prototype/test-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/two-page-pdf-bytes-proof.json",
+      "original_bytes": 632,
+      "original_sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9",
+      "stored_sha256": "ef1726f97d5d545d6cadda679a8d2e279408661e574513e3cf88c0bab4a67a02"
+    },
+    {
+      "file": "local/artifacts/test-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/two-page-pdf-bytes-proof.json.gz",
+      "source": "/workspace/Supermarket-Inventory/prototype/test-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/two-page-pdf-bytes-proof.json",
+      "original_bytes": 632,
+      "original_sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9",
+      "stored_sha256": "ef1726f97d5d545d6cadda679a8d2e279408661e574513e3cf88c0bab4a67a02"
+    },
+    {
+      "file": "local/artifacts/storage-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/storage-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md",
+      "original_bytes": 16860,
+      "original_sha256": "85efe0a36ec647e41d53f41490fb32635dcdbdff30fdc5a202f17bf51d692389",
+      "stored_sha256": "56841bb1f49fc975f11897285be7392a2646a2d6b8506fe4b94df40aded40498"
+    },
+    {
+      "file": "local/artifacts/invoice-migration-results/c8-layout-display-C8-exact-0962d-mpersonated-by-its-filename-phone/error-context.md.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/invoice-migration-results/c8-layout-display-C8-exact-0962d-mpersonated-by-its-filename-phone/error-context.md",
+      "original_bytes": 19333,
+      "original_sha256": "55e6f20453ec35d94452fcfb1ce66849336b505ed6d15271ecf07b35abdf7ab0",
+      "stored_sha256": "041bf3e6f141e5d32444f917dccce3398cdff15f7866bee3ffbb07217013c95e"
+    },
+    {
+      "file": "local/artifacts/invoice-migration-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/two-page-pdf-bytes-proof.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/invoice-migration-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-phone/two-page-pdf-bytes-proof.json",
+      "original_bytes": 632,
+      "original_sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9",
+      "stored_sha256": "ef1726f97d5d545d6cadda679a8d2e279408661e574513e3cf88c0bab4a67a02"
+    },
+    {
+      "file": "local/artifacts/invoice-migration-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/two-page-pdf-bytes-proof.json.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/invoice-migration-results/invoice-c4-an-uploaded-PDF-9155e-s-exact-bytes-after-refresh-desktop/two-page-pdf-bytes-proof.json",
+      "original_bytes": 632,
+      "original_sha256": "d2587ca672889ba36983c97e62986c5f69d21e1868c4ab34b5c9e26d9cfbb0b9",
+      "stored_sha256": "ef1726f97d5d545d6cadda679a8d2e279408661e574513e3cf88c0bab4a67a02"
+    },
+    {
+      "file": "local/artifacts/twenty-photos-replay-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md.gz",
+      "source": "/workspace/scratch/c9-webkit-storage/twenty-photos-replay-results/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop/error-context.md",
+      "original_bytes": 16861,
+      "original_sha256": "c40c37b66d7dbaf6bae164318fa41cc731928ce56cb20baf3d987b19c5085179",
+      "stored_sha256": "4cf3d829af62b7e631be4b28985950bb8e847d0a862aada71f21a892801c6542"
+    }
+  ]
+}
