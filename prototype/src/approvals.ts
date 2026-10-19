@@ -1,13 +1,15 @@
 import Decimal from "decimal.js";
 import { demoSeed } from "./config";
 import { createId } from "./ids";
-import { effectiveOffer, effectivePrice } from "./catalog";
+import { effectiveOffer, regularPrice } from "./catalog";
 import { branchSellsToCustomers, sellingBranches } from "./settings";
 import {
   clearManualPriceMarker,
   hydrateProductManualPriceMarkers,
   setManualPriceMarker,
+  manualPrice,
 } from "./manual-prices";
+import { productStoreCost } from "./product-costs";
 import { effectiveApprovalLocation } from "./received";
 export { isOfferScheduledNow } from "./catalog";
 import type {
@@ -83,6 +85,19 @@ export function approvalSnapshot(
     price: product.selling_price,
     overrides: product.branch_prices ?? {},
     manual_prices: product.manual_prices,
+    store_costs: sellingBranches(state.config).map((branch) => [
+      branch,
+      productStoreCost(
+        state,
+        {
+          company_id: product.company_id,
+          branch,
+          role: "supervisor",
+          actor: "",
+        },
+        product,
+      ),
+    ]),
     proposals: state.approvals
       .filter(
         (approval) =>
@@ -97,6 +112,10 @@ export function approvalSnapshot(
         effectiveApprovalLocation(state, approval),
         approval.source_invoice_id,
         approval.invoice_ids,
+        approval.unit_cost,
+        approval.margin,
+        approval.threshold,
+        approval.manual_price_review,
         (state.invoice_location_corrections ?? [])
           .filter(
             (correction) =>
@@ -157,7 +176,7 @@ export function approvalLocationEffects(
     const mapping = offerMapping(state, approval.proposed_price);
     const effect: ApprovalLocationEffect = {
       locations: [location],
-      old_price: effectivePrice(state, product, location),
+      old_price: regularPrice(state, product, location),
       new_price: approval.proposed_price,
       offer_label: offer?.label,
       offer_stops: Boolean(
@@ -203,7 +222,7 @@ export function reconcileOffers(
     const price =
       offer.scope === "all"
         ? product.selling_price
-        : effectivePrice(state, product, offer.branch);
+        : regularPrice(state, product, offer.branch);
     const mapping = offerMapping(state, price);
     if (
       offer.status !== "stopped" &&
@@ -231,7 +250,7 @@ export function reconcileOffers(
         .map((branch) => ({
           scope: "branch" as const,
           branch,
-          price: effectivePrice(state, product, branch),
+          price: regularPrice(state, product, branch),
         })),
     ];
   for (const item of scopes) {
@@ -284,7 +303,7 @@ export function syncPriceConflicts(
   const product = currentProduct(state, productCode);
   const prices = Object.fromEntries(
     sellingBranches(state.config, true)
-      .map((branch) => [branch, effectivePrice(state, product, branch)])
+      .map((branch) => [branch, regularPrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );
   const snapshot = JSON.stringify(prices);
@@ -360,6 +379,58 @@ export function applyApprovedPrice(
   );
 }
 
+export function manualRegularApprovalPreview(
+  state: DemoState,
+  approval: Approval,
+  decision: "rule" | "keep" = "rule",
+) {
+  const review = approval.manual_price_review;
+  const product = state.products.find(
+    (entry) =>
+      entry.company_id === state.config.company.seed_key &&
+      entry.company_id === approval.company_id &&
+      entry.code === approval.product_code,
+  );
+  const origin = effectiveApprovalLocation(state, approval);
+  const price = review
+    ? decision === "keep"
+      ? review.kept_price
+      : review.calculated_price
+    : approval.proposed_price;
+  const cost = approval.unit_cost;
+  const margin =
+    cost && new Decimal(price).gt(0)
+      ? new Decimal(price).minus(cost).div(price).toFixed(8)
+      : null;
+  const threshold =
+    approval.threshold ??
+    (product
+      ? state.config.pricing_categories.find(
+          (entry) => entry.key === product.pricing_category,
+        )?.minimum_margin
+      : null) ??
+    null;
+  return {
+    price,
+    regular_price: review?.kept_price ?? approval.current_price ?? null,
+    calculated_price: review?.calculated_price ?? approval.proposed_price,
+    margin,
+    threshold,
+    below_minimum_margin: Boolean(
+      margin !== null &&
+      threshold !== null &&
+      threshold !== "" &&
+      new Decimal(margin).lt(threshold),
+    ),
+    below_cost: Boolean(cost && new Decimal(price).lt(cost)),
+    can_keep: Boolean(
+      review &&
+      product &&
+      regularPrice(state, product, origin) === review.kept_price &&
+      manualPrice(state, product, origin),
+    ),
+  };
+}
 export function resolveApproval(
   state: DemoState,
   id: string,
@@ -368,6 +439,7 @@ export function resolveApproval(
   branch: Branch,
   reason?: string,
   expectedSnapshot?: string,
+  regularDecision: "rule" | "keep" = "rule",
 ): void {
   const approval = state.approvals.find(
     (item) =>
@@ -386,6 +458,43 @@ export function resolveApproval(
     expectedSnapshot !== approvalSnapshot(state, product.code)
   )
     throw new Error("Prices changed. Refresh the approval preview");
+  const regularReview = approval.manual_price_review;
+  const regularPreview = manualRegularApprovalPreview(
+    state,
+    approval,
+    regularDecision,
+  );
+  if (decision === "approve" && regularReview) {
+    const currentCost = productStoreCost(
+      state,
+      {
+        company_id: approval.company_id,
+        branch: origin,
+        role: "supervisor",
+        actor: "",
+      },
+      product,
+    );
+    if (
+      !regularPreview.can_keep ||
+      !currentCost ||
+      !new Decimal(currentCost).eq(regularReview.received_cost) ||
+      !new Decimal(approval.unit_cost ?? "-1").eq(regularReview.received_cost)
+    )
+      throw new Error("Prices changed. Refresh the approval preview");
+    if (
+      regularDecision === "keep" &&
+      (scope !== "branch" || targetBranch !== origin)
+    )
+      throw new Error("Keep this regular price at its receiving location");
+    if (
+      (regularPreview.below_minimum_margin || regularPreview.below_cost) &&
+      !reason?.trim()
+    )
+      throw new Error(
+        "Add a reason for keeping or approving this price below the minimum margin",
+      );
+  }
   if (decision === "approve" && approval.type === "margin_review")
     throw new Error(
       "Keep the approved price with a reason or propose an override",
@@ -403,16 +512,32 @@ export function resolveApproval(
     );
     return;
   }
-  if (decision === "approve")
+  if (decision === "approve" && regularReview && regularDecision === "keep") {
+    regularReview.decision = "keep";
+    approval.proposed_price = regularReview.kept_price;
+    approval.manual_override = true;
+    approval.clear_manual_price = false;
+    approval.margin = regularPreview.margin;
+    recordDemoActivity(state, "Keep regular price", product.code, origin);
+  } else if (decision === "approve")
     applyApprovedPrice(
       state,
       product.code,
-      approval.proposed_price,
+      regularReview?.calculated_price ?? approval.proposed_price,
       scope,
       targetBranch,
       approval.type === "new_product" ? "Approve product" : "Approve price",
     );
-  if (decision === "approve" && approval.manual_override) {
+  if (decision === "approve" && regularReview && regularDecision === "rule") {
+    regularReview.decision = "rule";
+    approval.proposed_price = regularReview.calculated_price;
+    approval.clear_manual_price = true;
+  }
+  if (
+    decision === "approve" &&
+    approval.manual_override &&
+    !(regularReview && regularDecision === "keep")
+  ) {
     const retained =
       scope === "all" ? structuredClone(product.manual_prices ?? {}) : {};
     setManualPriceMarker(
@@ -496,7 +621,7 @@ export function proposeManualOverride(
     id: `override:${review.company_id}:${state.approvals.length}`,
     type: "price_change",
     proposed_price: amount,
-    current_price: effectivePrice(state, product, origin),
+    current_price: regularPrice(state, product, origin),
     reason: reason.trim(),
     manual_override: true,
     status: "pending",
@@ -530,7 +655,7 @@ export function markPriceConflictIntentional(
   const product = currentProduct(state, alert.product_code);
   const prices = Object.fromEntries(
     sellingBranches(state.config, true)
-      .map((branch) => [branch, effectivePrice(state, product, branch)])
+      .map((branch) => [branch, regularPrice(state, product, branch)])
       .filter((entry): entry is [Branch, string] => Boolean(entry[1])),
   );
   if (
@@ -584,7 +709,7 @@ export function offerReadiness(
   const price =
     offer.scope === "all"
       ? product.selling_price
-      : effectivePrice(state, product, offer.branch);
+      : regularPrice(state, product, offer.branch);
   if (!samePrice(price, offer.price)) return "price_changed";
   const mapping = offerMapping(state, price);
   if (

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
-import { addSelectedLabels } from "./label-selection";
+import { addSelectedLabels, selectLabelGroup } from "./label-selection";
 
 for (const language of ["en", "fa"] as const) {
   for (const dimensions of [
@@ -19,6 +19,18 @@ for (const language of ["en", "fa"] as const) {
       });
       await signIn(page, "Floor Worker");
       await page.goto("/#labels");
+      const initialQueue = await page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
+            .label_waitlist,
+      );
+      expect(initialQueue).toHaveLength(1);
+      expect(initialQueue[0]).toMatchObject({
+        product_code: "0012",
+        preferred_template: "promo",
+        copies: 1,
+        branch: "Branch 1",
+      });
       await page.getByRole("tab", { name: "Templates", exact: true }).click();
       await page
         .getByRole("button", { name: "New template", exact: true })
@@ -38,6 +50,7 @@ for (const language of ["en", "fa"] as const) {
       await page.getByRole("tab", { name: "Products", exact: true }).click();
       await addSelectedLabels(page, ["0003", "0005", "0009"]);
       await page.getByRole("tab", { name: /^Waitlist/ }).click();
+      await selectLabelGroup(page, "regular", "Template 1");
       await page
         .getByRole("button", { name: "Print labels", exact: true })
         .click();
@@ -96,6 +109,17 @@ for (const language of ["en", "fa"] as const) {
         .getByRole("dialog")
         .getByRole("button", { name: "No", exact: true })
         .click();
+      expect(
+        await page.evaluate(
+          (ids) =>
+            JSON.parse(
+              localStorage.getItem("supermarket-prototype-v1")!,
+            ).label_waitlist.filter((item: { id: string }) =>
+              ids.includes(item.id),
+            ),
+          initialQueue.map((item: { id: string }) => item.id),
+        ),
+      ).toEqual(initialQueue);
       if (language === "fa") await setLanguage(page, "fa");
       await page.reload();
       await page

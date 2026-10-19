@@ -149,20 +149,94 @@ for (const language of ["en", "fa"] as const) {
       .evaluate((toolbar) => {
         const table = document.querySelector(".catalog-products-table")!;
         const card = table.closest(".ui-card")!;
+        const cardBounds = card.getBoundingClientRect();
+        const toolbarBounds = toolbar.getBoundingClientRect();
+        const tableBounds = table.getBoundingClientRect();
+        const cardStyle = getComputedStyle(card);
+        const visible = (element: Element) =>
+          element.getBoundingClientRect().width > 1 &&
+          element.getBoundingClientRect().height > 1;
+        const headers = [...table.querySelectorAll("thead th")].filter(visible);
+        const row = table.querySelector("tbody tr:not(.table-expanded-row)")!;
+        const cells = [
+          ...row.querySelectorAll(":scope > th,:scope > td"),
+        ].filter(visible);
+        const firstCell = cells[0];
+        const firstCellBounds = firstCell.getBoundingClientRect();
+        const text = document.createRange();
+        text.selectNodeContents(firstCell);
+        const textBounds = text.getBoundingClientRect();
+        const firstCellStyle = getComputedStyle(firstCell);
         return {
-          // Section spacing excludes the card's required internal padding.
-          gap:
-            card.getBoundingClientRect().top -
-            toolbar.getBoundingClientRect().bottom,
-          tableInset:
-            table.getBoundingClientRect().top -
-            card.getBoundingClientRect().top,
-          cardPadding: parseFloat(getComputedStyle(card).paddingBlockStart),
+          // C8 puts filters inside their list card; measure the real gap to
+          // the table and keep both regions inside the card's content edges.
+          toolbarInsideCard: card.contains(toolbar),
+          gap: tableBounds.top - toolbarBounds.bottom,
+          toolbarTopInset: toolbarBounds.top - cardBounds.top,
+          cardPadding: parseFloat(cardStyle.paddingBlockStart),
+          horizontalInsets: [
+            toolbarBounds.left - cardBounds.left,
+            cardBounds.right - toolbarBounds.right,
+            tableBounds.left - cardBounds.left,
+            cardBounds.right - tableBounds.right,
+          ],
+          cardHorizontalPadding: [
+            parseFloat(cardStyle.paddingLeft),
+            parseFloat(cardStyle.paddingRight),
+          ],
+          tableBottomInset: cardBounds.bottom - tableBounds.bottom,
+          firstCellTextInsets: [
+            textBounds.left - firstCellBounds.left,
+            firstCellBounds.right - textBounds.right,
+          ],
+          firstCellPadding: [
+            parseFloat(firstCellStyle.paddingLeft),
+            parseFloat(firstCellStyle.paddingRight),
+          ],
+          columnCount: cells.length,
+          columns: headers.map((header, index) => {
+            const bounds = header.getBoundingClientRect();
+            const cell = cells[index];
+            const cellBounds = cell.getBoundingClientRect();
+            const headerStyle = getComputedStyle(header);
+            const cellStyle = getComputedStyle(cell);
+            return {
+              leftDifference: Math.abs(bounds.left - cellBounds.left),
+              rightDifference: Math.abs(bounds.right - cellBounds.right),
+              paddingDifference: Math.max(
+                Math.abs(
+                  parseFloat(headerStyle.paddingInlineStart) -
+                    parseFloat(cellStyle.paddingInlineStart),
+                ),
+                Math.abs(
+                  parseFloat(headerStyle.paddingInlineEnd) -
+                    parseFloat(cellStyle.paddingInlineEnd),
+                ),
+              ),
+            };
+          }),
         };
       });
+    expect(spacing.toolbarInsideCard).toBe(true);
     expect(spacing.gap).toBeGreaterThanOrEqual(0);
     expect(spacing.gap).toBeLessThanOrEqual(isMobile ? 16 : 24);
-    expect(spacing.tableInset).toBeCloseTo(spacing.cardPadding, 0);
+    expect(spacing.toolbarTopInset).toBeGreaterThanOrEqual(
+      spacing.cardPadding - 1,
+    );
+    for (const [index, inset] of spacing.horizontalInsets.entries())
+      expect(inset).toBeCloseTo(spacing.cardHorizontalPadding[index % 2], 0);
+    expect(spacing.tableBottomInset).toBeGreaterThanOrEqual(0);
+    for (const [index, inset] of spacing.firstCellTextInsets.entries())
+      expect(inset).toBeGreaterThanOrEqual(spacing.firstCellPadding[index] - 1);
+    expect(spacing.columnCount).toBeGreaterThan(0);
+    if (!isMobile) {
+      expect(spacing.columns).toHaveLength(spacing.columnCount);
+      for (const column of spacing.columns) {
+        expect(column.leftDifference).toBeLessThanOrEqual(1);
+        expect(column.rightDifference).toBeLessThanOrEqual(1);
+        expect(column.paddingDifference).toBeLessThanOrEqual(1);
+      }
+    }
     const { toolbarGroups } = await inspect(page, "Products", language);
     expect(toolbarGroups).toHaveLength(1);
     for (const group of toolbarGroups) {
@@ -239,6 +313,9 @@ test("Part 1 invoice names and approved-price notes fit on one line", async ({
   await page.goto("/#invoices");
   await uploadInvoice(page);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
+  await expect(
+    page.locator(".invoice-line-toggle .product-name strong"),
+  ).toHaveCount(6);
   const names = await page
     .locator(".invoice-line-toggle .product-name strong")
     .evaluateAll((elements) =>
@@ -454,6 +531,7 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
     "Demo with fictional data",
   );
   await page.goto("/#invoices");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.locator("main")).toContainText(
     "AI invoice reading is simulated",
   );

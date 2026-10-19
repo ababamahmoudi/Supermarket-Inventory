@@ -1,7 +1,14 @@
 import Decimal from "decimal.js";
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import { approvalLocationEffects, type PriceScope } from "../approvals";
-import { effectivePrice } from "../catalog";
+import {
+  approvalLocationEffects,
+  manualRegularApprovalPreview,
+  type PriceScope,
+} from "../approvals";
+import { formatMoney } from "../formatters";
+import { weightPriceDisplay } from "../weighed";
+import { WhatsMissing } from "../WhatsMissing";
+import { regularPrice } from "../catalog";
 import { branchLabel, branchSellsToCustomers } from "../settings";
 import { effectiveApprovalLocation } from "../received";
 import { OfferLabel, ProductName } from "../presentation";
@@ -17,12 +24,22 @@ export function ApprovalReviewPanel({
   target,
   onScopeChange,
   showEffects = true,
+  regularDecision = "rule",
+  onRegularDecisionChange,
+  regularReason = "",
+  regularReasonError,
+  onRegularReasonChange,
 }: {
   approval: Approval;
   scope: PriceScope;
   target: Branch;
   onScopeChange: (scope: PriceScope) => void;
   showEffects?: boolean;
+  regularDecision?: "rule" | "keep";
+  onRegularDecisionChange?: (decision: "rule" | "keep") => void;
+  regularReason?: string;
+  regularReasonError?: string;
+  onRegularReasonChange?: (reason: string) => void;
 }) {
   const { state, lang, t } = useDemo();
   const product = state.products.find(
@@ -32,16 +49,20 @@ export function ApprovalReviewPanel({
   );
   if (!product) return null;
   const origin = effectiveApprovalLocation(state, approval);
-  const oldPrice = effectivePrice(
+  const oldPrice = regularPrice(
     state,
     product,
     origin === "all" ? target : origin,
   );
   const cost = approval.unit_cost ?? product.last_cost_before_tax;
-  const margin = new Decimal(approval.proposed_price || 0).gt(0)
-    ? new Decimal(approval.proposed_price)
+  const manualReview = approval.manual_price_review
+    ? manualRegularApprovalPreview(state, approval, regularDecision)
+    : null;
+  const proposedPrice = manualReview?.price ?? approval.proposed_price;
+  const margin = new Decimal(proposedPrice || 0).gt(0)
+    ? new Decimal(proposedPrice)
         .minus(cost)
-        .div(approval.proposed_price)
+        .div(proposedPrice)
         .times(100)
         .toFixed(2)
     : null;
@@ -53,8 +74,37 @@ export function ApprovalReviewPanel({
     origin === "all" ? target : origin,
   );
   const overridesRemoved = effects.some((effect) => effect.override_removed);
+  const priceLabel = (price: string) => {
+    const display =
+      product.sold_by === "weight"
+        ? weightPriceDisplay(price, state.config).main
+        : { amount: price, unit: "each" };
+    return `${formatMoney(display.amount, { currency: state.config.company.currency })}${display.unit === "each" ? "" : `/${display.unit}`}`;
+  };
   return (
     <div className="approval-review-content">
+      {showEffects &&
+        approval.manual_price_review &&
+        onRegularDecisionChange && (
+          <Field label={t("Selling price", "قیمت فروش")}>
+            <Select
+              value={regularDecision}
+              onChange={(value) =>
+                onRegularDecisionChange(value as "rule" | "keep")
+              }
+              options={[
+                {
+                  value: "rule",
+                  label: `${t("Use the new calculated price", "از قیمت محاسبه‌شدهٔ جدید استفاده شود")} ${priceLabel(approval.manual_price_review.calculated_price)}`,
+                },
+                {
+                  value: "keep",
+                  label: `${t("Keep", "حفظ شود")} ${priceLabel(approval.manual_price_review.kept_price)}`,
+                },
+              ]}
+            />
+          </Field>
+        )}
       <section
         className="approval-review-summary"
         aria-label={t("Approval summary", "خلاصه تأیید")}
@@ -86,7 +136,7 @@ export function ApprovalReviewPanel({
               <small>{t("New price", "قیمت جدید")}</small>
               <strong>
                 <ProductPrice
-                  value={approval.proposed_price}
+                  value={proposedPrice}
                   product={product}
                   config={state.config}
                 />
@@ -111,7 +161,57 @@ export function ApprovalReviewPanel({
           </div>
         </div>
       </section>
-      {showEffects && (
+      {showEffects &&
+        approval.manual_price_review &&
+        regularDecision === "keep" && (
+          <>
+            <p className="muted">
+              {t("Keep", "حفظ شود")}{" "}
+              {priceLabel(approval.manual_price_review.kept_price)} ·{" "}
+              {branchLabel(state.config, origin, lang)}
+            </p>
+          </>
+        )}
+      {showEffects &&
+        (manualReview?.below_minimum_margin || manualReview?.below_cost) && (
+          <section
+            className={`banner ${manualReview.below_cost ? "danger" : "pending"} sale-request-margin-warning`}
+          >
+            <p>
+              {t(
+                manualReview.below_cost
+                  ? "This price is below cost."
+                  : "This price is below the minimum margin.",
+                manualReview.below_cost
+                  ? "این قیمت کمتر از هزینه است."
+                  : "این قیمت کمتر از حداقل حاشیهٔ سود است.",
+              )}
+            </p>
+            <WhatsMissing
+              issues={
+                regularReasonError
+                  ? [
+                      {
+                        id: "manual-keep-reason",
+                        fieldId: "manual-keep-reason",
+                        message: regularReasonError,
+                      },
+                    ]
+                  : []
+              }
+            />
+            <Field label={t("Reason", "دلیل")} error={regularReasonError}>
+              <textarea
+                id="manual-keep-reason"
+                value={regularReason}
+                onChange={(event) =>
+                  onRegularReasonChange?.(event.target.value)
+                }
+              />
+            </Field>
+          </section>
+        )}
+      {showEffects && regularDecision !== "keep" && (
         <>
           <Field
             label={t("Apply price to", "اعمال قیمت به")}

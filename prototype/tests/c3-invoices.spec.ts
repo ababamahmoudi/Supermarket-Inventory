@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { setLanguage, signIn, uploadInvoice } from "./helpers";
+import { createHash } from "node:crypto";
+import { invoiceImage, setLanguage, signIn, uploadInvoice } from "./helpers";
 import type { DemoState } from "../src/types";
 import type { Order } from "../src/orders";
 
@@ -10,6 +11,29 @@ async function reviewWithComparison(page: Page) {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await uploadInvoice(page);
+  // The review heading appears before original retention and the simulated
+  // reading transition finish. Injecting an order earlier can be overwritten
+  // by either asynchronous durable snapshot. Wait for this upload's committed
+  // original and completed review before modifying the fixture snapshot.
+  const originalHash = createHash("sha256")
+    .update(invoiceImage.buffer)
+    .digest("hex");
+  await expect
+    .poll(() =>
+      page.evaluate((key) => {
+        const state: DemoState = JSON.parse(localStorage.getItem(key)!);
+        return {
+          fileName: state.invoice.file_name,
+          originalHash: state.invoice.file_data?.split(":").at(-1),
+          status: state.invoice.status,
+        };
+      }, storage),
+    )
+    .toEqual({
+      fileName: invoiceImage.name,
+      originalHash,
+      status: "review",
+    });
   await page.evaluate((key) => {
     const state: DemoState = JSON.parse(localStorage.getItem(key)!);
     const invoice = state.invoice;

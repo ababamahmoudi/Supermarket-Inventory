@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { addSelectedLabels } from "./label-selection";
+import { addSelectedLabels, selectLabelGroup } from "./label-selection";
 import { chooseOption, setLanguage, signIn } from "./helpers";
 
 const STORAGE_KEY = "supermarket-prototype-v1";
@@ -210,8 +210,22 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
     "Weight",
   );
   await expect(
-    editor.getByLabel("Selling price (per kg)", { exact: true }),
-  ).toHaveValue("16.51");
+    editor.locator(".product-editor-current-price .weight-price-main"),
+  ).toHaveText("$16.51/kg");
+  await expect(
+    editor.locator(".product-editor-current-price input"),
+  ).toHaveCount(0);
+  // This undated fixture must resolve tracking before a metadata save. The
+  // approved amount remains read-only; this does not open Change price.
+  await editor
+    .getByRole("switch", { name: "Date tracking", exact: true })
+    .uncheck();
+  await chooseOption(
+    page,
+    editor.getByLabel("Stop tracking", { exact: true }),
+    "keep",
+    "Stop tracking, keep the date on the product",
+  );
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
@@ -242,6 +256,7 @@ test("weighed Regular labels retain physical geometry, readable units, and appro
   await page.goto("/#labels");
   await addSelectedLabels(page, [PRODUCT_CODE]);
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular", "Regular");
   const label = page.locator(".label-bilingual-preview .shelf-label");
   await expect(label.locator(".weight-price-main")).toHaveText("$7.49/lb");
   await expect(label.locator(".weight-price-secondary")).toContainText(

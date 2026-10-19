@@ -1,0 +1,310 @@
+{
+  "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "reviewer": "/root",
+  "reviewedAt": "2026-10-13T18:22:12.178169+00:00",
+  "reviewedCount": 15,
+  "verdict": "PASS",
+  "reviewPassed": true,
+  "strictGalleryEligible": true,
+  "diagnostic": false,
+  "realFailures": [],
+  "referenceImages": [
+    {
+      "file": "1.png",
+      "bytes": 662344,
+      "sha256": "a5713ece8ceeda7e65ae3b87adcc4608d09f05e87f4db9b8d1e455605b29e860",
+      "openedIndividually": true,
+      "notes": "Personally opened this unchanged owner annotation during current-source review; compared date rows, invalid save, full-height Labels containment, Orders column alignment and Product grouped cards."
+    },
+    {
+      "file": "2.png",
+      "bytes": 620459,
+      "sha256": "a39c775e76acc03f6a0fac2311e8adb717554450f4f35c1306a094514ae082ad",
+      "openedIndividually": true,
+      "notes": "Personally opened this unchanged owner annotation during current-source review; compared date rows, invalid save, full-height Labels containment, Orders column alignment and Product grouped cards."
+    },
+    {
+      "file": "3.png",
+      "bytes": 644837,
+      "sha256": "63ed45dcd87ca9d7526065f09be2ee2bec539c0575f55adaa7de82a06db36df5",
+      "openedIndividually": true,
+      "notes": "Personally opened this unchanged owner annotation during current-source review; compared date rows, invalid save, full-height Labels containment, Orders column alignment and Product grouped cards."
+    },
+    {
+      "file": "4.png",
+      "bytes": 572152,
+      "sha256": "63c73c79d77d62a3ad581023d7e6aec1eabdabe96b2abb893fdfeecb91566259",
+      "openedIndividually": true,
+      "notes": "Personally opened this unchanged owner annotation during current-source review; compared date rows, invalid save, full-height Labels containment, Orders column alignment and Product grouped cards."
+    },
+    {
+      "file": "5.png",
+      "bytes": 557581,
+      "sha256": "42fb9b0ef52f9ef2547d8b13d9c045c7efac311de48eb354f334f9c6dfb81a8b",
+      "openedIndividually": true,
+      "notes": "Personally opened this unchanged owner annotation during current-source review; compared date rows, invalid save, full-height Labels containment, Orders column alignment and Product grouped cards."
+    }
+  ],
+  "reviews": [
+    {
+      "filename": "edit-product-dates-en-light.png",
+      "scene": "edit-product-dates",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "56c227599dba6bbd545e2352128827f02cbf60e12a576abc896faec95603a038",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. Status dot, expiry date, days-left text and remove action share centered rows; no text or control crosses the dialog boundary.",
+        "Type, Date, Quantity and Lot labels align over filled controls; Add matches the field height. Phone wraps the group into two rows with Add below."
+      ],
+      "framingLimits": [
+        "The dialog scroll is framed on Date tracking; sections above the visible viewport are not all shown."
+      ]
+    },
+    {
+      "filename": "edit-product-missing-date-en-light.png",
+      "scene": "edit-product-missing-date",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "122f092c8902e5232ff60c82100286c6e9ed37772196efe1c15c724657eb990c",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. The complete red missing-date helper is readable within its field group, including above the phone sticky footer.",
+        "Cancel and Save product remain contained; invalid date field is visible in the scrolled Dates section."
+      ],
+      "framingLimits": [
+        "What’s missing above this scrolled viewport and blocked-save behavior are checked separately by executed browser tests."
+      ]
+    },
+    {
+      "filename": "labels-products-en-light.png",
+      "scene": "labels-products",
+      "variant": "en-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "df17012da87e9758e567bf69eede175d3271f1cbf43bcf02f1576f938ca3c92c",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. All 16 product records and their dividers are within the full-height list card; code, offer and end-aligned selling-price columns fit at desktop and 900 px.",
+        "Checkboxes remain separate controls; bilingual names, current Sale price and crossed regular price are contained. Sidebar has a full-height background; no rows spill out."
+      ],
+      "framingLimits": [
+        "Sticky behavior and selection interactions require the separate browser checks."
+      ]
+    },
+    {
+      "filename": "edit-product-dates-en-dark.png",
+      "scene": "edit-product-dates",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "8602ef5e6c65e52d0ae30a91e47cabd4ff0565d451c2b11807cf2bb9bbcef466",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. Status dot, expiry date, days-left text and remove action share centered rows; no text or control crosses the dialog boundary.",
+        "Type, Date, Quantity and Lot labels align over filled controls; Add matches the field height. Phone wraps the group into two rows with Add below."
+      ],
+      "framingLimits": [
+        "The dialog scroll is framed on Date tracking; sections above the visible viewport are not all shown."
+      ]
+    },
+    {
+      "filename": "edit-product-missing-date-en-dark.png",
+      "scene": "edit-product-missing-date",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "c5ac1bfb015d06d4e26272b406dde166ccf574792e8c016d8fb6f72ffc2e1ae0",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. The complete red missing-date helper is readable within its field group, including above the phone sticky footer.",
+        "Cancel and Save product remain contained; invalid date field is visible in the scrolled Dates section."
+      ],
+      "framingLimits": [
+        "What’s missing above this scrolled viewport and blocked-save behavior are checked separately by executed browser tests."
+      ]
+    },
+    {
+      "filename": "labels-products-en-dark.png",
+      "scene": "labels-products",
+      "variant": "en-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "a276ed92a8c3a57c139f21821b7b79a445cf17195041d1dba53b58bf9ece7e04",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. All 16 product records and their dividers are within the full-height list card; code, offer and end-aligned selling-price columns fit at desktop and 900 px.",
+        "Checkboxes remain separate controls; bilingual names, current Sale price and crossed regular price are contained. Sidebar has a full-height background; no rows spill out."
+      ],
+      "framingLimits": [
+        "Sticky behavior and selection interactions require the separate browser checks."
+      ]
+    },
+    {
+      "filename": "edit-product-dates-fa-light.png",
+      "scene": "edit-product-dates",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "c1e83b0ee73554a2fd88f74ce28e31f6e9543ef2ebb55dbaa7d3681ce2e95fe3",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. Status dot, expiry date, days-left text and remove action share centered rows; no text or control crosses the dialog boundary.",
+        "Type, Date, Quantity and Lot labels align over filled controls; Add matches the field height. Phone wraps the group into two rows with Add below."
+      ],
+      "framingLimits": [
+        "The dialog scroll is framed on Date tracking; sections above the visible viewport are not all shown."
+      ]
+    },
+    {
+      "filename": "edit-product-missing-date-fa-light.png",
+      "scene": "edit-product-missing-date",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "9fa4c6379d265e5acabe63bf12c533acf30843ba0e3ba35c4606e2369e803c8d",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. The complete red missing-date helper is readable within its field group, including above the phone sticky footer.",
+        "Cancel and Save product remain contained; invalid date field is visible in the scrolled Dates section."
+      ],
+      "framingLimits": [
+        "What’s missing above this scrolled viewport and blocked-save behavior are checked separately by executed browser tests."
+      ]
+    },
+    {
+      "filename": "labels-products-fa-light.png",
+      "scene": "labels-products",
+      "variant": "fa-light",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "4a7c8cdb1a3e836593678d47a6a262e10ac98342525033546747dc3bd323d2f8",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. All 16 product records and their dividers are within the full-height list card; code, offer and end-aligned selling-price columns fit at desktop and 900 px.",
+        "Checkboxes remain separate controls; bilingual names, current Sale price and crossed regular price are contained. Sidebar has a full-height background; no rows spill out."
+      ],
+      "framingLimits": [
+        "Sticky behavior and selection interactions require the separate browser checks."
+      ]
+    },
+    {
+      "filename": "edit-product-dates-mid-900.png",
+      "scene": "edit-product-dates",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "289d3805766f1a3371c1363cded0ab804674b9ee4d9be2426e56545051581ce7",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. Status dot, expiry date, days-left text and remove action share centered rows; no text or control crosses the dialog boundary.",
+        "Type, Date, Quantity and Lot labels align over filled controls; Add matches the field height. Phone wraps the group into two rows with Add below."
+      ],
+      "framingLimits": [
+        "The dialog scroll is framed on Date tracking; sections above the visible viewport are not all shown."
+      ]
+    },
+    {
+      "filename": "edit-product-missing-date-mid-900.png",
+      "scene": "edit-product-missing-date",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "0e45c54233adf57cc89b8f942f5aa15a39ea6acd06756f2e689fb487c63bf7af",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. The complete red missing-date helper is readable within its field group, including above the phone sticky footer.",
+        "Cancel and Save product remain contained; invalid date field is visible in the scrolled Dates section."
+      ],
+      "framingLimits": [
+        "What’s missing above this scrolled viewport and blocked-save behavior are checked separately by executed browser tests."
+      ]
+    },
+    {
+      "filename": "labels-products-mid-900.png",
+      "scene": "labels-products",
+      "variant": "mid-900",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "2eaf3dd180cb8e06894a7dc252b7a715a46a09680a5961ffe8ef2552656e23f6",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. All 16 product records and their dividers are within the full-height list card; code, offer and end-aligned selling-price columns fit at desktop and 900 px.",
+        "Checkboxes remain separate controls; bilingual names, current Sale price and crossed regular price are contained. Sidebar has a full-height background; no rows spill out."
+      ],
+      "framingLimits": [
+        "Sticky behavior and selection interactions require the separate browser checks."
+      ]
+    },
+    {
+      "filename": "edit-product-dates-phone-dark.png",
+      "scene": "edit-product-dates",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "0d9af93f72af14f90f4cff451dda5b4b66493c6fc560b20285c65855588cab1f",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. Status dot, expiry date, days-left text and remove action share centered rows; no text or control crosses the dialog boundary.",
+        "Type, Date, Quantity and Lot labels align over filled controls; Add matches the field height. Phone wraps the group into two rows with Add below."
+      ],
+      "framingLimits": [
+        "The dialog scroll is framed on Date tracking; sections above the visible viewport are not all shown."
+      ]
+    },
+    {
+      "filename": "edit-product-missing-date-phone-dark.png",
+      "scene": "edit-product-missing-date",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "fc0b6cc5b11a4f1f581cf476fbf9d84899e4f46191b0e031faac79c5dd3410b6",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original PNG. The complete red missing-date helper is readable within its field group, including above the phone sticky footer.",
+        "Cancel and Save product remain contained; invalid date field is visible in the scrolled Dates section."
+      ],
+      "framingLimits": [
+        "What’s missing above this scrolled viewport and blocked-save behavior are checked separately by executed browser tests."
+      ]
+    },
+    {
+      "filename": "labels-products-phone-dark.png",
+      "scene": "labels-products",
+      "variant": "phone-dark",
+      "sourceCommit": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+      "sha256": "d4f46d12f2b48aac73bd3e2f13e63a7b02532d5a03cf1212c13be31a0529f5d8",
+      "openedIndividually": true,
+      "verdict": "PASS",
+      "realFailures": [],
+      "observations": [
+        "Personally opened this current-source original phone PNG. Every product card, checkbox, bilingual name, price and Details action stays inside the containing Labels card.",
+        "Pot current $16.99, Sale pill, crossed $20.99 and Oct 23 date are readable; Bulk Almonds $7.49/lb and $16.51/kg are intact."
+      ],
+      "framingLimits": [
+        "These are the retained C8 phone cards; compact checkbox list rows remain planned for E3. This full-page image does not itself prove sticky viewport behavior."
+      ]
+    }
+  ],
+  "summary": {
+    "pass": 15,
+    "fail": 0,
+    "scope": "Actual individual original PNG review only; behavior and all-gallery eligibility have separate checks."
+  }
+}

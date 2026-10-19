@@ -1,11 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  chooseOption,
-  resetDemo,
-  setBranch,
-  setLanguage,
-  signIn,
-} from "./helpers";
+import { resetDemo, setBranch, setLanguage, signIn } from "./helpers";
 
 async function showManualPrice(page: Page) {
   const table = page.locator(".catalog-products-table");
@@ -53,19 +47,25 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     }
   }
   await page
-    .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
+    .getByRole("link", { name: "Potato Chips 150 g", exact: true })
+    .click();
+  await page
+    .locator(".product-header-actions")
+    .getByRole("button", { name: "Change price", exact: true })
     .click();
   const editor = page.getByRole("dialog", {
-    name: "Edit product",
+    name: "Change price",
     exact: true,
   });
+  await editor.getByRole("radio", { name: /^New regular price/ }).click();
+  await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("3.29");
-  await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  await page
+    .getByRole("link", { name: "Back to Products", exact: true })
+    .click();
   await page.getByLabel("Manual prices", { exact: true }).check();
   await expect(page.locator(".catalog-products-table tbody tr")).toHaveCount(1);
   await showManualPrice(page);
@@ -76,8 +76,11 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     page.getByRole("heading", { name: "Cost history", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Last received", exact: true }),
+    page.getByRole("heading", { name: "Deliveries", exact: true }),
   ).toBeVisible();
+  await expect(page.locator(".product-last-received-summary")).toContainText(
+    "Last received",
+  );
   await expect(
     page.getByRole("heading", { name: "Stock estimate", exact: true }),
   ).toHaveCount(0);
@@ -147,23 +150,20 @@ test("branch-only manual prices do not flag the other location", async ({
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0009");
   await page
-    .getByRole("button", { name: "Edit Potato Chips 150 g", exact: true })
+    .locator(".product-header-actions")
+    .getByRole("button", { name: "Change price", exact: true })
     .click();
   const editor = page.getByRole("dialog", {
-    name: "Edit product",
+    name: "Change price",
     exact: true,
   });
+  await editor.getByRole("radio", { name: /^New regular price/ }).click();
+  await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
-    .getByLabel("Selling price (per unit)", { exact: true })
-    .fill("3.29");
-  await chooseOption(
-    page,
-    editor.getByLabel("Approval scope", { exact: true }),
-    "branch",
-    "This branch only",
-  );
+    .getByRole("button", { name: "Only North York", exact: true })
+    .click();
   await editor
-    .getByRole("button", { name: "Save product", exact: true })
+    .getByRole("button", { name: "Save new price", exact: true })
     .click();
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveText(
     "Manual price",

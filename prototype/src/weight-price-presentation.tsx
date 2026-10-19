@@ -65,8 +65,10 @@ export function ProductCost({
     return <Money value={value} currency={config.company.currency} />;
   return (
     <LtrText className="weight-cost">
-      <Money value={value} currency={config.company.currency} />
-      /lb
+      <span className="weight-price-main">
+        <Money value={value} currency={config.company.currency} />
+        /lb
+      </span>
     </LtrText>
   );
 }

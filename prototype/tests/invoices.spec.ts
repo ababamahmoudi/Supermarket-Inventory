@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, chooseOption, setLanguage } from "./helpers";
+import { createHash } from "node:crypto";
+import {
+  signIn,
+  chooseOption,
+  setLanguage,
+  openInvoiceUpload,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -15,13 +21,13 @@ async function signInWorker(page: Page) {
   ).toBeVisible();
 }
 async function upload(page: Page) {
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles({
-      name: "fictional-supplier-invoice.png",
-      mimeType: "image/png",
-      buffer: pixel,
-    });
+  await (
+    await openInvoiceUpload(page)
+  ).setInputFiles({
+    name: "fictional-supplier-invoice.png",
+    mimeType: "image/png",
+    buffer: pixel,
+  });
   await expect(
     page.getByRole("status").filter({ hasText: "Reading invoice…" }),
   ).toBeVisible();
@@ -31,6 +37,24 @@ async function upload(page: Page) {
   await expect(page.locator(".invoice-line")).toHaveCount(6, {
     timeout: 10000,
   });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const invoice = JSON.parse(
+          localStorage.getItem("supermarket-prototype-v1")!,
+        ).invoice;
+        return {
+          fileName: invoice.file_name,
+          originalHash: invoice.file_data?.split(":").at(-1),
+          status: invoice.status,
+        };
+      }),
+    )
+    .toEqual({
+      fileName: "fictional-supplier-invoice.png",
+      originalHash: createHash("sha256").update(pixel).digest("hex"),
+      status: "review",
+    });
 }
 async function stored(page: Page) {
   return page.evaluate(() =>
@@ -50,9 +74,16 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await signInWorker(page);
+  // The unread retained original now opens from its real Drafts row.
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByText("AI invoice reading is simulated", { exact: true }),
+    page
+      .getByRole("complementary", { name: "Original invoice", exact: true })
+      .getByText("AI invoice reading is simulated", { exact: true }),
   ).toBeVisible();
+  // This workflow tests a new uploaded invoice, separately from the retained
+  // original whose Continue action was checked above.
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
   const before = await stored(page);
   const beforeStock = before.stock["Branch 1:0009"];
   await upload(page);

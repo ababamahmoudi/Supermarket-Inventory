@@ -40,7 +40,7 @@ Owner specification: C6/C7, 2026-10-11. This document replaces the previous desi
 | Page-background control fill/border | `#FFFFFF` / `#E1E3E8` | dark surface / hairline                  |
 | Keyboard focus ring                 | `rgba(43,89,195,0.2)` | verified dark accent-ring token          |
 
-**Pending owner colour decision:** dark accent `#7397F0` with white Primary text fails 4.5:1. Owner chooses darker Primary fill `#2B59C3` with white (retain lighter dark accent for links/icons), or lighter fill with ink text. Do not silently relax contrast or claim unresolved pairing passes. Every status/secondary/selected/hover/disabled text pair is measured on its actual background; inaccessible raw reference combinations require a documented token adjustment.
+**Owner dark Primary decision resolved (2026-10-12):** use `#2B59C3` with white for filled primary buttons and solid blue summary cards. Retain `#7397F0` for dark links/icons/selected tabs/focus rings only. All actual composited text pairs still require 4.5:1; do not restore lighter-blue/white filled primaries.
 
 ## Typography
 
@@ -160,4 +160,19 @@ Supplier-facing Return memo/Print order default **English only**, with separate 
 
 Retain existing pricing/unit/domain checks. Add all Part 2 tests, twenty 3 MB photo migration/persistence, token-only components and ≥4.5:1 text contrast in both themes. Capture the 17 requested scenes in EN light, EN dark, FA, 900 px and phone, including real clearance/date/pickup/partial-resolution/What's missing states. Individually open each final capture beside all 14 bug notes and five retouches, recording mismatches honestly. C6/C7 are stacked without an intermediate approval stop; neither merges without later approval.
 
-**Klead contrast adjustment (2026-10-11):** The supplied green text `#1A7F45` on `#E6F4EC` measures 4.4451:1, below the owner's mandatory 4.5:1. Use the smallest measured darkening, `#197D44`, giving 4.56258:1 with the same tint. Keep the original reference files unchanged and list this deliberate accessibility difference; all rendered pairs still require actual contrast proof. This does not resolve the separately pending dark Primary choice.
+**Klead contrast adjustment (2026-10-11):** The supplied green text `#1A7F45` on `#E6F4EC` measures 4.4451:1, below the owner's mandatory 4.5:1. Use the smallest measured darkening, `#197D44`, giving 4.56258:1 with the same tint. Keep the original reference files unchanged and list this deliberate accessibility difference; all rendered pairs still require actual contrast proof. The separate dark Primary choice was subsequently resolved by the owner on 2026-10-12; use darker blue with white as specified above.
+
+## C8 visual refinements (2026-10-12)
+
+These targeted owner fixes supersede conflicting C6/C7 layouts. Klead fonts, tokens, semantic controls, accessibility and exact print geometry remain. Dark Primary is now resolved: **#2B59C3 with white** for filled buttons/blue KPI cards; **#7397F0** only for dark links/icons/selected tabs/focus rings.
+
+- Put every list filter bar inside its list card, with filled controls. The white/hairline page exception still applies to genuine outside-card controls, never nested dialog Cancel. One end record chevron; an end expander only for actually omitted permitted columns. At 1440 give identifying names at least 240 px. Empty More slots keep Edit aligned; Products has 25 rows per page.
+- Editor selects fill columns. Hairline above each Names/Pricing/Details/Date title. Add is 44 px aligned with fields; Type/Date/Quantity/Lot labels share a line. Date rows are centered dot/date/days-left/× with single spaces and past/reminder/later tones. Soft groups and white rows remain.
+- Quick-add Product/Date/Location/Add wraps as a group; 44 px action, note gap below list. App minimum 100dvh, full-height sticky sidebar background; icon mode hides bare group arrows and uses short dividers.
+- Labels grows with the page: no 560/480 px internal cap, header sticky below top bar, selection bar sticky bottom. Checkbox 48 px then flexible Product/Code/Offer/end Price, no empty gaps. Every row stays in its card at 390/900/1440.
+- Orders header/value columns align; numbers at end, total below Before-tax column above actions. Filled fields. Currency minimum 2 / maximum 4, trim zeros only after second; 1.5525 is not rounded away in read-only/printed costs. Unit prices are $4.99/lb. Whole-case display does not rewrite quantity evidence.
+- Product page uses header chips/actions, three responsive cards, then titled full-width sections. Money card/fields stay private; empty section is one muted line. Last received has a separator/date/source. No floating cost/status/unit fragments.
+- Alerts full width, compact date reminders. Returns title/link matches other card headers. Date tones amber before expiry/red after. Purchase bars accent or measured 3:1 track contrast. Stop offer in More; no cell gap; quiet empty suggestion. Lookup selection tint only/same inset, Taxable neutral. Company swatches and current logo/Replace.
+- Change price uses existing dialog/choices/fields; sale/new-regular exact copy from requirements. Scoped retail choices, dates, label checkbox, live plain summary, neutral Cancel and one primary action. Margin amber/acknowledgement, below cost red/reason. Sale large plus regular comparison; request amber beside current charge. No new font/colour scheme or copied reference data.
+
+**E3, planned:** specified phone tables become compact name/translation at start, key value at end, end chevron and one muted secondary line; Labels keeps its checkbox. New screens at 390/430 EN/FA, 44 px actions. Manifest branding is configured company logo/name. This does not claim C8 already implements the E3 conversion. All stages keep visible focus, role-private fields and actual 4.5:1 text contrast.

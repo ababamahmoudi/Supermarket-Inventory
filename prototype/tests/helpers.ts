@@ -130,10 +130,21 @@ export const invoiceImage = {
   ),
 };
 
+export async function openInvoiceUpload(page: Page) {
+  const input = page.getByLabel("Upload a PDF or photo", { exact: true });
+  // A retained unread original now has a real list row. Start the upload
+  // workspace through its action rather than replacing a browser record.
+  if ((await input.count()) === 0) {
+    await page
+      .getByRole("button", { name: "New invoice", exact: true })
+      .click();
+  }
+  await expect(input).toBeAttached();
+  return input;
+}
+
 export async function uploadInvoice(page: Page) {
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(invoiceImage);
+  await (await openInvoiceUpload(page)).setInputFiles(invoiceImage);
   await expect(
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
   ).toBeVisible({ timeout: 8000 });

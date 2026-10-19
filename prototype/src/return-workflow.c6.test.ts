@@ -129,8 +129,8 @@ describe("C6 actual immutable pickups", () => {
     expect(returnUiStatus(record(discarded))).toBe("closed");
     expect(record(discarded).original_units_recovered).toBe(0);
   });
-  it("does not grant correction through a broad Supervisor or Worker role", () => {
-    expect(canCorrectReturnPickup(supervisor)).toBe(false);
+  it("uses the approved Supervisor authority until E1 and never grants Worker correction", () => {
+    expect(canCorrectReturnPickup(supervisor)).toBe(true);
     expect(
       canCorrectReturnPickup({
         ...worker,
@@ -141,7 +141,7 @@ describe("C6 actual immutable pickups", () => {
     pickup(state);
     const before = structuredClone(state);
     expect(() =>
-      correctReturnPickup(state, supervisor, "c4-return", {
+      correctReturnPickup(state, worker, "c4-return", {
         memo_id: record(state).pickup_memos![0].id,
         quantities: { "0003": 2 },
         reason: "Wrong count",

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
 import { ArrowLeft, ChevronDown } from "lucide-react";
-import { demoSeed as demo } from "../config";
+import { configSeed, demoSeed as demo } from "../config";
+import { sha256Bytes } from "../sha256";
 import { useDemo, demoUsers } from "../store";
 import {
   configuredBranches,
@@ -33,7 +34,10 @@ import {
   focusValidationField,
   type ValidationIssue,
 } from "../WhatsMissing";
-import { storeUploadedFile } from "../file-database";
+import {
+  INCLUDED_COST_INVOICE_SHA256,
+  storeUploadedFile,
+} from "../file-database";
 import { reusableOtherLocationDates } from "../receipt-lots";
 import { ProductEditor } from "./Catalog";
 import "./manual-entry.css";
@@ -69,6 +73,7 @@ import {
   Money,
   ProductName,
   UnitSize,
+  UnitText,
 } from "../presentation";
 import "./invoice-settings-labels.css";
 import "./invoice-a2.css";
@@ -99,6 +104,7 @@ import {
   addManualLine,
   companyDate,
   createInvoice,
+  demoSaleCostInvoice,
   dateAfter,
   invoiceBlockers,
   lineShort,
@@ -118,6 +124,8 @@ import {
   removeInvoiceLine,
   markInvoiceSupplierReview,
   confirmInvoiceSupplierReview,
+  manualDecisionForLine,
+  initializeInvoiceManualPriceDecisions,
 } from "../invoice";
 import { manualPrice } from "../manual-prices";
 import {
@@ -148,11 +156,37 @@ import type {
   DemoInvoice,
   DemoState,
   InvoiceLine,
+  Language,
+  Product,
   Role,
   SupplierRecord,
 } from "../types";
 
 type Translate = (en: string, fa: string) => string;
+function invoiceProductOption(
+  item: Pick<Product, "code" | "name_en" | "name_fa">,
+  language: Language,
+) {
+  const label = `\u2066${item.code}\u2069 · ${language === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`;
+  return {
+    value: item.code,
+    label,
+    content: (
+      <>
+        {`\u2066${item.code}\u2069 · `}
+        {language === "fa" ? (
+          <UnitText>{item.name_fa}</UnitText>
+        ) : (
+          <>
+            {"\u2066"}
+            <UnitText>{item.name_en}</UnitText>
+            {"\u2069"}
+          </>
+        )}
+      </>
+    ),
+  };
+}
 type InvoiceTab =
   | "drafts"
   | "processing"
@@ -273,7 +307,7 @@ function readableInvoice(
 /** Keep the previous workspace as a resumable record before opening another. */
 function retainInvoiceWorkspace(draft: DemoState) {
   if (
-    draft.invoice.status === "empty" ||
+    (draft.invoice.status === "empty" && !draft.invoice.file_data) ||
     draft.invoice.company_id !== draft.config.company.seed_key
   )
     return;
@@ -324,7 +358,7 @@ export default function Invoices() {
       label: t("Supplier", "تأمین‌کننده"),
       width: "30%",
       priority: 3,
-      minWidth: 180,
+      minWidth: 240,
     },
     {
       key: "branch",
@@ -346,6 +380,15 @@ export default function Invoices() {
       width: "15%",
       priority: 2,
       minWidth: 110,
+    },
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 60,
+      actions: true,
+      priority: 0,
+      required: true,
+      align: "end",
     },
   ]);
   const branches = configuredBranches(state.config);
@@ -387,6 +430,7 @@ export default function Invoices() {
         )
           throw new Error("Choose an invoice in your allowed branch.");
         mutator(draft);
+        initializeInvoiceManualPriceDecisions(draft);
       });
     },
     [update],
@@ -466,6 +510,8 @@ export default function Invoices() {
   const locked = invoice.status === "posted";
   const displayedVersion = invoiceVersion(state, invoice, routeVersion);
   const active = invoice.status !== "empty";
+  const unreadOriginal = (item: DemoInvoice) =>
+    item.status === "empty" && Boolean(item.file_data);
   let movePreview: InvoiceMovePreview | null = null;
   if (moveOpen && role === "supervisor" && moveTarget) {
     try {
@@ -786,6 +832,7 @@ export default function Invoices() {
           return;
         retainInvoiceWorkspace(draft);
         draft.invoice = structuredClone(linked);
+        initializeInvoiceManualPriceDecisions(draft);
       });
       setDetailsOpen(false);
     };
@@ -829,6 +876,7 @@ export default function Invoices() {
       retainInvoiceWorkspace(draft);
       draft.invoice = createInvoice(draft, targetBranch, manual);
       draft.invoice.receiving_employee = user?.name;
+      initializeInvoiceManualPriceDecisions(draft);
       id = draft.invoice.id;
     });
     setSelectedView(null);
@@ -843,21 +891,26 @@ export default function Invoices() {
   }
 
   async function attachFile(file: File) {
-    if (
-      !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
-      file.type !== "application/pdf"
-    ) {
-      setUploadError(
-        t(
-          "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
-          "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
-        ),
-      );
-      return;
-    }
     const targetInvoiceId = invoice.id;
     setUploadPending(true);
     try {
+      const includedSvg =
+        file.type === "image/svg+xml" &&
+        sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
+          INCLUDED_COST_INVOICE_SHA256;
+      if (
+        !includedSvg &&
+        !/^image\/(png|jpeg|webp|gif)$/.test(file.type) &&
+        file.type !== "application/pdf"
+      ) {
+        setUploadError(
+          t(
+            "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
+            "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
+          ),
+        );
+        return;
+      }
       const retained = await storeUploadedFile(
         file,
         state.config.company.seed_key,
@@ -889,17 +942,44 @@ export default function Invoices() {
           attachedId = existing.id;
           return;
         }
-        const next =
-          existing.status === "empty"
-            ? createInvoice(
-                draft,
-                user?.branch && user.branch !== "all"
-                  ? user.branch
-                  : branch === "all"
-                    ? branches[0]
-                    : branch,
-              )
-            : existing;
+        const recognizedOriginal =
+          data.endsWith(`:${INCLUDED_COST_INVOICE_SHA256}`) &&
+          draft.config.company.seed_key === configSeed.company.seed_key;
+        let next = existing;
+        if (recognizedOriginal && existing.entry_mode !== "manual") {
+          const retainedInvoice = [
+            draft.invoice,
+            ...(draft.invoices ?? []),
+          ].find(
+            (item) =>
+              item.company_id === draft.config.company.seed_key &&
+              item.id === demo.sales_demo.cost_increase_invoice.id,
+          );
+          if (retainedInvoice) {
+            if (retainedInvoice.id !== existing.id)
+              retainInvoiceWorkspace(draft);
+            next = structuredClone(retainedInvoice);
+            if (next.status === "posted") {
+              draft.invoice = next;
+              attachedId = next.id;
+              return;
+            }
+          } else {
+            retainInvoiceWorkspace(draft);
+            next = demoSaleCostInvoice(draft, existing.branch);
+            next.receiving_employee = user?.name;
+          }
+        } else if (existing.status === "empty") {
+          retainInvoiceWorkspace(draft);
+          next = createInvoice(
+            draft,
+            user?.branch && user.branch !== "all"
+              ? user.branch
+              : branch === "all"
+                ? branches[0]
+                : branch,
+          );
+        }
         if (existing.status === "empty") next.receiving_employee = user?.name;
         next.file_name = file.name;
         next.file_type = file.type;
@@ -1157,20 +1237,21 @@ export default function Invoices() {
     ...(state.invoices?.filter(
       (item) =>
         item.id !== invoice.id &&
-        item.status !== "empty" &&
+        (item.status !== "empty" || unreadOriginal(item)) &&
         item.status !== "posted" &&
         readableInvoice(item, state.config.company.seed_key, reader, state) &&
         (role === "floor_worker" || branch === "all" || item.branch === branch),
     ) ?? []),
     ...(!routeId &&
-    active &&
+    (active || unreadOriginal(invoice)) &&
     !locked &&
     canReadWorkspace &&
     (branch === "all" || invoiceLocation === branch)
       ? [invoice]
       : []),
   ].filter((saved) => {
-    if (tab === "drafts") return saved.status === "draft";
+    if (tab === "drafts")
+      return saved.status === "draft" || unreadOriginal(saved);
     if (tab === "processing") return saved.status === "reading";
     if (saved.status !== "review") return false;
     const needsReview =
@@ -1192,6 +1273,8 @@ export default function Invoices() {
         return;
       retainInvoiceWorkspace(draft);
       draft.invoice = structuredClone(saved);
+      if (unreadOriginal(saved)) draft.invoice.status = "reading";
+      initializeInvoiceManualPriceDecisions(draft);
     });
     setDetailsOpen(true);
     setSelectedView(null);
@@ -1216,8 +1299,18 @@ export default function Invoices() {
             {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
           </LtrText>
           <LtrText>{saved.supplier}</LtrText>
+          {unreadOriginal(saved) && (
+            <>
+              <LtrText>{saved.file_name}</LtrText>
+              <span className="muted">
+                {t("Not read yet", "هنوز خوانده نشده")}
+              </span>
+            </>
+          )}
           <Button variant="neutral" onClick={() => resume(saved)}>
-            {t("Resume draft", "ادامه پیش‌نویس")}
+            {unreadOriginal(saved)
+              ? t("Continue", "ادامه")
+              : t("Resume draft", "ادامه پیش‌نویس")}
           </Button>
         </div>
       ))}
@@ -1438,7 +1531,7 @@ export default function Invoices() {
           }
         />
       )}
-      {routeId === invoice.id && active && (
+      {routeId === invoice.id && (active || unreadOriginal(invoice)) && (
         <a
           className="back-link invoice-back-link"
           href="#invoices"
@@ -1534,6 +1627,7 @@ export default function Invoices() {
                   <th scope="col">{t("Branch", "شعبه")}</th>
                   <th scope="col">{t("Date", "تاریخ")}</th>
                   <th scope="col">{t("Status", "وضعیت")}</th>
+                  <th scope="col">{t("Action", "عملیات")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1562,10 +1656,6 @@ export default function Invoices() {
                         >
                           <LtrText>{item.supplier_invoice_number}</LtrText>
                         </a>
-                        <TableRowLink
-                          href={`#invoices?id=${encodeURIComponent(item.id)}`}
-                          aria-label={`${t("Invoice", "فاکتور")} ${item.supplier_invoice_number}`}
-                        />
                       </div>
                     </td>
                     <td>
@@ -1579,6 +1669,12 @@ export default function Invoices() {
                     </td>
                     <td>
                       <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
+                    </td>
+                    <td className="action-cell">
+                      <TableRowLink
+                        href={`#invoices?id=${encodeURIComponent(item.id)}`}
+                        aria-label={`${t("Invoice", "فاکتور")} ${item.supplier_invoice_number}`}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -1650,7 +1746,7 @@ export default function Invoices() {
               className="ui-file-input"
               hidden
               type="file"
-              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
               aria-label={t("Attach original", "پیوست اصل فاکتور")}
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -1731,7 +1827,7 @@ export default function Invoices() {
                     >
                       <Dropzone
                         id="invoice-original"
-                        accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
+                        accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                         fileName={invoice.file_name}
                         fileSize={fileSize}
                         onChange={(file) => {
@@ -2469,6 +2565,11 @@ export default function Invoices() {
                       const manual = product
                         ? manualPrice(state, product, invoice.branch)
                         : null;
+                      const manualReplacement = manualDecisionForLine(
+                        state,
+                        line,
+                        invoiceLocation,
+                      );
                       let price: string | null = null;
                       let costValid = true;
                       try {
@@ -2524,7 +2625,7 @@ export default function Invoices() {
                         (!line.review_confirmed ||
                           !line.date_confirmed ||
                           (line.date_tracking && !line.date_value) ||
-                          (manual &&
+                          (manualReplacement &&
                             acceptedInvoiceUnits(line) > 0 &&
                             !line.short_dated &&
                             !line.manual_price_decision) ||
@@ -2765,7 +2866,7 @@ export default function Invoices() {
                                             line.unit_cost_before_tax)
                                           : line.unit_cost_before_tax
                                       }
-                                      decimals={2}
+
                                       currency={state.config.company.currency}
                                     />
                                     {line.sold_by === "weight" &&
@@ -3302,10 +3403,9 @@ export default function Invoices() {
                                                   invoice.company_id &&
                                                 item.status !== "archived",
                                             )
-                                            .map((item) => ({
-                                              value: item.code,
-                                              label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
-                                            })),
+                                            .map((item) =>
+                                              invoiceProductOption(item, lang),
+                                            ),
                                         ]}
                                       />
                                     </Field>
@@ -3737,7 +3837,7 @@ export default function Invoices() {
                                       )}
                                     </fieldset>
                                   }
-                                  {manual &&
+                                  {manualReplacement &&
                                     !locked &&
                                     !line.short_dated &&
                                     acceptedInvoiceUnits(line) > 0 && (
@@ -3769,15 +3869,15 @@ export default function Invoices() {
                                               {
                                                 value: "keep",
                                                 label: t(
-                                                  "Keep manual price",
-                                                  "حفظ قیمت دستی",
+                                                  `Keep ${money(manualReplacement.price)}`,
+                                                  `حفظ \u2066${money(manualReplacement.price)}\u2069`,
                                                 ),
                                               },
                                               {
                                                 value: "rule",
                                                 label: t(
-                                                  "Use rule price",
-                                                  "استفاده از قیمت قاعده",
+                                                  `Use the new calculated price${price ? ` ${money(price)}` : ""}`,
+                                                  `استفاده از قیمت محاسبه‌شده جدید${price ? ` \u2066${money(price)}\u2069` : ""}`,
                                                 ),
                                               },
                                             ]}
@@ -3789,7 +3889,7 @@ export default function Invoices() {
                                     id={`invoice-line-${index}-confirm`}
                                     disabled={
                                       locked ||
-                                      (!!manual &&
+                                      (!!manualReplacement &&
                                         acceptedInvoiceUnits(line) > 0 &&
                                         !line.short_dated &&
                                         !line.manual_price_decision)
@@ -3858,10 +3958,7 @@ export default function Invoices() {
                                   item.company_id === invoice.company_id &&
                                   item.status !== "archived",
                               )
-                              .map((item) => ({
-                                value: item.code,
-                                label: `\u2066${item.code}\u2069 · ${lang === "fa" ? item.name_fa : `\u2066${item.name_en}\u2069`}`,
-                              })),
+                              .map((item) => invoiceProductOption(item, lang)),
                             {
                               value: "__add_product",
                               label: t(

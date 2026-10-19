@@ -1,0 +1,485 @@
+/* C8 presentation; all palette, shapes and shadows remain Klead tokens. */
+@media screen {
+  :root .app-shell {
+    min-block-size: 100dvh;
+    align-items: flex-start;
+    background: var(--surface);
+  }
+  :root .app-shell > .sidebar {
+    position: sticky;
+    inset-block-start: 0;
+    block-size: 100dvh;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+  :root .app-shell > .workspace {
+    min-inline-size: 0;
+    min-block-size: 100dvh;
+    flex: 1 1 auto;
+    background: var(--page);
+  }
+  :root .app-shell.is-collapsed .sidebar:not(.is-open) .nav-group-toggle {
+    display: none;
+  }
+  :root
+    .app-shell.is-collapsed
+    .sidebar:not(.is-open)
+    .nav-section
+    + .nav-section {
+    margin-block-start: 8px;
+    padding-block-start: 8px;
+    position: relative;
+  }
+  :root
+    .app-shell.is-collapsed
+    .sidebar:not(.is-open)
+    .nav-section
+    + .nav-section::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 12px;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .main-content .lookup-page .lookup-result-row,
+  :root .main-content .lookup-page .lookup-result-row.is-active,
+  :root .main-content .lookup-page .lookup-result-row.is-selected {
+    margin-inline: 0;
+    inline-size: 100%;
+  }
+  :root .main-content .lookup-page .lookup-result-row::before {
+    display: none;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-fields .ui-select {
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-section,
+  :root .ui-dialog.product-editor-dialog .product-date-editor {
+    border-block-start: 1px solid var(--divider);
+    padding-block-start: 20px;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-row:not(:has(.field)) {
+    flex-wrap: nowrap;
+    align-items: center;
+    min-block-size: 56px;
+    gap: 8px;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    flex: 0 0 6px;
+    border-radius: var(--radius-round);
+    background: var(--approved-dot);
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-dot.pending {
+    background: var(--pending-dot);
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-dot.danger {
+    background: var(--danger-dot);
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-evidence,
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-status
+    .ui-status-dot {
+    display: none;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-status {
+    align-self: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-inline
+    .field
+    > label {
+    white-space: nowrap;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-inline {
+    align-items: start;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-inline
+    > .product-editor-date-add {
+    justify-self: end;
+    align-self: start;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-add > .ui-button {
+    block-size: 44px;
+    min-block-size: 44px;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-inline
+    .field
+    > :is(input, .ui-input) {
+    block-size: 44px;
+    min-block-size: 44px;
+    padding-block: 0;
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-inline
+    > .ui-button,
+  :root .date-quick-card .date-quick-actions > .ui-button {
+    block-size: 44px;
+    min-block-size: 44px;
+    align-self: end;
+  }
+  :root .date-quick-card .date-quick-main {
+    display: grid;
+    grid-template-columns:
+      minmax(240px, 2fr) minmax(160px, 1fr) minmax(160px, 1fr)
+      max-content;
+    align-items: end;
+    gap: 16px;
+  }
+  :root .date-quick-card .date-quick-main .field,
+  :root .date-quick-card .date-quick-main .ui-select {
+    min-inline-size: 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+  :root .date-tracking-page > .muted:last-child {
+    margin-block-start: 16px;
+  }
+  :root .product-row-menu-placeholder {
+    flex: 0 0 36px;
+    inline-size: 36px;
+    block-size: 36px;
+  }
+  :root
+    .ui-data-table.table-wrap.is-responsive
+    > table
+    > :is(thead, tbody)
+    > tr
+    > .table-disclosure-cell {
+    padding-inline: 0;
+    inline-size: 36px;
+    text-align: end;
+  }
+  @media (max-width: 760px) {
+    :root
+      .ui-data-table.table-wrap.is-responsive
+      > table
+      > tbody
+      > tr
+      > .table-disclosure-cell {
+      /* Phone cards retain the full translated caption above the 36px icon. */
+      inline-size: auto;
+    }
+  }
+  :root .ui-dialog.change-price-dialog {
+    inline-size: min(720px, calc(100vw - 32px));
+    max-inline-size: 720px;
+    max-block-size: calc(100dvh - 32px);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  :root .ui-dialog.change-price-dialog > .ui-dialog-header {
+    padding: 24px 24px 12px;
+    flex: 0 0 auto;
+  }
+  :root .ui-dialog.change-price-dialog > .dialog-description {
+    padding: 0 24px 20px;
+    margin: 0;
+    flex: 0 0 auto;
+  }
+  :root .change-price-form {
+    min-block-size: 0;
+    flex: 1 1 auto;
+    gap: 0;
+    overflow: hidden;
+  }
+  :root .change-price-body {
+    overflow-y: auto;
+    min-block-size: 0;
+    padding: 0 24px 24px;
+    gap: 20px;
+  }
+  :root .change-price-form > .ui-dialog-actions {
+    flex: 0 0 auto;
+    padding: 16px 24px;
+    margin: 0;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .change-price-current {
+    display: grid;
+    gap: 8px;
+  }
+  :root .change-price-current > strong {
+    font-size: var(--font-size-title);
+    line-height: var(--line-height-title);
+  }
+  :root .change-price-choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :root .change-price-choices > .ui-checked-control {
+    align-items: flex-start;
+    text-align: start;
+    padding: 16px;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+  }
+  :root .change-price-choices > .ui-checked-control[aria-checked="true"] {
+    background: var(--accent-soft);
+  }
+  :root .change-price-choices > .ui-checked-control > span:last-child {
+    display: grid;
+    gap: 8px;
+    min-inline-size: 0;
+    white-space: normal;
+  }
+  :root .change-price-amount-field .ui-number,
+  :root .change-price-dates .ui-date {
+    inline-size: min(100%, 280px);
+    max-inline-size: 280px;
+  }
+  :root .change-price-quick-picks {
+    flex-wrap: wrap;
+  }
+  :root .change-price-quick-picks > .ui-button {
+    gap: 8px;
+  }
+  :root .change-price-dates {
+    padding: 16px;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+  }
+  :root .change-price-dates .ui-date,
+  :root .change-price-cost-warning textarea {
+    background: var(--surface);
+  }
+  :root .change-price-summary {
+    padding: 16px;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+  }
+  :root .change-price-summary p + p {
+    margin-block-start: 12px;
+  }
+  :root .sale-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  :root .sale-status .sale-regular-price,
+  :root .sale-status .sale-end-date,
+  :root .sale-calendar-date {
+    white-space: nowrap;
+  }
+  :root .sale-status .sale-regular-price {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+  }
+  :root .pending-sale-status {
+    display: grid;
+    gap: 6px;
+    min-inline-size: 0;
+  }
+  :root .sale-request-pill.ui-badge {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    white-space: normal;
+    max-inline-size: 100%;
+    justify-self: start;
+  }
+}
+@media screen and (max-width: 1100px) {
+  :root .date-quick-card .date-quick-main {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+@media screen and (max-width: 759px) {
+  :root .change-price-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .ui-dialog.change-price-dialog > .ui-dialog-header {
+    padding: 20px 16px 12px;
+  }
+  :root .ui-dialog.change-price-dialog > .dialog-description {
+    padding-inline: 16px;
+  }
+  :root .change-price-body {
+    padding: 0 16px 16px;
+    gap: 16px;
+  }
+  :root .change-price-form > .ui-dialog-actions {
+    padding: 16px;
+  }
+  :root .ui-dialog.product-editor-dialog .product-editor-date-value strong {
+    font-size: var(--font-size-label);
+  }
+  :root
+    .ui-dialog.product-editor-dialog
+    .product-editor-date-row:not(:has(.field)) {
+    gap: 6px;
+  }
+  :root .date-quick-card .date-quick-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media screen {
+  :root .product-page .product-other-name {
+    margin-block-start: 6px;
+  }
+  :root .product-page .product-page-chips {
+    margin-block-start: 12px;
+  }
+  :root .product-page .product-page-top-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+  :root .product-page .product-page-top-cards.without-private-cost {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root .product-page .product-page-top-cards > .card {
+    min-inline-size: 0;
+  }
+  :root .product-page :is(.product-card-facts, .product-details-facts) {
+    margin: 0;
+    display: grid;
+    gap: 0 32px;
+  }
+  :root .product-page .product-details-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root .product-page :is(.product-card-facts, .product-details-facts) > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: baseline;
+    gap: 12px;
+    padding-block: 12px;
+    border-block-end: 1px solid var(--divider);
+    min-inline-size: 0;
+  }
+  :root .product-page :is(.product-card-facts, .product-details-facts) dt {
+    color: var(--text-muted);
+  }
+  :root .product-page :is(.product-card-facts, .product-details-facts) dd {
+    margin: 0;
+    text-align: end;
+    min-inline-size: 0;
+  }
+  :root .product-page .product-last-received-summary {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block-start: 16px;
+    border-block-start: 1px solid var(--divider);
+  }
+  :root .product-page .product-dates-section {
+    margin-block: 0;
+  }
+  :root .product-page .product-no-dates {
+    margin: 0;
+  }
+  :root .product-page .product-page-description {
+    border-block-start: 1px solid var(--divider);
+    margin-block-start: 16px;
+    padding-block-start: 16px;
+    display: grid;
+    gap: 8px;
+  }
+  :root .product-page .product-history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  :root .product-page .product-history-list > li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px 16px;
+    padding-block: 12px;
+    border-block-end: 1px solid var(--divider);
+  }
+}
+@media screen and (max-width: 1279px) {
+  :root .product-page .product-page-top-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root .product-page .product-page-dates-card {
+    grid-column: 1 / -1;
+  }
+}
+@media screen and (max-width: 759px) {
+  :root .product-page .product-page-top-cards,
+  :root .product-page .product-page-top-cards.without-private-cost,
+  :root .product-page .product-details-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .product-page .product-page-top-cards {
+    gap: 16px;
+  }
+  :root .product-page .product-page-dates-card {
+    grid-column: auto;
+  }
+  :root .product-header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media screen and (max-width: 759px) {
+  :root .app-shell > .sidebar {
+    position: fixed;
+    inset-block-start: 0;
+    block-size: 100dvh;
+  }
+}
+
+@media screen {
+  :root .catalog-products-table .catalog-charge-and-request {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root
+    .catalog-products-table
+    .catalog-charge-and-request
+    :is(.pending-sale-status, .sale-status) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    inline-size: 100%;
+    white-space: normal;
+    text-align: start;
+  }
+  :root .catalog-products-table .catalog-charge-and-request .sale-request-pill {
+    white-space: normal;
+  }
+}
+
+@container (max-width: 700px) {
+  :root .ui-dialog.product-editor-dialog .product-editor-date-add {
+    grid-column: 2;
+    gap: 0;
+  }
+  :root .ui-dialog.product-editor-dialog .product-date-label-space {
+    display: none;
+  }
+}

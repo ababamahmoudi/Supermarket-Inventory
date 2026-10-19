@@ -340,19 +340,63 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     .click();
   await measure(page, "Corrected History More actions menu");
   await page.keyboard.press("Escape");
+  const beforeNameEdit = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+    const product = state.products.find(
+      (item: { code: string }) => item.code === "0006",
+    );
+    return {
+      ledger: state.ledger,
+      invoices: state.invoices,
+      expiry: state.expiry,
+      prices: {
+        selling_price: product.selling_price,
+        branch_prices: product.branch_prices,
+        last_cost_before_tax: product.last_cost_before_tax,
+        pending_price: product.pending_price,
+      },
+    };
+  });
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
-  await page.getByRole("button", { name: /^Edit Potato Chips/ }).click();
+  await page.getByLabel("Search products", { exact: true }).fill("0006");
+  await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
   const editor = page.getByRole("dialog", {
     name: "Edit product",
     exact: true,
   });
+  // Preserve date tracking and use a product with existing date evidence.
+  // This audit remains a name-only Save under C8's required-date rule.
+  await expect(
+    editor.getByRole("switch", { name: "Date tracking", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(
+    editor.locator(".product-editor-date-row:not([data-removed])").first(),
+  ).toBeVisible();
   await editor
     .getByLabel("English name", { exact: true })
-    .fill("Potato Chips 150 g presentation audit edit");
+    .fill("Lavash Bread 500 g presentation audit edit");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
+  await expect(editor).not.toBeVisible();
+  const afterNameEdit = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+    const product = state.products.find(
+      (item: { code: string }) => item.code === "0006",
+    );
+    return {
+      ledger: state.ledger,
+      invoices: state.invoices,
+      expiry: state.expiry,
+      prices: {
+        selling_price: product.selling_price,
+        branch_prices: product.branch_prices,
+        last_cost_before_tax: product.last_cost_before_tax,
+        pending_price: product.pending_price,
+      },
+    };
+  });
+  expect(afterNameEdit).toEqual(beforeNameEdit);
   await page.goto("/#history");
   const savedRow = page
     .locator(".history-table tbody tr")

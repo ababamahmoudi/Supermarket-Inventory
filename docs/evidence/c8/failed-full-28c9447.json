@@ -1,0 +1,227 @@
+{
+  "sourceCommit": "28c9447a3e3a98dd6c44c3d180ffd0dc3db9fb09",
+  "startedAt": "2026-10-13T16:25:50.511Z",
+  "finishedAt": "2026-10-13T17:19:52.755Z",
+  "actualExitCode": 1,
+  "unchanged": true,
+  "retries": 0,
+  "workers": 2,
+  "stats": {
+    "startTime": "2026-10-13T16:25:51.689Z",
+    "duration": 3239304.661,
+    "expected": 689,
+    "skipped": 42,
+    "unexpected": 11,
+    "flaky": 0
+  },
+  "failures": [
+    {
+      "title": "c5-button-audit.spec.ts / C5 button contract covers Suppliers, every supplier tab and item dialogs",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: Supplier: Returns and credits: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Row navigation/disclosure is not at the row end\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: Supplier: Returns and credits: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Row navigation/disclosure is not at the row end\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at Object.check (/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:35:63)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:82:7",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts",
+              "column": 63,
+              "line": 35
+            },
+            "snippet": "  33 |         );\n  34 |         inspections.push(report);\n> 35 |         expect.soft(report.failures, `${screen}: ${variant}`).toEqual([]);\n     |                                                               ^\n  36 |       }\n  37 |       if (!modal) await appearance(page, \"en-light\");\n  38 |     },"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-button-audit.spec.ts / C5 button contract covers primary product, date, approval and invoice dialogs",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: Edit product dialog: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: Edit product dialog: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at Object.check (/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:35:63)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:412:5",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts",
+              "column": 63,
+              "line": 35
+            },
+            "snippet": "  33 |         );\n  34 |         inspections.push(report);\n> 35 |         expect.soft(report.failures, `${screen}: ${variant}`).toEqual([]);\n     |                                                               ^\n  36 |       }\n  37 |       if (!modal) await appearance(page, \"en-light\");\n  38 |     },"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-button-audit.spec.ts / C5 button contract covers Suppliers, every supplier tab and item dialogs",
+      "project": "phone",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: Supplier: Returns and credits: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Row navigation/disclosure is not at the row end\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: Supplier: Returns and credits: en-light\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Row navigation/disclosure is not at the row end\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at Object.check (/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:35:63)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts:82:7",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-button-audit.spec.ts",
+              "column": 63,
+              "line": 35
+            },
+            "snippet": "  33 |         );\n  34 |         inspections.push(report);\n> 35 |         expect.soft(report.failures, `${screen}: ${variant}`).toEqual([]);\n     |                                                               ^\n  36 |       }\n  37 |       if (!modal) await appearance(page, \"en-light\");\n  38 |     },"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-presentation.spec.ts / C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertContract (/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:135:33)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:194:19",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts",
+              "column": 33,
+              "line": 135
+            },
+            "snippet": "  133 |     ).toBeGreaterThanOrEqual(7);\n  134 |   }\n> 135 |   expect(proof.failures, scene).toEqual([]);\n      |                                 ^\n  136 |   return proof;\n  137 | }\n  138 |"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-presentation.spec.ts / C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertContract (/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:135:33)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:194:19",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts",
+              "column": 33,
+              "line": 135
+            },
+            "snippet": "  133 |     ).toBeGreaterThanOrEqual(7);\n  134 |   }\n> 135 |   expect(proof.failures, scene).toEqual([]);\n      |                                 ^\n  136 |   return proof;\n  137 | }\n  138 |"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-presentation.spec.ts / C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: \u0627\u0641\u0632\u0648\u062f\u0646 (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: expiry\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: \u0627\u0641\u0632\u0648\u062f\u0646 (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertContract (/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:135:33)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:194:19",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts",
+              "column": 33,
+              "line": 135
+            },
+            "snippet": "  133 |     ).toBeGreaterThanOrEqual(7);\n  134 |   }\n> 135 |   expect(proof.failures, scene).toEqual([]);\n      |                                 ^\n  136 |   return proof;\n  137 | }\n  138 |"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-presentation.spec.ts / C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Undo preserves money",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: Date quick-add with More\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: Date quick-add with More\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Text action height: Add (44px)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertContract (/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:135:33)\n    at /tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:551:3",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts",
+              "column": 33,
+              "line": 135
+            },
+            "snippet": "  133 |     ).toBeGreaterThanOrEqual(7);\n  134 |   }\n> 135 |   expect(proof.failures, scene).toEqual([]);\n      |                                 ^\n  136 |   return proof;\n  137 | }\n  138 |"
+          }
+        }
+      ]
+    },
+    {
+      "title": "c5-presentation.spec.ts / C5 repeated current offer is idempotent, stop moves retained record to Past and Undo restores Current",
+      "project": "phone",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[id=\"_r_h_-demo-offer-0003\"]')\nExpected substring: \u001b[32m\"S\u001b[7mtopped\u001b[27m\"\u001b[39m\nReceived string:    \u001b[31m\"S\u001b[7mcopeAll branches\u001b[27m\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[id=\"_r_h_-demo-offer-0003\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[id=\"_r_h_-demo-offer-0003\"]')\u001b[22m\n\u001b[2m    13 \u00d7 locator resolved to <tr class=\"table-expanded-row\" id=\"_r_h_-demo-offer-0003\">\u2026</tr>\u001b[22m\n\u001b[2m       - unexpected value \"ScopeAll branches\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[id=\"_r_h_-demo-offer-0003\"]')\nExpected substring: \u001b[32m\"S\u001b[7mtopped\u001b[27m\"\u001b[39m\nReceived string:    \u001b[31m\"S\u001b[7mcopeAll branches\u001b[27m\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[id=\"_r_h_-demo-offer-0003\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[id=\"_r_h_-demo-offer-0003\"]')\u001b[22m\n\u001b[2m    13 \u00d7 locator resolved to <tr class=\"table-expanded-row\" id=\"_r_h_-demo-offer-0003\">\u2026</tr>\u001b[22m\n\u001b[2m       - unexpected value \"ScopeAll branches\"\u001b[22m\n\n    at /tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts:767:55",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/c5-presentation.spec.ts",
+              "column": 55,
+              "line": 767
+            },
+            "snippet": "  765 |     expect(detailsId).toBeTruthy();\n  766 |     await details.click();\n> 767 |     await expect(page.locator(`[id=\"${detailsId}\"]`)).toContainText(\"Stopped\");\n      |                                                       ^\n  768 |   } else {\n  769 |     await expect(pastRow).toContainText(\"Stopped\");\n  770 |   }"
+          }
+        }
+      ]
+    },
+    {
+      "title": "storage-c6.spec.ts / C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload",
+      "project": "desktop",
+      "results": [
+        {
+          "status": "timedOut",
+          "retry": 0,
+          "error": {
+            "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m",
+            "stack": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+          }
+        }
+      ]
+    },
+    {
+      "title": "storage-c6.spec.ts / C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews",
+      "project": "phone",
+      "results": [
+        {
+          "status": "failed",
+          "retry": 0,
+          "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[1mMatcher error\u001b[22m: \u001b[31mreceived\u001b[39m value must be a string\n\nReceived has value: \u001b[31mundefined\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[1mMatcher error\u001b[22m: \u001b[31mreceived\u001b[39m value must be a string\n\nReceived has value: \u001b[31mundefined\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at /tmp/c8-source-28c9447/prototype/tests/storage-c6.spec.ts:197:8",
+            "location": {
+              "file": "/tmp/c8-source-28c9447/prototype/tests/storage-c6.spec.ts",
+              "column": 8,
+              "line": 197
+            },
+            "snippet": "  195 |     await expect\n  196 |       .poll(async () => (await saved(page))?.invoice.file_data)\n> 197 |       .toMatch(new RegExp(`^idb-file:v1:.*:${photo.sha256}$`));\n      |        ^\n  198 |     const invoice = (await saved(page)).invoice;\n  199 |     uploaded.push({\n  200 |       id: invoice.id,"
+          }
+        }
+      ]
+    },
+    {
+      "title": "storage-c6.spec.ts / C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload",
+      "project": "phone",
+      "results": [
+        {
+          "status": "timedOut",
+          "retry": 0,
+          "error": {
+            "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m",
+            "stack": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,10 +1,9 @@
 .history-toolbar {
   margin-block-end: 24px;
 }
-.history-toolbar .ui-date {
-  inline-size: 180px;
+.history-toolbar .received-range-trigger {
+  inline-size: fit-content;
   max-inline-size: 100%;
-  flex: 0 0 auto;
 }
 .history-card {
   min-inline-size: 0;
@@ -14,6 +13,7 @@
 }
 .history-invoice-version-links {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
@@ -31,7 +31,9 @@
   }
   .history-table td,
   .history-table th {
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
     white-space: normal;
   }
   .history-table .history-branch {
@@ -50,8 +52,21 @@
   gap: 4px;
   font-size: 13px;
 }
-.history-value-summary > span:first-child {
-  color: var(--text-muted);
+.history-recorded-change {
+  display: grid;
+  gap: 4px;
+}
+.history-value-summary > .button {
+  inline-size: fit-content;
+  padding-inline: 0;
+}
+.history-table bdi {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.history-invoice-reference {
+  display: inline-block;
+  white-space: nowrap;
 }
 .history-revert-dialog {
   inline-size: min(720px, calc(100vw - 32px));
@@ -89,6 +104,9 @@
   margin-block-start: 24px;
 }
 @media (max-width: 760px) {
+  :root .history-table tbody tr > td[data-column-key="values"] {
+    grid-column: 1 / -1;
+  }
   .history-toolbar {
     margin-block-end: 16px;
   }

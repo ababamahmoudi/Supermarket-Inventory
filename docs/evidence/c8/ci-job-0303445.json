@@ -1,0 +1,140 @@
+{
+  "id": 115456944826,
+  "run_id": 38443831934,
+  "workflow_name": "CI",
+  "head_branch": "feat/prototype-c8-sales-fixes",
+  "run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/actions/runs/38443831934",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU9hwec8AAAAa4cUqug",
+  "head_sha": "0303445e897c32684d1c933b9ed8deb7fe260bdd",
+  "url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/actions/jobs/115456944826",
+  "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38443831934/job/115456944826",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-13T18:04:45Z",
+  "started_at": "2026-10-13T18:04:47Z",
+  "completed_at": "2026-10-13T18:28:39Z",
+  "name": "Prototype lint, pricing and unit tests, build, and browsers",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-13T18:04:48Z",
+      "completed_at": "2026-10-13T18:04:49Z"
+    },
+    {
+      "name": "Check out repository",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-13T18:04:49Z",
+      "completed_at": "2026-10-13T18:04:54Z"
+    },
+    {
+      "name": "Read the prototype Node.js requirement",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-13T18:04:54Z",
+      "completed_at": "2026-10-13T18:04:55Z"
+    },
+    {
+      "name": "Set up the prototype Node.js version",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-13T18:04:55Z",
+      "completed_at": "2026-10-13T18:04:56Z"
+    },
+    {
+      "name": "Install frozen prototype dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-13T18:04:56Z",
+      "completed_at": "2026-10-13T18:05:04Z"
+    },
+    {
+      "name": "Check prototype lint and formatting",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-13T18:05:04Z",
+      "completed_at": "2026-10-13T18:05:45Z"
+    },
+    {
+      "name": "Run prototype unit tests and every seed pricing case",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-13T18:05:45Z",
+      "completed_at": "2026-10-13T18:07:43Z"
+    },
+    {
+      "name": "Build the prototype",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-13T18:07:43Z",
+      "completed_at": "2026-10-13T18:08:00Z"
+    },
+    {
+      "name": "Install Chromium and browser dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-10-13T18:08:00Z",
+      "completed_at": "2026-10-13T18:08:22Z"
+    },
+    {
+      "name": "Test desktop and phone browser workflows",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-13T18:08:22Z",
+      "completed_at": "2026-10-13T18:28:37Z"
+    },
+    {
+      "name": "Upload prototype browser failures",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 11,
+      "started_at": "2026-10-13T18:28:37Z",
+      "completed_at": "2026-10-13T18:28:37Z"
+    },
+    {
+      "name": "Post Set up the prototype Node.js version",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-10-13T18:28:37Z",
+      "completed_at": "2026-10-13T18:28:37Z"
+    },
+    {
+      "name": "Post Check out repository",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-10-13T18:28:37Z",
+      "completed_at": "2026-10-13T18:28:37Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-10-13T18:28:37Z",
+      "completed_at": "2026-10-13T18:28:37Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/ababamahmoudi/Supermarket-Inventory/check-runs/115456944826",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000000617,
+  "runner_name": "GitHub Actions 1000000617",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

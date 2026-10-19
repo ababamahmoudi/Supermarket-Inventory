@@ -727,5 +727,41 @@
     "tax": "0.00",
     "final_total": "22.00",
     "_note": "Separate fictional weighed example; not added to the existing invoice, payable, or historical purchases."
+  },
+  "sales_demo": {
+    "running_sale": {
+      "id": "demo-c8-pot-sale",
+      "product_code": "0012",
+      "branch": "Branch 1",
+      "sale_price": "16.99",
+      "starts_relative_days": -4,
+      "last_day_relative_days": 10
+    },
+    "pending_request": {
+      "id": "demo-c8-oil-request",
+      "product_code": "0008",
+      "branch": "Branch 1",
+      "requested_price": "7.99",
+      "starts_relative_days": 0,
+      "last_day_relative_days": 13,
+      "why": "slow seller"
+    },
+    "cost_increase_invoice": {
+      "id": "demo-c8-hw-5012",
+      "supplier": "HomeWare Imports",
+      "supplier_invoice_number": "HW-5012",
+      "branch": "Branch 1",
+      "product_code": "0012",
+      "qty_ordered": 3,
+      "qty_received": 3,
+      "units_per_case": 3,
+      "unit_cost_before_tax": "14.2000",
+      "tax_rate": "0.13",
+      "subtotal": "42.60",
+      "tax": "5.54",
+      "final_total": "48.14",
+      "original_file_name": "fictional-hw-5012.svg",
+      "original_sha256": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444"
+    }
   }
 }

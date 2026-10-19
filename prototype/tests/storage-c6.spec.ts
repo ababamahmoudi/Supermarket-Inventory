@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { resetDemo, signIn } from "./helpers";
+import { selectLabelGroup } from "./label-selection";
 
 const mainKey = "supermarket-prototype-v1";
 const databaseName = "supermarket-prototype-files-v1";
@@ -302,13 +303,13 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
   // before a user can revert after refresh; merely retaining files is not enough.
   expect(state.prototype_history_dictionary?.version).toBe(1);
   const originalName = state.products.find(
-    (product: { code: string }) => product.code === "0009",
+    (product: { code: string }) => product.code === "0006",
   ).name_en;
   await page.goto("/#lookup");
   await page
     .getByRole("combobox", { name: "Search products", exact: true })
-    .fill("0009");
-  await page.getByRole("button", { name: /^Edit Potato Chips/ }).click();
+    .fill("0006");
+  await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
   const editor = page.getByRole("dialog", {
     name: "Edit product",
     exact: true,
@@ -323,7 +324,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
     .poll(
       async () =>
         (await saved(page)).products.find(
-          (product: { code: string }) => product.code === "0009",
+          (product: { code: string }) => product.code === "0006",
         ).name_en,
     )
     .toContain("storage reload proof");
@@ -357,7 +358,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
     .poll(
       async () =>
         (await saved(page)).products.find(
-          (product: { code: string }) => product.code === "0009",
+          (product: { code: string }) => product.code === "0006",
         ).name_en,
     )
     .toBe(originalName);
@@ -397,6 +398,11 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
   page,
 }, testInfo) => {
   test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
   await page.addInitScript(() => {
     window.print = () => {
       const images = Array.from(
@@ -418,14 +424,18 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
   await waitForSavedFiles(page);
   const photo = await makePhoto(page, 99);
   await page.goto("/#settings?group=company");
+  const logoPicker = page.waitForEvent("filechooser");
   await page
     .locator("#company-logo")
-    .getByLabel("Upload file", { exact: true })
-    .setInputFiles({
-      name: "fictional-company-logo.jpg",
-      mimeType: "image/jpeg",
-      buffer: photo.buffer,
-    });
+    .getByRole("button", { name: "Replace", exact: true })
+    .click();
+  await (
+    await logoPicker
+  ).setFiles({
+    name: "fictional-company-logo.jpg",
+    mimeType: "image/jpeg",
+    buffer: photo.buffer,
+  });
   await expect
     .poll(() =>
       page
@@ -456,6 +466,16 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
     .getByRole("button", { name: "Add 1 product to waitlist", exact: true })
     .click();
   await page.getByRole("tab", { name: /^Waitlist/ }).click();
+  await selectLabelGroup(page, "regular", "Template 1");
+  const promoBefore = (await saved(page)).label_waitlist.filter(
+    (item: { preferred_template?: string }) =>
+      item.preferred_template === "promo",
+  );
+  expect(
+    promoBefore.some(
+      (item: { product_code: string }) => item.product_code === "0012",
+    ),
+  ).toBe(true);
   // No wait for a logo image here: the application must gate window.print.
   await page.getByRole("button", { name: "Print labels", exact: true }).click();
   await expect
@@ -473,6 +493,12 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
     expect(image.error).toBeNull();
     expect(image.source).toBe(true);
   }
+  expect(
+    (await saved(page)).label_waitlist.filter(
+      (item: { preferred_template?: string }) =>
+        item.preferred_template === "promo",
+    ),
+  ).toEqual(promoBefore);
   await page.reload();
   await waitForSavedFiles(page);
   expect((await saved(page)).config.company.logo_data).toBe(reference);
@@ -480,9 +506,16 @@ test("C6 resolves an uploaded company logo before an immediate label Print, and 
   expect(files[0].hash).toBe(photo.sha256);
   expect(files[0].size).toBe(photo.size);
   expect(await textBytes(page)).toBeLessThan(5 * 1024 * 1024);
+  expect(errors).toEqual([]);
   await testInfo.attach("Uploaded logo was loaded before window.print", {
     body: JSON.stringify(
-      { printed, file: files[0], reload_retained: true },
+      {
+        printed,
+        file: files[0],
+        reload_retained: true,
+        promo_retained: true,
+        console_errors: errors,
+      },
       null,
       2,
     ),
@@ -516,8 +549,8 @@ test("C6 retains malformed History text until an explicit Reset, verifying its r
   await page.goto("/#lookup");
   await page
     .getByRole("combobox", { name: "Search products", exact: true })
-    .fill("0009");
-  await page.getByRole("button", { name: /^Edit Potato Chips/ }).click();
+    .fill("0006");
+  await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
   const editor = page.getByRole("dialog", {
     name: "Edit product",
     exact: true,

@@ -14,13 +14,24 @@ import {
   historyErrorMessage,
 } from "../history-copy";
 import { branchLabel } from "../settings";
-import { demoUserLabel, DateText, LtrText, Money } from "../presentation";
+import {
+  demoUserLabel,
+  DateText,
+  LtrText,
+  Money,
+  UnitText,
+} from "../presentation";
+import {
+  historyChangeIsMoney,
+  historyDisplayChanges,
+  historyProductName,
+  type HistoryDisplayChange,
+} from "../history-display";
 import {
   Badge,
   Button,
   Card,
   DataTable,
-  DateField,
   Dialog,
   DialogActions,
   EmptyState,
@@ -34,6 +45,7 @@ import {
 import type { Activity } from "../types";
 import { useListState } from "../navigation";
 import { formatDate } from "../formatters";
+import { ReceivedDateRange } from "./ReceivedDateRange";
 import "./history-b.css";
 
 function InvoiceVersionLinks({ entry }: { entry: Activity }) {
@@ -95,14 +107,12 @@ export default function History() {
     setFilters((current) => ({ ...current, branch }));
   const setAction = (action: string) =>
     setFilters((current) => ({ ...current, action }));
-  const setFrom = (from: string) =>
-    setFilters((current) => ({ ...current, from }));
-  const setTo = (to: string) => setFilters((current) => ({ ...current, to }));
   const setSearch = (search: string) =>
     setFilters((current) => ({ ...current, search }));
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [expandedChanges, setExpandedChanges] = useState<string[]>([]);
   if (!historyContext || !user || role === "cashier")
     return (
       <EmptyState>
@@ -113,6 +123,8 @@ export default function History() {
       </EmptyState>
     );
   const entries = selectHistory(state, historyContext);
+  const productName = (entry: Activity) =>
+    historyProductName(state.products, entry, historyContext.company_id, lang);
   const visible = entries.filter(
     (entry) =>
       (person === "all" || entry.by === person) &&
@@ -121,7 +133,7 @@ export default function History() {
       (!from || formatDate(entry.at, state.config.company.timezone) >= from) &&
       (!to || formatDate(entry.at, state.config.company.timezone) <= to) &&
       (!search ||
-        `${historyActionLabel(entry.action, lang)} ${entry.by} ${entry.product_code ?? ""} ${entry.entity_id ?? ""} ${JSON.stringify(entry.before)} ${JSON.stringify(entry.after)}`
+        `${historyActionLabel(entry.action, lang)} ${entry.by} ${productName(entry) ?? ""} ${entry.product_code ?? ""} ${entry.entity_id ?? ""} ${JSON.stringify(entry.before)} ${JSON.stringify(entry.after)}`
           .toLowerCase()
           .includes(search.toLowerCase())),
   );
@@ -142,18 +154,31 @@ export default function History() {
       lang,
     );
   };
-  const value = (raw: unknown, patch?: ReversalPatch) => {
+  const value = (
+    raw: unknown,
+    patch?: ReversalPatch | HistoryDisplayChange,
+  ) => {
     if (raw === undefined || raw === null || raw === "")
       return <span className="muted">—</span>;
     if (typeof raw === "boolean") return raw ? t("Yes", "بله") : t("No", "خیر");
     if (
-      typeof raw === "string" &&
+      (typeof raw === "string" || typeof raw === "number") &&
       patch &&
-      /price|cost/.test(String(patch.path.at(-1))) &&
-      /^\d+(\.\d+)?$/.test(raw)
+      ("field" in patch
+        ? historyChangeIsMoney(patch)
+        : /price|cost|amount|total/.test(String(patch.path.at(-1)))) &&
+      /^-?\d+(\.\d+)?$/.test(String(raw))
     )
       return <Money value={raw} />;
     if (typeof raw === "string") {
+      const field = patch
+        ? "field" in patch
+          ? patch.field
+          : String(patch.path.at(-1))
+        : undefined;
+      if (field === "supplier_invoice_number" || field === "invoice_number")
+        return <LtrText className="history-invoice-reference">{raw}</LtrText>;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return <DateText value={raw} />;
       const statuses: Record<string, [string, string]> = {
         active: ["Active", "فعال"],
         stopped: ["Stopped", "متوقف‌شده"],
@@ -165,6 +190,14 @@ export default function History() {
         resolved: ["Resolved", "حل‌شده"],
         read: ["Read", "خوانده‌شده"],
         draft: ["Draft", "پیش‌نویس"],
+        ordered: ["Ordered", "سفارش‌داده‌شده"],
+        partially_received: ["Partially received", "بخشی دریافت‌شده"],
+        received: ["Received", "دریافت‌شده"],
+        cancelled: ["Cancelled", "لغوشده"],
+        scheduled: ["Scheduled", "زمان‌بندی‌شده"],
+        ended: ["Ended", "پایان‌یافته"],
+        withdrawn: ["Withdrawn", "پس‌گرفته‌شده"],
+        expired: ["Expired", "منقضی‌شده"],
         review: ["Needs review", "نیاز به بررسی"],
         cleared: ["Cleared", "پاک‌شده"],
         removed: ["Removed", "حذف‌شده"],
@@ -188,7 +221,11 @@ export default function History() {
         proposed: ["Proposed", "پیشنهادی"],
       };
       if (statuses[raw]) return t(...statuses[raw]);
-      return <bdi>{raw}</bdi>;
+      return (
+        <bdi>
+          <UnitText>{raw}</UnitText>
+        </bdi>
+      );
     }
     if (typeof raw === "number") return <LtrText>{raw}</LtrText>;
     if (Array.isArray(raw))
@@ -213,29 +250,51 @@ export default function History() {
     );
   };
   const summary = (entry: Activity) => {
-    const first = entry.reversal?.[0];
-    if (first)
+    const changes = historyDisplayChanges(entry);
+    const expanded = expandedChanges.includes(entry.id);
+    const displayChange = (change: HistoryDisplayChange, index: number) => {
+      const label = historyFieldLabel(change.field, lang);
+      return (
+        <div className="history-recorded-change" key={index}>
+          {label !== t("Recorded values", "مقادیر ثبت‌شده") && (
+            <span className="muted">{label}</span>
+          )}
+          <span>
+            {value(change.before, change)} {lang === "fa" ? "←" : "→"}{" "}
+            {value(change.after, change)}
+          </span>
+        </div>
+      );
+    };
+    if (changes.length)
       return (
         <div className="history-value-summary">
-          <span>{fieldLabel(first)}</span>
-          <span>
-            {value(first.before, first)} {lang === "fa" ? "←" : "→"}{" "}
-            {value(first.after, first)}
-          </span>
-          {entry.reversal!.length > 1 && (
-            <span className="muted">
+          {(expanded ? changes : changes.slice(0, 1)).map(displayChange)}
+          {changes.length > 1 && (
+            <Button
+              variant="plain"
+              size="sm"
+              aria-expanded={expanded}
+              onClick={() =>
+                setExpandedChanges((current) =>
+                  expanded
+                    ? current.filter((id) => id !== entry.id)
+                    : [...current, entry.id],
+                )
+              }
+            >
               {tCount(
                 "+{{count}} change",
                 "+{{count}} changes",
                 "+{{count}} تغییر",
                 "+{{count}} تغییر",
-                entry.reversal!.length - 1,
+                changes.length - 1,
               )}
-            </span>
+            </Button>
           )}
         </div>
       );
-    return <span className="muted">{t("Recorded action", "کار ثبت‌شده")}</span>;
+    return <span className="muted">—</span>;
   };
   return (
     <>
@@ -258,87 +317,87 @@ export default function History() {
           {message}
         </p>
       )}
-      <FilterToolbar
-        className="history-toolbar"
-        search={
-          <input
-            aria-label={t("Search History", "جستجوی سابقه")}
-            placeholder={t("Search History", "جستجوی سابقه")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        }
-        count={tCount(
-          "{{count}} action",
-          "{{count}} actions",
-          "{{count}} کار",
-          "{{count}} کار",
-          visible.length,
-        )}
-      >
-        <Select
-          aria-label={t("Person", "شخص")}
-          value={person}
-          onChange={setPerson}
-          options={[
-            { value: "all", label: t("All people", "همه افراد") },
-            ...[...new Set(entries.map((entry) => entry.by))].map((name) => ({
-              value: name,
-              label: demoUserLabel(name, lang),
-            })),
-          ]}
-        />
-        <Select
-          aria-label={t("History branch", "شعبه سابقه")}
-          value={branch}
-          onChange={setBranch}
-          options={[
-            { value: "all", label: t("All branches", "همه شعبه‌ها") },
-            ...historyContext.allowed_branches.map((id) => ({
-              value: id,
-              label: branchLabel(state.config, id, lang),
-            })),
-          ]}
-        />
-        <Select
-          aria-label={t("Action type", "نوع کار")}
-          value={action}
-          onChange={setAction}
-          options={[
-            { value: "all", label: t("All actions", "همه کارها") },
-            ...[...new Set(entries.map((entry) => entry.action))].map(
-              (name) => ({
-                value: name,
-                label: historyActionLabel(name, lang),
-              }),
-            ),
-          ]}
-        />
-        <DateField
-          aria-label={t("From date", "از تاریخ")}
-          value={from}
-          onChange={setFrom}
-        />
-        <DateField
-          aria-label={t("To date", "تا تاریخ")}
-          value={to}
-          onChange={setTo}
-        />
-        <Button
-          variant="plain"
-          onClick={() => {
-            setPerson("all");
-            setBranch("all");
-            setAction("all");
-            setFrom("");
-            setTo("");
-            setSearch("");
-          }}
-        >
-          {t("Clear filters", "پاک کردن فیلترها")}
-        </Button>
-      </FilterToolbar>
       <Card className="history-card">
+        <FilterToolbar
+          className="history-toolbar"
+          search={
+            <input
+              aria-label={t("Search History", "جستجوی سابقه")}
+              placeholder={t("Search History", "جستجوی سابقه")}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          }
+          count={tCount(
+            "{{count}} action",
+            "{{count}} actions",
+            "{{count}} کار",
+            "{{count}} کار",
+            visible.length,
+          )}
+        >
+          <Select
+            aria-label={t("Person", "شخص")}
+            value={person}
+            onChange={setPerson}
+            options={[
+              { value: "all", label: t("All people", "همه افراد") },
+              ...[...new Set(entries.map((entry) => entry.by))].map((name) => ({
+                value: name,
+                label: demoUserLabel(name, lang),
+              })),
+            ]}
+          />
+          <Select
+            aria-label={t("History branch", "شعبه سابقه")}
+            value={branch}
+            onChange={setBranch}
+            options={[
+              { value: "all", label: t("All branches", "همه شعبه‌ها") },
+              ...historyContext.allowed_branches.map((id) => ({
+                value: id,
+                label: branchLabel(state.config, id, lang),
+              })),
+            ]}
+          />
+          <Select
+            aria-label={t("Action type", "نوع کار")}
+            value={action}
+            onChange={setAction}
+            options={[
+              { value: "all", label: t("All actions", "همه کارها") },
+              ...[...new Set(entries.map((entry) => entry.action))].map(
+                (name) => ({
+                  value: name,
+                  label: historyActionLabel(name, lang),
+                }),
+              ),
+            ]}
+          />
+          <ReceivedDateRange
+            from={from}
+            to={to}
+            onChange={(nextFrom, nextTo) =>
+              setFilters((current) => ({
+                ...current,
+                from: nextFrom,
+                to: nextTo,
+              }))
+            }
+          />
+          <Button
+            variant="plain"
+            onClick={() => {
+              setPerson("all");
+              setBranch("all");
+              setAction("all");
+              setFilters((current) => ({ ...current, from: "", to: "" }));
+              setSearch("");
+            }}
+          >
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        </FilterToolbar>
         {!visible.length ? (
           <EmptyState>
             {t(
@@ -350,13 +409,33 @@ export default function History() {
           <DataTable
             className="history-table"
             columns={[
-              { width: 170 },
-              { width: 160 },
-              { width: 110 },
-              { width: 190 },
-              { width: 145 },
-              { width: 280 },
-              { width: 120, actions: true },
+              {
+                key: "time",
+                width: 150,
+                priority: 1,
+                required: true,
+                minWidth: 140,
+                mobilePrimary: true,
+              },
+              { key: "person", width: 150, priority: 5, mobilePrimary: false },
+              { key: "branch", width: 120, priority: 6, mobilePrimary: false },
+              { key: "action", width: 170, priority: 4, mobilePrimary: false },
+              {
+                key: "item",
+                width: 260,
+                priority: 0,
+                required: true,
+                minWidth: 240,
+                mobilePrimary: true,
+              },
+              {
+                key: "values",
+                width: 240,
+                priority: 2,
+                minWidth: 210,
+                mobilePrimary: true,
+              },
+              { key: "actions", width: 120, actions: true },
             ]}
           >
             <thead>
@@ -393,7 +472,11 @@ export default function History() {
                   </td>
                   <td>{historyActionLabel(entry.action, lang)}</td>
                   <td>
-                    {entry.product_code ? (
+                    {productName(entry) ? (
+                      <bdi dir="auto">
+                        <UnitText>{productName(entry)!}</UnitText>
+                      </bdi>
+                    ) : entry.product_code ? (
                       <LtrText>
                         {t("Product Code", "کد محصول")} {entry.product_code}
                       </LtrText>

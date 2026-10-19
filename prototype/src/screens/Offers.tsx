@@ -5,7 +5,7 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { ChevronRight, MoreHorizontal } from "lucide-react";
 import {
   activateOffer,
   businessDate,
@@ -14,13 +14,25 @@ import {
   offerReadiness,
   stopOffer,
 } from "../approvals";
-import { effectivePrice, isOfferScheduledNow, lookupBranch } from "../catalog";
+import {
+  effectivePrice,
+  isOfferScheduledNow,
+  lookupBranch,
+  regularPrice,
+} from "../catalog";
+import { ChangePriceDialog } from "../ChangePriceDialog";
+import { endSale, withdrawSaleRequest } from "../sales";
+import type { SaleSchedule, SaleRequest } from "../sales";
+import { offerPausedStores, salesOfferRows } from "../sales-offer-list";
+import type { SalesOfferRow as SaleRow } from "../sales-offer-list";
+import { salesText } from "../sales-locale";
+import { SalesOfferRow, SalesOfferRecord } from "./SalesOffers";
 import { useDemo } from "../store";
 import { ManualPricePill } from "../manual-price-presentation";
+import { ProductPrice } from "../weight-price-presentation";
 import {
   categoryLabel,
   DateText,
-  formatOffer,
   LtrText,
   Money,
   OfferLabel,
@@ -54,10 +66,12 @@ import {
   Tabs,
   Menu,
   MenuItem,
+  IconButton,
 } from "../ui";
 
 export function Offers() {
-  const { state, update, role, branch, setBranch, lang, t } = useDemo();
+  const { state, update, role, branch, setBranch, lang, t, historyContext } =
+    useDemo();
   const branches = sellingBranches(state.config);
   const [tab, setTab] = useState<"offers" | "past" | "pools">("offers");
   const [search, setSearch] = useState("");
@@ -78,6 +92,22 @@ export function Offers() {
   );
   const [stopId, setStopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [openedOffer, setOpenedOffer] = useState<Offer[] | null>(null);
+  const [openedSale, setOpenedSale] = useState<SaleRow | null>(null);
+  const [changePrice, setChangePrice] = useState<{
+    product_code: string;
+    branch?: Branch;
+    existing_sale_id?: string;
+    request_id?: string;
+  } | null>(null);
+  const [endSelected, setEndSelected] = useState<SaleSchedule | null>(null);
+  const [withdrawSelected, setWithdrawSelected] = useState<SaleRequest | null>(
+    null,
+  );
+  const [createType, setCreateType] = useState<"multi_buy" | "sale">(
+    "multi_buy",
+  );
+  const [createAttempted, setCreateAttempted] = useState(false);
   const company = state.config.company.seed_key;
   const viewBranch =
     branch === "all" ? (branches[0] ?? lookupBranch(branch)) : branch;
@@ -94,13 +124,21 @@ export function Offers() {
     const product = state.products.find(
       (item) => item.company_id === company && item.code === offer.product_code,
     );
+    const paused = offerPausedStores(
+      state,
+      offer,
+      branch,
+      historyContext?.allowed_branches ?? [],
+    );
     const visibleStatus =
       offer.status === "active" &&
       !isOfferScheduledNow(offer, state.config.company.timezone)
         ? isPastOffer(offer, state.config.company.timezone)
           ? "expired"
           : "scheduled"
-        : offer.status;
+        : paused.length
+          ? "paused"
+          : offer.status;
     return (
       (!needle ||
         [
@@ -112,7 +150,10 @@ export function Offers() {
       (!status || visibleStatus === status) &&
       (!category || product?.ai_category === category) &&
       (!supplier || product?.main_supplier === supplier) &&
-      (!type || offer.label === type)
+      (!type ||
+        (type === "clearance"
+          ? offer.clearance === true
+          : type === "multi_buy" && !offer.clearance))
     );
   });
   const suggestions = filteredOffers.filter(
@@ -130,12 +171,14 @@ export function Offers() {
   const suppliers = [
     ...new Set(products.map((product) => product.main_supplier)),
   ].sort();
-  const offerTypes = [
-    ...new Set([
-      ...state.config.promotions.price_to_offer.map((mapping) => mapping.offer),
-      ...ownOffers.map((offer) => offer.label),
-    ]),
-  ];
+  const saleRows = salesOfferRows(state, historyContext, branch, {
+    tab: tab === "past" ? "past" : "offers",
+    search,
+    status,
+    category,
+    supplier,
+    type,
+  });
   const clearFilters = () => {
     setSearch("");
     setStatus("");
@@ -246,10 +289,13 @@ export function Offers() {
     );
   };
   const selected = products.find((product) => product.code === code);
+  const endingProduct = products.find(
+    (product) => product.code === endSelected?.product_code,
+  );
   const manualPrice = selected
     ? scope === "all"
       ? selected.selling_price
-      : effectivePrice(state, selected, viewBranch)
+      : regularPrice(state, selected, viewBranch)
     : null;
   const mapping = offerMapping(state, manualPrice);
   const candidate: Offer | null =
@@ -281,6 +327,111 @@ export function Offers() {
         <EmptyState>{readyMessage("location_not_selling")}</EmptyState>
       </>
     );
+  const listFilters = (
+    <FilterToolbar
+      className="offers-filters"
+      aria-label={t("Offer filters", "فیلترهای پیشنهادها")}
+      search={
+        <input
+          className="ui-input"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          aria-label={t("Search offers", "جستجوی پیشنهادها")}
+          placeholder={t("Search offers", "جستجوی پیشنهادها")}
+        />
+      }
+      count={translateCount(
+        "{{count}} offer",
+        "{{count}} offers",
+        "{{count}} پیشنهاد",
+        "{{count}} پیشنهاد",
+        rows.length +
+          saleRows.length +
+          (tab === "offers" ? suggestions.length : 0),
+        lang,
+      )}
+    >
+      <Select
+        aria-label={t("Offer status", "وضعیت پیشنهاد")}
+        value={status}
+        onChange={setStatus}
+        options={[
+          { value: "", label: t("All statuses", "همه وضعیت‌ها") },
+          ...(tab === "past"
+            ? [
+                { value: "stopped", label: t("Stopped", "متوقف‌شده") },
+                { value: "expired", label: t("Expired", "منقضی‌شده") },
+                { value: "ended", label: t("Ended", "پایان‌یافته") },
+              ]
+            : [
+                { value: "suggested", label: t("Pending", "در انتظار") },
+                { value: "active", label: t("Active", "فعال") },
+                { value: "requested", label: t("Requested", "درخواست‌شده") },
+                { value: "paused", label: salesText(t, "paused") },
+                {
+                  value: "scheduled",
+                  label: t("Scheduled", "زمان‌بندی‌شده"),
+                },
+              ]),
+        ]}
+      />
+      <Select
+        aria-label={t("Offer category", "دسته پیشنهاد")}
+        value={category}
+        onChange={setCategory}
+        options={[
+          { value: "", label: t("All categories", "همه دسته‌ها") },
+          ...categories.map((value) => ({
+            value,
+            label: categoryLabel(value, lang),
+          })),
+        ]}
+      />
+      <Select
+        aria-label={t("Offer supplier", "تأمین‌کننده پیشنهاد")}
+        value={supplier}
+        onChange={setSupplier}
+        options={[
+          { value: "", label: t("All suppliers", "همه تأمین‌کنندگان") },
+          ...suppliers.map((value) => ({
+            value,
+            label: value,
+          })),
+        ]}
+      />
+      <Select
+        aria-label={t("Offer branch", "شعبه پیشنهاد")}
+        value={branch}
+        onChange={(value) => setBranch(value as Branch)}
+        disabled={role !== "supervisor"}
+        options={
+          role === "supervisor"
+            ? [
+                { value: "all", label: t("All branches", "همه شعبه‌ها") },
+                ...branches.map((value) => ({
+                  value,
+                  label: branchName(value),
+                })),
+              ]
+            : [{ value: branch, label: branchName(branch) }]
+        }
+      />
+      <Select
+        aria-label={t("Offer type", "نوع پیشنهاد")}
+        value={type}
+        onChange={setType}
+        options={[
+          { value: "", label: t("All offer types", "همه انواع پیشنهاد") },
+          { value: "multi_buy", label: t("Multi-buy", "خرید چندتایی") },
+          { value: "sale", label: t("Sale price", "قیمت حراج") },
+          { value: "clearance", label: t("Clearance", "فروش ویژه") },
+        ]}
+      />
+      <Button variant="plain" onClick={clearFilters}>
+        {t("Clear filters", "پاک کردن فیلترها")}
+      </Button>
+    </FilterToolbar>
+  );
   return (
     <>
       <PageHeader
@@ -293,6 +444,8 @@ export function Offers() {
           <Button
             onClick={() => {
               setCreateOpen(true);
+              setCreateType("multi_buy");
+              setCreateAttempted(false);
               setMessage(null);
             }}
           >
@@ -323,110 +476,17 @@ export function Offers() {
       )}
       {tab !== "pools" ? (
         <>
-          <FilterToolbar
-            className="offers-filters"
-            aria-label={t("Offer filters", "فیلترهای پیشنهادها")}
-            search={
-              <input
-                className="ui-input"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                aria-label={t("Search offers", "جستجوی پیشنهادها")}
-                placeholder={t("Search offers", "جستجوی پیشنهادها")}
-              />
-            }
-            count={translateCount(
-              "{{count}} offer",
-              "{{count}} offers",
-              "{{count}} پیشنهاد",
-              "{{count}} پیشنهاد",
-              rows.length + (tab === "offers" ? suggestions.length : 0),
-              lang,
-            )}
-          >
-            <Select
-              aria-label={t("Offer status", "وضعیت پیشنهاد")}
-              value={status}
-              onChange={setStatus}
-              options={[
-                { value: "", label: t("All statuses", "همه وضعیت‌ها") },
-                ...(tab === "past"
-                  ? [
-                      { value: "stopped", label: t("Stopped", "متوقف‌شده") },
-                      { value: "expired", label: t("Expired", "منقضی‌شده") },
-                    ]
-                  : [
-                      { value: "suggested", label: t("Pending", "در انتظار") },
-                      { value: "active", label: t("Active", "فعال") },
-                      {
-                        value: "scheduled",
-                        label: t("Scheduled", "زمان‌بندی‌شده"),
-                      },
-                    ]),
-              ]}
-            />
-            <Select
-              aria-label={t("Offer category", "دسته پیشنهاد")}
-              value={category}
-              onChange={setCategory}
-              options={[
-                { value: "", label: t("All categories", "همه دسته‌ها") },
-                ...categories.map((value) => ({
-                  value,
-                  label: categoryLabel(value, lang),
-                })),
-              ]}
-            />
-            <Select
-              aria-label={t("Offer supplier", "تأمین‌کننده پیشنهاد")}
-              value={supplier}
-              onChange={setSupplier}
-              options={[
-                { value: "", label: t("All suppliers", "همه تأمین‌کنندگان") },
-                ...suppliers.map((value) => ({
-                  value,
-                  label: value,
-                })),
-              ]}
-            />
-            <Select
-              aria-label={t("Offer branch", "شعبه پیشنهاد")}
-              value={branch}
-              onChange={(value) => setBranch(value as Branch)}
-              disabled={role !== "supervisor"}
-              options={
-                role === "supervisor"
-                  ? [
-                      { value: "all", label: t("All branches", "همه شعبه‌ها") },
-                      ...branches.map((value) => ({
-                        value,
-                        label: branchName(value),
-                      })),
-                    ]
-                  : [{ value: branch, label: branchName(branch) }]
-              }
-            />
-            <Select
-              aria-label={t("Offer type", "نوع پیشنهاد")}
-              value={type}
-              onChange={setType}
-              options={[
-                { value: "", label: t("All offer types", "همه انواع پیشنهاد") },
-                ...offerTypes.map((value) => ({
-                  value,
-                  label: formatOffer(
-                    value,
-                    lang,
-                    state.config.company.currency,
-                  ),
-                })),
-              ]}
-            />
-            <Button variant="plain" onClick={clearFilters}>
-              {t("Clear filters", "پاک کردن فیلترها")}
-            </Button>
-          </FilterToolbar>
-          {tab === "offers" && (
+          {tab === "offers" && suggestions.length === 0 && (
+            <p className="muted offers-empty-suggestions">
+              {state.config.promotions.ai_suggestions_enabled === false
+                ? t(
+                    "Offer suggestions are turned off in Settings.",
+                    "پیشنهادهای خودکار فروش در تنظیمات غیرفعال هستند.",
+                  )
+                : t("No suggestions waiting.", "پیشنهادی در انتظار نیست.")}
+            </p>
+          )}
+          {tab === "offers" && suggestions.length > 0 && (
             <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
               <p className="muted">
                 {t(
@@ -566,7 +626,8 @@ export function Offers() {
                 : t("Current offers", "پیشنهادهای فعلی")
             }
           >
-            {rows.length === 0 ? (
+            {listFilters}
+            {rows.length + saleRows.length === 0 ? (
               <EmptyState>
                 {t(
                   "No offers match these filters. Clear filters or create an offer.",
@@ -577,11 +638,33 @@ export function Offers() {
               <DataTable
                 className={`current-offers-table${tab === "past" ? " past-offers-table" : ""}`}
                 columns={[
-                  {},
-                  { width: 140 },
-                  { width: 140 },
-                  { width: 220 },
-                  ...(tab === "offers" ? [{ width: 124, actions: true }] : []),
+                  {
+                    key: "product",
+                    required: true,
+                    minWidth: 240,
+                    priority: 1,
+                    mobilePrimary: true,
+                  },
+                  {
+                    key: "offer",
+                    width: 190,
+                    minWidth: 190,
+                    priority: 2,
+                    mobilePrimary: true,
+                  },
+                  {
+                    key: "location",
+                    width: 144,
+                    priority: 4,
+                    mobilePrimary: false,
+                  },
+                  {
+                    key: "status",
+                    width: 220,
+                    priority: 3,
+                    mobilePrimary: true,
+                  },
+                  { key: "actions", width: 92, actions: true },
                 ]}
               >
                 <thead>
@@ -590,10 +673,30 @@ export function Offers() {
                     <th>{t("Offer", "پیشنهاد")}</th>
                     <th>{t("Scope", "دامنه")}</th>
                     <th>{t("Status", "وضعیت")}</th>
-                    {tab === "offers" && <th>{t("Action", "اقدام")}</th>}
+                    <th>{t("Action", "اقدام")}</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {saleRows.map((row) =>
+                    SalesOfferRow({
+                      row,
+                      state,
+                      lang,
+                      t,
+                      context: historyContext,
+                      onOpen: setOpenedSale,
+                      onChange: (record) =>
+                        setChangePrice({
+                          product_code: record.product_code,
+                          branch: record.branch,
+                          ...("requested_price" in record
+                            ? { request_id: record.id }
+                            : { existing_sale_id: record.id }),
+                        }),
+                      onEnd: setEndSelected,
+                      onWithdraw: setWithdrawSelected,
+                    }),
+                  )}
                   {rows.map((group) => {
                     const first = group[0];
                     const product = state.products.find(
@@ -605,6 +708,25 @@ export function Offers() {
                       <tr
                         key={tab === "past" ? first.id : first.product_code}
                         data-product-code={first.product_code}
+                        tabIndex={0}
+                        onClick={(event) => {
+                          if (
+                            !(event.target instanceof Element) ||
+                            !event.target.closest(
+                              "button,a,input,[role='button']",
+                            )
+                          )
+                            setOpenedOffer(group);
+                        }}
+                        onKeyDown={(event) => {
+                          if (
+                            event.target === event.currentTarget &&
+                            (event.key === "Enter" || event.key === " ")
+                          ) {
+                            event.preventDefault();
+                            setOpenedOffer(group);
+                          }
+                        }}
                       >
                         <td>
                           {product ? (
@@ -631,12 +753,9 @@ export function Offers() {
                                 )}
                               </span>
                               {offer.mix_and_match && (
-                                <>
-                                  <br />
-                                  <span className="muted">
-                                    {t("Mix-and-match", "ترکیبی")}
-                                  </span>
-                                </>
+                                <span className="muted offer-entry-pool">
+                                  {t("Mix-and-match", "ترکیبی")}
+                                </span>
                               )}
                             </div>
                           ))}
@@ -650,6 +769,12 @@ export function Offers() {
                         </td>
                         <td>
                           {group.map((offer) => {
+                            const paused = offerPausedStores(
+                              state,
+                              offer,
+                              branch,
+                              historyContext?.allowed_branches ?? [],
+                            );
                             const scheduled = isOfferScheduledNow(
                               offer,
                               state.config.company.timezone,
@@ -667,19 +792,28 @@ export function Offers() {
                                       ? "neutral"
                                       : expired
                                         ? "danger"
-                                        : scheduled
-                                          ? "approved"
-                                          : "info"
+                                        : paused.length
+                                          ? "pending"
+                                          : scheduled
+                                            ? "approved"
+                                            : "info"
                                   }
                                 >
                                   {offer.status === "stopped"
                                     ? t("Stopped", "متوقف‌شده")
                                     : expired
                                       ? t("Expired", "منقضی‌شده")
-                                      : scheduled
-                                        ? t("Active", "فعال")
-                                        : t("Scheduled", "زمان‌بندی‌شده")}
+                                      : paused.length
+                                        ? salesText(t, "paused")
+                                        : scheduled
+                                          ? t("Active", "فعال")
+                                          : t("Scheduled", "زمان‌بندی‌شده")}
                                 </Badge>
+                                {paused.map((store) => (
+                                  <p key={store} className="muted">
+                                    {branchName(store)}
+                                  </p>
+                                ))}
                                 {offer.start_date && (
                                   <p className="muted">
                                     {t("Starts", "شروع")}:{" "}
@@ -696,17 +830,9 @@ export function Offers() {
                             );
                           })}
                         </td>
-                        {tab === "offers" && (
-                          <td>
-                            {group.length === 1 ? (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => setStopId(first.id)}
-                              >
-                                {t("Stop offer", "توقف پیشنهاد")}
-                              </Button>
-                            ) : (
+                        <td>
+                          <div className="actions offer-row-actions">
+                            {tab === "offers" ? (
                               <Menu
                                 iconOnly
                                 showChevron={false}
@@ -729,9 +855,27 @@ export function Offers() {
                                   </MenuItem>
                                 ))}
                               </Menu>
+                            ) : (
+                              <span
+                                className="offer-more-slot"
+                                aria-hidden="true"
+                              />
                             )}
-                          </td>
-                        )}
+                            <IconButton
+                              variant="ghost"
+                              className="table-row-link"
+                              aria-label={t("Open offer", "باز کردن پیشنهاد")}
+                              onClick={() => setOpenedOffer(group)}
+                            >
+                              <ChevronRight
+                                className="directional"
+                                size={20}
+                                strokeWidth={1.5}
+                                aria-hidden="true"
+                              />
+                            </IconButton>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -838,7 +982,7 @@ export function Offers() {
             <>
               <ProductName product={selected} language={lang} />
               {" · "}
-              {scope === "branch"
+              {createType === "sale" || scope === "branch"
                 ? branchName(viewBranch)
                 : t("Company default price", "قیمت پیش‌فرض شرکت")}
             </>
@@ -855,12 +999,42 @@ export function Offers() {
           aria-label={t("Create offer", "ایجاد پیشنهاد")}
           onSubmit={(event) => {
             event.preventDefault();
+            setCreateAttempted(true);
+            if (createType === "sale") {
+              if (!selected) return;
+              setCreateOpen(false);
+              setChangePrice({
+                product_code: selected.code,
+                branch: viewBranch,
+              });
+              return;
+            }
             if (candidate && offerReadiness(state, candidate) === "ready")
               activate(candidate);
           }}
         >
+          <Field label={t("Offer type", "نوع پیشنهاد")}>
+            <Select
+              value={createType}
+              onChange={(value) => {
+                setCreateType(value as "multi_buy" | "sale");
+                setCreateAttempted(false);
+              }}
+              options={[
+                { value: "multi_buy", label: t("Multi-buy", "خرید چندتایی") },
+                { value: "sale", label: t("Sale price", "قیمت حراج") },
+              ]}
+            />
+          </Field>
           <div className="grid-2">
-            <Field label={t("Product", "کالا")}>
+            <Field
+              label={t("Product", "کالا")}
+              error={
+                createAttempted && !selected
+                  ? t("Choose a product", "یک کالا انتخاب کنید")
+                  : undefined
+              }
+            >
               <Select
                 value={code}
                 onChange={(value) => {
@@ -878,96 +1052,279 @@ export function Offers() {
                   },
                   ...products.map((product) => ({
                     value: product.code,
-                    label: `${lang === "fa" ? product.name_fa : product.name_en} · \u2066${product.code}\u2069`,
+                    label: `${lang === "fa" ? product.name_fa || product.name_en : product.name_en} · \u2066${product.code}\u2069`,
                   })),
                 ]}
               />
             </Field>
-            <Field label={t("Offer scope", "دامنه پیشنهاد")}>
-              <Select
-                value={scope}
-                onChange={(value) => {
-                  setScope(value as "all" | "branch");
-                  setMessage(null);
-                }}
-                options={[
-                  {
-                    value: "branch",
-                    label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
-                  },
-                  {
-                    value: "all",
-                    label: t("Company default price", "قیمت پیش‌فرض شرکت"),
-                  },
-                ]}
-              />
-            </Field>
-            <Field label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}>
-              <DateField
-                value={start}
-                onChange={(value) => {
-                  setStart(value);
-                  setMessage(null);
-                }}
-              />
-            </Field>
-            <Field
-              label={t("End date (optional)", "تاریخ پایان (اختیاری)")}
-              error={dateError}
-            >
-              <DateField
-                value={end}
-                onChange={(value) => {
-                  setEnd(value);
-                  setMessage(null);
-                }}
-              />
-            </Field>
-          </div>
-          <Checkbox checked={mix} onChange={setMix}>
-            {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
-          </Checkbox>
-          <p>
-            {candidate ? (
+            {createType === "multi_buy" && (
               <>
-                {t("Offer", "پیشنهاد")}:{" "}
-                <strong>{offerLabel(candidate.label)}</strong> ·{" "}
-                {t("Approved price", "قیمت تأییدشده")}:{" "}
-                <Money
-                  value={candidate.price}
-                  currency={state.config.company.currency}
-                />
-                {selected && (
-                  <ManualPricePill product={selected} branch={viewBranch} />
-                )}
+                <Field label={t("Offer scope", "دامنه پیشنهاد")}>
+                  <Select
+                    value={scope}
+                    onChange={(value) => {
+                      setScope(value as "all" | "branch");
+                      setMessage(null);
+                    }}
+                    options={[
+                      {
+                        value: "branch",
+                        label: `${t("This branch only", "فقط این شعبه")} — ${branchName(viewBranch)}`,
+                      },
+                      {
+                        value: "all",
+                        label: t("Company default price", "قیمت پیش‌فرض شرکت"),
+                      },
+                    ]}
+                  />
+                </Field>
+                <Field
+                  label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}
+                >
+                  <DateField
+                    value={start}
+                    onChange={(value) => {
+                      setStart(value);
+                      setMessage(null);
+                    }}
+                  />
+                </Field>
+                <Field
+                  label={t("End date (optional)", "تاریخ پایان (اختیاری)")}
+                  error={dateError}
+                >
+                  <DateField
+                    value={end}
+                    onChange={(value) => {
+                      setEnd(value);
+                      setMessage(null);
+                    }}
+                  />
+                </Field>
               </>
-            ) : selected ? (
-              t(
-                "This approved price has no configured offer. Choose another product or change the mapping in Settings.",
-                "این قیمت تأییدشده پیشنهاد تنظیم‌شده ندارد. کالای دیگری انتخاب کنید یا نگاشت را در تنظیمات تغییر دهید.",
-              )
-            ) : null}
-          </p>
-          {candidate && (
-            <p className="muted">
-              {readyMessage(offerReadiness(state, candidate))}
-            </p>
+            )}
+          </div>
+          {createType === "multi_buy" && (
+            <>
+              <Checkbox checked={mix} onChange={setMix}>
+                {t("Join the mix-and-match pool", "عضویت در گروه ترکیبی")}
+              </Checkbox>
+              <p>
+                {candidate ? (
+                  <>
+                    {t("Offer", "پیشنهاد")}:{" "}
+                    <strong>{offerLabel(candidate.label)}</strong> ·{" "}
+                    {t("Approved price", "قیمت تأییدشده")}:{" "}
+                    <Money
+                      value={candidate.price}
+                      currency={state.config.company.currency}
+                    />
+                    {selected && (
+                      <ManualPricePill product={selected} branch={viewBranch} />
+                    )}
+                  </>
+                ) : selected ? (
+                  t(
+                    "This approved price has no configured offer. Choose another product or change the mapping in Settings.",
+                    "این قیمت تأییدشده پیشنهاد تنظیم‌شده ندارد. کالای دیگری انتخاب کنید یا نگاشت را در تنظیمات تغییر دهید.",
+                  )
+                ) : null}
+              </p>
+              {candidate && (
+                <p className="muted">
+                  {readyMessage(offerReadiness(state, candidate))}
+                </p>
+              )}
+            </>
           )}
           <DialogActions>
             <Button variant="neutral" onClick={() => setCreateOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
-            <Button
-              type="submit"
-              disabled={
-                !candidate || offerReadiness(state, candidate) !== "ready"
-              }
-            >
-              {t("Create offer", "ایجاد پیشنهاد")}
+            <Button type="submit">
+              {createType === "sale"
+                ? t("Continue", "ادامه")
+                : t("Create offer", "ایجاد پیشنهاد")}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
+      {openedOffer && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setOpenedOffer(null);
+          }}
+          title={t("Offer", "پیشنهاد")}
+        >
+          {openedOffer.map((offer) => {
+            const product = products.find(
+              (item) => item.code === offer.product_code,
+            );
+            return (
+              <section className="offer-record" key={offer.id}>
+                {product && <ProductName product={product} language={lang} />}
+                <dl>
+                  <div>
+                    <dt>{t("Product Code", "کد کالا")}</dt>
+                    <dd>
+                      <LtrText>{offer.product_code}</LtrText>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{t("Offer", "پیشنهاد")}</dt>
+                    <dd>{offerLabel(offer.label)}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("Selling price", "قیمت فروش")}</dt>
+                    <dd>
+                      <Money
+                        value={offer.price}
+                        currency={state.config.company.currency}
+                      />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{t("Location", "مکان")}</dt>
+                    <dd>{branchName(offer.branch)}</dd>
+                  </div>
+                  {offer.start_date && (
+                    <div>
+                      <dt>{t("Starts", "شروع")}</dt>
+                      <dd>
+                        <DateText value={offer.start_date} />
+                      </dd>
+                    </div>
+                  )}
+                  {offer.end_date && (
+                    <div>
+                      <dt>{t("Ends", "پایان")}</dt>
+                      <dd>
+                        <DateText value={offer.end_date} />
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </section>
+            );
+          })}
+          <DialogActions>
+            <Button variant="neutral" onClick={() => setOpenedOffer(null)}>
+              {t("Close", "بستن")}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {openedSale && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setOpenedSale(null);
+          }}
+          title={t("Offer", "پیشنهاد")}
+        >
+          <SalesOfferRecord row={openedSale} state={state} lang={lang} t={t} />
+          <DialogActions>
+            <Button variant="neutral" onClick={() => setOpenedSale(null)}>
+              {t("Close", "بستن")}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {changePrice && (
+        <ChangePriceDialog
+          {...changePrice}
+          onClose={() => setChangePrice(null)}
+        />
+      )}
+      {endSelected && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setEndSelected(null);
+          }}
+          title={salesText(t, "endNow")}
+          description={branchName(endSelected.branch)}
+          confirmLabel={salesText(t, "endNow")}
+          confirmVariant="danger"
+          onConfirm={() => {
+            if (!historyContext) return;
+            try {
+              update((draft) =>
+                endSale(draft, historyContext, endSelected.id, {
+                  expected_revision: endSelected.revision,
+                }),
+              );
+              setEndSelected(null);
+              setMessage(["Ended sale.", "حراج پایان یافت."]);
+            } catch {
+              setEndSelected(null);
+              setMessage([
+                "The sale changed. Open it again before ending it.",
+                "حراج تغییر کرده است. پیش از پایان دادن دوباره آن را باز کنید.",
+              ]);
+            }
+          }}
+        >
+          {endingProduct && (
+            <p>
+              <ProductName product={endingProduct} language={lang} />
+            </p>
+          )}
+          <p>
+            {t("Regular", "عادی")}{" "}
+            {endingProduct && (
+              <ProductPrice
+                value={
+                  regularPrice(
+                    state,
+                    endSelected.product_code,
+                    endSelected.branch,
+                  ) ?? endSelected.regular_price_snapshot
+                }
+                product={endingProduct}
+                config={state.config}
+              />
+            )}
+          </p>
+        </ConfirmDialog>
+      )}
+      {withdrawSelected && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setWithdrawSelected(null);
+          }}
+          title={salesText(t, "withdraw")}
+          description={branchName(withdrawSelected.branch)}
+          confirmLabel={salesText(t, "withdraw")}
+          confirmVariant="danger"
+          onConfirm={() => {
+            if (!historyContext) return;
+            try {
+              update((draft) =>
+                withdrawSaleRequest(
+                  draft,
+                  historyContext,
+                  withdrawSelected.id,
+                  withdrawSelected.revision,
+                ),
+              );
+              setWithdrawSelected(null);
+              setMessage([
+                "Withdrew sale request.",
+                "درخواست حراج پس گرفته شد.",
+              ]);
+            } catch {
+              setWithdrawSelected(null);
+              setMessage([
+                "The request changed. Open it again before withdrawing it.",
+                "درخواست تغییر کرده است. پیش از پس‌گرفتن دوباره آن را باز کنید.",
+              ]);
+            }
+          }}
+        />
+      )}
       {stopId && (
         <ConfirmDialog
           open

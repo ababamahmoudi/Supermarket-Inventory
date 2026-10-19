@@ -184,6 +184,22 @@ for (const width of [1280, 1440, 1920]) {
             })
             .click();
           const supplierTable = page.locator(".suppliers-table");
+          // C8 keeps the twelve Supplier columns, including the required
+          // end Action column; optional values may move into row details.
+          const supplierColumns = [
+            ["name", "Supplier", "تأمین‌کننده"],
+            ["status", "Status", "وضعیت"],
+            ["last_delivery", "Last delivery", "آخرین تحویل"],
+            ["deliveries", "Deliveries", "تحویل‌ها"],
+            ["returns", "Open returns", "مرجوعی‌های باز"],
+            ["shorts", "Open shorts", "کسری‌های باز"],
+            ["terms", "Payment terms", "شرایط پرداخت"],
+            ["contact", "Sales rep and phone", "نماینده فروش و تلفن"],
+            ["balance", "Balance", "مانده"],
+            ["overdue", "Overdue", "سررسید گذشته"],
+            ["due", "Next due date", "سررسید بعدی"],
+            ["actions", "Action", "عملیات"],
+          ];
           await expect
             .poll(async () => {
               const visible = Number(
@@ -196,9 +212,25 @@ for (const width of [1280, 1440, 1920]) {
               );
               return visible + widthHidden;
             })
-            .toBe(11);
+            .toBe(supplierColumns.length);
           const widthHidden = Number(
             await supplierTable.getAttribute("data-width-hidden-column-count"),
+          );
+          const visibleKeys = await supplierTable
+            .locator("thead [data-column-key]")
+            .evaluateAll((headers) =>
+              headers.map((header) => header.getAttribute("data-column-key")),
+            );
+          expect(visibleKeys).toContain("name");
+          expect(visibleKeys).toContain("actions");
+          const hiddenColumns = supplierColumns.filter(
+            ([key]) => !visibleKeys.includes(key),
+          );
+          expect(hiddenColumns).toHaveLength(widthHidden);
+          expect(visibleKeys).toEqual(
+            supplierColumns
+              .filter(([key]) => visibleKeys.includes(key))
+              .map(([key]) => key),
           );
           if (widthHidden) {
             await supplierTable
@@ -208,6 +240,11 @@ for (const width of [1280, 1440, 1920]) {
             await expect(
               supplierTable.locator(".table-expanded-row dl > div"),
             ).toHaveCount(widthHidden);
+            await expect(
+              supplierTable.locator(".table-expanded-row dl dt"),
+            ).toHaveText(
+              hiddenColumns.map((column) => column[language === "en" ? 1 : 2]),
+            );
             await check("suppliers width-hidden values remain in row details");
             await supplierTable
               .locator(".table-details-toggle")

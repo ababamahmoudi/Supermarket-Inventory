@@ -47,7 +47,7 @@ export function ProductLotsSection({ product }: { product: Product }) {
         );
   return (
     <section className="stack product-lots-section">
-      <h3>{t("Lots", "سری‌های کالا")}</h3>
+      <h2>{t("Lots", "سری‌های کالا")}</h2>
       {!lots.length ? (
         <p className="muted">
           {t("No dated receipts recorded.", "تحویل دارای تاریخ ثبت نشده است.")}
@@ -211,12 +211,6 @@ export function ProductLotsSection({ product }: { product: Product }) {
           </tbody>
         </DataTable>
       )}
-      <p className="helper">
-        {t(
-          "Received quantities are invoice evidence, not stock on hand.",
-          "مقدار دریافت‌شده مدرک فاکتور است، نه موجودی کالا.",
-        )}
-      </p>
       {error && !selected && (
         <p className="form-error" role="alert">
           {error}

@@ -31,6 +31,7 @@ import {
 } from "./operations";
 import { supplierPage } from "./suppliers";
 import { supplierBalanceSummary } from "./supplier-balances";
+import { manualRegularApprovalPreview } from "./approvals";
 import { manualPrice, setManualPriceMarker } from "./manual-prices";
 import type { DemoState } from "./types";
 
@@ -553,7 +554,7 @@ describe("manual-priced invoice decisions", () => {
     state.invoice.lines[0].review_confirmed = true;
     return { state, product };
   }
-  it("requires Keep or Use before posting; Keep preserves manual provenance and updates regular cost", () => {
+  it("requires a receiver recommendation before posting; Keep preserves price/cost/evidence while creating the Manager calculated-price decision", () => {
     const { state, product } = manualReceipt();
     expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
       "manual_price",
@@ -568,11 +569,23 @@ describe("manual-priced invoice decisions", () => {
     expect(product.selling_price).toBe("2.79");
     expect(product.last_cost_before_tax).toBe("1.4000");
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("2.79");
-    expect(
-      state.approvals.filter(
-        (approval) => approval.source_invoice_id === state.invoice.id,
-      ),
-    ).toEqual([]);
+    // C8 moves the final Keep/Use authority to Approvals; receiver Keep no longer suppresses it.
+    const reviews = state.approvals.filter(
+      (approval) => approval.source_invoice_id === state.invoice.id,
+    );
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]).toMatchObject({
+      status: "pending",
+      type: "price_change",
+      proposed_price: "1.99",
+      manual_price_review: {
+        kept_price: "2.79",
+        calculated_price: "1.99",
+        receiver_recommendation: "keep",
+      },
+    });
+    expect(state.invoice.file_data).toBe(before.invoice.file_data);
+    expect(state.invoice.file_name).toBe(before.invoice.file_name);
     expect(state.invoice.lines[0].calculated_selling_price).toBe("1.99");
   });
   it("Use creates a rule-price proposal even if the new rule equals the current manual price", () => {
@@ -591,7 +604,7 @@ describe("manual-priced invoice decisions", () => {
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("2.99");
     expect(product.selling_price).toBe("2.99");
   });
-  it("Keep evaluates below-margin review against actual manual price without changing it", () => {
+  it("Manager Keep preview evaluates the same retained below-margin price while the pending proposal defaults calculated", () => {
     const { state, product } = manualReceipt("1.4000", "1.50");
     state.invoice.lines[0].manual_price_decision = "keep";
     postInvoice(state, "supervisor", "Branch 1");
@@ -599,12 +612,22 @@ describe("manual-priced invoice decisions", () => {
       (entry) => entry.source_invoice_id === state.invoice.id,
     )!;
     expect(approval).toMatchObject({
-      type: "margin_review",
-      proposed_price: "1.50",
+      type: "price_change",
+      status: "pending",
+      proposed_price: "1.99",
       current_price: "1.50",
-      clear_manual_price: false,
+      clear_manual_price: true,
+      manual_price_review: {
+        kept_price: "1.50",
+        calculated_price: "1.99",
+        receiver_recommendation: "keep",
+      },
     });
-    expect(new Decimal(approval.margin!).times(100).toFixed(2)).toBe("6.67");
+    // The old 6.67% proof is retained for the actual Manager Keep choice rather than the default Rule proposal.
+    const keep = manualRegularApprovalPreview(state, approval, "keep");
+    expect(keep.price).toBe("1.50");
+    expect(keep.below_minimum_margin).toBe(true);
+    expect(new Decimal(keep.margin!).times(100).toFixed(2)).toBe("6.67");
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("1.50");
   });
 });

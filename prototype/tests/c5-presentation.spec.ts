@@ -205,7 +205,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
             "Show details",
             "نمایش جزئیات",
           ).click();
-        await expect(cost).toHaveText("$4.99/lb");
+        await expect(cost).toHaveText("$4.9895/lb");
         await expect(cost).toHaveAttribute("dir", "ltr");
         const price = page.locator(".catalog-products-table .weight-price");
         await expect(price.locator(".weight-price-main")).toHaveText(
@@ -295,8 +295,16 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       ".posted-invoice-lines tbody tr > td:nth-child(3)",
     );
     await expect(displayedCosts.first()).toHaveText("$0.98");
-    for (const cost of await displayedCosts.all())
-      await expect(cost).toHaveText(/^\$[\d,]+\.\d{2}$/);
+    // This signed fictional document retains its exact six source costs.
+    // All have cents; the separate weighed fixture above must retain 4.9895.
+    await expect(displayedCosts).toHaveText([
+      "$0.98",
+      "$1.20",
+      "$1.55",
+      "$1.95",
+      "$3.40",
+      "$1.60",
+    ]);
     const title = page.locator(".posted-invoice-title");
     expect(
       await title.evaluate((element) => {
@@ -735,7 +743,13 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   );
   expect(repeated.offers).toEqual(before.offers);
   expect(repeated.activity).toEqual(before.activity);
-  await button(existing, "Stop offer").click();
+  await existing.getByRole("button", { name: "More", exact: true }).click();
+  const stopExisting = page.getByRole("menuitem", {
+    name: "Stop offer · All branches",
+    exact: true,
+  });
+  await expect(stopExisting).toBeVisible();
+  await stopExisting.click();
   const stop = page.getByRole("dialog", { name: "Stop offer", exact: true });
   await assertContract(page, "Stop offer confirmation", "en-light");
   await button(stop, "Stop offer").click();
@@ -745,15 +759,19 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     '.past-offers-table tr[data-product-code="0003"]',
   );
   await expect(pastRow).toHaveCount(1);
+  let retainedStatus = await pastRow.innerText();
   const details = button(pastRow, "Show details");
   if (await details.count()) {
     const detailsId = await details.getAttribute("aria-controls");
     expect(detailsId).toBeTruthy();
     await details.click();
-    await expect(page.locator(`[id="${detailsId}"]`)).toContainText("Stopped");
-  } else {
-    await expect(pastRow).toContainText("Stopped");
+    const omitted = page.locator(`[id="${detailsId}"]`);
+    await expect(omitted).toBeVisible();
+    expect(await omitted.locator("dl > div > dd").count()).toBeGreaterThan(0);
+    // C8 keeps Status in the phone row; only genuinely omitted values expand.
+    retainedStatus += ` ${await omitted.innerText()}`;
   }
+  expect(retainedStatus).toContain("Stopped");
   const toast = page
     .getByTestId("undo-toast")
     .filter({ hasText: "Stop offer" });

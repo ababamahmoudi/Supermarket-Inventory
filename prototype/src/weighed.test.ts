@@ -4,6 +4,7 @@ import fixtures from "../../seed/pricing-test-cases.json";
 import { initialState } from "./store";
 import { calculatePrice } from "./pricing";
 import { addProduct } from "./manual-product";
+import { savePriceChange } from "./sales";
 import { rulePrice } from "./manual-prices";
 import { savePricingSettings } from "./settings";
 import { attachReversals, reverseActivity } from "./history";
@@ -128,7 +129,7 @@ describe("weighed product and settings decisions", () => {
     const state = initialState();
     state.config.branches.find((branch) => branch.id === "Branch 2")!.active =
       false;
-    const product = state.products.find((item) => item.code === "0009")!;
+    let product = state.products.find((item) => item.code === "0009")!;
     const marker = {
       price: "8.29",
       rule_price: "7.49",
@@ -152,22 +153,7 @@ describe("weighed product and settings decisions", () => {
     const provenance = structuredClone(product.price_provenance.Warehouse);
     const invoices = structuredClone(state.invoices),
       ledger = structuredClone(state.ledger);
-    const edits: ProductEdits = {
-      name_en: product.name_en,
-      name_fa: product.name_fa,
-      description_en: product.description_en ?? "",
-      description_fa: product.description_fa ?? "",
-      unit_size: product.unit_size,
-      ai_category: product.ai_category,
-      pricing_category: product.pricing_category,
-      barcode: product.barcode,
-      main_supplier: product.main_supplier,
-      date_tracking: product.date_tracking,
-      sold_by: product.sold_by,
-      scope: "all",
-      selling_price: "3.29",
-    };
-    saveProductEdits(
+    savePriceChange(
       state,
       {
         company_id: state.config.company.seed_key,
@@ -176,10 +162,21 @@ describe("weighed product and settings decisions", () => {
         branch: "Branch 1",
         allowed_branches: configuredBranches(state.config),
       },
-      product.code,
-      edits,
-      productEditSnapshot(state, product.code),
+      {
+        product_code: product.code,
+        mode: "regular",
+        scope: "all",
+        price: "3.29",
+        price_unit: "each",
+        branches: ["Branch 1", "Branch 3"],
+        starts_on: new Date().toISOString().slice(0, 10),
+        last_day: null,
+        accept_below_margin: true,
+        below_cost_reason: "Reviewed retail price",
+        add_labels: false,
+      },
     );
+    product = state.products.find((item) => item.code === product.code)!;
     expect(product.selling_price).toBe("3.29");
     expect(product.branch_prices).toEqual({
       "Branch 2": "9.29",
@@ -217,14 +214,20 @@ describe("weighed product and settings decisions", () => {
     };
     const before = structuredClone(state);
     expect(() =>
-      saveProductEdits(
-        state,
-        context,
-        product.code,
-        edits,
-        productEditSnapshot(state, product.code),
-      ),
-    ).toThrow("branch");
+      savePriceChange(state, context, {
+        product_code: product.code,
+        mode: "regular",
+        scope: "current",
+        price: "7.49",
+        price_unit: "each",
+        branches: ["Warehouse"],
+        starts_on: new Date().toISOString().slice(0, 10),
+        last_day: null,
+        accept_below_margin: false,
+        below_cost_reason: "",
+        add_labels: false,
+      }),
+    ).toThrow("stores");
     expect(state).toEqual(before);
     saveProductEdits(
       state,

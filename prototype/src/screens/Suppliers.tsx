@@ -117,7 +117,7 @@ export default function Suppliers() {
     {
       key: "name",
       priority: 1,
-      minWidth: 180,
+      minWidth: 240,
       mobilePrimary: true,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
@@ -205,6 +205,15 @@ export default function Suppliers() {
           },
         ]
       : []),
+    {
+      key: "actions",
+      label: t("Action", "عملیات"),
+      width: 60,
+      actions: true,
+      priority: 0,
+      required: true,
+      align: "end",
+    },
   ]);
   if (role !== "supervisor" && role !== "floor_worker")
     return (
@@ -439,6 +448,7 @@ export default function Suppliers() {
                     </th>
                   </>
                 )}
+                <th>{t("Action", "عملیات")}</th>
               </tr>
             </thead>
             <tbody>
@@ -476,14 +486,6 @@ export default function Suppliers() {
                       >
                         <LtrText>{supplier.name}</LtrText>
                       </a>
-                      <TableRowLink
-                        href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
-                        aria-label={`${t("Supplier", "تأمین‌کننده")} ${supplier.name}`}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          openSupplier(supplier.name);
-                        }}
-                      />
                     </div>
                   </td>
                   <td>
@@ -524,6 +526,16 @@ export default function Suppliers() {
                       </td>
                     </>
                   )}
+                  <td className="action-cell">
+                    <TableRowLink
+                      href={`#suppliers?name=${encodeURIComponent(supplier.name)}`}
+                      aria-label={`${t("Supplier", "تأمین‌کننده")} ${supplier.name}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openSupplier(supplier.name);
+                      }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -800,6 +812,14 @@ export default function Suppliers() {
                     { width: "125px", align: "end" as const },
                   ]
                 : []),
+              {
+                key: "actions",
+                width: 60,
+                actions: true,
+                priority: 0,
+                required: true,
+                align: "end",
+              },
             ]}
           >
             <thead>
@@ -815,6 +835,7 @@ export default function Suppliers() {
                     <th>{t("Outstanding", "مانده پرداخت")}</th>
                   </>
                 )}
+                <th>{t("Action", "عملیات")}</th>
               </tr>
             </thead>
             <tbody>
@@ -830,10 +851,6 @@ export default function Suppliers() {
                       >
                         <LtrText>{invoice.number}</LtrText>
                       </a>
-                      <TableRowLink
-                        href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                        aria-label={`${t("Invoice", "فاکتور")} ${invoice.number}`}
-                      />
                     </div>
                   </td>
                   <td>
@@ -852,6 +869,12 @@ export default function Suppliers() {
                       <td>{money(invoice.financial.outstanding)}</td>
                     </>
                   )}
+                  <td className="action-cell">
+                    <TableRowLink
+                      href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                      aria-label={`${t("Invoice", "فاکتور")} ${invoice.number}`}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -870,12 +893,43 @@ export default function Suppliers() {
         )}
         {effectiveTab === "shorts" && (
           <DataTable
+            className="supplier-shorts-table"
             columns={[
-              { width: "260px" },
-              { width: "110px" },
-              { width: "160px" },
-              { width: "120px" },
-              { width: "100px", align: "end" },
+              {
+                key: "product",
+                minWidth: 180,
+                priority: 1,
+                mobilePrimary: true,
+              },
+              {
+                key: "code",
+                width: 110,
+                minWidth: 104,
+                priority: 3,
+                mobilePrimary: false,
+              },
+              {
+                key: "invoice",
+                width: 220,
+                minWidth: 220,
+                priority: 2,
+                mobilePrimary: true,
+              },
+              {
+                key: "location",
+                width: 144,
+                minWidth: 144,
+                priority: 5,
+                mobilePrimary: false,
+              },
+              {
+                key: "quantity",
+                width: 124,
+                minWidth: 124,
+                priority: 4,
+                mobilePrimary: true,
+                align: "end",
+              },
             ]}
           >
             <thead>
@@ -896,8 +950,10 @@ export default function Suppliers() {
                   <td>
                     <LtrText>{short.product_code}</LtrText>
                   </td>
-                  <td>
-                    <LtrText>{short.invoice}</LtrText>
+                  <td className="supplier-short-reference">
+                    <LtrText className="supplier-document-reference">
+                      {short.invoice}
+                    </LtrText>
                   </td>
                   <td>{branchName(short.branch)}</td>
                   <td>{short.quantity}</td>
@@ -949,6 +1005,19 @@ export default function Suppliers() {
                           "اختلاف‌های فاکتور و سفارش",
                         ),
                         date_reminder: t("Expiry reminder", "یادآوری انقضا"),
+                        sale_cost_increase: t(
+                          "Cost went up during a sale",
+                          "هزینه هنگام تخفیف افزایش یافت",
+                        ),
+                        sale_regular_not_above_sale: t(
+                          "The new regular price would be lower than the sale price",
+                          "قیمت عادی جدید کمتر از قیمت تخفیف خواهد بود",
+                        ),
+                        sale_no_end_reminder: t("Sale", "تخفیف"),
+                        sale_delivery_release: t(
+                          "Sale ended",
+                          "تخفیف پایان یافت",
+                        ),
                         return_credit_overdue: t(
                           "Return waiting for credit",
                           "مرجوعی در انتظار اعتبار",
@@ -1002,7 +1071,7 @@ export default function Suppliers() {
                   <td>
                     <LtrText>{payment.cheque_number ?? "—"}</LtrText>
                   </td>
-                  <td>{money(new Decimal(payment.amount).abs().toFixed(2))}</td>
+                  <td>{money(new Decimal(payment.amount).abs().toString())}</td>
                 </tr>
               ))}
             </tbody>

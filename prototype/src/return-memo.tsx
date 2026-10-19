@@ -98,7 +98,7 @@ export function ReturnMemoDocument({
       </span>
     );
   const amount = (value: string) =>
-    formatMoney(value, { currency: memo.currency, decimals: 2 });
+    formatMoney(value, { currency: memo.currency });
   return (
     <article
       className="operational-print-document return-memo-document"

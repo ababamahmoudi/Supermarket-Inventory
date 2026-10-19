@@ -16,7 +16,7 @@ import {
   Menu,
   MenuItem,
 } from "../ui";
-import { demoUserLabel, LtrText } from "../presentation";
+import { DateText, demoUserLabel, LtrText } from "../presentation";
 import { companyTimestamp } from "../operations";
 import {
   archiveNotebook,
@@ -404,8 +404,13 @@ export function NotebookSettings() {
                 <small className="muted">
                   {t("Changed by", "تغییریافته توسط")}{" "}
                   {demoUserLabel(item.by, lang)} ·{" "}
+                  <DateText value={item.updated_at} />{" "}
                   <LtrText>
-                    {companyTimestamp(state.config, item.updated_at)}
+                    {
+                      companyTimestamp(state.config, item.updated_at).split(
+                        " ",
+                      )[1]
+                    }
                   </LtrText>{" "}
                   ·{" "}
                   <a href={`#history?item=${encodeURIComponent(item.id)}`}>

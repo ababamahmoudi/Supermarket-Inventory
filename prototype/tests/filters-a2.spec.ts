@@ -32,14 +32,34 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   const current = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "Current offers", exact: true }),
   });
-  await expect(current.locator("tbody tr")).toHaveCount(5);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(7);
+  expect(
+    await current
+      .locator("tbody tr[data-product-code]")
+      .evaluateAll((rows) =>
+        rows.map((row) => row.getAttribute("data-product-code")).sort(),
+      ),
+  ).toEqual(["0003", "0005", "0006", "0007", "0008", "0009", "0012"]);
+  await expect(
+    current.locator('tbody tr[data-offer-kind="sale"]'),
+  ).toContainText("Stainless Steel Pot");
+  await expect(
+    current.locator('tbody tr[data-offer-kind="request"]'),
+  ).toContainText("Sunflower Oil");
+  await chooseOption(
+    page,
+    filters.getByLabel("Offer type", { exact: true }),
+    "multi_buy",
+    "Multi-buy",
+  );
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(5);
   await filters.getByLabel("Search offers", { exact: true }).fill("0003");
-  await expect(current.locator("tbody tr")).toHaveCount(1);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(1);
   await expect(current).toContainText("Sour Cherry Juice");
   await filters.getByLabel("Search offers", { exact: true }).fill("آب آلبالو");
-  await expect(current.locator("tbody tr")).toHaveCount(1);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(1);
   await filters.getByLabel("Search offers", { exact: true }).fill("2 for $5");
-  await expect(current.locator("tbody tr")).toHaveCount(2);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(2);
   await chooseOption(
     page,
     filters.getByLabel("Offer category", { exact: true }),
@@ -53,18 +73,21 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   await chooseOption(
     page,
     filters.getByLabel("Offer type", { exact: true }),
-    "2 for $5",
+    "multi_buy",
+    "Multi-buy",
   );
-  await expect(current.locator("tbody tr")).toHaveCount(1);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(1);
   await expect(filters.locator(".filter-count")).toHaveText("1 offer");
   await current
-    .getByRole("button", { name: "Stop offer", exact: true })
+    .locator('tbody tr[data-product-code="0003"]')
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  await page.getByRole("menuitem", { name: /^Stop offer ·/ }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
     .click();
-  await expect(current.locator("tbody tr")).toHaveCount(0);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(0);
   await page.getByRole("tab", { name: "Past offers", exact: true }).click();
   const past = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "Past offers", exact: true }),
@@ -75,12 +98,12 @@ test("Offers combines name/code/label search, category, supplier, type and statu
     "stopped",
     "Stopped",
   );
-  await expect(past.locator("tbody tr")).toHaveCount(1);
+  await expect(past.locator("tbody tr[data-product-code]")).toHaveCount(1);
   const stoppedOffer = past.locator('tr[data-product-code="0003"]');
   await expect(stoppedOffer).toHaveCount(1);
   await expect(stoppedOffer).toContainText("Sour Cherry Juice");
   const stoppedOfferValue = await responsiveColumn(stoppedOffer, "Offer");
-  await expect(stoppedOfferValue).toContainText("2 for $5");
+  await expect(stoppedOfferValue).toContainText("2 for $5.00");
   await expect(stoppedOfferValue).toContainText("$2.99");
   const stoppedStatus = await responsiveColumn(stoppedOffer, "Status");
   await expect(
@@ -96,7 +119,13 @@ test("Offers combines name/code/label search, category, supplier, type and statu
     "active",
     "Active",
   );
-  await expect(current.locator("tbody tr")).toHaveCount(4);
+  await chooseOption(
+    page,
+    filters.getByLabel("Offer type", { exact: true }),
+    "multi_buy",
+    "Multi-buy",
+  );
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(4);
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0003");
   await expect(page.locator(".price")).toHaveText("$2.99");
@@ -136,15 +165,15 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   const current = page.locator("section.card").filter({
     has: page.getByRole("heading", { name: "Current offers", exact: true }),
   });
-  await expect(current.locator("tbody tr")).toHaveCount(5);
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(5);
   await expect(current.locator('tr[data-product-code="0003"]')).toHaveCount(1);
+  const juiceScope = await responsiveColumn(
+    current.locator('tr[data-product-code="0003"]'),
+    "Scope",
+  );
+  await expect(juiceScope.locator(".offer-group-entry")).toHaveCount(2);
   await expect(
-    current.locator(
-      'tr[data-product-code="0003"] .offer-scope .offer-group-entry',
-    ),
-  ).toHaveCount(2);
-  await expect(
-    current.getByText("Richmond Hill", { exact: true }),
+    current.locator("tbody").getByText("Richmond Hill", { exact: true }),
   ).toBeVisible();
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
@@ -154,10 +183,23 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   await expect(filters.getByLabel("Offer branch", { exact: true })).toHaveText(
     "North York",
   );
-  await expect(current.locator("tbody tr")).toHaveCount(5);
-  await expect(current.getByText("Richmond Hill", { exact: true })).toHaveCount(
-    0,
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(7);
+  await expect(
+    current.locator('tbody tr[data-offer-kind="sale"]'),
+  ).toContainText("Stainless Steel Pot");
+  await expect(
+    current.locator('tbody tr[data-offer-kind="request"]'),
+  ).toContainText("Sunflower Oil");
+  await chooseOption(
+    page,
+    filters.getByLabel("Offer type", { exact: true }),
+    "multi_buy",
+    "Multi-buy",
   );
+  await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(5);
+  await expect(
+    current.locator("tbody").getByText("Richmond Hill", { exact: true }),
+  ).toHaveCount(0);
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
@@ -255,17 +297,27 @@ test("Persian Offers and Payables keep complete custom-filter choices and isolat
     offers.getByLabel("تأمین‌کننده پیشنهاد", { exact: true }),
     "Golden Grain Distributors",
   );
+  const current = page.locator("section.card").filter({
+    has: page.getByRole("heading", { name: "پیشنهادهای فعلی", exact: true }),
+  });
+  const supplierRows = current.locator("tbody tr[data-product-code]");
+  await expect(supplierRows).toHaveCount(2);
+  expect(
+    await supplierRows.evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute("data-product-code")).sort(),
+    ),
+  ).toEqual(["0007", "0008"]);
   await expect(
-    page
-      .locator("section.card")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "پیشنهادهای فعلی",
-          exact: true,
-        }),
-      })
-      .locator("tbody tr"),
-  ).toHaveCount(1);
+    current.locator('tbody tr[data-offer-kind="request"]'),
+  ).toHaveAttribute("data-product-code", "0008");
+  await chooseOption(
+    page,
+    offers.getByLabel("نوع پیشنهاد", { exact: true }),
+    "multi_buy",
+    "خرید چندتایی",
+  );
+  await expect(supplierRows).toHaveCount(1);
+  await expect(supplierRows).toHaveAttribute("data-product-code", "0007");
   await expect(offers).toContainText("1 پیشنهاد");
   await page.goto("/#payables");
   const payables = page.getByLabel("فیلترهای پرداختنی‌ها", { exact: true });

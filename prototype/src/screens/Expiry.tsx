@@ -37,6 +37,7 @@ import {
   MenuItem,
   PageHeader,
   Select,
+  TableRowLink,
   Tabs,
   useTableColumns,
 } from "../ui";
@@ -222,359 +223,388 @@ export function Expiry() {
           }}
         />
       </Card>
-      <FilterToolbar
-        className="expiry-filters"
-        aria-label={t("Date tracking filters", "فیلترهای پیگیری تاریخ")}
-        count={
-          <span className="date-filter-result-actions">
-            <span>
-              {translateCount(
-                "{{count}} entry",
-                "{{count}} entries",
-                "{{count}} مورد",
-                "{{count}} مورد",
-                entries.length,
-                lang,
-              )}
+      <Card className="c8-date-list-card">
+        <FilterToolbar
+          className="expiry-filters"
+          aria-label={t("Date tracking filters", "فیلترهای پیگیری تاریخ")}
+          count={
+            <span className="date-filter-result-actions">
+              <span>
+                {translateCount(
+                  "{{count}} entry",
+                  "{{count}} entries",
+                  "{{count}} مورد",
+                  "{{count}} مورد",
+                  entries.length,
+                  lang,
+                )}
+              </span>
+              {tableColumns.chooser}
             </span>
-            {tableColumns.chooser}
-          </span>
-        }
-        search={
-          <input
-            className="ui-input"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label={t("Search products", "جستجوی محصولات")}
-            placeholder={t("Name or Product Code", "نام یا کد محصول")}
-          />
-        }
-      >
-        <Tabs
-          aria-label={t("Time window", "بازه زمانی")}
-          value={window === "cleared" ? "removed" : window}
-          onChange={setWindow}
-          options={[
-            {
-              value: "soon",
-              label: t("Due soon", "نزدیک موعد"),
-            },
-            {
-              value: "active",
-              label: t("All dates", "همه تاریخ‌ها"),
-            },
-            {
-              value: "removed",
-              label: t("Removed", "حذف‌شده"),
-            },
-          ]}
-        />
-        <Select
-          aria-label={t("AI category", "دسته‌بندی هوش مصنوعی")}
-          value={category}
-          onChange={setCategory}
-          options={[
-            { value: "all", label: t("All categories", "همه دسته‌ها") },
-            ...[
-              ...new Set(
-                state.products
-                  .filter(
-                    (item) => item.company_id === state.config.company.seed_key,
-                  )
-                  .map((product) => product.ai_category),
-              ),
-            ].map((value) => ({
-              value,
-              label: categoryLabel(value, lang),
-            })),
-          ]}
-        />
-        <Select
-          aria-label={t("Date tracking location", "مکان پیگیری تاریخ")}
-          value={branch}
-          onChange={(value) => setBranch(value as Branch)}
-          disabled={role !== "supervisor"}
-          options={
-            role === "supervisor"
-              ? [
-                  { value: "all", label: t("All branches", "همه شعبه‌ها") },
-                  ...branches.map((value) => ({
-                    value,
-                    label: configuredBranchLabel(state.config, value, lang),
-                  })),
-                ]
-              : [
-                  {
-                    value: branch,
-                    label: configuredBranchLabel(state.config, branch, lang),
-                  },
-                ]
           }
-        />
-        <Select
-          aria-label={t("Sort by", "مرتب‌سازی بر اساس")}
-          value={sort}
-          onChange={(value) => setSort(value as "date" | "name")}
-          options={[
-            { value: "date", label: t("Date", "تاریخ") },
-            { value: "name", label: t("Product", "محصول") },
-          ]}
-        />
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setSearch("");
-            setCategory("all");
-            setWindow("soon");
-            setSort("date");
-            if (role === "supervisor") setBranch("all");
-          }}
+          search={
+            <input
+              className="ui-input"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              aria-label={t("Search products", "جستجوی محصولات")}
+              placeholder={t("Name or Product Code", "نام یا کد محصول")}
+            />
+          }
         >
-          {t("Clear filters", "پاک کردن فیلترها")}
-        </Button>
-      </FilterToolbar>
-      {message && (
-        <div className="banner approved" role="status">
-          {message}
-        </div>
-      )}
-      {entries.length === 0 ? (
-        <EmptyState>
-          {t(
-            "No dates match these filters.",
-            "هیچ تاریخی با این فیلترها مطابق نیست.",
-          )}
-        </EmptyState>
-      ) : (
-        <Card>
-          <DataTable className="expiry-table" columns={tableColumns.columns}>
-            <thead>
-              <tr>
-                <th>{t("Product", "محصول")}</th>
-                <th>{t("Location", "مکان")}</th>
-                <th>{t("Date", "تاریخ")}</th>
-                <th>{t("Type", "نوع")}</th>
-                <th className="number-cell">
-                  {t("Days left", "روز باقی‌مانده")}
-                </th>
-                <th>{t("Source / invoice", "منبع / فاکتور")}</th>
-                <th>{t("Status", "وضعیت")}</th>
-                <th>{t("Action", "عملیات")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => {
-                const product = state.products.find(
-                  (item) =>
-                    item.company_id === state.config.company.seed_key &&
-                    item.code === entry.product_code,
-                );
-                const invoice = [...(state.invoices ?? []), state.invoice].find(
-                  (item) =>
-                    item.company_id === entry.company_id &&
-                    item.id === entry.invoice_id,
-                );
-                const retainedSupplier = (
-                  entry as typeof entry & { supplier?: string }
-                ).supplier;
-                const days = daysLeft(entry.date);
-                return (
-                  <tr
-                    key={entry.id}
-                    data-new-date={entry.id === newDateId || undefined}
-                  >
-                    <td>
-                      {product && (
-                        <ProductName product={product} language={lang} />
-                      )}
-                      <div className="muted">
-                        <LtrText>{entry.product_code}</LtrText>
-                      </div>
-                      {(entry.quantity || entry.lot_number || entry.note) && (
-                        <div className="date-entry-evidence">
-                          {entry.quantity && (
-                            <div>
-                              {t("Quantity", "مقدار")}:{" "}
-                              <LtrText>
-                                {formatQuantity(
-                                  entry.quantity,
-                                  product?.sold_by === "weight"
-                                    ? "lb"
-                                    : "units",
-                                  lang,
-                                )}
-                              </LtrText>
-                            </div>
-                          )}
-                          {entry.lot_number && (
-                            <div>
-                              {t("Lot", "سری ساخت")}:{" "}
-                              <LtrText>{entry.lot_number}</LtrText>
-                            </div>
-                          )}
-                          {entry.note && <div>{entry.note}</div>}
+          <Tabs
+            aria-label={t("Time window", "بازه زمانی")}
+            value={window === "cleared" ? "removed" : window}
+            onChange={setWindow}
+            options={[
+              {
+                value: "soon",
+                label: t("Due soon", "نزدیک موعد"),
+              },
+              {
+                value: "active",
+                label: t("All dates", "همه تاریخ‌ها"),
+              },
+              {
+                value: "removed",
+                label: t("Removed", "حذف‌شده"),
+              },
+            ]}
+          />
+          <Select
+            aria-label={t("AI category", "دسته‌بندی هوش مصنوعی")}
+            value={category}
+            onChange={setCategory}
+            options={[
+              { value: "all", label: t("All categories", "همه دسته‌ها") },
+              ...[
+                ...new Set(
+                  state.products
+                    .filter(
+                      (item) =>
+                        item.company_id === state.config.company.seed_key,
+                    )
+                    .map((product) => product.ai_category),
+                ),
+              ].map((value) => ({
+                value,
+                label: categoryLabel(value, lang),
+              })),
+            ]}
+          />
+          <Select
+            aria-label={t("Date tracking location", "مکان پیگیری تاریخ")}
+            value={branch}
+            onChange={(value) => setBranch(value as Branch)}
+            disabled={role !== "supervisor"}
+            options={
+              role === "supervisor"
+                ? [
+                    { value: "all", label: t("All branches", "همه شعبه‌ها") },
+                    ...branches.map((value) => ({
+                      value,
+                      label: configuredBranchLabel(state.config, value, lang),
+                    })),
+                  ]
+                : [
+                    {
+                      value: branch,
+                      label: configuredBranchLabel(state.config, branch, lang),
+                    },
+                  ]
+            }
+          />
+          <Select
+            aria-label={t("Sort by", "مرتب‌سازی بر اساس")}
+            value={sort}
+            onChange={(value) => setSort(value as "date" | "name")}
+            options={[
+              { value: "date", label: t("Date", "تاریخ") },
+              { value: "name", label: t("Product", "محصول") },
+            ]}
+          />
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSearch("");
+              setCategory("all");
+              setWindow("soon");
+              setSort("date");
+              if (role === "supervisor") setBranch("all");
+            }}
+          >
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        </FilterToolbar>
+        {message && (
+          <div className="banner approved" role="status">
+            {message}
+          </div>
+        )}
+        {entries.length === 0 ? (
+          <EmptyState>
+            {t(
+              "No dates match these filters.",
+              "هیچ تاریخی با این فیلترها مطابق نیست.",
+            )}
+          </EmptyState>
+        ) : (
+          <div>
+            <DataTable className="expiry-table" columns={tableColumns.columns}>
+              <thead>
+                <tr>
+                  <th>{t("Product", "محصول")}</th>
+                  <th>{t("Location", "مکان")}</th>
+                  <th>{t("Date", "تاریخ")}</th>
+                  <th>{t("Type", "نوع")}</th>
+                  <th className="number-cell">
+                    {t("Days left", "روز باقی‌مانده")}
+                  </th>
+                  <th>{t("Source / invoice", "منبع / فاکتور")}</th>
+                  <th>{t("Status", "وضعیت")}</th>
+                  <th>{t("Action", "عملیات")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => {
+                  const product = state.products.find(
+                    (item) =>
+                      item.company_id === state.config.company.seed_key &&
+                      item.code === entry.product_code,
+                  );
+                  const invoice = [
+                    ...(state.invoices ?? []),
+                    state.invoice,
+                  ].find(
+                    (item) =>
+                      item.company_id === entry.company_id &&
+                      item.id === entry.invoice_id,
+                  );
+                  const retainedSupplier = (
+                    entry as typeof entry & { supplier?: string }
+                  ).supplier;
+                  const days = daysLeft(entry.date);
+                  return (
+                    <tr
+                      key={entry.id}
+                      data-row-href={
+                        product
+                          ? `#product?code=${encodeURIComponent(product.code)}`
+                          : undefined
+                      }
+                      data-new-date={entry.id === newDateId || undefined}
+                    >
+                      <td>
+                        {product && (
+                          <ProductName product={product} language={lang} />
+                        )}
+                        <div className="muted">
+                          <LtrText>{entry.product_code}</LtrText>
                         </div>
-                      )}
-                    </td>
-                    <td className="branch-label">
-                      {configuredBranchLabel(state.config, entry.branch, lang)}
-                    </td>
-                    <td>
-                      <DateText value={entry.date} />
-                    </td>
-                    <td>
-                      {entry.date_type === "best_before"
-                        ? t("Best before", "بهترین زمان مصرف")
-                        : t("Expiry", "انقضا")}
-                    </td>
-                    <td className="number-cell">
-                      <LtrText>{days}</LtrText>
-                    </td>
-                    <td>
-                      {entry.source === "manual" || !entry.invoice_id ? (
-                        t("Manual entry", "ثبت دستی")
-                      ) : (
-                        <LtrText>
-                          {invoice?.supplier ??
-                            retainedSupplier ??
-                            product?.main_supplier}
-                        </LtrText>
-                      )}
-                      <div className="muted">
-                        {entry.source === "manual" ? (
-                          entry.created_by
+                        {(entry.quantity || entry.lot_number || entry.note) && (
+                          <div className="date-entry-evidence">
+                            {entry.quantity && (
+                              <div>
+                                {t("Quantity", "مقدار")}:{" "}
+                                <LtrText>
+                                  {formatQuantity(
+                                    entry.quantity,
+                                    product?.sold_by === "weight"
+                                      ? "lb"
+                                      : "units",
+                                    lang,
+                                  )}
+                                </LtrText>
+                              </div>
+                            )}
+                            {entry.lot_number && (
+                              <div>
+                                {t("Lot", "سری ساخت")}:{" "}
+                                <LtrText>{entry.lot_number}</LtrText>
+                              </div>
+                            )}
+                            {entry.note && <div>{entry.note}</div>}
+                          </div>
+                        )}
+                      </td>
+                      <td className="branch-label">
+                        {configuredBranchLabel(
+                          state.config,
+                          entry.branch,
+                          lang,
+                        )}
+                      </td>
+                      <td>
+                        <DateText value={entry.date} />
+                      </td>
+                      <td>
+                        {entry.date_type === "best_before"
+                          ? t("Best before", "بهترین زمان مصرف")
+                          : t("Expiry", "انقضا")}
+                      </td>
+                      <td className="number-cell">
+                        <LtrText>{days}</LtrText>
+                      </td>
+                      <td>
+                        {entry.source === "manual" || !entry.invoice_id ? (
+                          t("Manual entry", "ثبت دستی")
                         ) : (
                           <LtrText>
-                            {entry.invoice_number ??
-                              invoice?.supplier_invoice_number ??
-                              "—"}
+                            {invoice?.supplier ??
+                              retainedSupplier ??
+                              product?.main_supplier}
                           </LtrText>
                         )}
-                        {entry.source === "correction" && (
-                          <div>{t("Corrected", "اصلاح‌شده")}</div>
-                        )}
-                        {entry.received_date && (
-                          <div>
-                            <DateText value={entry.received_date} />
-                          </div>
-                        )}
-                        {entry.source === "manual" && entry.created_at && (
-                          <div>
-                            <DateText
-                              value={companyDate(
-                                state.config,
-                                new Date(entry.created_at),
-                              )}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <Badge
-                        tone={
-                          entry.status !== "active"
-                            ? "neutral"
-                            : days < 0
-                              ? "danger"
-                              : days <= productReminderDays(state, product)
-                                ? "pending"
-                                : "info"
-                        }
-                      >
-                        {entry.status !== "active"
-                          ? t("Removed", "حذف‌شده")
-                          : days < 0
-                            ? t("Expired", "منقضی‌شده")
-                            : days <= productReminderDays(state, product)
-                              ? t("Expiring soon", "به‌زودی منقضی")
-                              : t("Open", "باز")}
-                      </Badge>
-                      {entry.status !== "active" && (
-                        <div className="date-entry-evidence">
-                          {entry.removed_reason && (
-                            <div>
-                              {dateRemovalReasonLabel(entry.removed_reason, t)}
-                            </div>
+                        <div className="muted">
+                          {entry.source === "manual" ? (
+                            entry.created_by
+                          ) : (
+                            <LtrText>
+                              {entry.invoice_number ??
+                                invoice?.supplier_invoice_number ??
+                                "—"}
+                            </LtrText>
                           )}
-                          {entry.removal_action === "stop_tracking" && (
-                            <div>
-                              {t(
-                                "Stop tracking this product",
-                                "توقف پیگیری این محصول",
-                              )}
-                            </div>
-                          )}
-                          {entry.removal_action === "undo" && (
-                            <div>{t("Undone", "واگرد شد")}</div>
-                          )}
-                          {entry.removal_action === "correction" && (
+                          {entry.source === "correction" && (
                             <div>{t("Corrected", "اصلاح‌شده")}</div>
                           )}
-                          {entry.removed_by && <div>{entry.removed_by}</div>}
-                          {entry.removed_at && (
+                          {entry.received_date && (
+                            <div>
+                              <DateText value={entry.received_date} />
+                            </div>
+                          )}
+                          {entry.source === "manual" && entry.created_at && (
                             <div>
                               <DateText
                                 value={companyDate(
                                   state.config,
-                                  new Date(entry.removed_at),
+                                  new Date(entry.created_at),
                                 )}
                               />
                             </div>
                           )}
                         </div>
-                      )}
-                    </td>
-                    <td>
-                      {entry.status === "active" && (
-                        <div className="actions">
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => {
-                              setRemoving(entry.id);
-                              setMessage("");
-                            }}
-                          >
-                            {t("Remove", "حذف")}
-                          </Button>
-                          {role === "supervisor" && (
-                            <Menu
-                              iconOnly
-                              showChevron={false}
-                              label={
-                                <MoreHorizontal
-                                  size={20}
-                                  strokeWidth={1.5}
-                                  aria-hidden="true"
-                                />
-                              }
-                              aria-label={t("More", "بیشتر")}
-                            >
-                              <MenuItem
-                                className="date-stop-menu-item"
-                                onClick={() => {
-                                  setStopping(entry.product_code);
-                                  setMessage("");
-                                }}
-                              >
+                      </td>
+                      <td>
+                        <Badge
+                          tone={
+                            entry.status !== "active"
+                              ? "neutral"
+                              : days < 0
+                                ? "danger"
+                                : days <= productReminderDays(state, product)
+                                  ? "pending"
+                                  : "info"
+                          }
+                        >
+                          {entry.status !== "active"
+                            ? t("Removed", "حذف‌شده")
+                            : days < 0
+                              ? t("Expired", "منقضی‌شده")
+                              : days <= productReminderDays(state, product)
+                                ? t("Expiring soon", "به‌زودی منقضی")
+                                : t("Open", "باز")}
+                        </Badge>
+                        {entry.status !== "active" && (
+                          <div className="date-entry-evidence">
+                            {entry.removed_reason && (
+                              <div>
+                                {dateRemovalReasonLabel(
+                                  entry.removed_reason,
+                                  t,
+                                )}
+                              </div>
+                            )}
+                            {entry.removal_action === "stop_tracking" && (
+                              <div>
                                 {t(
                                   "Stop tracking this product",
                                   "توقف پیگیری این محصول",
                                 )}
-                              </MenuItem>
-                            </Menu>
+                              </div>
+                            )}
+                            {entry.removal_action === "undo" && (
+                              <div>{t("Undone", "واگرد شد")}</div>
+                            )}
+                            {entry.removal_action === "correction" && (
+                              <div>{t("Corrected", "اصلاح‌شده")}</div>
+                            )}
+                            {entry.removed_by && <div>{entry.removed_by}</div>}
+                            {entry.removed_at && (
+                              <div>
+                                <DateText
+                                  value={companyDate(
+                                    state.config,
+                                    new Date(entry.removed_at),
+                                  )}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <div className="actions">
+                          {entry.status === "active" && (
+                            <>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => {
+                                  setRemoving(entry.id);
+                                  setMessage("");
+                                }}
+                              >
+                                {t("Remove", "حذف")}
+                              </Button>
+                              {role === "supervisor" && (
+                                <Menu
+                                  iconOnly
+                                  showChevron={false}
+                                  label={
+                                    <MoreHorizontal
+                                      size={20}
+                                      strokeWidth={1.5}
+                                      aria-hidden="true"
+                                    />
+                                  }
+                                  aria-label={t("More", "بیشتر")}
+                                >
+                                  <MenuItem
+                                    className="date-stop-menu-item"
+                                    onClick={() => {
+                                      setStopping(entry.product_code);
+                                      setMessage("");
+                                    }}
+                                  >
+                                    {t(
+                                      "Stop tracking this product",
+                                      "توقف پیگیری این محصول",
+                                    )}
+                                  </MenuItem>
+                                </Menu>
+                              )}
+                            </>
+                          )}
+                          {product && (
+                            <TableRowLink
+                              href={`#product?code=${encodeURIComponent(product.code)}`}
+                              aria-label={t(
+                                `Open ${product.name_en}`,
+                                `باز کردن ${product.name_fa || product.name_en}`,
+                              )}
+                            />
                           )}
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </DataTable>
-        </Card>
-      )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </DataTable>
+          </div>
+        )}
+      </Card>
       <p className="muted">
         {t(
           "Dates do not prove stock is still on the shelf. Adding or removing a date does not change stock or supplier balances.",

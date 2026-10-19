@@ -1,4 +1,4 @@
-# Requirements (current owner workflow, C6/C7 — 2026-10-11)
+# Requirements (current owner workflow, C8/E — 2026-10-12)
 
 C6/C7 supersede earlier presentation and interaction requirements where explicitly stated below. Historical acceptance sections record prior releases, not current defaults. Klead design language v1 is the sole current visual specification.
 
@@ -328,7 +328,7 @@ Each supermarket must be able to shape the app to its own way of working without
 
 - Products list: Supervisor-only **Store cost** (last regular unit cost before tax) and **Margin %**. Product page shows cost history with supplier/location/date/invoice and retained four-decimal cost. Floor Worker/Cashier visibility remains unchanged. Short-dated receipts appear in history but never replace regular cost.
 - Supervisor may set a selling price above or below the rule with existing below-margin confirmation. A **Manual price** pill follows the effective branch/company price wherever staff see it, including Lookup, Products, invoice selling-price review and Labels selection; Products has a **Manual prices** filter. Show **Rule price $X.XX · Manual price $Y.YY**; margin is Supervisor-only except existing authorized invoice-cost visibility. This flag is price-scope provenance, not a comparison based solely on today's rule.
-- On new regular receipts, preserve the approved manual price and show the new rule price. Reviewer must choose **Keep manual price** or **Use rule price**. Keep preserves manual provenance and any configured below-margin review evaluated against the actual manual price and new regular cost. Use creates the normal invoice-posting price proposal even when rule/manual values happen to match, leaving the manual approved price effective until explicit Supervisor approval. Only the effective approved decision replaces/removes the manual flag.
+- **C8 supersedes the earlier receiving-only decision:** every accepted normal receipt with an actual changed cost and a retained manual regular price creates a Supervisor approval, even if the receiver recommends Keep. The receiving choice is a recommendation, not the final price decision. The approval defaults to **Use the new calculated price $X** and also offers **Keep $Y** through the existing **Selling price** dropdown. Explicit Keep applies only at the original receiving store and preserves its approved price and manual provenance. Either Use calculated or Keep requires a reason if the selected price is below the configured minimum margin or below cost; missing-reason copy is **Add a reason.** / **یک دلیل اضافه کنید.** Until approval, the current approved regular price remains; during a sale, customers still pay the sale price. Same-cost and short-dated receipts do not change this manual-price decision. Only an effective approved Use-calculated decision replaces the regular price and removes the applicable manual flag.
 
 ## 26. Supplier items and packs
 
@@ -385,7 +385,7 @@ Screenshots in English light, English dark, Persian and phone: Suppliers/Product
 
 **Company product, location prices and lots.** A delivery-created product belongs to the company and appears in Lookup/Products at every allowed location with **First added at North York** provenance; dates stay at their entered location. One company-wide barcode maps to one catalog product. Lots are keyed by company, product, supplier, location and actual expiry date; same key merges identity, not immutable invoice evidence. Retain supplier, date, source quantity received and exact cost history. No stock balance/estimate is introduced. Different regular branch prices retain cross-branch alerts. A short-dated lot may have one current clearance offer for that product/location, linked to its lot and expiry, separate from ordinary offers. Current-location Lookup shows its approved regular price and eligible clearance/expiry, never another store's prices/lots. Promo labels print the actual lot clearance. Do not infer sales depletion or change a regular price because a date is entered.
 
-**Pickup and partial item outcomes.** Record actual quantity per item. If below return quantity, require a reason and disposition: **Keep for next pickup · Put back on the shelf · Throw away**. Keep permits a new later signed pickup event; it never edits the earlier event. Once recorded, pickup quantities/representative/evidence are locked. Only authorized **Correct pickup** with reason can append a correction; Owner/Manager mapping is awaiting the explicit answer in open-questions, and no worker gets that permission by default. Coverage of credits/replacements/write-offs cannot exceed actual cumulative pickup. Each item shows settled and outstanding quantities. Partial resolution supports credit note/amount, actual replacement quantity/covered original units, or still outstanding with expected date/note. Return stays **Waiting for credit** until every picked-up claim is credited/replaced/written off and any kept next-pickup remainder is dealt with. Financial authorization stays Supervisor-only. Multiple credits use distinct notes and non-overlapping coverage; actual money may differ from the expected before-tax estimate and follows existing tax/allocation/unapplied-credit rules. Preserve immutable pickup/resolution/physical/ledger evidence and release provisional expected credit only for settled coverage.
+**Pickup and partial item outcomes.** Record actual quantity per item. If below return quantity, require a reason and disposition: **Keep for next pickup · Put back on the shelf · Throw away**. Keep permits a new later signed pickup event; it never edits the earlier event. Once recorded, pickup quantities/representative/evidence are locked. Only authorized **Correct pickup** with reason can append a correction; Owner/Manager only: current Supervisor represents them until E1; no worker or cashier receives the permission. Coverage of credits/replacements/write-offs cannot exceed actual cumulative pickup. Each item shows settled and outstanding quantities. Partial resolution supports credit note/amount, actual replacement quantity/covered original units, or still outstanding with expected date/note. Return stays **Waiting for credit** until every picked-up claim is credited/replaced/written off and any kept next-pickup remainder is dealt with. Financial authorization stays Supervisor-only. Multiple credits use distinct notes and non-overlapping coverage; actual money may differ from the expected before-tax estimate and follows existing tax/allocation/unapplied-credit rules. Preserve immutable pickup/resolution/physical/ledger evidence and release provisional expected credit only for settled coverage.
 
 **Supplier documents.** `supplier_documents.return_memo` and `.supplier_order` independently select `en` (default) or `bilingual`; internal picking lists remain bilingual. Return memo uses store/address/RM number/date, supplier details, product/code/quantity/unit cost/expected credit, total, and driver/store-staff signature lines with name/date. No internal ID or accidental Persian in default supplier output.
 
@@ -402,3 +402,359 @@ Screenshots in English light, English dark, Persian and phone: Suppliers/Product
 Every **new** pickup/resolution/credit/replacement write requires actual retained signed pickup evidence and quantity coverage; legacy imported settled records remain readable without invented pickup events or new-write bypass. Browser files use database `supermarket-prototype-files-v1`, stores `files` and `backups`; verified old state/backups migrate to immutable Blob backups before localStorage rewrite. Reset demo does not delete file evidence/history. Exact original invoice PDFs **and original invoice photos** remain downloadable; reduced image derivatives are separate.
 
 **C6 working Settings:** Returns/date tracking/labels exposes **Default date reminder (days)**, audited Supervisor/company-scoped nonnegative whole value, updating the existing expiry default(30). Product reminder overrides remain independent. Author note-edit permission remains its existing10second window, separate from the new8second Undo display.
+
+## 34. C8: fixes, sales and new regular prices (2026-10-12)
+
+This section is the current C8 contract. It supersedes earlier conflicting rules about direct price entry in Edit product, two-decimal-only cost display, fractional-case display, filter placement and the two pending owner choices. The detailed numbered requirements below reproduce the owner's new request; examples use fictional demo records.
+
+C6 and C7 were approved and merged in that order, preserving history, after required CI passed. C8 starts from main `3b6da31`. Build four stacked pull requests in order: C8, E1, E2, E3, without an intermediate review pause. The owner reviews all four together; the deadline is October 30. Update source docs before implementing each stage. Change only prototype/, docs/ and seed/. This remains a browser prototype, with no new backend, hosted database, real AI, stock system, remote accounts/resources or deployment.
+
+### Resolved owner choices
+
+- Correcting a signed pickup is Owner/Manager only. Until E1 exists, today's Supervisor represents them for this permission. Nobody else gains it. Keep required reasons, settled-quantity checks, impact review and append-only evidence.
+- Dark filled Primary buttons and solid blue summary cards use **#2B59C3 with white text**. **#7397F0** is reserved for links, icons, selected tabs and focus rings on dark surfaces. Keep the accessible green adjustment and all actual 4.5:1 text checks.
+
+### Five annotated layout fixes
+
+1. Edit product → Date tracking (1.png).
+   - Each date row is one line, vertically centred: a status dot (red when past, amber inside the reminder window, green otherwise), "Expiry 2026-11-06", "25 days left" (one space, not two), and the ×.
+   - In the add-date row, the Type, Date, Quantity and Lot labels sit on one line. Add is the same 44 px height as the fields and lines up with them.
+   - In the whole dialog, dropdowns fill their column like text fields do (Pricing category, Sold by, Category, Supplier). Only short number fields, like "Remind me 30 days", stay compact.
+   - Separate the sections (Names, Pricing, Details, Date tracking) with a hairline above each section title.
+2. Saving with date tracking on and no date (2.png).
+   - If Date tracking is Yes and the product has no open date at any location, Save product doesn't save. It shows the What's missing box with "Add an expiry date, or turn off date tracking", links to the date field and focuses it.
+   - If someone picked a date but didn't press Add, Save product adds that date itself instead of dropping it.
+3. Labels → Products (3.png). The rows run out of the white card, and the sidebar stops partway down the page.
+   - Cause: c3-labels-notes-offers.css gives .labels-product-table max-block-size: 560px (480px on phones) with overflow-y: auto, but :root .ui-data-table { overflow: visible } in c6-shared.css and c3-components.css wins. The rows spill out of the card, the app shell ends where the card ends, and the sticky sidebar scrolls away with it.
+   - Remove the height cap. The list grows with the page, its header stays sticky under the top bar, and the existing selection bar stays sticky at the bottom.
+   - Make the sidebar fill the full window height and stay in place however long the page is (app shell at least 100dvh; sidebar sticky with its own full-height background).
+   - Columns: checkbox (48 px) | Product (takes the free space) | Product Code | Offer | Selling price, right-aligned at the card's right edge. No gap after the checkbox and no empty space after the last column.
+   - Add a layout test: on every page at 390, 900 and 1440 px, no table row extends past its card.
+4. New order items (4.png).
+   - Fixed columns, each header over its own content, numbers right-aligned under right-aligned headers: Product | Pack | Cases (input) | Units ("= 48 units", worked out) | Expected unit cost (input, with "Last bought $18.40" under it) | Case cost | Before-tax total.
+   - "Expected total before tax" sits right-aligned under the Before-tax total column, above the buttons.
+   - The inputs use the filled style, not outlined.
+   - Money everywhere: show at least 2 and at most 4 decimals, dropping zeros after the second. 18.4000 shows as 18.40; 1.5525 stays 1.5525. Keep storing 4 decimals. Check invoice lines, supplier items and orders too.
+5. Product page (5.png). It's one long card: sections run together, there's an orphan "lb Approved" line, "Last received No deliveries yet" has no separator, and "Store cost: $4.99 /lb" floats on its own. Rebuild it:
+   - Header: the name and Persian name, then chips for Product Code, size (or "Sold by weight"), tax and status. On the right: Change price (Part 3), Edit and ⋯.
+   - A row of three cards, stacked when narrow:
+     - Price at [location]: big price, scope, any offer or sale, "Calculated from invoice FV-20417", and Last received with its date and invoice.
+     - Cost and margin (Supervisor only): store cost, margin, pricing category with its divisor, and the minimum margin.
+     - Dates at [location]: open dates with their dots, and an Add date button.
+   - Then full-width cards, each with its own title: Details (two columns with a hairline between rows: barcode, AI category, pricing category, tax, supplier, sold by, unit size, first added at), Prices by store, Deliveries, Lots, Cost history and History.
+   - An empty section shows one short muted line inside its card.
+   - Drop the sentence "Received quantities are invoice evidence, not stock on hand" from the page. It can be a hint on the Lots title.
+
+### Additional reviewed fixes
+
+6. The product page doesn't update when you go from one product to another. Open #product?code=0016, then change the address to #product?code=0006, or press Back: the breadcrumb changes, but the page still shows Bulk Almonds. ProductPage reads window.location.hash only once. Re-render on hashchange (Back and Forward too) and test it.
+7. Received shows fractions of cases: "3.3333 cases (40 units)", "2.6667 cases (16 units)", "7.5 cases (30 units)". Show whole cases plus loose units, like "3 cases + 4 units", everywhere cases are shown.
+8. Dashboard → Purchases by supplier: Fresh Valley Foods' bar ($181.22) is so pale it looks empty. Every bar uses the accent blue, or at least 3:1 contrast against its track.
+9. A fresh demo shows a half-started invoice on Invoices → Drafts: fictional-fv-20417.svg is attached, with no lines and no way to continue, above "No drafts". Either list it as a draft row ("Not read yet · Continue") or start the demo without it. Its file name also shows twice.
+10. One row, one chevron. Received, Suppliers, Payables, Returns, Date tracking and the dashboard's Recent invoices put a › or a ˅ (Received and Suppliers both) in the middle of the row, right after the name or number.
+
+- Every row opens its record when clicked, with a single › at the row's end.
+- Show the ˅ (hidden columns) only when columns are actually hidden, also at the row's end.
+- Give the name column enough room (at least 240 px at 1440 px), so names like "Canned Fava Beans 400 g" don't wrap onto three lines.
+
+11. Products:
+
+- On rows without a ⋯ menu (Dried Barberries), Edit jumps right. Keep the ⋯ slot so Edit always lines up.
+- Write per-unit prices the same way everywhere: "$4.99/lb", not "$4.99 /lb".
+- Show 25 products per page, not 8.
+
+12. Orders and History use two unlabelled "Choose date" fields. Use the same single Date range control as Received (From, To, and Today / This week / This month).
+13. History: the Item column says "Product Code 0004" and Before → after says "Recorded action". Show the product name and the real values, for example "Black Tea 450 g · $6.99 → $6.49".
+14. Alerts: the cards are about half the page wide, with empty space on the right. Make them full width like other pages, and show date-tracking alerts as compact list rows instead of one large card each.
+15. Offers:
+
+- A red Stop offer button on every row is loud. Put Stop offer in the row's ⋯ menu and let the row open the offer.
+- Remove the empty gap inside the Offer cell, between the price and "Mix-and-match".
+- When there are no suggestions, show one short line instead of a large empty card.
+
+16. Dashboard:
+
+- The Returns card title is bigger than the other card titles. Match them, and move "View all returns" to the right side of the title row, like other cards.
+- Date-tracking alert chips are red. Use amber, and red only when a date has passed.
+
+17. Date tracking → Add date: Add is 40 px tall and sits higher than the 44 px fields. At 900 px, Location wraps and Add floats far to the right. Keep Product, Date, Location and Add together as one row that wraps as a group. The note under the list touches the card; give it some space.
+18. At 900–1100 px, where the sidebar shows icons only, the group headers appear as bare › and ˅ arrows. Hide them in icon mode and separate the groups with a short divider.
+19. Filter bars sit inside the list's card on Received, Returns, Suppliers, Orders and Labels, but on the grey page on Products, Offers, Payables and Date tracking. So the same controls look different (white with a border on some pages, filled on others). Put every filter bar inside its list card, at the top, so they all use the filled style.
+20. Lookup:
+
+- The selected result is wider than the other rows and has a blue bar at its start. Keep the same inset as the other rows and show selection with the tint only.
+- "Taxable" uses the same blue as offers. Make it a neutral grey chip so offers stand out.
+
+21. Settings → Company: show a colour swatch next to each brand colour. Show the current logo with a Replace button instead of an empty dropzone.
+22. Seed data: Dried Barberries' Persian name uses Western digits ("زرشک خشک 100 گرمی"), while the other products use Persian digits. Make it consistent.
+
+### C8 price reductions
+
+Our offers come from the price-to-offer mapping ($1.99, $2.99, $3.99), so a $20.99 item can't go on offer at all. I want to lower any price, for a while or for good, with settings that are very easy to use.
+Two words, used the same way everywhere:
+
+- A "sale" is a temporary lower price. The regular price comes back by itself.
+- A "new regular price" is a permanent change. It is today's manual price.
+
+1. One "Change price" dialog for the Supervisor (Floor Workers get a request version of it, item 9), opened from:
+   - the product page header
+   - the Lookup product card, and Products' ⋯ menu
+   - Offers → Create offer → "Sale price"
+   - Edit product, where Selling price becomes the current price shown with a "Change price" link. Nobody types a new price straight into Edit product any more.
+2. The dialog, top to bottom (example: Stainless Steel Pot 24 cm at $20.99):
+   - The product, and its current price at the selected location with how it was worked out.
+   - Two large choices, with Sale selected by default:
+     - "Sale, for a while": "The regular price comes back by itself."
+     - "New regular price": "Stays until a new invoice changes the cost."
+   - The price: an input, plus quick picks for 10%, 15%, 20% and 25% off, each rounded down to the store's .49 or .99 endings (for $20.99: $18.49, $17.49, $16.49 and $15.49). Under it, for example at $16.99: "Customers save $4.00 (19% off)" and, for the Supervisor only, "Margin at this price 26%".
+   - Stores: All stores (the default), Only [current location], or Choose stores (checkboxes). Never the Warehouse or any other location that doesn't sell to customers.
+   - For a sale only:
+     - Starts: Today (the default), Tomorrow, or a date.
+     - Ends: a "Last day" date, with quick picks for 1 week, 2 weeks and End of month; or "When I end it".
+   - "Add Promo labels to the label waitlist", on by default for a sale. For a new regular price, "Add regular labels to the label waitlist" is on by default.
+   - A plain summary box that updates as you type. For example: "From today until Saturday, October 31, all 3 stores sell Stainless Steel Pot 24 cm at $16.99 instead of $20.99. On Sunday, November 1, it goes back to $20.99 by itself."
+   - Buttons: Cancel, and "Start sale" ("Schedule sale" when it starts later) or "Save new price".
+3. Checks, in plain words, using the What's missing pattern:
+   - A sale price must be lower than the regular price. If it isn't: "A sale price must be lower than $20.99. To raise the price, choose New regular price."
+   - Below the pricing category's minimum margin: an amber note and a "Use this price anyway" checkbox.
+   - Below cost: a red note and a required reason.
+   - A product can have one sale per store at a time, and scheduled sales can't overlap. If a sale already exists, the dialog opens that sale to change it.
+4. While a sale runs at a store:
+   - That store charges the sale price. Lookup, for every role, shows the sale price large, a "Sale" pill, "Regular $20.99" crossed out, and "Until Oct 31" (or "No end date").
+   - Products shows the sale price with the pill and the regular price under it. Add an "On sale" filter.
+   - Offers lists sales under Current offers with the type "Sale price". Add an offer type filter: Multi-buy, Sale price, Clearance. Ended sales move to Past offers.
+   - Labels: the "On offer" filter includes sales. Promo labels show the sale price large and "Regular $20.99" smaller, using the existing Promo template.
+   - A multi-buy offer on that product pauses at that store ("Paused during sale") and comes back afterwards. Sale items don't join mix-and-match pools, even when the sale price matches a mapping.
+   - A lot's clearance price stays separate, as in C6. Lookup shows both.
+   - Weighed items: the sale price is per main unit, and the second unit is worked out as today.
+5. Changing and ending a sale:
+   - On the product page, in Offers and in Lookup (Supervisor only): "Change sale" (price, last day, stores) and "End sale now", with a confirmation.
+   - After the last day, at the start of the next day in the store's time zone, the price goes back to the regular price by itself. If a new regular price was approved during the sale, that one applies.
+   - A sale with no end date: remind the Supervisor every 14 days (a setting): "Stainless Steel Pot has been on sale at North York for 14 days." with Keep it and End sale.
+   - Every start, change and end goes to History with its before and after values, and can be reverted from History.
+6. New regular price (permanent). This is today's manual price, set through the same dialog. It stays until a regular invoice brings a different cost. Then the approval offers "Use the new calculated price $X" (selected by default) or "Keep $Y". An invoice at the same cost changes nothing.
+7. When an invoice changes the cost during a sale (a receipt at that store):
+   - The regular price proposal goes to Approvals as usual, marked "Applies after the sale". Customers keep paying the sale price.
+   - If the cost went up, the Supervisor gets an alert, "Cost went up during a sale", in Alerts, the bell and the dashboard. It shows:
+     - Stainless Steel Pot 24 cm · North York · invoice HW-5012
+     - Cost $12.60 → $14.20 · Sale $16.99 until Oct 31 · Margin at the sale price 26% → 16% (minimum 25%)
+     - After the sale: $20.99 → $23.49 (waiting in Approvals)
+   - Its choices: Keep the sale as it is, Change the sale, or End the sale now.
+   - Plus a checkbox, "Keep this delivery in the back until the sale ends". It adds a note to that store's notebook ("Keep HW-5012's Stainless Steel Pots in the back until the sale ends on Oct 31") and a reminder on the first day after the sale: "Sale ended: put the held Stainless Steel Pots on the shelf." We have no stock counts, so this is an instruction for staff, not a stock record.
+   - The alert stays open until someone decides.
+   - If the cost went down so far that the new regular price would be at or below the sale price, alert: "The new regular price $15.99 would be lower than the sale price $16.99", with End sale now and Keep the sale.
+   - A Short-dated (expiry discount) receipt changes nothing here, as today.
+8. Settings → Offers gets a short "Sales" section:
+   - default sale length (2 weeks)
+   - remind me about sales with no end date every [14] days
+   - add Promo labels when a sale starts (on)
+   - add regular labels when a sale ends (on)
+9. Who:
+   - The Supervisor starts, changes and ends sales and new regular prices. Saving is the approval, as with manual prices today.
+   - Floor Workers can request a sale for their own location. They use the same dialog in request mode:
+     - the title is "Request a sale", with only the Sale choice
+     - no cost or margin is shown
+     - an optional "Why?" field (for example "slow seller" or "close to expiry")
+     - the summary says "The manager approves this first. Until then, the regular price stays."
+     - the button is "Send request"
+   - Until it's approved, the request shows wherever the price shows, the same way a pending price does today. The approved price stays the big price customers pay, next to an amber "Sale requested $16.99 · Oct 13–31" pill and "Waiting for approval". This applies on Products (the "Has pending price" filter includes sale requests), Lookup, the product page, and Offers, where it's listed as Requested.
+   - The request goes to Approvals as a "Sale request" card. It shows the product, stores, sale price, dates, who asked and why, plus the margin for the approver. The choices are Approve, Change and approve, or Reject with a reason. The requester gets a notification either way.
+   - If it's approved after its start date, the sale starts at approval and keeps its last day. If its last day passes before anyone decides, the request expires and the requester is told.
+   - One open request per product per store. The requester can change or withdraw it until it's decided.
+   - Cashiers see sales and requested sales but can't request or change them. E1 maps all of this to the new roles.
+10. Demo data and docs:
+
+- Add one running sale (Stainless Steel Pot 24 cm, $16.99 at North York, ending 10 days after today), and a fictional invoice in the demo originals that raises its cost to $14.20, so I can see the alert by posting it.
+- Add one pending sale request from the Demo Floor Worker (Sunflower Oil 1.8 L, $7.99 at North York for 2 weeks, "Why?": "slow seller"), so the pending display and the Approvals card are visible right away.
+- Put both click paths in the review doc.
+- Docs: a new section in requirements, plus data-model, workflows, screens, decisions and open-questions. In open-questions, record two later options: putting several products on sale at once, and "until sold out" (needs stock counts, so Phase 2).
+  C8 PROOF
+- Tests for:
+  - the product page following the address, and Back
+  - no table row past its card, on every page at 390, 900 and 1440 px
+  - the date-tracking save rule, including a picked date that wasn't added
+  - the money display rule, and whole cases plus units
+  - sales: starting, scheduled start, automatic end restoring the current regular price, ending early, one sale per store, the lower-price rule, the below-margin and below-cost checks, multi-buy pausing and resuming, and the reminder for sales with no end date
+  - Floor Worker sale requests: the pending display everywhere, Approve, Change and approve, Reject, withdrawing, and expiry
+  - new regular price, and "Use the new calculated price" as the default
+  - both invoice alerts, and the hold note with its reminder
+  - Promo labels for a sale, and reverting a sale from History All existing tests must still pass.
+- Screenshots in English light, English dark, Persian, 900 px and phone:
+  - my five screens after the fixes
+  - the Change price dialog, with Sale and with New regular price
+  - the Floor Worker's "Request a sale" dialog, the requested sale on Products and Lookup, and its Approvals card
+  - Lookup with a sale, and Offers with a sale and the type filter
+  - the "Cost went up during a sale" alert
+  - a Promo label preview for a sale
+
+### Implementation boundaries agreed before code
+
+- **Open date** means an active, unremoved date, including a past date shown in red. Any same-company location qualifies for the product-save rule; do not silently require a future date or disclose another location's private details. Save product validates and includes a picked-but-unadded date atomically; failure and Cancel write neither product nor dates.
+- Existing **Edit product** shows its current price and a Change price link. **Add product** keeps its initial calculated/manual price entry and minimum-margin checks; no sale is created for an unsaved product.
+- A sale stores the exact entered two-decimal amount and its main unit (each/kg/lb). Compare price/cost in a common unit using full Decimal precision; convert the secondary display as today. Do not round a requested kg sale through canonical lb cents and change the entered price. Regular approved weight prices retain the existing canonical basis.
+- All stores means the concrete eligible stores reviewed in the transaction. Exclude Warehouse, inactive and non-selling locations. Check the lower-price and margin/cost rules against every affected store's actual regular price and cost. An existing sale is changed through its guarded record/revision; an employee request never changes it directly or creates an overlapping duplicate.
+- Validate the lower-price rule when saving a new or changed sale. A later regular-price/cost change does not silently stop an existing sale: the owner's explicit Keep the sale choice remains available on the alert.
+- Regular receipt cost uses actual posted, accepted, non-short-dated evidence at that store. Capture the previous cost before posting changes the projection. The existing regular-cost fallback is used only where no such receipt evidence exists; never invent a cost. Clearance eligibility uses the regular price, independently of the sale charge.
+- A changed-cost manual regular-price approval is required regardless of the receiver's Keep/Use recommendation. Default **Use the new calculated price $X**; explicit **Keep $Y** retains the original store's approved price and manual provenance. Both choices require a reason when the selected price is below minimum or below cost; show **Add a reason.** / **یک دلیل اضافه کنید.** if missing. Use the shared exact note **“This price is below the minimum margin.”** / **“این قیمت کمتر از حداقل حاشیهٔ سود است.”** Same-cost and short-dated receipts remain unchanged.
+- A sale alert says **waiting in Approvals** only when its actual linked regular-price approval is still pending. Otherwise show the current approved regular price with **Current regular price** / **قیمت عادی فعلی**; retain the original alert snapshots and decision evidence.
+- Evaluate starts, inclusive last days, automatic ending, request expiry and reminders with a supplied UTC clock and the configured store time zone (company zone fallback). Use local calendar boundaries, not UTC date slices or fixed 24-hour offsets. Repeated checks/posting are idempotent.
+- History Revert uses existing scope/version/conflict guards and the current clock. It never restores a stale regular price or reactivates an elapsed sale. Corrective labels may be newly queued; a physical print cannot be undone.
+- Automatic label entries need an actual Regular/Promo template preference, source and reason. Preserve explicit user template choice and exact physical geometry. A new regular price saved during a running sale must not silently replace the currently required Promo label; defer its automatic Regular-label addition until the actual sale ends and preserve the current Promo intent. Use the exact summary: **“Regular labels are added when the sale ends. The current Promo label stays.”** / **“برچسب‌های عادی پس از پایان حراج اضافه می‌شوند. برچسب حراج فعلی باقی می‌ماند.”**
+- In request mode, Why? remains optional and costs/margins remain private. Validate public price/date/scope rules on submission; enforce minimum-margin acknowledgement and below-cost reason at the approver's decision, without making the worker's optional Why? secretly required.
+- Display **every currency amount** with at least two and at most four decimals, dropping only trailing zeros after the second. Keep unit costs at four decimals in storage. This includes cost text on invoices, supplier items, orders and printed documents; mapped offer values remain unchanged while displayed currency follows the same formatter (for example, 2 for $5.00).
+- Whole-cases-plus-loose-units is a display decomposition of exact retained units/pack. Fractional Cases entry remains permitted under the existing exact-conversion rule. Do not rewrite quantity evidence or treat Weight quantities as Each units.
+
+## 35. E1, E2 and E3: authorized next stages, not built in C8
+
+The following work is authorized after C8. Its status is **Planned** until that stage's implementation and actual evidence exist. The detailed request is retained below so later sessions cannot omit a rule.
+
+### Planned E1 permission table
+
+Role labels come from configuration. Each person has one role; Owner/Manager cover all company locations, including future locations. Other roles have explicit assignments. Cashier never has Warehouse access. Different roles at different locations is a later option.
+
+| Capability                                                          | Owner and Manager                                 | Branch Supervisor                            | Floor Worker                                              | Cashier                              |
+| ------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------- | ------------------------------------ |
+| Location access                                                     | Every company location, including later additions | Assigned locations                           | Assigned locations                                        | Assigned stores, never Warehouse     |
+| Lookup, sales and pending display                                   | Yes                                               | Yes                                          | Existing access                                           | Existing access                      |
+| Create, review and post invoices                                    | Yes                                               | Own locations                                | Existing handled-invoice rules                            | No                                   |
+| Costs on invoices, supplier items and orders                        | Yes                                               | Own locations                                | Existing invoice/explicit Orders opt-in only              | No                                   |
+| Product/catalog margins and supplier financial balances             | Yes                                               | No                                           | No                                                        | No                                   |
+| Received, labels, dates, notes, requests and returns through pickup | Yes                                               | Own locations                                | Existing scoped operations                                | Existing custom notebook grants only |
+| Orders                                                              | Yes                                               | Own locations                                | Existing setting, off by default                          | No                                   |
+| Approve prices, products and sale requests                          | Yes                                               | No; view own pending and propose             | No                                                        | No                                   |
+| Start/change/end sales and new regular prices                       | Yes                                               | Request only                                 | Request only                                              | No                                   |
+| Hold a delivery on a sale-cost alert                                | Yes                                               | Own locations                                | Existing note access only; no price decision              | No                                   |
+| Payables, financial credits and supplier confirmation               | Yes                                               | No                                           | No                                                        | No                                   |
+| Correct signed pickup                                               | Yes                                               | No                                           | No                                                        | No                                   |
+| Settings, People and devices                                        | Yes                                               | No                                           | No                                                        | No                                   |
+| Price update register confirmation / completion (E2)                | Every store                                       | Own stores                                   | Label confirmation; completion only if explicitly enabled | Read-only Lookup pill                |
+| Dashboard                                                           | Current Supervisor dashboard                      | Own operational dashboard, no supplier money | Existing worker home                                      | Lookup                               |
+
+Enforce capabilities and field projections in one permission layer; every transaction still checks company and allowed location. Future server APIs must reuse these rules rather than trust hidden buttons.
+
+### Detailed E1/E2/E3 contract (planned)
+
+Start E1 from C8's branch.
+The managers at Super Arzon asked for three things: roles set per branch, price-change tasks for each branch, and using the app on their phones.
+This is still the browser prototype, and everything is stored in one browser. The demo shows flows between people by switching users from the Demo menu. Design the roles, permissions and tasks so the real server build can reuse them unchanged.
+E1: ROLES PER LOCATION, PEOPLE AND SIGN-IN
+
+1. Five roles (their labels come from config, not code):
+   - Owner and Manager: exactly the same access, company-wide, at every location, including locations added later. Together they replace today's Supervisor.
+   - Branch Supervisor: runs one or more locations.
+   - Floor Worker: one or more locations.
+   - Cashier: one or more stores, never the Warehouse. Each person has one role and, except for Owner and Manager, one or more locations. For example: a cashier at North York and Richmond Hill, or a Branch Supervisor at all three stores. Record "different roles at different locations" in open-questions as a later option.
+2. Permissions. Put this table in requirements.md. Enforce it in one place (the permission layer) instead of the many "supervisor" checks in the code today, and test it.
+   - Owner and Manager: everything today's Supervisor can do. That includes approving prices, new products and sale requests, starting, changing and ending sales and new regular prices (C8), Payables and supplier money, confirming suppliers, correcting a signed pickup, closing returns with a credit, Settings, People and devices, and every location's price updates and History.
+   - Branch Supervisor, at their own locations only:
+     - Can: enter, review and post invoices (including seeing costs on invoices, supplier items and orders), Received, returns (up to recording the pickup), labels, date tracking, notes, branch requests, orders and price updates (E2). They can propose price changes and request a sale; a request goes to Approvals for the Owner or a Manager. On a "Cost went up during a sale" alert, they can tick "Keep this delivery in the back". They can view pending approvals for their locations, without approving them.
+     - Can't: approve prices or new products, start, change or end a sale or a new regular price themselves, open Payables or supplier balances, correct a signed pickup, close a return with a credit, change Settings, or manage people.
+   - Floor Worker: what Floor Workers can do today, at their locations, including requesting a sale (C8).
+   - Cashier: what Cashiers can do today, at their stores.
+   - Dashboards:
+     - Owner and Manager get today's Supervisor dashboard.
+     - A Branch Supervisor gets a location dashboard without supplier money: arrivals, price updates to apply, sales running at their stores, expiring dates, open returns, branch requests, and notes for them. Add tests for every role at an allowed location and at a location they don't have.
+3. Location picker:
+   - It shows only the person's own locations, plus "All my locations" for people with more than one.
+   - Owner and Manager also get "All locations".
+   - A registered store computer defaults to its own location.
+4. Settings → People (Owner and Manager only).
+   - List: name, role, locations, status (Active, Invited, Deactivated) and last sign-in, with search and filters by role and location.
+   - Add person:
+     - Fields: English name, Persian name (optional), username, phone or email (for invites and password resets), role, and locations. Locations are hidden for Owner and Manager; the Warehouse isn't offered for Cashiers.
+     - Saving shows a one-time setup code, once. In the real build, it's sent by text or email.
+     - On first sign-in, the person sets their own password. Owner, Manager and Branch Supervisor also set up a second sign-in step: a passkey or an authenticator app code (simulated in the prototype).
+   - Edit person: change role or locations, with a reason. History records old → new.
+   - Deactivate: signs the person out everywhere immediately. Their records stay, and Reactivate is possible.
+   - Safety rules:
+     - Nobody can change their own role or deactivate themselves.
+     - There is always at least one active Owner.
+     - Only an Owner or Manager can make someone an Owner or Manager.
+   - Registered store computers: keep the current list, and show which location each computer belongs to.
+5. Demo users. Replace the three demo accounts with these, all with password demo1234 and fictional names:
+   - owner (Owner)
+   - manager (Manager)
+   - rh-supervisor (Branch Supervisor at Richmond Hill and Newmarket)
+   - ny-floor (Floor Worker at North York)
+   - wh-floor (Floor Worker at the Warehouse)
+   - cashier (Cashier at North York and Richmond Hill) The Demo menu can switch to any of them, and Reset demo restores them. The old username "supervisor" keeps working and signs in as the Manager.
+     E2: PRICE UPDATES (TASKS FOR EACH STORE)
+6. When a product's selling price changes at a store, that store gets a price update task. This applies whatever caused the change: a price approval, "Apply this price to all" on a branch price conflict, a new regular price, a sale starting, changing or ending (C8), another offer starting or ending, or a weighed item's price.
+   - The price in the app changes right away. But staff still have to change it on the store's own cash register and put up a new shelf label, so the task stays Pending until someone confirms both.
+   - Only stores whose price actually changes get a task. The Warehouse never gets one.
+   - Sales: a sale's start task appears on the morning of its first day. Its end task appears on the morning of its last day, titled "Sale ends after today: back to $20.99 tomorrow", so staff can change the register and labels at closing.
+7. Each task shows:
+   - the product (both names, code, barcode) and old → new price, including any offer or sale
+   - when it takes effect, why it changed, and who decided
+   - two checkboxes: "Changed on the cash register" and "New label printed", with "Print label now" and "Add to label waitlist" buttons that pick the Regular or Promo template automatically "Mark as done" needs both boxes ticked. The alternative is "No label needed" with a reason (for example, the product has no shelf label).
+8. Who sees what:
+   - The Branch Supervisors of that store get a notification and own the task. They (or an Owner or Manager) can tick "Changed on the cash register" and mark the task done.
+   - Floor Workers at that store see the list and can tick "New label printed". A setting can let them mark tasks done too (off by default).
+   - Cashiers at that store see a "Price changed" pill on the product in Lookup, with the old price crossed out, until the task is done. For a sale, they see C8's Sale pill instead.
+   - Owner and Manager see every store: for each change, which stores are done (by whom, when) and which are still pending.
+9. Where it appears:
+   - A new sidebar item, "Price updates", with a count badge.
+   - A dashboard card, "Price updates to apply".
+   - The notification bell. The Price updates page has filters for Pending or Done, location and date. You can select several tasks and then "Print labels" (adds them all to the label waitlist) or "Mark as done".
+10. Changes on top of changes:
+
+- If the price changes again before the task is done, update that same task to the newest price (keeping the earlier step in its history) instead of adding a second task.
+- If the change is undone before anyone has acted on it, cancel the task.
+
+11. Reminders:
+
+- If a task is still pending after 24 hours (a setting), remind that store's Branch Supervisors.
+- After 48 hours (a setting), alert the Owner and Manager, for example "Richmond Hill has 3 price updates waiting".
+
+12. Notifications in general:
+
+- The bell lists each person's notifications, newest first, with an unread count, "Mark all as read", and a link to the item.
+- Settings → Notifications decides which roles get which events: price updates, approvals waiting, branch requests, returns waiting for credit, expiring dates, sale requests and their decisions, and costs that went up during a sale.
+- Plan this in the docs, but don't build it yet: in the real build, notifications also arrive on phones as push notifications once the app is installed on the home screen (Android, and iPhone with iOS 16.4 or newer), with email as an option.
+  E3: PHONES
+
+13. Phones. C6 already made every screen work from 390 px up.
+
+- Check the new screens (People, Add/Edit person, Price updates, a price update task, the location dashboard, the bell, the Change price dialog and the sale alert) at 390 px and 430 px, in English and Persian, using the same layout checks as C6.
+- Phone lists: Products, Labels, Received, Suppliers, Payables and the dashboard's Recent invoices and Returns currently turn each row into a card of label/value pairs ("Product", "Product Code", "Details", a lone chevron under "Action"). On phones, use list rows like Lookup's: the name and Persian name on the left, the key value (price, amount or status) on the right, a chevron at the end, and secondary facts in one muted line. Tapping a row opens it. The Labels list keeps its checkbox at the start of each row.
+
+14. Installable app: add a web app manifest, icons (the Super Arzon logo), the name "Super Arzon", light and dark theme colours, and standalone display. "Add to Home Screen" should open the app full screen with its own icon, like a normal app. Show a simple "No connection" page when offline.
+15. Testing on phones: don't create any accounts or resources; write the steps for me in docs/phone-demo-hosting.md:
+
+- Same Wi-Fi: how to open the prototype on a phone using my computer's address, what to check if it doesn't load (firewall, virtual machine network mode), and why the camera barcode scanner and Add to Home Screen don't work this way (they need HTTPS).
+- Private link: step by step, putting the built prototype on Cloudflare Pages (free) behind Cloudflare Access (free for under 50 users), so only people whose email I add can open it, over HTTPS. Include how to update it after each merge to main, and how to turn it off.
+- Explain clearly that each phone keeps its own separate demo data, so changes on one phone don't reach another until the real server build.
+  E PROOF 16. Tests for:
+- the permission table: every role at an allowed location and at one they don't have
+- the People rules: the last Owner, no changing your own role, deactivation signing someone out
+- a price change creating one task per affected store (none for the Warehouse)
+- a sale creating its start and end tasks on the right mornings
+- a newer price replacing a pending task, and Undo cancelling it
+- the rules for marking a task done
+- reminder timing
+- the Cashier's "Price changed" pill
+- the manifest being valid All existing tests must still pass.
+
+17. Screenshots in English light, English dark, Persian and phone width:
+
+- the People list, Add person with locations, and Edit person
+- the Branch Supervisor's location picker and location dashboard
+- the Price updates list (as a Branch Supervisor) and a task with its checkboxes
+- the Manager's per-store progress view
+- the Cashier's "Price changed" pill in Lookup
+- the dashboard card and the bell
+- Products and Received as phone list rows
+- the app opened from the home screen (phone)
+
+18. A click-by-click demo script for the review doc, using the Black Tea price conflict:
+
+- As manager, open Alerts and choose "Apply this price to all" with North York's price.
+- Switch to rh-supervisor: Richmond Hill's task appears with a notification. Print the label, tick both boxes, mark done.
+- Switch to cashier at Richmond Hill: the pill shows until the task is done.
+- Switch back to manager: the progress view shows Richmond Hill done (by whom, when) and any other store still pending. Add a second script for sales:
+- As ny-floor, request a sale on Sunflower Oil at North York; show the pending pill on Products and Lookup.
+- As manager, approve it in Approvals; ny-floor gets a notification and North York gets its start task.
+- As manager, put Stainless Steel Pot on sale at all stores until next week; switch to rh-supervisor and complete Richmond Hill's start task.
+- Post the fictional cost-increase invoice at North York and show the "Cost went up during a sale" alert.
+
+All implementation, test and screenshot entries in [C8/E acceptance](C8_E_ACCEPTANCE.md) start Planned. These specifications are not a claim that E roles, tasks, phone installation or hosted collaboration already work.

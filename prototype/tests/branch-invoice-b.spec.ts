@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { invoiceImage, openShellAction, setBranch, signIn } from "./helpers";
+import {
+  invoiceImage,
+  openInvoiceUpload,
+  openShellAction,
+  setBranch,
+  signIn,
+} from "./helpers";
 
 const storage = "supermarket-prototype-v1";
 test.setTimeout(60000);
@@ -68,6 +74,7 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  await openInvoiceUpload(page);
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page

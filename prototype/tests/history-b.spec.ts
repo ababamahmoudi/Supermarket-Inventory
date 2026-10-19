@@ -2,18 +2,61 @@ import { expect, test, type Page, type Locator } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 
 async function saveName(page: Page, name: string) {
+  // Lavash has existing active date evidence, so this remains a name-only
+  // Save rather than changing tracking to bypass C8's required-date rule.
+  const before = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+    const product = state.products.find(
+      (item: { code: string }) => item.code === "0006",
+    );
+    return {
+      ledger: state.ledger,
+      invoices: state.invoices,
+      expiry: state.expiry,
+      prices: {
+        selling_price: product.selling_price,
+        branch_prices: product.branch_prices,
+        last_cost_before_tax: product.last_cost_before_tax,
+        pending_price: product.pending_price,
+      },
+    };
+  });
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
-  await page.getByRole("button", { name: /^Edit Potato Chips/ }).click();
+  await page.getByLabel("Search products", { exact: true }).fill("0006");
+  await page.getByRole("button", { name: /^Edit Lavash Bread/ }).click();
   const editor = page.getByRole("dialog", {
     name: "Edit product",
     exact: true,
   });
+  await expect(
+    editor.getByRole("switch", { name: "Date tracking", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(
+    editor.locator(".product-editor-date-row:not([data-removed])").first(),
+  ).toBeVisible();
   await editor.getByLabel("English name", { exact: true }).fill(name);
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
   await expect(editor).not.toBeVisible();
+  const after = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
+    const product = state.products.find(
+      (item: { code: string }) => item.code === "0006",
+    );
+    return {
+      ledger: state.ledger,
+      invoices: state.invoices,
+      expiry: state.expiry,
+      prices: {
+        selling_price: product.selling_price,
+        branch_prices: product.branch_prices,
+        last_cost_before_tax: product.last_cost_before_tax,
+        pending_price: product.pending_price,
+      },
+    };
+  });
+  expect(after).toEqual(before);
   await page.mouse.move(0, 0);
 }
 async function freezeClock(page: Page) {
@@ -26,7 +69,11 @@ async function stopOffer(page: Page, code: string) {
     `.current-offers-table tr[data-product-code="${code}"]`,
   );
   await expect(row).toHaveCount(1);
-  await row.getByRole("button", { name: "Stop offer", exact: true }).click();
+  await expect(
+    row.getByRole("button", { name: "Stop offer", exact: true }),
+  ).toHaveCount(0);
+  await row.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: /Stop offer/ }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
@@ -76,7 +123,7 @@ test("quiet product Save retains append-only History and can be explicitly rever
 }) => {
   await signIn(page, "Supervisor");
   await freezeClock(page);
-  await saveName(page, "Potato Chips 150 g corrected");
+  await saveName(page, "Lavash Bread 500 g corrected");
   const toast = page.locator(".undo-toast-stack");
   await expect(toast).not.toBeVisible();
   await page.goto("/#history");
@@ -90,9 +137,9 @@ test("quiet product Save retains append-only History and can be explicitly rever
     .getByRole("button", { name: "Revert change", exact: true })
     .click();
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page.getByLabel("Search products", { exact: true }).fill("0006");
   await expect(page.locator(".lookup-detail-header")).toContainText(
-    "Potato Chips 150 g",
+    "Lavash Bread 500 g",
   );
   await expect(page.locator(".lookup-detail-header")).not.toContainText(
     "corrected",
@@ -101,13 +148,24 @@ test("quiet product Save retains append-only History and can be explicitly rever
   await expect(
     page.getByRole("heading", { name: "History", exact: true }),
   ).toBeVisible();
-  for (const label of ["From date", "To date"]) {
-    const geometry = await page
-      .getByRole("button", { name: label, exact: true })
-      .boundingBox();
-    expect(geometry?.width).toBeCloseTo(180, 0);
-    expect(geometry?.height).toBeCloseTo(44, 0);
-  }
+  const range = page.getByRole("button", { name: "Date range", exact: true });
+  await expect(range).toHaveCount(1);
+  await range.click();
+  const rangeDialog = page.getByRole("dialog", {
+    name: "Date range",
+    exact: true,
+  });
+  for (const label of ["Today", "This week", "This month"])
+    await expect(
+      rangeDialog.getByRole("button", { name: label, exact: true }),
+    ).toBeVisible();
+  for (const label of ["From", "To"])
+    await expect(
+      rangeDialog.getByRole("button", { name: label, exact: true }),
+    ).toBeVisible();
+  await rangeDialog
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,
@@ -190,7 +248,7 @@ test("History Revert previews the actor, branch, values and requires confirmatio
 }) => {
   await signIn(page, "Supervisor");
   await freezeClock(page);
-  await saveName(page, "Potato Chips 150 g approved edit");
+  await saveName(page, "Lavash Bread 500 g approved edit");
   await page.clock.runFor(10001);
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
   await page.goto("/#history");
@@ -202,13 +260,13 @@ test("History Revert previews the actor, branch, values and requires confirmatio
   });
   await expect(dialog).toContainText("Demo Supervisor");
   await expect(dialog).toContainText("All branches");
-  await expect(dialog).toContainText("Potato Chips 150 g approved edit");
-  await expect(dialog).toContainText("Potato Chips 150 g");
+  await expect(dialog).toContainText("Lavash Bread 500 g approved edit");
+  await expect(dialog).toContainText("Lavash Bread 500 g");
   let stored = await page.evaluate(
     () =>
       JSON.parse(
         localStorage.getItem("supermarket-prototype-v1")!,
-      ).products.find((item: { code: string }) => item.code === "0009").name_en,
+      ).products.find((item: { code: string }) => item.code === "0006").name_en,
   );
   expect(stored).toContain("approved edit");
   await dialog
@@ -220,9 +278,9 @@ test("History Revert previews the actor, branch, values and requires confirmatio
     () =>
       JSON.parse(
         localStorage.getItem("supermarket-prototype-v1")!,
-      ).products.find((item: { code: string }) => item.code === "0009").name_en,
+      ).products.find((item: { code: string }) => item.code === "0006").name_en,
   );
-  expect(stored).toBe("Potato Chips 150 g");
+  expect(stored).toBe("Lavash Bread 500 g");
   await historyRow(page, "Reverted Save product");
   await expect(page.locator(".history-table")).toContainText(
     "Reverted Save product",
@@ -234,8 +292,8 @@ test("an intervening edit displays a conflict and cannot be silently overwritten
 }) => {
   await signIn(page, "Supervisor");
   await freezeClock(page);
-  await saveName(page, "Potato Chips 150 g first change");
-  await saveName(page, "Potato Chips 150 g latest change");
+  await saveName(page, "Lavash Bread 500 g first change");
+  await saveName(page, "Lavash Bread 500 g latest change");
   await page.goto("/#history");
   const older = await historyRow(
     page,
@@ -256,7 +314,7 @@ test("an intervening edit displays a conflict and cannot be silently overwritten
   ).toBeDisabled();
   await page.keyboard.press("Escape");
   await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  await page.getByLabel("Search products", { exact: true }).fill("0006");
   await expect(page.locator(".lookup-detail-header")).toContainText(
     "latest change",
   );
@@ -272,9 +330,24 @@ test("each eligible action replaces the single toast and its last message expire
     .evaluateAll((rows) =>
       rows.map((row) => row.getAttribute("data-product-code")!),
     );
-  expect(codes).toHaveLength(5);
+  // C8 adds two sale records beside the original five multi-buy offers.
+  const multiBuyCodes = ["0003", "0005", "0006", "0007", "0009"];
+  expect([...codes].sort()).toEqual([...multiBuyCodes, "0012", "0008"].sort());
+  const sale = page.locator(
+    '.current-offers-table tr[data-product-code="0012"]',
+  );
+  await expect(sale).toContainText("Stainless Steel Pot 24 cm");
+  await expect(sale).toContainText("Sale price");
+  await expect(sale).toContainText("$16.99");
+  const request = page.locator(
+    '.current-offers-table tr[data-product-code="0008"]',
+  );
+  await expect(request).toContainText("Sunflower Oil 1.8 L");
+  await expect(request).toContainText("Sale requested");
+  await expect(request).toContainText("$9.49");
+  await expect(request).toContainText("$7.99");
   await freezeClock(page);
-  for (const code of codes) {
+  for (const code of multiBuyCodes) {
     await stopOffer(page, code);
     await expect(page.locator(".undo-toast")).toHaveCount(1);
     await expect(page.locator(".undo-toast")).toContainText("Stop offer");
@@ -284,7 +357,10 @@ test("each eligible action replaces the single toast and its last message expire
   await expect(page.locator(".undo-toast-more")).toHaveCount(0);
   await expect(
     page.locator(".current-offers-table tr[data-product-code]"),
-  ).toHaveCount(0);
+  ).toHaveCount(2);
+  await expect(sale).toContainText("$16.99");
+  await expect(request).toContainText("$9.49");
+  await expect(request).toContainText("$7.99");
   await page.clock.runFor(7499);
   await expect(page.locator(".undo-toast")).toHaveCount(1);
   await page.clock.runFor(1);
@@ -301,6 +377,7 @@ test("hover or phone keyboard focus pauses the single toast and English/Persian 
   await page.clock.runFor(1000);
   const secondCode = await page
     .locator(".current-offers-table tr[data-product-code]")
+    .filter({ hasText: "Mix-and-match" })
     .first()
     .getAttribute("data-product-code");
   expect(secondCode).not.toBeNull();
@@ -333,7 +410,7 @@ test("workers see only their own History and cashiers cannot open it", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await saveName(page, "Potato Chips 150 g Supervisor edit");
+  await saveName(page, "Lavash Bread 500 g Supervisor edit");
   await signIn(page, "Floor Worker");
   await page.goto("/#history");
   await expect(

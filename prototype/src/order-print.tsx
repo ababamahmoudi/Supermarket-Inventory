@@ -20,9 +20,7 @@ export function OrderPrintDocument({
   const documentLanguage = config.supplier_documents?.supplier_order ?? "en";
   const printLanguage = documentLanguage === "en" ? "en" : language;
   const amount = (value: string | null) =>
-    value === null
-      ? "—"
-      : formatMoney(value, { currency: order.currency, decimals: 2 });
+    value === null ? "—" : formatMoney(value, { currency: order.currency });
   return (
     <div className="order-print-output">
       <OperationalPrintDocument

@@ -4,6 +4,8 @@ export interface TableColumnDefinition {
   required?: boolean;
   defaultVisible?: boolean;
   width?: string | number;
+  /** Keep a positive numeric width exact, including cell padding, instead of sharing free space. */
+  fixedWidth?: boolean;
   align?: "start" | "end";
   actions?: boolean;
   /** Smaller priorities remain visible longer when the real content width shrinks. */

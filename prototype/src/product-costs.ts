@@ -11,7 +11,10 @@ export interface ProductCostEntry {
   supplier: string;
   branch: string;
   date: string;
+  /** Effective cost-source time: a retained later delivery can follow the original posting. */
   posted_at: string;
+  receipt_id?: string;
+  received_at?: string;
   unit_cost_before_tax: string;
   short_dated: boolean;
   sold_by: "each" | "weight";
@@ -55,6 +58,26 @@ export function productCostHistory(
             0
         )
           return [];
+        const later = line.short_dated
+          ? undefined
+          : (state.stock_movements ?? [])
+              .filter(
+                (movement) =>
+                  movement.company_id === context.company_id &&
+                  movement.invoice_id === original.id &&
+                  movement.line_index === index &&
+                  movement.product_code === product.code &&
+                  movement.type === "short_resolved_received" &&
+                  new Decimal(movement.qty).gt(0) &&
+                  (original.short_receipt_keys ?? []).some(
+                    (key) =>
+                      movement.id === `${original.id}:delivery:${key}:stock`,
+                  ) &&
+                  Number.isFinite(Date.parse(movement.at)),
+              )
+              .sort(
+                (a, b) => b.at.localeCompare(a.at) || b.id.localeCompare(a.id),
+              )[0];
         return [
           {
             id: `${invoice.id}:cost:${index}`,
@@ -64,7 +87,10 @@ export function productCostHistory(
             branch,
             date:
               original.invoice_date ?? original.posted_at?.slice(0, 10) ?? "",
+            receipt_id: later?.id,
+            received_at: later?.at,
             posted_at:
+              later?.at ??
               original.posted_at ??
               original.received_at ??
               original.invoice_date ??

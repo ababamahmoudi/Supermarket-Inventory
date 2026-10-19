@@ -112,8 +112,29 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
   await visit(page, "products", "Products");
   await page.getByLabel("Has pending price", { exact: true }).check();
   await expect(
-    page.getByText("Page 1 of 1 · 2 products", { exact: true }),
+    page.getByText("Page 1 of 1 · 3 products", { exact: true }),
   ).toBeVisible();
+  const filteredRows = page.locator(
+    ".catalog-products-table tbody tr:not(.table-expanded-row)",
+  );
+  await expect(filteredRows).toHaveCount(3);
+  expect(
+    await filteredRows.evaluateAll((rows) =>
+      rows
+        .map(
+          (row) =>
+            row
+              .querySelector(".table-row-link")
+              ?.getAttribute("href")
+              ?.split("code=")[1],
+        )
+        .sort(),
+    ),
+  ).toEqual(["0006", "0008", "0015"]);
+  const requestedSale = filteredRows.filter({ hasText: "Sunflower Oil" });
+  await expect(requestedSale).toContainText("$9.49");
+  await expect(requestedSale).toContainText("Sale requested");
+  await expect(requestedSale).toContainText("$7.99");
   const lavash = demoSeed.products.find((product) => product.code === "0006")!;
   await page.getByRole("link", { name: lavash.name_en, exact: true }).click();
   await expect(
@@ -125,6 +146,9 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
     page.getByRole("heading", { name: "Stock estimate", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Last received", exact: true }),
+    page.getByRole("heading", { name: "Deliveries", exact: true }),
   ).toBeVisible();
+  await expect(page.locator(".product-last-received-summary")).toContainText(
+    "Last received",
+  );
 });

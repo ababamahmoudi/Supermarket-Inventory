@@ -27,6 +27,9 @@
   max-inline-size: none;
   inline-size: 100%;
 }
+.order-form-card {
+  container: order-form / inline-size;
+}
 .order-heading-fields {
   display: flex;
   flex-wrap: wrap;
@@ -54,7 +57,8 @@
 .order-items-table .product-name strong,
 .order-items-table .product-name small {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
   overflow: visible;
   text-overflow: clip;
 }
@@ -100,15 +104,27 @@
   margin-block-start: 5px;
 }
 .order-total {
-  display: flex;
+  display: grid;
+  /* Match the final column's 168 of 1076 desktop table-width shares. */
+  grid-template-columns: minmax(0, 1fr) calc(100% * 168 / 1076);
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  max-inline-size: 440px;
+  inline-size: 100%;
+  max-inline-size: none;
+  margin-inline-start: auto;
+  text-align: end;
   padding-block: 20px;
 }
+.order-total > span {
+  margin-inline-end: 20px;
+}
 .order-total strong {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding-inline: 8px;
+  direction: ltr;
+  text-align: right;
   font-size: 24px;
+  white-space: nowrap;
 }
 .order-form-actions {
   margin-block-start: 12px;
@@ -247,6 +263,63 @@
 .order-print-total strong {
   font-size: 18px;
 }
+/* Editable rows keep every field present; they do not hide inputs in the
+   read-only tables' disclosure layout. */
+:root .order-form-card .order-items-table.ui-data-table,
+:root .order-form-card .order-items-table table.has-defined-columns {
+  inline-size: 100%;
+  min-inline-size: 0;
+  overflow: visible;
+  table-layout: fixed;
+}
+:root .order-form-card .order-items-table :is(th, td) {
+  padding-inline: 8px;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  vertical-align: top;
+}
+:root .order-form-card .order-items-table th {
+  white-space: normal;
+}
+:root .order-form-card .order-items-table :is(th, td).numeric {
+  direction: ltr;
+}
+:root .order-form-card .order-items-table .order-item-caption {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root .order-form-card .order-items-table .field {
+  justify-items: end;
+}
+:root .order-form-card .order-table-field > .field-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+:root .order-form-card .order-items-table input.ui-number {
+  inline-size: 100%;
+  max-inline-size: 120px;
+  min-inline-size: 0;
+  margin-inline-start: auto;
+  text-align: right;
+  outline: none;
+  border-color: var(--color-clear);
+  background: var(--field-fill);
+  box-shadow: var(--shadow-none);
+}
+:root .order-form-card .order-items-table input.ui-number:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-focus);
+}
+:root .order-form-card .order-items-table input.ui-number[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--surface);
+}
 @media (max-width: 760px) {
   :root .order-items-table.ui-data-table {
     overflow: visible;
@@ -270,9 +343,16 @@
     display: grid;
     gap: 16px;
   }
-  .order-items-table tbody tr {
+  :root
+    .order-form-card
+    .order-items-table
+    tbody
+    tr:not(.table-expanded-row):nth-child(n) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    block-size: auto;
+    min-block-size: 0;
+    align-items: start;
     gap: 16px 12px;
     padding: 16px;
     border-radius: var(--radius-search);
@@ -316,6 +396,13 @@
     overflow: hidden;
     clip-path: inset(50%);
   }
+  :root .order-form-card .order-items-table .field {
+    justify-items: start;
+  }
+  :root .order-form-card .order-items-table input.ui-number {
+    margin-inline-start: 0;
+    background: var(--surface);
+  }
   .order-detail-meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
@@ -327,7 +414,7 @@
     inline-size: min(300px, 100%);
   }
   .order-total {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 @media print {
