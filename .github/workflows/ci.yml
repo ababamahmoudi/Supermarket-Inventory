@@ -107,7 +107,7 @@ jobs:
           make down
 
   prototype:
-    name: Prototype lint, pricing and unit tests, build, and browsers
+    name: Prototype lint, pricing and unit tests, and build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -134,16 +134,63 @@ jobs:
         run: npm test
       - name: Build the prototype
         run: npm run build
-      - name: Install Chromium and browser dependencies
-        run: npx playwright install --with-deps chromium
+
+  prototype_browser_tests:
+    name: Prototype browser shard ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    defaults:
+      run:
+        working-directory: prototype
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Read the prototype Node.js requirement
+        id: prototype-node
+        run: |
+          node -e 'const fs = require("node:fs"); const range = JSON.parse(fs.readFileSync("package.json", "utf8")).engines.node; fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${range}\n`);'
+      - name: Set up the prototype Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.prototype-node.outputs.version }}
+          cache: npm
+          cache-dependency-path: prototype/package-lock.json
+      - name: Install frozen prototype dependencies
+        run: npm ci
+      - name: Build the prototype
+        run: npm run build
+      - name: Install Chromium, WebKit and browser dependencies
+        run: npx playwright install --with-deps chromium webkit
       - name: Test desktop and phone browser workflows
-        run: npm run e2e -- --workers=2
+        run: npm run e2e -- --workers=2 --shard=${{ matrix.shard }}/4 --reporter=github,html
+        env:
+          PLAYWRIGHT_HTML_OPEN: never
       - name: Upload prototype browser failures
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: prototype-browser-test-results
+          name: prototype-browser-test-results-shard-${{ matrix.shard }}
           path: |
             prototype/playwright-report
             prototype/test-results
           if-no-files-found: ignore
+
+  prototype_browsers:
+    name: Prototype browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: prototype_browser_tests
+    if: always()
+    steps:
+      - name: Require every browser shard to pass
+        env:
+          SHARD_RESULT: ${{ needs.prototype_browser_tests.result }}
+        run: |
+          if [ "$SHARD_RESULT" != "success" ]; then
+            printf '%s\n' "Browser shards did not all pass: $SHARD_RESULT" >&2
+            exit 1
+          fi
