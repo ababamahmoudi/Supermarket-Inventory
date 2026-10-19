@@ -163,8 +163,8 @@ jobs:
         run: npm ci
       - name: Build the prototype
         run: npm run build
-      - name: Install Chromium and browser dependencies
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium, WebKit and browser dependencies
+        run: npx playwright install --with-deps chromium webkit
       - name: Test desktop and phone browser workflows
         run: npm run e2e -- --workers=2 --shard=${{ matrix.shard }}/4 --reporter=github,html
         env:
