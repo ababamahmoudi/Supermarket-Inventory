@@ -1,0 +1,47 @@
+{
+  "head": "ac10919fde0e63325fbd3e68d4b2570a51120fb7",
+  "file": "prototype/tests/design-v2.spec.ts",
+  "file_sha256": "139caa31f17b786d79d11d1efcca603443ed5a4c06646cf3394d34a165af4482",
+  "scope": "Only1080p sidebar/compound forms original case startup readiness; phone skip retained.",
+  "baseline": {
+    "exit_code": 0,
+    "stats": {
+      "startTime": "2026-10-19T15:29:36.269Z",
+      "duration": 12684.124,
+      "expected": 1,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "note": "Local original passed; exact ac10919 CI initial attempt null signin-card box was flaky and ultimately passed, never called a final unexpected failure."
+  },
+  "passive_ui_observation": {
+    "fresh_1920x1080_contexts": 3,
+    "all_load_events_initial_cardless": true,
+    "immediate_post_goto_zero_cards": 3,
+    "all_then_mount_real_signin_one_card": true,
+    "app_storage_styles_altered": false
+  },
+  "change": "Only add genuine Sign in heading visibility await before original identical signin width/sidebar and invoice geometry assertions.",
+  "other_initial_card_measurement_audit": "Four redesigned screens original case already has the same Sign-in readiness guard. No other unguarded initial-card geometry measurement remains in this file; keyboard sign-in awaits real Username focus before interaction; post-auth route measurements unchanged.",
+  "validation": {
+    "exit_code": 0,
+    "stats": {
+      "startTime": "2026-10-19T15:30:34.041Z",
+      "duration": 12450.23,
+      "expected": 1,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "scoped_eslint_exit_code": 0,
+    "scoped_prettier_check_exit_code": 0,
+    "git_diff_check_exit_code": 0,
+    "exact_file_addition_only": true
+  },
+  "app_changes": false,
+  "budgets_retries_workers_skips_changed": false,
+  "committed": false,
+  "pushed": false,
+  "build_ran": false
+}

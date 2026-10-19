@@ -383,6 +383,10 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   );
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/");
+  // C9's first-start placeholder has no Sign-in card to measure yet.
+  await expect(
+    page.getByRole("heading", { name: "Sign in", exact: true }),
+  ).toBeVisible();
   expect(
     (await page.locator(".signin-card").boundingBox())!.width,
   ).toBeLessThanOrEqual(420);

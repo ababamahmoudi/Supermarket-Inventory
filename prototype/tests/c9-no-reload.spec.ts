@@ -1,12 +1,22 @@
 import { networkInterfaces } from "node:os";
 import { expect, test } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
+import sourceConfiguration from "../../seed/arzon-config.json" with { type: "json" };
+import retainedConfiguration from "../src/compat/configuration.json" with { type: "json" };
 import { openShellAction, signIn, visitPage } from "./helpers";
 import {
   AUTH_IDENTITY_KEY,
   AUTH_PREFERENCES_KEY,
 } from "../src/auth-preferences.e1";
 import { PRESENTATION_THEME_KEY } from "../src/presentation-theme.c9";
+
+// Match config.ts's existing placeholder fallback without loading browser modules
+// into Node's test discovery, whose JSON imports require explicit attributes.
+const configuredTimeZone = sourceConfiguration.company.timezone.includes(
+  "PLACEHOLDER",
+)
+  ? retainedConfiguration.company.timezone
+  : sourceConfiguration.company.timezone;
 
 function nonLocalOrigin() {
   const explicit = process.env.C9_LAN_BASE_URL;
@@ -47,7 +57,17 @@ interface FrameWatch {
     colors: string[];
   }[];
 }
-type WatchedWindow = Window & { __c9FrameWatch?: FrameWatch };
+interface NativeExceptionDiagnostic {
+  source: string;
+  name: string;
+  code: string | number | null;
+  message: string;
+  frames: string[];
+}
+type WatchedWindow = Window & {
+  __c9FrameWatch?: FrameWatch;
+  __c9NativeExceptions?: NativeExceptionDiagnostic[];
+};
 
 test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", async ({
   page,
@@ -64,6 +84,126 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
     )
       unexpectedNavigations.push(request.url());
   });
+  if (testInfo.project.name === "webkit-no-reload")
+    await page.addInitScript(() => {
+      const records: NativeExceptionDiagnostic[] = [];
+      (window as WatchedWindow).__c9NativeExceptions = records;
+      const record = (source: string, error: unknown) => {
+        try {
+          if (
+            !(error instanceof Error || error instanceof DOMException) ||
+            records.length >= 32
+          )
+            return;
+          const ownValue = (key: string): unknown =>
+            Object.getOwnPropertyDescriptor(error, key)?.value;
+          const nativeProperty = (key: string): unknown => {
+            if (!(error instanceof DOMException)) return undefined;
+            return Object.getOwnPropertyDescriptor(
+              DOMException.prototype,
+              key,
+            )?.get?.call(error);
+          };
+          let name = ownValue("name") ?? nativeProperty("name");
+          if (typeof name !== "string") {
+            const descriptor = Object.getOwnPropertyDescriptor(
+              Object.getPrototypeOf(error),
+              "name",
+            );
+            name = descriptor?.value;
+          }
+          const message = ownValue("message") ?? nativeProperty("message");
+          const code = ownValue("code") ?? nativeProperty("code");
+          const stack = ownValue("stack");
+          const diagnostic: NativeExceptionDiagnostic = {
+            source,
+            name: typeof name === "string" ? name.slice(0, 80) : "Error",
+            code:
+              typeof code === "number"
+                ? code
+                : typeof code === "string"
+                  ? code.slice(0, 80)
+                  : null,
+            message: typeof message === "string" ? message.slice(0, 400) : "",
+            frames:
+              typeof stack === "string"
+                ? stack
+                    .split(/\r?\n/)
+                    .filter((line) => /^\s*at\b|@https?:\/\//.test(line))
+                    .slice(0, 8)
+                    .map((line) =>
+                      line
+                        .replace(/(https?:\/\/[^\s)?#]+)[?#][^\s)]*/g, "$1")
+                        .trim()
+                        .slice(0, 240),
+                    )
+                : [],
+          };
+          if (
+            !records.some(
+              (previous) =>
+                JSON.stringify(previous) === JSON.stringify(diagnostic),
+            )
+          )
+            records.push(diagnostic);
+        } catch {
+          // Diagnostics must not replace the original rejection or exception.
+        }
+      };
+      const originalCatch = Promise.prototype.catch;
+      const originalThen = Promise.prototype.then;
+      Promise.prototype.catch = function (onRejected) {
+        // Only ordinary native promises are tapped. Borrowed catch calls,
+        // subclasses and custom then methods keep their original callback too.
+        if (
+          typeof onRejected !== "function" ||
+          !this ||
+          typeof this !== "object" ||
+          Object.getPrototypeOf(this) !== Promise.prototype ||
+          Object.getOwnPropertyDescriptor(this, "then") ||
+          Object.getOwnPropertyDescriptor(Promise.prototype, "then")?.value !==
+            originalThen
+        )
+          return Reflect.apply(originalCatch, this, [onRejected]);
+        return Reflect.apply(originalCatch, this, [
+          (error: unknown) => {
+            record("Promise.catch rejection", error);
+            return Reflect.apply(onRejected, undefined, [error]);
+          },
+        ]);
+      };
+      if (typeof IDBFactory === "undefined") return;
+      const originalOpen = IDBFactory.prototype.open;
+      IDBFactory.prototype.open = function (...args) {
+        try {
+          const request: IDBOpenDBRequest = Reflect.apply(
+            originalOpen,
+            this,
+            args,
+          );
+          request.addEventListener("error", () =>
+            record("IndexedDB open error", request.error),
+          );
+          request.addEventListener("success", () => {
+            const database = request.result;
+            const observeError = (event: Event) => {
+              const target = event.target;
+              if (
+                target instanceof IDBRequest ||
+                target instanceof IDBTransaction
+              )
+                record(`IndexedDB ${event.type}`, target.error);
+            };
+            database.addEventListener("error", observeError, true);
+            database.addEventListener("abort", observeError, true);
+          });
+          return request;
+        } catch (error) {
+          record("IndexedDB open exception", error);
+          throw error;
+        }
+      };
+    });
   let lastAuthenticationSnapshot: unknown = null;
   let lastAuthenticationNotice = "";
   let authenticationSnapshotPending = false;
@@ -90,7 +230,7 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
     if (authenticationSnapshotPending || page.isClosed()) return;
     authenticationSnapshotPending = true;
     try {
-      lastAuthenticationSnapshot = await page.evaluate(() => {
+      lastAuthenticationSnapshot = await page.evaluate((timeZone: string) => {
         const visibleText = (selector: string) =>
           [...document.querySelectorAll<HTMLElement>(selector)]
             .filter((element) => {
@@ -98,6 +238,31 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
               return bounds.width > 0 && bounds.height > 0;
             })
             .map((element) => element.innerText.trim());
+        const dateFormat = (() => {
+          try {
+            const calendarFormat = new Intl.DateTimeFormat("en-CA", {
+              timeZone,
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            });
+            return {
+              configuredTimeZone: timeZone,
+              resolvedTimeZone: calendarFormat.resolvedOptions().timeZone,
+              enCaDate: calendarFormat.format(new Date()),
+            };
+          } catch (error) {
+            return {
+              configuredTimeZone: timeZone,
+              error: {
+                name:
+                  error instanceof Error ? error.name.slice(0, 80) : "Error",
+                message:
+                  error instanceof Error ? error.message.slice(0, 400) : "",
+              },
+            };
+          }
+        })();
         return {
           url: `${location.origin}${location.pathname}`,
           readyState: document.readyState,
@@ -115,8 +280,11 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
           indexedDBAvailable: typeof indexedDB !== "undefined",
           secureRandomAvailable:
             typeof globalThis.crypto?.getRandomValues === "function",
+          dateFormat,
+          nativeExceptions:
+            (window as WatchedWindow).__c9NativeExceptions ?? [],
         };
-      });
+      }, configuredTimeZone);
       const evidence = authenticationEvidence();
       if (
         process.env.CI &&

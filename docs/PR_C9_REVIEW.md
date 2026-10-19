@@ -4,6 +4,12 @@ C9 corrects the loading flash, decided sale requests, sale/regular-price interac
 
 Branch: `feat/prototype-c9`, created from main `d1fcb4ffdf55e4bb33792aa2564790dbac473e0b` after the approved feature merges. Settings is deferred except removing Notes; notebook management lives on Notes. No later feature PR or hosting deployment is part of C9.
 
+## Latest completed CI and diagnostic handoff
+
+All four browser shards finished at `ac10919fde0e63325fbd3e68d4b2570a51120fb7`: shards 1, 2 and 3 passed; shard 4 failed only the new WebKit case before the no-reload actions, while initial sign-in reported “Browser storage could not be read or updated.” Across the four shards: **789 passed, one flaky, 50 existing skips and one failed**. Foundation and prototype lint/unit/pricing/build passed; **Prototype browsers failed**. [Complete run](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39275383400), [original assessment and diagnostic packet](evidence/c9/webkit-startup/README.md).
+
+Ali approved fixing WebKit startup while keeping existing data and authentication rules. The current iteration only improves the new WebKit test's bounded exception diagnostics and waits for the genuine Sign-in view before the existing 1080p measurement. Synthetic native Promise/IndexedDB controls and local 1080p before/after checks do not prove a WebKit fix or LAN success. New exact-head CI is pending. C9 remains unmerged for Ali to test.
+
 ## Completed merge prerequisite
 
 [CI PR25](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/25) changed only the workflow. It keeps foundation unchanged and all job limits at 30 minutes. Prototype lint/unit/pricing/build is separate; four independent Playwright shards install/build/start and upload uniquely named failure reports; final **Prototype browsers** requires all four. Existing tests, assertions, workers, retries and skips were unchanged by that PR.

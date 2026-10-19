@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-19 — Diagnose WebKit startup after complete C9 CI
+
+- Wait for all four `ac10919` shards: 1/2/3 passed, 4 failed only the new WebKit case during initial sign-in with a browser-storage error. Totals are 789 passed, one flaky, 50 existing skips and one failed; foundation and prototype static/unit/pricing/build checks passed. The browser gate failed, so C9 remains open and unmerged.
+- Record Ali's explicit approval to fix WebKit startup while preserving data and authentication rules. This iteration adds bounded native exception metadata to the WebKit test's diagnostics, not an application fix or an authentication/storage workaround; no configuration, data or runner budgets change.
+- Await the real Sign-in heading before the retained 1080p sidebar/form measurement. Preserve its geometry assertions and phone skip; local before/after each passed the desktop case with the existing phone skip. Publish original CI assessment, native synthetic semantic controls and source/hash provenance in [the diagnostic packet](evidence/c9/webkit-startup/README.md); new exact-head CI remains pending.
+
 ## 2026-10-19 — Follow-up after all four C9 shards completed (new CI pending)
 
 - Preserve the complete27361bb run: all four browser shards failed assertions/locators, no30-minute job timeouts; foundation and prototype lint/unit/pricing/build passed. C9 stays open/unmerged.

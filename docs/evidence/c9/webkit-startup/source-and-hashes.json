@@ -1,0 +1,140 @@
+{
+  "base_head": "ac10919fde0e63325fbd3e68d4b2570a51120fb7",
+  "scope": "Diagnostic working-tree iteration. Not an application fix, exact-head CI success, or native WebKit/LAN proof.",
+  "artifacts": [
+    {
+      "artifact": "complete-assessment.json.gz",
+      "original_source": "/tmp/c9-final-ci-ac10919/complete-assessment.json",
+      "original_bytes": 12486,
+      "original_sha256": "d8e5edede11e594f39be1345f2b8ab6c8e0f821f14f85098e631e05276ade559",
+      "stored_bytes": 2075,
+      "stored_sha256": "e6048c36cfcd0928f0b6c943f8960849f5ec5e8b076c3943d4c6813bb4a6a3a0",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "design-1080-summary.json",
+      "original_source": "/tmp/c9-design-v2-1080-readiness/summary.json",
+      "original_bytes": 1880,
+      "original_sha256": "928dde982fa32c3e52403738001e8904b3a0b76aa3950169686a16553d24475d",
+      "stored_bytes": 1880,
+      "stored_sha256": "928dde982fa32c3e52403738001e8904b3a0b76aa3950169686a16553d24475d",
+      "encoding": "unmodified original bytes"
+    },
+    {
+      "artifact": "design-1080-before.json.gz",
+      "original_source": "/tmp/c9-design-v2-1080-readiness/before.json",
+      "original_bytes": 6201,
+      "original_sha256": "66ce50412b00eaa05c55415fcc5a219d7a63bb47495194fd6abc1bc244ee413d",
+      "stored_bytes": 1384,
+      "stored_sha256": "e2344e9e21712420669eb8b634a2cd1556d087c7b5cd5d6555b4837225981417",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "design-1080-after.json.gz",
+      "original_source": "/tmp/c9-design-v2-1080-readiness/after.json",
+      "original_bytes": 6196,
+      "original_sha256": "a9e2aa5803f534b90658411ac87629be1c04b65ed74bc85790a3223295b95a8c",
+      "stored_bytes": 1384,
+      "stored_sha256": "d87665b17c8c1ff07534d2653a250d75b45111e05374c601c9779704390c4d17",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "design-1080-observations.json.gz",
+      "original_source": "/tmp/c9-design-v2-1080-readiness/observations.json",
+      "original_bytes": 4361,
+      "original_sha256": "ea9878dbdb926f8bbec462a30629ba7290efdd81aa64513bb06d9bfd9998e81d",
+      "stored_bytes": 432,
+      "stored_sha256": "97fb27ab03516a0da3297f28533354001bc0d7428cb94009b845be4f64722aed",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "earlier-discovery-import-error.txt.gz",
+      "original_source": "/tmp/c9-native-startup-discovery.txt",
+      "original_bytes": 375,
+      "original_sha256": "cdc3c293a3fe938f5861d473d1a58efd5ce62c0e160f5f7c08b5f530c60620e3",
+      "stored_bytes": 263,
+      "stored_sha256": "f56cdb65a17cd64ac16b370a80b7ba544ecff9902589af7d2fa3edaabb525e86",
+      "encoding": "gzip, unmodified original bytes",
+      "outcome": "CLI 1, zero app cases; Node JSON import-attribute loader error, not a WebKit application result"
+    },
+    {
+      "artifact": "semantic-controls-report.json.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/report.json",
+      "original_bytes": 8394,
+      "original_sha256": "f83146f7ce40c5afac75610ae4084b19a87ed288a87c54888785b1e71c17a6e3",
+      "stored_bytes": 1296,
+      "stored_sha256": "02f885e0b73713039ba00ca3cf467b1a083c3d013b7da4813c2c77d4ad06dbe7",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-callback.ts.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.ts",
+      "original_bytes": 4593,
+      "original_sha256": "47de47ca7818c2bb1e1e7e92e1fe75a3f76bf55ef2db70fea843e324b585ebd6",
+      "stored_bytes": 1356,
+      "stored_sha256": "119a6e292c66b277d69519b4ea60054b15cf8be75b802296849cdcc393a8f19e",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-callback.js.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls/callback.js",
+      "original_bytes": 4273,
+      "original_sha256": "d8be59838004c38188a2986d6f9b353e4691fd3ccb1f105775ae48c4ef35543a",
+      "stored_bytes": 1258,
+      "stored_sha256": "995e63ec66c58e3836760582ec8bb5470aa241d5b7abfc33d01a53f262a399f9",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "native-controls-reproduction.cjs.gz",
+      "original_source": "/tmp/c9-native-diagnostic-semantic-controls.cjs",
+      "original_bytes": 9757,
+      "original_sha256": "db098818ce868f4d3cdbeedb70fa0938a0bc04c3d0dc4e2ab9c42036e4f1fac9",
+      "stored_bytes": 3354,
+      "stored_sha256": "573726a8f395ef372fd7e6cdabb6f29ebd62bee79e161e96c57b81a144a97ca7",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "selector-privacy-intl-controls.json.gz",
+      "original_source": "/tmp/c9-auth-diagnostic-selector-controls/report.json",
+      "original_bytes": 3565,
+      "original_sha256": "1d5ab9baffe482145c4293745a960846a5470cf0555b643bf668ca863996a6ba",
+      "stored_bytes": 878,
+      "stored_sha256": "46ad610083e8f408f5367ef6ecab83ff6943ff9c3691d6dff235761f6a19cc9e",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "discovery-fixed.txt.gz",
+      "original_source": "/tmp/c9-native-startup-discovery-fixed.log",
+      "original_bytes": 106104,
+      "original_sha256": "c004cd00df6ed5f1676e66108e237508cba1fda296cfec223f876844c3d3436a",
+      "stored_bytes": 22142,
+      "stored_sha256": "551360ffabb1ccdd720d2c80476b591721d05ea6e5dc88da7898631173001f78",
+      "encoding": "gzip, unmodified original bytes"
+    },
+    {
+      "artifact": "earlier-placeholder-control-error.txt.gz",
+      "original_source": "/tmp/c9-auth-diagnostic-raw-placeholder-first.log",
+      "original_bytes": 343,
+      "original_sha256": "9436a1fa91763caa146c54d3f0df344bad9bea7506759210907d0a1bf130196c",
+      "stored_bytes": 239,
+      "stored_sha256": "8a9090d452e78c6108784b2bf6a586ef7fa7bd9353e41e902996e058563a32a0",
+      "encoding": "gzip, unmodified original bytes"
+    }
+  ],
+  "diagnostic_source_snapshot": [
+    {
+      "path": "prototype/tests/c9-no-reload.spec.ts",
+      "working_tree_sha256": "66b1bd36d8bb366315174a3fdcf41f49fc087459ceb2d5802cc5aba29af92045",
+      "base_committed_sha256": "5b326f1f91c7197a16748ad4f5cdb73def98159619f24ded6ac48531ca09512e",
+      "differs_from_base": true
+    },
+    {
+      "path": "prototype/tests/design-v2.spec.ts",
+      "working_tree_sha256": "139caa31f17b786d79d11d1efcca603443ed5a4c06646cf3394d34a165af4482",
+      "base_committed_sha256": "612b7ea159b2b91a2204102ac56de0ca39205cb0cc9473f163af38f6d97f58d0",
+      "differs_from_base": true
+    }
+  ],
+  "source_snapshot_note": "Final stable diagnostic working-tree source; discovery and isolated controls verified these bytes. Not a new CI-tested head or application fix.",
+  "final_webkit_diagnostic_source_sha256": "66b1bd36d8bb366315174a3fdcf41f49fc087459ceb2d5802cc5aba29af92045"
+}
