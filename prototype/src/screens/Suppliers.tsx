@@ -34,12 +34,14 @@ import {
   MenuItem,
   EmptyState,
   FilterToolbar,
+  FilterChip,
   KpiCard,
   PageHeader,
   Select,
   Tabs,
   ConfirmDialog,
   useTableColumns,
+  useListFilterOrigin,
 } from "../ui";
 import { useProtectedQuery } from "../use-protected-query";
 import "./suppliers-a2.css";
@@ -86,6 +88,8 @@ export default function Suppliers() {
   const [editor, setEditor] = useState<"new" | "edit" | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [query, setQuery] = useListState("suppliers.search", "");
+  const { locationChanged: locationFilterChanged, resetLocation } =
+    useListFilterOrigin("suppliers");
   const [filters, setFilters] = useListState<string[]>("suppliers.filters", []);
   const [sort, setSort] = useListState<{ key: SortKey; descending: boolean }>(
     "suppliers.sort",
@@ -379,7 +383,9 @@ export default function Suppliers() {
               <Select
                 aria-label={t("Supplier branch", "شعبه تأمین‌کننده")}
                 value={branch}
-                onChange={(value) => setBranch(value as typeof branch)}
+                onChange={(value) => {
+                  void setBranch(value as typeof branch);
+                }}
                 options={[
                   { value: "all", label: t("All branches", "همهٔ شعب") },
                   ...branches.map((item) => ({
@@ -397,12 +403,11 @@ export default function Suppliers() {
               ["shorts", "Open shorts", "کسری‌های باز"],
               ["proposed", "Waiting for confirmation", "در انتظار تأیید"],
             ].map(([key, en, fa]) => (
-              <button
-                type="button"
+              <FilterChip
                 key={key}
                 className="supplier-filter-chip"
-                aria-pressed={filters.includes(key)}
-                onClick={() =>
+                checked={filters.includes(key)}
+                onChange={() =>
                   setFilters((previous) =>
                     previous.includes(key)
                       ? previous.filter((item) => item !== key)
@@ -411,18 +416,24 @@ export default function Suppliers() {
                 }
               >
                 {t(en, fa)}
-              </button>
+              </FilterChip>
             ))}
-            <Button
-              variant="plain"
-              size="sm"
-              onClick={() => {
-                setQuery("");
-                setFilters([]);
-              }}
-            >
-              {t("Clear filters", "پاک کردن فیلترها")}
-            </Button>
+            {(query || filters.length > 0 || locationFilterChanged) && (
+              <Button
+                variant="plain"
+                size="sm"
+                onClick={() => {
+                  setQuery("");
+                  setFilters([]);
+                  void resetLocation({
+                    "suppliers.search": "",
+                    "suppliers.filters": [],
+                  });
+                }}
+              >
+                {t("Clear filters", "پاک کردن فیلترها")}
+              </Button>
+            )}
           </FilterToolbar>
           <DataTable
             className={

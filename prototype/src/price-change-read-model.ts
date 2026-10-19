@@ -71,6 +71,7 @@ export function queryPriceChangePreview(
       savings: effect.savings,
       percentage_off: effect.percentage_off,
       existing_sale_id: effect.existing_sale_id,
+      regular_sale_conflict: effect.regular_sale_conflict,
       ...(privateRead
         ? {
             cost: effect.cost,

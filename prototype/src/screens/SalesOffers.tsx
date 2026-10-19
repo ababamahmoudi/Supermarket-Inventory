@@ -14,13 +14,15 @@ type SalesContext = AuthenticatedActor;
 import { salePriceDisplay } from "../sales";
 import { branchLabel } from "../settings";
 import { regularPrice } from "../catalog";
-import { DateText, LtrText, Money, ProductName } from "../presentation";
+import { DateText, LtrText, ProductName } from "../presentation";
 import {
   saleListStatus,
   type SalesOfferRow as SaleRow,
 } from "../sales-offer-list";
 import { saleCalendarDate, salesText } from "../sales-locale";
 import { ProductPrice } from "../weight-price-presentation";
+import { SellingPriceValue } from "../selling-price-presentation";
+import { weightPriceDisplay } from "../weighed";
 import { SalePrice } from "../sales-presentation";
 import type { Language } from "../types";
 import { Badge, IconButton, Menu, MenuItem } from "../ui";
@@ -34,31 +36,26 @@ type Presentation = {
 function RecordedSalePrice({
   state,
   sale,
+  regular,
+  product,
 }: {
   state: SalesView;
   sale: Pick<SaleSchedule, "sale_price" | "price_unit">;
+  regular?: string | null;
+  product?: Product;
 }) {
-  const display = salePriceDisplay(sale, state.config);
   return (
-    <span className="sale-price">
-      <LtrText>
-        <Money
-          value={display.main.amount}
-          currency={state.config.company.currency}
-        />
-        {display.main.unit !== "each" && `/${display.main.unit}`}
-      </LtrText>
-      {display.secondary && (
-        <LtrText className="weight-price-secondary">
-          {" · "}
-          <Money
-            value={display.secondary.amount}
-            currency={state.config.company.currency}
-          />
-          /{display.secondary.unit}
-        </LtrText>
-      )}
-    </span>
+    <SellingPriceValue
+      current={salePriceDisplay(sale, state.config)}
+      currency={state.config.company.currency}
+      regular={
+        regular
+          ? product?.sold_by === "weight"
+            ? weightPriceDisplay(regular, state.config)
+            : { main: { amount: regular, unit: "each" } }
+          : undefined
+      }
+    />
   );
 }
 
@@ -180,7 +177,7 @@ export function SalesOfferRow({
       <td>
         <ProductName product={row.product} language={lang} />
       </td>
-      <td>
+      <td className="numeric">
         {row.kind === "sale" ? (
           row.sales.map((sale) => {
             const regular = regularPrice(state, row.product, sale.branch);
@@ -188,18 +185,13 @@ export function SalesOfferRow({
               <div className="offer-group-entry sale-offer-price" key={sale.id}>
                 <span>{t("Sale price", "قیمت حراج")}</span>
                 <strong>
-                  <RecordedSalePrice state={state} sale={sale} />
+                  <RecordedSalePrice
+                    state={state}
+                    sale={sale}
+                    regular={regular}
+                    product={row.product}
+                  />
                 </strong>
-                {regular && (
-                  <del className="muted sale-regular-price">
-                    {salesText(t, "regular")}{" "}
-                    <ProductPrice
-                      value={regular}
-                      product={row.product}
-                      config={state.config}
-                    />
-                  </del>
-                )}
               </div>
             );
           })
@@ -208,8 +200,28 @@ export function SalesOfferRow({
             <strong>
               <SalePrice product={row.product} branch={row.request.branch} />
             </strong>
-            <Badge tone="pending" className="sale-request-offer-badge">
-              {salesText(t, "requested")}{" "}
+          </div>
+        )}
+      </td>
+      <td>
+        <span className="product-offer-lines">
+          {row.kind === "sale" ? (
+            row.sales.map((sale) => (
+              <span className="product-offer-line" key={sale.id}>
+                {t("Sale", "حراج")} ·{" "}
+                {sale.last_day ? (
+                  <>
+                    {t("ends", "پایان")}{" "}
+                    <bdi>{saleCalendarDate(sale.last_day, lang)}</bdi>
+                  </>
+                ) : (
+                  t("no end date", "بدون تاریخ پایان")
+                )}
+              </span>
+            ))
+          ) : (
+            <span className="product-offer-line is-requested">
+              {salesText(t, "requested")} ·{" "}
               <RecordedSalePrice
                 state={state}
                 sale={{
@@ -217,10 +229,9 @@ export function SalesOfferRow({
                   price_unit: row.request.price_unit,
                 }}
               />
-            </Badge>
-            <span className="muted">{salesText(t, "waiting")}</span>
-          </div>
-        )}
+            </span>
+          )}
+        </span>
       </td>
       <td className="branch-label offer-scope">
         {row.kind === "sale"

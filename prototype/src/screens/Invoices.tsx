@@ -189,8 +189,8 @@ type InvoiceTab =
   | "cancelled";
 const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
   permission: [
-    "Sign in as a Floor Worker or Supervisor to receive invoices.",
-    "برای دریافت فاکتور به عنوان کارمند فروشگاه یا سرپرست وارد شوید.",
+    "Sign in as a Floor Worker, Branch Supervisor, Owner or Manager to receive invoices.",
+    "برای دریافت فاکتور به عنوان کارمند فروشگاه، سرپرست شعبه، مالک یا مدیر وارد شوید.",
   ],
   branch: [
     "Select the invoice branch in the top bar before posting.",
@@ -213,12 +213,12 @@ const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
     "تلفن، ایمیل، نماینده فروش، تلفن نماینده و شرایط پرداخت تأمین‌کننده را تکمیل کنید.",
   ],
   supplier_review: [
-    "A Supervisor must review and confirm the supplier before posting.",
-    "سرپرست باید پیش از ثبت تأمین‌کننده را بررسی و تأیید کند.",
+    "An Owner or Manager must review and confirm the supplier before posting.",
+    "مالک یا مدیر باید پیش از ثبت تأمین‌کننده را بررسی و تأیید کند.",
   ],
   supplier_pending: [
-    "Waiting for Supervisor to confirm supplier.",
-    "در انتظار تأیید تأمین‌کننده توسط سرپرست.",
+    "Waiting for Owner or Manager to confirm supplier.",
+    "در انتظار تأیید تأمین‌کننده توسط مالک یا مدیر.",
   ],
   header: [
     "Add the invoice date, received time, and receiving employee.",
@@ -382,8 +382,8 @@ export default function Invoices() {
     return (
       <EmptyState>
         {t(
-          "Sign in as a Floor Worker or Supervisor to receive invoices.",
-          "برای دریافت فاکتور به عنوان کارمند فروشگاه یا سرپرست وارد شوید.",
+          "Sign in as a Floor Worker, Branch Supervisor, Owner or Manager to receive invoices.",
+          "برای دریافت فاکتور به عنوان کارمند فروشگاه، سرپرست شعبه، مالک یا مدیر وارد شوید.",
         )}
       </EmptyState>
     );
@@ -2562,8 +2562,8 @@ function InvoiceWorkspace({
                       <div className="invoice-supplier-review">
                         <p className="muted">
                           {t(
-                            "Waiting for Supervisor to complete and confirm supplier details.",
-                            "در انتظار تکمیل و تأیید اطلاعات تأمین‌کننده توسط سرپرست.",
+                            "Waiting for Owner or Manager to complete and confirm supplier details.",
+                            "در انتظار تکمیل و تأیید اطلاعات تأمین‌کننده توسط مالک یا مدیر.",
                           )}
                         </p>
                         {can("suppliers.confirm", scope) && (
@@ -4128,8 +4128,8 @@ function InvoiceWorkspace({
                     })}
                     <p className="muted">
                       {t(
-                        "Your answers create a Supervisor alert when you post. Unknown information is allowed with a note.",
-                        "پاسخ‌های شما هنگام ثبت هشدار سرپرست ایجاد می‌کند. اطلاعات نامعلوم با یادداشت پذیرفته می‌شود.",
+                        "Your answers create an Owner or Manager alert when you post. Unknown information is allowed with a note.",
+                        "پاسخ‌های شما هنگام ثبت هشدار مالک یا مدیر ایجاد می‌کند. اطلاعات نامعلوم با یادداشت پذیرفته می‌شود.",
                       )}
                     </p>
                     <fieldset

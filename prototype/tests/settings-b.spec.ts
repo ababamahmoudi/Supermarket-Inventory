@@ -12,7 +12,7 @@ async function open(page: Page) {
   await visitPage(page, "Settings");
 }
 
-test("Settings presents the exact 13 groups and unfinished groups cannot save", async ({
+test("Settings presents the exact 12 groups and unfinished groups cannot save", async ({
   page,
 }) => {
   await open(page);
@@ -30,7 +30,6 @@ test("Settings presents the exact 13 groups and unfinished groups cannot save", 
     "Taxes",
     "Receiving",
     "Returns/date tracking/labels",
-    "Notes",
     "Notifications",
     "Modules",
     "Data",

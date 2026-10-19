@@ -325,3 +325,17 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** ignore the unchanged location when the action is an ordinary location selection. Explicit Clear filters and actual location changes keep their existing behavior. Every query, financial action and current-authority check remains on its original protected path.
 
 **Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.
+
+
+## 042 — C9 session presentation and shared display contracts (2026-10-19)
+
+**Context:** the owner found transient light/sign-in frames, missing decided sale requests, conflicting regular/sale prices, ambiguous note status and inconsistent lists. The four approved feature PRs were merged in order only after all seven checks passed, following the separate CI sharding PR.
+
+**Decision:** preserve authority invalidation while retaining sanitized shell chrome; delay progress/first-start loading 300 ms and initialize saved theme before app code. Separate per-person note receipts from completion, use protected action-specific Undo, and retain immutable sale decisions and price-update snapshots. Reuse one selling-price component and one 40 px filter toolbar. Existing pricing/financial/physical/permission contracts stay in force. Notebook definitions live on Notes.
+
+**Decision:** WebKit runs only the new non-localhost dark-theme no-reload test; existing Chromium projects retain their suite, workers, retries and skip rules. C9 includes the restored device-access instructions, with no hosting resource/deployment or claimed real Safari/phone evidence.
+
+**Why:** correct the observed interactions without presenting stale private information, recalculating retained targets or implying remote synchronization. Source contracts precede code; executed evidence is recorded separately in PR_C9_REVIEW.md.
+
+
+C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb exactly while both display the same cents. Promotion markers/comparisons require a reduction in the displayed main-unit cents as well as the exact canonical amount. Keep the actual entered-unit display, effective price and history unchanged; never reconstruct a retained kg amount from rounded lb cents.

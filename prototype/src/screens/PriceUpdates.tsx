@@ -62,7 +62,7 @@ function taskScope(
   };
 }
 export function PriceUpdates() {
-  const { state, actor, can, lang, t, navigate } = useDemo();
+  const { state, actor, can, lang, t, tCount, navigate } = useDemo();
   const requestedId = useRouteParam("id");
   const progress = useRouteParam("view") === "progress";
   const requestedLocation = useRouteParam("location") ?? "all";
@@ -182,7 +182,7 @@ export function PriceUpdates() {
           "قیمت در برنامه بلافاصله تغییر می‌کند. صندوق فروش و برچسب قفسه را اینجا تأیید کنید.",
         )}
         actions={
-          isManager ? (
+          isManager && progress ? (
             <Button
               variant="neutral"
               onClick={() =>
@@ -207,15 +207,46 @@ export function PriceUpdates() {
         <PriceUpdateProgress tasks={tasks} />
       ) : (
         <Card>
-          <FilterToolbar>
-            <Tabs
-              value={status}
-              onChange={setStatus}
-              options={[
-                { value: "pending", label: t("Pending", "در انتظار") },
-                { value: "done", label: t("Done", "انجام‌شده") },
-              ]}
-            />
+          <FilterToolbar
+            aria-label={t("Price update filters", "فیلترهای به‌روزرسانی قیمت")}
+            count={tCount(
+              "{{count}} price update",
+              "{{count}} price updates",
+              "{{count}} به‌روزرسانی قیمت",
+              "{{count}} به‌روزرسانی قیمت",
+              visible.length,
+            )}
+            actions={
+              isManager ? (
+                <Button
+                  variant="neutral"
+                  onClick={() => navigate("price-updates?view=progress")}
+                >
+                  {t("Store progress", "پیشرفت فروشگاه‌ها")}
+                </Button>
+              ) : undefined
+            }
+            leading={
+              <Tabs
+                value={status}
+                onChange={setStatus}
+                options={[
+                  {
+                    value: "pending",
+                    label: t("Pending", "در انتظار"),
+                    count: tasks.filter((item) => item.status === "pending")
+                      .length,
+                  },
+                  {
+                    value: "done",
+                    label: t("Done", "انجام‌شده"),
+                    count: tasks.filter((item) => item.status === "done")
+                      .length,
+                  },
+                ]}
+              />
+            }
+          >
             <Field label={t("Location", "مکان")}>
               <Select
                 value={location}
@@ -240,11 +271,15 @@ export function PriceUpdates() {
                 setTo(nextTo);
               }}
             />
-            {(location !== "all" || from || to) && (
+            {(status !== "pending" || location !== "all" || from || to) && (
               <Button
                 variant="plain"
                 onClick={() => {
-                  setLocation("all");
+                  setFilters({
+                    key: filterKey,
+                    location: "all",
+                    status: "pending",
+                  });
                   setFrom("");
                   setTo("");
                 }}

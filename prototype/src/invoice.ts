@@ -155,7 +155,9 @@ export function confirmInvoiceSupplierReview(
     kind: "company_shared",
   });
   if (invoice.status === "posted")
-    throw new Error("Only a Supervisor can confirm this supplier review.");
+    throw new Error(
+      "Only an Owner or Manager can confirm this supplier review.",
+    );
   const supplier = supplierRecords(state).find(
     (item) =>
       item.company_id === invoice.company_id &&
@@ -1250,7 +1252,7 @@ export function postInvoice(
       const manualReview = !!manual && costChanged;
       const keepsManual = !!manual && !costChanged;
       const usesRule = manualReview;
-      // The receiver's choice is a retained recommendation; only the Supervisor decides.
+      // The receiver's choice is a retained recommendation; only the Owner or Manager decides.
       const price = manualReview ? rulePrice : keepsManual ? prior! : rulePrice;
       const manualPriceReview: Approval["manual_price_review"] = manualReview
         ? {

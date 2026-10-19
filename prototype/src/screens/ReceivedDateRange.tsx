@@ -65,7 +65,7 @@ export function ReceivedDateRange({
             <DateText value={to} />
           </>
         ) : (
-          t("Date range", "بازه تاریخ")
+          t("Any date", "هر تاریخی")
         )}
       </Button>
       <Dialog

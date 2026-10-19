@@ -1,3 +1,13 @@
+# Current C9 handoff — 2026-10-19
+
+The owner approved a separate CI sharding PR rather than raising time limits. [PR25](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/25) merged after all seven checks passed. Main was then merged into C8/E1/E2/E3 (no rebases); all seven checks passed on each exact integrated head. PR21, PR22, PR23 and PR24 merged into main in that order with ordinary two-parent merge commits. Main is `d1fcb4ffdf55e4bb33792aa2564790dbac473e0b`. [Actual merge/check records](evidence/ci-shards-2026-10-19/merge-and-check-results.json).
+
+Only C9 is now authorized. Branch `feat/prototype-c9` starts at that main. Read requirements §38, the C9 section of design-language.md and the original owner request below. C9 is in progress; no C9 tests or screenshots are claimed yet. Scope is prototype/, docs/ and seed/. Settings stays deferred except removing its Notes destination. The new WebKit project runs only the new no-reload test. The four preserved device-access documentation fixes were restored onto C9; keep them in its review summary. No hosting account/resource/deployment is authorized or performed.
+
+The earlier handoff below is retained as historical evidence. Its unfinished-CI, 90-minute-proposal and permission statements are superseded by the owner’s sharding authorization and the completed green merges above. Do not request that permission again or repeat the completed merges.
+
+---
+
 # C8 → E1 → E2 → E3: review handoff
 
 Updated 2026-10-15 21:30 UTC. All four requested implementations, review guides, screenshot galleries and local verification packets are complete and ready for the owner's combined review. Required full GitHub browser checks remain unfinished. Do not call the four PRs fully green, merge them, or deploy. No application question remains. The next owner decision is only the proposed CI file-scope exception described below.

@@ -1,4 +1,5 @@
 import PwaMenu from "./PwaMenu";
+import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   Archive,
@@ -529,6 +530,45 @@ function AuthLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+/** Only public company chrome survives a session transition; no cached actor. */
+function PendingSessionShell({ collapsed }: { collapsed: boolean }) {
+  const { state, t, lang } = useDemo();
+  return (
+    <div
+      className={`app-shell session-pending-shell ${collapsed ? "is-collapsed" : ""}`}
+      dir={lang === "fa" ? "rtl" : "ltr"}
+      aria-busy="true"
+    >
+      <aside className="sidebar" aria-label={t("Main menu", "منوی اصلی")}>
+        <div className="sidebar-brand">
+          <span className="brand-logo-tile">
+            <span className="brand-logo-window">
+              <StoredFileImage
+                className="brand-logo"
+                value={state.config.company.logo_data ?? logo}
+                companyId={state.config.company.seed_key}
+                alt={t(
+                  state.config.company.name_en,
+                  state.config.company.name_fa,
+                )}
+              />
+            </span>
+          </span>
+          <span className="store-name">
+            {t(state.config.company.name_en, state.config.company.name_fa)}
+          </span>
+        </div>
+      </aside>
+      <div className="workspace">
+        <header className="topbar">
+          <LanguageToggle />
+          <SessionProgress label={t("Loading…", "در حال بارگذاری…")} />
+        </header>
+        <main className="main-content" />
+      </div>
+    </div>
+  );
+}
 function ChoosePassword() {
   const authError = useAuthErrorCopy();
   const { choosePassword, signOut, state, t } = useDemo();
@@ -846,10 +886,14 @@ export default function App() {
   ]);
   if (authStage === "loading")
     return (
-      <AuthLayout>
-        <p role="status">{t("Loading…", "در حال بارگذاری…")}</p>
-      </AuthLayout>
+      <InitialSessionLoading>
+        <AuthLayout>
+          <p role="status">{t("Loading…", "در حال بارگذاری…")}</p>
+        </AuthLayout>
+      </InitialSessionLoading>
     );
+  if (authStage === "refreshing")
+    return <PendingSessionShell collapsed={effectiveCollapsed} />;
   if (authStage === "password") return <ChoosePassword />;
   if (
     authStage === "second_step_setup" ||
@@ -1036,7 +1080,12 @@ export default function App() {
     record.company_id === state.config.company.seed_key &&
     (record.branch === "all" || locationIds.includes(record.branch));
   const customUnread = (state.notebook_entries ?? []).filter(
-    (entry) => entry.notify_supervisor && entry.status === "open",
+    (entry) =>
+      entry.notify_supervisor &&
+      entry.status === "open" &&
+      !entry.seen_receipts?.some(
+        (receipt) => receipt.user_id === actor.user_id,
+      ),
   ).length;
   const unread =
     state.notes.filter(
@@ -1044,7 +1093,10 @@ export default function App() {
         inBranch(note) &&
         !note.archived &&
         note.type === "note_to_supervisor" &&
-        note.status === "open",
+        (note.status === "open" || note.status === "read") &&
+        !note.seen_receipts?.some(
+          (receipt) => receipt.user_id === actor.user_id,
+        ),
     ).length + customUnread;
   const approvalCount =
     state.approvals.filter(
@@ -1300,6 +1352,7 @@ export default function App() {
       </aside>
       <div className="workspace">
         <header className="topbar">
+          <SessionProgress label={t("Loading…", "در حال بارگذاری…")} />
           <IconButton
             id="menu-toggle"
             className="sidebar-toggle"

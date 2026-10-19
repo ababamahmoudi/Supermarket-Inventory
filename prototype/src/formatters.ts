@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { configSeed } from "./config";
+import { configSeed, demoSeed } from "./config";
 import { translate } from "./i18n";
 import type { Language } from "./types";
 
@@ -137,20 +137,33 @@ export function branchLabel(branch: string, language: Language): string {
   return branch;
 }
 
-const userCopy: Record<string, [string, string]> = {
-  supervisor: ["Demo Supervisor", "سرپرست نمایشی"],
-  floorworker: ["Demo Floor Worker", "کارمند سالن نمایشی"],
-  cashier: ["Demo Cashier", "صندوقدار نمایشی"],
-  newemployee: ["Demo New Employee", "کارمند جدید نمایشی"],
+// Retained fictional attribution remains immutable. Resolve its old aliases to
+// the configured E1 identity for display rather than showing retired role names.
+const legacyDemoAliases: Record<string, string> = {
+  supervisor: "manager",
+  "demo supervisor": "manager",
+  floorworker: "ny-floor",
+  "demo floor worker": "ny-floor",
+  "demo cashier": "cashier",
 };
 export function demoUserLabel(
   nameOrUsername: string,
   language: Language,
 ): string {
-  const entry =
-    userCopy[nameOrUsername.toLowerCase()] ??
-    Object.values(userCopy).find(([name]) => name === nameOrUsername);
-  return entry ? translate(...entry, language) : nameOrUsername;
+  const key = nameOrUsername.toLowerCase();
+  const username = legacyDemoAliases[key] ?? key;
+  const person = demoSeed.demo_users.find(
+    (user) =>
+      user.username.toLowerCase() === username ||
+      user.name_en.toLowerCase() === key ||
+      user.name_fa === nameOrUsername ||
+      user.aliases.some((alias) => alias.toLowerCase() === key),
+  );
+  return person
+    ? language === "fa"
+      ? person.name_fa || person.name_en
+      : person.name_en
+    : nameOrUsername;
 }
 
 const categoryCopy: Record<string, [string, string]> = {

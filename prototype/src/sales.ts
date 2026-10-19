@@ -3,7 +3,11 @@ import {
   invoiceEvidenceActor,
   type InternalPurchaseEvidence,
 } from "./purchase-evidence.internal";
-import { requireSystemReconciliation } from "./authority-repository";
+import {
+  requireSystemReconciliation,
+  type BrowserAuthorityRepository,
+} from "./authority-repository";
+import { sha256Bytes } from "./sha256";
 import type { SystemAttribution } from "./authority-types";
 import { freshActor } from "./authority";
 import { decodeCurrentRole } from "./role-config";
@@ -40,7 +44,11 @@ import {
 } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
 import { productStoreCost } from "./product-costs";
-import { weightConversionFactor, weighedSettings } from "./weighed";
+import {
+  weightConversionFactor,
+  weighedSettings,
+  weightPriceDisplay,
+} from "./weighed";
 import { setManualPriceMarker, rulePrice } from "./manual-prices";
 import { reconcileOffers, syncPriceConflicts } from "./approvals";
 import type { Branch, CompanyConfig, DemoState, Product } from "./types";
@@ -171,6 +179,16 @@ export interface SaleRequest {
   decided_at?: string;
   decision_reason?: string;
   approved_sale_id?: string;
+  /** The approved terms are evidence, independent of later sale edits. */
+  approved_terms?: ApprovedSaleTerms;
+}
+export interface ApprovedSaleTerms {
+  sale_id: string;
+  sale_revision: number;
+  sale_price: string;
+  price_unit: SalePriceUnit;
+  starts_on: string;
+  last_day: string | null;
 }
 export interface SaleLifecycleEvent {
   source_decision?: DecisionAttribution;
@@ -195,6 +213,8 @@ export interface SaleLifecycleEvent {
   effective_price_after: string | null;
 }
 export type NotificationKind =
+  | "note_added"
+  | "notebook_entry_added"
   | "price_update_created"
   | "price_update_reminder"
   | "price_update_escalation"
@@ -227,6 +247,8 @@ export interface NotificationRecord {
   request_id?: string;
   alert_id?: string;
   invoice_id?: string;
+  note_id?: string;
+  notebook_entry_id?: string;
   reason?: string;
   href: string;
   created_at: string;
@@ -266,6 +288,22 @@ export interface ChangePriceInput {
   existing_sale_id?: string;
   expected_revision?: number;
   expected_revisions?: Record<string, number>;
+  regular_sale_resolutions?: RegularSaleResolution[];
+}
+export interface RegularSaleResolution {
+  sale_id: string;
+  expected_revision: number;
+  action: "end" | "change";
+  sale_price?: string;
+  price_unit?: SalePriceUnit;
+}
+export interface RegularSaleConflict {
+  sale_id: string;
+  revision: number;
+  branch: Branch;
+  sale_price: string;
+  price_unit: SalePriceUnit;
+  display_price: string;
 }
 export type SalesErrorCode =
   | "permission"
@@ -275,6 +313,8 @@ export type SalesErrorCode =
   | "price"
   | "price_unit"
   | "sale_price_not_lower"
+  | "regular_sale_conflict"
+  | "replacement_sale_price_not_lower"
   | "start_date"
   | "last_day"
   | "end_before_start"
@@ -333,6 +373,7 @@ export interface SaleLocationEffect {
   savings: string | null;
   percentage_off: string | null;
   existing_sale_id?: string;
+  regular_sale_conflict?: RegularSaleConflict;
 }
 export interface PriceChangePreview {
   product: Product | null;
@@ -469,6 +510,35 @@ export function activeSaleAt<S extends TemporalSale>(
     ) ?? null
   );
 }
+/** Advertising a sale requires a real reduction against this store's regular price. */
+export function discountSaleAt<
+  S extends TemporalSale,
+  P extends SalePriceProduct & Pick<Product, "selling_price" | "branch_prices">,
+>(
+  state: SalePriceReadState<S> & { products: readonly P[] },
+  productOrCode: SalePriceProduct | string,
+  branch: Branch,
+  now = new Date(),
+): S | null {
+  const product = productInCompany(state, productOrCode);
+  const sale = activeSaleAt(state, productOrCode, branch, now);
+  const regular = product && baseRegularPrice(product, branch);
+  if (
+    !sale ||
+    !regular ||
+    !priceValue(regular) ||
+    !new SaleDecimal(saleCanonicalPrice(sale, state.config)).lt(regular)
+  )
+    return null;
+  // An exact reduction can disappear when the configured display unit rounds
+  // to cents. Advertise only a reduction the customer can actually see.
+  const shownSale = salePriceDisplay(sale, state.config).main;
+  const shownRegular =
+    sale.price_unit === "each"
+      ? regular
+      : weightPriceDisplay(regular, state.config).main.amount;
+  return new SaleDecimal(shownSale.amount).lt(shownRegular) ? sale : null;
+}
 export function pendingSaleRequest<R extends TemporalRequest>(
   state: SalePriceReadState<TemporalSale, R>,
   productOrCode: SalePriceProduct | string,
@@ -524,7 +594,10 @@ export function saleCanonicalPrice(
 export function salePriceDisplay(
   sale: Pick<SaleSchedule, "sale_price" | "price_unit">,
   config: Pick<CompanyConfig, "weighed_items">,
-) {
+): {
+  main: { amount: string; unit: SalePriceUnit };
+  secondary: { amount: string; unit: "lb" | "kg" } | null;
+} {
   if (sale.price_unit === "each")
     return {
       main: {
@@ -584,7 +657,10 @@ export function quickSalePrices(
   });
 }
 
-function baseRegularPrice(product: Product, branch: Branch): string | null {
+function baseRegularPrice(
+  product: Pick<Product, "selling_price" | "branch_prices">,
+  branch: Branch,
+): string | null {
   return product.branch_prices?.[branch] || product.selling_price || null;
 }
 function canonicalInputPrice(
@@ -684,15 +760,17 @@ export function previewPriceChange(
     )
       issues.push({ code: "elapsed", field: "last_day" });
   }
-  const existing = input.existing_sale_id
-    ? (state.sales ?? []).find(
-        (sale) =>
-          sale.id === input.existing_sale_id &&
-          sale.company_id === context.company_id &&
-          permitted.includes(sale.branch),
-      )
-    : undefined;
+  const existing =
+    input.mode === "sale" && input.existing_sale_id
+      ? (state.sales ?? []).find(
+          (sale) =>
+            sale.id === input.existing_sale_id &&
+            sale.company_id === context.company_id &&
+            permitted.includes(sale.branch),
+        )
+      : undefined;
   if (
+    input.mode === "sale" &&
     input.existing_sale_id &&
     (!existing ||
       existing.product_code !== input.product_code ||
@@ -754,13 +832,85 @@ export function previewPriceChange(
     const margin =
       canonical && cost ? canonical.minus(cost).div(canonical) : null;
     const threshold = category?.minimum_margin;
-    const belowMargin =
+    let belowMargin =
       margin !== null &&
       threshold !== null &&
       threshold !== undefined &&
       threshold !== "" &&
       margin.lt(threshold);
-    const belowCost = canonical !== null && cost !== null && canonical.lt(cost);
+    let belowCost = canonical !== null && cost !== null && canonical.lt(cost);
+    let regularSaleConflict: RegularSaleConflict | undefined;
+    const runningSale = product && activeSaleAt(state, product, branch, now);
+    if (
+      input.mode === "regular" &&
+      supervisor &&
+      canonical &&
+      runningSale &&
+      canonical.lte(saleCanonicalPrice(runningSale, state.config))
+    ) {
+      regularSaleConflict = {
+        sale_id: runningSale.id,
+        revision: runningSale.revision,
+        branch,
+        sale_price: runningSale.sale_price,
+        price_unit: runningSale.price_unit,
+        display_price: new SaleDecimal(
+          saleCanonicalPrice(runningSale, state.config),
+        )
+          .times(factor)
+          .toFixed(2),
+      };
+      const resolutions = (input.regular_sale_resolutions ?? []).filter(
+        (item) => item.sale_id === runningSale.id,
+      );
+      const resolution = resolutions[0];
+      if (
+        resolutions.length !== 1 ||
+        !["end", "change"].includes(resolution.action)
+      )
+        issues.push({ code: "regular_sale_conflict", field: "price", branch });
+      else if (resolution.expected_revision !== runningSale.revision)
+        issues.push({ code: "revision", field: "price", branch });
+      else if (resolution.action === "change") {
+        const field = `sale_price_${runningSale.id}`;
+        const validUnit =
+          product?.sold_by === "weight"
+            ? ["lb", "kg"].includes(resolution.price_unit ?? "")
+            : resolution.price_unit === "each";
+        if (!resolution.sale_price || !priceValue(resolution.sale_price))
+          issues.push({ code: "price", field, branch });
+        else if (!validUnit) issues.push({ code: "price_unit", field, branch });
+        else {
+          const replacement = new SaleDecimal(
+            saleCanonicalPrice(
+              {
+                sale_price: resolution.sale_price,
+                price_unit: resolution.price_unit!,
+              },
+              state.config,
+            ),
+          );
+          if (replacement.gte(canonical))
+            issues.push({
+              code: "replacement_sale_price_not_lower",
+              field,
+              branch,
+              regular_price: canonical.times(factor).toFixed(2),
+              sale_id: runningSale.id,
+            });
+          if (cost) {
+            const replacementMargin = replacement.minus(cost).div(replacement);
+            belowMargin ||= Boolean(
+              threshold !== null &&
+              threshold !== undefined &&
+              threshold !== "" &&
+              replacementMargin.lt(threshold),
+            );
+            belowCost ||= replacement.lt(cost);
+          }
+        }
+      }
+    }
     if (
       input.mode === "sale" &&
       canonical &&
@@ -840,6 +990,7 @@ export function previewPriceChange(
           : null,
       existing_sale_id: activeSaleAt(state, input.product_code, branch, now)
         ?.id,
+      regular_sale_conflict: regularSaleConflict,
     });
   }
   return {
@@ -1283,7 +1434,50 @@ function savePriceChangeDraft(
             },
           };
       }
-    for (const branch of preview.branches) {
+    for (const effect of preview.effects) {
+      const branch = effect.branch;
+      const conflict = effect.regular_sale_conflict;
+      if (conflict) {
+        const sale = saleRecord(state, context, conflict.sale_id);
+        const resolution = input.regular_sale_resolutions!.find(
+          (item) => item.sale_id === sale.id,
+        )!;
+        sale.deferred_regular_labels ||= input.add_labels;
+        if (resolution.action === "end") {
+          endRecord(
+            state,
+            sale,
+            "New regular price is not above the sale price",
+            now,
+            context,
+          );
+          continue;
+        }
+        const beforeSale = structuredClone(sale);
+        Object.assign(sale, {
+          sale_price: new SaleDecimal(resolution.sale_price!).toFixed(2),
+          price_unit: resolution.price_unit!,
+          revision: sale.revision + 1,
+          decision_attribution: decisionAttribution(state, context, now),
+          changed_by: context.actor,
+          changed_by_user_id: context.user_id,
+          changed_by_role_snapshot: context.role,
+          changed_at: now.toISOString(),
+          minimum_margin_accepted: input.accept_below_margin,
+          below_cost_reason: input.below_cost_reason.trim() || undefined,
+          regular_price_snapshot: price,
+          cost_snapshot: effect.cost!,
+        });
+        recordEvent(
+          state,
+          sale,
+          beforeSale,
+          "changed",
+          now,
+          context,
+          saleStoreDate(state.config, branch, now),
+        );
+      }
       const sale = activeSaleAt(state, product, branch, now);
       if (sale && input.add_labels) sale.deferred_regular_labels = true;
       else if (input.add_labels)
@@ -1794,6 +1988,7 @@ export function resolveSaleRequest(
       for (const sale of approved.sales) sale.source_request_id = request.id;
       request.status = "approved";
       request.approved_sale_id = approved.sales[0].id;
+      request.approved_terms = approvedSaleTerms(approved.sales[0]);
       request.revision++;
     }
     request.decision_attribution = decisionAttribution(draft, context, now);
@@ -2647,6 +2842,114 @@ export function decideSaleCostAlert(
   });
 }
 export const resolveSaleCostAlert = decideSaleCostAlert;
+function approvedSaleTerms(sale: SaleSchedule): ApprovedSaleTerms {
+  return {
+    sale_id: sale.id,
+    sale_revision: sale.revision,
+    sale_price: sale.sale_price,
+    price_unit: sale.price_unit,
+    starts_on: sale.starts_on,
+    last_day: sale.last_day,
+  };
+}
+
+function invalidRetainedSales(state: DemoState): SaleSchedule[] {
+  return (state.sales ?? []).filter((sale) => {
+    if (
+      sale.company_id !== state.config.company.seed_key ||
+      sale.status === "ended"
+    )
+      return false;
+    const product = productInCompany(state, sale.product_code);
+    const regular = product && baseRegularPrice(product, sale.branch);
+    if (
+      !regular ||
+      !priceValue(regular) ||
+      !priceValue(sale.sale_price) ||
+      !["each", "lb", "kg"].includes(sale.price_unit)
+    )
+      return false;
+    return new SaleDecimal(saleCanonicalPrice(sale, state.config)).gte(regular);
+  });
+}
+
+/** Retain the original record and evidence; append the end of an invalid overlay. */
+function repairSalePriceInvariantsDraft(state: DemoState, now: Date) {
+  for (const sale of invalidRetainedSales(state))
+    endRecord(
+      state,
+      sale,
+      "Saved sale price is not below the regular price",
+      now,
+      null,
+    );
+  for (const request of state.sale_requests ?? []) {
+    if (
+      request.company_id !== state.config.company.seed_key ||
+      request.status !== "approved" ||
+      request.approved_terms ||
+      !request.approved_sale_id
+    )
+      continue;
+    // Never substitute today's mutable sale terms for historical approval evidence.
+    const evidence = (state.sale_events ?? []).filter(
+      (event) =>
+        event.company_id === request.company_id &&
+        event.sale_id === request.approved_sale_id &&
+        event.occurred_at === request.decided_at &&
+        ["started", "scheduled", "changed"].includes(event.kind) &&
+        (!request.decided_by_user_id ||
+          event.actor_user_id === request.decided_by_user_id),
+    );
+    if (evidence.length === 1)
+      request.approved_terms = approvedSaleTerms(evidence[0].after);
+  }
+}
+
+/** Existing IDB shops bypass legacy hydration. Back up and verify before repairing them. */
+export async function migrateSalePriceInvariants(
+  repository: BrowserAuthorityRepository,
+  companyId: string,
+): Promise<void> {
+  const hash = (raw: string) => sha256Bytes(new TextEncoder().encode(raw));
+  class ChangedDuringBackup extends Error {}
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const loaded = await repository.loadBusiness<DemoState>(companyId);
+    const candidate = structuredClone(loaded.state);
+    repairSalePriceInvariantsDraft(candidate, new Date());
+    const raw = JSON.stringify(loaded.state);
+    if (JSON.stringify(candidate) === raw) return;
+    await repository.archivePrivateBackup(
+      {
+        id: `c9-sales:${companyId}:${loaded.revision}:${hash(raw)}`,
+        company_id: companyId,
+        source_key: `business:${companyId}:revision:${loaded.revision}`,
+        raw,
+        sha256: hash(raw),
+        created_at: new Date().toISOString(),
+      },
+      hash,
+    );
+    try {
+      await repository.runSystemReconciliation<DemoState, void>(
+        companyId,
+        "sales_clock",
+        (draft, attribution) => {
+          requireSystemReconciliation(draft, attribution, "sales_clock");
+          if (JSON.stringify(draft) !== raw) throw new ChangedDuringBackup();
+          repairSalePriceInvariantsDraft(
+            draft,
+            new Date(attribution.applied_at),
+          );
+        },
+      );
+      return;
+    } catch (cause) {
+      if (!(cause instanceof ChangedDuringBackup)) throw cause;
+    }
+  }
+  throw new Error("migration_conflict");
+}
 /** Additive schema migration: never populate fixture business records into a saved shop. */
 export function hydrateSalesState(state: DemoState): DemoState {
   if (state.prototype_c8_schema === 1) return state;
@@ -2710,7 +3013,14 @@ export function hydrateSalesDemo(
   )!;
   const saleData = fixture.running_sale;
   const product = productInCompany(state, saleData.product_code);
-  if (product && sellingSaleBranches(state).includes(saleData.branch)) {
+  const demoRegular = product && baseRegularPrice(product, saleData.branch);
+  if (
+    product &&
+    demoRegular &&
+    priceValue(demoRegular) &&
+    new SaleDecimal(saleData.sale_price).lt(demoRegular) &&
+    sellingSaleBranches(state).includes(saleData.branch)
+  ) {
     const date = saleStoreDate(state.config, saleData.branch, now);
     state.sales!.push({
       id: saleData.id,

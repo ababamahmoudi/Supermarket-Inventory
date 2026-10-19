@@ -1,5 +1,11 @@
 # Project changelog
 
+## 2026-10-18 — Restore device access in the startup instructions
+
+- Remove the localhost-only override from the current Ubuntu and phone guides. The existing preview command already listens on all network interfaces; no application or pricing change is required.
+- Make the Wi-Fi Network address part of the main quick-start, retain VM/firewall troubleshooting, and distinguish it from an Internet HTTPS deployment.
+- Point the prototype README at the combined E3 review branch and current guides. No hosting account or Internet site has been created.
+
 ## 2026-10-15 — Combined review verification and remaining CI boundaries
 
 - Record source-specific `0786ea2` application 1,444/1,444, separate SDK75/75, normal full lint and a fresh build, actual exits0 and unchanged source. Preserve earlier failing and successful attempts separately.

@@ -22,6 +22,13 @@ import {
 } from "./signed-return-pickups";
 import { companyDate } from "./invoice";
 import { configuredBranches } from "./settings";
+import { configSeed } from "./config";
+import { configuredRoleLabel } from "./role-config";
+import { appendSeenReceipt, recordNoteCompletion } from "./note-engagement";
+import {
+  notifyBuiltinNote,
+  markLinkedNoteNotificationsRead,
+} from "./note-notifications";
 import { projectExpiryLocation } from "./received";
 import {
   createReturnMemo,
@@ -1399,17 +1406,20 @@ export function addNote(
       input.text.trim(),
     );
   }
-  state.notes.unshift({
+  const note: NoteRecord = {
     ...input,
     text: input.text.trim(),
     id: id("note"),
     company_id: context.company_id,
     branch: context.branch,
     status: "open",
+    seen_receipts: [],
     by: context.actor,
     ...actorAudit(state, context),
     created_at: now(),
-  });
+  };
+  state.notes.unshift(note);
+  notifyBuiltinNote(state, note);
   audit(
     state,
     context,
@@ -1417,12 +1427,43 @@ export function addNote(
     input.product_code,
   );
 }
+export function markNoteSeen(
+  state: DemoState,
+  context: OperationsContext,
+  noteId: string,
+  at = new Date(),
+) {
+  context = freshActor(state, context);
+  const note = state.notes.find(
+    (item) => item.id === noteId && belongs(item, context),
+  );
+  if (!note || note.archived) fail("scope");
+  operationGuard(state, context, "notes.read", note);
+  operationGuard(state, context, "notes.mark_seen", note, true);
+  const receipt = appendSeenReceipt(note, context, at);
+  markLinkedNoteNotificationsRead(state, context, note, at);
+  if (!receipt) return;
+  const entry = audit(
+    state,
+    context,
+    "note_seen",
+    note.product_code,
+    note.branch,
+  );
+  entry.at = at.toISOString();
+  entry.entity_type = "note";
+  entry.entity_id = note.id;
+  entry.before = { receipt: null };
+  entry.after = { receipt: structuredClone(receipt) };
+}
 export function updateNoteStatus(
   state: DemoState,
   context: OperationsContext,
   noteId: string,
   status: NoteRecord["status"],
 ) {
+  if (status === "read") return markNoteSeen(state, context, noteId);
+  if (!["open", "resolved"].includes(status)) fail("status");
   try {
     context = freshActor(state, context);
   } catch {
@@ -1446,26 +1487,19 @@ export function updateNoteStatus(
     note,
     true,
   );
-  if (status === "ordered" || note.status === "ordered") fail("status");
+  if (
+    note.archived ||
+    status === "ordered" ||
+    (note.status === "ordered" && status !== "open")
+  )
+    fail("status");
+  if (note.status === status) return;
   note.status = status;
-  const recordedNote = note as NoteRecord & {
-    seen_by?: string;
-    seen_at?: string;
-    done_by?: string;
-    done_at?: string;
-  };
-  if (status === "read") {
-    recordedNote.seen_by = context.actor;
-    recordedNote.seen_at = now();
-  }
-  if (status === "resolved") {
-    recordedNote.done_by = context.actor;
-    recordedNote.done_at = now();
-  }
+  recordNoteCompletion(note, context, status === "resolved");
   const entry = audit(
     state,
     context,
-    status === "read" ? "note_seen" : "note_resolved",
+    status === "open" ? "note_reopened" : "note_resolved",
     note.product_code,
     note.branch,
   );
@@ -1914,7 +1948,10 @@ export function scopedRecords<T extends { company_id: string; branch: Branch }>(
 export function operationError(
   key: string,
   t: (en: string, fa: string) => string,
+  config: Pick<CompanyConfig, "roles"> = configSeed,
 ) {
+  const managersEn = `${configuredRoleLabel(config.roles, "owner", "en")} or ${configuredRoleLabel(config.roles, "manager", "en")}`;
+  const managersFa = `${configuredRoleLabel(config.roles, "owner", "fa")} یا ${configuredRoleLabel(config.roles, "manager", "fa")}`;
   const messages: Record<string, [string, string]> = {
     month: [
       "Choose a valid month for the month-end summary.",
@@ -1929,8 +1966,8 @@ export function operationError(
       "صندوق‌دار فقط می‌تواند قیمت را جستجو کند.",
     ],
     supervisor: [
-      "Ask a Supervisor to verify and post this action.",
-      "برای تأیید و ثبت این کار از سرپرست کمک بگیرید.",
+      `Ask an ${managersEn} to verify and post this action.`,
+      `برای تأیید و ثبت این کار از ${managersFa} کمک بگیرید.`,
     ],
     branch: [
       "Choose one branch before recording this action.",
@@ -2061,8 +2098,8 @@ export function operationError(
       "بررسی تسویه را توضیح دهید و نگهداری جبران قبلی را تأیید کنید.",
     ],
     review: [
-      "Choose a return awaiting Supervisor cancellation review.",
-      "مرجوعی منتظر بررسی لغو سرپرست را انتخاب کنید.",
+      `Choose a return awaiting ${managersEn} cancellation review.`,
+      `مرجوعی منتظر بررسی لغو ${managersFa} را انتخاب کنید.`,
     ],
     text: [
       "Add a short note before saving.",

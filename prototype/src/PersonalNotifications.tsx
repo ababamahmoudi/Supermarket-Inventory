@@ -103,6 +103,8 @@ export function PersonalNotifications() {
   };
   if (!notifications.length) return null;
   const titles: Record<NotificationRecord["kind"], string> = {
+    note_added: t("New note", "یادداشت جدید"),
+    notebook_entry_added: t("New notebook entry", "یادداشت جدید دفترچه"),
     sale_request_decision: t("Sale request decision", "نتیجهٔ درخواست حراج"),
     price_update_created: t("Price update", "به‌روزرسانی قیمت"),
     price_update_reminder: t(

@@ -458,8 +458,8 @@ function SupplierItemEditor({
     });
   const errors: Record<SupplierItemError["code"], string> = {
     permission: t(
-      "Only a Supervisor can save supplier items.",
-      "فقط سرپرست می‌تواند کالاهای تأمین‌کننده را ذخیره کند.",
+      "Only an Owner or Manager can save supplier items.",
+      "فقط مالک یا مدیر می‌تواند کالاهای تأمین‌کننده را ذخیره کند.",
     ),
     scope: t("Choose an allowed location.", "یک مکان مجاز انتخاب کنید."),
     supplier: t(

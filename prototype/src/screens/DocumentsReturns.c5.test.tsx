@@ -23,6 +23,7 @@ import { PostedInvoice } from "./PostedInvoice";
 import { Returns } from "./Returns";
 import { SupplierReturnsPanel } from "./SupplierReturnsPanel";
 import i18n from "../i18n";
+import { demoSeed } from "../config";
 import {
   renderedUiReady,
   clearRenderedUiReadiness,
@@ -335,7 +336,8 @@ it("keeps status beside the return title, metadata below and policy as five clea
     within(title as HTMLElement).getByText("Waiting for pickup"),
   ).toHaveClass("info");
   expect(container.querySelector(".return-detail-subtitle")).toHaveTextContent(
-    "Demo Floor Worker",
+    demoSeed.demo_users.find((person) => person.username === "ny-floor")!
+      .name_en,
   );
   const trigger = screen.getByRole("button", {
     name: "Return policy",

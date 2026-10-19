@@ -41,7 +41,7 @@ export interface ShellSnapshot<View> {
   actor: AuthenticatedActor | null;
   person: PeopleDirectoryRow | null;
   secondStepMethod: "passkey" | "authenticator" | null;
-  stage: SignInResult["next"] | "signed_out" | "loading";
+  stage: SignInResult["next"] | "signed_out" | "loading" | "refreshing";
   revision: number;
   directoryVersion: number;
   generation: number;
@@ -208,9 +208,21 @@ export function createE1StoreController<State extends BusinessState, View>(
       return;
     actor = null;
     canonical = null;
+    person = null;
+    stage = "refreshing";
     generation++;
     publishSignedOut();
-    await adopt(await deps.authentication.resume(captured));
+    const pendingVersion = generation;
+    try {
+      const resumed = await deps.authentication.resume(captured);
+      if (current(captured, pendingVersion)) await adopt(resumed);
+    } catch (failure) {
+      if (current(captured, pendingVersion)) {
+        stage = "signed_out";
+        publishSignedOut();
+      }
+      throw failure;
+    }
   }
   async function authenticatedTransition(
     operation: (captured: CommandIdentity) => Promise<SignInResult>,
@@ -297,7 +309,7 @@ export function createE1StoreController<State extends BusinessState, View>(
       canonical = null;
       person = null;
       generation++;
-      stage = "loading";
+      stage = "refreshing";
       publishSignedOut();
       try {
         let failure: unknown;
@@ -610,11 +622,21 @@ export function createE1StoreController<State extends BusinessState, View>(
       generation++;
       actor = null;
       canonical = null;
+      person = null;
+      stage = captured ? "refreshing" : "signed_out";
       publishSignedOut();
       const version = generation;
       if (captured) {
-        const result = await deps.authentication.resume(captured);
-        if (current(captured, version)) await adopt(result);
+        try {
+          const result = await deps.authentication.resume(captured);
+          if (current(captured, version)) await adopt(result);
+        } catch (error) {
+          if (current(captured, version)) {
+            stage = "signed_out";
+            publishSignedOut();
+          }
+          throw error;
+        }
       }
     },
     async refresh() {

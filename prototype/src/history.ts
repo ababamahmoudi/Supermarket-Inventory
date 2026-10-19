@@ -78,6 +78,7 @@ const safeRoots = new Set([
   "templates",
   "expiry",
   "notes",
+  "notifications",
   "invoice",
   "invoices",
   "suppliers",
@@ -109,6 +110,8 @@ const simpleActions = new Set([
   "expiry_cleared",
   "note_seen",
   "note_resolved",
+  "note_reopened",
+  "notebook_entry_seen",
   "note_added",
   "Save draft",
   "Edit draft",
@@ -280,7 +283,10 @@ export function changedPaths(
   after: DemoState,
 ): ReversalPatch[] {
   const result: ReversalPatch[] = [];
-  for (const root of safeRoots)
+  for (const root of safeRoots) {
+    // Personal read acknowledgements are captured only by their linked seen
+    // action below, never swept into an unrelated business reversal.
+    if (root === "notifications") continue;
     difference(
       (before as unknown as Record<string, unknown>)[root] ??
         (Array.isArray((after as unknown as Record<string, unknown>)[root])
@@ -290,6 +296,7 @@ export function changedPaths(
       [root],
       result,
     );
+  }
   for (const patch of result) {
     let lastRecord = -1;
     for (let index = 0; index < patch.path.length; index++)
@@ -468,6 +475,80 @@ export function attachReversals(
     Object.assign(entry, actorAudit(after, context));
     entry.device = "Browser";
     if (entry.reversal_kind) continue;
+    // Each reader owns one receipt. A later reader or independent completion
+    // must not make Undo remove somebody else's acknowledgement.
+    if (["note_seen", "notebook_entry_seen"].includes(entry.action)) {
+      const root = entry.entity_type === "note" ? "notes" : "notebook_entries";
+      const record = after[root]?.find((value) => value.id === entry.entity_id);
+      const receipt = record?.seen_receipts?.find(
+        (value) => value.user_id === context.user_id,
+      );
+      if (!record || !receipt) {
+        entry.reversible = false;
+        continue;
+      }
+      const path: HistoryPath = [root, { key: "id", value: record.id }];
+      entry.reversal = [
+        {
+          path: [...path, "seen_receipts", { key: "id", value: receipt.id }],
+          before_exists: false,
+          after_exists: true,
+          after: structuredClone(receipt),
+          creation: "remove",
+          guards: ["company_id", "branch", "archived"].map((field) => {
+            const value = readPath(after, [...path, field]);
+            return {
+              path: [...path, field],
+              after: value.value,
+              exists: value.exists,
+            };
+          }),
+        },
+      ];
+      for (const notice of after.notifications ?? []) {
+        const prior = before.notifications?.find(
+          (value) => value.id === notice.id,
+        );
+        if (
+          !prior ||
+          prior.read_at === notice.read_at ||
+          notice.recipient_user_id !== context.user_id ||
+          !(
+            notice.note_id === record.id ||
+            notice.notebook_entry_id === record.id ||
+            (notice.kind === "sale_delivery_release" &&
+              after.sale_delivery_holds?.some(
+                (hold) =>
+                  hold.note_id === record.id &&
+                  hold.sale_id === notice.sale_id &&
+                  hold.invoice_id === notice.invoice_id,
+              ))
+          )
+        )
+          continue;
+        entry.reversal.push({
+          path: ["notifications", { key: "id", value: notice.id }, "read_at"],
+          before: prior.read_at,
+          after: notice.read_at,
+          before_exists: prior.read_at !== undefined,
+          after_exists: notice.read_at !== undefined,
+          creation: prior.read_at === undefined ? "remove" : undefined,
+          guards: [
+            {
+              path: [
+                "notifications",
+                { key: "id", value: notice.id },
+                "recipient_user_id",
+              ],
+              after: context.user_id,
+              exists: true,
+            },
+          ],
+        });
+      }
+      entry.reversible = true;
+      continue;
+    }
     if (
       entry.action === "note_resolved" &&
       patches.some(
@@ -506,6 +587,31 @@ export function attachReversals(
     );
     if (!entry.reversible) continue;
     entry.reversal = structuredClone(patches);
+    if (
+      [
+        "note_resolved",
+        "note_reopened",
+        "Mark ordered",
+        "notebook_entry_done",
+        "notebook_entry_reopened",
+      ].includes(entry.action)
+    ) {
+      // Completion owns only its status/attribution. In particular it never
+      // rewinds another reader's receipt or a later independent text edit.
+      const fields = new Set([
+        "status",
+        "done_by",
+        "done_by_user_id",
+        "done_at",
+      ]);
+      entry.reversal = entry.reversal.filter(
+        (patch) =>
+          ["notes", "notebook_entries"].includes(String(patch.path[0])) &&
+          fields.has(String(patch.path.at(-1))),
+      );
+      for (const patch of entry.reversal) patch.guards = [];
+      entry.reversible = entry.reversal.length > 0;
+    }
     if (transfers?.events.length) {
       entry.reversal[0].transfer_events = structuredClone(transfers.events);
       entry.reversal[0].transfer_movements = structuredClone(
@@ -621,6 +727,8 @@ function sourceCapability(
       (item) =>
         item.company_id === entry.company_id && item.id === entry.entity_id,
     );
+    if (entry.action === "note_seen")
+      return note && !note.archived ? "notes.mark_seen" : null;
     const statusAction =
       entry.action === "note_seen" ||
       /status|resolved|ordered|done|open/i.test(entry.action);
@@ -632,6 +740,7 @@ function sourceCapability(
   }
   if (root === "notebook_entries") {
     if (!canApplyNotebookHistoryActivity(state, context, entry.id)) return null;
+    if (entry.action === "notebook_entry_seen") return "notebooks.mark_seen";
     if (
       ["notebook_entry_done", "notebook_entry_reopened"].includes(entry.action)
     )
@@ -645,6 +754,11 @@ function sourceCapability(
       ? "notebooks.entry_edit_any"
       : "notebooks.entry_edit_own";
   }
+  if (
+    root === "notifications" &&
+    ["note_seen", "notebook_entry_seen"].includes(entry.action)
+  )
+    return "notifications.mark_read";
   if (root === "notebooks") return "notebooks.definition_manage";
   if (root === "expiry") return "dates.remove";
   if (root === "label_waitlist") return "labels.queue_write";
@@ -889,6 +1003,7 @@ function patchScope(
     !workerDatePreference &&
     ![
       "notes",
+      "notifications",
       "expiry",
       "notebook_entries",
       "label_waitlist",
@@ -901,6 +1016,20 @@ function patchScope(
     ].includes(patch.path[0])
   )
     throw new HistoryError("permission");
+  if (patch.path[0] === "notifications") {
+    const selector = patch.path[1];
+    const notice =
+      typeof selector === "object" &&
+      state.notifications?.find((value) => value.id === selector.value);
+    if (
+      !notice ||
+      notice.recipient_user_id !== context.user_id ||
+      patch.path.length !== 3 ||
+      patch.path[2] !== "read_at" ||
+      !["note_seen", "notebook_entry_seen"].includes(entry.action)
+    )
+      throw new HistoryError("permission");
+  }
   if (
     patch.path[0] === "orders" &&
     !canDomain(state, context, "catalog.edit") &&

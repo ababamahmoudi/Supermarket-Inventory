@@ -367,7 +367,11 @@ function ReturnsContent() {
     } catch (caught) {
       setErrorKey(caught instanceof Error ? caught.message : "");
       setError(
-        operationError(caught instanceof Error ? caught.message : "", t),
+        operationError(
+          caught instanceof Error ? caught.message : "",
+          t,
+          state.config,
+        ),
       );
       setFeedback(null);
     }
@@ -411,23 +415,25 @@ function ReturnsContent() {
             )}
           />
           <Card className="returns-overview">
-            <Tabs
-              value={returnTab}
-              onChange={(value) => {
-                setReturnTab(value);
-                setStatus("all");
-              }}
-              aria-label={t("Returns view", "نمایش مرجوعی‌ها")}
-              options={[
-                { value: "open", label: t("Open", "باز") },
-                { value: "history", label: t("History", "تاریخچه") },
-              ]}
-            />
             <FilterToolbar
               className="returns-toolbar"
               aria-label={t("Filter returns", "فیلتر مرجوعی‌ها")}
+              leading={
+                <Tabs
+                  value={returnTab}
+                  onChange={(value) => {
+                    setReturnTab(value);
+                    setStatus("all");
+                  }}
+                  aria-label={t("Returns view", "نمایش مرجوعی‌ها")}
+                  options={[
+                    { value: "open", label: t("Open", "باز") },
+                    { value: "history", label: t("History", "تاریخچه") },
+                  ]}
+                />
+              }
               count={
-                <span className="returns-toolbar-end">
+                <span className="returns-toolbar-end filter-toolbar-end">
                   <span aria-live="polite">
                     <LtrText>{overviewReturns.length}</LtrText>{" "}
                     {translateCount(
@@ -499,18 +505,25 @@ function ReturnsContent() {
                   })),
                 ]}
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSupplier("all");
-                  setStatus("all");
-                  setReturnBranch("all");
-                  setSearch("");
-                }}
-              >
-                {t("Clear filters", "پاک کردن فیلترها")}
-              </Button>
+              {(supplier !== "all" ||
+                status !== "all" ||
+                returnBranch !== "all" ||
+                search ||
+                returnTab !== "open") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSupplier("all");
+                    setStatus("all");
+                    setReturnBranch("all");
+                    setSearch("");
+                    setReturnTab("open");
+                  }}
+                >
+                  {t("Clear filters", "پاک کردن فیلترها")}
+                </Button>
+              )}
             </FilterToolbar>
             <DataTable
               className="returns-overview-table"
@@ -727,6 +740,7 @@ function ReturnsContent() {
                     operationError(
                       caught instanceof Error ? caught.message : "",
                       t,
+                      state.config,
                     ),
                   );
                 }
@@ -1468,6 +1482,7 @@ function ReturnsContent() {
                                 operationError(
                                   caught instanceof Error ? caught.message : "",
                                   t,
+                                  state.config,
                                 ),
                               );
                             }

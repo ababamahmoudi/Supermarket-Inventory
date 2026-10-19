@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/klead-tokens.css" />
+    <style>
+      html,
+      body {
+        background: var(--klead-page);
+        color: var(--klead-ink);
+      }
+    </style>
     <link rel="icon" type="image/png" href="../assets/arzon-logo.png?inline" />
     <link
       rel="manifest"
@@ -21,6 +29,80 @@
       content="#181C25"
       media="(prefers-color-scheme: dark)"
     />
+    <script>
+      (() => {
+        let theme = "light";
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem("supermarket-prototype-preferences-v3") ||
+              "null",
+          );
+          if (saved?.version === 3) {
+            const deviceTheme = saved.device_preferences?.theme;
+            if (deviceTheme === "light" || deviceTheme === "dark")
+              theme = deviceTheme;
+            try {
+              const identity = JSON.parse(
+                sessionStorage.getItem("supermarket-prototype-session-v3") ||
+                  "null",
+              );
+              // Display hints never establish a session, role or permission.
+              if (
+                typeof identity?.company_id === "string" &&
+                identity.company_id.length > 0 &&
+                typeof identity?.session_id === "string" &&
+                identity.session_id.length > 0
+              ) {
+                const personTheme = (id) => {
+                  if (
+                    typeof id !== "string" ||
+                    !saved.by_user_id ||
+                    Array.isArray(saved.by_user_id) ||
+                    !Object.prototype.hasOwnProperty.call(saved.by_user_id, id)
+                  )
+                    return null;
+                  const value = saved.by_user_id[id]?.theme;
+                  return value === "light" || value === "dark" ? value : null;
+                };
+                let tabTheme = null;
+                try {
+                  const hint = JSON.parse(
+                    sessionStorage.getItem(
+                      "supermarket-prototype-theme-hint-v1",
+                    ) || "null",
+                  );
+                  if (
+                    hint?.version === 1 &&
+                    (hint.theme === "light" || hint.theme === "dark")
+                  )
+                    tabTheme = personTheme(hint.user_id);
+                } catch {
+                  // Old tabs have no hint; retain the legacy fallback below.
+                }
+                const recent = Array.isArray(saved.recent_user_ids)
+                  ? saved.recent_user_ids[0]
+                  : null;
+                theme = tabTheme ?? personTheme(recent) ?? theme;
+              }
+            } catch {
+              // An unreadable session hint must not discard the device theme.
+            }
+          }
+        } catch {
+          // The provider reports storage failures; bootstrap never overwrites it.
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        const surface = getComputedStyle(document.documentElement)
+          .getPropertyValue("--klead-surface")
+          .trim();
+        if (surface)
+          for (const meta of document.querySelectorAll(
+            'meta[name="theme-color"]',
+          ))
+            meta.content = surface;
+      })();
+    </script>
     <title>Supermarket demo</title>
   </head>
   <body>

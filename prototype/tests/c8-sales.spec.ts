@@ -395,8 +395,10 @@ for (const language of ["en", "fa"] as const) {
     const row = page
       .locator(".catalog-products-table tbody > tr")
       .filter({ hasText: "Canned Fava Beans" });
-    await expect(row.locator(".sale-request-pill")).toContainText("$1.19");
-    await expect(row.locator(".sale-request-pill")).toBeVisible();
+    await expect(row.locator(".product-offer-line.is-requested")).toContainText(
+      "$1.19",
+    );
+    await expect(row.locator(".product-offer-line.is-requested")).toBeVisible();
     await expect(row).toContainText("$1.49");
     await lookup(page, "0002");
     await expect(

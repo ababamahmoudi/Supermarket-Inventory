@@ -42,6 +42,12 @@ import {
 import { useDemo } from "./store";
 import { translate } from "./i18n";
 import {
+  navigationKey,
+  readNavigationValue,
+  saveNavigationValue,
+} from "./navigation";
+import { configuredBranches } from "./settings";
+import {
   allocateTableColumns,
   fixedColumnWidth,
   tableResponsiveDefinition,
@@ -59,6 +65,7 @@ import {
 import "./controls.css";
 import "./c3-components.css";
 import "./phone-lists-e3.css";
+import "./filter-toolbar-c9.css";
 
 export function cn(...values: ClassValue[]) {
   return twMerge(clsx(values));
@@ -1132,15 +1139,72 @@ export function ColumnChooser({
   );
 }
 
+/** Preserve a list's nonprivate origin across protected-view remounts. */
+export function useListFilterOrigin(list: string) {
+  const { actor, branch, setBranch, state, user } = useDemo();
+  const key = navigationKey(
+    state.config.company.seed_key,
+    actor?.username ?? user?.username ?? "signed-out",
+    "list-filter-origin",
+    JSON.stringify([
+      list,
+      actor?.user_id,
+      actor?.session_id,
+      actor?.authority_epoch,
+    ]),
+  );
+  const stored = readNavigationValue<unknown>(key, null);
+  const origin =
+    typeof stored === "string" &&
+    (stored === "all" ||
+      (actor?.allowed_branches.includes(stored) &&
+        configuredBranches(state.config).includes(stored)))
+      ? stored
+      : branch;
+  const authenticated = Boolean(actor);
+  useLayoutEffect(() => {
+    if (authenticated) saveNavigationValue(key, origin);
+  }, [authenticated, key, origin]);
+  return {
+    origin,
+    locationChanged: branch !== origin,
+    resetLocation: async (defaults: Record<string, unknown>) => {
+      // Clear the destination's saved filters before the permission-checked switch.
+      for (const [field, value] of Object.entries(defaults))
+        saveNavigationValue(
+          navigationKey(
+            state.config.company.seed_key,
+            user?.username ?? "signed-out",
+            origin,
+            field,
+          ),
+          value,
+        );
+      await setBranch(origin);
+    },
+  };
+}
+
 export function FilterToolbar({
   children,
   search,
   count,
+  leading,
+  actions,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { search?: ReactNode; count?: ReactNode }) {
+}: HTMLAttributes<HTMLDivElement> & {
+  search?: ReactNode;
+  count?: ReactNode;
+  leading?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
-    <div className={cn("filter-toolbar", className)} {...props}>
+    <div
+      className={cn("filter-toolbar c9-filter-toolbar", className)}
+      {...props}
+    >
+      {leading}
       {isValidElement(search) && search.type === "input" ? (
         <div className="filter-search-pill">
           <Search size={18} strokeWidth={1.5} aria-hidden="true" />
@@ -1150,8 +1214,39 @@ export function FilterToolbar({
         search
       )}
       {children}
-      {count !== undefined && <span className="filter-count">{count}</span>}
+      {(count !== undefined || actions !== undefined) && (
+        <div className="filter-toolbar-end filter-toolbar-trailing">
+          {count !== undefined && <span className="filter-count">{count}</span>}
+          {actions}
+        </div>
+      )}
     </div>
+  );
+}
+
+export function FilterChip({
+  checked,
+  onChange,
+  children,
+  className,
+  ...props
+}: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> & {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Button
+      {...props}
+      variant="neutral"
+      className={cn("filter-chip", className)}
+      aria-pressed={checked}
+      onClick={(event) => {
+        props.onClick?.(event);
+        if (!event.defaultPrevented) onChange(!checked);
+      }}
+    >
+      {children}
+    </Button>
   );
 }
 export function EmptyState({
@@ -2643,6 +2738,7 @@ type SegmentedProps = {
   options: SelectOption[];
   "aria-label"?: string;
   className?: string;
+  showZeroCounts?: boolean;
 };
 function Segments({
   id,
@@ -2650,6 +2746,7 @@ function Segments({
   onChange,
   options,
   className,
+  showZeroCounts = false,
   tabs,
   ...props
 }: SegmentedProps & { tabs: boolean }) {
@@ -2666,7 +2763,7 @@ function Segments({
           type="button"
           role={tabs ? "tab" : undefined}
           aria-label={
-            option.count && option.count > 0
+            option.count !== undefined && (showZeroCounts || option.count > 0)
               ? `${option.label} ${option.count}`
               : undefined
           }
@@ -2710,9 +2807,10 @@ function Segments({
           }}
         >
           <span>{option.label}</span>
-          {option.count !== undefined && option.count > 0 && (
-            <span className="tab-count">{option.count}</span>
-          )}
+          {option.count !== undefined &&
+            (showZeroCounts || option.count > 0) && (
+              <span className="tab-count">{option.count}</span>
+            )}
         </button>
       ))}
     </div>

@@ -1,0 +1,132 @@
+.notebooks-page {
+  gap: 16px;
+}
+.notebooks-page > .page-header {
+  margin-block-end: 4px;
+}
+.notes-notebook-bar,
+.notebook-manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.notes-notebook-bar > .ui-tabs {
+  margin: 0;
+}
+.notebook-manage-actions {
+  margin: 0;
+  gap: 4px;
+}
+.notes-filter-toolbar .filter-search-pill {
+  inline-size: min(344px, 100%);
+}
+.notebooks-page .notebook-entry-card {
+  inline-size: min(960px, 100%);
+  box-sizing: border-box;
+  padding: 20px 24px;
+}
+.notebook-entry-card > .row-between {
+  align-items: flex-start;
+  gap: 16px;
+}
+.notebook-entry-card > .row-between > strong {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+.notebook-entry-card > .muted {
+  margin-block: 12px;
+}
+.notebook-entry-card .note-evidence {
+  display: grid;
+  gap: 12px;
+  margin-block-start: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.note-readers,
+.note-completion,
+.note-seen-by-you {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.note-readers > svg,
+.note-completion > svg,
+.note-seen-by-you > svg {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-block-start: 2px;
+}
+.note-readers > span,
+.note-readers-details,
+.note-completion > span {
+  min-inline-size: 0;
+  overflow-wrap: normal;
+}
+.note-readers-details summary {
+  cursor: pointer;
+}
+.note-readers-details summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-small);
+}
+.note-readers-details ol {
+  margin-block: 8px 0;
+  padding-inline-start: 20px;
+}
+.note-readers-details li + li {
+  margin-block-start: 4px;
+}
+.note-completion,
+.note-seen-by-you {
+  color: var(--approved);
+  margin: 0;
+}
+.note-seen-by-you {
+  font-size: 13px;
+  font-weight: 600;
+  padding-inline: 4px;
+}
+.notebook-entry-card .note-card-footer {
+  border-block-start: 1px solid var(--border);
+  padding-block-start: 12px;
+  margin-block-start: 12px;
+  margin-block-end: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.note-card-footer > .ui-menu {
+  margin-inline-start: auto;
+}
+.notes-archive-management {
+  inline-size: min(960px, 100%);
+}
+.notes-archive-management > .notebook-definition-list {
+  margin-block-start: 12px;
+}
+@media (max-width: 760px) {
+  .notebooks-page .notebook-entry-card {
+    padding: 16px;
+  }
+  .notes-notebook-bar {
+    align-items: flex-start;
+  }
+  .notes-notebook-bar > .ui-tabs {
+    max-inline-size: 100%;
+  }
+  .notes-filter-toolbar .filter-search-pill {
+    inline-size: 100%;
+  }
+  .note-card-footer .ui-button {
+    min-block-size: 44px;
+  }
+}
+
+.note-card-footer .note-seen-by-you:disabled {
+  opacity: 1;
+  color: var(--approved);
+}

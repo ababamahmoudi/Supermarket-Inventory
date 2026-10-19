@@ -18,6 +18,8 @@ import { configSeed } from "./config";
 import { branchLabel, savePricingSettings } from "./settings";
 import { initialState } from "./e1-bootstrap";
 import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { saleStoreDate, savePriceChange } from "./sales";
 
 const previousAsyncTimeout = getConfig().asyncUtilTimeout;
 let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
@@ -117,11 +119,12 @@ async function show(
   code = "0009",
   role: "manager" | "floor_worker" = "manager",
   approve = false,
+  state = initialState(),
 ) {
   const user = userEvent.setup();
   openedCode = code;
   fixture = await authenticatedProviderFixture({
-    state: initialState(),
+    state,
     role: role,
     actorOptions: { selection: { kind: "location", location_id: "Branch 1" } },
   });
@@ -267,17 +270,141 @@ it("new regular price during a sale explains deferred charging and labels, and C
   await user.click(
     within(dialog).getByRole("radio", { name: /^New regular price/ }),
   );
+  const price = within(dialog).getByRole("textbox", { name: "Price" });
+  await user.clear(price);
+  await user.type(price, "21.49");
   const summary = dialog.querySelector(".change-price-summary");
-  expect(summary).toHaveTextContent("Applies after the sale");
+  await waitFor(() =>
+    expect(summary).toHaveTextContent("Applies after the sale"),
+  );
   expect(summary).toHaveTextContent("Customers keep paying the sale price.");
   expect(summary).toHaveTextContent(
     "Regular labels are added when the sale ends. The current Promo label stays.",
   );
-  const price = within(dialog).getByRole("textbox", { name: "Price" });
-  await user.clear(price);
-  await user.type(price, "21.49");
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(screen.getByTestId("record").textContent).toBe(before);
+});
+it("saves the after-sale regular price while the running sale keeps its customer charge", async () => {
+  const user = await show("0012");
+  const dialog = screen.getByRole("dialog", { name: "Change sale" });
+  await user.click(
+    within(dialog).getByRole("radio", { name: /^New regular price/ }),
+  );
+  const price = within(dialog).getByRole("textbox", { name: "Price" });
+  await user.clear(price);
+  await user.type(price, "24.99");
+  await clickSubmit(user, dialog, "Save new price");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
+  const canonical = await fixture.readCanonical();
+  expect(regularPrice(canonical, "0012", "Branch 1")).toBe("24.99");
+  expect(effectivePrice(canonical, "0012", "Branch 1")).toBe("16.99");
+});
+it("saves a regular price from one store of a multi-store sale without a false sale revision error", async () => {
+  const state = initialState();
+  state.sales = [];
+  state.sale_events = [];
+  const manager = authenticatedTestActor(state, "manager", {
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
+  savePriceChange(state, manager, {
+    product_code: "0012",
+    mode: "sale",
+    scope: "selected",
+    branches: ["Branch 1", "Branch 2"],
+    price: "16.99",
+    price_unit: "each",
+    starts_on: saleStoreDate(state.config, "Branch 1"),
+    last_day: null,
+    accept_below_margin: false,
+    below_cost_reason: "",
+    add_labels: true,
+  });
+  const user = await show("0012", "manager", false, state);
+  const dialog = screen.getByRole("dialog");
+  await user.click(
+    within(dialog).getByRole("radio", { name: /^New regular price/ }),
+  );
+  const price = within(dialog).getByRole("textbox", { name: "Price" });
+  await user.clear(price);
+  await user.type(price, "24.99");
+  await clickSubmit(user, dialog, "Save new price");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
+  const canonical = await fixture.readCanonical();
+  expect(regularPrice(canonical, "0012", "Branch 1")).toBe("24.99");
+  expect(regularPrice(canonical, "0012", "Branch 2")).toBe("20.99");
+  expect(canonical.sales!.every((sale) => sale.status === "active")).toBe(true);
+});
+it.each(["16.99", "15.99"])(
+  "defaults to ending a sale when the new regular price is %s",
+  async (amount) => {
+    const user = await show("0012");
+    const dialog = screen.getByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("radio", { name: /^New regular price/ }),
+    );
+    const price = within(dialog).getByRole("textbox", { name: "Price" });
+    await user.clear(price);
+    await user.type(price, amount);
+    await waitFor(() =>
+      expect(dialog).toHaveTextContent(
+        `The sale price $16.99 isn't lower than the new regular price $${amount}.`,
+      ),
+    );
+    expect(
+      within(dialog).getByRole("radio", { name: "End the sale now" }),
+    ).toHaveAttribute("aria-checked", "true");
+    expect(dialog).toHaveTextContent(
+      "The sale ends now. Customers pay the new regular price.",
+    );
+    if (amount === "15.99")
+      await user.click(
+        await within(dialog).findByRole("checkbox", {
+          name: "Use this price anyway",
+        }),
+      );
+    await clickSubmit(user, dialog, "Save new price");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    const canonical = await fixture.readCanonical();
+    expect(effectivePrice(canonical, "0012", "Branch 1")).toBe(amount);
+    expect(
+      canonical.sales!.find((sale) => sale.product_code === "0012")?.status,
+    ).toBe("ended");
+  },
+);
+it("can lower the running sale price together with the new regular price", async () => {
+  const user = await show("0012");
+  const dialog = screen.getByRole("dialog");
+  await user.click(
+    within(dialog).getByRole("radio", { name: /^New regular price/ }),
+  );
+  await user.click(
+    await within(dialog).findByRole("radio", { name: "Change the sale price" }),
+  );
+  await user.type(
+    within(dialog).getByRole("textbox", { name: "New sale price" }),
+    "15.99",
+  );
+  await user.click(
+    await within(dialog).findByRole("checkbox", {
+      name: "Use this price anyway",
+    }),
+  );
+  await clickSubmit(user, dialog, "Save new price");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
+  const canonical = await fixture.readCanonical();
+  expect(regularPrice(canonical, "0012", "Branch 1")).toBe("16.99");
+  expect(effectivePrice(canonical, "0012", "Branch 1")).toBe("15.99");
+  expect(
+    canonical.sales!.find((sale) => sale.product_code === "0012")?.status,
+  ).toBe("active");
 });
 it("a non-discounting sale stays editable with linked validation and no mutation", async () => {
   const user = await show();

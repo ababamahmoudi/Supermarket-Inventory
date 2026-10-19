@@ -15,6 +15,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import i18n from "./i18n";
+import { demoSeed } from "./config";
 import {
   Money,
   UnitSize,
@@ -891,8 +892,12 @@ describe("shared language and number presentation", () => {
     expect(view.container.querySelector("small")).toHaveTextContent("Milk");
     expect(branchLabel("Branch 1", "fa")).toBe("شعبه 1");
     expect(branchLabel("all", "fa")).toBe("همه شعبه‌ها");
-    expect(demoUserLabel("Demo Supervisor", "fa")).toBe("سرپرست نمایشی");
-    expect(demoUserLabel("floorworker", "fa")).toBe("کارمند سالن نمایشی");
+    expect(demoUserLabel("Demo Supervisor", "fa")).toBe(
+      demoSeed.demo_users.find((user) => user.username === "manager")!.name_fa,
+    );
+    expect(demoUserLabel("floorworker", "fa")).toBe(
+      demoSeed.demo_users.find((user) => user.username === "ny-floor")!.name_fa,
+    );
   });
   it("puts a notebook count in its own pill beside the translated tab name", async () => {
     await show(

@@ -305,7 +305,10 @@ export function NotebookEditor({
             checked={form.notify_supervisor}
             onChange={(value) => field("notify_supervisor", value)}
           >
-            {t("Notify Supervisor", "اطلاع به سرپرست")}
+            {t(
+              `Notify ${["owner", "manager", "branch_supervisor"].map((role) => configuredRoleLabel(state.config.roles, role as Role, "en")).join(" / ")}`,
+              `اطلاع به ${["owner", "manager", "branch_supervisor"].map((role) => configuredRoleLabel(state.config.roles, role as Role, "fa")).join(" / ")}`,
+            )}
           </Checkbox>
         </div>
         {error &&

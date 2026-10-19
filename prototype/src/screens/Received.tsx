@@ -23,6 +23,7 @@ import {
   PageHeader,
   Select,
   useTableColumns,
+  useListFilterOrigin,
 } from "../ui";
 import "./received-c.css";
 import { ReceivedDateRange } from "./ReceivedDateRange";
@@ -274,6 +275,8 @@ export default function Received({
       ) ?? "all",
   );
   const [search, setSearch] = useListState("received.search", "");
+  const { locationChanged: locationFilterChanged, resetLocation } =
+    useListFilterOrigin("received");
   const tableColumns = useReceivedColumns();
   const scope = {
     company_id: state.config.company.seed_key,
@@ -395,18 +398,32 @@ export default function Received({
               })),
           ]}
         />
-        <Button
-          variant="plain"
-          onClick={() => {
-            setFrom("");
-            setTo("");
-            setSupplier("all");
-            setProduct("all");
-            setSearch("");
-          }}
-        >
-          {t("Clear filters", "پاک کردن فیلترها")}
-        </Button>
+        {(from ||
+          to ||
+          supplierFilter !== "all" ||
+          product !== "all" ||
+          search ||
+          locationFilterChanged) && (
+          <Button
+            variant="plain"
+            onClick={() => {
+              setFrom("");
+              setTo("");
+              setSupplier("all");
+              setProduct("all");
+              setSearch("");
+              void resetLocation({
+                "received.from": "",
+                "received.to": "",
+                "received.supplier": "all",
+                "received.product": "all",
+                "received.search": "",
+              });
+            }}
+          >
+            {t("Clear filters", "پاک کردن فیلترها")}
+          </Button>
+        )}
       </FilterToolbar>
       {from && to && from > to ? (
         <p role="alert" className="form-error">

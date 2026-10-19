@@ -133,7 +133,10 @@ describe("explicit fictional demo documents", () => {
     expect(invoice.supplier_invoice_number).toBe("FV-20390");
     expect(approval.unit_cost).toBe("1.5500");
     expect(new Decimal(approval.margin!).times(100).toFixed(2)).toBe("48.16");
-    expect(approval.triggered_by).toBe("Demo Floor Worker");
+    expect(approval.triggered_by).toBe(
+      configuredDemoPeople().find((person) => person.username === "ny-floor")!
+        .name_en,
+    );
     expect(approval.created_at).toBe(invoice.posted_at);
     expect(
       state.returns.every((record) => record.created_by && record.created_at),

@@ -62,8 +62,8 @@ describe("C6 missing-field navigation across existing forms", () => {
     fireEvent.click(screen.getByText("Worker session"));
     await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch1);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
-    expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
-    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(screen.getByRole("button", { name: "Send request" })).toBeEnabled();
+    await userEvent.click(screen.getByRole("button", { name: "Send request" }));
     const list = screen.getByRole("alert", { name: "What's missing" });
     expect(within(list).getAllByRole("link")).toHaveLength(2);
     await userEvent.click(
@@ -71,17 +71,18 @@ describe("C6 missing-field navigation across existing forms", () => {
         name: /different active sending location/,
       }),
     );
-    expect(screen.getByLabelText("Sending location")).toHaveFocus();
-    await choose(screen.getByLabelText("Sending location"), "Warehouse");
+    expect(screen.getByLabelText("Ask this location")).toHaveFocus();
+    await choose(screen.getByLabelText("Ask this location"), "Warehouse");
     expect(
       within(
         screen.getByRole("alert", { name: "What's missing" }),
       ).getAllByRole("link"),
     ).toHaveLength(1);
-    expect(screen.getByLabelText("Search products")).toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
+    expect(
+      screen.getByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
+    ).toHaveAttribute("aria-invalid", "true");
     expect((await sharedUiCanonical()).branch_requests ?? []).toHaveLength(0);
   });
   it("collects store-use requirements without saving and keeps unrelated errors", async () => {
@@ -117,7 +118,7 @@ describe("C6 missing-field navigation across existing forms", () => {
     const sessionBeforeSwitch3 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Supervisor session"));
     await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch3);
-    await userEvent.click(screen.getByRole("button", { name: "Add item" }));
+    await userEvent.click(screen.getByRole("button", { name: /^Add item/ }));
     const dialog = screen.getByRole("dialog");
     await userEvent.clear(within(dialog).getByLabelText("Units per case"));
     await userEvent.type(within(dialog).getByLabelText("Units per case"), "0");
@@ -126,7 +127,7 @@ describe("C6 missing-field navigation across existing forms", () => {
       "bad",
     );
     await userEvent.click(
-      within(dialog).getByRole("button", { name: "Add item" }),
+      within(dialog).getByRole("button", { name: /^Add item/ }),
     );
     const list = within(dialog).getByRole("alert", { name: "What's missing" });
     expect(within(list).getAllByRole("link")).toHaveLength(3);

@@ -3,6 +3,7 @@ import type { DemoState } from "./types";
 import type { NotificationRecord } from "./sales";
 import { can } from "./permissions";
 import { domainScope } from "./domain-authority";
+import { readableNotebookEntries } from "./notebooks";
 /** Retained notification rows never retain authority after a person's role/locations change. */
 export function notificationReadable(
   state: DemoState,
@@ -17,6 +18,29 @@ export function notificationReadable(
     return false;
   let capability: Capability;
   switch (row.kind) {
+    case "note_added":
+      if (
+        !state.notes.some(
+          (note) =>
+            note.company_id === row.company_id &&
+            note.id === row.note_id &&
+            note.branch === row.branch &&
+            !note.archived,
+        )
+      )
+        return false;
+      capability = "notes.read";
+      break;
+    case "notebook_entry_added":
+      if (
+        !readableNotebookEntries(state, actor).some(
+          (entry) =>
+            entry.id === row.notebook_entry_id && entry.branch === row.branch,
+        )
+      )
+        return false;
+      capability = "notebooks.read";
+      break;
     case "price_update_created":
     case "price_update_reminder":
       if (

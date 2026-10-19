@@ -114,7 +114,9 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
 }) => {
   await signIn(page, "Floor Worker");
   await visit(page, "products", "Products");
-  await page.getByLabel("Has pending price", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Has pending price", exact: true })
+    .click();
   await expect(
     page.getByText("Page 1 of 1 · 3 products", { exact: true }),
   ).toBeVisible();

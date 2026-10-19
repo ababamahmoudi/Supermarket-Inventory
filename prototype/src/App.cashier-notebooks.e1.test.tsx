@@ -122,7 +122,7 @@ describe("Cashier custom-notebook shell uses the actual protected ACL and locati
       }
       expect(
         screen.queryByRole("tab", {
-          name: /^(To order|Store use|For Supervisor|Deli temperatures)/,
+          name: /^(To order|Store use|For managers|Deli temperatures)/,
         }),
       ).not.toBeInTheDocument();
       expect(

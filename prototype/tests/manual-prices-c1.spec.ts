@@ -97,7 +97,9 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await page
     .getByRole("link", { name: "Back to Products", exact: true })
     .click();
-  await page.getByLabel("Manual prices", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Manual prices", exact: true })
+    .click();
   await expect(page.locator(".catalog-products-table tbody tr")).toHaveCount(1);
   await showManualPrice(page);
   await page

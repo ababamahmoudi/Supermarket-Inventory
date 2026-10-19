@@ -284,7 +284,7 @@ test("C5 button contract covers Orders and Branch request forms and retained det
     await closeDialog(page);
     await page.goto("/#requests");
     await proof.check("Branch requests Incoming");
-    await page.getByRole("tab", { name: "Outgoing", exact: true }).click();
+    await page.getByRole("tab", { name: /^Outgoing(?: \d+)?$/ }).click();
     await proof.check("Branch requests Outgoing");
     await page
       .getByRole("button", { name: "New request", exact: true })
@@ -292,10 +292,14 @@ test("C5 button contract covers Orders and Branch request forms and retained det
     await proof.check("New request");
     await chooseOption(
       page,
-      page.getByLabel("Sending location", { exact: true }),
+      page.getByLabel("Ask this location", { exact: true }),
       "Warehouse",
     );
-    await page.getByLabel("Search products", { exact: true }).fill("0003");
+    await page
+      .getByLabel("Add a product, or type an item that isn't in the catalog", {
+        exact: true,
+      })
+      .fill("0003");
     await page
       .locator(".request-search-results")
       .getByRole("button", { name: "Add", exact: true })

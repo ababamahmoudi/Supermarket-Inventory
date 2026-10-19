@@ -1,7 +1,9 @@
 import { activityLabel } from "./formatters";
 import { translate } from "./i18n";
 import { HistoryError } from "./history";
-import type { Language } from "./types";
+import type { CompanyConfig, Language } from "./types";
+import { configSeed } from "./config";
+import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
   "Create price update": ["Create price update", "ایجاد به‌روزرسانی قیمت"],
@@ -54,7 +56,9 @@ const actions: Record<string, [string, string]> = {
   "Save sales settings": ["Save sales settings", "ذخیره تنظیمات تخفیف‌ها"],
   Undone: ["Undone", "واگرد شد"],
   note_added: ["Add note", "افزودن یادداشت"],
-  note_seen: ["Mark seen", "علامت دیده‌شده"],
+  note_seen: ["Mark as seen", "علامت‌گذاری دیده‌شده"],
+  note_reopened: ["Reopen", "بازگشایی"],
+  notebook_entry_seen: ["Mark as seen", "علامت‌گذاری دیده‌شده"],
   note_resolved: ["Mark done", "علامت انجام‌شده"],
   "Mark ordered": ["Mark ordered", "علامت سفارش‌داده‌شده"],
   "Save draft": ["Save draft", "ذخیره پیش‌نویس"],
@@ -174,7 +178,7 @@ const actions: Record<string, [string, string]> = {
   notebook_entry_added: ["Save note", "ذخیره یادداشت"],
   notebook_entry_updated: ["Edit note", "ویرایش یادداشت"],
   notebook_entry_done: ["Mark done", "علامت انجام‌شده"],
-  notebook_entry_reopened: ["Mark open", "علامت باز"],
+  notebook_entry_reopened: ["Reopen", "بازگشایی"],
 };
 export function historyActionLabel(action: string, lang: Language): string {
   if (action.startsWith("Reverted "))
@@ -285,7 +289,10 @@ const fields: Record<string, [string, string]> = {
     "Automatically add approved prices",
     "افزودن خودکار قیمت‌های تأییدشده",
   ],
-  notify_supervisor: ["Notify Supervisor", "اطلاع به سرپرست"],
+  notify_supervisor: ["Notify managers", "اطلاع به مدیران"],
+  seen_receipts: ["Seen by", "دیده‌شده توسط"],
+  done_by: ["Done by", "انجام‌شده توسط"],
+  done_at: ["Completed at", "زمان انجام"],
   read_roles: ["Who can read", "افراد مجاز به خواندن"],
   add_roles: ["Who can add", "افراد مجاز به افزودن"],
   status_enabled: ["Entry status", "وضعیت یادداشت"],
@@ -308,7 +315,17 @@ const fields: Record<string, [string, string]> = {
   ],
   lines: ["Invoice lines", "ردیف‌های فاکتور"],
 };
-export function historyFieldLabel(field: string, lang: Language): string {
+export function historyFieldLabel(
+  field: string,
+  lang: Language,
+  config: Pick<CompanyConfig, "roles"> = configSeed,
+): string {
+  if (field === "notify_supervisor") {
+    const roles = (["owner", "manager", "branch_supervisor"] as const)
+      .map((role) => configuredRoleLabel(config.roles, role, lang))
+      .join(" / ");
+    return lang === "fa" ? `اطلاع به ${roles}` : `Notify ${roles}`;
+  }
   const copy = fields[field];
   return copy
     ? translate(...copy, lang)
@@ -317,7 +334,10 @@ export function historyFieldLabel(field: string, lang: Language): string {
 export function historyErrorMessage(
   error: unknown,
   t: (en: string, fa: string) => string,
+  config: Pick<CompanyConfig, "roles"> = configSeed,
 ): string {
+  const managersEn = `${configuredRoleLabel(config.roles, "owner", "en")} or ${configuredRoleLabel(config.roles, "manager", "en")}`;
+  const managersFa = `${configuredRoleLabel(config.roles, "owner", "fa")} یا ${configuredRoleLabel(config.roles, "manager", "fa")}`;
   if (error instanceof HistoryError) {
     const messages: Record<string, [string, string]> = {
       conflict: [
@@ -329,8 +349,8 @@ export function historyErrorMessage(
         "این بارکد اکنون به محصول دیگری تعلق دارد. پیش از بازگردانی، محصولات را بررسی کنید.",
       ],
       permission: [
-        "You cannot reverse this action. Ask the Supervisor to review History.",
-        "اجازه واگرد این کار را ندارید. از سرپرست بخواهید سابقه را بررسی کند.",
+        `You cannot reverse this action. Ask an ${managersEn} to review History.`,
+        `اجازه واگرد این کار را ندارید. از ${managersFa} بخواهید سابقه را بررسی کند.`,
       ],
       scope: [
         "This action belongs to another company or branch.",
@@ -341,8 +361,8 @@ export function historyErrorMessage(
         "این کار به اصلاح ثبت‌شده نیاز دارد. صفحه اصلی آن را بررسی کنید.",
       ],
       expired: [
-        "The Undo window has ended. Ask the Supervisor to review History.",
-        "زمان واگرد به پایان رسیده است. از سرپرست بخواهید سابقه را بررسی کند.",
+        `The Undo window has ended. Ask an ${managersEn} to review History.`,
+        `زمان واگرد به پایان رسیده است. از ${managersFa} بخواهید سابقه را بررسی کند.`,
       ],
     };
     return t(...messages[error.code]);

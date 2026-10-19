@@ -36,6 +36,8 @@ import {
   type Theme,
 } from "./auth-preferences.e1";
 import i18n, { translate, translateCount } from "./i18n";
+import { rememberDisplayedTheme } from "./presentation-theme.c9";
+import { synchronizeThemeColor } from "./pwa-theme";
 import { formatMoney } from "./formatters";
 import { attachReversals, ownUndoResource, reverseActivity } from "./history";
 import {
@@ -198,16 +200,28 @@ export function DemoProvider({
         if (!active) return;
         snapshotRef.current = next;
         setSnapshot(next);
-        if (
-          next.actor &&
-          preferencesRef.current.recent_user_ids[0] !== next.actor.user_id
-        ) {
-          const remembered = rememberRecentPerson(
-            preferencesRef.current,
+        if (next.actor && next.stage === "complete") {
+          const current = preferencesRef.current;
+          const appliedTheme = preferencesFor(
+            current,
             next.actor.user_id,
-          );
+          ).theme;
+          const remembered = rememberRecentPerson(current, next.actor.user_id);
+          // Bootstrap follows the last displayed theme, while each person's
+          // saved preferences retain their independent values.
+          const nextPreferences = {
+            ...remembered,
+            device_preferences: {
+              ...remembered.device_preferences,
+              theme: appliedTheme,
+            },
+          };
           try {
-            savePreferences(remembered);
+            if (
+              current.recent_user_ids[0] !== next.actor.user_id ||
+              current.device_preferences.theme !== appliedTheme
+            )
+              savePreferences(nextPreferences);
           } catch {
             setStorageError(true);
           }
@@ -374,11 +388,17 @@ export function DemoProvider({
       setStorageError(true);
     }
   }, [lang]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     void i18n.changeLanguage(lang);
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
-    document.documentElement.dataset.theme = activePreferences.theme;
+    if (snapshot.stage !== "refreshing" && snapshot.stage !== "loading") {
+      document.documentElement.dataset.theme = activePreferences.theme;
+      document.documentElement.style.colorScheme = activePreferences.theme;
+      synchronizeThemeColor(document);
+      if (snapshot.stage === "complete" && snapshot.actor)
+        rememberDisplayedTheme(snapshot.actor.user_id, activePreferences.theme);
+    }
     document.documentElement.dataset.textSize =
       activePreferences.comfortableText ? "comfortable" : "default";
     const company = snapshot.view.config.company;
@@ -388,6 +408,8 @@ export function DemoProvider({
     activePreferences.theme,
     activePreferences.comfortableText,
     snapshot.view.config.company,
+    snapshot.stage,
+    snapshot.actor,
   ]);
   useEffect(() => {
     const style = document.documentElement.style,

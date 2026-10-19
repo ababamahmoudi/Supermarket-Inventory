@@ -6,7 +6,17 @@ import type { DemoState, Role, Branch, CompanyConfig } from "./types";
 import type { AuthenticatedActor, ResourceScope } from "./authority-types";
 import { actorAtLocation, freshActor } from "./authority";
 import { configuredRoleLabel } from "./role-config";
+import { demoSeed } from "./config";
 import { can, requireCapability, requireConcreteLocation } from "./permissions";
+import {
+  appendSeenReceipt,
+  recordNoteCompletion,
+  type NoteEngagement,
+} from "./note-engagement";
+import {
+  notifyNotebookEntry,
+  markLinkedNoteNotificationsRead,
+} from "./note-notifications";
 
 /** The approved author-edit window is independent of transient Undo duration. */
 export const NOTEBOOK_EDIT_WINDOW = 10_000;
@@ -29,13 +39,14 @@ export interface NotebookDefinition {
   fields: NotebookFields;
   status_enabled: boolean;
   notify_supervisor: boolean;
+  notify_roles?: Role[];
   archived: boolean;
   created_at: string;
   updated_at: string;
   by: string;
   by_user_id?: string;
 }
-export interface NotebookEntry {
+export interface NotebookEntry extends NoteEngagement {
   id: string;
   company_id: string;
   branch: Branch;
@@ -521,12 +532,14 @@ export function addNotebookEntry(
     created_at: at,
     updated_at: at,
     status: "open",
+    seen_receipts: [],
     notify_supervisor: notebook.notify_supervisor,
     ...(values.measurement !== undefined
       ? { measurement_unit: notebook.fields.measurement_unit }
       : {}),
   };
   (state.notebook_entries ??= []).unshift(record);
+  notifyNotebookEntry(state, record, notebook);
   recordAction(
     state,
     context,
@@ -668,6 +681,27 @@ export function canApplyNotebookHistoryActivity(
         record.entity_type === "notebook_entry",
     );
     if (!activity?.entity_id) return false;
+    if (activity.action === "notebook_entry_seen") {
+      const entry = readableNotebookEntries(state, actor).find(
+        (record) => record.id === activity.entity_id,
+      );
+      if (!entry || entry.archived) return false;
+      const notebook = definition(state, actor, entry.notebook_id);
+      return (
+        !notebook.archived &&
+        notebook.status_enabled &&
+        (can(state, actor, "notebooks.entry_edit_any", notebookScope(notebook))
+          .allowed ||
+          activity.actor_user_id === actor.user_id) &&
+        can(state, actor, "notebooks.mark_seen", {
+          company_id: entry.company_id,
+          kind: "location_record",
+          location_ids: [entry.branch],
+          entity_id: entry.id,
+          mutation: true,
+        }).allowed
+      );
+    }
     if (
       ["notebook_entry_added", "notebook_entry_updated"].includes(
         activity.action,
@@ -783,6 +817,42 @@ export function editNotebookEntry(
   );
   return record;
 }
+export function markNotebookEntrySeen(
+  state: DemoState,
+  context: NotebookContext,
+  entryId: string,
+  at = new Date(),
+) {
+  context = freshActor(state, context);
+  company(state, context);
+  const record = readableNotebookEntries(state, context).find(
+    (item) => item.id === entryId,
+  );
+  if (!record || record.archived) fail("scope");
+  const notebook = definition(state, context, record.notebook_id);
+  if (notebook.archived || !notebook.status_enabled) fail("status");
+  requireCapability(state, context, "notebooks.mark_seen", {
+    company_id: record.company_id,
+    kind: "location_record",
+    location_ids: [record.branch],
+    entity_id: record.id,
+    mutation: true,
+  });
+  const receipt = appendSeenReceipt(record, context, at);
+  markLinkedNoteNotificationsRead(state, context, record, at);
+  if (!receipt) return;
+  recordAction(
+    state,
+    context,
+    "notebook_entry_seen",
+    record,
+    { receipt: null },
+    { receipt },
+    "notebook_entry",
+    at,
+  );
+}
+
 export function updateNotebookEntryStatus(
   state: DemoState,
   context: NotebookContext,
@@ -810,6 +880,7 @@ export function updateNotebookEntryStatus(
   if (record.status === status) return;
   const before = structuredClone(record);
   record.status = status;
+  recordNoteCompletion(record, context, status === "done");
   record.updated_at = new Date().toISOString();
   recordAction(
     state,
@@ -851,7 +922,9 @@ export function hydrateNotebooks(state: DemoState): DemoState {
       archived: false,
       created_at: at,
       updated_at: at,
-      by: "Demo Supervisor",
+      by: demoSeed.demo_users.find(
+        (person) => person.id === "demo-person-owner",
+      )!.name_en,
       by_user_id: "demo-person-owner",
     },
   ];
@@ -862,7 +935,9 @@ export function hydrateNotebooks(state: DemoState): DemoState {
       branch,
       notebook_id: "demo-deli-temperatures",
       text: "Morning fridge check",
-      by: "Demo Floor Worker",
+      by: demoSeed.demo_users.find(
+        (person) => person.id === "demo-person-ny-floor",
+      )!.name_en,
       by_user_id: "demo-person-ny-floor",
       created_at: at,
       updated_at: at,

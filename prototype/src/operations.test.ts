@@ -500,13 +500,16 @@ describe("notes and expiry are company and branch scoped", () => {
       expect(state).toEqual(after);
     }
   });
-  it("keeps unread Supervisor notes restricted and history remains after seen/done", () => {
+  it("lets note readers mark seen while keeping manager-note completion restricted and retaining history", () => {
     const state = initialState();
     const note = state.notes.find(
       (item) => item.type === "note_to_supervisor",
     )!;
+    const reader = worker(state);
+    updateNoteStatus(state, reader, note.id, "read");
+    expect(note.seen_receipts?.[0].user_id).toBe(reader.user_id);
     expect(() =>
-      updateNoteStatus(state, worker(state), note.id, "read"),
+      updateNoteStatus(state, worker(state), note.id, "resolved"),
     ).toThrow("scope");
     expect(() =>
       updateNoteStatus(
@@ -517,7 +520,8 @@ describe("notes and expiry are company and branch scoped", () => {
       ),
     ).toThrow("scope");
     updateNoteStatus(state, supervisor(state), note.id, "read");
-    expect(note.status).toBe("read");
+    expect(note.status).toBe("open");
+    expect(note.seen_receipts).toHaveLength(2);
     updateNoteStatus(state, supervisor(state), note.id, "resolved");
     expect(state.notes).toContain(note);
   });

@@ -32,6 +32,7 @@ import { SalesOfferRow, SalesOfferRecord } from "./SalesOffers";
 import { useDemo } from "../store";
 import { ManualPricePill } from "../manual-price-presentation";
 import { ProductPrice } from "../weight-price-presentation";
+import { SalePrice } from "../sales-presentation";
 import {
   categoryLabel,
   DateText,
@@ -95,6 +96,7 @@ export function Offers() {
   const [category, setCategory] = useState("");
   const [supplier, setSupplier] = useState("");
   const [type, setType] = useState("");
+  const [locationFilterChanged, setLocationFilterChanged] = useState(false);
   const [code, setCode] = useState("");
   const [scope, setScope] = useState<"all" | "branch">("branch");
   const [mix, setMix] = useState(true);
@@ -207,6 +209,7 @@ export function Offers() {
     setCategory("");
     setSupplier("");
     setType("");
+    setLocationFilterChanged(false);
     if (companyLocations) void setBranch("all");
   };
   if (!can("offers.read"))
@@ -489,7 +492,10 @@ export function Offers() {
       <Select
         aria-label={t("Offer branch", "شعبه پیشنهاد")}
         value={branch}
-        onChange={(value) => setBranch(value as Branch)}
+        onChange={(value) => {
+          setLocationFilterChanged(true);
+          void setBranch(value as Branch);
+        }}
         disabled={branches.length < 2}
         options={
           branches.length > 1
@@ -514,9 +520,16 @@ export function Offers() {
           { value: "clearance", label: t("Clearance", "فروش ویژه") },
         ]}
       />
-      <Button variant="plain" onClick={clearFilters}>
-        {t("Clear filters", "پاک کردن فیلترها")}
-      </Button>
+      {(search ||
+        status ||
+        category ||
+        supplier ||
+        type ||
+        locationFilterChanged) && (
+        <Button variant="plain" onClick={clearFilters}>
+          {t("Clear filters", "پاک کردن فیلترها")}
+        </Button>
+      )}
     </FilterToolbar>
   );
   return (
@@ -725,6 +738,11 @@ export function Offers() {
             ) : (
               <DataTable
                 className={`current-offers-table${tab === "past" ? " past-offers-table" : ""}`}
+                phoneList={{
+                  name: "product",
+                  value: "price",
+                  secondary: ["offer", "location", "status"],
+                }}
                 columns={[
                   {
                     key: "product",
@@ -732,6 +750,14 @@ export function Offers() {
                     minWidth: 240,
                     priority: 1,
                     mobilePrimary: true,
+                  },
+                  {
+                    key: "price",
+                    label: t("Price", "قیمت"),
+                    width: 180,
+                    minWidth: 150,
+                    priority: 2,
+                    align: "end",
                   },
                   {
                     key: "offer",
@@ -758,6 +784,7 @@ export function Offers() {
                 <thead>
                   <tr>
                     <th>{t("Product", "کالا")}</th>
+                    <th className="numeric">{t("Price", "قیمت")}</th>
                     <th>{t("Offer", "پیشنهاد")}</th>
                     <th>{t("Scope", "دامنه")}</th>
                     <th>{t("Status", "وضعیت")}</th>
@@ -824,30 +851,52 @@ export function Offers() {
                             <LtrText>{first.product_code}</LtrText>
                           )}
                         </td>
-                        <td>
-                          {group.map((offer) => (
-                            <div className="offer-group-entry" key={offer.id}>
-                              {offerLabel(offer.label)}
-                              <span className="muted offer-entry-price">
-                                <Money
-                                  value={offer.price}
-                                  currency={state.config.company.currency}
-                                />
-                                {product && (
-                                  <ManualPricePill
+                        <td className="numeric">
+                          {product
+                            ? group.map((offer) => (
+                                <div
+                                  className="offer-group-entry"
+                                  key={offer.id}
+                                >
+                                  <SalePrice
                                     product={product}
-                                    branch={offer.branch}
-                                    companyDefault={offer.scope === "all"}
+                                    branch={
+                                      branch === "all" ? offer.branch : branch
+                                    }
                                   />
-                                )}
-                              </span>
-                              {offer.mix_and_match && (
-                                <span className="muted offer-entry-pool">
-                                  {t("Mix-and-match", "ترکیبی")}
+                                </div>
+                              ))
+                            : "—"}
+                        </td>
+                        <td>
+                          {group.map((offer) => {
+                            const paused = offerPausedStores(
+                              state,
+                              offer,
+                              branch,
+                              historyContext?.allowed_branches ?? [],
+                            );
+                            return (
+                              <div
+                                className="product-offer-lines offer-group-entry"
+                                key={offer.id}
+                              >
+                                <span className="product-offer-line">
+                                  {offerLabel(offer.label)}
                                 </span>
-                              )}
-                            </div>
-                          ))}
+                                {paused.length > 0 && (
+                                  <span className="product-offer-line is-paused">
+                                    {salesText(t, "paused")}
+                                  </span>
+                                )}
+                                {offer.mix_and_match && (
+                                  <span className="muted offer-entry-pool">
+                                    {t("Mix-and-match", "ترکیبی")}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </td>
                         <td className="branch-label offer-scope">
                           {group.map((offer) => (

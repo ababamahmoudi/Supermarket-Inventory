@@ -326,8 +326,8 @@
       },
       {
         "kind": "for_supervisor",
-        "name_en": "For Manager",
-        "name_fa": "برای مدیر",
+        "name_en": "For managers",
+        "name_fa": "برای مدیران",
         "read_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
         "add_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
         "has_status": true,

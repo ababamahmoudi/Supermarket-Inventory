@@ -13,6 +13,7 @@ import { DemoProvider, initialState, useDemo } from "../store";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
 import i18n from "../i18n";
 import Invoices from "./Invoices";
+import { renderedUiReady } from "../test/rendered-ui-readiness";
 
 let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
 let currentDemo: ReturnType<typeof useDemo>;
@@ -60,6 +61,7 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
       <ActualInvoices />
     </DemoProvider>,
   );
+  await renderedUiReady(() => currentDemo?.authStage === "complete");
   fireEvent.click(await screen.findByRole("tab", { name: "Posted" }));
   const table = () =>
     document.querySelector<HTMLDivElement>(".invoice-posted-table")!;

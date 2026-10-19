@@ -1,3 +1,4 @@
+import { saleRequestTab } from "../sale-request-status";
 import { approvalBoard } from "../approval-board";
 import { useProtectedQuery } from "../use-protected-query";
 import { domainScope } from "../domain-authority";
@@ -88,6 +89,20 @@ export function Approvals() {
     (row) => row.approval.status === viewStatus,
   );
   const items = rows.map((row) => row.approval);
+  const saleRequests = (state.sale_requests ?? []).filter(
+    (request) =>
+      request.company_id === company &&
+      actor?.allowed_branches.includes(request.branch) &&
+      (branch === "all" || request.branch === branch),
+  );
+  const counts = (status: Approval["status"]) =>
+    (boardRead.data ?? []).filter((row) => row.approval.status === status)
+      .length +
+    saleRequests.filter((request) => saleRequestTab(request.status) === status)
+      .length;
+  const saleCount = saleRequests.filter(
+    (request) => saleRequestTab(request.status) === viewStatus,
+  ).length;
   if (!actor || !can("approvals.read"))
     return <EmptyState>{t("Approvals", "تأییدها")}</EmptyState>;
   const typeName = (item: Approval) =>
@@ -284,6 +299,7 @@ export function Approvals() {
         )}
       />
       <Tabs
+        showZeroCounts
         value={viewStatus}
         aria-label={t("Approval status", "وضعیت تأیید")}
         onChange={(value) => {
@@ -293,12 +309,34 @@ export function Approvals() {
         options={
           canDecide
             ? [
-                { value: "pending", label: t("Pending", "در انتظار") },
-                { value: "approved", label: t("Approved", "تأییدشده") },
-                { value: "rejected", label: t("Rejected", "ردشده") },
-                { value: "superseded", label: t("Superseded", "جایگزین‌شده") },
+                {
+                  value: "pending",
+                  count: counts("pending"),
+                  label: t("Pending", "در انتظار"),
+                },
+                {
+                  value: "approved",
+                  count: counts("approved"),
+                  label: t("Approved", "تأییدشده"),
+                },
+                {
+                  value: "rejected",
+                  count: counts("rejected"),
+                  label: t("Rejected", "ردشده"),
+                },
+                {
+                  value: "superseded",
+                  count: counts("superseded"),
+                  label: t("Superseded", "جایگزین‌شده"),
+                },
               ]
-            : [{ value: "pending", label: t("Pending", "در انتظار") }]
+            : [
+                {
+                  value: "pending",
+                  count: counts("pending"),
+                  label: t("Pending", "در انتظار"),
+                },
+              ]
         }
       />
       {message && (
@@ -306,24 +344,24 @@ export function Approvals() {
           {message}
         </div>
       )}
-      {viewStatus === "pending" && <SaleRequestCards />}
-      {items.length === 0 &&
-        !(
-          viewStatus === "pending" &&
-          (state.sale_requests ?? []).some(
-            (request) =>
-              request.company_id === company &&
-              request.status === "pending" &&
-              (branch === "all" || request.branch === branch),
-          )
-        ) && (
-          <EmptyState>
-            {t(
-              "No approvals in this view. Receive an invoice to create a proposal.",
-              "در این نما تأییدی وجود ندارد. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
-            )}
-          </EmptyState>
-        )}
+      <SaleRequestCards status={viewStatus} />
+      {items.length === 0 && saleCount === 0 && (
+        <EmptyState>
+          {viewStatus === "pending"
+            ? t(
+                "No pending requests. Receive an invoice to create a proposal.",
+                "درخواستی در انتظار نیست. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
+              )
+            : viewStatus === "approved"
+              ? t("No approved requests yet.", "هنوز درخواستی تأیید نشده است.")
+              : viewStatus === "rejected"
+                ? t("No rejected requests yet.", "هنوز درخواستی رد نشده است.")
+                : t(
+                    "No expired or withdrawn requests yet.",
+                    "هنوز درخواستی منقضی یا پس گرفته نشده است.",
+                  )}
+        </EmptyState>
+      )}
       {items.map((item) => {
         if (item.type === "new_supplier")
           return canDecide ? (

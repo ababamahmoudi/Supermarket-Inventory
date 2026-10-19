@@ -8,7 +8,7 @@ import { Button, IconButton } from "./ui";
 import "./undo-toasts.css";
 
 function UndoToastItem({ toast }: { toast: UndoToast }) {
-  const { lang, t, undoActivity, pauseUndo, dismissUndo } = useDemo();
+  const { state, lang, t, undoActivity, pauseUndo, dismissUndo } = useDemo();
   const [error, setError] = useState("");
   useEffect(() => () => pauseUndo(toast.id, false), [toast.id, pauseUndo]);
   return (
@@ -36,10 +36,10 @@ function UndoToastItem({ toast }: { toast: UndoToast }) {
         onClick={() => {
           try {
             void undoActivity(toast.id).catch((caught: unknown) => {
-              setError(historyErrorMessage(caught, t));
+              setError(historyErrorMessage(caught, t, state.config));
             });
           } catch (caught) {
-            setError(historyErrorMessage(caught, t));
+            setError(historyErrorMessage(caught, t, state.config));
           }
         }}
       >

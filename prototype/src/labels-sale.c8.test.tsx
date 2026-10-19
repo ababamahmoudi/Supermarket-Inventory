@@ -261,15 +261,17 @@ describe("C8 label styles follow real sale lifecycle and scoped printing", () =>
       "true",
     );
     await user.click(screen.getByRole("tab", { name: /^Waitlist/ }));
-    expect(
-      screen.getByRole("combobox", { name: "Saved template" }),
-    ).toHaveTextContent("Promo");
-    expect(container.querySelector(".promo-label-price")).toHaveTextContent(
-      "$16.99",
-    );
-    expect(
-      container.querySelector(".promo-label-regular-price"),
-    ).toHaveTextContent("$20.99");
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", { name: "Saved template" }),
+      ).toHaveTextContent("Promo");
+      expect(container.querySelector(".promo-label-price")).toHaveTextContent(
+        "$16.99",
+      );
+      expect(
+        container.querySelector(".promo-label-regular-price"),
+      ).toHaveTextContent("$20.99");
+    });
     const evidence = JSON.parse(
       screen.getByTestId("waiting-evidence").textContent!,
     );

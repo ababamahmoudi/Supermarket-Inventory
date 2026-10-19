@@ -26,10 +26,14 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page.getByRole("button", { name: "New request", exact: true }).click();
   await chooseOption(
     page,
-    page.getByLabel("Sending location", { exact: true }),
+    page.getByLabel("Ask this location", { exact: true }),
     "Warehouse",
   );
-  await page.getByLabel("Search products", { exact: true }).fill("0003");
+  await page
+    .getByLabel("Add a product, or type an item that isn't in the catalog", {
+      exact: true,
+    })
+    .fill("0003");
   await page
     .locator(".request-search-results")
     .getByRole("button", { name: "Add", exact: true })
@@ -47,9 +51,11 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
     .getByLabel("Note (optional)", { exact: true })
     .fill("For the front shelf");
   await page
-    .getByLabel("Free-text item", { exact: true })
+    .getByLabel("Add a product, or type an item that isn't in the catalog", {
+      exact: true,
+    })
     .fill("Small paper bags");
-  await page.getByRole("button", { name: "Add item", exact: true }).click();
+  await page.getByRole("button", { name: /^Add item/, exact: true }).click();
   const freeLine = page.locator(".request-draft-line").nth(1);
   await freeLine.getByLabel("Quantity", { exact: true }).fill("3");
   await chooseOption(
@@ -58,7 +64,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
     "cases",
     "Cases",
   );
-  await page.getByRole("button", { name: "Send", exact: true }).click();
+  await page.getByRole("button", { name: "Send request", exact: true }).click();
   const reference = await page.locator(".request-detail h2").innerText();
   await expect(page.locator(".request-detail-heading .badge")).toContainText(
     "Requested",
@@ -69,11 +75,11 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await signIn(page, "Supervisor");
   await setBranch(page, "Warehouse");
   await page.goto("/#requests");
-  await page.getByRole("tab", { name: "Incoming", exact: true }).click();
+  await page.getByRole("tab", { name: /^Incoming(?: \d+)?$/ }).click();
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: reference, exact: true })
+    .getByRole("link", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Mark as sent", exact: true }).click();
   await expect(
@@ -129,7 +135,7 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: reference, exact: true })
+    .getByRole("link", { name: reference, exact: true })
     .click();
   await page
     .locator(".request-checklist-item")
@@ -241,7 +247,7 @@ for (const language of ["en", "fa"] as const) {
     await page
       .getByRole("row")
       .filter({ hasText: "REQ-PRINT" })
-      .getByRole("button", { name: "REQ-PRINT", exact: true })
+      .getByRole("link", { name: "REQ-PRINT", exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: "Mark as sent", exact: true }),

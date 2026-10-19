@@ -564,7 +564,11 @@ export function ReturnActionForms({
       );
     } catch (error) {
       setDomainError(
-        operationError(error instanceof Error ? error.message : "", t),
+        operationError(
+          error instanceof Error ? error.message : "",
+          t,
+          state.config,
+        ),
       );
     }
     setReview(false);
@@ -1179,7 +1183,8 @@ export function ReturnActionForms({
             })
           )
             perform();
-          else setDomainError(operationError("pickup_authority", t));
+          else
+            setDomainError(operationError("pickup_authority", t, state.config));
         }}
       >
         {record.lines.map((line) => (
@@ -1310,7 +1315,11 @@ export function ReturnCancellationForm({
       );
     } catch (caught) {
       setError(
-        operationError(caught instanceof Error ? caught.message : "", t),
+        operationError(
+          caught instanceof Error ? caught.message : "",
+          t,
+          state.config,
+        ),
       );
     }
   };

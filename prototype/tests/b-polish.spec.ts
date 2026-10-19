@@ -71,7 +71,7 @@ async function visibleGeometry(page: Page, route: string) {
 }
 
 for (const language of ["en", "fa"] as const) {
-  test(`Filter fields are 44px and actions are 40px, readable, searchable and compact in ${language}`, async ({
+  test(`C9 filter controls are 40px, readable, searchable and compact in ${language}`, async ({
     page,
     isMobile,
   }) => {
@@ -86,20 +86,7 @@ for (const language of ["en", "fa"] as const) {
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
         expect(
-          Math.abs(
-            control.height -
-              (control.kind === "field"
-                ? 44
-                : control.kind === "icon"
-                  ? 36
-                  : control.kind === "choice"
-                    ? 40
-                    : isMobile
-                      ? 44
-                      : control.small
-                        ? 32
-                        : 40),
-          ),
+          Math.abs(control.height - (control.kind === "choice" ? 32 : 40)),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
       }

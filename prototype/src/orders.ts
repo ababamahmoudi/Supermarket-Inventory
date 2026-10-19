@@ -861,6 +861,9 @@ export function placeOrder(
       note.branch === order.branch,
   )) {
     note.status = "ordered";
+    note.done_by = context.actor;
+    note.done_by_user_id = context.user_id;
+    note.done_at = order.ordered_at;
     state.activity.unshift({
       id: createId("note-order"),
       company_id: context.company_id,
