@@ -14,6 +14,10 @@ const actions: Record<string, [string, string]> = {
   "Cancel price update": ["Cancel price update", "لغو به‌روزرسانی قیمت"],
   "Update price task": ["Update price task", "به‌روزرسانی کار قیمت"],
   "Complete price update": ["Complete price update", "تکمیل به‌روزرسانی قیمت"],
+  "Mark price update seen": [
+    "Mark price update seen",
+    "علامت‌گذاری به‌روزرسانی قیمت به‌عنوان دیده‌شده",
+  ],
   "Print price update labels": [
     "Print price update labels",
     "چاپ برچسب‌های به‌روزرسانی قیمت",

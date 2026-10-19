@@ -119,6 +119,9 @@ export interface PriceUpdateTask {
   decided_by_user_id?: string;
   source_decision?: DecisionAttribution;
   steps: PriceTaskStep[];
+  /** Who first opened and acknowledged this version of the change. */
+  seen?: PriceTaskAcknowledgement;
+  /** Older checklist evidence; retained for history, no longer required. */
   register_changed?: PriceTaskAcknowledgement;
   label_printed?: PriceTaskAcknowledgement & { print_id: string };
   no_label?: PriceTaskAcknowledgement & { reason: string };
@@ -1025,6 +1028,39 @@ export function updatePriceTask(
   task.acted_at ??= now.toISOString();
   audit(state, current, task, "Update price task", before, now);
 }
+/**
+ * Seen: the person has read this version of the price change. Anyone who may
+ * read the task at an active location can mark it; repeat marks change nothing.
+ */
+export function markPriceTaskSeen(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+  now = new Date(),
+) {
+  const { task, actor: current } = taskFor(state, actor, id);
+  requireCapability(
+    state,
+    current,
+    "price_updates.read",
+    taskScope(state, task, true),
+  );
+  if (task.status !== "pending") throw new PriceUpdatesError("status");
+  if (task.seen?.version === task.version) return;
+  const before = structuredClone(task);
+  task.seen = {
+    by_user_id: current.user_id,
+    by: current.actor,
+    at: now.toISOString(),
+    version: task.version,
+  };
+  task.acted_at ??= now.toISOString();
+  audit(state, current, task, "Mark price update seen", before, now);
+}
+/**
+ * Done: the register and shelf label are handled. Ali's rule (Oct 2026): only
+ * Seen and Done are tracked, each with who and when; no checklist is required.
+ */
 export function completePriceTasks(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -1036,16 +1072,18 @@ export function completePriceTasks(
   );
   if (!tasks.length) throw new PriceUpdatesError("task");
   for (const task of tasks)
-    if (
-      task.status !== "pending" ||
-      task.register_changed?.version !== task.version ||
-      (task.label_printed?.version !== task.version &&
-        (!task.no_label?.reason || task.no_label.version !== task.version))
-    )
-      throw new PriceUpdatesError("checkboxes");
+    if (task.status !== "pending") throw new PriceUpdatesError("status");
   actor = freshActor(state, actor);
   for (const task of tasks) {
     const before = structuredClone(task);
+    // Finishing a task also means it was seen.
+    if (task.seen?.version !== task.version)
+      task.seen = {
+        by_user_id: actor.user_id,
+        by: actor.actor,
+        at: now.toISOString(),
+        version: task.version,
+      };
     task.status = "done";
     task.completed_by = actor.actor;
     task.completed_by_user_id = actor.user_id;

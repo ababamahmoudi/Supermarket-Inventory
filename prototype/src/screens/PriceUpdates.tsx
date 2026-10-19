@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { ChevronRight, Printer } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Eye, Printer } from "lucide-react";
 import { useDemo } from "../store";
 import { useProtectedQuery } from "../use-protected-query";
 import { useRouteParam } from "../navigation";
 import {
   priceUpdateTasks,
   priceUpdateProgress,
-  updatePriceTask,
+  markPriceTaskSeen,
   completePriceTasks,
   queuePriceTaskLabels,
   preparePriceTaskPrint,
@@ -21,6 +21,7 @@ import {
   Button,
   Card,
   Checkbox,
+  DataTable,
   Dialog,
   DialogActions,
   EmptyState,
@@ -30,7 +31,7 @@ import {
   Select,
   Tabs,
 } from "../ui";
-import { DateText, LtrText, ProductName } from "../presentation";
+import { DateText, LtrText, NotAdded, ProductName } from "../presentation";
 import { branchLabel } from "../settings";
 import { companyDate } from "../invoice";
 import { companyTimestampText } from "../company-time";
@@ -43,7 +44,6 @@ import { historyActionLabel } from "../history-copy";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import { PhysicalSheet } from "./Labels";
 import { waitForPrintImages } from "../print-images";
-import { WhatsMissing } from "../WhatsMissing";
 import type { ScopedReadView } from "../e1-read-model";
 import type { ResourceScope } from "../authority-types";
 import "./price-updates-e2.css";
@@ -146,8 +146,8 @@ export function PriceUpdates() {
       if (currentIdentity.current === scopedIdentity)
         setError(
           t(
-            "Confirm the cash register and label for every selected task first.",
-            "ابتدا صندوق فروش و برچسب هر کار انتخاب‌شده را تأیید کنید.",
+            "Some selected price updates changed. Open the list again.",
+            "برخی از به‌روزرسانی‌های انتخاب‌شده تغییر کرده‌اند. فهرست را دوباره باز کنید.",
           ),
         );
     }
@@ -178,8 +178,8 @@ export function PriceUpdates() {
       <PageHeader
         title={t("Price updates", "به‌روزرسانی قیمت‌ها")}
         description={t(
-          "The price in the app changes right away. Confirm the cash register and shelf label here.",
-          "قیمت در برنامه بلافاصله تغییر می‌کند. صندوق فروش و برچسب قفسه را اینجا تأیید کنید.",
+          "The price in the app changes right away. Mark each update as seen, then done once the register and shelf label match.",
+          "قیمت در برنامه بلافاصله تغییر می‌کند. هر به‌روزرسانی را دیده‌شده علامت بزنید و پس از هماهنگ شدن صندوق و برچسب قفسه، انجام‌شده.",
         )}
         actions={
           isManager && progress ? (
@@ -314,7 +314,7 @@ export function PriceUpdates() {
                   {t("Price", "قیمت")}
                 </span>
                 <span>{t("Why", "دلیل")}</span>
-                <span>{t("Done so far", "انجام‌شده تا کنون")}</span>
+                <span>{t("Seen", "دیده‌شده")}</span>
                 <span />
               </div>
               {visible.map((task) => {
@@ -323,12 +323,8 @@ export function PriceUpdates() {
                     item.company_id === task.company_id &&
                     item.code === task.product_code,
                 );
-                const completedSteps =
-                  Number(task.register_changed?.version === task.version) +
-                  Number(
-                    task.label_printed?.version === task.version ||
-                      task.no_label?.version === task.version,
-                  );
+                const seen =
+                  task.seen?.version === task.version ? task.seen : null;
                 const scope = taskScope(task.company_id, task.branch);
                 return (
                   <div
@@ -417,15 +413,20 @@ export function PriceUpdates() {
                       )}
                     </div>
                     <div
-                      className={`price-updates-steps price-updates-wide-cell ${completedSteps === 2 ? "is-complete" : completedSteps ? "is-started" : "is-pending"}`}
+                      className={`price-updates-steps price-updates-wide-cell ${task.status === "done" ? "is-complete" : seen ? "is-started" : "is-pending"}`}
                     >
                       <span aria-hidden="true" />
-                      {tCount(
-                        "{{count}} of 2 steps",
-                        "{{count}} of 2 steps",
-                        "{{count}} از ۲ مرحله",
-                        "{{count}} از ۲ مرحله",
-                        completedSteps,
+                      {seen ? (
+                        <span className="price-updates-seen">
+                          <bdi>{seen.by}</bdi>
+                          <small className="muted">
+                            <LtrText>
+                              {companyTimestampText(state.config, seen.at)}
+                            </LtrText>
+                          </small>
+                        </span>
+                      ) : (
+                        t("Not seen yet", "هنوز دیده نشده")
                       )}
                     </div>
                     <div className="price-updates-row-actions">
@@ -568,9 +569,6 @@ function PriceUpdateDetail({ id }: { id: string }) {
   );
   const task = result.data;
   const [error, setError] = useState("");
-  const [attempted, setAttempted] = useState(false);
-  const [waiver, setWaiver] = useState(false);
-  const [reason, setReason] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
   const [pendingPrint, setPendingPrint] = useState<PriceTaskPrint | null>(null);
   const [printState, setPrintState] = useState<ScopedReadView | null>(null);
@@ -591,12 +589,12 @@ function PriceUpdateDetail({ id }: { id: string }) {
     );
   const run = async (
     action: (
-      draft: Parameters<typeof updatePriceTask>[0],
-      freshActor: Parameters<typeof updatePriceTask>[1],
+      draft: Parameters<typeof markPriceTaskSeen>[0],
+      freshActor: Parameters<typeof markPriceTaskSeen>[1],
     ) => void,
     capability:
+      | "price_updates.read"
       | "price_updates.label_confirm"
-      | "price_updates.register_confirm"
       | "price_updates.complete"
       | "labels.queue_write"
       | "labels.print",
@@ -645,12 +643,26 @@ function PriceUpdateDetail({ id }: { id: string }) {
       if (currentIntent.current === intent) setPrinting(false);
     }
   };
+  const backLink = (
+    <a
+      className="back-link"
+      href="#price-updates"
+      onClick={(event) => {
+        event.preventDefault();
+        navigate("price-updates");
+      }}
+    >
+      <ArrowLeft size={16} aria-hidden="true" />
+      {t("Back to Price updates", "بازگشت به به‌روزرسانی قیمت‌ها")}
+    </a>
+  );
   if (!task)
     return (
       <div
         className="price-update-detail"
-        data-pwa-unsaved={printing || confirmation || reason !== null || waiver}
+        data-pwa-unsaved={printing || confirmation}
       >
+        {backLink}
         <PageHeader title={t("Price update", "به‌روزرسانی قیمت")} />
         <Card>
           <p role={result.error ? "alert" : "status"}>
@@ -661,9 +673,6 @@ function PriceUpdateDetail({ id }: { id: string }) {
                   "این کار دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
                 )}
           </p>
-          <Button variant="plain" onClick={() => navigate("price-updates")}>
-            {t("Back to Price updates", "بازگشت به به‌روزرسانی قیمت‌ها")}
-          </Button>
         </Card>
       </div>
     );
@@ -672,67 +681,42 @@ function PriceUpdateDetail({ id }: { id: string }) {
       item.company_id === task.company_id && item.code === task.product_code,
   );
   const scope = taskScope(task.company_id, task.branch, true);
-  const registerReady = Boolean(
-    task.register_changed?.version === task.version,
+  const seen = task.seen?.version === task.version ? task.seen : null;
+  const seenEarlier = !seen && task.seen ? task.seen : null;
+  const done = task.status === "done";
+  const mayMarkSeen = !done && can("price_updates.read", scope);
+  const mayComplete = !done && can("price_updates.complete", scope);
+  const stamp = (by: string, at: string) => (
+    <span className="price-update-stamp">
+      <bdi>{by}</bdi>
+      <span aria-hidden="true">·</span>
+      <LtrText>{companyTimestampText(state.config, at)}</LtrText>
+    </span>
   );
-  const labelReady = Boolean(
-    task.label_printed?.version === task.version ||
-    task.no_label?.version === task.version,
-  );
-  const issues = attempted
-    ? [
-        ...(!registerReady
-          ? [
-              {
-                id: "task-register",
-                fieldId: "task-register",
-                message: t(
-                  "A register confirmation is still required.",
-                  "تأیید صندوق فروش هنوز لازم است.",
-                ),
-              },
-            ]
-          : []),
-        ...(!labelReady
-          ? [
-              {
-                id: "task-label",
-                fieldId: "task-label",
-                message: t(
-                  "Print the new label, or choose No label needed and add a reason.",
-                  "برچسب جدید را چاپ کنید، یا «نیازی به برچسب نیست» را انتخاب کرده و دلیل بنویسید.",
-                ),
-              },
-            ]
-          : []),
-      ]
-    : [];
+  const history = [...task.steps].sort((a, b) => b.at.localeCompare(a.at));
   return (
     <div
       className="price-update-detail"
-      data-pwa-unsaved={
-        printing ||
-        confirmation ||
-        (reason !== null && reason !== (task.no_label?.reason ?? "")) ||
-        (waiver && !task.no_label)
-      }
+      data-pwa-unsaved={printing || confirmation}
     >
-      <PageHeader
-        title={t("Price update", "به‌روزرسانی قیمت")}
-        actions={
-          <Button variant="plain" onClick={() => navigate("price-updates")}>
-            {t("Back to Price updates", "بازگشت به به‌روزرسانی قیمت‌ها")}
-          </Button>
-        }
-      />
-      <WhatsMissing issues={issues} />
+      {backLink}
+      <PageHeader title={t("Price update", "به‌روزرسانی قیمت")} />
       {error && (
         <p className="form-error" role="alert">
           {error}
         </p>
       )}
-      <Card>
-        {product && <ProductName product={product} language={lang} />}
+      <Card className="price-update-summary">
+        <div className="price-update-summary-head">
+          {product ? (
+            <ProductName product={product} language={lang} />
+          ) : (
+            <LtrText>{task.product_code}</LtrText>
+          )}
+          <Badge tone={done ? "approved" : "pending"}>
+            {done ? t("Done", "انجام‌شده") : t("Pending", "در انتظار")}
+          </Badge>
+        </div>
         <p className="muted">
           {t(state.config.terminology.product_code, "کد محصول")}:{" "}
           <LtrText>{task.product_code}</LtrText>
@@ -743,13 +727,15 @@ function PriceUpdateDetail({ id }: { id: string }) {
             </>
           )}
         </p>
-        <PriceUpdateChange task={task} />
+        <div className="price-update-summary-change">
+          <PriceUpdateChange task={task} />
+        </div>
         {task.sale_end_preparation && (
           <p>
             <SaleEndTaskTitle task={task} />
           </p>
         )}
-        <dl className="price-update-facts">
+        <dl className="detail-grid">
           <div>
             <dt>{t("Location", "مکان")}</dt>
             <dd>{branchLabel(state.config, task.branch, lang)}</dd>
@@ -769,104 +755,102 @@ function PriceUpdateDetail({ id }: { id: string }) {
           <div>
             <dt>{t("Decided by", "تصمیم‌گیرنده")}</dt>
             <dd>
-              <bdi>{task.decided_by ?? "—"}</bdi>
+              {task.decided_by ? <bdi>{task.decided_by}</bdi> : <NotAdded />}
             </dd>
           </div>
         </dl>
       </Card>
-      <Card>
-        <div className="price-update-checks" data-undo-toast-host>
-          <div className="price-update-check-row">
-            <div>
-              <Checkbox
-                id="task-register"
-                checked={registerReady}
-                disabled={
-                  task.status !== "pending" ||
-                  !can("price_updates.register_confirm", scope)
-                }
-                onChange={(checked) =>
+      <Card className="price-update-status-card" data-undo-toast-host>
+        <h2>{t("Status", "وضعیت")}</h2>
+        <ol className="price-update-status-steps">
+          <li className={seen || done ? "is-complete" : "is-pending"}>
+            <span className="price-update-status-icon" aria-hidden="true">
+              {seen || done ? <Check size={16} /> : <Eye size={16} />}
+            </span>
+            <div className="price-update-status-copy">
+              <strong>{t("Seen", "دیده‌شده")}</strong>
+              {seen ? (
+                stamp(seen.by, seen.at)
+              ) : (
+                <span className="muted">
+                  {seenEarlier
+                    ? t(
+                        "The price changed again after it was seen.",
+                        "قیمت پس از دیده شدن دوباره تغییر کرد.",
+                      )
+                    : t("Not seen yet", "هنوز دیده نشده")}
+                </span>
+              )}
+            </div>
+            {!seen && mayMarkSeen && (
+              <Button
+                variant="neutral"
+                onClick={() =>
                   void run((draft, freshActor) => {
-                    updatePriceTask(draft, freshActor, id, {
-                      register_changed: checked,
-                    });
-                  }, "price_updates.register_confirm")
+                    markPriceTaskSeen(draft, freshActor, id);
+                  }, "price_updates.read")
                 }
               >
-                {t(
-                  "Changed on the cash register",
-                  "در صندوق فروش تغییر داده شد",
-                )}
-              </Checkbox>
-              {task.register_changed && (
-                <small className="muted">
-                  <bdi>{task.register_changed.by}</bdi> ·{" "}
-                  <LtrText>
-                    {companyTimestampText(
-                      state.config,
-                      task.register_changed.at,
-                    )}
-                  </LtrText>
-                </small>
+                {t("Mark as seen", "علامت‌گذاری دیده‌شده")}
+              </Button>
+            )}
+          </li>
+          <li className={done ? "is-complete" : "is-pending"}>
+            <span className="price-update-status-icon" aria-hidden="true">
+              <Check size={16} />
+            </span>
+            <div className="price-update-status-copy">
+              <strong>{t("Done", "انجام‌شده")}</strong>
+              {done && task.completed_at ? (
+                stamp(task.completed_by ?? "", task.completed_at)
+              ) : (
+                <span className="muted">
+                  {t(
+                    "Mark done once the cash register and shelf label show the new price.",
+                    "وقتی صندوق فروش و برچسب قفسه قیمت جدید را نشان دادند، انجام‌شده علامت بزنید.",
+                  )}
+                </span>
               )}
             </div>
-          </div>
-          <div className="price-update-check-row">
-            <div>
-              <Checkbox
-                id="task-label"
-                checked={Boolean(task.label_printed?.version === task.version)}
-                disabled={
-                  task.status !== "pending" ||
-                  !can("price_updates.label_confirm", scope)
+            {mayComplete && (
+              <Button
+                onClick={() =>
+                  void run((draft, freshActor) => {
+                    completePriceTasks(draft, freshActor, [id]);
+                  }, "price_updates.complete")
                 }
-                onChange={(checked) => {
-                  if (!checked)
-                    void run((draft, freshActor) => {
-                      updatePriceTask(draft, freshActor, id, {
-                        label_printed: false,
-                      });
-                    }, "price_updates.label_confirm");
-                  else if (pendingPrint)
-                    void run((draft, freshActor) => {
-                      confirmPriceTaskLabel(
-                        draft,
-                        freshActor,
-                        id,
-                        pendingPrint.id,
-                      );
-                    }, "price_updates.label_confirm");
-                  else
-                    setError(
-                      t(
-                        "Confirm that the label was printed.",
-                        "تأیید کنید که برچسب چاپ شده است.",
-                      ),
-                    );
-                }}
               >
-                {t("New label printed", "برچسب جدید چاپ شد")}
-              </Checkbox>
-              {task.label_printed && (
-                <small className="muted">
-                  <bdi>{task.label_printed.by}</bdi> ·{" "}
-                  <LtrText>
-                    {companyTimestampText(state.config, task.label_printed.at)}
-                  </LtrText>
-                </small>
+                {t("Mark as done", "علامت‌گذاری انجام‌شده")}
+              </Button>
+            )}
+          </li>
+        </ol>
+        {!done && (
+          <div className="price-update-label-tools">
+            <span className="muted">
+              {t("Shelf label", "برچسب قفسه")}
+              {task.label_printed?.version === task.version && (
+                <>
+                  {" "}
+                  · {t("printed by", "چاپ توسط")}{" "}
+                  {stamp(task.label_printed.by, task.label_printed.at)}
+                </>
               )}
-            </div>
+            </span>
             <div className="actions">
               <Button
                 variant="tinted"
-                disabled={printing || task.status !== "pending"}
+                size="sm"
+                disabled={printing || !can("labels.print", scope)}
                 onClick={() => void print()}
               >
+                <Printer size={16} aria-hidden="true" />
                 {t("Print label now", "چاپ برچسب اکنون")}
               </Button>
               <Button
                 variant="neutral"
-                disabled={task.status !== "pending"}
+                size="sm"
+                disabled={!can("labels.queue_write", scope)}
                 onClick={() =>
                   void run((draft, freshActor) => {
                     queuePriceTaskLabels(draft, freshActor, [id]);
@@ -877,98 +861,70 @@ function PriceUpdateDetail({ id }: { id: string }) {
               </Button>
             </div>
           </div>
-          {task.status === "pending" &&
-            can("price_updates.register_confirm", scope) && (
-              <>
-                <Checkbox
-                  checked={waiver || Boolean(task.no_label)}
-                  onChange={setWaiver}
-                >
-                  {t("No label needed", "نیازی به برچسب نیست")}
-                </Checkbox>
-                {(waiver || task.no_label) && (
-                  <div>
-                    <Field label={t("Reason", "دلیل")}>
-                      <textarea
-                        id="task-label-reason"
-                        value={reason ?? task.no_label?.reason ?? ""}
-                        onChange={(event) => setReason(event.target.value)}
-                      />
-                    </Field>
-                    <Button
-                      variant="neutral"
-                      onClick={() => {
-                        if (!(reason ?? task.no_label?.reason ?? "").trim()) {
-                          setError(t("Add a reason.", "یک دلیل اضافه کنید."));
-                          return;
-                        }
-                        void run((draft, freshActor) => {
-                          updatePriceTask(draft, freshActor, id, {
-                            no_label_reason:
-                              reason ?? task.no_label?.reason ?? "",
-                          });
-                        }, "price_updates.register_confirm");
-                      }}
-                    >
-                      {t("Save reason", "ذخیرهٔ دلیل")}
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          {task.no_label && (
-            <p className="price-task-waiver-evidence" role="status">
-              {t("No label needed", "نیازی به برچسب نیست")} ·{" "}
-              {task.no_label.reason} · <bdi>{task.no_label.by}</bdi> ·{" "}
-              <LtrText>
-                {companyTimestampText(state.config, task.no_label.at)}
-              </LtrText>
-            </p>
-          )}
-          {task.status === "pending" &&
-            can("price_updates.complete", scope) && (
-              <div className="actions">
-                <Button
-                  onClick={() => {
-                    setAttempted(true);
-                    if (registerReady && labelReady)
-                      void run((draft, freshActor) => {
-                        completePriceTasks(draft, freshActor, [id]);
-                      }, "price_updates.complete");
-                  }}
-                >
-                  {t("Mark as done", "علامت‌گذاری انجام‌شده")}
-                </Button>
-              </div>
-            )}
-          {task.completed_at && (
-            <p>
-              <Badge tone="approved">{t("Done", "انجام‌شده")}</Badge>{" "}
-              <bdi>{task.completed_by}</bdi> ·{" "}
-              <LtrText>
-                {companyTimestampText(state.config, task.completed_at)}
-              </LtrText>
-            </p>
-          )}
-        </div>
+        )}
       </Card>
-      <Card title={t("History", "تاریخچه")}>
-        <ol className="price-update-history">
-          {task.steps.map((step) => (
-            <li key={step.version}>
-              <span className="price-update-change">
-                <PriceUpdateValue value={step.old_price} />
-                <span aria-hidden="true">→</span>
-                <PriceUpdateValue value={step.new_price} />
-              </span>
-              <small className="muted">
-                {historyActionLabel(step.reason, lang)} ·{" "}
-                <bdi>{step.decided_by}</bdi> ·{" "}
-                <LtrText>{companyTimestampText(state.config, step.at)}</LtrText>
-              </small>
-            </li>
-          ))}
-        </ol>
+      <Card className="price-update-history-card">
+        <h2>{t("Price history", "تاریخچهٔ قیمت")}</h2>
+        <DataTable
+          className="price-update-history-table"
+          columns={[
+            {
+              key: "when",
+              label: t("When", "زمان"),
+              required: true,
+              priority: 1,
+              minWidth: 150,
+            },
+            {
+              key: "change",
+              label: t("Price change", "تغییر قیمت"),
+              required: true,
+              priority: 1,
+              minWidth: 150,
+            },
+            { key: "why", label: t("Why", "دلیل"), priority: 3 },
+            { key: "by", label: t("By", "توسط"), priority: 2 },
+          ]}
+        >
+          <thead>
+            <tr>
+              <th scope="col">{t("When", "زمان")}</th>
+              <th scope="col">{t("Price change", "تغییر قیمت")}</th>
+              <th scope="col">{t("Why", "دلیل")}</th>
+              <th scope="col">{t("By", "توسط")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((step, index) => (
+              <tr key={step.version}>
+                <td>
+                  <LtrText>{companyTimestampText(state.config, step.at)}</LtrText>
+                  {index === 0 && (
+                    <>
+                      {" "}
+                      <Badge tone="info">{t("Latest", "آخرین")}</Badge>
+                    </>
+                  )}
+                </td>
+                <td>
+                  <span className="price-update-change">
+                    <PriceUpdateValue value={step.old_price} />
+                    <span aria-hidden="true">→</span>
+                    <PriceUpdateValue value={step.new_price} />
+                  </span>
+                </td>
+                <td>{historyActionLabel(step.reason, lang)}</td>
+                <td>
+                  {step.decided_by ? (
+                    <bdi>{step.decided_by}</bdi>
+                  ) : (
+                    <NotAdded />
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </DataTable>
       </Card>
       {pendingPrint &&
         printState &&

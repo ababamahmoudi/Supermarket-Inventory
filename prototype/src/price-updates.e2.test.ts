@@ -26,6 +26,7 @@ import {
   priceUpdateTasks,
   priceChangeHints,
   updatePriceTask,
+  markPriceTaskSeen,
   completePriceTasks,
   queuePriceTaskLabels,
   preparePriceTaskPrint,
@@ -198,9 +199,9 @@ describe("E2 genuine canonical price changes", () => {
           entry.actor_user_id === supervisor.user_id,
       ),
     ).toBe(true);
-    expect(() => completePriceTasks(state, supervisor, [row.id])).toThrow(
-      "checkboxes",
-    );
+    // Ali's rule (Oct 2026): Done no longer depends on a checklist.
+    completePriceTasks(state, supervisor, [row.id]);
+    expect(tasks().find((item) => item.id === row.id)?.status).toBe("done");
   });
   it("real History Undo cancels an untouched task rather than creating another", () => {
     const before = cloneWithAuthority(state);
@@ -411,23 +412,49 @@ describe("E2 exact staff permissions and physical label confirmation", () => {
     expect(() =>
       updatePriceTask(state, supervisor, task().id, { label_printed: true }),
     ).toThrow("print");
-    updatePriceTask(state, supervisor, task().id, { register_changed: true });
-    expect(() => completePriceTasks(state, supervisor, [task().id])).toThrow(
-      "checkboxes",
-    );
+    expect(task().label_printed).toBeUndefined();
   });
-  it("needs both acknowledgements, retaining the exact real completion person and time", () => {
+  it("Done needs no checklist and records the real person, time and Seen", () => {
     change();
     const row = task();
-    physicalLabel(row, floor);
-    expect(() => completePriceTasks(state, supervisor, [row.id])).toThrow(
-      "checkboxes",
-    );
-    updatePriceTask(state, supervisor, row.id, { register_changed: true });
     completePriceTasks(state, supervisor, [row.id]);
     expect(row.status).toBe("done");
     expect(row.completed_by_user_id).toBe(supervisor.user_id);
     expect(row.completed_at).toBe(now.toISOString());
+    expect(row.seen?.by_user_id).toBe(supervisor.user_id);
+    expect(row.seen?.version).toBe(row.version);
+    expect(() => completePriceTasks(state, supervisor, [row.id])).toThrow(
+      "status",
+    );
+  });
+  it("Seen records who and when once per version; a new change asks again", () => {
+    change();
+    const row = task();
+    markPriceTaskSeen(state, floor, row.id);
+    expect(row.seen?.by_user_id).toBe(floor.user_id);
+    expect(row.seen?.at).toBe(now.toISOString());
+    const audits = state.activity.filter(
+      (entry) => entry.action === "Mark price update seen",
+    ).length;
+    markPriceTaskSeen(state, supervisor, row.id);
+    expect(row.seen?.by_user_id).toBe(floor.user_id);
+    expect(
+      state.activity.filter((entry) => entry.action === "Mark price update seen")
+        .length,
+    ).toBe(audits);
+    change({ price: "5.49" });
+    expect(task().seen?.version).not.toBe(task().version);
+    markPriceTaskSeen(state, supervisor, task().id);
+    expect(task().seen?.by_user_id).toBe(supervisor.user_id);
+    expect(task().seen?.version).toBe(task().version);
+  });
+  it("Seen is limited to people who may read the task at its location", () => {
+    change();
+    const row = task();
+    expect(() => markPriceTaskSeen(state, cashier, row.id)).toThrow();
+    expect(row.seen).toBeUndefined();
+    completePriceTasks(state, supervisor, [row.id]);
+    expect(() => markPriceTaskSeen(state, floor, row.id)).toThrow("status");
   });
   it("a reasoned no-label waiver is the alternative to physical label confirmation", () => {
     change();
