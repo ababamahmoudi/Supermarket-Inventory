@@ -47,6 +47,7 @@ export function SellingPriceValue({
   return (
     <span
       {...props}
+      data-testid="selling-price"
       className={[
         "selling-price-value",
         current.secondary && "has-secondary",

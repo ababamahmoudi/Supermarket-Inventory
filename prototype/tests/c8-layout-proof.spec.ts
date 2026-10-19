@@ -251,8 +251,10 @@ for (const language of ["en", "fa"] as const)
           if (entry.route === "requests") {
             await page
               .getByRole("tab", {
-                name: language === "en" ? "Outgoing" : "خروجی",
-                exact: true,
+                name:
+                  language === "en"
+                    ? /^Outgoing(?:\s+\d+)?$/
+                    : /^خروجی(?:\s+[\d۰-۹]+)?$/,
               })
               .click();
             await choose(

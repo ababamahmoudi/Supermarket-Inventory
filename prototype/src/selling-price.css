@@ -107,6 +107,9 @@
   border-block-start: 1px solid var(--divider);
   padding-block-start: 16px;
 }
+.c9-provenance-invoice-reference {
+  white-space: nowrap;
+}
 .c9-hero-price {
   display: flex;
   flex-wrap: wrap;

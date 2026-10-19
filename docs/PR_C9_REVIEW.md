@@ -1,6 +1,6 @@
 # C9 review
 
-C9 corrects the loading flash, decided sale requests, sale/regular-price interaction, Notes engagement, selling-price display, filter bars and Branch request presentation. It keeps the existing fictional data, pricing rules, permissions, documents and financial/physical evidence. The implementation and local review packet are complete. C9 stays unmerged for owner review; use its live GitHub Checks for the final exact-head CI status.
+C9 corrects the loading flash, decided sale requests, sale/regular-price interaction, Notes engagement, selling-price display, filter bars and Branch request presentation. It keeps the existing fictional data, pricing rules, permissions, documents and financial/physical evidence. C9 stays unmerged for owner review; use its live GitHub Checks for the final exact-head CI status. [Current expectation-alignment results and the separately approved phone invoice-code wrapping fix](evidence/c9/test-alignment/README.md) supersede the earlier pending-CI status; no green result is claimed for the new edits until every exact-head check passes.
 
 Branch: `feat/prototype-c9`, created from main `d1fcb4ffdf55e4bb33792aa2564790dbac473e0b` after the approved feature merges. Settings is deferred except removing Notes; notebook management lives on Notes. No later feature PR or hosting deployment is part of C9.
 

@@ -932,7 +932,7 @@ export function Notes() {
             aria-label={t("Search notes", "جستجوی یادداشت‌ها")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={t("Search notes", "جستجوی یادداشت‌ها")}
+            placeholder={t("Search notes", "جستجو در یادداشت‌ها")}
           />
         }
       >

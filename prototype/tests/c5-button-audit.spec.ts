@@ -151,7 +151,6 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       "Taxes",
       "Receiving",
       "Returns/date tracking/labels",
-      "Notes",
       "Notifications",
       "Modules",
       "Data",
@@ -161,6 +160,9 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
         .click();
       await proof.check(`Settings: ${group}`);
     }
+    await expect(
+      navigation.getByRole("button", { name: "Notes", exact: true }),
+    ).toHaveCount(0);
     await navigation
       .getByRole("button", { name: "Branches", exact: true })
       .click();
@@ -183,9 +185,10 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       .click();
     await proof.check("Add pricing category dialog");
     await closeDialog(page);
-    await navigation
-      .getByRole("button", { name: "Notes", exact: true })
-      .click();
+    // C9 manages notebooks on Notes only; keep the same real button/dialog
+    // contract coverage at its new destination instead of restoring Settings.
+    await page.goto("/#notes");
+    await proof.check("Notes notebook management");
     await page
       .getByRole("button", { name: "New notebook", exact: true })
       .click();

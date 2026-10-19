@@ -83,3 +83,22 @@ it("renders frozen task values and both unit lines directly from their snapshot"
   expect(container).toHaveTextContent("$8.99/lb$19.82/kg");
   expect(container.querySelector("del")).toBeNull();
 });
+
+it("identifies each complete price once without named or role-bearing nested copies", () => {
+  const { getAllByTestId } = render(
+    <>
+      <SellingPriceValue current={{ main: { amount: "2.99", unit: "each" } }} />
+      <SellingPriceValue current={{ main: { amount: "3.29", unit: "each" } }} />
+    </>,
+  );
+  const prices = getAllByTestId("selling-price");
+  expect(prices).toHaveLength(2);
+  expect(prices.map((price) => price.textContent)).toEqual(["$2.99", "$3.29"]);
+  for (const price of prices) {
+    expect(price.querySelector("[data-testid]")).toBeNull();
+    expect(
+      price.querySelector("[aria-label], [aria-labelledby], [role]"),
+    ).toBeNull();
+    expect(price.querySelectorAll("strong")).toHaveLength(1);
+  }
+});

@@ -159,10 +159,11 @@ for (const language of ["en", "fa"] as const) {
         const textBounds = text.getBoundingClientRect();
         const firstCellStyle = getComputedStyle(firstCell);
         return {
-          // C8 puts filters inside their list card; measure the real gap to
-          // the table and keep both regions inside the card's content edges.
+          // C9 keeps filters inside the list card, with 20px below the
+          // toolbar and a separate 12px gap between wrapped controls.
           toolbarInsideCard: card.contains(toolbar),
           gap: tableBounds.top - toolbarBounds.bottom,
+          controlWrapGap: parseFloat(getComputedStyle(toolbar).rowGap),
           toolbarTopInset: toolbarBounds.top - cardBounds.top,
           cardPadding: parseFloat(cardStyle.paddingBlockStart),
           horizontalInsets: [
@@ -210,7 +211,8 @@ for (const language of ["en", "fa"] as const) {
       });
     expect(spacing.toolbarInsideCard).toBe(true);
     expect(spacing.gap).toBeGreaterThanOrEqual(0);
-    expect(spacing.gap).toBeLessThanOrEqual(isMobile ? 16 : 24);
+    expect(spacing.gap).toBeCloseTo(20, 0);
+    expect(spacing.controlWrapGap).toBeCloseTo(12, 0);
     expect(spacing.toolbarTopInset).toBeGreaterThanOrEqual(
       spacing.cardPadding - 1,
     );

@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-19 — Align retained C9 tests with requested behavior (verification pending)
+
+- Read the return creator's expected name from the demo users, rather than copying a display name. Check the genuine Persian Search notes translation and prove search still reaches built-in and other custom notebooks.
+- Give the shared selling-price wrapper one test identity; target complete prices and verify their accessible tree has no repeated nested labels or roles. Check the stopped offer's $2.99 in Price and its “2 for $5.00” terms in Offer, including compact phone rows.
+- Retain notebook button/dialog coverage at Notes and prove its removed Settings destination is absent. Recognize counted Branch request tabs and verify the requested 20px toolbar-to-list space separately from the 12px wrapping gap; preserve other geometry and business assertions.
+- After Ali explicitly approved the real phone wrapping fix, keep the Product price explanation's invoice reference whole with a class scoped to that fragment and `white-space: nowrap`. Preserve the existing layout guard, invoice data and pricing behavior.
+- Record the owner's standing rule to update tests that only expect explicitly replaced behavior, while stopping for apparent bugs or ambiguous requirements. All four earlier C9 shards finished: two assertion failures and two time limits. The test alignments and approved wrapping fix are included; new exact-head CI is pending; C9 remains unmerged.
+
 ## 2026-10-19 — C9 review and faster prototype CI
 
 - Complete separate CI PR25: static prototype checks plus four independent30-minute Playwright shards and the required aggregate browser check; foundation and original runner settings unchanged. Merge green C8,E1,E2,E3 in order after ordinary main integrations; preserve their commit histories.

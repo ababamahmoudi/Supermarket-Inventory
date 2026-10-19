@@ -173,7 +173,10 @@ function ProductProvenance({ product }: { product: Product }) {
         "Regular price worked out from Invoice",
         "قیمت عادی محاسبه‌شده از فاکتور",
       )}{" "}
-      <LtrText>{source.invoice_number}</LtrText> ·{" "}
+      <LtrText className="c9-provenance-invoice-reference">
+        {source.invoice_number}
+      </LtrText>{" "}
+      ·{" "}
       <LtrText>
         {sourceCost && financial.data?.category && (
           <>

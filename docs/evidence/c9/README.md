@@ -1,6 +1,6 @@
 # C9 verification and screenshots
 
-The screenshot source is `882a381908b6a39c0f883319cb1a6062708b92c8`. Publication changes only docs. This packet records local executions; the final pull request’s **Checks** tab supplies the exact-head GitHub CI result. C9 is for owner review and must remain unmerged until approved.
+The screenshot source is `882a381908b6a39c0f883319cb1a6062708b92c8`. Its publication changes only docs. This packet records source-specific local executions; the final pull request’s **Checks** tab supplies the exact-head GitHub CI result. C9 is for owner review and must remain unmerged until approved. [Later expectation-alignment checks, completed earlier CI, and confirmed phone invoice-code wrapping bug](test-alignment/README.md) are recorded separately; the 40 baseline screenshots are not relabelled as the later source.
 
 - [All40 actual/reference comparisons and differences](COMPARISON.md), [portable gallery](screenshots/index.html), [source/asset/PNG manifest](screenshots/manifest.json), [four manual review records](reviews/).
 - Capture:40/40, actual exit0, unchanged source, zero recorded page/console/request errors, inner/page overflow or layout-check failures. All originals are unedited. Root reviewed10 phone images; parallel reviewers independently opened10 each for EN-light, EN-dark and FA-light; hashes match.

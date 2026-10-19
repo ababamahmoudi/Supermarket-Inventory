@@ -574,6 +574,7 @@ for (const language of ["en", "fa"] as const) {
         tableGap:
           table.getBoundingClientRect().top -
           toolbar.getBoundingClientRect().bottom,
+        controlWrapGap: parseFloat(getComputedStyle(toolbar).rowGap),
       };
     });
     report.columns = {
@@ -592,9 +593,9 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(columnsContainment.controlContained).toBe(true);
     expect.soft(columnsContainment.tableContained).toBe(true);
     expect.soft(columnsContainment.tableGap).toBeGreaterThanOrEqual(0);
-    expect
-      .soft(columnsContainment.tableGap)
-      .toBeLessThanOrEqual(page.viewportSize()!.width < 760 ? 16 : 24);
+    // C9's 20px toolbar-to-list space is separate from its 12px control gap.
+    expect.soft(columnsContainment.tableGap).toBeCloseTo(20, 0);
+    expect.soft(columnsContainment.controlWrapGap).toBeCloseTo(12, 0);
 
     await page.goto("/#suppliers");
     const search = page.locator(".suppliers-overview .filter-search-pill");

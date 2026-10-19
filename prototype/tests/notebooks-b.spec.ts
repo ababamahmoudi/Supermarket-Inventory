@@ -300,13 +300,35 @@ test("Persian Deli notebook uses custom controls and keeps the measurement and d
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.goto("/#notes");
+  await createCleaningNotebook(page);
+  await page
+    .getByLabel("Note", { exact: true })
+    .fill("Sunflower oil cleaning check");
+  await page.getByRole("button", { name: "Save note", exact: true }).click();
   await setLanguage(page, "fa");
   await notebookTab(page, "دمای اغذیه");
   await expect(page.locator(".notebook-entry-card")).toContainText("3.2 °C");
+  const search = page.getByLabel("جستجوی یادداشت‌ها", { exact: true });
+  await expect(search).toHaveAttribute("placeholder", "جستجو در یادداشت‌ها");
+  // The shorter translated prompt does not narrow search to the active tab:
+  // both a built-in note and another custom notebook remain searchable.
+  await search.fill("Sunflower oil");
   await expect(
-    page.getByLabel("جستجوی یادداشت‌ها", { exact: true }),
-  ).toHaveAttribute("placeholder", "جستجو در همه دفترچه‌ها");
+    page.getByRole("tab", { name: /^دمای اغذیه( \d+)?$/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "روغن آفتابگردان ۱٫۸ لیتری موجود نیست" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "Sunflower oil cleaning check" }),
+  ).toBeVisible();
+  await expect(page.locator(".filter-count")).toHaveText("2 یادداشت");
+  await search.clear();
+  await expect(page.locator(".notebook-entry-card")).toContainText("3.2 °C");
   await expect(
     page.locator(
       ".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]",
