@@ -229,3 +229,17 @@
 :root [dir="rtl"] .back-link > svg {
   transform: scaleX(-1);
 }
+
+/* Dashboard approvals queue: each request is one boxed item (Ali, Oct 2026). */
+:root .dashboard-queue {
+  display: grid;
+  gap: 12px;
+}
+:root .dashboard-queue .dashboard-queue-row.list-box,
+:root .dashboard-queue .sale-request-card.is-compact {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
