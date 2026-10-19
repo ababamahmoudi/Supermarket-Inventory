@@ -205,7 +205,7 @@ test("Floor Worker and Cashier never see product Edit, including direct product 
   await expect(page.getByRole("button", { name: /^Edit / })).toHaveCount(0);
 });
 
-test("Lookup columns mirror in Persian, with selected row distinct from offer pill", async ({
+test("Lookup columns mirror in Persian, with selected row distinct from offer dot and terms", async ({
   page,
 }) => {
   await signIn(page, "Cashier");
@@ -235,19 +235,21 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer pi
     return { nameX: name.x, priceX: price.x, width: price.width };
   });
   expect(geometry.nameX).toBeGreaterThan(geometry.priceX);
-  const fills = await row.evaluate((element) => ({
-    rowRadius: getComputedStyle(element).borderRadius,
-    pillRadius: getComputedStyle(element.querySelector(".offer-pill")!)
-      .borderRadius,
-    pillHeight: element.querySelector(".offer-pill")!.getBoundingClientRect()
-      .height,
-    bar: getComputedStyle(element, "::before").width,
-  }));
-  expect(fills.rowRadius).not.toBe(fills.pillRadius);
-  expect(parseFloat(fills.pillRadius)).toBeGreaterThanOrEqual(
-    fills.pillHeight / 2,
+  const fills = await row.evaluate((element) => {
+    const offer = element.querySelector(".product-offer-line")!;
+    const dot = getComputedStyle(offer, "::before");
+    return {
+      rowRadius: getComputedStyle(element).borderRadius,
+      dotRadius: dot.borderRadius,
+      dotHeight: parseFloat(dot.height),
+      bar: getComputedStyle(element, "::before").width,
+    };
+  });
+  expect(fills.rowRadius).not.toBe(fills.dotRadius);
+  expect(parseFloat(fills.dotRadius)).toBeGreaterThanOrEqual(
+    fills.dotHeight / 2,
   );
-  await expect(row.locator(".offer-pill")).not.toBeEmpty();
+  await expect(row.locator(".product-offer-line")).toHaveText("۲ عدد $5.00");
   expect(fills.bar).toBe("3px");
 });
 

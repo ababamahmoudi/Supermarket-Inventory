@@ -347,6 +347,11 @@ test("the four redesigned screens use styled controls and borderless cards witho
   page,
 }) => {
   await page.goto("/");
+  // C9 leaves the first-start placeholder cardless while the real session
+  // initializes. Inspect the actual Sign-in screen after it has mounted.
+  await expect(
+    page.getByRole("heading", { name: "Sign in", exact: true }),
+  ).toBeVisible();
   await expectStyledControls(page);
   await expectBorderlessCards(page);
   await expectNoPageOverflow(page);

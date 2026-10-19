@@ -40,6 +40,8 @@ interface FrameWatch {
   samples: number;
   violations: {
     reason: string;
+    source: "animation-frame" | "mutation";
+    readyState: DocumentReadyState;
     url: string;
     theme: string;
     colors: string[];
@@ -62,7 +64,96 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
     )
       unexpectedNavigations.push(request.url());
   });
-  await signIn(page, "Manager");
+  let lastAuthenticationSnapshot: unknown = null;
+  let lastAuthenticationNotice = "";
+  let authenticationSnapshotPending = false;
+  const authenticationEvidence = () => {
+    const evidence = JSON.stringify(
+      {
+        phase: "Initial Manager username/password and second sign-in step",
+        expectedSecondStep: demoSeed.demo_users.find(
+          (person) => person.username === "manager",
+        )!.setup.second_step_method,
+        lastAuthenticationSnapshot,
+        errors,
+      },
+      null,
+      2,
+    );
+    return demoSeed.demo_users.reduce(
+      (text, person) =>
+        person.password ? text.replaceAll(person.password, "[redacted]") : text,
+      evidence,
+    );
+  };
+  const captureAuthenticationSnapshot = async () => {
+    if (authenticationSnapshotPending || page.isClosed()) return;
+    authenticationSnapshotPending = true;
+    try {
+      lastAuthenticationSnapshot = await page.evaluate(() => {
+        const visibleText = (selector: string) =>
+          [...document.querySelectorAll<HTMLElement>(selector)]
+            .filter((element) => {
+              const bounds = element.getBoundingClientRect();
+              return bounds.width > 0 && bounds.height > 0;
+            })
+            .map((element) => element.innerText.trim());
+        return {
+          url: `${location.origin}${location.pathname}`,
+          readyState: document.readyState,
+          headings: visibleText(".signin-page h1,.sign-in-card h1"),
+          fieldLabels: visibleText(".signin-page label,.sign-in-card label"),
+          buttons: visibleText(".signin-page button,.sign-in-card button"),
+          alerts: visibleText(
+            ".signin-page [role=alert],.signin-page .form-error,.sign-in-card [role=alert],.sign-in-card .form-error",
+          ),
+          statuses: visibleText(
+            ".signin-page [role=status],.banner[role=status]",
+          ),
+          hasWorkspace: Boolean(document.querySelector(".app-shell")),
+          secureContext: isSecureContext,
+          indexedDBAvailable: typeof indexedDB !== "undefined",
+          secureRandomAvailable:
+            typeof globalThis.crypto?.getRandomValues === "function",
+        };
+      });
+      const evidence = authenticationEvidence();
+      if (
+        process.env.CI &&
+        testInfo.project.name === "webkit-no-reload" &&
+        evidence !== lastAuthenticationNotice
+      ) {
+        lastAuthenticationNotice = evidence;
+        const escaped = evidence
+          .replaceAll("%", "%25")
+          .replaceAll("\r", "%0D")
+          .replaceAll("\n", "%0A");
+        process.stdout.write(
+          `\n::notice title=C9 WebKit initial sign-in::${escaped}\n`,
+        );
+      }
+    } catch {
+      // A native test timeout may close the page. Keep the last public DOM
+      // snapshot; never read input values, credentials, or authority records.
+    } finally {
+      authenticationSnapshotPending = false;
+    }
+  };
+  const authenticationDiagnostics = setInterval(
+    () => void captureAuthenticationSnapshot(),
+    1000,
+  );
+  try {
+    await signIn(page, "Manager");
+  } catch (error) {
+    await testInfo.attach("C9 initial Manager sign-in failure", {
+      body: authenticationEvidence(),
+      contentType: "application/json",
+    });
+    throw error;
+  } finally {
+    clearInterval(authenticationDiagnostics);
+  }
   await (await openShellAction(page, "Switch to dark theme")).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const retainedThemeInput = await page.evaluate(
@@ -122,7 +213,7 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
       violations: [],
     };
     (window as WatchedWindow).__c9FrameWatch = watch;
-    const sample = () => {
+    const sample = (source: "animation-frame" | "mutation") => {
       const root = document.documentElement;
       if (!root || !document.body) return;
       watch.samples++;
@@ -137,7 +228,13 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
         return channels.slice(0, 3).some((channel) => channel > 60);
       });
       let reason = "";
-      if (root.dataset.theme !== "dark" || !opaque.length || light)
+      // A parser mutation can precede render-blocking CSS without being painted.
+      // Check the background at every rendering opportunity; both sources still
+      // guard against mounting auth or removing the workspace after clicks.
+      if (
+        source === "animation-frame" &&
+        (root.dataset.theme !== "dark" || !opaque.length || light)
+      )
         reason = "A frame did not have the chosen dark page background.";
       if (watch.armed) {
         const auth = document.querySelector<HTMLElement>(".signin-page");
@@ -149,12 +246,14 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
       if (reason && watch.violations.length < 20)
         watch.violations.push({
           reason,
+          source,
+          readyState: document.readyState,
           url: location.href,
           theme: root.dataset.theme ?? "",
           colors,
         });
     };
-    new MutationObserver(sample).observe(document, {
+    new MutationObserver(() => sample("mutation")).observe(document, {
       subtree: true,
       childList: true,
       attributes: true,
@@ -162,7 +261,7 @@ test("C9 dark LAN clicks never reload, show sign-in, or paint a light page", asy
     });
     const frame = () => {
       watch.frames++;
-      sample();
+      sample("animation-frame");
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);

@@ -1,0 +1,49 @@
+{
+  "base": "27361bbf2cfcad02e674539b3431587b36aa65f4",
+  "source_state": "Test/documentation-only follow-up on27361bb; no app/helper/config/workflow changes.",
+  "source_sha256": {
+    "prototype/tests/c9-no-reload.spec.ts": "5b326f1f91c7197a16748ad4f5cdb73def98159619f24ded6ac48531ca09512e",
+    "prototype/tests/catalog-a2.spec.ts": "48f127413d227d8f7bb35935c680c56eb9cf6c0b0b61ac4a882fbae7c0f102ca",
+    "prototype/tests/catalog.spec.ts": "60ebd592295d27839c7afe1b2d6ece070b1040a750f2c5b0c1f7ed028a78d88f",
+    "prototype/tests/design-v2.spec.ts": "612b7ea159b2b91a2204102ac56de0ca39205cb0cc9473f163af38f6d97f58d0",
+    "prototype/tests/supplier-approval.spec.ts": "733e2904ec78964a68bfb3611157b35cb003dfd25eba005573594117ee583208",
+    "prototype/tests/supplier-items-c2.spec.ts": "f85511363c16f1881866c84d4858777287f1143c57308e58b8a22d56fa74809a"
+  },
+  "preserved_budgets": {
+    "prototype/tests/c9-no-reload.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    },
+    "prototype/tests/catalog-a2.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    },
+    "prototype/tests/catalog.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    },
+    "prototype/tests/design-v2.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    },
+    "prototype/tests/supplier-approval.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    },
+    "prototype/tests/supplier-items-c2.spec.ts": {
+      "timeouts": true,
+      "skip_rules": true,
+      "workers_retries": true
+    }
+  },
+  "checks": {
+    "normal_lint_exit": 0,
+    "discovered": 841,
+    "new_lan_webkit_result": "pending; initial WebKit auth cause unknown"
+  }
+}

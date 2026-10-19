@@ -347,3 +347,11 @@ C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb 
 **Decision:** update only obsolete expectations, preserve business/layout assertions and runner budgets, and list every changed test. Verify one shared-price announcement through the native accessibility tree and genuine Persian search across notebooks. Keep the Product provenance invoice code together. Give Supplier items' invoice column a 220px minimum and priority so lower-priority values move into the existing row details when necessary; retain its previous phone visibility and all permitted values/actions.
 
 **Why:** meet the requested presentation without restoring old behavior, clipping invoice references, shrinking typography, losing data or weakening tests. Wait for all four browser shards and all exact-head checks; leave C9 unmerged for Ali's review. Equivalent invoice-reference layout fixes are authorized; other real bugs or ambiguous requirements still require a question.
+
+## 044 — Observe ready views and actual rendering opportunities (2026-10-19)
+
+**Context:** the complete 27361bb browser run exposed more old markup assumptions, a pre-mount inspection and a frame watcher that also classified unpainted parser mutations as frames. The app's intended delayed startup and approved responsive data allocation remain.
+
+**Decision:** await the real Sign-in heading or populated supplier row before inspecting their unchanged layout/data contracts. Test the new shared-price/offer/tax markup and counted tabs. Check dark backgrounds on every animation frame; keep sign-in/workspace guards on both mutation and frame observations. Record only public auth labels, errors and capability flags when diagnosing the unresolved WebKit initial sign-in, with no input values or authority/session records.
+
+**Why:** verify the requested visible behavior without restoring obsolete presentation, weakening financial/permission assertions, counting pre-paint CSS loading as a displayed flash or changing workers, retries, skips and budgets. All four next-head shards and the final browser gate still must pass; C9 remains unmerged.

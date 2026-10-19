@@ -1,0 +1,359 @@
+{
+  "alteredAppOrStorage": false,
+  "observations": [
+    {
+      "width": 1440,
+      "iteration": 0,
+      "immediate": {
+        "cards": 0,
+        "initial": true,
+        "signIn": false
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 54.5,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 367.09999999403954,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 387.79999999701977,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 492.29999999701977,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 744.3999999910593,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    },
+    {
+      "width": 1440,
+      "iteration": 1,
+      "immediate": {
+        "cards": 0,
+        "initial": true,
+        "signIn": false
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 28.200000002980232,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 328.5,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 348.90000000596046,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 456.29999999701977,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 664.5,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    },
+    {
+      "width": 1440,
+      "iteration": 2,
+      "immediate": {
+        "cards": 1,
+        "initial": false,
+        "signIn": true
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 71.09999999403954,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 771.7000000029802,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 834,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 1103.7000000029802,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 1197.5,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "immediate": {
+        "cards": 0,
+        "initial": true,
+        "signIn": false
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 33.099999994039536,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 295.8999999910593,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 358.59999999403954,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 522.3999999910593,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 687.6999999880791,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "immediate": {
+        "cards": 0,
+        "initial": true,
+        "signIn": false
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 55.099999994039536,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 701.5999999940395,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 734.0999999940395,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 836.2999999970198,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 1083.0999999940395,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "immediate": {
+        "cards": 0,
+        "initial": true,
+        "signIn": false
+      },
+      "final": {
+        "cards": 1,
+        "records": [
+          {
+            "source": "mutation",
+            "at": 31.299999997019768,
+            "readyState": "loading",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "domcontentloaded",
+            "at": 309.5,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": false,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 356.29999999701977,
+            "readyState": "interactive",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "load",
+            "at": 366,
+            "readyState": "complete",
+            "cards": 0,
+            "initial": true,
+            "signIn": false,
+            "heading": []
+          },
+          {
+            "source": "mutation",
+            "at": 686,
+            "readyState": "complete",
+            "cards": 1,
+            "initial": false,
+            "signIn": true,
+            "heading": []
+          }
+        ]
+      }
+    }
+  ]
+}

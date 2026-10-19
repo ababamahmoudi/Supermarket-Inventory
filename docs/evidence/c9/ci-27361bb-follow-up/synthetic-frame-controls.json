@@ -1,0 +1,152 @@
+{
+  "scope": "SYNTHETIC MEASUREMENT CONTROLS ONLY: about:blank documents, never the published app. No app screenshots, no LAN/WebKit evidence. Runs the exact current test addInitScript callback extracted from its TypeScript AST.",
+  "watcher_sha256": "59f15797b23e0468b5d84a8dc9a277e37dde67d449b4506b4e3dd7829bdc3d11",
+  "results": [
+    {
+      "name": "Synthetic dark baseline: original rAF remains active",
+      "passed": true,
+      "watch": {
+        "documentToken": "1792421744257-0.6596265862849776",
+        "armed": false,
+        "frames": 2,
+        "samples": 2,
+        "violations": []
+      }
+    },
+    {
+      "name": "Synthetic light page: native animation-frame violation is still detected",
+      "passed": true,
+      "watch": {
+        "documentToken": "1792421744428-0.7336298592240825",
+        "armed": true,
+        "frames": 5,
+        "samples": 6,
+        "violations": [
+          {
+            "reason": "A frame did not have the chosen dark page background.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(255, 255, 255)",
+              "rgb(255, 255, 255)"
+            ]
+          },
+          {
+            "reason": "A frame did not have the chosen dark page background.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(255, 255, 255)",
+              "rgb(255, 255, 255)"
+            ]
+          },
+          {
+            "reason": "A frame did not have the chosen dark page background.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(255, 255, 255)",
+              "rgb(255, 255, 255)"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Synthetic sign-in mount: mutation guard remains active",
+      "passed": true,
+      "watch": {
+        "documentToken": "1792421744658-0.0728391139782757",
+        "armed": true,
+        "frames": 5,
+        "samples": 6,
+        "violations": [
+          {
+            "reason": "A click mounted the sign-in/first-loading layout.",
+            "source": "mutation",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          },
+          {
+            "reason": "A click mounted the sign-in/first-loading layout.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          },
+          {
+            "reason": "A click mounted the sign-in/first-loading layout.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Synthetic workspace removal: mutation guard remains active",
+      "passed": true,
+      "watch": {
+        "documentToken": "1792421744868-0.5693050397811503",
+        "armed": true,
+        "frames": 4,
+        "samples": 5,
+        "violations": [
+          {
+            "reason": "A click removed the workspace frame.",
+            "source": "mutation",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          },
+          {
+            "reason": "A click removed the workspace frame.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          },
+          {
+            "reason": "A click removed the workspace frame.",
+            "source": "animation-frame",
+            "readyState": "complete",
+            "url": "about:blank",
+            "theme": "dark",
+            "colors": [
+              "rgb(14, 17, 23)",
+              "rgb(14, 17, 23)"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

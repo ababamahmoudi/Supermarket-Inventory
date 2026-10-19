@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-19 — Follow-up after all four C9 shards completed (new CI pending)
+
+- Preserve the complete27361bb run: all four browser shards failed assertions/locators, no30-minute job timeouts; foundation and prototype lint/unit/pricing/build passed. C9 stays open/unmerged.
+- Align retained catalog tax/shared-price/offer-dot and Approved-count selectors. Await the real Sign-in view or populated Supplier row before unchanged layout, purchase-cost, no-invented-purchases and permission assertions.
+- Measure dark backgrounds on every actual animation-frame callback; retain mutation/frame sign-in/workspace guards and all original clicks/assertions. Isolated synthetic controls verify light frames and forbidden auth transitions still fail.
+- Add safe public auth diagnostics to the new WebKit test for its unresolved initial passkey-stage wait. Do not claim an auth fix or LAN/WebKit success from localhost diagnostics. No app, helper, credential, workflow, worker, retry, skip or budget changes.
+
 ## 2026-10-19 — Align retained C9 tests with requested behavior (CI pending at publication)
 
 - Read the return creator's expected name from the demo users, rather than copying a display name. Check the genuine Persian Search notes translation and prove search still reaches built-in and other custom notebooks.

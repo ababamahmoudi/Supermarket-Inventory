@@ -1,0 +1,848 @@
+Listing tests:
+  [desktop] › alignment-a2.spec.ts:5:3 › table columns align and phone cards retain labelled contained values (en)
+  [desktop] › alignment-a2.spec.ts:5:3 › table columns align and phone cards retain labelled contained values (fa)
+  [desktop] › alignment-a2.spec.ts:267:1 › product editor is centered with focus trapped, Escape and backdrop restore focus
+  [desktop] › approvals.spec.ts:44:1 › live role switches keep cashier approved price until branch approval; new product approves for all
+  [desktop] › approvals.spec.ts:92:1 › intentional tea conflicts stay quiet, and applying a selected price clears all branch overrides
+  [desktop] › approvals.spec.ts:132:1 › approved Lavash suggests a worker-confirmed offer and joins juice and chips in the same pool
+  [desktop] › b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in en
+  [desktop] › b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in fa
+  [desktop] › b-polish.spec.ts:249:1 › Part 1 pills and dashboard branch values stay on one line
+  [desktop] › b-polish.spec.ts:318:1 › Part 1 invoice names and approved-price notes fit on one line
+  [desktop] › b-polish.spec.ts:361:1 › Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards
+  [desktop] › b-polish.spec.ts:400:1 › Part 1 Open return exposes pickup and cancellation, then resolution after pickup, with the normal title size
+  [desktop] › b-polish.spec.ts:454:1 › Part 1 approval headers are complete and sortable Products headers and back links use shared styling
+  [desktop] › b-polish.spec.ts:527:1 › Part 1 demo disclaimer appears inside Demo and only invoice AI reading remains in page copy
+  [desktop] › branch-invoice-b.spec.ts:13:1 › a Floor Worker cannot read another branch's manual draft, and starting their own invoice preserves it for the Supervisor
+  [desktop] › branch-invoice-b.spec.ts:137:1 › another branch's reading draft stays hidden and unchanged by reading timers or Demo answers
+  [desktop] › branch-requests-c2.spec.ts:12:1 › request catalog cases and free text; fulfil at Warehouse, receive Missing, close and copy residual once
+  [desktop] › branch-requests-c2.spec.ts:195:3 › Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in en
+  [desktop] › branch-requests-c2.spec.ts:195:3 › Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in fa
+  [desktop] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 720px desktop height
+  [desktop] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 950px desktop height
+  [desktop] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 1080px desktop height
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1280px (en)
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1280px (fa)
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1440px (en)
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1440px (fa)
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1920px (en)
+  [desktop] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1920px (fa)
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in en light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in en dark
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in fa light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in fa dark
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in en light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in en dark
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in fa light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in fa dark
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in en light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in en dark
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in fa light
+  [desktop] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in fa dark
+  [desktop] › c3-invoices.spec.ts:253:1 › posted invoice Columns persist, and detail/browser Back retain the Posted list
+  [desktop] › c3-invoices.spec.ts:307:1 › a manual draft detail returns to its list without losing the saved line
+  [desktop] › c3-navigation-forms.spec.ts:5:1 › company and supplier validation clears only when its related field changes
+  [desktop] › c3-navigation-forms.spec.ts:45:1 › Warehouse selling opt-in persists and is reversible without changing receiving evidence
+  [desktop] › c3-navigation-forms.spec.ts:121:1 › request detail Back and browser Back retain tab and search, with actionable breadcrumbs
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1280px (en)
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1280px (fa)
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1440px (en)
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1440px (fa)
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1920px (en)
+  [desktop] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1920px (fa)
+  [desktop] › c3-tables.spec.ts:308:1 › Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker
+  [desktop] › c3-tables.spec.ts:368:1 › browser Back restores the Products search and Orders status without mutating data
+  [desktop] › c3-tables.spec.ts:404:1 › an order error belongs to its invalid item and clears immediately only when that item changes
+  [desktop] › c3-tables.spec.ts:435:1 › external payment is unchanged until explicit money confirmation, and cancellation records nothing
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1280px (en)
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1280px (fa)
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1440px (en)
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1440px (fa)
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1920px (en)
+  [desktop] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1920px (fa)
+  [desktop] › c4-notebooks-settings.spec.ts:4:1 › English-only notebooks keep their name in Persian and clear only the related name error
+  [desktop] › c4-notebooks-settings.spec.ts:40:1 › Settings names new branches as locations
+  [desktop] › c5-button-audit.spec.ts:54:1 › C5 button contract covers Suppliers, every supplier tab and item dialogs
+  [desktop] › c5-button-audit.spec.ts:133:1 › C5 button contract covers working Settings groups and their dialogs
+  [desktop] › c5-button-audit.spec.ts:202:1 › C5 button contract covers Labels, Notes, History, Received and ledger forms
+  [desktop] › c5-button-audit.spec.ts:268:1 › C5 button contract covers Orders and Branch request forms and retained details
+  [desktop] › c5-button-audit.spec.ts:324:1 › C5 button contract covers sign-in, first-sign-in password and lock actions
+  [desktop] › c5-button-audit.spec.ts:434:1 › C5 button contract covers primary product, date, approval and invoice dialogs
+  [desktop] › c5-conditional-audit.spec.ts:36:1 › C5 conditional request decisions and later lifecycle actions
+  [desktop] › c5-conditional-audit.spec.ts:116:1 › C5 conditional reauthentication dialog
+  [desktop] › c5-conditional-audit.spec.ts:144:1 › C5 conditional label selection, template restore, and print confirmation
+  [desktop] › c5-conditional-audit.spec.ts:196:1 › C5 conditional note editing and seen/done/open actions
+  [desktop] › c5-conditional-audit.spec.ts:259:1 › C5 conditional saved order and print/cancel dialogs
+  [desktop] › c5-conditional-audit.spec.ts:290:1 › C5 conditional correction preview, confirmation, versions, history menu and Revert
+  [desktop] › c5-conditional-audit.spec.ts:450:1 › C5 conditional supplier-held return cancellation review actions
+  [desktop] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (en-light)
+  [desktop] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)
+  [desktop] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (en-light)
+  [desktop] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (en-dark)
+  [desktop] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)
+  [desktop] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (en-dark)
+  [desktop] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (fa-light)
+  [desktop] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)
+  [desktop] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (fa-light)
+  [desktop] › c5-presentation.spec.ts:560:1 › C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Undo preserves money
+  [desktop] › c5-presentation.spec.ts:627:3 › C6 Lookup dates are readonly; shelf addition enables tracking and local Remove Undo restores evidence (Supervisor)
+  [desktop] › c5-presentation.spec.ts:627:3 › C6 Lookup dates are readonly; shelf addition enables tracking and local Remove Undo restores evidence (Floor Worker)
+  [desktop] › c5-presentation.spec.ts:735:1 › C5 repeated current offer is idempotent, stop moves retained record to Past and Undo restores Current
+  [desktop] › c5-presentation.spec.ts:804:1 › C5 return evidence, memo, cancellation and settlement forms retain compact actions for both roles
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 390px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 768px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 900px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1024px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1180px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1280px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1440px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1920px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 390px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 768px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 900px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1024px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1180px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1280px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1440px
+  [desktop] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1920px
+  [desktop] › c7-shell-controls.spec.ts:4:3 › C7 phone nested menu focus and controls en
+  [desktop] › c7-shell-controls.spec.ts:4:3 › C7 phone nested menu focus and controls fa
+  [desktop] › c8-layout-display.spec.ts:67:3 › C8 unread original has Continue and exact durable evidence (en)
+  [desktop] › c8-layout-display.spec.ts:131:3 › C8 invoice read-only costs preserve four decimals without posting money (en)
+  [desktop] › c8-layout-display.spec.ts:186:3 › C8 Received uses whole cases and retained loose units (en)
+  [desktop] › c8-layout-display.spec.ts:226:3 › C8 list navigation and disclosure stay at the row end (en)
+  [desktop] › c8-layout-display.spec.ts:403:3 › C8 Payables filters share their list card and preserve scoped rows (en)
+  [desktop] › c8-layout-display.spec.ts:67:3 › C8 unread original has Continue and exact durable evidence (fa)
+  [desktop] › c8-layout-display.spec.ts:131:3 › C8 invoice read-only costs preserve four decimals without posting money (fa)
+  [desktop] › c8-layout-display.spec.ts:186:3 › C8 Received uses whole cases and retained loose units (fa)
+  [desktop] › c8-layout-display.spec.ts:226:3 › C8 list navigation and disclosure stay at the row end (fa)
+  [desktop] › c8-layout-display.spec.ts:403:3 › C8 Payables filters share their list card and preserve scoped rows (fa)
+  [desktop] › c8-layout-display.spec.ts:425:1 › C8 exact included sale-cost original preserves drafts and cannot be impersonated by its filename
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 390px
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 900px
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px
+  [desktop] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px
+  [desktop] › c8-migration.spec.ts:502:1 › C8 schema-only boundary preserves real saved settings, manual prices, all records and original bytes after verified exact backup
+  [desktop] › c8-migration.spec.ts:576:1 › C8 backup write failure blocks schema replacement and retains exact state and originals until recovery
+  [desktop] › c8-product-dates.spec.ts:35:3 › C8 product follows same-document hashchange, Back and Forward (en)
+  [desktop] › c8-product-dates.spec.ts:77:3 › C8 tracking without any company date blocks Save and focuses the linked field (en)
+  [desktop] › c8-product-dates.spec.ts:124:3 › C8 Save includes a picked past date not yet Added exactly once (en)
+  [desktop] › c8-product-dates.spec.ts:195:3 › C8 existing other-location open date allows Save without copying its date (en)
+  [desktop] › c8-product-dates.spec.ts:242:3 › C8 incomplete staged date blocks Save and valid picked date Cancel persists nothing (en)
+  [desktop] › c8-product-dates.spec.ts:35:3 › C8 product follows same-document hashchange, Back and Forward (fa)
+  [desktop] › c8-product-dates.spec.ts:77:3 › C8 tracking without any company date blocks Save and focuses the linked field (fa)
+  [desktop] › c8-product-dates.spec.ts:124:3 › C8 Save includes a picked past date not yet Added exactly once (fa)
+  [desktop] › c8-product-dates.spec.ts:195:3 › C8 existing other-location open date allows Save without copying its date (fa)
+  [desktop] › c8-product-dates.spec.ts:242:3 › C8 incomplete staged date blocks Save and valid picked date Cancel persists nothing (fa)
+  [desktop] › c8-sales.spec.ts:125:3 › C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)
+  [desktop] › c8-sales.spec.ts:255:3 › C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)
+  [desktop] › c8-sales.spec.ts:345:3 › C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)
+  [desktop] › c8-sales.spec.ts:484:3 › C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)
+  [desktop] › c8-sales.spec.ts:125:3 › C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)
+  [desktop] › c8-sales.spec.ts:255:3 › C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)
+  [desktop] › c8-sales.spec.ts:345:3 › C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)
+  [desktop] › c8-sales.spec.ts:484:3 › C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)
+  [desktop] › c8-visual-controls.spec.ts:20:3 › C8 supplier purchase bars keep 3:1 contrast and dark filled primary/summary cards use approved blue (en)
+  [desktop] › c8-visual-controls.spec.ts:155:3 › C8 Edit product date rows, column-filling selects and hairlines render as requested (en)
+  [desktop] › c8-visual-controls.spec.ts:354:3 › C8 New order uses filled inputs and headers, units and totals share their real columns (en)
+  [desktop] › c8-visual-controls.spec.ts:20:3 › C8 supplier purchase bars keep 3:1 contrast and dark filled primary/summary cards use approved blue (fa)
+  [desktop] › c8-visual-controls.spec.ts:155:3 › C8 Edit product date rows, column-filling selects and hairlines render as requested (fa)
+  [desktop] › c8-visual-controls.spec.ts:354:3 › C8 New order uses filled inputs and headers, units and totals share their real columns (fa)
+  [desktop] › c9-no-reload.spec.ts:52:1 › C9 dark LAN clicks never reload, show sign-in, or paint a light page
+  [desktop] › c9-prices.spec.ts:91:3 › C9 sale price stays on one line at 1440/900/390, and ending an equal-price sale preserves its task snapshot (en)
+  [desktop] › c9-prices.spec.ts:276:3 › C9 lower regular price can change the running sale atomically (en)
+  [desktop] › c9-prices.spec.ts:91:3 › C9 sale price stays on one line at 1440/900/390, and ending an equal-price sale preserves its task snapshot (fa)
+  [desktop] › c9-prices.spec.ts:276:3 › C9 lower regular price can change the running sale atomically (fa)
+  [desktop] › c9-prices.spec.ts:344:1 › C9 approved, rejected, withdrawn and expired sale requests retain their terms, deciders, counts and read-only cards in English and Persian
+  [desktop] › catalog-a2.spec.ts:31:1 › Supervisor product page uses own route, Back link and shared editor
+  [desktop] › catalog-a2.spec.ts:91:1 › Lookup Change price defaults to all stores and records the signed-in Supervisor
+  [desktop] › catalog-a2.spec.ts:149:1 › Change price changes this store only, and validation stays inside the open dialog
+  [desktop] › catalog-a2.spec.ts:189:1 › Floor Worker and Cashier never see product Edit, including direct product links
+  [desktop] › catalog-a2.spec.ts:208:1 › Lookup columns mirror in Persian, with selected row distinct from offer dot and terms
+  [desktop] › catalog-a2.spec.ts:256:1 › duplicate barcode reports one scoped conflict and allows a corrected save
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 390px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 390px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 768px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 768px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 900px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 900px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1024px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1024px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1180px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1180px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1280px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1280px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1440px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1440px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1920px
+  [desktop] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1920px
+  [desktop] › catalog-klead-c7.spec.ts:323:3 › Klead preserves Floor Worker catalog money and edit restrictions
+  [desktop] › catalog-klead-c7.spec.ts:323:3 › Klead preserves Cashier catalog money and edit restrictions
+  [desktop] › catalog.spec.ts:14:1 › cashier finds English, Persian, code and barcode results with approved price, tax and pending tags
+  [desktop] › catalog.spec.ts:56:1 › cashier direct navigation stays in lookup and exposes no operational or financial controls
+  [desktop] › catalog.spec.ts:76:1 › branch switcher shows approved overrides and a new product requires Supervisor confirmation
+  [desktop] › catalog.spec.ts:116:1 › Floor Worker filters Products and opens details without seeing catalog supplier cost
+  [desktop] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in light
+  [desktop] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in dark
+  [desktop] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in Persian
+  [desktop] › design-polish.spec.ts:112:1 › Persian lookup preserves unit order and makes the Persian name primary
+  [desktop] › design-polish.spec.ts:128:1 › re-check dialog is centered and the top bar remains visible while Settings scrolls
+  [desktop] › design-polish.spec.ts:172:1 › invoice review retains styled controls after simulated extraction
+  [desktop] › design-v2.spec.ts:141:1 › keyboard sign-in explains a wrong password and opens the cashier's approved price lookup
+  [desktop] › design-v2.spec.ts:170:1 › temporary-password users cannot bypass the new password form through routes or a reload
+  [desktop] › design-v2.spec.ts:229:1 › locking hides the app, and recent users fill a username without retaining a password
+  [desktop] › design-v2.spec.ts:265:1 › dark theme, comfortable text and Persian RTL persist when the page reloads
+  [desktop] › design-v2.spec.ts:293:1 › lookup supports keyboard results and a second barcode without adding it to the first
+  [desktop] › design-v2.spec.ts:324:1 › the topbar product search opens an encoded English or Persian lookup query
+  [desktop] › design-v2.spec.ts:346:1 › the four redesigned screens use styled controls and borderless cards without page overflow
+  [desktop] › design-v2.spec.ts:377:1 › the 1080p sidebar fits while compound invoice forms use the available width and individual fields stay bounded
+  [desktop] › design-v2.spec.ts:476:1 › dashboard approvals and notes have actions that change the actual records and navigate to their lists
+  [desktop] › e1-authority-native.spec.js:28:3 › Two tabs preserve both business changes and acknowledgements under one IDB command lock
+  [desktop] › e1-authority-native.spec.js:28:3 › Concurrent last-Owner removal is serialized across real browser tabs
+  [desktop] › e1-authority-native.spec.js:28:3 › Protected authority History returns real transactional before/after without private setup, contacts or credentials; Floor Worker denied
+  [desktop] › e1-authority-native.spec.js:28:3 › Deactivation broadcasts to another tab and fresh command denies even a deliberately stale cached UI actor
+  [desktop] › e1-authority-native.spec.js:28:3 › Fresh protected queries reject revoked identity before constructing private DTO fields
+  [desktop] › e1-authority-native.spec.js:28:3 › Reactivation never revives old sessions; fresh password sign-in creates a working session
+  [desktop] › e1-authority-native.spec.js:28:3 › Actual IDB initialization verifies exact private raw backup, preserves alias passwords/preferences and interrupted setup, never enables unknown credential account or resets on reload
+  [desktop] › e1-authority-native.spec.js:28:3 › Latest shared config commit rejects Cashier store-to-Warehouse conversion atomically without publishing business revision
+  [desktop] › e1-authority-native.spec.js:28:3 › Configured Cashier Demo Reset atomically restores exactly six, revokes all previous sessions and immediately broadcasts to removed custom person
+  [desktop] › e1-authority-native.spec.js:28:3 › Native IDB authority persists across failed verified UI preference write; retry uses actual current aliases, preserves entire private directory and cleans raw credentials only after verified preference persistence
+  [desktop] › e1-authority-native.spec.js:28:3 › Native IDB accepted commit drains after dispose; closed BroadcastChannel and listener errors cannot reject durable commit; new calls fail and genuine SID remains resumable
+  [desktop] › e1-authority-native.spec.js:28:3 › Native IDB clock reconciliation witness authorizes only its active exact canonical draft/source; spread, cloned-draft, wrong-source and retained witnesses fail closed
+  [desktop] › e1-shell.smoke.spec.ts:47:3 › E1 normal sign-in and permitted Reset preserve all six people and locations (en)
+  [desktop] › e1-shell.smoke.spec.ts:99:3 › E1 Owner invitation creates real resumable first-sign-in password setup (en)
+  [desktop] › e1-shell.smoke.spec.ts:217:3 › E1 deactivation removes another tab's access and reactivation needs a fresh sign-in (en)
+  [desktop] › e1-shell.smoke.spec.ts:47:3 › E1 normal sign-in and permitted Reset preserve all six people and locations (fa)
+  [desktop] › e1-shell.smoke.spec.ts:99:3 › E1 Owner invitation creates real resumable first-sign-in password setup (fa)
+  [desktop] › e1-shell.smoke.spec.ts:217:3 › E1 deactivation removes another tab's access and reactivation needs a fresh sign-in (fa)
+  [desktop] › e2-price-updates.spec.ts:7:1 › Black Tea: real approval, scoped notification, Cashier pill, physical print confirmation and per-store progress
+  [desktop] › e2-price-updates.spec.ts:103:1 › Floor Worker and Warehouse cannot acknowledge another store's register or acquire a task by a direct link
+  [desktop] › e2-price-updates.spec.ts:129:3 › new price-update screens stay inside their cards at 390px and 430px: en
+  [desktop] › e2-price-updates.spec.ts:129:3 › new price-update screens stay inside their cards at 390px and 430px: fa
+  [desktop] › e3-phones.spec.ts:21:5 › E3 compact phone lists 390 en
+  [desktop] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 390 en
+  [desktop] › e3-phones.spec.ts:21:5 › E3 compact phone lists 390 fa
+  [desktop] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 390 fa
+  [desktop] › e3-phones.spec.ts:21:5 › E3 compact phone lists 430 en
+  [desktop] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 430 en
+  [desktop] › e3-phones.spec.ts:21:5 › E3 compact phone lists 430 fa
+  [desktop] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 430 fa
+  [desktop] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 390 en
+  [desktop] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 390 fa
+  [desktop] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 430 en
+  [desktop] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 430 fa
+  [desktop] › e3-pwa-native.spec.ts:7:1 › E3 built manifest, real service worker public cache and bilingual offline reconnect
+  [desktop] › filters-a2.spec.ts:54:1 › Offers combines name/code/label search, category, supplier, type and status without changing prices
+  [desktop] › filters-a2.spec.ts:165:1 › Offers branch filtering never lets a Floor Worker read another branch offer
+  [desktop] › filters-a2.spec.ts:242:1 › Payables filters supplier totals and keeps selected report in the same branch
+  [desktop] › filters-a2.spec.ts:334:1 › Persian Offers and Payables keep complete custom-filter choices and isolated supplier names
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 1440px en
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 1440px fa
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 900px en
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 900px fa
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 390px en
+  [desktop] › filters-c9.spec.ts:103:5 › C9 list filter geometry 390px fa
+  [desktop] › history-b.spec.ts:129:1 › quiet product Save retains append-only History and can be explicitly reverted
+  [desktop] › history-b.spec.ts:200:1 › Undo stays above a native modal and keyboard focus pauses its own timer
+  [desktop] › history-b.spec.ts:265:1 › History Revert previews the actor, branch, values and requires confirmation
+  [desktop] › history-b.spec.ts:311:1 › an intervening edit displays a conflict and cannot be silently overwritten
+  [desktop] › history-b.spec.ts:344:1 › each eligible action replaces the single toast and its last message expires after eight seconds
+  [desktop] › history-b.spec.ts:391:1 › hover or phone keyboard focus pauses the single toast and English/Persian placement mirrors
+  [desktop] › history-b.spec.ts:430:1 › workers see only their own History and cashiers cannot open it
+  [desktop] › invoice-a2.spec.ts:58:1 › each invoice line requires one date answer, collapses when confirmed and opens from the row
+  [desktop] › invoice-a2.spec.ts:118:1 › Persian signed money, line numbers and deduction parentheses stay isolated
+  [desktop] › invoice-a2.spec.ts:146:1 › the document sticks beside the review and the action bar has a full surface
+  [desktop] › invoice-a2.spec.ts:182:1 › manual invoice drafts work when randomUUID is unavailable
+  [desktop] › invoice-a2.spec.ts:225:1 › fictional invoice answers are available only inside Demo and retain Persian copy
+  [desktop] › invoice-a2.spec.ts:263:1 › Supplier invoice links open the actual posted document and retained original image in either language
+  [desktop] › invoice-c4.spec.ts:17:3 › posted original and confirmed correction retain immutable evidence and version links in en
+  [desktop] › invoice-c4.spec.ts:17:3 › posted original and confirmed correction retain immutable evidence and version links in fa
+  [desktop] › invoice-c4.spec.ts:234:1 › an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh
+  [desktop] › invoice-orders-c2.spec.ts:104:1 › retained case quote bills exactly, remembers the pack and leaves the posted snapshot intact
+  [desktop] › invoice-orders-c2.spec.ts:165:1 › order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts
+  [desktop] › invoice-orders-c2.spec.ts:286:1 › short-dated expiry discount requires a real date and preserves an existing manual selling price
+  [desktop] › invoices-c6.spec.ts:22:1 › manual invoice uses local time, term dates and editable computed totals without autosave Undo
+  [desktop] › invoices-c6.spec.ts:94:1 › new invoice supplier allows omissions and requires completion plus explicit Supervisor confirmation
+  [desktop] › invoices-c6.spec.ts:166:1 › Remove line is reversible while ordinary field edits stay silent
+  [desktop] › invoices-c6.spec.ts:187:1 › Received has one range control and supplier cards open scoped records
+  [desktop] › invoices-c6.spec.ts:238:1 › New invoice preserves an unsaved draft and its durable original instead of replacing them
+  [desktop] › invoices.spec.ts:64:1 › simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents
+  [desktop] › invoices.spec.ts:218:1 › manual draft survives a refresh and cannot post without its original
+  [desktop] › invoices.spec.ts:268:1 › Persian invoice review mirrors the shell and keeps Western price digits
+  [desktop] › klead-contrast.spec.ts:7:5 › Klead composited text contrast en light
+  [desktop] › klead-contrast.spec.ts:7:5 › Klead composited text contrast en dark
+  [desktop] › klead-contrast.spec.ts:7:5 › Klead composited text contrast fa light
+  [desktop] › klead-contrast.spec.ts:7:5 › Klead composited text contrast fa dark
+  [desktop] › klead-retouch-controls.spec.ts:178:3 › Klead retouch: expanded invoice resting controls retain focus and error cues (en)
+  [desktop] › klead-retouch-controls.spec.ts:225:3 › Klead retouch: Remove line has a destructive tone and preserves Undo (en)
+  [desktop] › klead-retouch-controls.spec.ts:249:3 › Klead retouch: hyphenated invoice reference is whole and contained (en)
+  [desktop] › klead-retouch-controls.spec.ts:286:3 › Klead retouch: Lookup category choices are pills with normal and selected token surfaces (en)
+  [desktop] › klead-retouch-controls.spec.ts:343:3 › Klead retouch: tables paint one inset row divider without cell underlines (en)
+  [desktop] › klead-retouch-controls.spec.ts:404:3 › Klead retouch: product caption shares the title and body inset (en)
+  [desktop] › klead-retouch-controls.spec.ts:499:3 › Klead retouch: reminder days remain a surface field inside the soft tracking group (en)
+  [desktop] › klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (en)
+  [desktop] › klead-retouch-controls.spec.ts:178:3 › Klead retouch: expanded invoice resting controls retain focus and error cues (fa)
+  [desktop] › klead-retouch-controls.spec.ts:225:3 › Klead retouch: Remove line has a destructive tone and preserves Undo (fa)
+  [desktop] › klead-retouch-controls.spec.ts:249:3 › Klead retouch: hyphenated invoice reference is whole and contained (fa)
+  [desktop] › klead-retouch-controls.spec.ts:286:3 › Klead retouch: Lookup category choices are pills with normal and selected token surfaces (fa)
+  [desktop] › klead-retouch-controls.spec.ts:343:3 › Klead retouch: tables paint one inset row divider without cell underlines (fa)
+  [desktop] › klead-retouch-controls.spec.ts:404:3 › Klead retouch: product caption shares the title and body inset (fa)
+  [desktop] › klead-retouch-controls.spec.ts:499:3 › Klead retouch: reminder days remain a surface field inside the soft tracking group (fa)
+  [desktop] › klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa)
+  [desktop] › labels-a2.spec.ts:11:5 › saved 60 × 40 mm labels fit their physical boxes in en without randomUUID
+  [desktop] › labels-a2.spec.ts:11:5 › saved 10 × 6 mm labels fit their physical boxes in en without randomUUID
+  [desktop] › labels-a2.spec.ts:11:5 › saved 60 × 40 mm labels fit their physical boxes in fa without randomUUID
+  [desktop] › labels-a2.spec.ts:11:5 › saved 10 × 6 mm labels fit their physical boxes in fa without randomUUID
+  [desktop] › labels-b.spec.ts:19:1 › live A4 designer redraws capacity and calibration, stores editable presets and prints an alignment page
+  [desktop] › labels-b.spec.ts:102:1 › shared waitlist prints multiple pages but only explicit Yes clears it
+  [desktop] › labels-b.spec.ts:200:1 › waitlists persist across coworkers and remain isolated by branch
+  [desktop] › labels-c1.spec.ts:7:3 › ready Regular and Promo labels print exact millimetres and truthful monochrome offers in en
+  [desktop] › labels-c1.spec.ts:7:3 › ready Regular and Promo labels print exact millimetres and truthful monochrome offers in fa
+  [desktop] › labels-c1.spec.ts:164:1 › built-in templates can be duplicated, edited, archived and restored without deletion
+  [desktop] › labels-c1.spec.ts:264:1 › Promo without an active offer never invents SPECIAL or an offer
+  [desktop] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in en-light before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in en-light before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in en-dark before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in en-dark before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in fa-light before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in fa-light before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in phone-dark before and during print
+  [desktop] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in phone-dark before and during print
+  [desktop] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1280px, including their dialogs
+  [desktop] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1440px, including their dialogs
+  [desktop] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1920px, including their dialogs
+  [desktop] › labels-notes-offers-c3.spec.ts:85:3 › Labels selects only filtered products and edits copies in Waitlist in en
+  [desktop] › labels-notes-offers-c3.spec.ts:85:3 › Labels selects only filtered products and edits copies in Waitlist in fa
+  [desktop] › labels-notes-offers-c3.spec.ts:225:1 › Notes has a focused validating dialog; Save is quiet and Mark done can be undone
+  [desktop] › labels-notes-offers-c3.spec.ts:291:1 › Offers creates from the top dialog, keeps pricing unchanged and excludes Warehouse
+  [desktop] › labels.spec.ts:19:1 › creates a template, starts after four used slots, and prints bilingual labels
+  [desktop] › labels.spec.ts:123:1 › validates A4 dimensions and Persian labels without external requests
+  [desktop] › labels.spec.ts:153:1 › requires one branch and prints its approved price instead of a pending proposal
+  [desktop] › layout-proof-c6.spec.ts:6:3 › rendered en glyph proof distinguishes separate bilingual lines from real overlap
+  [desktop] › layout-proof-c6.spec.ts:6:3 › rendered fa glyph proof distinguishes separate bilingual lines from real overlap
+  [desktop] › layout-proof-c6.spec.ts:83:3 › product-name size and unit stay together in en, and a split is detected
+  [desktop] › layout-proof-c6.spec.ts:83:3 › product-name size and unit stay together in fa, and a split is detected
+  [desktop] › layout-proof-c6.spec.ts:152:3 › ordinary en Activity sizes stay together and an unmarked split is detected
+  [desktop] › layout-proof-c6.spec.ts:152:3 › ordinary fa Activity sizes stay together and an unmarked split is detected
+  [desktop] › locations-c1.spec.ts:6:1 › Warehouse is a configured location and retains its type through a Supervisor Settings edit
+  [desktop] › locations-c1.spec.ts:61:1 › location type can be chosen when adding a location and Cashiers cannot access Received
+  [desktop] › locations-c1.spec.ts:135:1 › the dashboard replaces stock projections with actual arrivals for the selected location
+  [desktop] › locations-c1.spec.ts:193:1 › short desktop keeps all four groups, Settings, History and the user menu accessible without sidebar scrolling
+  [desktop] › manual-entry.spec.ts:7:1 › Supervisor Add supplier saves Confirmed and a dated branch opening balance
+  [desktop] › manual-entry.spec.ts:88:1 › supplier similarity warning links the existing record and requires explicit continuation
+  [desktop] › manual-entry.spec.ts:128:1 › Supervisor Add product calculates its price and blocks a barcode conflict without inventory fields
+  [desktop] › manual-entry.spec.ts:202:1 › worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances
+  [desktop] › manual-entry.spec.ts:283:1 › manual invoice uses both shared add forms, keeps its lines on attachment and requires the original before posting
+  [desktop] › manual-entry.spec.ts:409:1 › Persian Add product dialog remains centered and its pricing category popover accepts a real selection
+  [desktop] › manual-prices-c1.spec.ts:15:1 › manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only
+  [desktop] › manual-prices-c1.spec.ts:190:1 › branch-only manual prices do not flag the other location
+  [desktop] › notebook-edit-b.spec.ts:21:1 › a worker corrects their own note within ten seconds, the original author window expires, and the Supervisor can edit later
+  [desktop] › notebook-edit-b.spec.ts:110:1 › an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact
+  [desktop] › notebooks-b.spec.ts:47:1 › Notes search has a search icon, a placeholder, bounded fields and touch actions, and the singular note count
+  [desktop] › notebooks-b.spec.ts:79:1 › Supervisor configures a custom notebook and entries persist with author, branch and enabled fields
+  [desktop] › notebooks-b.spec.ts:122:1 › archive retains authorized search results, restore keeps entries, and workers cannot edit notebook definitions
+  [desktop] › notebooks-b.spec.ts:187:1 › Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks
+  [desktop] › notebooks-b.spec.ts:299:1 › Persian Deli notebook uses custom controls and keeps the measurement and dates readable
+  [desktop] › notebooks-c1.spec.ts:76:1 › Supervisor can create and add to a custom notebook in All branches, including Warehouse, and normal-location/default worker addition still works
+  [desktop] › notebooks-c1.spec.ts:183:1 › read-only notebook explains why adding is unavailable in English and Persian
+  [desktop] › notebooks-c1.spec.ts:203:1 › All branches notebook add picker is restricted to its configured location
+  [desktop] › notes-c9.spec.ts:29:1 › C9 readers keep separate receipts while Manager done, reopen and Undo preserve the other reader and all operational evidence
+  [desktop] › notes-c9.spec.ts:118:1 › C9 four genuine readers have ordered persisted receipts, accessible full disclosure and no Cashier done grant
+  [desktop] › offline.spec.ts:29:1 › all screens and both languages work offline with no console errors
+  [desktop] › operations.spec.ts:30:1 › supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals
+  [desktop] › operations.spec.ts:141:1 › date removal, notes store-use, and unread Supervisor actions survive refresh
+  [desktop] › operations.spec.ts:251:1 › Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables
+  [desktop] › operations.spec.ts:351:1 › dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow
+  [desktop] › operations.spec.ts:427:1 › invalid pickup evidence, invalid store-use quantities, and invalid financial amounts show errors without changing records or crashing the app
+  [desktop] › orders-c2.spec.ts:70:1 › Supervisor creates a Warehouse fractional-case draft, places it, filters it and prints the bilingual retained estimate
+  [desktop] › orders-c2.spec.ts:225:1 › free-text To order note saves unresolved selection but needs explicit item and Cases before placement; new unbought items need Expected unit cost
+  [desktop] › orders-c2.spec.ts:358:1 › worker ordering is opt-in and location scoped; switching location discards unsaved supplier costs and print state
+  [desktop] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1280px in English and Persian
+  [desktop] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1440px in English and Persian
+  [desktop] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1920px in English and Persian
+  [desktop] › orders-c4.spec.ts:94:3 › New item phone cards and whole A4 preview keep the unknown estimate in en
+  [desktop] › orders-c4.spec.ts:94:3 › New item phone cards and whole A4 preview keep the unknown estimate in fa
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 390px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 768px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 900px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1024px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1180px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1280px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1440px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1920px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 390px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 768px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 900px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1024px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1180px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1280px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1440px
+  [desktop] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1920px
+  [desktop] › receiving-c.spec.ts:71:1 › a worker retargets their own invoice to Warehouse without gaining Warehouse access
+  [desktop] › receiving-c.spec.ts:159:1 › Supervisor moves a posted invoice with a reason and retains its original document and company balance
+  [desktop] › receiving-c.spec.ts:243:1 › invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting
+  [desktop] › returns-a2.spec.ts:271:1 › Returns starts with all suppliers and Open records, and opens each return as its own page
+  [desktop] › returns-a2.spec.ts:334:1 › Return policy dialog centers, closes with Escape and backdrop, and restores trigger focus
+  [desktop] › returns-a2.spec.ts:369:1 › Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian
+  [desktop] › returns-a2.spec.ts:388:1 › Overview and direct return links enforce company and worker branch scope
+  [desktop] › returns-a2.spec.ts:458:1 › Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger
+  [desktop] › returns-a2.spec.ts:534:1 › Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review
+  [desktop] › returns-c4.spec.ts:5:1 › evidenced pickup retains an RM across reload and exposes only a separate Supervisor pending claim
+  [desktop] › returns-c4.spec.ts:106:1 › return and supplier tabs share Open/History while worker money stays inaccessible
+  [desktop] › settings-b.spec.ts:15:1 › Settings presents the exact 12 groups and unfinished groups cannot save
+  [desktop] › settings-b.spec.ts:127:1 › company settings save deliberately, persist and record before/after History
+  [desktop] › settings-b.spec.ts:176:1 › new branch configuration works in the live branch switcher and retains history after deactivation
+  [desktop] › settings-b.spec.ts:240:1 › a new pricing category feeds the same Decimal tester and preserves approved prices
+  [desktop] › settings-b.spec.ts:396:1 › offer preferences and module visibility save, while existing records stay intact
+  [desktop] › settings.spec.ts:26:1 › divisors update live, survive refresh, and invalid money preserves valid rules
+  [desktop] › settings.spec.ts:81:1 › Rice uses unrounded raw and the same result renders in Persian RTL
+  [desktop] › settings.spec.ts:108:1 › Reset demo restores pricing rules, including an invalid field draft
+  [desktop] › sha256-lan-c6.spec.ts:198:1 › C6 nonsecure HTTP uploads, migrates near-full text storage and verifies original bytes without SubtleCrypto
+  [desktop] › shell.spec.ts:4:1 › username sign-in, correct role menu, RTL and offline operation
+  [desktop] › storage-c6.spec.ts:359:1 › C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews
+  [desktop] › storage-c6.spec.ts:609:1 › C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload
+  [desktop] › storage-c6.spec.ts:738:1 › C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first
+  [desktop] › storage-c6.spec.ts:871:1 › C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes
+  [desktop] › storage-c6.spec.ts:1021:1 › C6 keeps legacy inline evidence intact when the file database is disabled
+  [desktop] › supplier-approval.spec.ts:118:1 › Supervisor confirms a worker supplier from Approvals without product-price fields
+  [desktop] › supplier-approval.spec.ts:177:1 › Supervisor rejects a worker supplier from the dashboard and keeps its invoice blocked
+  [desktop] › supplier-items-c2.spec.ts:32:1 › Supervisor adds a quoted supplier item without invented purchases and worker views stay nonfinancial
+  [desktop] › supplier-items-c2.spec.ts:151:1 › remembered pack and supplier code edits preserve posted history and remain keyboard accessible
+  [desktop] › suppliers-a2.spec.ts:35:1 › Supervisor supplier overview reconciles balances and opens financial tabs
+  [desktop] › suppliers-a2.spec.ts:98:3 › Floor Worker supplier overview and every tab omit financial DOM in en
+  [desktop] › suppliers-a2.spec.ts:98:3 › Floor Worker supplier overview and every tab omit financial DOM in fa
+  [desktop] › suppliers-a2.spec.ts:151:1 › Cashier cannot open Suppliers through a direct address
+  [desktop] › weighed-c4.spec.ts:102:3 › Supervisor sees approved weighed prices in Lookup with isolated bilingual units
+  [desktop] › weighed-c4.spec.ts:102:3 › Floor Worker sees approved weighed prices in Lookup with isolated bilingual units
+  [desktop] › weighed-c4.spec.ts:102:3 › Cashier sees approved weighed prices in Lookup with isolated bilingual units
+  [desktop] › weighed-c4.spec.ts:132:1 › weighed defaults persist, change only display/rules, and a kg editor save preserves the approved lb amount
+  [desktop] › weighed-c4.spec.ts:249:1 › weighed Regular labels retain physical geometry, readable units, and approved monetary state
+  [phone] › alignment-a2.spec.ts:5:3 › table columns align and phone cards retain labelled contained values (en)
+  [phone] › alignment-a2.spec.ts:5:3 › table columns align and phone cards retain labelled contained values (fa)
+  [phone] › alignment-a2.spec.ts:267:1 › product editor is centered with focus trapped, Escape and backdrop restore focus
+  [phone] › approvals.spec.ts:44:1 › live role switches keep cashier approved price until branch approval; new product approves for all
+  [phone] › approvals.spec.ts:92:1 › intentional tea conflicts stay quiet, and applying a selected price clears all branch overrides
+  [phone] › approvals.spec.ts:132:1 › approved Lavash suggests a worker-confirmed offer and joins juice and chips in the same pool
+  [phone] › b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in en
+  [phone] › b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in fa
+  [phone] › b-polish.spec.ts:249:1 › Part 1 pills and dashboard branch values stay on one line
+  [phone] › b-polish.spec.ts:318:1 › Part 1 invoice names and approved-price notes fit on one line
+  [phone] › b-polish.spec.ts:361:1 › Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards
+  [phone] › b-polish.spec.ts:400:1 › Part 1 Open return exposes pickup and cancellation, then resolution after pickup, with the normal title size
+  [phone] › b-polish.spec.ts:454:1 › Part 1 approval headers are complete and sortable Products headers and back links use shared styling
+  [phone] › b-polish.spec.ts:527:1 › Part 1 demo disclaimer appears inside Demo and only invoice AI reading remains in page copy
+  [phone] › branch-invoice-b.spec.ts:13:1 › a Floor Worker cannot read another branch's manual draft, and starting their own invoice preserves it for the Supervisor
+  [phone] › branch-invoice-b.spec.ts:137:1 › another branch's reading draft stays hidden and unchanged by reading timers or Demo answers
+  [phone] › branch-requests-c2.spec.ts:12:1 › request catalog cases and free text; fulfil at Warehouse, receive Missing, close and copy residual once
+  [phone] › branch-requests-c2.spec.ts:195:3 › Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in en
+  [phone] › branch-requests-c2.spec.ts:195:3 › Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in fa
+  [phone] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 720px desktop height
+  [phone] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 950px desktop height
+  [phone] › c2-shell-review.spec.ts:5:3 › C2 sidebar keeps new and existing pages accessible without scrolling at 1080px desktop height
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1280px (en)
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1280px (fa)
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1440px (en)
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1440px (fa)
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1920px (en)
+  [phone] › c3-additional-layout.spec.ts:6:5 › supplier item history and settings fit at 1920px (fa)
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in en light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in en dark
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in fa light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1280 in fa dark
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in en light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in en dark
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in fa light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1440 in fa dark
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in en light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in en dark
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in fa light
+  [phone] › c3-invoices.spec.ts:192:7 › invoice names, Pending and order cost decisions fit every panel at 1920 in fa dark
+  [phone] › c3-invoices.spec.ts:253:1 › posted invoice Columns persist, and detail/browser Back retain the Posted list
+  [phone] › c3-invoices.spec.ts:307:1 › a manual draft detail returns to its list without losing the saved line
+  [phone] › c3-navigation-forms.spec.ts:5:1 › company and supplier validation clears only when its related field changes
+  [phone] › c3-navigation-forms.spec.ts:45:1 › Warehouse selling opt-in persists and is reversible without changing receiving evidence
+  [phone] › c3-navigation-forms.spec.ts:121:1 › request detail Back and browser Back retain tab and search, with actionable breadcrumbs
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1280px (en)
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1280px (fa)
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1440px (en)
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1440px (fa)
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1920px (en)
+  [phone] › c3-tables.spec.ts:113:5 › all seven table pages fit and retain their complete text at 1920px (fa)
+  [phone] › c3-tables.spec.ts:308:1 › Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker
+  [phone] › c3-tables.spec.ts:368:1 › browser Back restores the Products search and Orders status without mutating data
+  [phone] › c3-tables.spec.ts:404:1 › an order error belongs to its invalid item and clears immediately only when that item changes
+  [phone] › c3-tables.spec.ts:435:1 › external payment is unchanged until explicit money confirmation, and cancellation records nothing
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1280px (en)
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1280px (fa)
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1440px (en)
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1440px (fa)
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1920px (en)
+  [phone] › c4-layout.spec.ts:84:5 › C4 documents, new items, weighed prices, dates and pending credits fit at 1920px (fa)
+  [phone] › c4-notebooks-settings.spec.ts:4:1 › English-only notebooks keep their name in Persian and clear only the related name error
+  [phone] › c4-notebooks-settings.spec.ts:40:1 › Settings names new branches as locations
+  [phone] › c5-button-audit.spec.ts:54:1 › C5 button contract covers Suppliers, every supplier tab and item dialogs
+  [phone] › c5-button-audit.spec.ts:133:1 › C5 button contract covers working Settings groups and their dialogs
+  [phone] › c5-button-audit.spec.ts:202:1 › C5 button contract covers Labels, Notes, History, Received and ledger forms
+  [phone] › c5-button-audit.spec.ts:268:1 › C5 button contract covers Orders and Branch request forms and retained details
+  [phone] › c5-button-audit.spec.ts:324:1 › C5 button contract covers sign-in, first-sign-in password and lock actions
+  [phone] › c5-button-audit.spec.ts:434:1 › C5 button contract covers primary product, date, approval and invoice dialogs
+  [phone] › c5-conditional-audit.spec.ts:36:1 › C5 conditional request decisions and later lifecycle actions
+  [phone] › c5-conditional-audit.spec.ts:116:1 › C5 conditional reauthentication dialog
+  [phone] › c5-conditional-audit.spec.ts:144:1 › C5 conditional label selection, template restore, and print confirmation
+  [phone] › c5-conditional-audit.spec.ts:196:1 › C5 conditional note editing and seen/done/open actions
+  [phone] › c5-conditional-audit.spec.ts:259:1 › C5 conditional saved order and print/cancel dialogs
+  [phone] › c5-conditional-audit.spec.ts:290:1 › C5 conditional correction preview, confirmation, versions, history menu and Revert
+  [phone] › c5-conditional-audit.spec.ts:450:1 › C5 conditional supplier-held return cancellation review actions
+  [phone] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (en-light)
+  [phone] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (en-light)
+  [phone] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (en-light)
+  [phone] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (en-dark)
+  [phone] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (en-dark)
+  [phone] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (en-dark)
+  [phone] › c5-presentation.spec.ts:141:3 › C5 Waiting for credit is amber for different retained return states (fa-light)
+  [phone] › c5-presentation.spec.ts:183:3 › C5 Klead text actions, intrinsic table actions and uniform topbar (fa-light)
+  [phone] › c5-presentation.spec.ts:305:3 › C5 posted invoice, whole-page viewer, correction contrast and return policy (fa-light)
+  [phone] › c5-presentation.spec.ts:560:1 › C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Undo preserves money
+  [phone] › c5-presentation.spec.ts:627:3 › C6 Lookup dates are readonly; shelf addition enables tracking and local Remove Undo restores evidence (Supervisor)
+  [phone] › c5-presentation.spec.ts:627:3 › C6 Lookup dates are readonly; shelf addition enables tracking and local Remove Undo restores evidence (Floor Worker)
+  [phone] › c5-presentation.spec.ts:735:1 › C5 repeated current offer is idempotent, stop moves retained record to Past and Undo restores Current
+  [phone] › c5-presentation.spec.ts:804:1 › C5 return evidence, memo, cancellation and settlement forms retain compact actions for both roles
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 390px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 768px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 900px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1024px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1180px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1280px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1440px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: en 1920px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 390px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 768px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 900px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1024px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1180px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1280px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1440px
+  [phone] › c6-responsive.spec.ts:7:5 › C7 adaptive tables and shell: fa 1920px
+  [phone] › c7-shell-controls.spec.ts:4:3 › C7 phone nested menu focus and controls en
+  [phone] › c7-shell-controls.spec.ts:4:3 › C7 phone nested menu focus and controls fa
+  [phone] › c8-layout-display.spec.ts:67:3 › C8 unread original has Continue and exact durable evidence (en)
+  [phone] › c8-layout-display.spec.ts:131:3 › C8 invoice read-only costs preserve four decimals without posting money (en)
+  [phone] › c8-layout-display.spec.ts:186:3 › C8 Received uses whole cases and retained loose units (en)
+  [phone] › c8-layout-display.spec.ts:226:3 › C8 list navigation and disclosure stay at the row end (en)
+  [phone] › c8-layout-display.spec.ts:403:3 › C8 Payables filters share their list card and preserve scoped rows (en)
+  [phone] › c8-layout-display.spec.ts:67:3 › C8 unread original has Continue and exact durable evidence (fa)
+  [phone] › c8-layout-display.spec.ts:131:3 › C8 invoice read-only costs preserve four decimals without posting money (fa)
+  [phone] › c8-layout-display.spec.ts:186:3 › C8 Received uses whole cases and retained loose units (fa)
+  [phone] › c8-layout-display.spec.ts:226:3 › C8 list navigation and disclosure stay at the row end (fa)
+  [phone] › c8-layout-display.spec.ts:403:3 › C8 Payables filters share their list card and preserve scoped rows (fa)
+  [phone] › c8-layout-display.spec.ts:425:1 › C8 exact included sale-cost original preserves drafts and cannot be impersonated by its filename
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 390px
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 900px
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px
+  [phone] › c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px
+  [phone] › c8-migration.spec.ts:502:1 › C8 schema-only boundary preserves real saved settings, manual prices, all records and original bytes after verified exact backup
+  [phone] › c8-migration.spec.ts:576:1 › C8 backup write failure blocks schema replacement and retains exact state and originals until recovery
+  [phone] › c8-product-dates.spec.ts:35:3 › C8 product follows same-document hashchange, Back and Forward (en)
+  [phone] › c8-product-dates.spec.ts:77:3 › C8 tracking without any company date blocks Save and focuses the linked field (en)
+  [phone] › c8-product-dates.spec.ts:124:3 › C8 Save includes a picked past date not yet Added exactly once (en)
+  [phone] › c8-product-dates.spec.ts:195:3 › C8 existing other-location open date allows Save without copying its date (en)
+  [phone] › c8-product-dates.spec.ts:242:3 › C8 incomplete staged date blocks Save and valid picked date Cancel persists nothing (en)
+  [phone] › c8-product-dates.spec.ts:35:3 › C8 product follows same-document hashchange, Back and Forward (fa)
+  [phone] › c8-product-dates.spec.ts:77:3 › C8 tracking without any company date blocks Save and focuses the linked field (fa)
+  [phone] › c8-product-dates.spec.ts:124:3 › C8 Save includes a picked past date not yet Added exactly once (fa)
+  [phone] › c8-product-dates.spec.ts:195:3 › C8 existing other-location open date allows Save without copying its date (fa)
+  [phone] › c8-product-dates.spec.ts:242:3 › C8 incomplete staged date blocks Save and valid picked date Cancel persists nothing (fa)
+  [phone] › c8-sales.spec.ts:125:3 › C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (en)
+  [phone] › c8-sales.spec.ts:255:3 › C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (en)
+  [phone] › c8-sales.spec.ts:345:3 › C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (en)
+  [phone] › c8-sales.spec.ts:484:3 › C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (en)
+  [phone] › c8-sales.spec.ts:125:3 › C8 sale defaults, lower-than-regular and below-cost acknowledgments are real Save gates (fa)
+  [phone] › c8-sales.spec.ts:255:3 › C8 regular price saved during a sale preserves the overlay and defers regular labels until actual End (fa)
+  [phone] › c8-sales.spec.ts:345:3 › C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (fa)
+  [phone] › c8-sales.spec.ts:484:3 › C8 actual cost-up posting, Keep with delivery hold, and End preserve invoice money and source (fa)
+  [phone] › c8-visual-controls.spec.ts:20:3 › C8 supplier purchase bars keep 3:1 contrast and dark filled primary/summary cards use approved blue (en)
+  [phone] › c8-visual-controls.spec.ts:155:3 › C8 Edit product date rows, column-filling selects and hairlines render as requested (en)
+  [phone] › c8-visual-controls.spec.ts:354:3 › C8 New order uses filled inputs and headers, units and totals share their real columns (en)
+  [phone] › c8-visual-controls.spec.ts:20:3 › C8 supplier purchase bars keep 3:1 contrast and dark filled primary/summary cards use approved blue (fa)
+  [phone] › c8-visual-controls.spec.ts:155:3 › C8 Edit product date rows, column-filling selects and hairlines render as requested (fa)
+  [phone] › c8-visual-controls.spec.ts:354:3 › C8 New order uses filled inputs and headers, units and totals share their real columns (fa)
+  [phone] › c9-no-reload.spec.ts:52:1 › C9 dark LAN clicks never reload, show sign-in, or paint a light page
+  [phone] › c9-prices.spec.ts:91:3 › C9 sale price stays on one line at 1440/900/390, and ending an equal-price sale preserves its task snapshot (en)
+  [phone] › c9-prices.spec.ts:276:3 › C9 lower regular price can change the running sale atomically (en)
+  [phone] › c9-prices.spec.ts:91:3 › C9 sale price stays on one line at 1440/900/390, and ending an equal-price sale preserves its task snapshot (fa)
+  [phone] › c9-prices.spec.ts:276:3 › C9 lower regular price can change the running sale atomically (fa)
+  [phone] › c9-prices.spec.ts:344:1 › C9 approved, rejected, withdrawn and expired sale requests retain their terms, deciders, counts and read-only cards in English and Persian
+  [phone] › catalog-a2.spec.ts:31:1 › Supervisor product page uses own route, Back link and shared editor
+  [phone] › catalog-a2.spec.ts:91:1 › Lookup Change price defaults to all stores and records the signed-in Supervisor
+  [phone] › catalog-a2.spec.ts:149:1 › Change price changes this store only, and validation stays inside the open dialog
+  [phone] › catalog-a2.spec.ts:189:1 › Floor Worker and Cashier never see product Edit, including direct product links
+  [phone] › catalog-a2.spec.ts:208:1 › Lookup columns mirror in Persian, with selected row distinct from offer dot and terms
+  [phone] › catalog-a2.spec.ts:256:1 › duplicate barcode reports one scoped conflict and allows a corrected save
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 390px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 390px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 768px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 768px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 900px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 900px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1024px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1024px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1180px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1180px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1280px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1280px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1440px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1440px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI en 1920px
+  [phone] › catalog-klead-c7.spec.ts:61:5 › Klead catalog/date actual UI fa 1920px
+  [phone] › catalog-klead-c7.spec.ts:323:3 › Klead preserves Floor Worker catalog money and edit restrictions
+  [phone] › catalog-klead-c7.spec.ts:323:3 › Klead preserves Cashier catalog money and edit restrictions
+  [phone] › catalog.spec.ts:14:1 › cashier finds English, Persian, code and barcode results with approved price, tax and pending tags
+  [phone] › catalog.spec.ts:56:1 › cashier direct navigation stays in lookup and exposes no operational or financial controls
+  [phone] › catalog.spec.ts:76:1 › branch switcher shows approved overrides and a new product requires Supervisor confirmation
+  [phone] › catalog.spec.ts:116:1 › Floor Worker filters Products and opens details without seeing catalog supplier cost
+  [phone] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in light
+  [phone] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in dark
+  [phone] › design-polish.spec.ts:86:3 › all existing screens use styled controls and bounded layout in Persian
+  [phone] › design-polish.spec.ts:112:1 › Persian lookup preserves unit order and makes the Persian name primary
+  [phone] › design-polish.spec.ts:128:1 › re-check dialog is centered and the top bar remains visible while Settings scrolls
+  [phone] › design-polish.spec.ts:172:1 › invoice review retains styled controls after simulated extraction
+  [phone] › design-v2.spec.ts:141:1 › keyboard sign-in explains a wrong password and opens the cashier's approved price lookup
+  [phone] › design-v2.spec.ts:170:1 › temporary-password users cannot bypass the new password form through routes or a reload
+  [phone] › design-v2.spec.ts:229:1 › locking hides the app, and recent users fill a username without retaining a password
+  [phone] › design-v2.spec.ts:265:1 › dark theme, comfortable text and Persian RTL persist when the page reloads
+  [phone] › design-v2.spec.ts:293:1 › lookup supports keyboard results and a second barcode without adding it to the first
+  [phone] › design-v2.spec.ts:324:1 › the topbar product search opens an encoded English or Persian lookup query
+  [phone] › design-v2.spec.ts:346:1 › the four redesigned screens use styled controls and borderless cards without page overflow
+  [phone] › design-v2.spec.ts:377:1 › the 1080p sidebar fits while compound invoice forms use the available width and individual fields stay bounded
+  [phone] › design-v2.spec.ts:476:1 › dashboard approvals and notes have actions that change the actual records and navigate to their lists
+  [phone] › e1-authority-native.spec.js:28:3 › Two tabs preserve both business changes and acknowledgements under one IDB command lock
+  [phone] › e1-authority-native.spec.js:28:3 › Concurrent last-Owner removal is serialized across real browser tabs
+  [phone] › e1-authority-native.spec.js:28:3 › Protected authority History returns real transactional before/after without private setup, contacts or credentials; Floor Worker denied
+  [phone] › e1-authority-native.spec.js:28:3 › Deactivation broadcasts to another tab and fresh command denies even a deliberately stale cached UI actor
+  [phone] › e1-authority-native.spec.js:28:3 › Fresh protected queries reject revoked identity before constructing private DTO fields
+  [phone] › e1-authority-native.spec.js:28:3 › Reactivation never revives old sessions; fresh password sign-in creates a working session
+  [phone] › e1-authority-native.spec.js:28:3 › Actual IDB initialization verifies exact private raw backup, preserves alias passwords/preferences and interrupted setup, never enables unknown credential account or resets on reload
+  [phone] › e1-authority-native.spec.js:28:3 › Latest shared config commit rejects Cashier store-to-Warehouse conversion atomically without publishing business revision
+  [phone] › e1-authority-native.spec.js:28:3 › Configured Cashier Demo Reset atomically restores exactly six, revokes all previous sessions and immediately broadcasts to removed custom person
+  [phone] › e1-authority-native.spec.js:28:3 › Native IDB authority persists across failed verified UI preference write; retry uses actual current aliases, preserves entire private directory and cleans raw credentials only after verified preference persistence
+  [phone] › e1-authority-native.spec.js:28:3 › Native IDB accepted commit drains after dispose; closed BroadcastChannel and listener errors cannot reject durable commit; new calls fail and genuine SID remains resumable
+  [phone] › e1-authority-native.spec.js:28:3 › Native IDB clock reconciliation witness authorizes only its active exact canonical draft/source; spread, cloned-draft, wrong-source and retained witnesses fail closed
+  [phone] › e1-shell.smoke.spec.ts:47:3 › E1 normal sign-in and permitted Reset preserve all six people and locations (en)
+  [phone] › e1-shell.smoke.spec.ts:99:3 › E1 Owner invitation creates real resumable first-sign-in password setup (en)
+  [phone] › e1-shell.smoke.spec.ts:217:3 › E1 deactivation removes another tab's access and reactivation needs a fresh sign-in (en)
+  [phone] › e1-shell.smoke.spec.ts:47:3 › E1 normal sign-in and permitted Reset preserve all six people and locations (fa)
+  [phone] › e1-shell.smoke.spec.ts:99:3 › E1 Owner invitation creates real resumable first-sign-in password setup (fa)
+  [phone] › e1-shell.smoke.spec.ts:217:3 › E1 deactivation removes another tab's access and reactivation needs a fresh sign-in (fa)
+  [phone] › e2-price-updates.spec.ts:7:1 › Black Tea: real approval, scoped notification, Cashier pill, physical print confirmation and per-store progress
+  [phone] › e2-price-updates.spec.ts:103:1 › Floor Worker and Warehouse cannot acknowledge another store's register or acquire a task by a direct link
+  [phone] › e2-price-updates.spec.ts:129:3 › new price-update screens stay inside their cards at 390px and 430px: en
+  [phone] › e2-price-updates.spec.ts:129:3 › new price-update screens stay inside their cards at 390px and 430px: fa
+  [phone] › e3-phones.spec.ts:21:5 › E3 compact phone lists 390 en
+  [phone] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 390 en
+  [phone] › e3-phones.spec.ts:21:5 › E3 compact phone lists 390 fa
+  [phone] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 390 fa
+  [phone] › e3-phones.spec.ts:21:5 › E3 compact phone lists 430 en
+  [phone] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 430 en
+  [phone] › e3-phones.spec.ts:21:5 › E3 compact phone lists 430 fa
+  [phone] › e3-phones.spec.ts:228:5 › E3 new screens retain genuine phone layout 430 fa
+  [phone] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 390 en
+  [phone] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 390 fa
+  [phone] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 430 en
+  [phone] › e3-phones.spec.ts:371:5 › E3 genuine task, change-price and sale-alert phone layout 430 fa
+  [phone] › e3-pwa-native.spec.ts:7:1 › E3 built manifest, real service worker public cache and bilingual offline reconnect
+  [phone] › filters-a2.spec.ts:54:1 › Offers combines name/code/label search, category, supplier, type and status without changing prices
+  [phone] › filters-a2.spec.ts:165:1 › Offers branch filtering never lets a Floor Worker read another branch offer
+  [phone] › filters-a2.spec.ts:242:1 › Payables filters supplier totals and keeps selected report in the same branch
+  [phone] › filters-a2.spec.ts:334:1 › Persian Offers and Payables keep complete custom-filter choices and isolated supplier names
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 1440px en
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 1440px fa
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 900px en
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 900px fa
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 390px en
+  [phone] › filters-c9.spec.ts:103:5 › C9 list filter geometry 390px fa
+  [phone] › history-b.spec.ts:129:1 › quiet product Save retains append-only History and can be explicitly reverted
+  [phone] › history-b.spec.ts:200:1 › Undo stays above a native modal and keyboard focus pauses its own timer
+  [phone] › history-b.spec.ts:265:1 › History Revert previews the actor, branch, values and requires confirmation
+  [phone] › history-b.spec.ts:311:1 › an intervening edit displays a conflict and cannot be silently overwritten
+  [phone] › history-b.spec.ts:344:1 › each eligible action replaces the single toast and its last message expires after eight seconds
+  [phone] › history-b.spec.ts:391:1 › hover or phone keyboard focus pauses the single toast and English/Persian placement mirrors
+  [phone] › history-b.spec.ts:430:1 › workers see only their own History and cashiers cannot open it
+  [phone] › invoice-a2.spec.ts:58:1 › each invoice line requires one date answer, collapses when confirmed and opens from the row
+  [phone] › invoice-a2.spec.ts:118:1 › Persian signed money, line numbers and deduction parentheses stay isolated
+  [phone] › invoice-a2.spec.ts:146:1 › the document sticks beside the review and the action bar has a full surface
+  [phone] › invoice-a2.spec.ts:182:1 › manual invoice drafts work when randomUUID is unavailable
+  [phone] › invoice-a2.spec.ts:225:1 › fictional invoice answers are available only inside Demo and retain Persian copy
+  [phone] › invoice-a2.spec.ts:263:1 › Supplier invoice links open the actual posted document and retained original image in either language
+  [phone] › invoice-c4.spec.ts:17:3 › posted original and confirmed correction retain immutable evidence and version links in en
+  [phone] › invoice-c4.spec.ts:17:3 › posted original and confirmed correction retain immutable evidence and version links in fa
+  [phone] › invoice-c4.spec.ts:234:1 › an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh
+  [phone] › invoice-orders-c2.spec.ts:104:1 › retained case quote bills exactly, remembers the pack and leaves the posted snapshot intact
+  [phone] › invoice-orders-c2.spec.ts:165:1 › order comparison requires explicit extra and changed-cost decisions, then preserves one alert and accepted receipts
+  [phone] › invoice-orders-c2.spec.ts:286:1 › short-dated expiry discount requires a real date and preserves an existing manual selling price
+  [phone] › invoices-c6.spec.ts:22:1 › manual invoice uses local time, term dates and editable computed totals without autosave Undo
+  [phone] › invoices-c6.spec.ts:94:1 › new invoice supplier allows omissions and requires completion plus explicit Supervisor confirmation
+  [phone] › invoices-c6.spec.ts:166:1 › Remove line is reversible while ordinary field edits stay silent
+  [phone] › invoices-c6.spec.ts:187:1 › Received has one range control and supplier cards open scoped records
+  [phone] › invoices-c6.spec.ts:238:1 › New invoice preserves an unsaved draft and its durable original instead of replacing them
+  [phone] › invoices.spec.ts:64:1 › simulated upload, review, lower-price answer and two partial chip deliveries conserve stock and cents
+  [phone] › invoices.spec.ts:218:1 › manual draft survives a refresh and cannot post without its original
+  [phone] › invoices.spec.ts:268:1 › Persian invoice review mirrors the shell and keeps Western price digits
+  [phone] › klead-contrast.spec.ts:7:5 › Klead composited text contrast en light
+  [phone] › klead-contrast.spec.ts:7:5 › Klead composited text contrast en dark
+  [phone] › klead-contrast.spec.ts:7:5 › Klead composited text contrast fa light
+  [phone] › klead-contrast.spec.ts:7:5 › Klead composited text contrast fa dark
+  [phone] › klead-retouch-controls.spec.ts:178:3 › Klead retouch: expanded invoice resting controls retain focus and error cues (en)
+  [phone] › klead-retouch-controls.spec.ts:225:3 › Klead retouch: Remove line has a destructive tone and preserves Undo (en)
+  [phone] › klead-retouch-controls.spec.ts:249:3 › Klead retouch: hyphenated invoice reference is whole and contained (en)
+  [phone] › klead-retouch-controls.spec.ts:286:3 › Klead retouch: Lookup category choices are pills with normal and selected token surfaces (en)
+  [phone] › klead-retouch-controls.spec.ts:343:3 › Klead retouch: tables paint one inset row divider without cell underlines (en)
+  [phone] › klead-retouch-controls.spec.ts:404:3 › Klead retouch: product caption shares the title and body inset (en)
+  [phone] › klead-retouch-controls.spec.ts:499:3 › Klead retouch: reminder days remain a surface field inside the soft tracking group (en)
+  [phone] › klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (en)
+  [phone] › klead-retouch-controls.spec.ts:178:3 › Klead retouch: expanded invoice resting controls retain focus and error cues (fa)
+  [phone] › klead-retouch-controls.spec.ts:225:3 › Klead retouch: Remove line has a destructive tone and preserves Undo (fa)
+  [phone] › klead-retouch-controls.spec.ts:249:3 › Klead retouch: hyphenated invoice reference is whole and contained (fa)
+  [phone] › klead-retouch-controls.spec.ts:286:3 › Klead retouch: Lookup category choices are pills with normal and selected token surfaces (fa)
+  [phone] › klead-retouch-controls.spec.ts:343:3 › Klead retouch: tables paint one inset row divider without cell underlines (fa)
+  [phone] › klead-retouch-controls.spec.ts:404:3 › Klead retouch: product caption shares the title and body inset (fa)
+  [phone] › klead-retouch-controls.spec.ts:499:3 › Klead retouch: reminder days remain a surface field inside the soft tracking group (fa)
+  [phone] › klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa)
+  [phone] › labels-a2.spec.ts:11:5 › saved 60 × 40 mm labels fit their physical boxes in en without randomUUID
+  [phone] › labels-a2.spec.ts:11:5 › saved 10 × 6 mm labels fit their physical boxes in en without randomUUID
+  [phone] › labels-a2.spec.ts:11:5 › saved 60 × 40 mm labels fit their physical boxes in fa without randomUUID
+  [phone] › labels-a2.spec.ts:11:5 › saved 10 × 6 mm labels fit their physical boxes in fa without randomUUID
+  [phone] › labels-b.spec.ts:19:1 › live A4 designer redraws capacity and calibration, stores editable presets and prints an alignment page
+  [phone] › labels-b.spec.ts:102:1 › shared waitlist prints multiple pages but only explicit Yes clears it
+  [phone] › labels-b.spec.ts:200:1 › waitlists persist across coworkers and remain isolated by branch
+  [phone] › labels-c1.spec.ts:7:3 › ready Regular and Promo labels print exact millimetres and truthful monochrome offers in en
+  [phone] › labels-c1.spec.ts:7:3 › ready Regular and Promo labels print exact millimetres and truthful monochrome offers in fa
+  [phone] › labels-c1.spec.ts:164:1 › built-in templates can be duplicated, edited, archived and restored without deletion
+  [phone] › labels-c1.spec.ts:264:1 › Promo without an active offer never invents SPECIAL or an offer
+  [phone] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in en-light before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in en-light before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in en-dark before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in en-dark before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in fa-light before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in fa-light before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › regular label paper stays readable in phone-dark before and during print
+  [phone] › labels-c8-ink.spec.ts:77:5 › promo label paper stays readable in phone-dark before and during print
+  [phone] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1280px, including their dialogs
+  [phone] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1440px, including their dialogs
+  [phone] › labels-notes-offers-c3.spec.ts:47:3 › Labels, Notes and Offers panels fit at 1920px, including their dialogs
+  [phone] › labels-notes-offers-c3.spec.ts:85:3 › Labels selects only filtered products and edits copies in Waitlist in en
+  [phone] › labels-notes-offers-c3.spec.ts:85:3 › Labels selects only filtered products and edits copies in Waitlist in fa
+  [phone] › labels-notes-offers-c3.spec.ts:225:1 › Notes has a focused validating dialog; Save is quiet and Mark done can be undone
+  [phone] › labels-notes-offers-c3.spec.ts:291:1 › Offers creates from the top dialog, keeps pricing unchanged and excludes Warehouse
+  [phone] › labels.spec.ts:19:1 › creates a template, starts after four used slots, and prints bilingual labels
+  [phone] › labels.spec.ts:123:1 › validates A4 dimensions and Persian labels without external requests
+  [phone] › labels.spec.ts:153:1 › requires one branch and prints its approved price instead of a pending proposal
+  [phone] › layout-proof-c6.spec.ts:6:3 › rendered en glyph proof distinguishes separate bilingual lines from real overlap
+  [phone] › layout-proof-c6.spec.ts:6:3 › rendered fa glyph proof distinguishes separate bilingual lines from real overlap
+  [phone] › layout-proof-c6.spec.ts:83:3 › product-name size and unit stay together in en, and a split is detected
+  [phone] › layout-proof-c6.spec.ts:83:3 › product-name size and unit stay together in fa, and a split is detected
+  [phone] › layout-proof-c6.spec.ts:152:3 › ordinary en Activity sizes stay together and an unmarked split is detected
+  [phone] › layout-proof-c6.spec.ts:152:3 › ordinary fa Activity sizes stay together and an unmarked split is detected
+  [phone] › locations-c1.spec.ts:6:1 › Warehouse is a configured location and retains its type through a Supervisor Settings edit
+  [phone] › locations-c1.spec.ts:61:1 › location type can be chosen when adding a location and Cashiers cannot access Received
+  [phone] › locations-c1.spec.ts:135:1 › the dashboard replaces stock projections with actual arrivals for the selected location
+  [phone] › locations-c1.spec.ts:193:1 › short desktop keeps all four groups, Settings, History and the user menu accessible without sidebar scrolling
+  [phone] › manual-entry.spec.ts:7:1 › Supervisor Add supplier saves Confirmed and a dated branch opening balance
+  [phone] › manual-entry.spec.ts:88:1 › supplier similarity warning links the existing record and requires explicit continuation
+  [phone] › manual-entry.spec.ts:128:1 › Supervisor Add product calculates its price and blocks a barcode conflict without inventory fields
+  [phone] › manual-entry.spec.ts:202:1 › worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances
+  [phone] › manual-entry.spec.ts:283:1 › manual invoice uses both shared add forms, keeps its lines on attachment and requires the original before posting
+  [phone] › manual-entry.spec.ts:409:1 › Persian Add product dialog remains centered and its pricing category popover accepts a real selection
+  [phone] › manual-prices-c1.spec.ts:15:1 › manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only
+  [phone] › manual-prices-c1.spec.ts:190:1 › branch-only manual prices do not flag the other location
+  [phone] › notebook-edit-b.spec.ts:21:1 › a worker corrects their own note within ten seconds, the original author window expires, and the Supervisor can edit later
+  [phone] › notebook-edit-b.spec.ts:110:1 › an already-open worker editor expires after ten seconds and Cancel keeps the saved record intact
+  [phone] › notebooks-b.spec.ts:47:1 › Notes search has a search icon, a placeholder, bounded fields and touch actions, and the singular note count
+  [phone] › notebooks-b.spec.ts:79:1 › Supervisor configures a custom notebook and entries persist with author, branch and enabled fields
+  [phone] › notebooks-b.spec.ts:122:1 › archive retains authorized search results, restore keeps entries, and workers cannot edit notebook definitions
+  [phone] › notebooks-b.spec.ts:187:1 › Cashier gets only granted custom notebook reads and cannot add or read built-in notebooks
+  [phone] › notebooks-b.spec.ts:299:1 › Persian Deli notebook uses custom controls and keeps the measurement and dates readable
+  [phone] › notebooks-c1.spec.ts:76:1 › Supervisor can create and add to a custom notebook in All branches, including Warehouse, and normal-location/default worker addition still works
+  [phone] › notebooks-c1.spec.ts:183:1 › read-only notebook explains why adding is unavailable in English and Persian
+  [phone] › notebooks-c1.spec.ts:203:1 › All branches notebook add picker is restricted to its configured location
+  [phone] › notes-c9.spec.ts:29:1 › C9 readers keep separate receipts while Manager done, reopen and Undo preserve the other reader and all operational evidence
+  [phone] › notes-c9.spec.ts:118:1 › C9 four genuine readers have ordered persisted receipts, accessible full disclosure and no Cashier done grant
+  [phone] › offline.spec.ts:29:1 › all screens and both languages work offline with no console errors
+  [phone] › operations.spec.ts:30:1 › supplier pickup and partial substitute receipt preserve Payables; settled cancellation restores zero supplier-held originals
+  [phone] › operations.spec.ts:141:1 › date removal, notes store-use, and unread Supervisor actions survive refresh
+  [phone] › operations.spec.ts:251:1 › Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables
+  [phone] › operations.spec.ts:351:1 › dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow
+  [phone] › operations.spec.ts:427:1 › invalid pickup evidence, invalid store-use quantities, and invalid financial amounts show errors without changing records or crashing the app
+  [phone] › orders-c2.spec.ts:70:1 › Supervisor creates a Warehouse fractional-case draft, places it, filters it and prints the bilingual retained estimate
+  [phone] › orders-c2.spec.ts:225:1 › free-text To order note saves unresolved selection but needs explicit item and Cases before placement; new unbought items need Expected unit cost
+  [phone] › orders-c2.spec.ts:358:1 › worker ordering is opt-in and location scoped; switching location discards unsaved supplier costs and print state
+  [phone] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1280px in English and Persian
+  [phone] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1440px in English and Persian
+  [phone] › orders-c4.spec.ts:80:3 › New order fits its fields, names and table at 1920px in English and Persian
+  [phone] › orders-c4.spec.ts:94:3 › New item phone cards and whole A4 preview keep the unknown estimate in en
+  [phone] › orders-c4.spec.ts:94:3 › New item phone cards and whole A4 preview keep the unknown estimate in fa
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 390px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 768px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 900px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1024px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1180px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1280px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1440px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in en at 1920px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 390px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 768px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 900px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1024px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1180px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1280px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1440px
+  [phone] › product-unit-order-c6.spec.ts:6:5 › stored Persian decimal retains its actual visual order in fa at 1920px
+  [phone] › receiving-c.spec.ts:71:1 › a worker retargets their own invoice to Warehouse without gaining Warehouse access
+  [phone] › receiving-c.spec.ts:159:1 › Supervisor moves a posted invoice with a reason and retains its original document and company balance
+  [phone] › receiving-c.spec.ts:243:1 › invoice changed regular cost defaults to calculated and explicit Keep preserves the approved price on posting
+  [phone] › returns-a2.spec.ts:271:1 › Returns starts with all suppliers and Open records, and opens each return as its own page
+  [phone] › returns-a2.spec.ts:334:1 › Return policy dialog centers, closes with Escape and backdrop, and restores trigger focus
+  [phone] › returns-a2.spec.ts:369:1 › Returns desktop columns align within two pixels and phone card labels/values fit in English and Persian
+  [phone] › returns-a2.spec.ts:388:1 › Overview and direct return links enforce company and worker branch scope
+  [phone] › returns-a2.spec.ts:458:1 › Return detail pickup does not deduct stock twice and replacement increases actual stock without posting to the supplier ledger
+  [phone] › returns-a2.spec.ts:534:1 › Supplier-held cancellation keeps stock and compensation unchanged and requires Supervisor review
+  [phone] › returns-c4.spec.ts:5:1 › evidenced pickup retains an RM across reload and exposes only a separate Supervisor pending claim
+  [phone] › returns-c4.spec.ts:106:1 › return and supplier tabs share Open/History while worker money stays inaccessible
+  [phone] › settings-b.spec.ts:15:1 › Settings presents the exact 12 groups and unfinished groups cannot save
+  [phone] › settings-b.spec.ts:127:1 › company settings save deliberately, persist and record before/after History
+  [phone] › settings-b.spec.ts:176:1 › new branch configuration works in the live branch switcher and retains history after deactivation
+  [phone] › settings-b.spec.ts:240:1 › a new pricing category feeds the same Decimal tester and preserves approved prices
+  [phone] › settings-b.spec.ts:396:1 › offer preferences and module visibility save, while existing records stay intact
+  [phone] › settings.spec.ts:26:1 › divisors update live, survive refresh, and invalid money preserves valid rules
+  [phone] › settings.spec.ts:81:1 › Rice uses unrounded raw and the same result renders in Persian RTL
+  [phone] › settings.spec.ts:108:1 › Reset demo restores pricing rules, including an invalid field draft
+  [phone] › sha256-lan-c6.spec.ts:198:1 › C6 nonsecure HTTP uploads, migrates near-full text storage and verifies original bytes without SubtleCrypto
+  [phone] › shell.spec.ts:4:1 › username sign-in, correct role menu, RTL and offline operation
+  [phone] › storage-c6.spec.ts:359:1 › C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews
+  [phone] › storage-c6.spec.ts:609:1 › C6 resolves an uploaded company logo before an immediate label Print, and retains the source after reload
+  [phone] › storage-c6.spec.ts:738:1 › C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first
+  [phone] › storage-c6.spec.ts:871:1 › C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes
+  [phone] › storage-c6.spec.ts:1021:1 › C6 keeps legacy inline evidence intact when the file database is disabled
+  [phone] › supplier-approval.spec.ts:118:1 › Supervisor confirms a worker supplier from Approvals without product-price fields
+  [phone] › supplier-approval.spec.ts:177:1 › Supervisor rejects a worker supplier from the dashboard and keeps its invoice blocked
+  [phone] › supplier-items-c2.spec.ts:32:1 › Supervisor adds a quoted supplier item without invented purchases and worker views stay nonfinancial
+  [phone] › supplier-items-c2.spec.ts:151:1 › remembered pack and supplier code edits preserve posted history and remain keyboard accessible
+  [phone] › suppliers-a2.spec.ts:35:1 › Supervisor supplier overview reconciles balances and opens financial tabs
+  [phone] › suppliers-a2.spec.ts:98:3 › Floor Worker supplier overview and every tab omit financial DOM in en
+  [phone] › suppliers-a2.spec.ts:98:3 › Floor Worker supplier overview and every tab omit financial DOM in fa
+  [phone] › suppliers-a2.spec.ts:151:1 › Cashier cannot open Suppliers through a direct address
+  [phone] › weighed-c4.spec.ts:102:3 › Supervisor sees approved weighed prices in Lookup with isolated bilingual units
+  [phone] › weighed-c4.spec.ts:102:3 › Floor Worker sees approved weighed prices in Lookup with isolated bilingual units
+  [phone] › weighed-c4.spec.ts:102:3 › Cashier sees approved weighed prices in Lookup with isolated bilingual units
+  [phone] › weighed-c4.spec.ts:132:1 › weighed defaults persist, change only display/rules, and a kg editor save preserves the approved lb amount
+  [phone] › weighed-c4.spec.ts:249:1 › weighed Regular labels retain physical geometry, readable units, and approved monetary state
+  [webkit-no-reload] › c9-no-reload.spec.ts:52:1 › C9 dark LAN clicks never reload, show sign-in, or paint a light page
+Total: 841 tests in 76 files
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,82 @@
+{
+  "completed-ci.json.gz": {
+    "uncompressed_sha256": "622ed4351af5fdc82f5141b1250d50bb5d44e0c3b48b521ab92de036634eb6ed",
+    "source": "/tmp/c9-final-ci27361bb/final-exact-head.json"
+  },
+  "completed-ci-failures.json.gz": {
+    "uncompressed_sha256": "560c440ccdf98de2931b7910a0dd698bdd38f4ec34962073074dd4d258c1ba4f",
+    "source": "/tmp/c9-final-ci27361bb/deduplicated-failures.json"
+  },
+  "initial-classification.json.gz": {
+    "uncompressed_sha256": "e4919e4287ac9d5d596a3102e0afa4d4774f5e350439018fec0f528042e6f6c3",
+    "source": "/tmp/c9-final-ci27361bb/classified-failures.json"
+  },
+  "prepaint-observations.json.gz": {
+    "uncompressed_sha256": "34eb75759c7a3b577a172da0b7aa6870ebdc579c1edc3eb1571680566e82e4e0",
+    "source": "/tmp/c9-no-reload-observer-diagnosis/report.json"
+  },
+  "synthetic-frame-controls.json.gz": {
+    "uncompressed_sha256": "2602dfde19808beb53406fc6a6bdd42fe973f7bdb725118f7f4114b8276679dd",
+    "source": "/tmp/c9-frame-watch-synthetic-controls/report.json"
+  },
+  "signin-readiness-summary.json.gz": {
+    "uncompressed_sha256": "27f9b1a81bc112861753753e09ccfc74af8698112fb9b2efdab9b13cbca74b9c",
+    "source": "/tmp/c9-design-v2-readiness/summary.json"
+  },
+  "signin-readiness-observations.json.gz": {
+    "uncompressed_sha256": "7fc3a5f1801f195f2513ad843bcfb2e03c2d13c21750f7c54e5e11b58e5374b7",
+    "source": "/tmp/c9-design-v2-readiness/observations.json"
+  },
+  "signin-layout-before.json.gz": {
+    "uncompressed_sha256": "16541a9acf0f235fe337329b3bd4d2db5244a2cb4f5bf5f8bbf6b3b506ad43da",
+    "source": "/tmp/c9-design-v2-readiness/before.json"
+  },
+  "signin-layout-after.json.gz": {
+    "uncompressed_sha256": "7477bba0d1bd1a728a4cb02730d9f76eea4dec046c830b8d5ddcfa0654d3d3b0",
+    "source": "/tmp/c9-design-v2-readiness/after.json"
+  },
+  "catalog-cashier.txt.gz": {
+    "uncompressed_sha256": "2d8504496303d66b614d2b7b3b3b9e8f8f87cba96daf92ca2db91510c497436a",
+    "source": "/tmp/c9-catalog-cashier-native.log"
+  },
+  "catalog-worker.txt.gz": {
+    "uncompressed_sha256": "63f59d6bee55ab9d413ac0b42f4af890ae5efd145e0725cec3dfa437214e8efe",
+    "source": "/tmp/c9-catalog-worker-native.log"
+  },
+  "catalog-mirror.txt.gz": {
+    "uncompressed_sha256": "6e29ae3ce0ddc7b0cdf3127a60aba5440d6aeb6967380ecf18c4cfd3ab013816",
+    "source": "/tmp/c9-catalog-mirror-native.log"
+  },
+  "catalog-zero-discovery-attempt.txt.gz": {
+    "uncompressed_sha256": "10430d4abdbd108757550247ef54aa526417db51010e4fcac2d0bf16fe54e830",
+    "source": "/tmp/c9-catalog-cashier-readonly.log"
+  },
+  "supplier-original-local.json.gz": {
+    "uncompressed_sha256": "39d31ae4219a960f31edcb6f2a0fbbb3731d04efee35bcfcdf37a671349d280e",
+    "source": "/tmp/c9-ci273-supplier-regressions-original.json"
+  },
+  "supplier-exploratory-throttle.json.gz": {
+    "uncompressed_sha256": "02adade519ed081efe9fbdae532964b51129e6e7b7303edc00e22900ad550c32",
+    "source": "/tmp/c9-supplier-c2-ready-diag/report.json"
+  },
+  "supplier-ready-local.json.gz": {
+    "uncompressed_sha256": "122e96a09eb9381c3f0f556614db28e697aa961aa1567d500e662665ac134c6b",
+    "source": "/tmp/c9-ci273-supplier-regressions-ready.json"
+  },
+  "supplier-controlled-query-delay.json.gz": {
+    "uncompressed_sha256": "f5ada8484044c3f29265739316317ca8c191a5857a526f9a2c1e151cfdf10448",
+    "source": "/tmp/c9-supplier-c2-delay-controlled-results/delay-controlled-delay-con-02961-g-without-business-mutation-desktop/delay-controlled-readiness.json"
+  },
+  "auth-diagnostic-privacy-controls.json.gz": {
+    "uncompressed_sha256": "365cbe3b356177f5363d47cb8f42c1e5432a5e0091d2ae869d7446722264655c",
+    "source": "/tmp/c9-auth-diagnostic-selector-controls/report.json"
+  },
+  "lint.txt.gz": {
+    "uncompressed_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+    "source": "/tmp/c9-ci273-followup-lint.log"
+  },
+  "discovery.txt.gz": {
+    "uncompressed_sha256": "8cd55a6d6bdf8fe621df4166f0e130c80c1f47f46a3caa8d173b9e8274fefbf6",
+    "source": "/tmp/c9-ci273-followup-discovery.log"
+  }
+}
