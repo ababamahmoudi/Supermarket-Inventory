@@ -10,6 +10,7 @@ import {
   visitC8,
 } from "../scripts/capture-c8-proof.mjs";
 import { setBranch, setLanguage, signIn } from "./helpers";
+import { configuredPersonExpectation } from "./configured-person-expectations";
 
 async function prepare(
   page: Page,
@@ -384,7 +385,7 @@ for (const language of ["en", "fa"] as const) {
     expect(request).toMatchObject({
       branch: "Branch 1",
       requested_price: "1.19",
-      requester_username: "floorworker",
+      requester_username: configuredPersonExpectation("ny-floor").username,
     });
     expect(request.why ?? "").toBe("");
     expect(pending.products).toEqual(before.products);
@@ -464,7 +465,7 @@ for (const language of ["en", "fa"] as const) {
       ),
     ).toEqual([
       expect.objectContaining({
-        target_username: "floorworker",
+        target_username: configuredPersonExpectation("ny-floor").username,
         branch: "Branch 1",
       }),
     ]);

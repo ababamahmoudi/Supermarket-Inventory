@@ -1,5 +1,6 @@
-import { beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import {
+  cleanup,
   fireEvent,
   render,
   screen,
@@ -7,28 +8,58 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DemoProvider, useDemo } from "../store";
-import { SESSION_KEY } from "../auth";
+import { DemoProvider, initialState, useDemo } from "../store";
+import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
+
 import i18n from "../i18n";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 import Payables from "./Payables";
 import Orders from "./Orders";
 
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  clearRenderedUiReadiness();
+  cleanup();
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+});
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   window.location.hash = "#payables";
   await i18n.changeLanguage("en");
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "Branch 1",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
 });
+async function renderFinance(page: "payables" | "orders", all = false) {
+  const fixture = await authenticatedProviderFixture({
+    state: initialState(),
+    role: "manager",
+    actorOptions: {
+      selection: all
+        ? { kind: "all_locations" }
+        : { kind: "location", location_id: "Branch 1" },
+    },
+  });
+  fixtures.push(fixture);
+  render(
+    <DemoProvider options={fixture.options}>
+      <Harness page={page} />
+    </DemoProvider>,
+  );
+  await renderedUiReady(() =>
+    Boolean(
+      screen.queryByRole("button", {
+        name: page === "payables" ? "Record external payment" : "New order",
+      }),
+    ),
+  );
+  await screen.findByRole("button", {
+    name: page === "payables" ? "Record external payment" : "New order",
+  });
+  return fixture;
+}
+
 function Harness({ page }: { page: "payables" | "orders" }) {
   const { state } = useDemo();
   return (
@@ -41,29 +72,29 @@ function Harness({ page }: { page: "payables" | "orders" }) {
 }
 it("blocks incomplete payment without a ledger write, links to the missing field and posts once after confirmation", async () => {
   const user = userEvent.setup();
-  render(
-    <DemoProvider>
-      <Harness page="payables" />
-    </DemoProvider>,
-  );
+  await renderFinance("payables");
   const before = screen.getByTestId("ledger-json").textContent!;
   await user.click(
     screen.getByRole("button", { name: "Record external payment" }),
   );
-  await user.clear(screen.getByLabelText("Payment amount"));
+  await user.clear(await screen.findByLabelText("Payment amount"));
   await user.click(
-    screen.getByRole("button", { name: "Preview oldest-due allocations" }),
+    await screen.findByRole("button", {
+      name: "Preview oldest-due allocations",
+    }),
   );
   const amountList = screen.getByRole("alert", { name: "What's missing" });
   await user.click(within(amountList).getByRole("link"));
-  expect(screen.getByLabelText("Payment amount")).toHaveFocus();
+  expect(await screen.findByLabelText("Payment amount")).toHaveFocus();
   expect(screen.getByTestId("ledger-json").textContent).toBe(before);
-  await user.type(screen.getByLabelText("Payment amount"), "10.00");
+  await user.type(await screen.findByLabelText("Payment amount"), "10.00");
   await user.click(
-    screen.getByRole("button", { name: "Preview oldest-due allocations" }),
+    await screen.findByRole("button", {
+      name: "Preview oldest-due allocations",
+    }),
   );
   await user.click(
-    screen.getByRole("button", { name: "Confirm and record payment" }),
+    await screen.findByRole("button", { name: "Confirm and record payment" }),
   );
   const receiptList = screen.getByRole("alert", { name: "What's missing" });
   await user.click(
@@ -82,36 +113,34 @@ it("blocks incomplete payment without a ledger write, links to the missing field
     "C6-EXTERNAL-PAYMENT",
   );
   await user.click(
-    screen.getByRole("button", { name: "Confirm and record payment" }),
+    await screen.findByRole("button", { name: "Confirm and record payment" }),
   );
-  const confirm = screen.getByRole("dialog", {
+  const confirm = await screen.findByRole("dialog", {
     name: "Record external payment",
   });
   await user.click(
     within(confirm).getByRole("button", { name: "Confirm and record payment" }),
   );
-  const ledger = JSON.parse(screen.getByTestId("ledger-json").textContent!);
-  expect(ledger).toHaveLength(JSON.parse(before).length + 1);
-  expect(ledger.at(-1)).toMatchObject({
-    type: "payment",
-    amount: "-10.00",
-    reference: "C6-EXTERNAL-PAYMENT",
-    branch: "Branch 1",
+  await waitFor(() => {
+    const ledger = JSON.parse(screen.getByTestId("ledger-json").textContent!);
+    expect(ledger).toHaveLength(JSON.parse(before).length + 1);
+    expect(ledger.at(-1)).toMatchObject({
+      type: "payment",
+      amount: "-10.00",
+      reference: "C6-EXTERNAL-PAYMENT",
+      branch: "Branch 1",
+    });
   });
 });
 it("lists every missing ledger field and clears only the edited hint before a guarded confirmed save", async () => {
   const user = userEvent.setup();
-  render(
-    <DemoProvider>
-      <Harness page="payables" />
-    </DemoProvider>,
-  );
+  await renderFinance("payables");
   const before = screen.getByTestId("ledger-json").textContent!;
   await user.click(
     screen.getByRole("button", { name: "Record external payment" }),
   );
   await user.click(
-    screen.getByRole("button", {
+    await screen.findByRole("button", {
       name: "Record opening balance, credit, or adjustment",
     }),
   );
@@ -147,22 +176,20 @@ it("lists every missing ledger field and clears only the edited hint before a gu
       screen.getByRole("dialog", { name: "Record ledger entry" }),
     ).getByRole("button", { name: "Record ledger entry" }),
   );
-  expect(
-    JSON.parse(screen.getByTestId("ledger-json").textContent!).at(-1),
-  ).toMatchObject({
-    type: "adjustment",
-    amount: "-5.00",
-    reference: "C6-ADJUSTMENT-VALIDATION",
+  await waitFor(() => {
+    expect(
+      JSON.parse(screen.getByTestId("ledger-json").textContent!).at(-1),
+    ).toMatchObject({
+      type: "adjustment",
+      amount: "-5.00",
+      reference: "C6-ADJUSTMENT-VALIDATION",
+    });
   });
 });
 it("explains missing order supplier and invalid selected quantity without saving, then places valid cases without changing money", async () => {
   const user = userEvent.setup();
   window.location.hash = "#orders";
-  render(
-    <DemoProvider>
-      <Harness page="orders" />
-    </DemoProvider>,
-  );
+  await renderFinance("orders");
   const ledgerBefore = screen.getByTestId("ledger-json").textContent!,
     ordersBefore = screen.getByTestId("orders-json").textContent!;
   await user.click(screen.getByRole("button", { name: "New order" }));
@@ -177,7 +204,9 @@ it("explains missing order supplier and invalid selected quantity without saving
   const emptyList = screen.getByRole("alert", { name: "What's missing" });
   await user.click(within(emptyList).getByRole("link"));
   expect(document.getElementById("order-items")).toHaveFocus();
-  const cases = screen.getAllByRole("textbox", { name: /^Cases —/ })[0];
+  const cases = (
+    await screen.findAllByRole("textbox", { name: /^Cases —/ })
+  )[0];
   fireEvent.change(cases, { target: { value: "0.1" } });
   await user.click(screen.getByRole("button", { name: "Place order" }));
   const quantityList = screen.getByRole("alert", { name: "What's missing" });
@@ -196,26 +225,12 @@ it("explains missing order supplier and invalid selected quantity without saving
 });
 it("explains All branches on payment preview and links to the actual branch chooser without writing money", async () => {
   const user = userEvent.setup();
-  sessionStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      username: "supervisor",
-      branch: "all",
-      lang: "en",
-      locked: false,
-      authenticatedAt: Date.now(),
-    }),
-  );
-  render(
-    <DemoProvider>
-      <Harness page="payables" />
-    </DemoProvider>,
-  );
+  await renderFinance("payables", true);
   const before = screen.getByTestId("ledger-json").textContent!;
   await user.click(
     screen.getByRole("button", { name: "Record external payment" }),
   );
-  const preview = screen.getByRole("button", {
+  const preview = await screen.findByRole("button", {
     name: "Preview oldest-due allocations",
   });
   expect(preview).not.toBeDisabled();
@@ -234,24 +249,28 @@ it("explains All branches on payment preview and links to the actual branch choo
 
 it("C7 supplier rows open their ledger by keyboard and chevron without posting money", async () => {
   const user = userEvent.setup();
-  render(
-    <DemoProvider>
-      <Harness page="payables" />
-    </DemoProvider>,
-  );
+  await renderFinance("payables");
   const before = screen.getByTestId("ledger-json").textContent!;
   const row = screen.getByRole("row", { name: "Fresh Valley Foods" });
   row.focus();
   await user.keyboard("{Enter}");
+  await renderedUiReady(() =>
+    Boolean(screen.queryByRole("heading", { name: "Fresh Valley Foods" })),
+  );
   expect(
-    screen.getByRole("heading", { name: "Fresh Valley Foods" }),
+    await screen.findByRole("heading", { name: "Fresh Valley Foods" }),
   ).toBeVisible();
   const next = screen.getByRole("row", { name: "Golden Grain Distributors" });
   await user.click(
     within(next).getByRole("link", { name: "View Golden Grain Distributors" }),
   );
+  await renderedUiReady(() =>
+    Boolean(
+      screen.queryByRole("heading", { name: "Golden Grain Distributors" }),
+    ),
+  );
   expect(
-    screen.getByRole("heading", { name: "Golden Grain Distributors" }),
+    await screen.findByRole("heading", { name: "Golden Grain Distributors" }),
   ).toBeVisible();
   expect(screen.getByTestId("ledger-json").textContent).toBe(before);
 });
@@ -259,23 +278,28 @@ it("C7 supplier rows open their ledger by keyboard and chevron without posting m
 it("C7 order rows navigate to the saved order by keyboard without replacing its data", async () => {
   const user = userEvent.setup();
   window.location.hash = "#orders";
-  render(
-    <DemoProvider>
-      <Harness page="orders" />
-    </DemoProvider>,
-  );
+  await renderFinance("orders");
   await user.click(screen.getByRole("button", { name: "New order" }));
   await user.click(screen.getByLabelText("Supplier"));
   await user.click(screen.getByRole("option", { name: "Fresh Valley Foods" }));
-  fireEvent.change(screen.getAllByRole("textbox", { name: /^Cases —/ })[0], {
-    target: { value: "1" },
-  });
+  fireEvent.change(
+    (await screen.findAllByRole("textbox", { name: /^Cases —/ }))[0],
+    {
+      target: { value: "1" },
+    },
+  );
   await user.click(screen.getByRole("button", { name: "Save as draft" }));
+  await renderedUiReady(() => /#orders\?id=/.test(window.location.hash));
   await waitFor(() => expect(window.location.hash).toMatch(/#orders\?id=/));
   const retained = screen.getByTestId("orders-json").textContent!;
   const ledger = screen.getByTestId("ledger-json").textContent!;
   const order = JSON.parse(retained).at(-1);
-  await user.click(screen.getByRole("button", { name: "Back to Orders" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Back to Orders" }),
+  );
+  await renderedUiReady(() =>
+    Boolean(screen.queryByRole("row", { name: order.reference })),
+  );
   const row = await screen.findByRole("row", { name: order.reference });
   expect(
     within(row).getByRole("link", { name: `View ${order.reference}` }),
@@ -285,6 +309,9 @@ it("C7 order rows navigate to the saved order by keyboard without replacing its 
   ).toBeNull();
   row.focus();
   await user.keyboard("{Enter}");
+  await renderedUiReady(
+    () => window.location.hash === `#orders?id=${encodeURIComponent(order.id)}`,
+  );
   await waitFor(() =>
     expect(window.location.hash).toBe(
       `#orders?id=${encodeURIComponent(order.id)}`,

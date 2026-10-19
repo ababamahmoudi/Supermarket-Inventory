@@ -1,16 +1,12 @@
-import Decimal from "decimal.js";
+import { approvalPanelRead } from "../approval-board";
+import { useProtectedQuery } from "../use-protected-query";
+import { domainScope } from "../domain-authority";
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import {
-  approvalLocationEffects,
-  manualRegularApprovalPreview,
-  type PriceScope,
-} from "../approvals";
+import { type PriceScope } from "../approvals";
 import { formatMoney } from "../formatters";
 import { weightPriceDisplay } from "../weighed";
 import { WhatsMissing } from "../WhatsMissing";
-import { regularPrice } from "../catalog";
 import { branchLabel, branchSellsToCustomers } from "../settings";
-import { effectiveApprovalLocation } from "../received";
 import { OfferLabel, ProductName } from "../presentation";
 import { useDemo } from "../store";
 import type { Approval, Branch } from "../types";
@@ -41,34 +37,38 @@ export function ApprovalReviewPanel({
   regularReasonError?: string;
   onRegularReasonChange?: (reason: string) => void;
 }) {
-  const { state, lang, t } = useDemo();
+  const { state, can, lang, t } = useDemo();
+  const panelRead = useProtectedQuery(
+    can("approvals.decide") ? "approvals.decide" : null,
+    domainScope(state, approval),
+    (canonical, actor) =>
+      approvalPanelRead(
+        canonical,
+        actor,
+        approval.id,
+        scope,
+        target,
+        regularDecision,
+        showEffects,
+      ),
+    JSON.stringify([approval.id, scope, target, regularDecision, showEffects]),
+  );
   const product = state.products.find(
     (item) =>
       item.company_id === state.config.company.seed_key &&
       item.code === approval.product_code,
   );
-  if (!product) return null;
-  const origin = effectiveApprovalLocation(state, approval);
-  const oldPrice = regularPrice(
-    state,
-    product,
-    origin === "all" ? target : origin,
-  );
-  const cost = approval.unit_cost ?? product.last_cost_before_tax;
-  const manualReview = approval.manual_price_review
-    ? manualRegularApprovalPreview(state, approval, regularDecision)
-    : null;
-  const proposedPrice = manualReview?.price ?? approval.proposed_price;
-  const margin = new Decimal(proposedPrice || 0).gt(0)
-    ? new Decimal(proposedPrice)
-        .minus(cost)
-        .div(proposedPrice)
-        .times(100)
-        .toFixed(2)
-    : null;
-  const effects = showEffects
-    ? approvalLocationEffects(state, approval, scope, target)
-    : [];
+  if (!product || !panelRead.data) return null;
+  const {
+    origin,
+    oldPrice,
+    cost,
+    manualReview,
+    proposedPrice,
+    margin,
+    effects,
+  } = panelRead.data;
+  const actualApproval = panelRead.data.approval;
   const allowsBranch = branchSellsToCustomers(
     state.config,
     origin === "all" ? target : origin,
@@ -84,7 +84,7 @@ export function ApprovalReviewPanel({
   return (
     <div className="approval-review-content">
       {showEffects &&
-        approval.manual_price_review &&
+        actualApproval.manual_price_review &&
         onRegularDecisionChange && (
           <Field label={t("Selling price", "قیمت فروش")}>
             <Select
@@ -95,11 +95,11 @@ export function ApprovalReviewPanel({
               options={[
                 {
                   value: "rule",
-                  label: `${t("Use the new calculated price", "از قیمت محاسبه‌شدهٔ جدید استفاده شود")} ${priceLabel(approval.manual_price_review.calculated_price)}`,
+                  label: `${t("Use the new calculated price", "از قیمت محاسبه‌شدهٔ جدید استفاده شود")} ${priceLabel(actualApproval.manual_price_review.calculated_price)}`,
                 },
                 {
                   value: "keep",
-                  label: `${t("Keep", "حفظ شود")} ${priceLabel(approval.manual_price_review.kept_price)}`,
+                  label: `${t("Keep", "حفظ شود")} ${priceLabel(actualApproval.manual_price_review.kept_price)}`,
                 },
               ]}
             />
@@ -146,11 +146,15 @@ export function ApprovalReviewPanel({
           <div>
             <small>{t("Unit cost", "هزینه واحد")}</small>
             <strong>
-              <ProductCost
-                value={cost}
-                product={product}
-                config={state.config}
-              />
+              {cost !== null && cost !== undefined ? (
+                <ProductCost
+                  value={cost}
+                  product={product}
+                  config={state.config}
+                />
+              ) : (
+                <span className="muted">—</span>
+              )}
             </strong>
           </div>
           <div>
@@ -162,12 +166,12 @@ export function ApprovalReviewPanel({
         </div>
       </section>
       {showEffects &&
-        approval.manual_price_review &&
+        actualApproval.manual_price_review &&
         regularDecision === "keep" && (
           <>
             <p className="muted">
               {t("Keep", "حفظ شود")}{" "}
-              {priceLabel(approval.manual_price_review.kept_price)} ·{" "}
+              {priceLabel(actualApproval.manual_price_review.kept_price)} ·{" "}
               {branchLabel(state.config, origin, lang)}
             </p>
           </>

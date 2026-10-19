@@ -1,9 +1,18 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { chooseOption, setLanguage, signIn } from "./helpers";
+import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
 test.setTimeout(60000);
 
 async function responsiveColumn(row: Locator, label: string) {
+  await expect(row).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        await row
+          .locator(`td[data-column-label="${label}"], .table-details-toggle`)
+          .count(),
+    )
+    .toBeGreaterThan(0);
   const cell = row.locator(`td[data-column-label="${label}"]`);
   if (await cell.count()) {
     await expect(cell).toBeVisible();
@@ -128,6 +137,7 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(4);
   await page.goto("/#lookup");
   await page.getByLabel("Search products", { exact: true }).fill("0003");
+  await setBranch(page, "Branch 1");
   await expect(page.locator(".price")).toHaveText("$2.99");
 });
 

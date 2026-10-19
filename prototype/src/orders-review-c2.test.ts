@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import {
+  applyReviewedOrderReceipt as applyInvoiceToOrder,
+  validateReviewedOrderReceipt as validateOrderReceipt,
+} from "./order-receipt-test-fixture";
 import { configuredBranches } from "./settings";
 import { supplierRecords } from "./supplier-editor";
 import { saveSupplierItem } from "./supplier-items";
 import {
-  applyInvoiceToOrder,
   compareInvoiceOrder,
   createOrder,
   orderCandidates,
   placeOrder,
-  validateOrderReceipt,
-  type OrderContext,
   type OrderReceiptInput,
 } from "./orders";
 
@@ -21,13 +23,11 @@ function fixture() {
   state.invoices = [];
   state.invoice.status = "empty";
   const branches = configuredBranches(state.config);
-  const context: OrderContext = {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    branch: "all",
-    allowed_branches: branches,
-    actor: "Demo Supervisor",
-  };
+  const context = authenticatedTestActor(state, "manager", {
+    locations: [branches[0]],
+    selection: { kind: "all_locations" },
+    name_en: "Demo Manager",
+  });
   const supplier = supplierRecords(state).find(
     (item) => item.active && item.status === "confirmed",
   )!;
@@ -217,37 +217,34 @@ describe("independent Orders receipt regression review", () => {
   });
 
   it("enforces the authenticated company, allowed locations, and receiving role even when invoice evidence exists", () => {
-    const { state, context, order, initial, branches } = fixture();
-    const contexts: OrderContext[] = [
-      { ...context, company_id: "foreign-company" },
-      { ...context, role: "cashier", branch: order.branch },
-      { ...context, allowed_branches: [] },
-      {
-        ...context,
-        role: "floor_worker",
-        branch: order.branch,
-        allowed_branches: [],
-      },
-      {
-        ...context,
-        role: "floor_worker",
-        branch: branches[1],
-        allowed_branches: [branches[1]],
-      },
+    const { state, order, initial, branches } = fixture();
+    const foreign = initialState();
+    foreign.config.company.seed_key = "foreign-company";
+    const attempts = [
+      () =>
+        authenticatedTestActor(foreign, "manager", {
+          locations: [order.branch],
+        }),
+      () =>
+        authenticatedTestActor(state, "cashier", { locations: [order.branch] }),
+      () =>
+        authenticatedTestActor(state, "branch_supervisor", { locations: [] }),
+      () => authenticatedTestActor(state, "floor_worker", { locations: [] }),
+      () =>
+        authenticatedTestActor(state, "floor_worker", {
+          locations: [branches[1]],
+        }),
     ];
-    for (const actor of contexts) {
+    for (const attempt of attempts) {
       const before = structuredClone(state);
       expect(() =>
-        applyInvoiceToOrder(state, actor, order.id, initial),
+        applyInvoiceToOrder(state, attempt(), order.id, initial),
       ).toThrow();
       expect(state).toEqual(before);
     }
-    const ownWorker: OrderContext = {
-      ...context,
-      role: "floor_worker",
-      branch: order.branch,
-      allowed_branches: [order.branch],
-    };
+    const ownWorker = authenticatedTestActor(state, "floor_worker", {
+      locations: [order.branch],
+    });
     // Receiving an invoice is available without granting general Orders access.
     expect(state.config.orders?.allow_floor_worker).toBe(false);
     validateOrderReceipt(state, ownWorker, order.id, initial);

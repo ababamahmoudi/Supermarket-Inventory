@@ -1,10 +1,42 @@
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
+import { invoiceView } from "./invoice-projections";
+const managers = new WeakMap<
+  ReturnType<typeof initialState>,
+  Map<string, AuthenticatedActor>
+>();
+function managerAt(
+  state: ReturnType<typeof initialState>,
+  branch = "Branch 1",
+) {
+  let records = managers.get(state);
+  if (!records) {
+    records = new Map();
+    managers.set(state, records);
+  }
+  let actor = records.get(branch);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      user_id: `test-receipts-manager-${branch}`,
+      locations: branch === "all" ? ["Branch 1"] : [branch],
+      selection:
+        branch === "all"
+          ? { kind: "all_locations" }
+          : { kind: "location", location_id: branch },
+      name_en: "Demo Manager",
+    });
+    records.set(branch, actor);
+  }
+  return actor;
+}
 import { configuredBranches } from "./settings";
 import { saveSupplier, supplierRecords } from "./supplier-editor";
 import { saveSupplierItem, supplierItemFacts } from "./supplier-items";
-import { createOrder, placeOrder, type OrderContext } from "./orders";
+import { createOrder, placeOrder } from "./orders";
 import {
   addManualLine,
   createInvoice,
@@ -39,13 +71,7 @@ function fixture(
   state.supplier_items = [];
   state.invoices = [];
   const branch = configuredBranches(state.config)[0];
-  const context: OrderContext = {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    branch,
-    allowed_branches: [branch],
-    actor: "Demo Supervisor",
-  };
+  const context = managerAt(state, branch);
   const supplier = supplierRecords(state).find(
     (item) => item.name === "Fresh Valley Foods",
   )!;
@@ -74,14 +100,14 @@ function fixture(
     ],
   });
   placeOrder(state, context, order.id, order.version);
-  state.invoice = createInvoice(state, branch, true);
+  state.invoice = createInvoice(state, managerAt(state, branch), branch, true);
   state.invoice.supplier = supplier.name;
   state.invoice.supplier_confirmed = true;
   state.invoice.supplier_invoice_number = "C2-DUPLICATE-PRODUCT-REVIEW";
   state.invoice.file_name = "fictional-invoice.png";
   state.invoice.file_data = "data:image/png;base64,ZGVtbw==";
   for (const [index, item] of [first, second].entries()) {
-    addManualLine(state, productCode, item.id);
+    addManualLine(state, managerAt(state, branch), productCode, item.id);
     const line = state.invoice.lines[index];
     line.unit_cost_before_tax = costs[index];
     setInvoiceLineQuantity(line, "1", "cases", item.units_per_case);
@@ -94,9 +120,9 @@ function fixture(
     }
   }
   recalculateInvoice(state.invoice, state.config);
-  setInvoiceOrder(state, "supervisor", branch, order.id);
+  setInvoiceOrder(state, managerAt(state, branch), order.id);
   if (options.firstRefused)
-    setInvoiceExtraDecision(state, "supervisor", branch, 0, "refuse");
+    setInvoiceExtraDecision(state, managerAt(state, branch), 0, "refuse");
   state.invoice.order_missing_decisions = Object.fromEntries(
     order.lines
       .filter((line) => {
@@ -118,21 +144,17 @@ function fixture(
     line.review_confirmed = true;
     line.date_confirmed = true;
   }
-  expect(invoiceBlockers(state, "supervisor", branch)).toEqual([]);
-  postInvoice(state, "supervisor", branch, context.actor);
+  expect(invoiceBlockers(state, context)).toEqual([]);
+  postInvoice(state, context);
   return { state, context, branch, order, productCode, first, second };
 }
 
 describe("independent same-product supplier SKU delivery review", () => {
   it("receives a linked later Short at the corrected Warehouse without moving the original order or replaying liability", () => {
-    const { state, context, branch, order, productCode } = fixture(6, 6);
+    const { state, branch, order, productCode } = fixture(6, 6);
     const originalInvoice = structuredClone(state.invoice);
     const originalOrder = structuredClone(order);
-    const supervisor = {
-      ...context,
-      branch: "all",
-      allowed_branches: configuredBranches(state.config, true),
-    };
+    const supervisor = managerAt(state, "all");
     const preview = invoiceLocationMovePreview(
       state,
       supervisor,
@@ -157,31 +179,33 @@ describe("independent same-product supplier SKU delivery review", () => {
         productCode,
         2,
         "C2-CORRECTED-LOCATION-DELIVERY",
-        "floor_worker",
-        branch,
+        authenticatedTestActor(state, "floor_worker", { locations: [branch] }),
         1,
       ),
-    ).toThrow("permitted");
+    ).toThrow(AuthorityError);
     expect(state).toEqual(before);
     const balance = (location: string) =>
       supplierBalanceSummary(
         state,
-        { ...context, branch: location },
+        managerAt(state, location),
         state.invoice.supplier,
       ).balance;
     const originalBranchBalance = balance(branch);
     const warehouseBalance = balance("Warehouse");
     const receiver = "Fictional Warehouse receiver";
+    const warehouseWorker = authenticatedTestActor(state, "floor_worker", {
+      user_id: "test-corrected-warehouse-worker",
+      locations: ["Warehouse"],
+      name_en: receiver,
+    });
     expect(
       receiveShort(
         state,
         productCode,
         2,
         "C2-CORRECTED-LOCATION-DELIVERY",
-        "floor_worker",
-        "Warehouse",
+        warehouseWorker,
         1,
-        receiver,
       ),
     ).toBe("1.96");
     expect(balance(branch)).toBe(originalBranchBalance);
@@ -210,7 +234,7 @@ describe("independent same-product supplier SKU delivery review", () => {
       })),
     }).toEqual(originalInvoice);
     expect(
-      receivedLog(state, { ...context, branch: "Warehouse" }).filter(
+      receivedLog(state, managerAt(state, "Warehouse")).filter(
         (entry) =>
           entry.invoice_id === state.invoice.id &&
           entry.kind === "short_delivery",
@@ -252,10 +276,8 @@ describe("independent same-product supplier SKU delivery review", () => {
         productCode,
         2,
         "C2-CORRECTED-LOCATION-DELIVERY",
-        "floor_worker",
-        "Warehouse",
+        warehouseWorker,
         1,
-        receiver,
       ),
     ).toBe("0.00");
     expect(state).toEqual(saved);
@@ -269,16 +291,28 @@ describe("independent same-product supplier SKU delivery review", () => {
         costs: ["1.0000", "2.0000"],
       });
       const original = structuredClone(state.invoices![0]);
-      state.invoice = createInvoice(state, branch, true);
+      state.invoice = createInvoice(
+        state,
+        managerAt(state, branch),
+        branch,
+        true,
+      );
       state.invoice.supplier = original.supplier;
-      addManualLine(state, productCode, second.id);
+      addManualLine(state, managerAt(state, branch), productCode, second.id);
       const line = state.invoice.lines[0];
       line.unit_cost_before_tax = "1.5000";
-      expect(previousReceiptCost(state, productCode, line)).toMatchObject({
+      expect(
+        previousReceiptCost(state, managerAt(state, branch), productCode, line),
+      ).toMatchObject({
         cost: "2.0000",
         reference: original.supplier_invoice_number,
       });
-      expect(lowerPriceLines(state)).toEqual([line]);
+      expect(lowerPriceLines(state, managerAt(state, branch))).toEqual([
+        invoiceView(state, managerAt(state, branch), state.invoice.id).lines[0],
+      ]);
+      expect(
+        lowerPriceLines(state, managerAt(state, branch))[0],
+      ).not.toHaveProperty("demo_note");
       expect(state.invoices![0]).toEqual(original);
     },
   );
@@ -308,16 +342,28 @@ describe("independent same-product supplier SKU delivery review", () => {
       { id: supplier.id },
     );
     expect(renamed.previous_names).toContain(original.supplier);
-    state.invoice = createInvoice(state, branch, true);
+    state.invoice = createInvoice(
+      state,
+      managerAt(state, branch),
+      branch,
+      true,
+    );
     state.invoice.supplier = renamed.name;
-    addManualLine(state, productCode, second.id);
+    addManualLine(state, managerAt(state, branch), productCode, second.id);
     const line = state.invoice.lines[0];
     line.unit_cost_before_tax = "1.5000";
-    expect(previousReceiptCost(state, productCode, line)).toMatchObject({
+    expect(
+      previousReceiptCost(state, managerAt(state, branch), productCode, line),
+    ).toMatchObject({
       cost: "2.0000",
       reference: original.supplier_invoice_number,
     });
-    expect(lowerPriceLines(state)).toEqual([line]);
+    expect(lowerPriceLines(state, managerAt(state, branch))).toEqual([
+      invoiceView(state, managerAt(state, branch), state.invoice.id).lines[0],
+    ]);
+    expect(
+      lowerPriceLines(state, managerAt(state, branch))[0],
+    ).not.toHaveProperty("demo_note");
     expect(state.invoices![0]).toEqual(original);
     expect(state.activity).toContainEqual(
       expect.objectContaining({
@@ -333,19 +379,11 @@ describe("independent same-product supplier SKU delivery review", () => {
     const firstSnapshot = structuredClone(state.invoice.lines[0]);
     const before = structuredClone(state);
     expect(() =>
-      receiveShort(state, productCode, 2, "AMBIGUOUS", "supervisor", branch),
+      receiveShort(state, productCode, 2, "AMBIGUOUS", context),
     ).toThrow();
     expect(state).toEqual(before);
     expect(
-      receiveShort(
-        state,
-        productCode,
-        2,
-        "C2-LARGE-PACK-DELIVERY",
-        "supervisor",
-        branch,
-        1,
-      ),
+      receiveShort(state, productCode, 2, "C2-LARGE-PACK-DELIVERY", context, 1),
     ).toBe("1.96");
     expect(state.invoice.lines[0]).toEqual(firstSnapshot);
     expect(state.invoice.lines[1].qty_later_received).toBe(2);
@@ -367,7 +405,7 @@ describe("independent same-product supplier SKU delivery review", () => {
     ]);
     const facts = supplierItemFacts(
       state,
-      context.company_id,
+      context,
       state.invoice.supplier,
       branch,
     );
@@ -383,10 +421,24 @@ describe("independent same-product supplier SKU delivery review", () => {
     const { state, branch, order, productCode } = fixture(4, 10);
     const document = "C2-ONE-DOCUMENT-TWO-SKUS";
     expect(
-      receiveShort(state, productCode, 2, document, "supervisor", branch, 0),
+      receiveShort(
+        state,
+        productCode,
+        2,
+        document,
+        managerAt(state, branch),
+        0,
+      ),
     ).toBe("1.96");
     expect(
-      receiveShort(state, productCode, 2, document, "supervisor", branch, 1),
+      receiveShort(
+        state,
+        productCode,
+        2,
+        document,
+        managerAt(state, branch),
+        1,
+      ),
     ).toBe("1.96");
     expect(state.invoice.lines.map((line) => line.qty_later_received)).toEqual([
       2, 2,
@@ -424,8 +476,7 @@ describe("independent same-product supplier SKU delivery review", () => {
           productCode,
           2,
           document,
-          "supervisor",
-          branch,
+          managerAt(state, branch),
           index,
         ),
       ).toBe("0.00");

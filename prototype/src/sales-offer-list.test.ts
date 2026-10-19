@@ -1,12 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import {
   offerPausedStores,
   saleListStatus,
   salesOfferRows,
 } from "./sales-offer-list";
-import type { SalesContext, SaleSchedule } from "./sales";
-import type { Offer } from "./types";
+import type { SaleSchedule } from "./sales";
+import {
+  catalogTestActor,
+  foreignCatalogManager,
+} from "./catalog-authority-test-fixture";
+import type { DemoState, Offer } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { projectCatalogReadView } from "./catalog-read-model";
+import { projectOffersReadView } from "./offers-read-model";
+import { signedOutReadView } from "./e1-read-model";
 
 const now = new Date("2026-10-12T16:00:00Z");
 const filters = {
@@ -17,6 +25,17 @@ const filters = {
   supplier: "",
   type: "",
 };
+/** Use the same cost-free projections as the actual public Offers screen. */
+function listView(
+  state: DemoState,
+  actor: AuthenticatedActor = catalogTestActor(state, "manager", "all"),
+) {
+  return {
+    config: signedOutReadView(state.config).config,
+    products: projectCatalogReadView(state, actor).products,
+    ...projectOffersReadView(state, actor),
+  };
+}
 function fixture() {
   const state = initialState();
   const sale = {
@@ -32,20 +51,13 @@ function fixture() {
       last_day: "2026-10-25",
     },
   ];
-  const context: SalesContext = {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    actor: "Demo Supervisor",
-    username: "supervisor",
-    branch: "Branch 1",
-    allowed_branches: ["Branch 1", "Branch 2", "Branch 3", "Warehouse"],
-  };
+  const context = catalogTestActor(state, "manager");
   return { state, sale, context };
 }
 
 describe("sale offer list boundaries", () => {
   it("combines visible store sales without disclosing another company, unauthorized store or Warehouse", () => {
-    const { state, sale, context } = fixture();
+    const { state, sale } = fixture();
     state.sales!.push(
       { ...sale, id: "another-company", company_id: "another-company" },
       {
@@ -62,9 +74,13 @@ describe("sale offer list boundaries", () => {
       },
       { ...sale, id: "warehouse", branch: "Warehouse", branch_id: "Warehouse" },
     );
+    const assignedActor = catalogTestActor(state, "branch_supervisor", "all", {
+      locations: ["Branch 1", "Branch 2", "Warehouse"],
+      user_id: "test-list-supervisor",
+    });
     const rows = salesOfferRows(
-      state,
-      { ...context, allowed_branches: ["Branch 1", "Branch 2", "Warehouse"] },
+      listView(state, assignedActor),
+      assignedActor,
       "all",
       filters,
       now,
@@ -77,36 +93,39 @@ describe("sale offer list boundaries", () => {
     ]);
     expect(
       salesOfferRows(
-        state,
-        { ...context, company_id: "another-company" },
+        listView(state),
+        foreignCatalogManager(state),
         "all",
         filters,
         now,
       ),
     ).toEqual([]);
-    expect(salesOfferRows(state, null, "all", filters, now)).toEqual([]);
+    expect(salesOfferRows(listView(state), null, "all", filters, now)).toEqual(
+      [],
+    );
   });
   it("shows a worker only their own pending request and keeps decided/elapsed requests out of Current offers", () => {
-    const { state, context } = fixture();
+    const { state } = fixture();
+    const worker = catalogTestActor(state, "floor_worker");
+    const otherWorker = catalogTestActor(state, "floor_worker", "Branch 1", {
+      user_id: "test-other-worker",
+      username: "different-worker",
+    });
     const request = state.sale_requests![0];
+    request.requester_user_id = worker.user_id;
     state.sale_requests!.push(
       {
         ...request,
         id: "another-worker",
-        requester_username: "different-worker",
+        requester_username: otherWorker.username,
+        requester_user_id: otherWorker.user_id,
       },
       { ...request, id: "elapsed", last_day: "2026-10-11" },
       { ...request, id: "decided", status: "approved" },
       { ...request, id: "another-company", company_id: "another-company" },
     );
-    const worker = {
-      ...context,
-      role: "floor_worker" as const,
-      username: request.requester_username,
-      allowed_branches: ["Branch 1", "Branch 2"],
-    };
     const rows = salesOfferRows(
-      state,
+      listView(state, worker),
       worker,
       "all",
       { ...filters, status: "requested" },
@@ -117,19 +136,21 @@ describe("sale offer list boundaries", () => {
       kind: "request",
       request: { id: request.id },
     });
-    expect(salesOfferRows(state, worker, "Branch 2", filters, now)).toEqual([]);
+    expect(
+      salesOfferRows(listView(state, worker), worker, "Branch 2", filters, now),
+    ).toEqual([]);
   });
   it("moves an inclusive last-day sale to Past offers at the store's next midnight even before the scheduler persists status", () => {
     const { state, sale, context } = fixture();
     sale.last_day = "2026-10-12";
     state.sales = [sale];
-    expect(saleListStatus(state, sale, new Date("2026-10-13T03:59:59Z"))).toBe(
-      "active",
-    );
+    expect(
+      saleListStatus(listView(state), sale, new Date("2026-10-13T03:59:59Z")),
+    ).toBe("active");
     const nextMidnight = new Date("2026-10-13T04:00:00Z");
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...filters, type: "sale" },
@@ -138,7 +159,7 @@ describe("sale offer list boundaries", () => {
     ).toHaveLength(0);
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...filters, tab: "past", type: "sale" },
@@ -161,11 +182,11 @@ describe("sale offer list boundaries", () => {
       type: "sale",
     };
     expect(
-      salesOfferRows(state, context, "Branch 1", matches, now),
+      salesOfferRows(listView(state), context, "Branch 1", matches, now),
     ).toHaveLength(1);
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...matches, type: "multi_buy" },
@@ -174,7 +195,7 @@ describe("sale offer list boundaries", () => {
     ).toHaveLength(0);
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...matches, type: "clearance" },
@@ -183,7 +204,7 @@ describe("sale offer list boundaries", () => {
     ).toHaveLength(0);
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...matches, supplier: "another supplier" },
@@ -208,11 +229,17 @@ describe("sale offer list boundaries", () => {
     };
     const before = structuredClone(offer);
     expect(
-      offerPausedStores(state, offer, "all", context.allowed_branches, now),
+      offerPausedStores(
+        listView(state),
+        offer,
+        "all",
+        context.allowed_branches,
+        now,
+      ),
     ).toEqual(["Branch 1"]);
     expect(
       offerPausedStores(
-        state,
+        listView(state),
         offer,
         "Branch 2",
         context.allowed_branches,
@@ -221,7 +248,7 @@ describe("sale offer list boundaries", () => {
     ).toEqual([]);
     expect(
       offerPausedStores(
-        state,
+        listView(state),
         { ...offer, clearance: true },
         "Branch 1",
         context.allowed_branches,
@@ -230,7 +257,7 @@ describe("sale offer list boundaries", () => {
     ).toEqual([]);
     expect(
       offerPausedStores(
-        state,
+        listView(state),
         offer,
         "Branch 1",
         context.allowed_branches,
@@ -268,7 +295,7 @@ describe("sale offer list boundaries", () => {
     );
     expect(
       salesOfferRows(
-        state,
+        listView(state),
         context,
         "Branch 1",
         { ...filters, status: "scheduled" },
@@ -276,7 +303,7 @@ describe("sale offer list boundaries", () => {
       ),
     ).toMatchObject([{ sales: [{ id: "future" }] }]);
     const past = salesOfferRows(
-      state,
+      listView(state),
       context,
       "Branch 1",
       { ...filters, tab: "past" },

@@ -1,0 +1,87 @@
+{
+  "source_kind": "Exact actual current Root files at freeze; no source or test overlays; HEAD is context, source fingerprint is authority",
+  "source_commit": null,
+  "root_head_context_only": "0e3c3312ae26b4bc69370e0767749a0690c4d940",
+  "source_fingerprint": "f7ceb57bb4efe02ee490456ed98b82b044e5802c4885596302a50c355831d18c",
+  "source_files": 553,
+  "source_unchanged": true,
+  "changed_candidate_files": [],
+  "live_root_unchanged": true,
+  "live_root_changed": [],
+  "production_asset_files": 55,
+  "production_assets_unchanged": true,
+  "owned_http_before_all_match": true,
+  "owned_http_after_all_match": true,
+  "configured_workers": 1,
+  "configured_retries": 0,
+  "test_timeout_unchanged": true,
+  "grep": "another branch's reading|conditional correction preview|Waiting for credit is amber",
+  "phases": [
+    {
+      "name": "list",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e1-retained-diagnostic-repairs-current-root-v13/retained.config.mts",
+        "--grep",
+        "another branch's reading|conditional correction preview|Waiting for credit is amber",
+        "--list"
+      ],
+      "actual_exit": 0,
+      "started": "2026-10-14T01:37:05.812302+00:00",
+      "ended": "2026-10-14T01:37:11.055457+00:00"
+    },
+    {
+      "name": "semantic",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false"
+      ],
+      "actual_exit": 0,
+      "started": "2026-10-14T01:37:11.055883+00:00",
+      "ended": "2026-10-14T01:37:58.099631+00:00"
+    },
+    {
+      "name": "build",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/vite/bin/vite.js",
+        "build"
+      ],
+      "actual_exit": 0,
+      "started": "2026-10-14T01:37:58.100879+00:00",
+      "ended": "2026-10-14T01:38:00.498737+00:00"
+    },
+    {
+      "name": "browser",
+      "command": [
+        "/workspace/scratch/supermarket-review-node/bin/node",
+        "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e1-retained-diagnostic-repairs-current-root-v13/retained.config.mts",
+        "--grep",
+        "another branch's reading|conditional correction preview|Waiting for credit is amber"
+      ],
+      "actual_exit": 1,
+      "started": "2026-10-14T01:38:01.115888+00:00",
+      "ended": "2026-10-14T01:41:08.416876+00:00"
+    }
+  ],
+  "browser_stats": {
+    "startTime": "2026-10-14T01:38:02.208Z",
+    "duration": 186173.199,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  },
+  "unhandled_errors": [],
+  "registered_actual_test_records": 10,
+  "runner_error": null
+}

@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, signIn } from "./helpers";
 
@@ -54,25 +55,25 @@ test("Warehouse selling opt-in persists and is reversible without changing recei
     exact: true,
   });
   await expect(selling).toHaveAttribute("aria-checked", "false");
-  const evidence = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    return {
-      ledger: state.ledger,
-      invoices: state.invoices,
-      movements: state.stock_movements,
-    };
-  });
+  const evidence = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
+      return {
+        ledger: state.ledger,
+        invoices: state.invoices,
+        movements: state.stock_movements,
+      };
+    },
+  );
   await selling.click();
   await dialog
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).config.branches.find(
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).config.branches.find(
             (entry: { type: string }) => entry.type === "warehouse",
           ).sells_to_customers,
       ),
@@ -97,21 +98,17 @@ test("Warehouse selling opt-in persists and is reversible without changing recei
     .click();
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).config.branches.find(
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).config.branches.find(
             (entry: { type: string }) => entry.type === "warehouse",
           ).sells_to_customers ?? false,
       ),
     )
     .toBe(false);
   expect(
-    await page.evaluate(() => {
-      const state = JSON.parse(
-        localStorage.getItem("supermarket-prototype-v1")!,
-      );
+    await readCanonicalBusinessEvidence(page).then((canonicalState) => {
+      const state = JSON.parse(JSON.stringify(canonicalState)!);
       return {
         ledger: state.ledger,
         invoices: state.invoices,

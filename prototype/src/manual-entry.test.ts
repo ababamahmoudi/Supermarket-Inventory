@@ -16,7 +16,9 @@ import {
   type NewProductEdits,
 } from "./manual-product";
 import { calculatePrice } from "./pricing";
-import { configuredBranches } from "./settings";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation, AuthorityError } from "./authority";
+import type { AuthenticatedActor, RoleId } from "./authority-types";
 import {
   addManualLine,
   createInvoice,
@@ -28,26 +30,34 @@ import {
   supplierBalanceSummary,
 } from "./supplier-balances";
 import { supplierPage } from "./suppliers";
-import type { OperationsContext } from "./operations";
-import type { ProductEditorContext } from "./product-editor";
 import type { DemoState } from "./types";
 
 let state: DemoState;
-let supervisor: OperationsContext;
-let productContext: ProductEditorContext;
+let supervisor: AuthenticatedActor;
+let productContext: AuthenticatedActor;
 beforeEach(() => {
   state = initialState();
-  supervisor = {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    branch: "Branch 1",
-    actor: "Demo Supervisor",
-  };
-  productContext = {
-    ...supervisor,
-    allowed_branches: configuredBranches(state.config),
-  };
+  supervisor = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    name_en: "Demo Supervisor",
+  });
+  productContext = supervisor;
 });
+const actor = (role: RoleId) =>
+  authenticatedTestActor(state, role, { locations: ["Branch 1"] });
+const managerAll = () =>
+  authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    name_en: supervisor.actor,
+    selection: { kind: "all_locations" },
+  });
+const foreignActor = (company: string) => {
+  const foreign = initialState();
+  foreign.config.company.seed_key = company;
+  return authenticatedTestActor(foreign, "manager", {
+    locations: ["Branch 1"],
+  });
+};
 const supplierEdits = (patch: Partial<SupplierEdits> = {}): SupplierEdits => ({
   name: "North Orchard Supply",
   phone: "416-555-0173",
@@ -125,11 +135,7 @@ describe("Supervisor manual supplier entry", () => {
       "123.45",
     );
     expect(
-      supplierBalanceSummary(
-        state,
-        { ...supervisor, branch: "all" },
-        added.name,
-      ).balance,
+      supplierBalanceSummary(state, managerAll(), added.name).balance,
     ).toBe("113.45");
     expect(state.invoices).toEqual(invoices);
     expect(state.activity.at(-1)?.reversible).toBe(false);
@@ -190,24 +196,16 @@ describe("Supervisor manual supplier entry", () => {
   it("rejects workers' catalog additions, Cashier quick-adds, foreign companies and invalid balance branches", () => {
     const before = structuredClone(state);
     expect(() =>
-      saveSupplier(
-        state,
-        { ...supervisor, role: "floor_worker" },
-        supplierEdits(),
-      ),
-    ).toThrow("permission");
+      saveSupplier(state, actor("floor_worker"), supplierEdits()),
+    ).toThrow(AuthorityError);
     expect(() =>
-      saveSupplier(state, { ...supervisor, role: "cashier" }, supplierEdits(), {
+      saveSupplier(state, actor("cashier"), supplierEdits(), {
         invoice_quick_add: true,
       }),
-    ).toThrow("permission");
+    ).toThrow(AuthorityError);
     expect(() =>
-      saveSupplier(
-        state,
-        { ...supervisor, company_id: "other-company" },
-        supplierEdits(),
-      ),
-    ).toThrow("scope");
+      saveSupplier(state, foreignActor("other-company"), supplierEdits()),
+    ).toThrow(AuthorityError);
     expect(() =>
       saveSupplier(
         state,
@@ -218,7 +216,7 @@ describe("Supervisor manual supplier entry", () => {
           ],
         }),
       ),
-    ).toThrow("scope");
+    ).toThrow(AuthorityError);
     expect(state).toEqual(before);
   });
   it("rejects invalid money/date before creating any supplier or ledger row", () => {
@@ -239,35 +237,31 @@ describe("Supervisor manual supplier entry", () => {
     expect(state).toEqual(before);
   });
   it("creates worker invoice-only proposals, blocks posting even if a confirmed flag is forged, and unblocks only after confirmation", () => {
-    const worker = { ...supervisor, role: "floor_worker" as const };
+    const worker = actor("floor_worker");
+    state.invoice = createInvoice(state, worker, "Branch 1", false);
     const added = saveSupplier(state, worker, supplierEdits(), {
       invoice_quick_add: true,
     });
     expect(added.status).toBe("proposed");
-    state.invoice = createInvoice(state, "Branch 1", true);
     state.invoice.supplier = added.name;
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "supplier_pending",
-    );
+    expect(invoiceBlockers(state, worker)).toContain("supplier_pending");
     expect(
       state.approvals.find((item) => item.supplier_id === added.id),
     ).toMatchObject({ type: "new_supplier", status: "pending" });
     expect(() => confirmSupplier(state, worker, added.id)).toThrow(
-      "permission",
+      AuthorityError,
     );
     confirmSupplier(state, supervisor, added.id);
     expect(added.status).toBe("confirmed");
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
-      "supplier_pending",
-    );
+    expect(invoiceBlockers(state, worker)).not.toContain("supplier_pending");
   });
   it("rejects worker opening balances in an invoice quick-add transaction", () => {
     const before = structuredClone(state);
     expect(() =>
       saveSupplier(
         state,
-        { ...supervisor, role: "floor_worker" },
+        actor("floor_worker"),
         supplierEdits({
           opening_balances: [
             { branch: "Branch 1", amount: "10.00", date: "2026-10-01" },
@@ -296,9 +290,9 @@ describe("Supervisor manual product entry", () => {
     );
     expect(taxable.tax_profile).toBe("hst_13");
     expect(taxable.taxable).toBe(true);
-    state.invoice = createInvoice(state, "Branch 1", true);
-    addManualLine(state, nonTaxable.code);
-    addManualLine(state, taxable.code);
+    state.invoice = createInvoice(state, supervisor, "Branch 1", true);
+    addManualLine(state, supervisor, nonTaxable.code);
+    addManualLine(state, supervisor, taxable.code);
     expect(state.invoice.lines.map((line) => line.taxable)).toEqual([
       false,
       true,
@@ -394,18 +388,13 @@ describe("Supervisor manual product entry", () => {
     expect(product.code).not.toBe(existing.code);
   });
   it("does not allow worker or Cashier standalone creation; invoice worker proposals remain pending", () => {
-    const worker = { ...productContext, role: "floor_worker" as const };
+    const worker = actor("floor_worker");
     expect(() => addProduct(state, worker, productEdits())).toThrow(
-      "permission",
+      AuthorityError,
     );
     expect(() =>
-      addProduct(
-        state,
-        { ...productContext, role: "cashier" },
-        productEdits(),
-        true,
-      ),
-    ).toThrow("permission");
+      addProduct(state, actor("cashier"), productEdits(), true),
+    ).toThrow(AuthorityError);
     const product = addProduct(state, worker, productEdits(), true);
     expect(product.status).toBe("pending_approval");
     expect(product.selling_price).toBe("");
@@ -417,7 +406,7 @@ describe("Supervisor manual product entry", () => {
   });
   it("rejects removed opening-count input, worker overrides, foreign company and invalid locations", () => {
     const before = structuredClone(state);
-    const worker = { ...productContext, role: "floor_worker" as const };
+    const worker = actor("floor_worker");
     const obsolete = {
       ...productEdits(),
       opening_counts: [{ branch: "Branch 1", quantity: 0 }],
@@ -430,19 +419,15 @@ describe("Supervisor manual product entry", () => {
       addProduct(state, worker, productEdits({ selling_price: "4.99" }), true),
     ).toThrow("permission");
     expect(() =>
-      addProduct(
-        state,
-        { ...productContext, company_id: "foreign" },
-        productEdits(),
-      ),
-    ).toThrow("company");
+      addProduct(state, foreignActor("foreign"), productEdits()),
+    ).toThrow(AuthorityError);
     expect(() =>
       addProduct(
         state,
-        { ...productContext, branch: "foreign-location" },
+        actorAtLocation(state, productContext, "foreign-location"),
         productEdits(),
       ),
-    ).toThrow("branch");
+    ).toThrow("location");
     expect(state).toEqual(before);
   });
   it("excludes another company's similar names, codes and barcodes", () => {
@@ -460,7 +445,7 @@ describe("Supervisor manual product entry", () => {
 });
 describe("manual invoices use normal posting rules", () => {
   it("starts with no invented supplier, invoice number, lines or original", () => {
-    state.invoice = createInvoice(state, "Branch 1", true);
+    state.invoice = createInvoice(state, supervisor, "Branch 1", true);
     expect(state.invoice).toMatchObject({
       entry_mode: "manual",
       status: "draft",
@@ -469,7 +454,7 @@ describe("manual invoices use normal posting rules", () => {
       lines: [],
       final_total: "0.00",
     });
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual(
+    expect(invoiceBlockers(state, supervisor)).toEqual(
       expect.arrayContaining(["file", "supplier", "lines"]),
     );
   });
@@ -480,23 +465,21 @@ describe("manual invoices use normal posting rules", () => {
       productContext,
       productEdits({ main_supplier: supplier.name }),
     );
-    state.invoice = createInvoice(state, "Branch 1", true);
+    state.invoice = createInvoice(state, supervisor, "Branch 1", true);
     Object.assign(state.invoice, {
       supplier: supplier.name,
       supplier_confirmed: true,
       supplier_invoice_number: "DEMO-MANUAL-1",
       payment_terms: "Net 30",
     });
-    addManualLine(state, product.code);
+    addManualLine(state, supervisor, product.code);
     state.invoice.lines[0].review_confirmed = true;
     state.invoice.lines[0].date_confirmed = true;
-    expect(invoiceBlockers(state, "supervisor", "all")).toEqual(["file"]);
-    expect(() => postInvoice(state, "supervisor", "all")).toThrow("file");
+    expect(invoiceBlockers(state, managerAll())).toEqual(["file"]);
+    expect(() => postInvoice(state, managerAll())).toThrow("file");
     state.invoice.file_name = "fictional-original.png";
     state.invoice.file_data = "data:image/png;base64,ZmFrZQ==";
-    expect(postInvoice(state, "supervisor", "all", supervisor.actor)).toBe(
-      true,
-    );
+    expect(postInvoice(state, managerAll())).toBe(true);
     expect(state.ledger.at(-1)).toMatchObject({
       supplier: supplier.name,
       reference: "DEMO-MANUAL-1",
@@ -511,7 +494,7 @@ describe("manual invoices use normal posting rules", () => {
       productContext,
       productEdits({ main_supplier: supplier.name }),
     );
-    state.invoice = createInvoice(state, "Branch 1", true);
+    state.invoice = createInvoice(state, supervisor, "Branch 1", true);
     Object.assign(state.invoice, {
       supplier: supplier.name,
       supplier_confirmed: true,
@@ -519,14 +502,12 @@ describe("manual invoices use normal posting rules", () => {
       file_name: "original.png",
       file_data: "data:image/png;base64,ZmFrZQ==",
     });
-    addManualLine(state, product.code);
+    addManualLine(state, supervisor, product.code);
     state.invoice.lines[0].review_confirmed = true;
     state.invoice.lines[0].date_confirmed = true;
     const id = state.invoice.id;
     state.invoices!.push(structuredClone(state.invoice));
-    expect(postInvoice(state, "supervisor", "Branch 1", supervisor.actor)).toBe(
-      true,
-    );
+    expect(postInvoice(state, supervisor)).toBe(true);
     expect(state.invoices!.filter((invoice) => invoice.id === id)).toHaveLength(
       1,
     );
@@ -534,9 +515,7 @@ describe("manual invoices use normal posting rules", () => {
       "posted",
     );
     const posted = structuredClone(state);
-    expect(postInvoice(state, "supervisor", "Branch 1", supervisor.actor)).toBe(
-      false,
-    );
+    expect(postInvoice(state, supervisor)).toBe(false);
     expect(state).toEqual(posted);
   });
 });

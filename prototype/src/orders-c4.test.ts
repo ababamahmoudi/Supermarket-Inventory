@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { initialState } from "./store";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import {
   addManualLine,
   createInvoice,
@@ -15,7 +17,6 @@ import {
   compareInvoiceOrder,
   remainingOrderUnits,
   saveOrderDraft,
-  type OrderContext,
 } from "./orders";
 import {
   currentInvoiceOrderComparison,
@@ -29,19 +30,29 @@ import {
   setInvoiceWeightQuantity,
 } from "./invoice-weight";
 
-const context: OrderContext = {
-  company_id: "super-arzon",
-  role: "supervisor",
-  branch: "all",
-  actor: "Order reviewer",
-};
+const actors = new WeakMap<
+  ReturnType<typeof initialState>,
+  AuthenticatedActor
+>();
+function actor(state: ReturnType<typeof initialState>) {
+  let actual = actors.get(state);
+  if (!actual) {
+    actual = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+      selection: { kind: "all_locations" },
+      name_en: "Order reviewer",
+    });
+    actors.set(state, actual);
+  }
+  return actual;
+}
 function fixture(
   cases = "1",
   pack: number | null = 12,
   expectedCost = "0.9800",
 ) {
   const state = initialState();
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, actor(state), "Branch 1", true);
   Object.assign(state.invoice, {
     supplier: "Fresh Valley Foods",
     supplier_confirmed: true,
@@ -49,7 +60,7 @@ function fixture(
     file_name: "fictional.png",
     file_data: "data:image/png;base64,ZGVtbw==",
   });
-  addManualLine(state, "0002");
+  addManualLine(state, actor(state), "0002");
   const line = state.invoice.lines[0];
   line.supplier_item_id = undefined;
   line.supplier_item_code = "C4-NEW-ITEM";
@@ -78,7 +89,7 @@ function fixture(
       },
     ],
   };
-  const order = createOrder(state, context, input);
+  const order = createOrder(state, actor(state), input);
   return { state, order, line, input };
 }
 
@@ -104,7 +115,7 @@ describe("C4 intentional temporary orders", () => {
     });
     saveOrderDraft(
       state,
-      context,
+      actor(state),
       order.id,
       {
         ...input,
@@ -121,7 +132,7 @@ describe("C4 intentional temporary orders", () => {
       order.version,
     );
     expect(order.lines[0].id).toBe("temporary-c4-line");
-    placeOrder(state, context, order.id, order.version);
+    placeOrder(state, actor(state), order.id, order.version);
     expect(order.status).toBe("ordered");
     expect(state.products).toEqual(products);
     expect(state.ledger).toEqual(ledger);
@@ -130,17 +141,17 @@ describe("C4 intentional temporary orders", () => {
 
   it("still blocks a real unbought supplier item without an explicit expected cost", () => {
     const { state } = fixture();
-    const item = saveSupplierItem(state, context, "Fresh Valley Foods", {
+    const item = saveSupplierItem(state, actor(state), "Fresh Valley Foods", {
       product_code: "0008",
       supplier_item_code: "NO-COST-C4",
       units_per_case: 12,
     });
-    const order = createOrder(state, context, {
+    const order = createOrder(state, actor(state), {
       branch: "Branch 1",
       supplier: "Fresh Valley Foods",
       lines: [{ supplier_item_id: item.id, cases: "1" }],
     });
-    expect(() => placeOrder(state, context, order.id)).toThrow("cost");
+    expect(() => placeOrder(state, actor(state), order.id)).toThrow("cost");
     expect(order.status).toBe("draft");
   });
 
@@ -154,7 +165,7 @@ describe("C4 intentional temporary orders", () => {
       const { state, input } = fixture();
       const before = structuredClone(state.orders);
       expect(() =>
-        createOrder(state, context, {
+        createOrder(state, actor(state), {
           ...input,
           lines: [
             {
@@ -177,15 +188,16 @@ describe("C4 intentional temporary orders", () => {
     const { state, order, line } = fixture();
     const original = structuredClone(order.lines[0]);
     const items = structuredClone(state.supplier_items);
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
     expect(
-      currentInvoiceOrderComparison(state)?.lines[0].order_line_id,
+      currentInvoiceOrderComparison(state, actor(state))?.lines[0]
+        .order_line_id,
     ).toBeUndefined();
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
       "order_decisions",
     ]);
-    setInvoiceNewItemMatch(state, "supervisor", "Branch 1", original.id, 0);
+    setInvoiceNewItemMatch(state, actor(state), original.id, 0);
     expect(line.order_new_item_match).toMatchObject({
       order_line_id: original.id,
       product_code: "0002",
@@ -195,8 +207,8 @@ describe("C4 intentional temporary orders", () => {
     expect(state.supplier_items).toEqual(items);
     expect(order.lines[0].new_item_association).toBeUndefined();
     line.review_confirmed = true;
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1", context.actor);
+    expect(invoiceBlockers(state, actor(state))).toEqual([]);
+    postInvoice(state, actor(state));
     expect(order.lines[0]).toMatchObject({
       ...original,
       received_units: 12,
@@ -210,7 +222,7 @@ describe("C4 intentional temporary orders", () => {
     expect(order.status).toBe("received");
     const item = supplierItemFacts(
       state,
-      context.company_id,
+      actor(state),
       state.invoice.supplier,
       "all",
     ).find((item) => item.supplier_item_code === "C4-NEW-ITEM")!;
@@ -221,9 +233,7 @@ describe("C4 intentional temporary orders", () => {
       items: state.supplier_items,
       ledger: state.ledger,
     });
-    expect(postInvoice(state, "supervisor", "Branch 1", context.actor)).toBe(
-      false,
-    );
+    expect(postInvoice(state, actor(state))).toBe(false);
     expect({
       orders: state.orders,
       items: state.supplier_items,
@@ -233,17 +243,11 @@ describe("C4 intentional temporary orders", () => {
 
   it("resolves an unknown pack from the explicitly selected invoice while preserving the original null snapshot", () => {
     const { state, order, line } = fixture("1", null, "");
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
-    setInvoiceNewItemMatch(
-      state,
-      "supervisor",
-      "Branch 1",
-      order.lines[0].id,
-      0,
-    );
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
+    setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
     line.review_confirmed = true;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, actor(state));
     expect(order.lines[0]).toMatchObject({
       units_per_case: null,
       ordered_units: null,
@@ -256,7 +260,7 @@ describe("C4 intentional temporary orders", () => {
 
   it("rejects duplicate explicit consumption, stale fingerprints and foreign location links before any money changes", () => {
     const { state, order, line, input } = fixture();
-    saveOrderDraft(state, context, order.id, {
+    saveOrderDraft(state, actor(state), order.id, {
       ...input,
       lines: [
         ...input.lines,
@@ -266,42 +270,24 @@ describe("C4 intentional temporary orders", () => {
         },
       ],
     });
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
-    setInvoiceNewItemMatch(
-      state,
-      "supervisor",
-      "Branch 1",
-      order.lines[0].id,
-      0,
-    );
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
+    setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
     const before = structuredClone(state);
     expect(() =>
-      setInvoiceNewItemMatch(
-        state,
-        "supervisor",
-        "Branch 1",
-        "temporary-second",
-        0,
-      ),
+      setInvoiceNewItemMatch(state, actor(state), "temporary-second", 0),
     ).toThrow("match");
     expect(state).toEqual(before);
     line.units_per_case = 6;
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
       "order_decisions",
     ]);
-    expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow();
+    expect(() => postInvoice(state, actor(state))).toThrow();
     expect(state.ledger).toEqual(before.ledger);
     line.units_per_case = 12;
     state.invoice.branch = "Branch 2";
     expect(() =>
-      setInvoiceNewItemMatch(
-        state,
-        "supervisor",
-        "Branch 1",
-        "temporary-second",
-        0,
-      ),
+      setInvoiceNewItemMatch(state, actor(state), "temporary-second", 0),
     ).toThrow("match");
     expect(state.ledger).toEqual(before.ledger);
   });
@@ -312,17 +298,11 @@ describe("C4 intentional temporary orders", () => {
     line.new_name_en = "Fictional C4 proposed food";
     line.new_name_fa = "خوراک پیشنهادی آزمایشی";
     line.pricing_category = "grocery";
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
-    setInvoiceNewItemMatch(
-      state,
-      "supervisor",
-      "Branch 1",
-      order.lines[0].id,
-      0,
-    );
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
+    setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
     line.review_confirmed = true;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, actor(state));
     expect(line.product_code).not.toBe("NEW");
     expect(order.lines[0].new_item_association?.product_code).toBe(
       line.product_code,
@@ -347,27 +327,17 @@ describe("C4 intentional temporary orders", () => {
       qty_received_at_posting: 44.0924,
       unit_cost_before_tax: "4.9895",
     });
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
     expect(() =>
-      setInvoiceNewItemMatch(
-        state,
-        "supervisor",
-        "Branch 1",
-        order.lines[0].id,
-        0,
-      ),
+      setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0),
     ).toThrow("case_weight");
     line.case_weight = "10";
     line.case_weight_unit = "kg";
-    setInvoiceNewItemMatch(
-      state,
-      "supervisor",
-      "Branch 1",
-      order.lines[0].id,
-      0,
-    );
-    expect(currentInvoiceOrderComparison(state)?.lines[0]).toMatchObject({
+    setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
+    expect(
+      currentInvoiceOrderComparison(state, actor(state))?.lines[0],
+    ).toMatchObject({
       expected_remaining_units: 44.0924,
       delivered_units: 44.0924,
       extra_units: 0,
@@ -391,18 +361,12 @@ describe("C4 intentional temporary orders", () => {
     setInvoiceWeightCost(line, "11.0000", "kg", state.config);
     setInvoiceWeightQuantity(line, "2", "cases", state.config);
     recalculateInvoice(state.invoice, state.config);
-    placeOrder(state, context, order.id);
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
-    setInvoiceNewItemMatch(
-      state,
-      "supervisor",
-      "Branch 1",
-      order.lines[0].id,
-      0,
-    );
+    placeOrder(state, actor(state), order.id);
+    setInvoiceOrder(state, actor(state), order.id);
+    setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
     line.review_confirmed = true;
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1");
+    expect(invoiceBlockers(state, actor(state))).toEqual([]);
+    postInvoice(state, actor(state));
     expect(order.status).toBe("received");
     expect(order.lines[0]).toMatchObject({
       ordered_units: null,
@@ -420,7 +384,7 @@ describe("C4 intentional temporary orders", () => {
     expect(order.expected_total_before_tax).toBeNull();
     const fact = supplierItemFacts(
       state,
-      context.company_id,
+      actor(state),
       state.invoice.supplier,
       "all",
     ).find((item) => item.supplier_item_code === "C4-NEW-ITEM")!;
@@ -443,10 +407,10 @@ describe("C4 intentional temporary orders", () => {
     setInvoiceWeightQuantity(line, "2", "cases", state.config);
     recalculateInvoice(state.invoice, state.config);
     line.review_confirmed = true;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, actor(state));
     const candidate = orderCandidates(
       state,
-      context,
+      actor(state),
       state.invoice.supplier,
     ).find((item) => item.supplier_item_code === "C4-NEW-ITEM")!;
     expect(candidate).toMatchObject({
@@ -455,12 +419,12 @@ describe("C4 intentional temporary orders", () => {
       expected_unit_cost: "4.9895",
       expected_case_cost: "110.0000",
     });
-    const order = createOrder(state, context, {
+    const order = createOrder(state, actor(state), {
       branch: "Branch 1",
       supplier: state.invoice.supplier,
       lines: [{ supplier_item_id: candidate.id, cases: "2" }],
     });
-    placeOrder(state, context, order.id);
+    placeOrder(state, actor(state), order.id);
     expect(order).toMatchObject({
       expected_total_before_tax: "220.00",
       lines: [
@@ -474,7 +438,7 @@ describe("C4 intentional temporary orders", () => {
     });
     const definition = saveSupplierItem(
       state,
-      context,
+      actor(state),
       state.invoice.supplier,
       {
         product_code: line.product_code,
@@ -490,11 +454,11 @@ describe("C4 intentional temporary orders", () => {
     });
     const changed = orderCandidates(
       state,
-      context,
+      actor(state),
       state.invoice.supplier,
     ).find((item) => item.id === candidate.id)!;
     expect(changed.expected_case_cost).toBe("55.0000");
-    const changedOrder = createOrder(state, context, {
+    const changedOrder = createOrder(state, actor(state), {
       branch: "Branch 1",
       supplier: state.invoice.supplier,
       lines: [{ supplier_item_id: changed.id, cases: "2" }],
@@ -503,7 +467,7 @@ describe("C4 intentional temporary orders", () => {
     expect(changedOrder.expected_total_before_tax).toBe("110.00");
     const fact = supplierItemFacts(
       state,
-      context.company_id,
+      actor(state),
       state.invoice.supplier,
       "all",
     ).find((item) => item.id === candidate.id)!;
@@ -522,7 +486,7 @@ describe("C4 intentional temporary orders", () => {
   it("does not treat a real weighed supplier case with no retained case weight as one Each unit", () => {
     const { state } = fixture();
     state.products.find((item) => item.code === "0008")!.sold_by = "weight";
-    const item = saveSupplierItem(state, context, "Fresh Valley Foods", {
+    const item = saveSupplierItem(state, actor(state), "Fresh Valley Foods", {
       product_code: "0008",
       supplier_item_code: "UNKNOWN-WEIGHT-PACK",
       units_per_case: 1,
@@ -530,7 +494,7 @@ describe("C4 intentional temporary orders", () => {
     });
     const orders = structuredClone(state.orders);
     expect(() =>
-      createOrder(state, context, {
+      createOrder(state, actor(state), {
         branch: "Branch 1",
         supplier: "Fresh Valley Foods",
         lines: [{ supplier_item_id: item.id, cases: "1" }],
@@ -541,18 +505,18 @@ describe("C4 intentional temporary orders", () => {
 
   it("does not reinterpret retained Each order quantities as lb after a product's selling basis changes", () => {
     const { state, line } = fixture();
-    const item = saveSupplierItem(state, context, state.invoice.supplier, {
+    const item = saveSupplierItem(state, actor(state), state.invoice.supplier, {
       product_code: line.product_code,
       supplier_item_code: line.supplier_item_code!,
       units_per_case: 12,
       quoted_unit_cost_before_tax: "2.0000",
     });
-    const order = createOrder(state, context, {
+    const order = createOrder(state, actor(state), {
       branch: "Branch 1",
       supplier: state.invoice.supplier,
       lines: [{ supplier_item_id: item.id, cases: "2" }],
     });
-    placeOrder(state, context, order.id);
+    placeOrder(state, actor(state), order.id);
     const retainedOrder = structuredClone(order);
     state.products.find(
       (product) => product.code === line.product_code,
@@ -563,9 +527,9 @@ describe("C4 intentional temporary orders", () => {
     setInvoiceWeightQuantity(line, "2", "cases", state.config);
     recalculateInvoice(state.invoice, state.config);
     expect(() => compareInvoiceOrder(order, state.invoice)).toThrow("quantity");
-    setInvoiceOrder(state, "supervisor", "Branch 1", order.id);
-    expect(currentInvoiceOrderComparison(state)).toBeNull();
-    expect(invoiceOrderIssues(state, "supervisor", "Branch 1")).toEqual([
+    setInvoiceOrder(state, actor(state), order.id);
+    expect(currentInvoiceOrderComparison(state, actor(state))).toBeNull();
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
       "order_decisions",
     ]);
     expect(order).toEqual(retainedOrder);

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { configuredRoleLabel } from "../role-config";
+import { domainScope } from "../domain-authority";
+import { useEffect, useState } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import {
@@ -14,23 +16,23 @@ import {
   Select,
 } from "../ui";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
-import { StoredFileImage } from "../stored-file";
-import { storeUploadedFile } from "../file-database";
+import type { OperationalReturnRead } from "../return-projections";
+import {
+  uploadReturnPhoto,
+  type ReturnPhotoAttachment,
+} from "../return-file-access";
 import { companyDate } from "../invoice";
 import {
   cancelReturn,
-  canCorrectReturnPickup,
   correctReturnPickup,
   operationError,
   recordPickup,
   returnUnpickedQuantity,
-  type OperationalReturn,
   type OperationsContext,
   type Disposition,
 } from "../operations";
 import {
   recordItemResolutions,
-  returnItemProgress,
   type ItemResolutionInput,
   type ItemResolutionKind,
 } from "../return-item-resolutions";
@@ -59,14 +61,41 @@ export function ReturnActionForms({
   onClose,
   onSaved,
 }: {
-  record: OperationalReturn;
+  record: OperationalReturnRead;
   context: OperationsContext;
   mode: "pickup" | "correct" | "resolve";
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {
-  const { state, update, t, lang } = useDemo();
+  const { state, command, query, can, t, lang } = useDemo();
+  const financialRoles = {
+    en: ["owner", "manager"]
+      .map((role) =>
+        configuredRoleLabel(
+          state.config.roles,
+          role as "owner" | "manager",
+          "en",
+        ),
+      )
+      .join(" / "),
+    fa: ["owner", "manager"]
+      .map((role) =>
+        configuredRoleLabel(
+          state.config.roles,
+          role as "owner" | "manager",
+          "fa",
+        ),
+      )
+      .join(" / "),
+  };
   const latest = record.pickup_memos?.at(-1);
+  const [photoPreview, setPhotoPreview] = useState<string>();
+  useEffect(
+    () => () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    },
+    [photoPreview],
+  );
   const [quantities, setQuantities] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       record.lines.map((line) => [
@@ -100,7 +129,7 @@ export function ReturnActionForms({
   const [slip, setSlip] = useState("");
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
-  const [photo, setPhoto] = useState("");
+  const [photo, setPhoto] = useState<ReturnPhotoAttachment | null>(null);
   const [photoName, setPhotoName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -110,7 +139,7 @@ export function ReturnActionForms({
         line.product_code,
         {
           kind: "outstanding",
-          quantity: String(returnItemProgress(record, line).available),
+          quantity: String(record.line_progress[line.product_code].available),
           document: "",
           amount: "",
           invoice_id: record.linked_invoice ?? "",
@@ -194,10 +223,19 @@ export function ReturnActionForms({
     setUploading(true);
     setUploadError("");
     try {
-      const saved = await storeUploadedFile(file, context.company_id, {
-        purpose: "photo",
+      const saved = await uploadReturnPhoto(query, {
+        company_id: context.company_id,
+        return_id: record.id,
+        capability:
+          mode === "pickup"
+            ? "returns.pickup_record"
+            : mode === "correct"
+              ? "returns.pickup_correct"
+              : "returns.operational_resolve",
+        file,
       });
-      setPhoto(saved.reference);
+      setPhotoPreview(URL.createObjectURL(file));
+      setPhoto(saved);
       setPhotoName(saved.name);
     } catch {
       setUploadError(
@@ -297,7 +335,7 @@ export function ReturnActionForms({
         );
     } else {
       for (const line of record.lines.filter(
-        (item) => returnItemProgress(record, item).available > 0,
+        (item) => record.line_progress[item.product_code].available > 0,
       )) {
         const code = line.product_code,
           item = items[code];
@@ -315,7 +353,7 @@ export function ReturnActionForms({
         if (
           !validQuantity(
             item.quantity,
-            returnItemProgress(record, line).available,
+            record.line_progress[line.product_code].available,
             line,
           )
         )
@@ -327,7 +365,8 @@ export function ReturnActionForms({
             ),
           );
         if (
-          Number(item.quantity) < returnItemProgress(record, line).available &&
+          Number(item.quantity) <
+            record.line_progress[line.product_code].available &&
           !item.expected_date
         )
           add(
@@ -354,7 +393,7 @@ export function ReturnActionForms({
                 "فاکتور ثبت‌شده برای بستانکاری را انتخاب کنید.",
               ),
             );
-          if (context.role === "supervisor") {
+          if (can("returns.credit_post", domainScope(state, record, true))) {
             try {
               const amount = new Decimal(item.amount);
               if (
@@ -437,63 +476,76 @@ export function ReturnActionForms({
     setIssues(missing);
     return !missing.length;
   };
-  const perform = () => {
+  const perform = async () => {
     try {
-      update((draft) => {
-        if (mode === "resolve") {
-          const inputs: ItemResolutionInput[] = record.lines
-            .filter((line) => returnItemProgress(record, line).available > 0)
-            .map((line) => ({
-              ...items[line.product_code],
-              product_code: line.product_code,
-              quantity: Number(items[line.product_code].quantity),
-              amount:
-                context.role === "supervisor" &&
-                (items[line.product_code].kind === "credited" ||
-                  items[line.product_code].kind === "cash_or_other")
-                  ? items[line.product_code].amount
-                  : undefined,
-              replacement_quantity: Number(
-                items[line.product_code].replacement_quantity,
-              ),
-            }));
-          recordItemResolutions(draft, context, record.id, inputs);
-        } else {
-          const picked = Object.fromEntries(
-            record.lines.map((line) => [
-              line.product_code,
-              Number(quantities[line.product_code]),
-            ]),
-          );
-          const decisions = Object.fromEntries(
-            Object.entries(shortfalls)
-              .filter(([, value]) => value.outcome)
-              .map(([code, value]) => [
-                code,
-                {
-                  reason: value.reason,
-                  outcome: value.outcome as ShortfallOutcome,
-                },
+      await command(
+        mode === "resolve"
+          ? "returns.operational_resolve"
+          : mode === "correct"
+            ? "returns.pickup_correct"
+            : "returns.pickup_record",
+        domainScope(state, record, true),
+        (draft, freshActor) => {
+          if (mode === "resolve") {
+            const inputs: ItemResolutionInput[] = record.lines
+              .filter(
+                (line) => record.line_progress[line.product_code].available > 0,
+              )
+              .map((line) => ({
+                ...items[line.product_code],
+                product_code: line.product_code,
+                quantity: Number(items[line.product_code].quantity),
+                amount:
+                  can(
+                    "returns.credit_post",
+                    domainScope(state, record, true),
+                  ) &&
+                  (items[line.product_code].kind === "credited" ||
+                    items[line.product_code].kind === "cash_or_other")
+                    ? items[line.product_code].amount
+                    : undefined,
+                replacement_quantity: Number(
+                  items[line.product_code].replacement_quantity,
+                ),
+              }));
+            recordItemResolutions(draft, freshActor, record.id, inputs);
+          } else {
+            const picked = Object.fromEntries(
+              record.lines.map((line) => [
+                line.product_code,
+                Number(quantities[line.product_code]),
               ]),
-          );
-          if (mode === "correct")
-            correctReturnPickup(draft, context, record.id, {
-              memo_id: latest?.id ?? "",
-              quantities: picked,
-              shortfalls: decisions,
-              reason,
-            });
-          else
-            recordPickup(draft, context, record.id, {
-              quantities: picked,
-              shortfalls: decisions,
-              representative,
-              slip,
-              photo: photo || undefined,
-              note,
-            });
-        }
-      });
+            );
+            const decisions = Object.fromEntries(
+              Object.entries(shortfalls)
+                .filter(([, value]) => value.outcome)
+                .map(([code, value]) => [
+                  code,
+                  {
+                    reason: value.reason,
+                    outcome: value.outcome as ShortfallOutcome,
+                  },
+                ]),
+            );
+            if (mode === "correct")
+              correctReturnPickup(draft, freshActor, record.id, {
+                memo_id: latest?.id ?? "",
+                quantities: picked,
+                shortfalls: decisions,
+                reason,
+              });
+            else
+              recordPickup(draft, freshActor, record.id, {
+                quantities: picked,
+                shortfalls: decisions,
+                representative,
+                slip,
+                photo: photo || undefined,
+                note,
+              });
+          }
+        },
+      );
       onSaved(
         mode === "pickup"
           ? t(
@@ -506,8 +558,8 @@ export function ReturnActionForms({
                 "جمع‌آوری اصلاح شد. سابقه امضاشده اصلی نگهداری می‌شود.",
               )
             : t(
-                "Recorded item resolutions. Credit claims require Supervisor verification.",
-                "حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید سرپرست نیاز دارد.",
+                `Recorded item resolutions. Credit claims require ${financialRoles.en} verification.`,
+                `حل‌وفصل اقلام ثبت شد. ادعای اعتبار به تأیید ${financialRoles.fa} نیاز دارد.`,
               ),
       );
     } catch (error) {
@@ -700,7 +752,7 @@ export function ReturnActionForms({
                         void photoUpload(file);
                       }}
                       onRemove={() => {
-                        setPhoto("");
+                        setPhoto(null);
                         setPhotoName("");
                         setUploadError("");
                       }}
@@ -708,10 +760,9 @@ export function ReturnActionForms({
                   </Field>
                 </div>
                 {photo && (
-                  <StoredFileImage
+                  <img
                     className="evidence-photo"
-                    value={photo}
-                    companyId={context.company_id}
+                    src={photoPreview}
                     alt={t("Evidence photo", "عکس مدرک")}
                   />
                 )}
@@ -750,7 +801,7 @@ export function ReturnActionForms({
               {record.lines.map((line) => {
                 const code = line.product_code,
                   item = items[code],
-                  progress = returnItemProgress(record, line);
+                  progress = record.line_progress[line.product_code];
                 return (
                   <section className="return-item-form" key={code}>
                     <h4>
@@ -794,7 +845,10 @@ export function ReturnActionForms({
                                   "هنوز باقی‌مانده",
                                 ),
                               },
-                              ...(context.role === "supervisor"
+                              ...(can(
+                                "returns.credit_post",
+                                domainScope(state, record, true),
+                              )
                                 ? [
                                     {
                                       value: "written_off",
@@ -879,7 +933,10 @@ export function ReturnActionForms({
                                 }
                               />
                             </Field>
-                            {context.role === "supervisor" && (
+                            {can(
+                              "returns.credit_post",
+                              domainScope(state, record, true),
+                            ) && (
                               <Field
                                 className="field-short"
                                 label={t(
@@ -1080,8 +1137,8 @@ export function ReturnActionForms({
                       <p className="muted">
                         {progress.pending > 0
                           ? t(
-                              "Pending Supervisor verification",
-                              "در انتظار تأیید سرپرست",
+                              `Pending ${financialRoles.en} verification`,
+                              `در انتظار تأیید ${financialRoles.fa}`,
                             )
                           : t("Resolved", "حل‌شده")}
                       </p>
@@ -1115,7 +1172,13 @@ export function ReturnActionForms({
         )}
         confirmLabel={t("Correct pickup", "اصلاح جمع‌آوری")}
         onConfirm={() => {
-          if (canCorrectReturnPickup(context)) perform();
+          if (
+            can("returns.pickup_correct", {
+              ...domainScope(state, record, true),
+              location_policy: "retained_correction",
+            })
+          )
+            perform();
           else setDomainError(operationError("pickup_authority", t));
         }}
       >
@@ -1142,12 +1205,12 @@ export function ReturnCancellationForm({
   onClose,
   onSaved,
 }: {
-  record: OperationalReturn;
+  record: OperationalReturnRead;
   context: OperationsContext;
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {
-  const { state, update, t, lang } = useDemo();
+  const { state, command, t, lang } = useDemo();
   const [quantities, setQuantities] = useState<Record<string, string>>({});
   const [dispositions, setDispositions] = useState<Record<string, Disposition>>(
     {},
@@ -1164,7 +1227,7 @@ export function ReturnCancellationForm({
   };
   const errorFor = (fieldId: string) =>
     issues.find((issue) => issue.fieldId === fieldId)?.message;
-  const submit = () => {
+  const submit = async () => {
     const missing: ValidationIssue[] = [];
     const add = (fieldId: string, message: string) => {
       if (!missing.some((issue) => issue.fieldId === fieldId))
@@ -1223,18 +1286,21 @@ export function ReturnCancellationForm({
     setIssues(missing);
     if (missing.length) return;
     try {
-      update((draft) =>
-        cancelReturn(draft, context, record.id, {
-          reason,
-          dispositions,
-          recovered: Object.fromEntries(
-            record.lines.map((line) => [
-              line.product_code,
-              Number(quantities[line.product_code] ?? "0"),
-            ]),
-          ),
-          safe,
-        }),
+      await command(
+        "returns.operational_resolve",
+        domainScope(state, record, true),
+        (draft, freshActor) =>
+          cancelReturn(draft, freshActor, record.id, {
+            reason,
+            dispositions,
+            recovered: Object.fromEntries(
+              record.lines.map((line) => [
+                line.product_code,
+                Number(quantities[line.product_code] ?? "0"),
+              ]),
+            ),
+            safe,
+          }),
       );
       onSaved(
         t(

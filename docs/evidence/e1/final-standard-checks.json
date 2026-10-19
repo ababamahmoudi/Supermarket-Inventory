@@ -1,0 +1,93 @@
+{
+  "recorded_at_utc": "2026-10-14T01:42:07.502632+00:00",
+  "source_kind": "Actual Root current worktree, required standard npm scripts; no candidate or application/source overlay",
+  "observed_root_head_context_only": "0e3c3312ae26b4bc69370e0767749a0690c4d940",
+  "observed_branch": "feat/prototype-e1-location-roles",
+  "node": "v22.23.3",
+  "npm": "10.9.9",
+  "required_commands": [
+    {
+      "command": "npm run lint",
+      "run": "v2 final-source single rerun after formatter correction",
+      "exit_code": 0,
+      "elapsed_seconds": 80.685,
+      "source_files": 553,
+      "source_fingerprint_sha256": "767dfab9475e3135cfd40ca4a9422c2ceedc73f803b7b3dddd677a45ad02dce5",
+      "source_unchanged": true
+    },
+    {
+      "command": "npm run test:sdk",
+      "run": "v1 actual standard command; not rerun",
+      "exit_code": 0,
+      "elapsed_seconds": 6.461,
+      "test_files_passed": 6,
+      "test_files_total": 6,
+      "tests_passed": 75,
+      "tests_total": 75,
+      "source_files": 553,
+      "source_fingerprint_sha256": "b9e004415e3abe1a2cb718d309860a285f71387bee907c9e9b66f13b428d09e8",
+      "source_unchanged": true
+    },
+    {
+      "command": "npm run build",
+      "run": "v1 actual standard tsc --noEmit && vite build command; not rerun",
+      "exit_code": 0,
+      "elapsed_seconds": 53.454,
+      "production_assets": 55,
+      "source_files": 553,
+      "source_fingerprint_sha256": "b9e004415e3abe1a2cb718d309860a285f71387bee907c9e9b66f13b428d09e8",
+      "source_unchanged": true
+    }
+  ],
+  "retained_prior_failure": {
+    "command": "npm run lint",
+    "run": "v1 actual standard command",
+    "exit_code": 1,
+    "reason": "ESLint completed; Prettier rejected src/e1-shell-runtime.ts only.",
+    "elapsed_seconds": 106.445,
+    "source_unchanged": true,
+    "preserved_in_raw_archive": true
+  },
+  "final_source_guard": {
+    "source_files": 553,
+    "source_fingerprint_sha256": "767dfab9475e3135cfd40ca4a9422c2ceedc73f803b7b3dddd677a45ad02dce5",
+    "algorithm": "SHA256 of sorted compact JSON path\u2192{sha256,bytes} map; exact before/after maps are preserved in the raw archive.",
+    "before_equals_after": true,
+    "differences_during_final_lint": []
+  },
+  "source_changes_after_v1_sdk_build": [
+    {
+      "path": "prototype/src/e1-shell-runtime.ts",
+      "v1_sha256": "320b1b478db6b6b6b9c7b58a16bca51dbdbae8769a59e6180418eb9c0439face",
+      "final_sha256": "0b521cdb48dc977e20660c8fb9db0311807a844de3519d22928b09870283e0c5"
+    },
+    {
+      "path": "prototype/tests/branch-invoice-b.spec.ts",
+      "v1_sha256": "ad5d00d3a34204da43d8efee5bb312a799b7cb2cebd54074a84a3dd1df7f7b6e",
+      "final_sha256": "27824e7d9f7e30a95158800d4852a679b932b09e86e728e846efa42f857a3fa9"
+    },
+    {
+      "path": "prototype/tests/c5-conditional-audit.spec.ts",
+      "v1_sha256": "9b31e63b3919704cf5336f19b385e740ad1a8201cd69f254ca1adb4f5c6e229a",
+      "final_sha256": "3f29238ee44c242d710f702ce55941e0194471070b79430b67a064dda774a760"
+    },
+    {
+      "path": "prototype/tests/c5-presentation.spec.ts",
+      "v1_sha256": "0e4ff2117e04ffe50afd1069810b38c24dcfa709890134ea8724c34df485e9d2",
+      "final_sha256": "e464dbd1364285446caa6617208186aef6152dd30f7f35721f58d50726824fba"
+    }
+  ],
+  "scope_of_changes": {
+    "production": "Only optional TypeScript generic trailing comma <T,>\u2192<T> in e1-shell-runtime.ts. Isolated TS5.9.3 emitted JavaScript is byte-identical, 18,353 bytes, SHA256 c705637b21af9a88bf27257d07a9172e29e464123daefa8ecbc39b1a8d83a66b. This is syntax-only, not a runtime logic change.",
+    "test_fixtures": "Three retained original foreign/C5 fixture files changed; command provenance attributes SDK/build to their actual v1 input set and final lint to v2. No claim of rerunning SDK/build on v2.",
+    "validation_limits": "This evidence reports only the required lint/SDK/build commands. Full app/native browser results and final PR/CI status are separate evidence."
+  },
+  "raw_archive": {
+    "path": "final-standard-checks-rawlogs.json.gz",
+    "sha256": "9ddc0547b9bf24cb16997040b0e7a0b1cf8fa9478b440677c130503113e448d9",
+    "gzip_bytes": 123678,
+    "contents": "Exact individual stdout logs, execution metadata, all 553 v1/final input hashes before/after, actual 75-test SDK count, formatter emitted-JS equivalence, 55 actual built assets, and v1 failed lint."
+  },
+  "source_mutations_performed_by_verifier": false,
+  "browser_server_lifecycle_changed": false
+}

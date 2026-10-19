@@ -1,7 +1,37 @@
+import {
+  invoiceEvidenceActor,
+  type InternalPurchaseEvidence,
+} from "./purchase-evidence.internal";
+import { requireSystemReconciliation } from "./authority-repository";
+import type { SystemAttribution } from "./authority-types";
+import { freshActor } from "./authority";
+import { decodeCurrentRole } from "./role-config";
+import type {
+  AuthenticatedActor,
+  DecisionAttribution,
+  RoleId,
+} from "./authority-types";
+import {
+  actorAtLocation,
+  cloneWithAuthority,
+  decisionAttribution,
+} from "./authority";
+import {
+  can,
+  directoryRecipients,
+  requireCapability as requireCentralCapability,
+  requireConcreteLocation,
+  allowedLocationIds,
+} from "./permissions";
+import {
+  actorAudit,
+  domainScope,
+  guardDomain as requireDomainScope,
+} from "./domain-authority";
 import Decimal from "decimal.js";
 import { configSeed, demoSeed } from "./config";
 import { createId } from "./ids";
-import { companyDateTime, companyLocalToUtc } from "./company-time";
+import { companyLocalToUtc } from "./company-time";
 import { branchId } from "./settings";
 import {
   effectiveInvoiceVersion,
@@ -12,8 +42,7 @@ import { productStoreCost } from "./product-costs";
 import { weightConversionFactor, weighedSettings } from "./weighed";
 import { setManualPriceMarker, rulePrice } from "./manual-prices";
 import { reconcileOffers, syncPriceConflicts } from "./approvals";
-import type { HistoryContext } from "./history";
-import type { Branch, CompanyConfig, DemoState, Product, Role } from "./types";
+import type { Branch, CompanyConfig, DemoState, Product } from "./types";
 
 const SaleDecimal = Decimal.clone({
   precision: 80,
@@ -21,6 +50,47 @@ const SaleDecimal = Decimal.clone({
 });
 
 export type SalePriceUnit = "each" | "lb" | "kg";
+export type SaleClockConfig = Pick<
+  CompanyConfig,
+  "company" | "branches" | "weighed_items"
+>;
+export type SalePriceProduct = Pick<Product, "code" | "company_id" | "status">;
+export type TemporalSale = Pick<
+  SaleSchedule,
+  | "id"
+  | "company_id"
+  | "branch"
+  | "product_code"
+  | "group_id"
+  | "status"
+  | "starts_on"
+  | "last_day"
+  | "sale_price"
+  | "price_unit"
+>;
+export type TemporalRequest = Pick<
+  SaleRequest,
+  | "id"
+  | "company_id"
+  | "branch"
+  | "product_code"
+  | "status"
+  | "last_day"
+  | "requested_price"
+  | "price_unit"
+  | "starts_on"
+  | "revision"
+>;
+export interface SalePriceReadState<
+  S extends TemporalSale = TemporalSale,
+  R extends TemporalRequest = TemporalRequest,
+> {
+  config: SaleClockConfig;
+  products: readonly SalePriceProduct[];
+  sales?: readonly S[];
+  sale_requests?: readonly R[];
+}
+
 export interface SalesSettings {
   default_length_days: number;
   open_ended_reminder_days: number;
@@ -31,13 +101,13 @@ export interface SalesSettings {
 }
 export interface SaleRecipient {
   username: string;
-  role: Role;
-  allowed_branches: Branch[];
+  role: RoleId;
+  user_id: string;
+  allowed_branches: readonly Branch[];
 }
-export interface SalesContext extends HistoryContext {
-  notification_recipients?: SaleRecipient[];
-}
+export type SalesContext = AuthenticatedActor;
 export interface SaleSchedule {
+  decision_attribution?: DecisionAttribution;
   id: string;
   company_id: string;
   branch: Branch;
@@ -51,9 +121,13 @@ export interface SaleSchedule {
   status: "scheduled" | "active" | "ended";
   revision: number;
   created_by: string;
+  created_by_user_id?: string;
+  created_by_role_snapshot?: RoleId;
   created_by_username: string;
   created_at: string;
   changed_by?: string;
+  changed_by_user_id?: string;
+  changed_by_role_snapshot?: RoleId;
   changed_at?: string;
   started_at?: string;
   ended_at?: string;
@@ -69,6 +143,7 @@ export interface SaleSchedule {
   deferred_regular_labels?: boolean;
 }
 export interface SaleRequest {
+  decision_attribution?: DecisionAttribution;
   id: string;
   company_id: string;
   branch: Branch;
@@ -80,6 +155,8 @@ export interface SaleRequest {
   last_day: string | null;
   why?: string;
   requester: string;
+  requester_user_id?: string;
+  requester_role_snapshot?: RoleId;
   requester_username: string;
   requested_at: string;
   revision: number;
@@ -88,11 +165,15 @@ export interface SaleRequest {
   existing_sale_id?: string;
   expected_sale_revision?: number;
   decided_by?: string;
+  decided_by_user_id?: string;
+  decided_by_role_snapshot?: RoleId;
   decided_at?: string;
   decision_reason?: string;
   approved_sale_id?: string;
 }
 export interface SaleLifecycleEvent {
+  source_decision?: DecisionAttribution;
+  applied_at?: string;
   id: string;
   company_id: string;
   branch: Branch;
@@ -102,6 +183,8 @@ export interface SaleLifecycleEvent {
   kind: "scheduled" | "started" | "changed" | "ended" | "reminded" | "reverted";
   by: string;
   actor_username?: string;
+  actor_user_id?: string;
+  actor_role_snapshot?: RoleId;
   occurred_at: string;
   local_boundary: string;
   effect_key: string;
@@ -126,6 +209,7 @@ export interface NotificationRecord {
   company_id: string;
   branch: Branch;
   target_username: string;
+  recipient_user_id?: string;
   kind: NotificationKind;
   product_code?: string;
   sale_id?: string;
@@ -148,6 +232,8 @@ export interface SaleDeliveryHold {
   line_index: number;
   note_id: string;
   held_by: string;
+  held_by_user_id?: string;
+  held_by_role_snapshot?: RoleId;
   held_at: string;
   planned_last_day: string | null;
   released_reminder_at?: string;
@@ -206,6 +292,23 @@ export class SalesError extends Error {
     this.name = "SalesError";
   }
 }
+function requireCapability(
+  ...args: Parameters<typeof requireCentralCapability>
+) {
+  try {
+    return requireCentralCapability(...args);
+  } catch {
+    throw new SalesError("permission");
+  }
+}
+function guardDomain(...args: Parameters<typeof requireDomainScope>) {
+  try {
+    return requireDomainScope(...args);
+  } catch {
+    throw new SalesError("permission");
+  }
+}
+
 export interface SaleLocationEffect {
   branch: Branch;
   regular_price: string | null;
@@ -237,7 +340,7 @@ export interface PriceChangeResult {
 }
 
 export function saleStoreDate(
-  config: CompanyConfig,
+  config: SaleClockConfig,
   branch: Branch,
   now = new Date(),
 ): string {
@@ -245,10 +348,15 @@ export function saleStoreDate(
     (entry, index) => branchId(entry, index) === branch,
   );
   const timezone = location?.timezone || config.company.timezone;
-  return companyDateTime(
-    { ...config, company: { ...config.company, timezone } },
-    now,
-  ).date;
+  const parts = new Intl.DateTimeFormat("en-CA-u-ca-gregory-nu-latn", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const value = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
 }
 export function saleDateAfter(date: string, days: number): string {
   const day = new Date(`${date}T12:00:00Z`);
@@ -266,10 +374,10 @@ const priceValue = (value: string) => {
     return null;
   }
 };
-function productInCompany(
-  state: DemoState,
-  value: Product | string,
-): Product | null {
+function productInCompany<P extends SalePriceProduct>(
+  state: { config: { company: { seed_key: string } }; products: readonly P[] },
+  value: SalePriceProduct | string,
+): P | null {
   const code = typeof value === "string" ? value : value.code;
   if (
     typeof value !== "string" &&
@@ -283,11 +391,15 @@ function productInCompany(
     ) ?? null
   );
 }
-export function salesSettings(state: DemoState): SalesSettings {
+export function salesSettings(state: {
+  config: Pick<CompanyConfig, "sales">;
+}): SalesSettings {
   return { ...structuredClone(configSeed.sales), ...state.config.sales };
 }
 /** C8 sales never target the Warehouse, even if a legacy retail flag was enabled. */
-export function sellingSaleBranches(state: DemoState): Branch[] {
+export function sellingSaleBranches(state: {
+  config: Pick<CompanyConfig, "branches">;
+}): Branch[] {
   return state.config.branches.flatMap((entry, index) =>
     entry.active !== false &&
     entry.type !== "warehouse" &&
@@ -300,20 +412,28 @@ export function allowedSaleBranches(
   state: DemoState,
   context: SalesContext,
 ): Branch[] {
-  if (context.company_id !== state.config.company.seed_key) return [];
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  if (!can(state, context, "sales.read").allowed) return [];
+  const allowed = allowedLocationIds(state, context, { sellingOnly: true });
   return sellingSaleBranches(state).filter(
     (branch) =>
-      context.allowed_branches.includes(branch) &&
-      (context.role === "supervisor" || branch === context.branch),
+      allowed.includes(branch) &&
+      (can(state, context, "sales.manage").allowed ||
+        context.branch === "all" ||
+        branch === context.branch),
   );
 }
 /** Pure temporal selector; reading prices does not generate audit or label writes. */
-export function activeSaleAt(
-  state: DemoState,
-  productOrCode: Product | string,
+export function activeSaleAt<S extends TemporalSale>(
+  state: SalePriceReadState<S>,
+  productOrCode: SalePriceProduct | string,
   branch: Branch,
   now = new Date(),
-): SaleSchedule | null {
+): S | null {
   const product = productInCompany(state, productOrCode);
   if (
     !product ||
@@ -338,12 +458,12 @@ export function activeSaleAt(
     ) ?? null
   );
 }
-export function pendingSaleRequest(
-  state: DemoState,
-  productOrCode: Product | string,
+export function pendingSaleRequest<R extends TemporalRequest>(
+  state: SalePriceReadState<TemporalSale, R>,
+  productOrCode: SalePriceProduct | string,
   branch: Branch,
   now = new Date(),
-): SaleRequest | null {
+): R | null {
   const product = productInCompany(state, productOrCode);
   if (!product || !sellingSaleBranches(state).includes(branch)) return null;
   const date = saleStoreDate(state.config, branch, now);
@@ -358,10 +478,10 @@ export function pendingSaleRequest(
     ) ?? null
   );
 }
-export function saleGroup(
-  state: DemoState,
-  saleOrId: SaleSchedule | string,
-): SaleSchedule[] {
+export function saleGroup<S extends TemporalSale>(
+  state: SalePriceReadState<S>,
+  saleOrId: S | string,
+): S[] {
   const selected =
     typeof saleOrId === "string"
       ? (state.sales ?? []).find(
@@ -381,7 +501,7 @@ export function saleGroup(
 }
 export function saleCanonicalPrice(
   sale: Pick<SaleSchedule, "sale_price" | "price_unit">,
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "weighed_items">,
 ): string {
   return (
     sale.price_unit === "kg"
@@ -392,7 +512,7 @@ export function saleCanonicalPrice(
 /** Derive both units directly from entered cents; never round through lb first. */
 export function salePriceDisplay(
   sale: Pick<SaleSchedule, "sale_price" | "price_unit">,
-  config: CompanyConfig,
+  config: Pick<CompanyConfig, "weighed_items">,
 ) {
   if (sale.price_unit === "each")
     return {
@@ -422,7 +542,7 @@ export function salePriceDisplay(
 }
 export function quickSalePrices(
   regularDisplayPrice: string,
-  state: DemoState,
+  state: { config: Pick<CompanyConfig, "sales"> },
 ): { percentage: number; price: string | null }[] {
   const settings = salesSettings(state);
   const regular = priceValue(regularDisplayPrice);
@@ -488,6 +608,11 @@ export function previewPriceChange(
   input: ChangePriceInput,
   now = new Date(),
 ): PriceChangePreview {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   const issues: SalesValidationIssue[] = [];
   const product =
     context.company_id === state.config.company.seed_key
@@ -495,10 +620,19 @@ export function previewPriceChange(
       : null;
   const branches = [...new Set(input.branches)];
   const permitted = allowedSaleBranches(state, context);
-  const supervisor = context.role === "supervisor";
+  const supervisor = can(
+    state,
+    context,
+    input.mode === "sale" ? "sales.manage" : "pricing.regular_manage",
+  ).allowed;
+  const requestAllowed = can(
+    state,
+    context,
+    input.mode === "sale" ? "sales.request" : "pricing.propose_manual",
+  ).allowed;
   if (context.company_id !== state.config.company.seed_key)
     issues.push({ code: "company", field: "stores" });
-  if (context.role === "cashier" || (!supervisor && input.mode !== "sale"))
+  if (!supervisor && !requestAllowed)
     issues.push({ code: "permission", field: "price" });
   if (!product || product.status !== "active")
     issues.push({ code: "product", field: "product" });
@@ -592,7 +726,11 @@ export function previewPriceChange(
       : null;
     const costText =
       product && supervisor
-        ? productStoreCost(state, { ...context, branch }, product)
+        ? productStoreCost(
+            state,
+            actorAtLocation(state, context, branch),
+            product,
+          )
         : null;
     let cost: Decimal | null = null;
     try {
@@ -708,6 +846,11 @@ export function validatePriceChange(
   input: ChangePriceInput,
   now = new Date(),
 ): SalesValidationIssue[] {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return previewPriceChange(state, context, input, now).issues;
 }
 
@@ -720,16 +863,37 @@ function arrays(state: DemoState) {
   state.sale_label_effects ??= [];
 }
 function transact<T>(state: DemoState, action: (draft: DemoState) => T): T {
-  const draft = structuredClone(state);
+  const draft = cloneWithAuthority(state);
   arrays(draft);
   const result = action(draft);
   Object.assign(state, draft);
   return result;
 }
-function supervisor(state: DemoState, context: SalesContext) {
-  if (context.company_id !== state.config.company.seed_key)
-    throw new SalesError("company");
-  if (context.role !== "supervisor") throw new SalesError("permission");
+function saleAuthority(
+  state: DemoState,
+  context: SalesContext,
+  capability:
+    | "sales.manage"
+    | "pricing.regular_manage"
+    | "approvals.decide"
+    | "settings.manage"
+    | "sales.cost_alert_decide",
+) {
+  try {
+    requireCapability(state, context, capability, domainScope(state));
+  } catch {
+    throw new SalesError("permission");
+  }
+}
+function saleRecipients(state: DemoState): SaleRecipient[] {
+  return directoryRecipients(state, { capability: "approvals.decide" }).map(
+    (person) => ({
+      username: person.username,
+      user_id: person.user_id,
+      role: person.role,
+      allowed_branches: [...person.allowed_branches],
+    }),
+  );
 }
 function saleRecord(state: DemoState, context: SalesContext, id: string) {
   if (context.company_id !== state.config.company.seed_key)
@@ -756,7 +920,11 @@ function notification(
     state.notifications!.some(
       (entry) =>
         entry.company_id === input.company_id &&
-        entry.target_username === input.target_username &&
+        (entry.recipient_user_id && input.recipient_user_id
+          ? entry.recipient_user_id === input.recipient_user_id
+          : !entry.recipient_user_id &&
+            !input.recipient_user_id &&
+            entry.target_username === input.target_username) &&
         entry.event_key === input.event_key,
     )
   )
@@ -765,15 +933,18 @@ function notification(
 }
 function notifySupervisors(
   state: DemoState,
-  recipients: SaleRecipient[],
+  _recipients: SaleRecipient[],
   input: Omit<NotificationRecord, "id" | "read_at" | "target_username">,
 ) {
-  for (const recipient of recipients)
-    if (
-      recipient.role === "supervisor" &&
-      recipient.allowed_branches.includes(input.branch)
-    )
-      notification(state, { ...input, target_username: recipient.username });
+  for (const recipient of directoryRecipients(state, {
+    capability: "approvals.decide",
+    location_ids: [input.branch],
+  }))
+    notification(state, {
+      ...input,
+      target_username: recipient.username,
+      recipient_user_id: recipient.user_id,
+    });
 }
 function auditSale(
   state: DemoState,
@@ -792,6 +963,7 @@ function auditSale(
     action,
     by: context?.actor ?? "System",
     actor_username: context?.username,
+    ...(context ? actorAudit(state, context, now) : {}),
     at: now.toISOString(),
     reversible: action !== "Sale reminder",
     reversal:
@@ -884,6 +1056,9 @@ function recordEvent(
       ? saleCanonicalPrice(value, state.config)
       : regular;
   const event: SaleLifecycleEvent = {
+    source_decision:
+      sale.decision_attribution && structuredClone(sale.decision_attribution),
+    applied_at: now.toISOString(),
     id: createId("sale-event"),
     company_id: sale.company_id,
     branch: sale.branch,
@@ -893,6 +1068,7 @@ function recordEvent(
     kind,
     by: context?.actor ?? "System",
     actor_username: context?.username,
+    ...(context ? actorAudit(state, context, now) : {}),
     occurred_at: now.toISOString(),
     local_boundary: boundary,
     effect_key: effectKey,
@@ -968,7 +1144,11 @@ function endRecord(
   sale.ended_at = now.toISOString();
   sale.ended_reason = reason;
   sale.release_reminder_on = saleReleaseReminderDate(state, sale, now);
+  if (context)
+    sale.decision_attribution = decisionAttribution(state, context, now);
   sale.changed_by = context?.actor ?? "System";
+  sale.changed_by_user_id = context?.user_id;
+  sale.changed_by_role_snapshot = context?.role;
   sale.changed_at = now.toISOString();
   recordEvent(
     state,
@@ -986,7 +1166,11 @@ function savePriceChangeDraft(
   input: ChangePriceInput,
   now: Date,
 ): PriceChangeResult {
-  supervisor(state, context);
+  saleAuthority(
+    state,
+    context,
+    input.mode === "sale" ? "sales.manage" : "pricing.regular_manage",
+  );
   const preview = previewPriceChange(state, context, input, now);
   assertPreview(preview);
   const product = preview.product!;
@@ -1003,12 +1187,15 @@ function savePriceChangeDraft(
       product.selling_price = price;
       for (const branch of preview.branches)
         delete product.branch_prices[branch];
-      setManualPriceMarker(state, product, "all", price, context.actor, now);
+      setManualPriceMarker(state, context, product, "all", price, now);
       product.manual_prices ??= {};
       product.manual_prices.all = {
         price,
         rule_price: rulePrice(state, product) ?? price,
         set_by: context.actor,
+        set_by_user_id: context.user_id,
+        set_by_role_snapshot: context.role,
+        decision_attribution: decisionAttribution(state, context, now),
         set_at: now.toISOString(),
       };
     } else
@@ -1016,10 +1203,10 @@ function savePriceChangeDraft(
         product.branch_prices[effect.branch] = price;
         setManualPriceMarker(
           state,
+          actorAtLocation(state, context, effect.branch),
           product,
           effect.branch,
           price,
-          context.actor,
           now,
           effect.cost!,
         );
@@ -1028,6 +1215,9 @@ function savePriceChangeDraft(
           price,
           rule_price: rulePrice(state, product, effect.cost!) ?? price,
           set_by: context.actor,
+          set_by_user_id: context.user_id,
+          set_by_role_snapshot: context.role,
+          decision_attribution: decisionAttribution(state, context, now),
           set_at: now.toISOString(),
         };
       }
@@ -1078,8 +1268,8 @@ function savePriceChangeDraft(
           now,
         );
     }
-    reconcileOffers(state, product.code);
-    syncPriceConflicts(state, product.code);
+    reconcileOffers(state, context, product.code);
+    syncPriceConflicts(state, context, product.code);
     state.activity.push({
       id: createId("regular-price-history"),
       company_id: context.company_id,
@@ -1087,7 +1277,7 @@ function savePriceChangeDraft(
       product_code: product.code,
       action: "Set regular price",
       by: context.actor,
-      actor_username: context.username,
+      ...actorAudit(state, context, now),
       at: now.toISOString(),
       reversible: true,
       entity_type: "product",
@@ -1130,7 +1320,10 @@ function savePriceChangeDraft(
       last_day: input.last_day,
       status,
       revision: 0,
+      decision_attribution: decisionAttribution(state, context, now),
       created_by: context.actor,
+      created_by_user_id: context.user_id,
+      created_by_role_snapshot: context.role,
       created_by_username: context.username ?? "",
       created_at: now.toISOString(),
       add_promo_labels: input.add_labels,
@@ -1145,7 +1338,10 @@ function savePriceChangeDraft(
       last_day: input.last_day,
       status,
       revision: sale.revision + 1,
+      decision_attribution: decisionAttribution(state, context, now),
       changed_by: context.actor,
+      changed_by_user_id: context.user_id,
+      changed_by_role_snapshot: context.role,
       changed_at: now.toISOString(),
       add_promo_labels: input.add_labels,
       minimum_margin_accepted: input.accept_below_margin,
@@ -1194,10 +1390,15 @@ export function savePriceChange(
   input: ChangePriceInput,
   now = new Date(),
 ): PriceChangeResult {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    evaluateSales(draft, now, context.notification_recipients);
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     const result = savePriceChangeDraft(draft, context, input, now);
-    evaluateSales(draft, now, context.notification_recipients);
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     return result;
   });
 }
@@ -1208,6 +1409,11 @@ export function changeSale(
   input: ChangePriceInput,
   now = new Date(),
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return savePriceChange(
     state,
     context,
@@ -1222,8 +1428,13 @@ export function endSale(
   options: { expected_revision: number; reason?: string; branches?: Branch[] },
   now = new Date(),
 ): SaleSchedule[] {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    supervisor(draft, context);
+    saleAuthority(draft, context, "sales.manage");
     const selected = saleRecord(draft, context, id);
     if (selected.revision !== options.expected_revision)
       throw new SalesError("revision");
@@ -1250,7 +1461,7 @@ export function endSale(
         now,
         context,
       );
-    evaluateSales(draft, now, context.notification_recipients);
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     return group;
   });
 }
@@ -1269,12 +1480,10 @@ function requestRecord(
       allowedSaleBranches(state, context).includes(entry.branch),
   );
   if (!request) throw new SalesError("stores");
+  guardDomain(state, context, "sales.read", request);
   if (
     ownOnly &&
-    (!context.username ||
-      request.requester_username !== context.username ||
-      context.role !== "floor_worker" ||
-      request.branch !== context.branch)
+    (!context.username || request.requester_user_id !== context.user_id)
   )
     throw new SalesError("permission");
   return request;
@@ -1294,7 +1503,7 @@ function auditRequest(
     product_code: request.product_code,
     action,
     by: context.actor,
-    actor_username: context.username,
+    ...actorAudit(state, context, now),
     at: now.toISOString(),
     reversible: false,
     entity_type: "sale_request",
@@ -1309,10 +1518,23 @@ export function requestSale(
   input: ChangePriceInput,
   now = new Date(),
 ): SaleRequest {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    if (context.role !== "floor_worker" || !context.username)
-      throw new SalesError("permission");
-    evaluateSales(draft, now, context.notification_recipients);
+    if (input.branches.length !== 1) throw new SalesError("stores");
+    context = actorAtLocation(draft, context, input.branches[0]);
+    requireConcreteLocation(draft, context);
+    guardDomain(
+      draft,
+      context,
+      "sales.request",
+      { company_id: draft.config.company.seed_key, branch: context.branch },
+      true,
+    );
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     const preview = previewPriceChange(
       draft,
       context,
@@ -1333,7 +1555,10 @@ export function requestSale(
       starts_on: input.starts_on,
       last_day: input.last_day,
       why: input.why?.trim() || undefined,
+      decision_attribution: decisionAttribution(state, context, now),
       requester: context.actor,
+      requester_user_id: context.user_id,
+      requester_role_snapshot: context.role,
       requester_username: context.username,
       requested_at: now.toISOString(),
       revision: 1,
@@ -1344,7 +1569,7 @@ export function requestSale(
     };
     draft.sale_requests!.push(request);
     auditRequest(draft, request, context, "Request sale", null, now);
-    notifySupervisors(draft, context.notification_recipients ?? [], {
+    notifySupervisors(draft, saleRecipients(draft), {
       event_key: `${request.id}:submitted:1`,
       company_id: request.company_id,
       branch: request.branch,
@@ -1365,8 +1590,17 @@ export function editSaleRequest(
   expectedRevision: number,
   now = new Date(),
 ): SaleRequest {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
     const request = requestRecord(draft, context, id, true);
+    requireCapability(draft, context, "sales.request_edit_own", {
+      ...domainScope(draft, request, true),
+      owner_user_id: request.requester_user_id,
+    });
     if (request.revision !== expectedRevision) throw new SalesError("revision");
     if (request.status !== "pending") throw new SalesError("request_decided");
     if (
@@ -1376,8 +1610,20 @@ export function editSaleRequest(
       throw new SalesError("elapsed");
     if (input.product_code !== request.product_code)
       throw new SalesError("product");
+    if (input.branches.length !== 1 || input.branches[0] !== request.branch)
+      throw new SalesError("stores");
     assertPreview(
-      previewPriceChange(draft, context, { ...input, mode: "sale" }, now),
+      previewPriceChange(
+        draft,
+        actorAtLocation(draft, context, request.branch),
+        {
+          ...input,
+          mode: "sale",
+          branches: [request.branch],
+          scope: "current",
+        },
+        now,
+      ),
     );
     const before = structuredClone(request);
     Object.assign(request, {
@@ -1402,14 +1648,26 @@ export function withdrawSaleRequest(
   expectedRevision: number,
   now = new Date(),
 ): SaleRequest {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
     const request = requestRecord(draft, context, id, true);
+    requireCapability(draft, context, "sales.request_withdraw_own", {
+      ...domainScope(draft, request, true),
+      owner_user_id: request.requester_user_id,
+    });
     if (request.revision !== expectedRevision) throw new SalesError("revision");
     if (request.status !== "pending") throw new SalesError("request_decided");
     const before = structuredClone(request);
     request.status = "withdrawn";
     request.revision++;
+    request.decision_attribution = decisionAttribution(draft, context, now);
     request.decided_by = context.actor;
+    request.decided_by_user_id = context.user_id;
+    request.decided_by_role_snapshot = context.role;
     request.decided_at = now.toISOString();
     auditRequest(draft, request, context, "Withdraw sale request", before, now);
     return request;
@@ -1450,8 +1708,13 @@ export function resolveSaleRequest(
   },
   now = new Date(),
 ): SaleRequest {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    supervisor(draft, context);
+    saleAuthority(draft, context, "approvals.decide");
     const request = requestRecord(draft, context, id);
     if (request.status !== "pending") {
       if (
@@ -1500,7 +1763,10 @@ export function resolveSaleRequest(
       request.approved_sale_id = approved.sales[0].id;
       request.revision++;
     }
+    request.decision_attribution = decisionAttribution(draft, context, now);
     request.decided_by = context.actor;
+    request.decided_by_user_id = context.user_id;
+    request.decided_by_role_snapshot = context.role;
     request.decided_at = now.toISOString();
     auditRequest(
       draft,
@@ -1519,6 +1785,7 @@ export function resolveSaleRequest(
       branch: request.branch,
       event_key: `${request.id}:${request.status}`,
       target_username: request.requester_username,
+      recipient_user_id: request.requester_user_id,
       kind: `sale_request_${request.status}` as NotificationKind,
       request_id: request.id,
       product_code: request.product_code,
@@ -1546,10 +1813,11 @@ function boundaryInstant(state: DemoState, branch: Branch, date: string) {
   );
 }
 /** Idempotent local-calendar lifecycle. No money, stock or ledger record is touched. */
-export function evaluateSales(
+function evaluateSalesDraft(
   state: DemoState,
   now = new Date(),
   recipients: SaleRecipient[] = [],
+  locations?: readonly string[],
 ): boolean {
   const prior = JSON.stringify({
     sales: state.sales,
@@ -1566,6 +1834,7 @@ export function evaluateSales(
   for (const sale of state.sales!) {
     if (
       sale.company_id !== state.config.company.seed_key ||
+      (locations !== undefined && !locations.includes(sale.branch)) ||
       !sellingSaleBranches(state).includes(sale.branch) ||
       !productInCompany(state, sale.product_code) ||
       !validDate(sale.starts_on) ||
@@ -1648,6 +1917,7 @@ export function evaluateSales(
   for (const request of state.sale_requests!) {
     if (
       request.company_id !== state.config.company.seed_key ||
+      (locations !== undefined && !locations.includes(request.branch)) ||
       request.status !== "pending" ||
       !sellingSaleBranches(state).includes(request.branch) ||
       !request.last_day ||
@@ -1677,6 +1947,7 @@ export function evaluateSales(
       branch: request.branch,
       event_key: `${request.id}:expired`,
       target_username: request.requester_username,
+      recipient_user_id: request.requester_user_id,
       kind: "sale_request_expired",
       request_id: request.id,
       product_code: request.product_code,
@@ -1685,7 +1956,11 @@ export function evaluateSales(
     });
   }
   for (const hold of state.sale_delivery_holds!) {
-    if (hold.company_id !== state.config.company.seed_key) continue;
+    if (
+      hold.company_id !== state.config.company.seed_key ||
+      (locations !== undefined && !locations.includes(hold.branch))
+    )
+      continue;
     const sale = state.sales!.find(
       (entry) =>
         entry.id === hold.sale_id &&
@@ -1707,6 +1982,8 @@ export function evaluateSales(
             alert.status = "resolved";
             alert.sale_decision = "keep";
             alert.decided_by = sale.changed_by ?? "System";
+            alert.decided_by_user_id = sale.changed_by_user_id;
+            alert.decision_attribution = sale.decision_attribution;
             alert.decided_at = now.toISOString();
           }
         delete hold.released_reminder_at;
@@ -1780,22 +2057,32 @@ export function evaluateSales(
     })
   );
 }
+/** Repository-only clock operation. Plain, stale, wrong-source and cloned witnesses fail closed. */
+export function evaluateSales(
+  state: DemoState,
+  attribution: SystemAttribution,
+  now = new Date(attribution.applied_at),
+): boolean {
+  requireSystemReconciliation(state, attribution, "sales_clock");
+  return evaluateSalesDraft(state, now);
+}
 export function syncSales(
   state: DemoState,
-  context?: { now?: Date; notification_recipients?: SaleRecipient[] },
+  attribution: SystemAttribution,
 ): boolean {
-  return evaluateSales(
-    state,
-    context?.now ?? new Date(),
-    context?.notification_recipients ?? [],
-  );
+  return evaluateSales(state, attribution);
 }
 export function saveSalesSettings(
   state: DemoState,
   context: SalesContext,
   settings: SalesSettings,
 ) {
-  supervisor(state, context);
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  saleAuthority(state, context, "settings.manage");
   if (
     !Number.isInteger(settings.default_length_days) ||
     settings.default_length_days < 1 ||
@@ -1819,7 +2106,7 @@ export function saveSalesSettings(
     branch: "all",
     action: "Save sales settings",
     by: context.actor,
-    actor_username: context.username,
+    ...actorAudit(state, context),
     at: new Date().toISOString(),
     reversible: true,
     entity_type: "config",
@@ -1832,13 +2119,20 @@ export function userNotifications(
   state: DemoState,
   context: SalesContext,
 ): NotificationRecord[] {
-  if (context.company_id !== state.config.company.seed_key || !context.username)
-    return [];
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  requireCapability(state, context, "notifications.read", {
+    ...domainScope(state),
+    owner_user_id: context.user_id,
+  });
   return (state.notifications ?? [])
     .filter(
       (entry) =>
         entry.company_id === context.company_id &&
-        entry.target_username === context.username &&
+        entry.recipient_user_id === context.user_id &&
         context.allowed_branches.includes(entry.branch),
     )
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
@@ -1849,6 +2143,15 @@ export function markNotificationRead(
   id: string,
   now = new Date(),
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  requireCapability(state, context, "notifications.mark_read", {
+    ...domainScope(state),
+    owner_user_id: context.user_id,
+  });
   const record = userNotifications(state, context).find(
     (entry) => entry.id === id,
   );
@@ -1860,6 +2163,15 @@ export function markAllNotificationsRead(
   context: SalesContext,
   now = new Date(),
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  requireCapability(state, context, "notifications.mark_read", {
+    ...domainScope(state),
+    owner_user_id: context.user_id,
+  });
   for (const record of userNotifications(state, context))
     record.read_at ??= now.toISOString();
 }
@@ -1877,7 +2189,11 @@ export interface SaleReceiptCostInput {
 /** Called only after an accepted, non-short-dated invoice has actually posted. */
 export function recordSaleReceiptCost(
   state: DemoState,
+  context: SalesContext,
   input: SaleReceiptCostInput,
+  source:
+    "invoice_post" | "invoice_content_correction" | "invoice_short_receipt",
+  evidence: InternalPurchaseEvidence,
   now = new Date(),
   recipients: SaleRecipient[] = [],
 ): string[] {
@@ -1887,6 +2203,28 @@ export function recordSaleReceiptCost(
       entry.id === input.invoice_id &&
       entry.status === "posted",
   );
+  if (!original) throw new SalesError("permission");
+  context = freshActor(state, context);
+  const purpose =
+    source === "invoice_post"
+      ? "invoice_post"
+      : source === "invoice_content_correction"
+        ? "invoice_correct"
+        : source === "invoice_short_receipt"
+          ? "invoice_short_resolve"
+          : null;
+  if (!purpose) throw new SalesError("permission");
+  const authorised = invoiceEvidenceActor(
+    state,
+    evidence,
+    original.id,
+    purpose,
+  );
+  if (
+    authorised.user_id !== context.user_id ||
+    authorised.session_id !== context.session_id
+  )
+    throw new SalesError("permission");
   const invoice = original
     ? {
         ...effectiveInvoiceVersion(state, original),
@@ -2142,10 +2480,60 @@ function holdDelivery(
     line_index: alert.invoice_line_index,
     note_id: noteId,
     held_by: context.actor,
+    held_by_user_id: context.user_id,
+    held_by_role_snapshot: context.role,
     held_at: now.toISOString(),
     planned_last_day: sale.last_day,
   });
 }
+export function holdSaleDelivery(
+  state: DemoState,
+  context: SalesContext,
+  id: string,
+  expectedSaleRevision: number,
+  now = new Date(),
+) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
+  return transact(state, (draft) => {
+    const alert = draft.alerts.find((item) => item.id === id);
+    if (
+      !alert ||
+      !alert.sale_id ||
+      alert.status !== "pending" ||
+      !["sale_cost_increase", "sale_regular_not_above_sale"].includes(
+        alert.type,
+      )
+    )
+      throw new SalesError("product");
+    guardDomain(draft, context, "sales.delivery_hold", alert, true);
+    const sale = saleRecord(draft, context, alert.sale_id);
+    if (sale.revision !== expectedSaleRevision)
+      throw new SalesError("revision");
+    holdDelivery(draft, sale, id, context, now);
+    draft.activity.push({
+      id: createId("sale-hold-history"),
+      company_id: sale.company_id,
+      branch: sale.branch,
+      product_code: sale.product_code,
+      action: "Keep this delivery in the back",
+      by: context.actor,
+      ...actorAudit(draft, context, now),
+      at: now.toISOString(),
+      reversible: false,
+      entity_type: "sale_hold",
+      entity_id: id,
+    });
+    return draft.sale_delivery_holds!.find(
+      (hold) =>
+        hold.sale_id === sale.id && hold.invoice_id === alert.invoice_id,
+    );
+  });
+}
+
 export function decideSaleCostAlert(
   state: DemoState,
   context: SalesContext,
@@ -2153,8 +2541,13 @@ export function decideSaleCostAlert(
   options: SaleAlertDecisionInput,
   now = new Date(),
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    supervisor(draft, context);
+    saleAuthority(draft, context, "sales.cost_alert_decide");
     const alert = draft.alerts.find(
       (entry) =>
         entry.id === id &&
@@ -2203,6 +2596,8 @@ export function decideSaleCostAlert(
     alert.status = "resolved";
     alert.sale_decision = options.decision;
     alert.decided_by = context.actor;
+    alert.decided_by_user_id = context.user_id;
+    alert.decision_attribution = decisionAttribution(draft, context, now);
     alert.decided_at = now.toISOString();
     draft.activity.push({
       id: createId("sale-alert-decision"),
@@ -2211,7 +2606,7 @@ export function decideSaleCostAlert(
       product_code: alert.product_code,
       action: "Decide sale alert",
       by: context.actor,
-      actor_username: context.username,
+      ...actorAudit(state, context, now),
       at: now.toISOString(),
       reversible: false,
       entity_type: "alert",
@@ -2219,7 +2614,7 @@ export function decideSaleCostAlert(
       before,
       after: structuredClone(alert),
     });
-    evaluateSales(draft, now, context.notification_recipients);
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     return alert;
   });
 }
@@ -2239,6 +2634,34 @@ export function hydrateSalesState(state: DemoState): DemoState {
   );
   if (product?.name_fa === "زرشک خشک 100 گرمی")
     product.name_fa = "زرشک خشک ۱۰۰ گرمی";
+  const configuredIdentity = (username: string | undefined) => {
+    if (!username) return null;
+    const matches = demoSeed.demo_users.filter(
+      (person) =>
+        person.username === username ||
+        ("aliases" in person &&
+          Array.isArray(person.aliases) &&
+          person.aliases.some((alias) => String(alias) === username)),
+    );
+    return matches.length === 1 && "id" in matches[0]
+      ? String(matches[0].id)
+      : null;
+  };
+  for (const sale of state.sales ?? []) {
+    if (sale.company_id !== state.config.company.seed_key) continue;
+    sale.created_by_user_id ??=
+      configuredIdentity(sale.created_by_username) ?? undefined;
+  }
+  for (const request of state.sale_requests ?? []) {
+    if (request.company_id !== state.config.company.seed_key) continue;
+    request.requester_user_id ??=
+      configuredIdentity(request.requester_username) ?? undefined;
+  }
+  for (const item of state.notifications ?? []) {
+    if (item.company_id !== state.config.company.seed_key) continue;
+    item.recipient_user_id ??=
+      configuredIdentity(item.target_username) ?? undefined;
+  }
   state.prototype_c8_schema = 1;
   return state;
 }
@@ -2252,7 +2675,7 @@ export function hydrateSalesDemo(
   if (!fixture || state.config.company.seed_key !== configSeed.company.seed_key)
     return state;
   const manager = demoSeed.demo_users.find(
-    (entry) => entry.role === "supervisor",
+    (entry) => entry.username === "manager" || entry.username === "supervisor",
   )!;
   const worker = demoSeed.demo_users.find(
     (entry) => entry.role === "floor_worker",
@@ -2275,6 +2698,8 @@ export function hydrateSalesDemo(
       status: "active",
       revision: 1,
       created_by: manager.name,
+      created_by_user_id: "id" in manager ? String(manager.id) : undefined,
+      created_by_role_snapshot: decodeCurrentRole(manager.role) ?? undefined,
       created_by_username: manager.username,
       created_at: now.toISOString(),
       started_at: now.toISOString(),
@@ -2290,22 +2715,7 @@ export function hydrateSalesDemo(
       entry.company_id === state.config.company.seed_key,
   );
   if (seeded)
-    recordEvent(
-      state,
-      seeded,
-      null,
-      "started",
-      now,
-      {
-        company_id: seeded.company_id,
-        branch: seeded.branch,
-        role: "supervisor",
-        actor: manager.name,
-        username: manager.username,
-        allowed_branches: sellingSaleBranches(state),
-      },
-      seeded.starts_on,
-    );
+    recordEvent(state, seeded, null, "started", now, null, seeded.starts_on);
   const request = fixture.pending_request;
   if (
     productInCompany(state, request.product_code) &&
@@ -2324,6 +2734,8 @@ export function hydrateSalesDemo(
       last_day: saleDateAfter(date, request.last_day_relative_days),
       why: request.why,
       requester: worker.name,
+      requester_user_id: "id" in worker ? String(worker.id) : undefined,
+      requester_role_snapshot: decodeCurrentRole(worker.role) ?? undefined,
       requester_username: worker.username,
       requested_at: now.toISOString(),
       revision: 1,
@@ -2342,8 +2754,13 @@ export function revertSaleLifecycle(
   mode: "undo" | "revert",
   now = new Date(),
 ) {
+  try {
+    context = freshActor(state, context);
+  } catch {
+    throw new SalesError("permission");
+  }
   return transact(state, (draft) => {
-    supervisor(draft, context);
+    saleAuthority(draft, context, "sales.manage");
     const entry = draft.activity.find(
       (item) =>
         item.id === activityId &&
@@ -2403,7 +2820,7 @@ export function revertSaleLifecycle(
         const cost = currentCost
           ? productStoreCost(
               draft,
-              { ...context, branch: sale.branch },
+              actorAtLocation(draft, context, sale.branch),
               currentCost,
             )
           : null;
@@ -2477,7 +2894,7 @@ export function revertSaleLifecycle(
     audit.reversible = false;
     audit.reversed_activity_id = entry.id;
     audit.reversal_kind = mode;
-    evaluateSales(draft, now, context.notification_recipients);
+    evaluateSalesDraft(draft, now, [], allowedSaleBranches(draft, context));
     return audit;
   });
 }

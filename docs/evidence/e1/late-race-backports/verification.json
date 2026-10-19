@@ -1,0 +1,13 @@
+{
+  "commit": "f6f99b0c2681387930a0ad01b983332cbb7577a2",
+  "actual_exit_code": 0,
+  "source_unchanged": true,
+  "counts": {
+    "numTotalTests": 4,
+    "numPassedTests": 4,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "scope": "Actual branch checkout: genuine Provider regressions for delayed invoice Back and Payables input/Clear filters/Floor Worker denial. Four targeted unit cases; no full application or fresh normal build is claimed by this packet."
+}

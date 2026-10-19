@@ -1,26 +1,38 @@
 import Decimal from "decimal.js";
-import { receivedLog, effectiveInvoiceLocation } from "./received";
+import {
+  receivedLog,
+  effectiveInvoiceLocation,
+  effectiveApprovalLocation,
+} from "./received";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate, dateAfter } from "./invoice";
-import {
-  OperationError,
-  type OperationalLedger,
-  type OperationsContext,
-} from "./operations";
+import { type OperationalLedger } from "./operations";
 import type { DemoState, Product } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { freshActor } from "./authority";
+import { requireCapability } from "./permissions";
+import { selectedLocations, domainScope } from "./domain-authority";
+import { activeTrackedDates, dateIsDueSoon } from "./date-tracking";
+import {
+  supplierBalanceOverview,
+  supplierBalanceSummary,
+} from "./supplier-balances";
+import { projectNotesDatesRequests } from "./notes-dates-projections";
+import { selectHistory } from "./history";
+import { projectInvoiceState } from "./invoice-projections";
+import { regularPrice } from "./catalog";
 
-function scoped(state: DemoState, context: OperationsContext) {
-  if (context.company_id !== state.config.company.seed_key)
-    throw new OperationError("scope");
-  if (context.role !== "supervisor") throw new OperationError("supervisor");
+function scoped(state: DemoState, context: AuthenticatedActor) {
+  requireCapability(state, context, "dashboard.company", domainScope(state));
+  return freshActor(state, context);
 }
 
 export function dashboardPurchases(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   today = companyDate(state.config),
 ) {
-  scoped(state, context);
+  context = scoped(state, context);
   const suppliers = new Map<string, Decimal>();
   const weeks = Array.from({ length: 8 }, (_, index) => ({
     start: dateAfter(today, -55 + index * 7),
@@ -109,10 +121,10 @@ export function dashboardPurchases(
 
 export function dashboardArrivals(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   today = companyDate(state.config),
 ) {
-  scoped(state, context);
+  context = scoped(state, context);
   return receivedLog(state, context, {
     from: companyWeekStart(today),
     to: today,
@@ -126,10 +138,10 @@ export function companyWeekStart(today: string) {
 
 export function dashboardPriceChanges(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   today = companyDate(state.config),
 ) {
-  scoped(state, context);
+  context = scoped(state, context);
   const start = companyWeekStart(today);
   const actions = new Set([
     "Approve price",
@@ -178,3 +190,183 @@ export function dashboardPriceChanges(
         ) === index,
     );
 }
+
+/** Exact company dashboard computations; canonical rows/snapshots never leave this query. */
+export function dashboardSummary(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  now = new Date(),
+) {
+  actor = scoped(state, actor);
+  const today = companyDate(state.config, now);
+  const locations = new Set(selectedLocations(state, actor, true));
+  const invoices = projectInvoiceState(state, actor);
+  const visible = [...invoices.invoices];
+  if (invoices.invoice && invoices.invoice.status !== "empty") {
+    const index = visible.findIndex(
+      (invoice) => invoice.id === invoices.invoice?.id,
+    );
+    if (index < 0) visible.push(invoices.invoice);
+    else visible[index] = invoices.invoice;
+  }
+  const recentInvoices = visible
+    .filter((invoice) => invoice.status !== "empty")
+    .sort((left, right) =>
+      (
+        right.posted_at ??
+        right.received_at ??
+        right.invoice_date ??
+        ""
+      ).localeCompare(
+        left.posted_at ?? left.received_at ?? left.invoice_date ?? "",
+      ),
+    )
+    .slice(0, 5)
+    .map((invoice) => ({
+      id: invoice.id,
+      company_id: invoice.company_id,
+      branch: invoice.branch,
+      status: invoice.status,
+      supplier: invoice.supplier,
+      supplier_invoice_number: invoice.supplier_invoice_number,
+      invoice_date: invoice.invoice_date,
+    }));
+  const canonicalInvoices = [...(state.invoices ?? [])];
+  const currentIndex = canonicalInvoices.findIndex(
+    (invoice) => invoice.id === state.invoice.id,
+  );
+  if (currentIndex < 0) canonicalInvoices.push(state.invoice);
+  else canonicalInvoices[currentIndex] = state.invoice;
+  const shortCount = canonicalInvoices
+    .filter(
+      (invoice) =>
+        invoice.company_id === actor.company_id &&
+        invoice.status === "posted" &&
+        locations.has(effectiveInvoiceLocation(state, invoice)),
+    )
+    .flatMap((invoice) =>
+      invoice.lines.filter(
+        (line) =>
+          line.qty_invoiced -
+            line.qty_received_at_posting -
+            (line.qty_later_received ?? 0) >
+          0,
+      ),
+    ).length;
+  const expiryCount = activeTrackedDates(state, actor).filter((date) =>
+    dateIsDueSoon(state, date, now),
+  ).length;
+  const notes = projectNotesDatesRequests(state, actor)
+    .notes.filter(
+      (note) =>
+        !note.archived &&
+        note.type === "note_to_supervisor" &&
+        note.status !== "resolved",
+    )
+    .sort(
+      (left, right) =>
+        Number(right.status === "open") - Number(left.status === "open") ||
+        right.created_at.localeCompare(left.created_at),
+    )
+    .map((note) => ({
+      id: note.id,
+      text: note.text,
+      by: note.by,
+      branch: note.branch,
+      status: note.status,
+      created_at: note.created_at,
+    }));
+  const activity = selectHistory(state, actor)
+    .filter((entry) => entry.branch === "all" || locations.has(entry.branch))
+    .sort((left, right) => right.at.localeCompare(left.at))
+    .map((entry) => ({
+      id: entry.id,
+      action: entry.action,
+      at: entry.at,
+      by: entry.by,
+      branch: entry.branch,
+      product_code: entry.product_code,
+    }));
+  const balances = supplierBalanceOverview(state, actor)
+    .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
+    .slice(0, 5)
+    .map((row) => ({
+      supplier: row.supplier,
+      balance: row.balance,
+      overdue: row.overdue,
+      outstandingCount: supplierBalanceSummary(
+        state,
+        actor,
+        row.supplier,
+      ).invoices.filter((invoice) => new Decimal(invoice.amount).gt(0)).length,
+    }));
+  const purchases = dashboardPurchases(state, actor, today);
+  const arrivals = dashboardArrivals(state, actor, today).map((row) => ({
+    id: row.id,
+    product_code: row.product_code,
+    branch: row.branch,
+    date: row.date,
+    invoice_number: row.invoice_number,
+    units: row.units,
+  }));
+  const weeklyChanges = dashboardPriceChanges(state, actor, today).map(
+    (entry) => {
+      const product = state.products.find(
+        (product) =>
+          product.company_id === actor.company_id &&
+          product.code === entry.product_code,
+      );
+      return {
+        id: entry.id,
+        product_code: entry.product_code,
+        at: entry.at,
+        by: entry.by,
+        branch: entry.branch,
+        regular_price: product
+          ? regularPrice(
+              state,
+              product,
+              entry.branch === "all" ? actor.branch : entry.branch,
+            )
+          : null,
+      };
+    },
+  );
+  const approvalPrices = state.approvals
+    .filter(
+      (approval) =>
+        approval.company_id === actor.company_id &&
+        (approval.branch === "all" || locations.has(approval.branch)),
+    )
+    .map((approval) => {
+      const product = state.products.find(
+        (product) =>
+          product.company_id === actor.company_id &&
+          product.code === approval.product_code,
+      );
+      return {
+        id: approval.id,
+        regular_price: product
+          ? regularPrice(
+              state,
+              product,
+              effectiveApprovalLocation(state, approval),
+            )
+          : null,
+      };
+    });
+  return {
+    today,
+    recentInvoices,
+    shortCount,
+    expiryCount,
+    notes,
+    activity,
+    balances,
+    purchases,
+    arrivals,
+    weeklyChanges,
+    approvalPrices,
+  };
+}
+export type DashboardSummary = ReturnType<typeof dashboardSummary>;

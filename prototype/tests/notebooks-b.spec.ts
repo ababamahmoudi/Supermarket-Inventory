@@ -1,3 +1,4 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -90,7 +91,9 @@ test("Supervisor configures a custom notebook and entries persist with author, b
   const entry = page
     .locator(".notebook-entry-card")
     .filter({ hasText: "Deli counter cleaned" });
-  await expect(entry).toContainText("Demo Supervisor");
+  await expect(entry).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(entry).toContainText("North York");
   await expect(entry).toContainText("3.5 °C");
   await page.reload();
@@ -172,7 +175,7 @@ test("archive retains authorized search results, restore keeps entries, and work
     page
       .locator(".notebook-entry-card")
       .filter({ hasText: "Floor Worker cleaning check" }),
-  ).toContainText("Demo Floor Worker");
+  ).toContainText(configuredPersonExpectation("ny-floor").name_en);
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await expect(page.getByRole("tab", { name: /^Cleaning log/ })).toHaveCount(0);
@@ -204,6 +207,73 @@ test("Cashier gets only granted custom notebook reads and cannot add or read bui
     }),
   ).toHaveCount(0);
   await expect(page.getByLabel("Note", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Add note", exact: true }),
+  ).toHaveCount(0);
+  const mobile = page.viewportSize()!.width < 760;
+  if (mobile)
+    await page
+      .locator(".topbar")
+      .getByRole("button", { name: "Open menu", exact: true })
+      .click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Pages", exact: true })
+      .getByRole("link", { name: "Notes", exact: true }),
+  ).toBeVisible();
+  if (mobile) {
+    // The drawer covers its underlying topbar toggle. Use its genuine Escape
+    // dismissal before the next person's normal Demo action.
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".sidebar-backdrop")).toHaveCount(0);
+  }
+
+  // Revoke the actual read grant through the permitted Manager definition form.
+  // The same Cashier must immediately lose this route without deleting its entry.
+  await signIn(page, "Manager");
+  await page.goto("/#notes");
+  await notebookTab(page, "Cleaning log");
+  await page
+    .getByRole("button", { name: "Edit notebook", exact: true })
+    .click();
+  const definition = page.getByRole("dialog", {
+    name: "Edit notebook",
+    exact: true,
+  });
+  await definition
+    .getByRole("group", { name: "Who can read", exact: true })
+    .getByRole("checkbox", { name: "Cashier", exact: true })
+    .uncheck();
+  await definition
+    .getByRole("button", { name: "Save notebook", exact: true })
+    .click();
+  await expect(definition).not.toBeVisible();
+  await signIn(page, "Cashier");
+  await page.goto("/#notes");
+  await expect(
+    page.getByRole("heading", { name: "Cashier lookup", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Cleaning log/ })).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("navigation", {
+        name: "Pages",
+        exact: true,
+        includeHidden: true,
+      })
+      .getByRole("link", { name: "Notes", exact: true, includeHidden: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Cashier-readable check", { exact: true }),
+  ).toHaveCount(0);
+  await signIn(page, "Manager");
+  await page.goto("/#notes");
+  await notebookTab(page, "Cleaning log");
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "Cashier-readable check" }),
+  ).toBeVisible();
 });
 
 test("Persian Deli notebook uses custom controls and keeps the measurement and dates readable", async ({

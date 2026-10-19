@@ -1,11 +1,24 @@
 import Decimal from "decimal.js";
+import {
+  actorAtLocation,
+  configuredLocations,
+  isCompanyRole,
+} from "./authority";
+import type { AuthenticatedActor } from "./authority-types";
+import { can } from "./permissions";
+import { requirePurchase, purchaseLocationAllowed } from "./purchase-authority";
+import { requireInvoiceAuthority } from "./invoice-authority";
+import {
+  invoiceEvidenceActor,
+  type InternalPurchaseEvidence,
+} from "./purchase-evidence.internal";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import { effectiveInvoiceLocation, receivedLog } from "./received";
 import { effectiveInvoiceVersion } from "./invoice-version";
 import { weightQuantityPerLb, weightQuantityFromLb } from "./weighed";
-import type { OperationsContext } from "./operations";
+
 import type { Branch, DemoState, DemoInvoice } from "./types";
 
 /** Editable supplier metadata. Purchases remain immutable invoice evidence. */
@@ -27,8 +40,11 @@ export interface SupplierItemDefinition {
   archived?: boolean;
   created_at: string;
   created_by: string;
+  created_by_user_id?: string;
   updated_at?: string;
   updated_by?: string;
+  updated_by_user_id?: string;
+  quoted_by_user_id?: string;
 }
 
 export interface SupplierItemPurchase {
@@ -211,12 +227,13 @@ function scope(state: DemoState, company: string, branch: Branch): void {
 }
 
 /** Branch scopes purchase evidence; company item associations remain usable at new locations. */
-export function supplierItemFacts(
+function canonicalSupplierItemFacts(
   state: DemoState,
-  company: string,
+  actor: AuthenticatedActor,
   supplierName: string,
   branch: Branch,
 ): SupplierItemFact[] {
+  const company = actor.company_id;
   scope(state, company, branch);
   const supplier = supplierRecords(state).find(
     (record) =>
@@ -232,18 +249,34 @@ export function supplierItemFacts(
         ? record.supplier_id === supplierId
         : matches(record.supplier_name)),
   );
-  const receipts = receivedLog(state, {
-    company_id: company,
-    branch: "all",
-    role: "supervisor",
-    actor: "",
-  }).filter((receipt) => receipt.kind !== "replacement");
+  // Filter to the genuine actor's permitted receipts before deriving shared
+  // association metadata. The requested location filters returned history below.
+  const mayReadLocation =
+    branch === "all" ||
+    purchaseLocationAllowed(state, actor, "received.read", company, branch);
+  const receipts = (
+    mayReadLocation
+      ? isCompanyRole(actor.role) && actor.selection.kind === "location"
+        ? configuredLocations(state)
+            .filter(
+              (location) =>
+                location.active !== false &&
+                actor.allowed_branches.includes(location.id),
+            )
+            .flatMap((location) =>
+              receivedLog(state, actorAtLocation(state, actor, location.id)),
+            )
+        : receivedLog(state, actor)
+      : []
+  ).filter((receipt) => receipt.kind !== "replacement");
+  const invoiceIds = new Set(receipts.map((receipt) => receipt.invoice_id));
   const invoices = new Map(
     [...(state.invoices ?? []), state.invoice]
       .filter(
         (invoice) =>
           invoice.company_id === company &&
           invoice.status === "posted" &&
+          invoiceIds.has(invoice.id) &&
           matches(invoice.supplier),
       )
       .map((invoice) => [invoice.id, invoice]),
@@ -438,44 +471,85 @@ export function supplierItemFacts(
     );
 }
 
+/** Protected purchasing read. Operational Supplier Items uses its redacted DTO below. */
+export function supplierItemFacts(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  supplier: string,
+  branch: Branch = actor.branch,
+): SupplierItemFact[] {
+  const current = requirePurchase(state, actor, "supplier_items.cost_read");
+  return canonicalSupplierItemFacts(state, current, supplier, branch);
+}
+/** Internal Orders calculation only; screens expose OrderCandidate DTOs, never these raw facts. */
+export function supplierItemFactsForOrder(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  supplier: string,
+  branch: Branch = actor.branch,
+): SupplierItemFact[] {
+  const current = requirePurchase(state, actor, "orders.cost_read");
+  return canonicalSupplierItemFacts(state, current, supplier, branch);
+}
+/** Internal authorised invoice calculation. Never expose these facts as a query DTO. */
+export function supplierItemFactsForInvoice(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  supplier: string,
+  invoiceId = state.invoice.id,
+): SupplierItemFact[] {
+  const current = requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.cost_read",
+    invoiceId,
+  );
+  const invoice =
+    invoiceId === state.invoice.id
+      ? state.invoice
+      : state.invoices!.find((item) => item.id === invoiceId)!;
+  return canonicalSupplierItemFacts(state, current, supplier, invoice.branch);
+}
+
 export function resolveSupplierItem(
   state: DemoState,
-  company: string,
+  actor: AuthenticatedActor,
   supplier: string,
   branch: Branch,
   selector: { id?: string; product_code?: string; supplier_item_code?: string },
 ): SupplierItemFact | null {
-  scope(state, company, branch);
+  const current = requireInvoiceAuthority(state, actor, "invoices.cost_read");
   if (
     selector.id === undefined &&
     selector.product_code === undefined &&
     selector.supplier_item_code === undefined
   )
     return null;
-  const candidates = supplierItemFacts(state, company, supplier, branch).filter(
-    (fact) =>
-      selector.id !== undefined
-        ? fact.id === selector.id
-        : (selector.product_code === undefined ||
-            fact.product_code === selector.product_code) &&
-          (selector.supplier_item_code === undefined ||
-            fact.supplier_item_code === selector.supplier_item_code.trim()),
+  const candidates = canonicalSupplierItemFacts(
+    state,
+    current,
+    supplier,
+    branch,
+  ).filter((fact) =>
+    selector.id !== undefined
+      ? fact.id === selector.id
+      : (selector.product_code === undefined ||
+          fact.product_code === selector.product_code) &&
+        (selector.supplier_item_code === undefined ||
+          fact.supplier_item_code === selector.supplier_item_code.trim()),
   );
   return candidates.length === 1 ? candidates[0] : null;
 }
 
 export function supplierItems(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   supplier: string,
 ): SupplierItemRow[] {
-  scope(state, context.company_id, context.branch);
-  if (context.role === "cashier") throw new SupplierItemError("permission");
-  if (context.role !== "supervisor" && context.branch === "all")
-    throw new SupplierItemError("scope");
-  return supplierItemFacts(
+  context = requirePurchase(state, context, "supplier_items.read");
+  return canonicalSupplierItemFacts(
     state,
-    context.company_id,
+    context,
     supplier,
     context.branch,
   ).map(
@@ -509,7 +583,10 @@ export function supplierItems(
       last_bought_date,
       last_invoice_id,
       last_invoice_number,
-      ...(context.role === "supervisor"
+      ...(can(state, context, "supplier_items.cost_read", {
+        company_id: context.company_id,
+        kind: "company_shared",
+      }).allowed
         ? {
             financial: {
               last_bought_unit_cost,
@@ -536,14 +613,13 @@ export interface SupplierItemEdits {
 
 export function saveSupplierItem(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   supplierName: string,
   edits: SupplierItemEdits,
   id?: string,
   now = new Date(),
 ): SupplierItemDefinition {
-  scope(state, context.company_id, context.branch);
-  if (context.role !== "supervisor") throw new SupplierItemError("permission");
+  context = requirePurchase(state, context, "supplier_items.manage");
   const supplier = supplierRecords(state).find(
     (record) =>
       record.company_id === context.company_id &&
@@ -563,12 +639,7 @@ export function saveSupplierItem(
   validPack(edits.units_per_case);
   const quote = edits.quoted_unit_cost_before_tax?.trim();
   if (quote) cost(quote);
-  const facts = supplierItemFacts(
-    state,
-    context.company_id,
-    supplierName,
-    "all",
-  );
+  const facts = supplierItemFacts(state, context, supplierName, "all");
   const current = id ? facts.find((record) => record.id === id) : undefined;
   if (id && !current) throw new SupplierItemError("not_found");
   const code = edits.supplier_item_code.trim();
@@ -595,6 +666,7 @@ export function saveSupplierItem(
     units_per_case: edits.units_per_case,
     created_at: now.toISOString(),
     created_by: context.actor,
+    created_by_user_id: context.user_id,
   };
   if (
     record.product_code !== edits.product_code ||
@@ -622,16 +694,19 @@ export function saveSupplierItem(
   record.archived = false;
   record.updated_at = now.toISOString();
   record.updated_by = context.actor;
+  record.updated_by_user_id = context.user_id;
   if (quote !== undefined) {
     if (quote) {
       if (record.quoted_unit_cost_before_tax !== cost(quote).toFixed(4)) {
         record.quoted_unit_cost_before_tax = cost(quote).toFixed(4);
         record.quoted_by = context.actor;
+        record.quoted_by_user_id = context.user_id;
         record.quoted_at = now.toISOString();
       }
     } else {
       delete record.quoted_unit_cost_before_tax;
       delete record.quoted_by;
+      delete record.quoted_by_user_id;
       delete record.quoted_at;
     }
   }
@@ -643,6 +718,9 @@ export function saveSupplierItem(
     branch: "all",
     action: id ? "Save supplier item" : "Add supplier item",
     by: context.actor,
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role_snapshot: context.role,
     at: now.toISOString(),
     reversible: true,
     entity_type: "supplier_item",
@@ -656,20 +734,26 @@ export function saveSupplierItem(
 /** A received temporary order item becomes supplier metadata only at posting. */
 export function associatePostedSupplierItem(
   state: DemoState,
-  context: OperationsContext,
+  evidence: InternalPurchaseEvidence,
   invoice: DemoInvoice,
   lineIndex: number,
 ): SupplierItemDefinition {
-  scope(state, context.company_id, context.branch);
-  const line = invoice.lines[lineIndex];
-  if (context.role === "cashier") throw new SupplierItemError("permission");
+  const context = invoiceEvidenceActor(
+    state,
+    evidence,
+    invoice.id,
+    "invoice_post",
+  );
+  const canonical =
+    invoice.id === state.invoice.id
+      ? state.invoice
+      : state.invoices?.find((item) => item.id === invoice.id);
+  const line = canonical?.lines[lineIndex];
   if (
-    invoice.company_id !== context.company_id ||
+    canonical !== invoice ||
     invoice.status !== "posted" ||
     !line ||
-    line.company_id !== context.company_id ||
-    (context.role !== "supervisor" &&
-      context.branch !== (invoice.handling_branch ?? invoice.branch))
+    line.company_id !== context.company_id
   )
     throw new SupplierItemError("scope");
   if (
@@ -696,17 +780,6 @@ export function associatePostedSupplierItem(
     throw new SupplierItemError("product");
   const pack = validPack(line.units_per_case ?? 1);
   const code = line.supplier_item_code?.trim() ?? "";
-  const facts = supplierItemFacts(
-    state,
-    context.company_id,
-    invoice.supplier,
-    "all",
-  );
-  const fact = facts.find(
-    (item) =>
-      item.product_code === line.product_code &&
-      item.supplier_item_code === code,
-  );
   const prior = state.supplier_items?.find(
     (item) =>
       item.company_id === context.company_id &&
@@ -735,7 +808,9 @@ export function associatePostedSupplierItem(
   )
     throw new SupplierItemError("scope");
   const record: SupplierItemDefinition = {
-    id: fact?.id ?? line.supplier_item_id ?? createId("supplier-item"),
+    id:
+      line.supplier_item_id ??
+      `supplier-item:${encodeURIComponent(context.company_id)}:${encodeURIComponent(supplier.id)}:${encodeURIComponent(sourceKey(line.product_code, code))}`,
     company_id: context.company_id,
     supplier_id: supplier.id,
     supplier_name: supplier.name,
@@ -744,6 +819,7 @@ export function associatePostedSupplierItem(
     units_per_case: pack,
     created_at: invoice.posted_at ?? new Date().toISOString(),
     created_by: context.actor,
+    created_by_user_id: context.user_id,
   };
   state.supplier_items ??= [];
   state.supplier_items.push(record);
@@ -753,6 +829,9 @@ export function associatePostedSupplierItem(
     branch: effectiveInvoiceLocation(state, invoice),
     action: "Associate ordered new item",
     by: context.actor,
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role_snapshot: context.role,
     at: record.created_at,
     reversible: false,
     entity_type: "supplier_item",

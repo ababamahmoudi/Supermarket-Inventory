@@ -1,3 +1,5 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation } from "./authority";
 import { describe, it, expect } from "vitest";
 import { returnFixture } from "./return-test-fixture";
 import {
@@ -8,7 +10,6 @@ import {
   submitFinancialClaim,
   postReturnClaim,
   type OperationalReturn,
-  type OperationsContext,
 } from "./operations";
 import {
   recordItemResolutions,
@@ -20,21 +21,42 @@ import {
   returnClosureSubtype,
 } from "./return-workflow";
 import { supplierBalanceSummary } from "./supplier-balances";
-const worker: OperationsContext = {
-  company_id: "super-arzon",
-  branch: "Branch 1",
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
+
+// Every case resolves a genuine configured Person and session in its own state.
+// The old demo "Supervisor" identity is the actual E1 Manager, not Branch Supervisor.
+const worker = (state: ReturnType<typeof returnFixture>, branch = "Branch 1") =>
+  authenticatedTestActor(state, "floor_worker", {
+    name_en: "Demo Floor Worker",
+    locations: [branch],
+    selection: { kind: "location", location_id: branch },
+  });
+const supervisor = (
+  state: ReturnType<typeof returnFixture>,
+  branch = "Branch 1",
+) =>
+  actorAtLocation(
+    state,
+    authenticatedTestActor(state, "manager", {
+      name_en: "Demo Supervisor",
+      locations: ["Branch 1"],
+      selection: { kind: "location", location_id: "Branch 1" },
+    }),
+    branch,
+  );
+const otherCompanyActor = (
+  state: ReturnType<typeof returnFixture>,
+  role: "manager" | "floor_worker",
+  company_id = "other-company",
+  branch = "Branch 1",
+) => {
+  const other = structuredClone(state);
+  other.config.company.seed_key = company_id;
+  return authenticatedTestActor(other, role, {
+    locations: [branch],
+    selection: { kind: "location", location_id: branch },
+  });
 };
-const supervisor: OperationsContext = {
-  ...worker,
-  role: "supervisor",
-  actor: "Demo Supervisor",
-};
-const manager: OperationsContext = {
-  ...supervisor,
-  pickup_correction_authority: "manager",
-};
+
 const pickup = (
   state: ReturnType<typeof returnFixture>,
   qty = 3,
@@ -44,7 +66,7 @@ const pickup = (
     | "put_back_on_shelf"
     | "throw_away" = "keep_for_next_pickup",
 ) =>
-  recordPickup(state, worker, "c4-return", {
+  recordPickup(state, worker(state), "c4-return", {
     quantities: { "0003": qty },
     representative: "Demo Driver",
     slip,
@@ -60,7 +82,7 @@ describe("C6 actual immutable pickups", () => {
     const state = returnFixture(),
       before = structuredClone(state);
     expect(() =>
-      recordPickup(state, worker, "c4-return", {
+      recordPickup(state, worker(state), "c4-return", {
         quantities: { "0003": 2 },
         representative: "Demo Driver",
         slip: "SIGNED",
@@ -68,7 +90,7 @@ describe("C6 actual immutable pickups", () => {
     ).toThrow("pickup_shortfall_reason");
     expect(state).toEqual(before);
     expect(() =>
-      recordPickup(state, worker, "c4-return", {
+      recordPickup(state, worker(state), "c4-return", {
         quantities: { "0003": 2 },
         representative: "Demo Driver",
         slip: "SIGNED",
@@ -93,7 +115,9 @@ describe("C6 actual immutable pickups", () => {
       "RM-0001",
       "RM-0002",
     ]);
-    expect(pendingReturnCredits(state, supervisor)[0].amount).toBe("10.00");
+    expect(pendingReturnCredits(state, supervisor(state))[0].amount).toBe(
+      "10.00",
+    );
     const before = structuredClone(state);
     pickup(state, 2, "SIGNED-C6-002");
     expect(state).toEqual(before);
@@ -108,7 +132,7 @@ describe("C6 actual immutable pickups", () => {
     const before = structuredClone(state);
     expect(() => pickup(state, 1, "SECOND")).toThrow("pickup_cap");
     expect(state).toEqual(before);
-    receiveReplacement(state, worker, "c4-return", {
+    receiveReplacement(state, worker(state), "c4-return", {
       product_code: "0002",
       qty: 2,
       covers: { "0003": 2 },
@@ -122,26 +146,25 @@ describe("C6 actual immutable pickups", () => {
     const state = returnFixture();
     pickup(state, 0, "REFUSED");
     expect(returnUiStatus(record(state))).toBe("waiting_for_pickup");
-    expect(pendingReturnCredits(state, supervisor)).toEqual([]);
+    expect(pendingReturnCredits(state, supervisor(state))).toEqual([]);
     expect(state.ledger).toHaveLength(1);
     const discarded = returnFixture();
     pickup(discarded, 0, "THROWN", "throw_away");
     expect(returnUiStatus(record(discarded))).toBe("closed");
     expect(record(discarded).original_units_recovered).toBe(0);
   });
-  it("uses the approved Supervisor authority until E1 and never grants Worker correction", () => {
-    expect(canCorrectReturnPickup(supervisor)).toBe(true);
-    expect(
-      canCorrectReturnPickup({
-        ...worker,
-        pickup_correction_authority: "manager",
-      }),
-    ).toBe(false);
+  it("uses actual Manager authority and never grants Worker correction", () => {
     const state = returnFixture();
+    expect(canCorrectReturnPickup(state, supervisor(state), "c4-return")).toBe(
+      true,
+    );
+    expect(canCorrectReturnPickup(state, worker(state), "c4-return")).toBe(
+      false,
+    );
     pickup(state);
     const before = structuredClone(state);
     expect(() =>
-      correctReturnPickup(state, worker, "c4-return", {
+      correctReturnPickup(state, worker(state), "c4-return", {
         memo_id: record(state).pickup_memos![0].id,
         quantities: { "0003": 2 },
         reason: "Wrong count",
@@ -155,7 +178,7 @@ describe("C6 actual immutable pickups", () => {
     const original = structuredClone(record(state).pickup_memos![0]),
       event = structuredClone(record(state).evidence![0]),
       ledger = structuredClone(state.ledger);
-    correctReturnPickup(state, manager, "c4-return", {
+    correctReturnPickup(state, supervisor(state), "c4-return", {
       memo_id: original.id,
       quantities: { "0003": 1 },
       reason: "Signed count corrected after review",
@@ -175,13 +198,13 @@ describe("C6 actual immutable pickups", () => {
     });
     expect(record(state).pickup_corrections).toHaveLength(1);
     expect(record(state).lines[0].picked_up).toBe(1);
-    expect(pendingReturnCredits(state, supervisor)).toEqual([
+    expect(pendingReturnCredits(state, supervisor(state))).toEqual([
       expect.objectContaining({ reference: "RM-0002", amount: "10.00" }),
     ]);
     expect(state.ledger).toEqual(ledger);
     const corrected = structuredClone(state);
     expect(() =>
-      correctReturnPickup(state, manager, "c4-return", {
+      correctReturnPickup(state, supervisor(state), "c4-return", {
         memo_id: original.id,
         quantities: { "0003": 1 },
         reason: "Old version",
@@ -192,7 +215,7 @@ describe("C6 actual immutable pickups", () => {
   it("blocks correction below already credited original quantity or across a company", () => {
     const state = returnFixture();
     pickup(state);
-    submitFinancialClaim(state, supervisor, "c4-return", {
+    submitFinancialClaim(state, supervisor(state), "c4-return", {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       amount: "8.00",
@@ -201,13 +224,13 @@ describe("C6 actual immutable pickups", () => {
     });
     postReturnClaim(
       state,
-      supervisor,
+      supervisor(state),
       "c4-return",
       record(state).claims![0].id,
     );
     const before = structuredClone(state);
     expect(() =>
-      correctReturnPickup(state, manager, "c4-return", {
+      correctReturnPickup(state, supervisor(state), "c4-return", {
         memo_id: record(state).pickup_memos![0].id,
         quantities: { "0003": 0 },
         reason: "Bad reduction",
@@ -217,7 +240,7 @@ describe("C6 actual immutable pickups", () => {
     expect(() =>
       correctReturnPickup(
         state,
-        { ...manager, company_id: "other" },
+        otherCompanyActor(state, "manager", "other"),
         "c4-return",
         {
           memo_id: record(state).pickup_memos![0].id,
@@ -235,7 +258,7 @@ describe("C6 item-level partial settlement and conservation", () => {
     const state = returnFixture(),
       before = structuredClone(state);
     expect(() =>
-      recordItemResolutions(state, worker, "c4-return", [
+      recordItemResolutions(state, worker(state), "c4-return", [
         {
           product_code: "0003",
           kind: "outstanding",
@@ -245,7 +268,7 @@ describe("C6 item-level partial settlement and conservation", () => {
       ]),
     ).toThrow("pickup_required");
     expect(() =>
-      receiveReplacement(state, worker, "c4-return", {
+      receiveReplacement(state, worker(state), "c4-return", {
         product_code: "0002",
         qty: 1,
         covers: { "0003": 1 },
@@ -255,7 +278,7 @@ describe("C6 item-level partial settlement and conservation", () => {
       }),
     ).toThrow("pickup_required");
     expect(() =>
-      submitFinancialClaim(state, worker, "c4-return", {
+      submitFinancialClaim(state, worker(state), "c4-return", {
         type: "credit_current_invoice",
         covers: { "0003": 1 },
         invoice_id: "c4-base-invoice",
@@ -269,7 +292,7 @@ describe("C6 item-level partial settlement and conservation", () => {
     pickup(state, 1);
     const before = structuredClone(state);
     expect(() =>
-      submitFinancialClaim(state, worker, "c4-return", {
+      submitFinancialClaim(state, worker(state), "c4-return", {
         type: "credit_current_invoice",
         covers: { "0003": 2 },
         invoice_id: "c4-base-invoice",
@@ -277,14 +300,14 @@ describe("C6 item-level partial settlement and conservation", () => {
       }),
     ).toThrow("coverage");
     expect(state).toEqual(before);
-    submitFinancialClaim(state, worker, "c4-return", {
+    submitFinancialClaim(state, worker(state), "c4-return", {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       invoice_id: "c4-base-invoice",
       document: "CLAIM-1",
     });
     expect(() =>
-      submitFinancialClaim(state, worker, "c4-return", {
+      submitFinancialClaim(state, worker(state), "c4-return", {
         type: "credit_current_invoice",
         covers: { "0003": 1 },
         invoice_id: "c4-base-invoice",
@@ -298,7 +321,7 @@ describe("C6 item-level partial settlement and conservation", () => {
     pickup(state);
     const memo = structuredClone(record(state).pickup_memos),
       ledger = structuredClone(state.ledger);
-    recordItemResolutions(state, worker, "c4-return", [
+    recordItemResolutions(state, worker(state), "c4-return", [
       {
         product_code: "0003",
         kind: "outstanding",
@@ -323,7 +346,7 @@ describe("C6 item-level partial settlement and conservation", () => {
       [1, "8.00", "C6-1"],
       [2, "17.00", "C6-2"],
     ] as const) {
-      recordItemResolutions(state, supervisor, "c4-return", [
+      recordItemResolutions(state, supervisor(state), "c4-return", [
         {
           product_code: "0003",
           kind: "credited",
@@ -335,11 +358,15 @@ describe("C6 item-level partial settlement and conservation", () => {
         },
       ]);
       const claim = record(state).claims!.at(-1)!;
-      postReturnClaim(state, supervisor, "c4-return", claim.id);
-      postReturnClaim(state, supervisor, "c4-return", claim.id);
+      postReturnClaim(state, supervisor(state), "c4-return", claim.id);
+      postReturnClaim(state, supervisor(state), "c4-return", claim.id);
       if (quantity === 1)
         expect(
-          supplierBalanceSummary(state, supervisor, "Fresh Valley Foods"),
+          supplierBalanceSummary(
+            state,
+            supervisor(state),
+            "Fresh Valley Foods",
+          ),
         ).toMatchObject({
           balance: "572.00",
           confirmed_balance: "592.00",
@@ -347,7 +374,7 @@ describe("C6 item-level partial settlement and conservation", () => {
         });
     }
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods"),
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods"),
     ).toMatchObject({ balance: "575.00", pending_credit: "0.00" });
     expect(
       state.ledger.filter((entry) => entry.type === "credit"),
@@ -365,14 +392,14 @@ describe("C6 item-level partial settlement and conservation", () => {
       unit_cost: "5.0000",
       reason: "Damaged",
     });
-    recordPickup(state, worker, "c4-return", {
+    recordPickup(state, worker(state), "c4-return", {
       quantities: { "0003": 3, "0001": 2 },
       representative: "Demo Driver",
       slip: "SIGNED-MIXED",
     });
     const before = structuredClone(state);
     expect(() =>
-      recordItemResolutions(state, worker, "c4-return", [
+      recordItemResolutions(state, worker(state), "c4-return", [
         {
           product_code: "0003",
           kind: "replaced",
@@ -402,12 +429,12 @@ describe("C6 item-level partial settlement and conservation", () => {
       unit_cost: "5.0000",
       reason: "Damaged",
     });
-    recordPickup(state, worker, "c4-return", {
+    recordPickup(state, worker(state), "c4-return", {
       quantities: { "0003": 3, "0001": 2 },
       representative: "Demo Driver",
       slip: "SIGNED-MIXED",
     });
-    recordItemResolutions(state, supervisor, "c4-return", [
+    recordItemResolutions(state, supervisor(state), "c4-return", [
       {
         product_code: "0003",
         kind: "credited",
@@ -435,18 +462,18 @@ describe("C6 item-level partial settlement and conservation", () => {
     });
     postReturnClaim(
       state,
-      supervisor,
+      supervisor(state),
       "c4-return",
       record(state).claims![0].id,
     );
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods"),
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods"),
     ).toMatchObject({
       confirmed_balance: "588.00",
       pending_credit: "25.00",
       balance: "563.00",
     });
-    recordItemResolutions(state, worker, "c4-return", [
+    recordItemResolutions(state, worker(state), "c4-return", [
       {
         product_code: "0003",
         kind: "replaced",
@@ -467,10 +494,10 @@ describe("C6 item-level partial settlement and conservation", () => {
     ]);
     expect(returnUiStatus(record(state))).toBe("waiting_for_credit");
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods")
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods")
         .pending_credit,
     ).toBe("5.00");
-    recordItemResolutions(state, supervisor, "c4-return", [
+    recordItemResolutions(state, supervisor(state), "c4-return", [
       {
         product_code: "0001",
         kind: "written_off",
@@ -481,14 +508,15 @@ describe("C6 item-level partial settlement and conservation", () => {
     ]);
     postReturnClaim(
       state,
-      supervisor,
+      supervisor(state),
       "c4-return",
       record(state).claims!.at(-1)!.id,
     );
     expect(returnUiStatus(record(state))).toBe("closed");
     expect(returnClosureSubtype(record(state))).toBeUndefined();
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods").balance,
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods")
+        .balance,
     ).toBe("588.00");
   });
   it("preserves full replacement570→600 without a new credit or purchase", () => {
@@ -496,9 +524,10 @@ describe("C6 item-level partial settlement and conservation", () => {
     pickup(state);
     const ledger = structuredClone(state.ledger);
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods").balance,
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods")
+        .balance,
     ).toBe("570.00");
-    recordItemResolutions(state, worker, "c4-return", [
+    recordItemResolutions(state, worker(state), "c4-return", [
       {
         product_code: "0003",
         kind: "replaced",
@@ -512,7 +541,8 @@ describe("C6 item-level partial settlement and conservation", () => {
       },
     ]);
     expect(
-      supplierBalanceSummary(state, supervisor, "Fresh Valley Foods").balance,
+      supplierBalanceSummary(state, supervisor(state), "Fresh Valley Foods")
+        .balance,
     ).toBe("600.00");
     expect(state.ledger).toEqual(ledger);
   });
@@ -528,13 +558,13 @@ it("retains detached immutable pickup/claim inputs and rejects a changed shortfa
       "0003": { reason: "Two kept", outcome: "keep_for_next_pickup" as const },
     },
   };
-  recordPickup(state, worker, "c4-return", input);
+  recordPickup(state, worker(state), "c4-return", input);
   const saved = structuredClone(record(state));
   input.quantities["0003"] = 2;
   input.shortfalls["0003"].reason = "Changed later";
   expect(record(state)).toEqual(saved);
   expect(() =>
-    recordPickup(state, worker, "c4-return", {
+    recordPickup(state, worker(state), "c4-return", {
       ...input,
       quantities: { "0003": 1 },
     }),
@@ -545,7 +575,7 @@ it("retains detached immutable pickup/claim inputs and rejects a changed shortfa
     invoice_id: "c4-base-invoice",
     document: "DETACHED-CREDIT",
   };
-  submitFinancialClaim(state, worker, "c4-return", claimInput);
+  submitFinancialClaim(state, worker(state), "c4-return", claimInput);
   claimInput.covers["0003"] = 3;
   expect(record(state).claims![0].covers).toEqual({ "0003": 1 });
 });
@@ -557,12 +587,12 @@ it("requires a multi-item verified note to equal the explicit per-item amounts b
     unit_cost: "5.0000",
     reason: "Damaged",
   });
-  recordPickup(state, worker, "c4-return", {
+  recordPickup(state, worker(state), "c4-return", {
     quantities: { "0003": 3, "0001": 1 },
     representative: "Demo Driver",
     slip: "SIGNED-MULTI-AMOUNT",
   });
-  submitFinancialClaim(state, worker, "c4-return", {
+  submitFinancialClaim(state, worker(state), "c4-return", {
     type: "credit_current_invoice",
     covers: { "0003": 1, "0001": 1 },
     invoice_id: "c4-base-invoice",
@@ -571,16 +601,16 @@ it("requires a multi-item verified note to equal the explicit per-item amounts b
   const claimId = record(state).claims![0].id,
     before = structuredClone(state);
   expect(() =>
-    postReturnClaim(state, supervisor, "c4-return", claimId, "12.00"),
+    postReturnClaim(state, supervisor(state), "c4-return", claimId, "12.00"),
   ).toThrow("item_credit_amount");
   expect(() =>
-    postReturnClaim(state, supervisor, "c4-return", claimId, "12.00", {
+    postReturnClaim(state, supervisor(state), "c4-return", claimId, "12.00", {
       "0003": "8.00",
       "0001": "5.00",
     }),
   ).toThrow("item_credit_amount");
   expect(state).toEqual(before);
-  postReturnClaim(state, supervisor, "c4-return", claimId, "12.00", {
+  postReturnClaim(state, supervisor(state), "c4-return", claimId, "12.00", {
     "0003": "8.00",
     "0001": "4.00",
   });
@@ -592,7 +622,7 @@ it("requires a multi-item verified note to equal the explicit per-item amounts b
 it("preserves cash/other compensation as an evidence claim with verified item money", () => {
   const state = returnFixture();
   pickup(state);
-  recordItemResolutions(state, supervisor, "c4-return", [
+  recordItemResolutions(state, supervisor(state), "c4-return", [
     {
       product_code: "0003",
       kind: "cash_or_other",
@@ -604,7 +634,7 @@ it("preserves cash/other compensation as an evidence claim with verified item mo
   ]);
   const claim = record(state).claims![0];
   expect(claim.type).toBe("cash_or_other");
-  postReturnClaim(state, supervisor, "c4-return", claim.id);
+  postReturnClaim(state, supervisor(state), "c4-return", claim.id);
   expect(claim.item_amounts).toEqual({ "0003": "8.00" });
   expect(state.ledger.at(-1)!.amount).toBe("-8.00");
   expect(returnUiStatus(record(state))).toBe("waiting_for_credit");

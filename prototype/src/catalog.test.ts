@@ -7,7 +7,7 @@ import {
   pendingPrice,
   searchProducts,
 } from "./catalog";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import type { DemoState, Offer } from "./types";
 
 let state: DemoState;

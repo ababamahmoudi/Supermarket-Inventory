@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useProtectedQuery } from "../use-protected-query";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
 import { configuredBranches, branchLabel } from "../settings";
@@ -38,8 +39,17 @@ export function SupplierEditor({
   onClose: () => void;
   onSaved?: (supplier: SupplierRecord) => void;
 }) {
-  const { state, role, branch, user, lang, t, update, navigate } = useDemo();
-  const supervisor = role === "supervisor";
+  const { state, actor, can, lang, t, command, navigate } = useDemo();
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+  };
+  const supervisor = can("payables.opening_balance_write", scope);
+  const saveCapability =
+    invoiceQuickAdd && !supplier
+      ? "invoices.supplier_propose"
+      : "suppliers.manage";
+  const [pending, setPending] = useState(false);
   const [values, setValues] = useState<SupplierEdits>({
     name: supplier?.name ?? "",
     phone: supplier?.phone ?? "",
@@ -57,7 +67,13 @@ export function SupplierEditor({
   });
   const [attemptedSave, setAttemptedSave] = useState(false);
   const [error, setError] = useState<SupplierEditError["code"] | null>(null);
-  const matches = similarSupplierNames(state, values.name, supplier?.id);
+  const similar = useProtectedQuery(
+    "suppliers.read",
+    scope,
+    (canonical) => similarSupplierNames(canonical, values.name, supplier?.id),
+    JSON.stringify([values.name, supplier?.id]),
+  );
+  const matches = similar.data ?? [];
   const patch = (key: keyof SupplierEdits, value: string | boolean) => {
     if (
       (key === "name" && (error === "name" || error === "similar")) ||
@@ -170,8 +186,7 @@ export function SupplierEditor({
     attemptedSave
       ? missing.find((item) => item.fieldId === `supplier-${field}`)?.message
       : undefined;
-  if (!supervisor && !(role === "floor_worker" && invoiceQuickAdd && !supplier))
-    return null;
+  if (!actor || !can(saveCapability, scope)) return null;
   return (
     <Dialog
       open
@@ -188,40 +203,41 @@ export function SupplierEditor({
       <form
         className="stack manual-entry-form"
         noValidate
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           setError(null);
           setAttemptedSave(true);
           if (missing.length) return;
+          if (pending) return;
+          setPending(true);
           try {
-            let saved: SupplierRecord | undefined;
-            update((draft) => {
-              saved = structuredClone(
-                saveSupplier(
-                  draft,
-                  {
-                    company_id: state.config.company.seed_key,
-                    role: role!,
-                    branch,
-                    actor: user!.name,
-                  },
-                  {
-                    ...values,
-                    opening_balances:
-                      supervisor && !supplier ? values.opening_balances : [],
-                  },
-                  {
-                    id: supplier?.id,
-                    invoice_quick_add: invoiceQuickAdd,
-                    complete_invoice_details: completeForInvoice,
-                  },
+            const saved = await command(
+              saveCapability,
+              scope,
+              (draft, currentActor) =>
+                structuredClone(
+                  saveSupplier(
+                    draft,
+                    currentActor,
+                    {
+                      ...values,
+                      opening_balances:
+                        supervisor && !supplier ? values.opening_balances : [],
+                    },
+                    {
+                      id: supplier?.id,
+                      invoice_quick_add: invoiceQuickAdd,
+                      complete_invoice_details: completeForInvoice,
+                    },
+                  ),
                 ),
-              );
-            });
-            onSaved?.(saved!);
+            );
+            onSaved?.(saved);
             onClose();
           } catch (cause) {
             setError(cause instanceof SupplierEditError ? cause.code : "scope");
+          } finally {
+            setPending(false);
           }
         }}
       >
@@ -457,7 +473,7 @@ export function SupplierEditor({
           <Button variant="neutral" onClick={onClose}>
             {t("Cancel", "انصراف")}
           </Button>
-          <Button type="submit">
+          <Button disabled={pending} type="submit">
             {supplier
               ? t("Save supplier", "ذخیرهٔ تأمین‌کننده")
               : t("Add supplier", "افزودن تأمین‌کننده")}

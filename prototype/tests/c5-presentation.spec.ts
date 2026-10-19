@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import { openShellAction, setBranch, signIn } from "./helpers";
@@ -154,7 +155,12 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       "SIGNED-C5-COLOR-001",
     );
     await button(pickup, "Record pickup").click();
+    // This existing status is published only after the actual command completes.
+    await expect(page.getByRole("status")).toHaveText(
+      "Recorded pickup and retained Return memo.",
+    );
     await page.goto("/#returns");
+    await expect(page.locator(".returns-overview-table")).toBeVisible();
     await appearance(page, variant);
     const proof = await assertContract(
       page,
@@ -549,8 +555,8 @@ test("C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Un
   await button(quick, "More").click();
   await field(quick, "Lot (optional)").fill("C5-SHELF-ENTER");
   await assertContract(page, "Date quick-add with More", "en-light");
-  const before = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   await product.fill("0001");
   await product.press("Enter");
@@ -562,8 +568,8 @@ test("C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Un
   await assertContract(page, "New shelf date without an Add toast", "en-light");
   await expect(page.getByTestId("undo-toast")).toHaveCount(0);
   await expect(field(quick, "Lot (optional)")).toHaveValue("");
-  const after = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(after.ledger).toEqual(before.ledger);
   expect(after.stock_movements).toEqual(before.stock_movements);
@@ -588,8 +594,8 @@ test("C6 shelf quick-add accepts Enter, resets focus, pins new row and Remove Un
       .locator(".expiry-table tbody tr")
       .filter({ hasText: "C5-SHELF-ENTER" }),
   ).toHaveCount(1);
-  const restored = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const restored = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(restored.ledger).toEqual(before.ledger);
   expect(restored.stock_movements).toEqual(before.stock_movements);
@@ -609,8 +615,8 @@ for (const role of ["Supervisor", "Floor Worker"] as const) {
   }) => {
     await signIn(page, role);
     if (role === "Supervisor") await setBranch(page, "Branch 1");
-    const before = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    const before = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
     );
     await page.goto("/#lookup");
     await field(page.locator(".lookup-page"), "Search products").fill("0001");
@@ -639,19 +645,17 @@ for (const role of ["Supervisor", "Floor Worker"] as const) {
     ).toContainText(lot);
     await expect
       .poll(async () =>
-        page.evaluate(
-          (value) =>
-            JSON.parse(
-              localStorage.getItem("supermarket-prototype-v1")!,
-            ).expiry.some(
-              (entry: { lot_number?: string }) => entry.lot_number === value,
-            ),
-          lot,
-        ),
+        readCanonicalBusinessEvidence(page).then((canonicalState) => {
+          const canonicalEvidenceInput = lot;
+          return JSON.parse(JSON.stringify(canonicalState)!).expiry.some(
+            (entry: { lot_number?: string }) =>
+              entry.lot_number === canonicalEvidenceInput,
+          );
+        }),
       )
       .toBe(true);
-    const added = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    const added = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
     );
     const newDate = added.expiry.find(
       (entry: { lot_number?: string }) => entry.lot_number === lot,
@@ -689,8 +693,8 @@ for (const role of ["Supervisor", "Floor Worker"] as const) {
       .filter({ hasText: "Remove date" });
     await button(toast, "Undo").click();
     await expect(row).toHaveCount(1);
-    const restored = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+    const restored = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
     );
     expect(
       restored.expiry.find((entry: { id: string }) => entry.id === newDate.id),
@@ -723,8 +727,8 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     '.current-offers-table tr[data-product-code="0003"]',
   );
   await expect(existing).toHaveCount(1);
-  const before = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const before = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   await button(page, "Create offer").click();
   const dialog = page.getByRole("dialog", {
@@ -738,8 +742,8 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   await expect(page.getByRole("status")).toContainText(
     "This offer already exists.",
   );
-  const repeated = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  const repeated = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
   expect(repeated.offers).toEqual(before.offers);
   expect(repeated.activity).toEqual(before.activity);

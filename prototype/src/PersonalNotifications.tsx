@@ -1,6 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { useDemo } from "./store";
 import {
-  userNotifications,
   markNotificationRead,
   markAllNotificationsRead,
   type NotificationRecord,
@@ -11,9 +11,93 @@ import { ProductName } from "./presentation";
 import { MenuItem } from "./ui";
 
 export function PersonalNotifications() {
-  const { state, update, historyContext, setBranch, lang, t } = useDemo();
-  if (!historyContext) return null;
-  const notifications = userNotifications(state, historyContext);
+  const { state, command, actor, can, setBranch, navigate, lang, t } =
+    useDemo();
+  const [error, setError] = useState("");
+  const intentKey = actor
+    ? `${actor.company_id}:${actor.session_id}:${actor.authority_epoch}:${actor.person_version}`
+    : "";
+  const currentIntent = useRef(intentKey);
+  useEffect(() => {
+    currentIntent.current = intentKey;
+  }, [intentKey]);
+  if (
+    !actor ||
+    !can("notifications.read", {
+      company_id: actor.company_id,
+      kind: "company_shared",
+      owner_user_id: actor.user_id,
+    })
+  )
+    return null;
+  const notifications = state.notifications ?? [];
+  const markAll = async () => {
+    try {
+      await command(
+        "notifications.mark_read",
+        {
+          company_id: actor.company_id,
+          kind: "company_shared",
+          owner_user_id: actor.user_id,
+          mutation: true,
+        },
+        (draft, freshActor) => markAllNotificationsRead(draft, freshActor),
+      );
+      if (currentIntent.current === intentKey) setError("");
+    } catch {
+      if (currentIntent.current === intentKey)
+        setError(
+          t(
+            "This notification is no longer available. Open its list again.",
+            "این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
+          ),
+        );
+    }
+  };
+  const open = async (id: string) => {
+    try {
+      const destination = await command(
+        "notifications.mark_read",
+        {
+          company_id: actor.company_id,
+          kind: "company_shared",
+          owner_user_id: actor.user_id,
+          mutation: true,
+        },
+        (draft, freshActor) => {
+          const source = (draft.notifications ?? []).find(
+            (item) =>
+              item.id === id &&
+              item.company_id === freshActor.company_id &&
+              item.recipient_user_id === freshActor.user_id &&
+              freshActor.allowed_branches.includes(item.branch),
+          );
+          if (
+            !source ||
+            !/^(?:#)?(?:product\?code=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$))/.test(
+              source.href,
+            )
+          )
+            throw new Error("permission");
+          markNotificationRead(draft, freshActor, id);
+          return { branch: source.branch, href: source.href };
+        },
+      );
+      if (currentIntent.current !== intentKey) return;
+      await setBranch(destination.branch);
+      if (currentIntent.current !== intentKey) return;
+      navigate(destination.href);
+      setError("");
+    } catch {
+      if (currentIntent.current === intentKey)
+        setError(
+          t(
+            "This notification is no longer available. Open its list again.",
+            "این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
+          ),
+        );
+    }
+  };
   if (!notifications.length) return null;
   const titles: Record<NotificationRecord["kind"], string> = {
     sale_request_submitted: t("Sale request", "درخواست حراج"),
@@ -49,12 +133,9 @@ export function PersonalNotifications() {
   };
   return (
     <>
+      {error && <p role="alert">{error}</p>}
       {notifications.some((item) => !item.read_at) && (
-        <MenuItem
-          onClick={() =>
-            update((draft) => markAllNotificationsRead(draft, historyContext))
-          }
-        >
+        <MenuItem onClick={markAll}>
           {t("Mark all as read", "همه را خوانده‌شده علامت بزن")}
         </MenuItem>
       )}
@@ -68,14 +149,7 @@ export function PersonalNotifications() {
           <MenuItem
             className={`personal-notification${notification.read_at ? " is-read" : ""}`}
             key={notification.id}
-            onClick={() => {
-              update((draft) =>
-                markNotificationRead(draft, historyContext, notification.id),
-              );
-              if (historyContext.allowed_branches.includes(notification.branch))
-                setBranch(notification.branch);
-              window.location.hash = notification.href;
-            }}
+            onClick={() => open(notification.id)}
           >
             <span className="personal-notification-copy">
               <strong>{titles[notification.kind]}</strong>

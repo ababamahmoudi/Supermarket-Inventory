@@ -1,8 +1,9 @@
+import { domainScope } from "../domain-authority";
 import { useState } from "react";
 import Decimal from "decimal.js";
 import { regularPrice } from "../catalog";
 import { ChangePriceDialog } from "../ChangePriceDialog";
-import { decideSaleCostAlert, salesSettings } from "../sales";
+import { decideSaleCostAlert, holdSaleDelivery, salesSettings } from "../sales";
 import { setAlertStatus } from "../approvals";
 import { branchLabel } from "../settings";
 import { useDemo } from "../store";
@@ -17,12 +18,14 @@ export function SalesAlerts({
 }: {
   showResolved?: boolean;
 }) {
-  const { state, update, historyContext, role, branch, lang, t } = useDemo();
+  const { state, command, can, historyContext, branch, lang, t } = useDemo();
   const [holds, setHolds] = useState<Record<string, boolean>>({});
   const [changing, setChanging] = useState<Alert | null>(null);
   const [ending, setEnding] = useState<Alert | null>(null);
   const [error, setError] = useState("");
-  if (role !== "supervisor" || !historyContext) return null;
+  if (!historyContext || !can("alerts.read")) return null;
+  const canDecide = can("sales.cost_alert_decide");
+  const canHold = can("sales.delivery_hold");
   const alerts = state.alerts.filter(
     (alert) =>
       alert.company_id === historyContext.company_id &&
@@ -31,19 +34,22 @@ export function SalesAlerts({
       (showResolved || alert.status === "pending") &&
       (branch === "all" || branch === alert.branch),
   );
-  const decide = (alert: Alert, decision: "keep" | "end") => {
+  const decide = async (alert: Alert, decision: "keep" | "end") => {
     const sale = state.sales?.find(
       (item) =>
         item.company_id === alert.company_id && item.id === alert.sale_id,
     );
     if (!sale) return;
     try {
-      update((draft) =>
-        decideSaleCostAlert(draft, historyContext, alert.id, {
-          decision,
-          expected_sale_revision: sale.revision,
-          hold_delivery: holds[alert.id],
-        }),
+      await command(
+        "sales.cost_alert_decide",
+        domainScope(state, alert, true),
+        (draft, freshActor) =>
+          decideSaleCostAlert(draft, freshActor, alert.id, {
+            decision,
+            expected_sale_revision: sale.revision,
+            hold_delivery: holds[alert.id],
+          }),
       );
       setEnding(null);
       setError("");
@@ -77,7 +83,10 @@ export function SalesAlerts({
           (item) =>
             item.company_id === alert.company_id && item.id === alert.sale_id,
         );
-        const invoice = [state.invoice, ...(state.invoices ?? [])].find(
+        const invoice = [
+          ...(state.invoice ? [state.invoice] : []),
+          ...(state.invoices ?? []),
+        ].find(
           (item) =>
             item.company_id === alert.company_id &&
             item.id === alert.invoice_id,
@@ -139,7 +148,27 @@ export function SalesAlerts({
                 </>
               )}
             </p>
-            {alert.type === "sale_cost_increase" && (
+            {!canDecide && sale && (
+              <p>
+                {t("Sale", "حراج")}:{" "}
+                <LtrText>
+                  <Money
+                    value={sale.sale_price}
+                    currency={state.config.company.currency}
+                  />
+                  {sale.price_unit !== "each" ? `/${sale.price_unit}` : ""}
+                </LtrText>{" "}
+                ·{" "}
+                {sale.last_day ? (
+                  <>
+                    {t("Until", "تا")} <DateText value={sale.last_day} />
+                  </>
+                ) : (
+                  t("No end date", "بدون تاریخ پایان")
+                )}
+              </p>
+            )}
+            {canDecide && alert.type === "sale_cost_increase" && (
               <>
                 <p>
                   {t("Cost", "هزینه")}:{" "}
@@ -286,13 +315,36 @@ export function SalesAlerts({
             )}
             {alert.status === "pending" && (
               <>
-                {alert.type === "sale_cost_increase" && (
+                {canHold && alert.type === "sale_cost_increase" && (
                   <Checkbox
                     checked={held || (holds[alert.id] ?? false)}
                     disabled={held}
-                    onChange={(value) =>
-                      setHolds((current) => ({ ...current, [alert.id]: value }))
-                    }
+                    onChange={(value) => {
+                      if (canDecide)
+                        setHolds((current) => ({
+                          ...current,
+                          [alert.id]: value,
+                        }));
+                      else if (value && sale)
+                        void command(
+                          "sales.delivery_hold",
+                          domainScope(state, alert, true),
+                          (draft, freshActor) =>
+                            holdSaleDelivery(
+                              draft,
+                              freshActor,
+                              alert.id,
+                              sale.revision,
+                            ),
+                        ).catch(() =>
+                          setError(
+                            t(
+                              "This sale changed. Review the alert again before deciding.",
+                              "این حراج تغییر کرده است. پیش از تصمیم، هشدار را دوباره بررسی کنید.",
+                            ),
+                          ),
+                        );
+                    }}
                   >
                     {t(
                       "Keep this delivery in the back until the sale ends",
@@ -300,50 +352,67 @@ export function SalesAlerts({
                     )}
                   </Checkbox>
                 )}
-                <div className="actions sale-alert-actions">
-                  {alert.type === "sale_delivery_release" ? (
-                    <Button
-                      variant="neutral"
-                      onClick={() =>
-                        update((draft) =>
-                          setAlertStatus(draft, alert.id, "resolved"),
-                        )
-                      }
-                    >
-                      {t("Taken care of", "رسیدگی شد")}
-                    </Button>
-                  ) : (
-                    <>
+                {canDecide && (
+                  <div className="actions sale-alert-actions">
+                    {alert.type === "sale_delivery_release" ? (
                       <Button
                         variant="neutral"
-                        onClick={() => decide(alert, "keep")}
+                        onClick={() =>
+                          void command(
+                            "alerts.decide",
+                            domainScope(state, alert, true),
+                            (draft, freshActor) =>
+                              setAlertStatus(
+                                draft,
+                                freshActor,
+                                alert.id,
+                                "resolved",
+                              ),
+                          ).catch(() =>
+                            setError(
+                              t(
+                                "This sale changed. Review the alert again before deciding.",
+                                "این حراج تغییر کرده است. پیش از تصمیم، هشدار را دوباره بررسی کنید.",
+                              ),
+                            ),
+                          )
+                        }
                       >
-                        {alert.type === "sale_no_end_reminder"
-                          ? t("Keep it", "ادامه بده")
-                          : alert.type === "sale_cost_increase"
-                            ? t(
-                                "Keep the sale as it is",
-                                "حراج به همین صورت ادامه یابد",
-                              )
-                            : t("Keep the sale", "حراج ادامه یابد")}
+                        {t("Taken care of", "رسیدگی شد")}
                       </Button>
-                      {alert.type === "sale_cost_increase" && sale && (
+                    ) : (
+                      <>
                         <Button
                           variant="neutral"
-                          onClick={() => setChanging(alert)}
+                          onClick={() => decide(alert, "keep")}
                         >
-                          {t("Change the sale", "تغییر حراج")}
+                          {alert.type === "sale_no_end_reminder"
+                            ? t("Keep it", "ادامه بده")
+                            : alert.type === "sale_cost_increase"
+                              ? t(
+                                  "Keep the sale as it is",
+                                  "حراج به همین صورت ادامه یابد",
+                                )
+                              : t("Keep the sale", "حراج ادامه یابد")}
                         </Button>
-                      )}
-                      <Button
-                        variant="destructive"
-                        onClick={() => setEnding(alert)}
-                      >
-                        {t("End sale now", "پایان حراج اکنون")}
-                      </Button>
-                    </>
-                  )}
-                </div>
+                        {alert.type === "sale_cost_increase" && sale && (
+                          <Button
+                            variant="neutral"
+                            onClick={() => setChanging(alert)}
+                          >
+                            {t("Change the sale", "تغییر حراج")}
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          onClick={() => setEnding(alert)}
+                        >
+                          {t("End sale now", "پایان حراج اکنون")}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
               </>
             )}
             {held && (
@@ -358,7 +427,7 @@ export function SalesAlerts({
           </Card>
         );
       })}
-      {changing && (
+      {changing && canDecide && (
         <ChangePriceDialog
           product_code={changing.product_code}
           branch={changing.branch}
@@ -368,7 +437,7 @@ export function SalesAlerts({
           onClose={() => setChanging(null)}
         />
       )}
-      {ending && (
+      {ending && canDecide && (
         <ConfirmDialog
           open
           title={t("End sale now", "پایان حراج اکنون")}

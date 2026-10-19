@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
+import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { signIn, setLanguage } from "./helpers";
+
+const managerRole = configuration.roles.find((role) => role.key === "manager")!;
 
 const screens = [
   ["lookup", "Cashier lookup", "جست‌وجوی صندوق‌دار"],
@@ -12,7 +15,11 @@ const screens = [
   ["expiry", "Date tracking", "پیگیری تاریخ"],
   ["notes", "Notes", "یادداشت‌ها"],
   ["payables", "Payables", "پرداختنی‌ها"],
-  ["dashboard", "Supervisor dashboard", "داشبورد سرپرست"],
+  [
+    "dashboard",
+    `${managerRole.label} dashboard`,
+    `داشبورد ${managerRole.label_fa}`,
+  ],
   ["products", "Products", "محصولات"],
   ["suppliers", "Suppliers", "تأمین‌کنندگان"],
   ["settings", "Settings", "تنظیمات"],
@@ -28,7 +35,7 @@ test("all screens and both languages work offline with no console errors", async
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  await signIn(page, "Supervisor");
+  await signIn(page, "Manager");
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
   for (const language of ["en", "fa"]) {

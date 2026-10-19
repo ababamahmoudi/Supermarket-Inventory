@@ -1,8 +1,12 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
-import { DemoProvider } from "./store";
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+} from "./shared-ui-provider-test-fixture";
+import { act, fireEvent, screen, within } from "@testing-library/react";
+import { afterEach, expect, it, vi, beforeEach } from "vitest";
 import { Button, DataTable, TableRowLink } from "./ui";
-
 function boundedWidth(width = 460) {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
     function (this: HTMLElement) {
@@ -19,9 +23,9 @@ function boundedWidth(width = 460) {
   );
 }
 afterEach(() => vi.restoreAllMocks());
-it("places the omitted-column expander at the row end, keeps name text untouched and exposes all omitted permitted facts, including a Columns preference", () => {
+it("places the omitted-column expander at the row end, keeps name text untouched and exposes all omitted permitted facts, including a Columns preference", async () => {
   boundedWidth();
-  render(
+  await render(
     <DemoProvider>
       <DataTable
         columns={[
@@ -73,9 +77,9 @@ it("places the omitted-column expander at the row end, keeps name text untouched
   expect(toggle).toHaveAttribute("aria-expanded", "true");
   expect(detail.querySelector("td")?.colSpan).toBe(row.children.length);
 });
-it("adds no separate disclosure when every permitted column fits", () => {
+it("adds no separate disclosure when every permitted column fits", async () => {
   boundedWidth(1000);
-  render(
+  await render(
     <DemoProvider>
       <DataTable
         columns={[
@@ -105,9 +109,9 @@ it("adds no separate disclosure when every permitted column fits", () => {
     2, 2,
   ]);
 });
-it("uses the existing final action group for a conditional expander and preserves row-link and Enter navigation", () => {
+it("uses the existing final action group for a conditional expander and preserves row-link and Enter navigation", async () => {
   boundedWidth(500);
-  render(
+  await render(
     <DemoProvider>
       <DataTable
         columns={[
@@ -166,8 +170,7 @@ it("uses the existing final action group for a conditional expander and preserve
   );
   expect(window.location.hash).toBe("#product?code=0001");
 });
-
-it("reserves an exact48px selection and fixed metadata, giving the product the remaining space and exposing omitted details", () => {
+it("reserves an exact48px selection and fixed metadata, giving the product the remaining space and exposing omitted details", async () => {
   let width = 724;
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
     function (this: HTMLElement) {
@@ -241,7 +244,7 @@ it("reserves an exact48px selection and fixed metadata, giving the product the r
       </tbody>
     </DataTable>
   );
-  const view = render(<DemoProvider>{content()}</DemoProvider>);
+  const view = await render(<DemoProvider>{content()}</DemoProvider>);
   const widths = () =>
     Array.from(view.container.querySelectorAll("col")).map((col) =>
       parseFloat(col.style.width),
@@ -261,4 +264,10 @@ it("reserves an exact48px selection and fixed metadata, giving the product the r
   fireEvent.click(screen.getByRole("button", { name: "Show details" }));
   expect(screen.getByText("0001", { selector: "dd" })).toBeVisible();
   expect(screen.getByText("Actual offer", { selector: "dd" })).toBeVisible();
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

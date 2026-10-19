@@ -1,19 +1,23 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
+import {
+  evaluateFixtureSales,
+  receiptCostFixture,
+} from "./sale-reconciliation-test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import {
   activeSaleAt,
   changeSale,
   decideSaleCostAlert,
   editSaleRequest,
   endSale,
-  evaluateSales,
   hydrateSalesState,
   markNotificationRead,
   pendingSaleRequest,
   previewPriceChange,
   quickSalePrices,
-  recordSaleReceiptCost,
   requestSale,
   resolveSaleRequest,
   saleCanonicalPrice,
@@ -52,33 +56,16 @@ import { productStoreCost } from "./product-costs";
 import type { DemoState } from "./types";
 const now = new Date("2026-10-12T16:00:00Z");
 let state: DemoState;
-const manager: SalesContext = {
-  company_id: "super-arzon",
-  role: "supervisor",
-  actor: "Demo Supervisor",
-  username: "supervisor",
-  branch: "Branch 1",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3", "Warehouse"],
-  notification_recipients: [
-    {
-      username: "supervisor",
-      role: "supervisor",
-      allowed_branches: ["Branch 1", "Branch 2", "Branch 3"],
-    },
-  ],
-};
-const worker: SalesContext = {
-  ...manager,
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
-  username: "floorworker",
-  allowed_branches: ["Branch 1"],
-};
-const cashier: SalesContext = {
-  ...worker,
-  role: "cashier",
-  username: "cashier",
-};
+let manager: SalesContext;
+let worker: SalesContext;
+let cashier: SalesContext;
+const otherWorker = () =>
+  authenticatedTestActor(state, "floor_worker", {
+    user_id: "e1-test-other-worker",
+    username: "another-worker",
+    name_en: "Another fixture worker",
+    locations: ["Branch 1"],
+  });
 const input = (patch: Partial<ChangePriceInput> = {}): ChangePriceInput => ({
   product_code: "0012",
   mode: "sale",
@@ -108,7 +95,7 @@ function begin(patch: Partial<ChangePriceInput> = {}) {
   return savePriceChange(state, manager, input(patch), now).sales[0];
 }
 function costInvoice(cost = "14.2000") {
-  state.invoice = demoSaleCostInvoice(state);
+  state.invoice = demoSaleCostInvoice(state, worker, "Branch 1");
   state.invoice.lines[0].unit_cost_before_tax = cost;
   state.invoice.lines[0].case_cost_before_tax = new Decimal(cost)
     .times(3)
@@ -133,9 +120,24 @@ function costInvoice(cost = "14.2000") {
   state.invoice.lower_price_answers = { same_expiry: "no_previous_stock" };
 }
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(now);
   state = initialState();
+  manager = authenticatedTestActor(state, "manager", {
+    username: "supervisor",
+    name_en: "Demo Supervisor",
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
+  worker = authenticatedTestActor(state, "floor_worker", {
+    username: "floorworker",
+    name_en: "Demo Floor Worker",
+    locations: ["Branch 1"],
+  });
+  cashier = authenticatedTestActor(state, "cashier", {
+    username: "cashier",
+    name_en: "Demo Cashier",
+    locations: ["Branch 1"],
+  });
   state.sales = [];
   state.sale_requests = [];
   state.sale_events = [];
@@ -147,7 +149,7 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("C8 scoped independent sale pricing", () => {
-  it("offers configured downward quick picks without float rounding", () => {
+  it("offers configured downward quick picks without float rounding", async () => {
     expect(quickSalePrices("20.99", state).map((item) => item.price)).toEqual([
       "18.49",
       "17.49",
@@ -157,7 +159,7 @@ describe("C8 scoped independent sale pricing", () => {
     state.config.sales!.round_down_endings = ["0.29"];
     expect(quickSalePrices("20.99", state)[0].price).toBe("18.29");
   });
-  it("starts a real sale overlay, leaves regular provenance and finance untouched, and queues Promo once", () => {
+  it("starts a real sale overlay, leaves regular provenance and finance untouched, and queues Promo once", async () => {
     const before = finance(),
       baseline = structuredClone(product());
     const sale = begin();
@@ -170,12 +172,12 @@ describe("C8 scoped independent sale pricing", () => {
     expect(state.label_waitlist![0].preferred_template).toBe("promo");
     expect(state.sale_events![0].sale_id).toBe(sale.id);
     const snapshot = JSON.stringify(state);
-    expect(evaluateSales(state, now)).toBe(false);
+    expect(await evaluateFixtureSales(state, now)).toBe(false);
     expect(JSON.stringify(state)).toBe(snapshot);
   });
-  it("checks every target's own regular price atomically", () => {
+  it("checks every target's own regular price atomically", async () => {
     product().branch_prices = { "Branch 2": "15.99" };
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     const proposal = input({
       scope: "all",
       branches: sellingSaleBranches(state),
@@ -195,20 +197,20 @@ describe("C8 scoped independent sale pricing", () => {
   });
   it.each(["Warehouse", "all", "foreign-store"])(
     "forbids a sale target %s without writes",
-    (branch) => {
-      const before = structuredClone(state);
+    async (branch) => {
+      const before = cloneWithAuthority(state);
       expect(() => begin({ branches: [branch] })).toThrow("stores");
       expect(state).toEqual(before);
     },
   );
-  it("excludes inactive or non-selling stores and rejects an unauthorized company or role", () => {
+  it("excludes inactive or non-selling stores and rejects an unauthorized company or role", async () => {
     state.config.branches.find((entry) => entry.id === "Branch 2")!.active =
       false;
     state.config.branches.find(
       (entry) => entry.id === "Branch 3",
     )!.sells_to_customers = false;
     expect(sellingSaleBranches(state)).toEqual(["Branch 1"]);
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     for (const ctx of [
       worker,
       cashier,
@@ -217,7 +219,7 @@ describe("C8 scoped independent sale pricing", () => {
       expect(() => savePriceChange(state, ctx, input(), now)).toThrow();
     expect(state).toEqual(before);
   });
-  it("enforces positive cent price, strict reduction and ordered valid inclusive dates", () => {
+  it("enforces positive cent price, strict reduction and ordered valid inclusive dates", async () => {
     for (const patch of [
       { price: "0" },
       { price: "16.999" },
@@ -226,13 +228,13 @@ describe("C8 scoped independent sale pricing", () => {
       { last_day: "2026-10-11" },
       { starts_on: "2026-10-26", last_day: "2026-10-25" },
     ]) {
-      const before = structuredClone(state);
+      const before = cloneWithAuthority(state);
       expect(() => begin(patch)).toThrow();
       expect(state).toEqual(before);
     }
   });
-  it("requires an explicit below-margin choice and separately a below-cost reason", () => {
-    const before = structuredClone(state);
+  it("requires an explicit below-margin choice and separately a below-cost reason", async () => {
+    const before = cloneWithAuthority(state);
     expect(() => begin({ price: "14.99" })).toThrow("below_margin");
     expect(state).toEqual(before);
     expect(() => begin({ price: "11.99", accept_below_margin: true })).toThrow(
@@ -247,7 +249,7 @@ describe("C8 scoped independent sale pricing", () => {
       }).sale_price,
     ).toBe("11.99");
   });
-  it("retains exact entered weighed cents and derives secondary without a lb rounding roundtrip", () => {
+  it("retains exact entered weighed cents and derives secondary without a lb rounding roundtrip", async () => {
     const weighed = state.products.find((entry) => entry.code === "0016")!;
     weighed.selling_price = "20.99";
     weighed.last_cost_before_tax = "1.0000";
@@ -273,7 +275,7 @@ describe("C8 scoped independent sale pricing", () => {
     );
     expect(regularPrice(state, weighed, "Branch 1")).toBe("20.99");
   });
-  it("keeps mapped multi-buy evidence active while pausing it only at the sale store", () => {
+  it("keeps mapped multi-buy evidence active while pausing it only at the sale store", async () => {
     const old = structuredClone(
       state.offers.filter((entry) => entry.product_code === "0006"),
     );
@@ -292,7 +294,7 @@ describe("C8 scoped independent sale pricing", () => {
     endSale(state, manager, sale.id, { expected_revision: sale.revision }, now);
     expect(effectiveOffer(state, "0006", "Branch 1", now)).not.toBeNull();
   });
-  it("does not treat a sale matching a mapping as a multi-buy offer", () => {
+  it("does not treat a sale matching a mapping as a multi-buy offer", async () => {
     begin({
       product_code: "0006",
       price: "0.99",
@@ -301,7 +303,7 @@ describe("C8 scoped independent sale pricing", () => {
     });
     expect(effectiveOffer(state, "0006", "Branch 1", now)).toBeNull();
   });
-  it("does not show another company's sale or request even when product IDs match", () => {
+  it("does not show another company's sale or request even when product IDs match", async () => {
     const sale = begin();
     state.sales![0].company_id = "another-company";
     state.sale_requests = [
@@ -325,7 +327,7 @@ describe("C8 scoped independent sale pricing", () => {
     ];
     expect(activeSaleAt(state, "0012", "Branch 1", now)).toBeNull();
     expect(pendingSaleRequest(state, "0012", "Branch 1", now)).toBeNull();
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       endSale(
         state,
@@ -340,13 +342,17 @@ describe("C8 scoped independent sale pricing", () => {
 });
 
 describe("C8 local calendar lifecycle and version guards", () => {
-  it("schedules without a live price or labels, starts on local morning and queues once", () => {
+  it("schedules without a live price or labels, starts on local morning and queues once", async () => {
     const sale = begin({ starts_on: "2026-10-13", last_day: "2026-10-19" });
     expect(sale.status).toBe("scheduled");
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("20.99");
     expect(state.label_waitlist).toHaveLength(0);
-    expect(evaluateSales(state, new Date("2026-10-13T03:59:59Z"))).toBe(false);
-    expect(evaluateSales(state, new Date("2026-10-13T04:00:00Z"))).toBe(true);
+    expect(
+      await evaluateFixtureSales(state, new Date("2026-10-13T03:59:59Z")),
+    ).toBe(false);
+    expect(
+      await evaluateFixtureSales(state, new Date("2026-10-13T04:00:00Z")),
+    ).toBe(true);
     expect(
       effectivePrice(
         state,
@@ -356,13 +362,13 @@ describe("C8 local calendar lifecycle and version guards", () => {
       ),
     ).toBe("16.99");
     const events = state.sale_events!.length;
-    evaluateSales(state, new Date("2026-10-13T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-13T16:00:00Z"));
     expect(state.sale_events).toHaveLength(events);
     expect(state.label_waitlist).toHaveLength(1);
   });
-  it("ends after inclusive last day through Toronto's 25-hour DST day", () => {
+  it("ends after inclusive last day through Toronto's 25-hour DST day", async () => {
     begin({ starts_on: "2026-11-01", last_day: "2026-11-01" });
-    evaluateSales(state, new Date("2026-11-01T04:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-11-01T04:00:00Z"));
     expect(
       effectivePrice(
         state,
@@ -371,7 +377,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
         new Date("2026-11-02T04:59:59Z"),
       ),
     ).toBe("16.99");
-    evaluateSales(state, new Date("2026-11-02T05:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-11-02T05:00:00Z"));
     expect(state.sales![0].ended_at).toBe("2026-11-02T05:00:00.000Z");
     expect(
       effectivePrice(
@@ -383,7 +389,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
     ).toBe("20.99");
     expect(state.label_waitlist![0].preferred_template).toBe("regular");
   });
-  it("evaluates store-local days independently and does not emit retroactive Promo after a missed interval", () => {
+  it("evaluates store-local days independently and does not emit retroactive Promo after a missed interval", async () => {
     state.config.branches.find((entry) => entry.id === "Branch 2")!.timezone =
       "Asia/Tokyo";
     begin({
@@ -392,7 +398,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
       starts_on: "2026-10-12",
       last_day: "2026-10-13",
     });
-    evaluateSales(state, new Date("2026-10-13T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-13T16:00:00Z"));
     expect(
       state.sales!.find((entry) => entry.branch === "Branch 1")!.status,
     ).toBe("active");
@@ -403,7 +409,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
     state.sale_events = [];
     state.label_waitlist = [];
     begin({ starts_on: "2026-10-13", last_day: "2026-10-13" });
-    evaluateSales(state, new Date("2026-10-14T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-14T16:00:00Z"));
     expect(state.sale_events!.map((entry) => entry.kind)).toEqual([
       "scheduled",
       "ended",
@@ -414,7 +420,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
       ),
     ).toBe(true);
   });
-  it("restores today's newly approved regular price and defers Regular labels while the sale runs", () => {
+  it("restores today's newly approved regular price and defers Regular labels while the sale runs", async () => {
     const sale = begin();
     const promo = structuredClone(state.label_waitlist![0]);
     savePriceChange(
@@ -431,9 +437,9 @@ describe("C8 local calendar lifecycle and version guards", () => {
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("24.99");
     expect(state.label_waitlist![0].preferred_template).toBe("regular");
   });
-  it("blocks inclusive overlaps but allows the day after, and rejects stale revisions atomically", () => {
+  it("blocks inclusive overlaps but allows the day after, and rejects stale revisions atomically", async () => {
     const sale = begin({ last_day: "2026-10-19" });
-    let before = structuredClone(state);
+    let before = cloneWithAuthority(state);
     expect(() =>
       begin({ starts_on: "2026-10-19", last_day: "2026-10-25" }),
     ).toThrow("sale_overlap");
@@ -441,7 +447,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
     expect(
       begin({ starts_on: "2026-10-20", last_day: "2026-10-25" }).status,
     ).toBe("scheduled");
-    before = structuredClone(state);
+    before = cloneWithAuthority(state);
     expect(() =>
       changeSale(
         state,
@@ -453,7 +459,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
     ).toThrow("revision");
     expect(state).toEqual(before);
   });
-  it("changes reviewed scope without deleting an old store's sale evidence", () => {
+  it("changes reviewed scope without deleting an old store's sale evidence", async () => {
     const sale = begin({
       scope: "selected",
       branches: ["Branch 1", "Branch 2"],
@@ -481,24 +487,16 @@ describe("C8 local calendar lifecycle and version guards", () => {
       ),
     ).toBe(true);
   });
-  it("reminds every configured interval once, Keep it resets the interval, and a printed queue cannot be re-added by retry", () => {
+  it("reminds every configured interval once, Keep it resets the interval, and a printed queue cannot be re-added by retry", async () => {
     const sale = begin({ last_day: null });
     state.label_waitlist = [];
-    evaluateSales(
-      state,
-      new Date("2026-10-26T16:00:00Z"),
-      manager.notification_recipients,
-    );
+    await evaluateFixtureSales(state, new Date("2026-10-26T16:00:00Z"));
     const reminder = state.alerts.find(
       (entry) => entry.type === "sale_no_end_reminder",
     )!;
     expect(reminder.sale_id).toBe(sale.id);
     expect(state.notifications).toHaveLength(1);
-    evaluateSales(
-      state,
-      new Date("2026-10-26T16:00:00Z"),
-      manager.notification_recipients,
-    );
+    await evaluateFixtureSales(state, new Date("2026-10-26T16:00:00Z"));
     expect(state.notifications).toHaveLength(1);
     expect(state.label_waitlist).toHaveLength(0);
     decideSaleCostAlert(
@@ -508,20 +506,12 @@ describe("C8 local calendar lifecycle and version guards", () => {
       { decision: "keep", expected_sale_revision: state.sales![0].revision },
       new Date("2026-10-27T16:00:00Z"),
     );
-    evaluateSales(
-      state,
-      new Date("2026-11-09T16:00:00Z"),
-      manager.notification_recipients,
-    );
+    await evaluateFixtureSales(state, new Date("2026-11-09T16:00:00Z"));
     expect(state.notifications).toHaveLength(1);
-    evaluateSales(
-      state,
-      new Date("2026-11-10T16:00:00Z"),
-      manager.notification_recipients,
-    );
+    await evaluateFixtureSales(state, new Date("2026-11-10T16:00:00Z"));
     expect(state.notifications).toHaveLength(2);
   });
-  it("supports configured positive day counts beyond a year without an invented cap", () => {
+  it("supports configured positive day counts beyond a year without an invented cap", async () => {
     saveSalesSettings(state, manager, {
       ...state.config.sales!,
       default_length_days: 500,
@@ -538,7 +528,7 @@ describe("C8 local calendar lifecycle and version guards", () => {
 });
 
 describe("C8 private worker requests and real decisions", () => {
-  it("submits the below-margin Oil request with optional Why and no private preview data", () => {
+  it("submits the below-margin Oil request with optional Why and no private preview data", async () => {
     const proposal = input({ product_code: "0008", price: "7.99", why: "" });
     const before = finance();
     const preview = previewPriceChange(state, worker, proposal, now);
@@ -562,9 +552,9 @@ describe("C8 private worker requests and real decisions", () => {
       "sale_request_submitted",
     );
   });
-  it("enforces one pending request, own requester revision, own store, and cashier read-only", () => {
+  it("enforces one pending request, own requester revision, own store, and cashier read-only", async () => {
     const request = requestSale(state, worker, input(), now);
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() => requestSale(state, worker, input(), now)).toThrow(
       "request_exists",
     );
@@ -574,7 +564,7 @@ describe("C8 private worker requests and real decisions", () => {
     expect(() =>
       editSaleRequest(
         state,
-        { ...worker, username: "another-worker" },
+        otherWorker(),
         request.id,
         input({ price: "17.99" }),
         request.revision,
@@ -611,14 +601,14 @@ describe("C8 private worker requests and real decisions", () => {
     expect(pendingSaleRequest(state, "0012", "Branch 1", now)).toBeNull();
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("20.99");
   });
-  it("bare approval cannot bypass the Supervisor's margin acknowledgement and explicit approval is atomic/idempotent", () => {
+  it("bare approval cannot bypass the Supervisor's margin acknowledgement and explicit approval is atomic/idempotent", async () => {
     const request = requestSale(
       state,
       worker,
       input({ product_code: "0008", price: "7.99" }),
       now,
     );
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       resolveSaleRequest(
         state,
@@ -659,9 +649,9 @@ describe("C8 private worker requests and real decisions", () => {
     );
     expect(JSON.stringify(state)).toBe(snapshot);
   });
-  it("requires rejection reason, records it and sends only the original requester a notification", () => {
+  it("requires rejection reason, records it and sends only the original requester a notification", async () => {
     const request = requestSale(state, worker, input(), now);
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       resolveSaleRequest(
         state,
@@ -687,19 +677,17 @@ describe("C8 private worker requests and real decisions", () => {
     expect(userNotifications(state, worker)[0].reason).toBe(
       "Stock already sells well",
     );
-    expect(
-      userNotifications(state, { ...worker, username: "another-worker" }),
-    ).toEqual([]);
+    expect(userNotifications(state, otherWorker())).toEqual([]);
     expect(() =>
       markNotificationRead(
         state,
-        { ...worker, username: "another-worker" },
+        otherWorker(),
         state.notifications!.at(-1)!.id,
         now,
       ),
     ).toThrow("permission");
   });
-  it("approves after the requested start at approval, keeping the last day, and expires elapsed requests once", () => {
+  it("approves after the requested start at approval, keeping the last day, and expires elapsed requests once", async () => {
     const request = requestSale(
       state,
       worker,
@@ -731,13 +719,13 @@ describe("C8 private worker requests and real decisions", () => {
       input({ last_day: "2026-10-12" }),
       now,
     );
-    evaluateSales(state, new Date("2026-10-13T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-13T16:00:00Z"));
     expect(state.sale_requests![0].status).toBe("expired");
     expect(userNotifications(state, worker)[0].kind).toBe(
       "sale_request_expired",
     );
     const snapshot = JSON.stringify(state);
-    evaluateSales(state, new Date("2026-10-13T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-13T16:00:00Z"));
     expect(JSON.stringify(state)).toBe(snapshot);
     expect(() =>
       resolveSaleRequest(
@@ -753,15 +741,13 @@ describe("C8 private worker requests and real decisions", () => {
 });
 
 describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
-  it("has no live alert for an unposted draft, posts the actual old/new cost and sale margin once", () => {
+  it("has no live alert for an unposted draft, posts the actual old/new cost and sale margin once", async () => {
     const sale = begin();
     costInvoice();
     expect(
       state.alerts.some((entry) => entry.type === "sale_cost_increase"),
     ).toBe(false);
-    expect(postInvoice(state, "floor_worker", "Branch 1", worker.actor)).toBe(
-      true,
-    );
+    expect(postInvoice(state, worker)).toBe(true);
     const alert = state.alerts.find(
       (entry) => entry.type === "sale_cost_increase",
     )!;
@@ -785,15 +771,13 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
     expect(proposal.applies_after_sale).toBe(true);
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("16.99");
     const snapshot = JSON.stringify(state);
-    expect(postInvoice(state, "floor_worker", "Branch 1", worker.actor)).toBe(
-      false,
-    );
+    expect(postInvoice(state, worker)).toBe(false);
     expect(JSON.stringify(state)).toBe(snapshot);
   });
-  it("produces the distinct lower/equal-regular alert without silently ending a kept sale", () => {
+  it("produces the distinct lower/equal-regular alert without silently ending a kept sale", async () => {
     const sale = begin();
     costInvoice("9.0000");
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const alert = state.alerts.find(
       (entry) => entry.type === "sale_regular_not_above_sale",
     )!;
@@ -813,10 +797,10 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("16.99");
     expect(finance()).toBe(before);
   });
-  it("a hold is an actual linked instruction and its release waits until the first local day after changed/early end without stock or money writes", () => {
+  it("a hold is an actual linked instruction and its release waits until the first local day after changed/early end without stock or money writes", async () => {
     const sale = begin();
     costInvoice();
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const alert = state.alerts.find(
       (entry) => entry.type === "sale_cost_increase",
     )!;
@@ -854,7 +838,7 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       }),
       now,
     );
-    evaluateSales(state, now);
+    await evaluateFixtureSales(state, now);
     expect(state.sale_delivery_holds![0].planned_last_day).toBe("2026-10-30");
     const live = state.sales![0];
     endSale(state, manager, live.id, { expected_revision: live.revision }, now);
@@ -869,14 +853,12 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
     ).toHaveLength(0);
     expect(state.sale_delivery_holds![0].released_reminder_at).toBeUndefined();
     const todaySnapshot = JSON.stringify(state);
-    expect(evaluateSales(state, new Date("2026-10-13T03:59:59Z"))).toBe(false);
+    expect(
+      await evaluateFixtureSales(state, new Date("2026-10-13T03:59:59Z")),
+    ).toBe(false);
     expect(JSON.stringify(state)).toBe(todaySnapshot);
     expect(
-      evaluateSales(
-        state,
-        new Date("2026-10-13T04:00:00Z"),
-        manager.notification_recipients,
-      ),
+      await evaluateFixtureSales(state, new Date("2026-10-13T04:00:00Z")),
     ).toBe(true);
     expect(
       state.alerts.filter((entry) => entry.type === "sale_delivery_release"),
@@ -890,22 +872,22 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       ),
     ).toHaveLength(1);
     const snapshot = JSON.stringify(state);
-    evaluateSales(state, new Date("2026-10-13T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-13T16:00:00Z"));
     expect(JSON.stringify(state)).toBe(snapshot);
     expect(finance()).toBe(before);
   });
   it.each(["automatic", "explicit after the last day"])(
     "releases a held delivery on the first day after the inclusive last day through Toronto's 25-hour day (%s)",
-    (ending) => {
+    async (ending) => {
       const sale = begin({
         starts_on: "2026-11-01",
         last_day: "2026-11-01",
       });
       const start = new Date("2026-11-01T04:00:00Z");
       vi.setSystemTime(start);
-      evaluateSales(state, start);
+      await evaluateFixtureSales(state, start);
       costInvoice();
-      postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+      postInvoice(state, worker);
       const alert = state.alerts.find(
         (entry) => entry.type === "sale_cost_increase",
       )!;
@@ -922,13 +904,12 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       );
       const before = finance();
       const beforeMidnight = JSON.stringify(state);
-      expect(evaluateSales(state, new Date("2026-11-02T04:59:59Z"))).toBe(
-        false,
-      );
+      expect(
+        await evaluateFixtureSales(state, new Date("2026-11-02T04:59:59Z")),
+      ).toBe(false);
       expect(JSON.stringify(state)).toBe(beforeMidnight);
       const midnight = new Date("2026-11-02T05:00:00Z");
-      if (ending === "automatic")
-        evaluateSales(state, midnight, manager.notification_recipients);
+      if (ending === "automatic") await evaluateFixtureSales(state, midnight);
       else
         endSale(
           state,
@@ -949,14 +930,14 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       );
       expect(finance()).toBe(before);
       const snapshot = JSON.stringify(state);
-      evaluateSales(state, new Date("2026-11-02T17:00:00Z"));
+      await evaluateFixtureSales(state, new Date("2026-11-02T17:00:00Z"));
       expect(JSON.stringify(state)).toBe(snapshot);
     },
   );
-  it("derives an earlier saved hold's next local day without trusting the editable ending reason", () => {
+  it("derives an earlier saved hold's next local day without trusting the editable ending reason", async () => {
     const sale = begin();
     costInvoice();
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const alert = state.alerts.find(
       (entry) => entry.type === "sale_cost_increase",
     )!;
@@ -985,20 +966,18 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
     // Earlier C8 saved records retain ended_at but do not have the new optional date.
     delete state.sales![0].release_reminder_on;
     const snapshot = JSON.stringify(state);
-    expect(evaluateSales(state, new Date("2026-10-13T03:59:59Z"))).toBe(false);
+    expect(
+      await evaluateFixtureSales(state, new Date("2026-10-13T03:59:59Z")),
+    ).toBe(false);
     expect(JSON.stringify(state)).toBe(snapshot);
-    evaluateSales(
-      state,
-      new Date("2026-10-13T04:00:00Z"),
-      manager.notification_recipients,
-    );
+    await evaluateFixtureSales(state, new Date("2026-10-13T04:00:00Z"));
     expect(state.sales![0].release_reminder_on).toBeUndefined();
     expect(
       state.alerts.filter((entry) => entry.type === "sale_delivery_release"),
     ).toHaveLength(1);
     expect(finance()).toBe(before);
   });
-  it("same cost preserves manual regular price even when the stale UI choice says calculated; changed cost defaults calculated", () => {
+  it("same cost preserves manual regular price even when the stale UI choice says calculated; changed cost defaults calculated", async () => {
     savePriceChange(
       state,
       manager,
@@ -1007,10 +986,10 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
     );
     costInvoice("12.6000");
     expect(
-      manualDecisionForLine(state, state.invoice.lines[0], "Branch 1"),
+      manualDecisionForLine(state, manager, state.invoice.lines[0], "Branch 1"),
     ).toBeNull();
     state.invoice.lines[0].manual_price_decision = "rule";
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     expect(
       state.approvals.some(
         (entry) =>
@@ -1020,28 +999,29 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       ),
     ).toBe(false);
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
-    state.invoice = demoSaleCostInvoice(state);
+    state.invoice = demoSaleCostInvoice(state, worker, "Branch 1");
     delete state.invoice.lines[0].manual_price_decision;
     expect(
-      manualDecisionForLine(state, state.invoice.lines[0], "Branch 1")?.price,
+      manualDecisionForLine(state, manager, state.invoice.lines[0], "Branch 1")
+        ?.price,
     ).toBe("24.99");
-    initializeInvoiceManualPriceDecisions(state);
+    initializeInvoiceManualPriceDecisions(state, manager);
     expect(state.invoice.lines[0].manual_price_decision).toBe("rule");
     state.invoice.lines[0].manual_price_decision = "keep";
-    initializeInvoiceManualPriceDecisions(state);
+    initializeInvoiceManualPriceDecisions(state, manager);
     expect(state.invoice.lines[0].manual_price_decision).toBe("keep");
   });
 });
 
 describe("C8 retained History and additive restore", () => {
-  it("reverts a new sale without deleting lifecycle evidence or restoring an unrelated regular price", () => {
-    const before = structuredClone(state);
+  it("reverts a new sale without deleting lifecycle evidence or restoring an unrelated regular price", async () => {
+    const before = cloneWithAuthority(state);
     const sale = begin();
     const entry = attachReversals(before, state, manager).find(
       (item) => item.entity_type === "sale",
     )!;
     expect(canReverse(state, entry, manager, "revert")).toBe(true);
-    applyApprovedPrice(state, "0012", "24.99", "branch", "Branch 1");
+    applyApprovedPrice(state, manager, "0012", "24.99", "branch", "Branch 1");
     const financeBefore = finance();
     const oldEvents = structuredClone(state.sale_events);
     reverseActivity(state, manager, entry.id, "revert", now);
@@ -1052,14 +1032,14 @@ describe("C8 retained History and additive restore", () => {
     expect(state.sale_events!.slice(0, oldEvents!.length)).toEqual(oldEvents);
     expect(finance()).toBe(financeBefore);
   });
-  it("refuses a stale sale reversal and cannot revive an elapsed sale", () => {
+  it("refuses a stale sale reversal and cannot revive an elapsed sale", async () => {
     const sale = begin();
-    const prior = structuredClone(state);
+    const prior = cloneWithAuthority(state);
     endSale(state, manager, sale.id, { expected_revision: sale.revision }, now);
     const entry = attachReversals(prior, state, manager).find(
       (item) => item.entity_type === "sale",
     )!;
-    const snapshot = structuredClone(state);
+    const snapshot = cloneWithAuthority(state);
     expect(() =>
       reverseActivity(
         state,
@@ -1076,7 +1056,7 @@ describe("C8 retained History and additive restore", () => {
       reverseActivity(state, manager, entry.id, "revert", now),
     ).toThrow("irreversible");
   });
-  it("migrates a saved shop additively, preserving exact business records, files and custom settings without demo injection", () => {
+  it("migrates a saved shop additively, preserving exact business records, files and custom settings without demo injection", async () => {
     const retained = initialState();
     delete retained.prototype_c8_schema;
     delete retained.sales;
@@ -1113,7 +1093,7 @@ describe("C8 retained History and additive restore", () => {
     hydrateSalesState(roundtrip);
     expect(roundtrip).toEqual(retained);
   });
-  it("fresh seed has the real Pot sale/Oil request and correct actual prior store cost", () => {
+  it("fresh seed has the real Pot sale/Oil request and correct actual prior store cost", async () => {
     const demo = initialState();
     expect(activeSaleAt(demo, "0012", "Branch 1", now)?.sale_price).toBe(
       "16.99",
@@ -1124,7 +1104,11 @@ describe("C8 retained History and additive restore", () => {
     expect(
       productStoreCost(
         demo,
-        manager,
+        authenticatedTestActor(demo, "manager", {
+          username: "supervisor",
+          name_en: "Demo Supervisor",
+          selection: { kind: "location", location_id: "Branch 1" },
+        }),
         demo.products.find((item) => item.code === "0012")!,
       ),
     ).toBe("12.6000");
@@ -1136,9 +1120,9 @@ describe("C8 retained History and additive restore", () => {
 });
 
 describe("C8 adversarial source evidence and later receipts", () => {
-  it("rejects unrelated existing-sale IDs and foreign previews without reading private data or writing", () => {
+  it("rejects unrelated existing-sale IDs and foreign previews without reading private data or writing", async () => {
     const sale = begin();
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       changeSale(
         state,
@@ -1153,22 +1137,21 @@ describe("C8 adversarial source evidence and later receipts", () => {
         now,
       ),
     ).toThrow("revision");
-    const preview = previewPriceChange(
-      state,
-      { ...manager, company_id: "foreign-company" },
-      input(),
-      now,
+    expect(state).toEqual(before);
+    const foreignState = structuredClone(state);
+    foreignState.config.company.seed_key = "foreign-company";
+    const foreignActor = authenticatedTestActor(foreignState, "manager");
+    expect(() => previewPriceChange(state, foreignActor, input(), now)).toThrow(
+      "permission",
     );
-    expect(preview.product).toBeNull();
-    expect(preview.effects).toEqual([]);
     expect(state).toEqual(before);
   });
-  it("rejects a group edit that would end another store outside the actor's allowed scope", () => {
+  it("rejects forged narrowed assignment claims before any group edit", async () => {
     const sale = begin({
       branches: ["Branch 1", "Branch 2"],
       scope: "selected",
     });
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       changeSale(
         state,
@@ -1177,10 +1160,10 @@ describe("C8 adversarial source evidence and later receipts", () => {
         input({ expected_revision: sale.revision }),
         now,
       ),
-    ).toThrow("stores");
+    ).toThrow("permission");
     expect(state).toEqual(before);
   });
-  it("honors an explicitly deferred Regular label after sale end even when the automatic end setting is off", () => {
+  it("honors an explicitly deferred Regular label after sale end even when the automatic end setting is off", async () => {
     const sale = begin();
     state.config.sales!.add_regular_labels_on_end = false;
     const promo = structuredClone(state.label_waitlist![0]);
@@ -1194,11 +1177,11 @@ describe("C8 adversarial source evidence and later receipts", () => {
     endSale(state, manager, sale.id, { expected_revision: sale.revision }, now);
     expect(state.label_waitlist![0].preferred_template).toBe("regular");
   });
-  it("an actual older invoice delivered later becomes the current regular cost with exact original short restoration", () => {
+  it("an actual older invoice delivered later becomes the current regular cost with exact original short restoration", async () => {
     begin();
     costInvoice();
     state.invoice.lines[0].qty_received_at_posting = 0;
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const oldId = state.invoice.id;
     expect(
       state.alerts.filter((entry) => entry.type === "sale_cost_increase"),
@@ -1207,7 +1190,7 @@ describe("C8 adversarial source evidence and later receipts", () => {
     costInvoice("13.3000");
     state.invoice.id = "newer-regular-receipt";
     state.invoice.supplier_invoice_number = "HW-NEWER";
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     expect(productStoreCost(state, manager, product())).toBe("13.3000");
     vi.setSystemTime(new Date("2026-10-14T16:00:00Z"));
     state.invoice = structuredClone(
@@ -1216,18 +1199,9 @@ describe("C8 adversarial source evidence and later receipts", () => {
     const ledger = structuredClone(state.ledger),
       movements = structuredClone(state.stock_movements!);
     const stock = state.stock["Branch 1:0012"];
-    expect(
-      receiveShort(
-        state,
-        "0012",
-        1,
-        "LATER-HW-ONE",
-        "floor_worker",
-        "Branch 1",
-        0,
-        worker.actor,
-      ),
-    ).toBe("16.05");
+    expect(receiveShort(state, "0012", 1, "LATER-HW-ONE", worker, 0)).toBe(
+      "16.05",
+    );
     expect(state.ledger.slice(0, ledger.length)).toEqual(ledger);
     expect(
       state.ledger
@@ -1254,24 +1228,15 @@ describe("C8 adversarial source evidence and later receipts", () => {
       state.approvals.find((entry) => entry.id.includes("LATER-HW-ONE")),
     ).toMatchObject({ proposed_price: "23.49", applies_after_sale: true });
     const snapshot = JSON.stringify(state);
-    expect(
-      receiveShort(
-        state,
-        "0012",
-        1,
-        "LATER-HW-ONE",
-        "floor_worker",
-        "Branch 1",
-        0,
-        worker.actor,
-      ),
-    ).toBe("0.00");
+    expect(receiveShort(state, "0012", 1, "LATER-HW-ONE", worker, 0)).toBe(
+      "0.00",
+    );
     expect(JSON.stringify(state)).toBe(snapshot);
   });
-  it("corrected cost uses its immutable correction source, preserves original receipt bytes/stock and deduplicates retry", () => {
+  it("corrected cost uses its immutable correction source, preserves original receipt bytes/stock and deduplicates retry", async () => {
     begin();
     costInvoice();
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const original = structuredClone(state.invoice),
       stock = structuredClone(state.stock),
       movements = structuredClone(state.stock_movements);
@@ -1323,8 +1288,9 @@ describe("C8 adversarial source evidence and later receipts", () => {
     );
     expect(JSON.stringify(state)).toBe(snapshot);
     expect(
-      recordSaleReceiptCost(
+      receiptCostFixture(
         state,
+        manager,
         {
           invoice_id: state.invoice.id,
           product_code: "0012",
@@ -1343,10 +1309,10 @@ describe("C8 adversarial source evidence and later receipts", () => {
 });
 
 describe("C8 reversible held instructions", () => {
-  it("refreshes the real instruction without marking physical action done, preserving each prior reminder after a reversal", () => {
+  it("refreshes the real instruction without marking physical action done, preserving each prior reminder after a reversal", async () => {
     const sale = begin();
     costInvoice();
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const alert = state.alerts.find(
       (entry) => entry.type === "sale_cost_increase",
     )!;
@@ -1365,7 +1331,7 @@ describe("C8 reversible held instructions", () => {
       original = structuredClone(
         state.notes.find((entry) => entry.id === hold.note_id)!,
       );
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     endSale(state, manager, sale.id, { expected_revision: sale.revision }, now);
     const end = attachReversals(before, state, manager).find(
       (entry) => entry.entity_type === "sale" && entry.action === "End sale",
@@ -1386,7 +1352,7 @@ describe("C8 reversible held instructions", () => {
       state.alerts.filter((entry) => entry.type === "sale_delivery_release"),
     ).toHaveLength(0);
     const firstAfterEnd = new Date("2026-10-13T16:00:00Z");
-    evaluateSales(state, firstAfterEnd, manager.notification_recipients);
+    await evaluateFixtureSales(state, firstAfterEnd);
     reverseActivity(state, manager, end.id, "revert", firstAfterEnd);
     expect(state.notes.find((entry) => entry.id === hold.note_id)!.text).toBe(
       original.text,
@@ -1411,7 +1377,7 @@ describe("C8 reversible held instructions", () => {
         .filter((entry) => entry.type === "sale_delivery_release")
         .map((entry) => entry.status),
     ).toEqual(["resolved"]);
-    evaluateSales(state, new Date("2026-10-14T04:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-14T04:00:00Z"));
     expect(
       state.alerts
         .filter((entry) => entry.type === "sale_delivery_release")
@@ -1419,13 +1385,13 @@ describe("C8 reversible held instructions", () => {
     ).toEqual(["resolved", "pending"]);
     expect(finance()).toBe(money);
     const snapshot = JSON.stringify(state);
-    evaluateSales(state, new Date("2026-10-14T16:00:00Z"));
+    await evaluateFixtureSales(state, new Date("2026-10-14T16:00:00Z"));
     expect(JSON.stringify(state)).toBe(snapshot);
   });
 });
 
 describe("C8 canonical regular weighed preview", () => {
-  it("previews the exact stored canonical regular amount while temporary sales preserve entered kg cents", () => {
+  it("previews the exact stored canonical regular amount while temporary sales preserve entered kg cents", async () => {
     const weighed = state.products.find((entry) => entry.code === "0016")!;
     weighed.selling_price = "20.99";
     weighed.last_cost_before_tax = "1.0000";
@@ -1440,7 +1406,7 @@ describe("C8 canonical regular weighed preview", () => {
     expect(preview.effects[0].proposed_price).toBe("7.71");
     savePriceChange(state, manager, proposal, now);
     expect(regularPrice(state, weighed.code, "Branch 1")).toBe("7.71");
-    const before = structuredClone(state);
+    const before = cloneWithAuthority(state);
     expect(() =>
       savePriceChange(state, manager, { ...proposal, price: "0.01" }, now),
     ).toThrow("price");
@@ -1461,7 +1427,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     );
     costInvoice();
     state.invoice.lines[0].manual_price_decision = recommendation;
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     return state.approvals.find(
       (entry) =>
         entry.source_invoice_id === state.invoice.id &&
@@ -1469,7 +1435,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
         entry.status === "pending",
     )!;
   };
-  it("receiver Keep is only a recommendation: default pending proposal is calculated, and Manager Keep preserves exact price/provenance/evidence", () => {
+  it("receiver Keep is only a recommendation: default pending proposal is calculated, and Manager Keep preserves exact price/provenance/evidence", async () => {
     const review = prepare();
     expect(review).toMatchObject({
       type: "price_change",
@@ -1484,18 +1450,21 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
       },
     });
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
-    expect(manualRegularApprovalPreview(state, review).price).toBe("23.49");
+    expect(manualRegularApprovalPreview(state, manager, review).price).toBe(
+      "23.49",
+    );
     const marker = structuredClone(manualPrice(state, product(), "Branch 1")),
       evidence = finance(),
       invoice = structuredClone(state.invoice);
     resolveApproval(
       state,
+      manager,
       review.id,
       "approve",
       "branch",
       "Branch 1",
       undefined,
-      approvalSnapshot(state, "0012"),
+      approvalSnapshot(state, manager, "0012"),
       "keep",
     );
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
@@ -1506,7 +1475,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(finance()).toBe(evidence);
     expect(state.activity.at(-1)!.action).toBe("Keep regular price");
   });
-  it("Manager's default Use calculated clears only that store's manual marker after explicit approval", () => {
+  it("Manager's default Use calculated clears only that store's manual marker after explicit approval", async () => {
     savePriceChange(
       state,
       manager,
@@ -1520,7 +1489,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     );
     costInvoice();
     state.invoice.lines[0].manual_price_decision = "keep";
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const review = state.approvals.find(
       (entry) =>
         entry.source_invoice_id === state.invoice.id &&
@@ -1529,12 +1498,13 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     const evidence = finance();
     resolveApproval(
       state,
+      manager,
       review.id,
       "approve",
       "branch",
       "Branch 1",
       undefined,
-      approvalSnapshot(state, "0012"),
+      approvalSnapshot(state, manager, "0012"),
     );
     expect(regularPrice(state, "0012", "Branch 1")).toBe("23.49");
     expect(manualPrice(state, product(), "Branch 1")).toBeNull();
@@ -1543,7 +1513,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(review.manual_price_review!.decision).toBe("rule");
     expect(finance()).toBe(evidence);
   });
-  it("does not create a same-cost lower-regular alert or another manual approval even when regular is below the current Sale", () => {
+  it("does not create a same-cost lower-regular alert or another manual approval even when regular is below the current Sale", async () => {
     begin();
     savePriceChange(
       state,
@@ -1556,22 +1526,24 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     const approvals = structuredClone(state.approvals),
       alerts = structuredClone(state.alerts),
       baseline = regularPrice(state, "0012", "Branch 1");
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     expect(state.approvals).toEqual(approvals);
     expect(state.alerts).toEqual(alerts);
     expect(regularPrice(state, "0012", "Branch 1")).toBe(baseline);
     expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("16.99");
   });
-  it("requires a reason to Keep below minimum and blocks stale or company-wide Keep decisions without writes", () => {
+  it("requires a reason to Keep below minimum and blocks stale or company-wide Keep decisions without writes", async () => {
     const review = prepare("17.99"),
-      snapshot = approvalSnapshot(state, "0012"),
-      before = structuredClone(state);
+      snapshot = approvalSnapshot(state, manager, "0012"),
+      before = cloneWithAuthority(state);
     expect(
-      manualRegularApprovalPreview(state, review, "keep").below_minimum_margin,
+      manualRegularApprovalPreview(state, manager, review, "keep")
+        .below_minimum_margin,
     ).toBe(true);
     expect(() =>
       resolveApproval(
         state,
+        manager,
         review.id,
         "approve",
         "branch",
@@ -1585,6 +1557,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(() =>
       resolveApproval(
         state,
+        manager,
         review.id,
         "approve",
         "all",
@@ -1597,6 +1570,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(state).toEqual(before);
     resolveApproval(
       state,
+      manager,
       review.id,
       "approve",
       "branch",
@@ -1609,17 +1583,18 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(review.acknowledgment_reason).toBe(
       "Approved slower-selling product",
     );
-    state = structuredClone(before);
+    state = cloneWithAuthority(before);
     savePriceChange(
       state,
       manager,
       input({ mode: "regular", price: "24.99" }),
       now,
     );
-    const changed = structuredClone(state);
+    const changed = cloneWithAuthority(state);
     expect(() =>
       resolveApproval(
         state,
+        manager,
         review.id,
         "approve",
         "branch",
@@ -1634,7 +1609,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
 });
 
 describe("C8 fresh manual decisions after actual cost transitions", () => {
-  it("does not reuse a historically approved Keep decision when a later invoice returns to a previous cost", () => {
+  it("does not reuse a historically approved Keep decision when a later invoice returns to a previous cost", async () => {
     savePriceChange(
       state,
       manager,
@@ -1643,11 +1618,22 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     );
     const receipt = (cost: string, id: string, date: string) => {
       vi.setSystemTime(new Date(date));
+      // Each later business day is a new authenticated session, as the critical approval requires.
+      manager = authenticatedTestActor(state, "manager", {
+        username: "supervisor",
+        name_en: "Demo Supervisor",
+        selection: { kind: "location", location_id: "Branch 1" },
+      });
+      worker = authenticatedTestActor(state, "floor_worker", {
+        username: "floorworker",
+        name_en: "Demo Floor Worker",
+        locations: ["Branch 1"],
+      });
       costInvoice(cost);
       state.invoice.id = id;
       state.invoice.supplier_invoice_number = id;
       state.invoice.lines[0].manual_price_decision = "keep";
-      postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+      postInvoice(state, worker);
       return state.approvals.find(
         (entry) =>
           entry.source_invoice_id === id &&
@@ -1662,6 +1648,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     );
     resolveApproval(
       state,
+      manager,
       first.id,
       "approve",
       "branch",
@@ -1677,6 +1664,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     );
     resolveApproval(
       state,
+      manager,
       second.id,
       "approve",
       "branch",
@@ -1696,7 +1684,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     expect(again.manual_price_review!.receiver_recommendation).toBe("keep");
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
   });
-  it("later delivery and corrected cost retain receiver Keep as a recommendation instead of bypassing a manual-price review", () => {
+  it("later delivery and corrected cost retain receiver Keep as a recommendation instead of bypassing a manual-price review", async () => {
     savePriceChange(
       state,
       manager,
@@ -1706,7 +1694,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     costInvoice();
     state.invoice.lines[0].qty_received_at_posting = 0;
     state.invoice.lines[0].manual_price_decision = "keep";
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     expect(
       state.approvals.some(
         (entry) =>
@@ -1714,16 +1702,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
           entry.product_code === "0012",
       ),
     ).toBe(false);
-    receiveShort(
-      state,
-      "0012",
-      1,
-      "MANUAL-LATER",
-      "floor_worker",
-      "Branch 1",
-      0,
-      worker.actor,
-    );
+    receiveShort(state, "0012", 1, "MANUAL-LATER", worker, 0);
     const review = state.approvals.find((entry) =>
       entry.id.includes("MANUAL-LATER"),
     )!;
@@ -1738,7 +1717,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     costInvoice();
     state.invoice.id = "manual-corrected-source";
     state.invoice.lines[0].manual_price_decision = "keep";
-    postInvoice(state, "floor_worker", "Branch 1", worker.actor);
+    postInvoice(state, worker);
     const lines = structuredClone(state.invoice.lines);
     lines[0].unit_cost_before_tax = "15.2000";
     lines[0].case_cost_before_tax = "45.6000";

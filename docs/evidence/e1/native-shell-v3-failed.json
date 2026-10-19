@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-10-13T23:23:49.965278+00:00",
+  "finishedAt": "2026-10-13T23:29:42.322769+00:00",
+  "buildExitCode": 0,
+  "testExitCode": 1,
+  "error": null,
+  "sourceFingerprint": "8ff121989e6cf060f59bde75e90b552d8f6d36289eebd1761046c8b308da89c8",
+  "sourceFileCount": 547,
+  "frozenUnchanged": true,
+  "liveUnchanged": true,
+  "productionAssetsUnchanged": true,
+  "serverRunningThroughFinalChecks": true,
+  "configuredRetries": 0,
+  "workers": 1,
+  "stats": {
+    "startTime": "2026-10-13T23:25:16.194Z",
+    "duration": 265853.336,
+    "expected": 12,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

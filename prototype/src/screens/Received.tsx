@@ -2,8 +2,9 @@ import "../c3-tables.css";
 import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import { receivedLog, type DeliveryReceipt } from "../received";
-import { branchLabel, configuredBranches } from "../settings";
+import { branchLabel } from "../settings";
 import { supplierRecords } from "../supplier-editor";
+import { useProtectedQuery } from "../use-protected-query";
 import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
 import {
   Button,
@@ -243,7 +244,8 @@ export default function Received({
   supplier,
   embedded = false,
 }: { supplier?: string; embedded?: boolean } = {}) {
-  const { state, role, user, branch, setBranch, lang, t, tCount } = useDemo();
+  const { state, actor, can, branch, setBranch, locationIds, lang, t, tCount } =
+    useDemo();
   const [from, setFrom] = useListState("received.from", "");
   const [to, setTo] = useListState("received.to", "");
   const [supplierFilter, setSupplier] = useListState(
@@ -259,7 +261,25 @@ export default function Received({
   );
   const [search, setSearch] = useListState("received.search", "");
   const tableColumns = useReceivedColumns();
-  if (role !== "supervisor" && role !== "floor_worker")
+  const scope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+  };
+  const read = useProtectedQuery(
+    "received.read",
+    scope,
+    (canonical, currentActor) =>
+      receivedLog(canonical, currentActor, {
+        from,
+        to,
+        supplier: supplier ?? supplierFilter,
+        product,
+        search,
+      }),
+    JSON.stringify([from, to, supplier, supplierFilter, product, search]),
+  );
+  const rows = read.data ?? [];
+  if (!actor || !can("received.read", scope))
     return (
       <EmptyState>
         {t(
@@ -268,16 +288,6 @@ export default function Received({
         )}
       </EmptyState>
     );
-  const rows = receivedLog(
-    state,
-    {
-      company_id: state.config.company.seed_key,
-      branch: role === "floor_worker" ? (user?.branch ?? branch) : branch,
-      role,
-      actor: user?.name ?? "",
-    },
-    { from, to, supplier: supplier ?? supplierFilter, product, search },
-  );
   const content = (
     <>
       <FilterToolbar
@@ -317,14 +327,19 @@ export default function Received({
             setTo(nextTo);
           }}
         />
-        {role === "supervisor" && (
+        {locationIds.length > 1 && (
           <Select
             value={branch}
             onChange={setBranch}
             aria-label={t("Location", "مکان")}
             options={[
-              { value: "all", label: t("All branches", "همه شعب") },
-              ...configuredBranches(state.config, true).map((location) => ({
+              {
+                value: "all",
+                label: can("dashboard.company", scope)
+                  ? t("All branches", "همه شعب")
+                  : t("All my locations", "همه مکان‌های من"),
+              },
+              ...locationIds.map((location) => ({
                 value: location,
                 label: branchLabel(state.config, location, lang),
               })),

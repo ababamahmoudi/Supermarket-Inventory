@@ -1,3 +1,4 @@
+import { decodeCurrentRole } from "./role-config";
 import Decimal from "decimal.js";
 import fixture from "./fixtures/a2-demo-data.json";
 import { configSeed, demoSeed } from "./config";
@@ -30,7 +31,7 @@ export function hydrateDemoFixture(input: DemoState): DemoState {
     (user) => user.role === "floor_worker",
   )!.name;
   const supervisor = demoSeed.demo_users.find(
-    (user) => user.role === "supervisor",
+    (user) => decodeCurrentRole(user.role) === "manager",
   )!.name;
   const movements: NonNullable<DemoState["stock_movements"]> = [];
   const stock = (

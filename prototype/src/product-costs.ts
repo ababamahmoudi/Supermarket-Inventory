@@ -1,7 +1,9 @@
 import Decimal from "decimal.js";
 import { effectiveInvoiceVersion } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
-import type { OperationsContext } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { freshActor } from "./authority";
+import { allowedLocationIds, can } from "./permissions";
 import type { DemoState, Product } from "./types";
 
 export interface ProductCostEntry {
@@ -20,18 +22,24 @@ export interface ProductCostEntry {
   sold_by: "each" | "weight";
 }
 
-/** Catalog costs are Supervisor-only, including calls outside the presentation. */
+/** Catalog cost authority is independent of operational invoice-cost grants. */
 export function productCostHistory(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   product: Product,
 ): ProductCostEntry[] {
   if (
-    context.role !== "supervisor" ||
-    context.company_id !== state.config.company.seed_key ||
-    product.company_id !== context.company_id
+    !can(state, context, "catalog.cost_read", {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    }).allowed
   )
     return [];
+  context = freshActor(state, context);
+  const visibleLocations = new Set(
+    allowedLocationIds(state, context, { includeInactive: true }),
+  );
   const invoices = new Map(
     [...(state.invoices ?? []), state.invoice]
       .filter(
@@ -45,7 +53,11 @@ export function productCostHistory(
     .flatMap((original) => {
       const invoice = effectiveInvoiceVersion(state, original);
       const branch = effectiveInvoiceLocation(state, original);
-      if (context.branch !== "all" && branch !== context.branch) return [];
+      if (
+        !visibleLocations.has(branch) ||
+        (context.branch !== "all" && branch !== context.branch)
+      )
+        return [];
       return invoice.lines.flatMap((line, index): ProductCostEntry[] => {
         if (
           line.company_id !== context.company_id ||
@@ -113,15 +125,18 @@ export function productCostHistory(
 
 export function productStoreCost(
   state: DemoState,
-  context: OperationsContext,
+  context: AuthenticatedActor,
   product: Product,
 ): string | null {
   if (
-    context.role !== "supervisor" ||
-    context.company_id !== state.config.company.seed_key ||
-    product.company_id !== context.company_id
+    !can(state, context, "catalog.cost_read", {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    }).allowed
   )
     return null;
+  context = freshActor(state, context);
   return (
     productCostHistory(state, context, product).find(
       (entry) => !entry.short_dated,

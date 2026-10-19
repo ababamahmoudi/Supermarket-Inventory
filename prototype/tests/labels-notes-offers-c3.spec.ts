@@ -1,3 +1,5 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
 import { selectLabelGroup } from "./label-selection";
@@ -85,10 +87,9 @@ for (const language of ["en", "fa"] as const) {
   }) => {
     await signIn(page, "Floor Worker");
     await page.goto("/#labels");
-    const initialQueue = await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-          .label_waitlist,
+    const initialQueue = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
     );
     expect(initialQueue).toHaveLength(1);
     expect(initialQueue[0]).toMatchObject({
@@ -160,10 +161,9 @@ for (const language of ["en", "fa"] as const) {
           .click();
       await expect(copies).toHaveValue("3");
     }
-    const queue = await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-          .label_waitlist,
+    const queue = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
     );
     expect(
       queue
@@ -190,10 +190,9 @@ for (const language of ["en", "fa"] as const) {
       .click();
     await expect(page.locator(".labels-waitlist-table")).toHaveCount(0);
     expect(
-      await page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("supermarket-prototype-v1")!)
-            .label_waitlist,
+      await readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).label_waitlist,
       ),
     ).toEqual([]);
     await page
@@ -210,10 +209,8 @@ for (const language of ["en", "fa"] as const) {
     );
     await expect
       .poll(() =>
-        page.evaluate(() =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).label_waitlist.sort(
+        readCanonicalBusinessEvidence(page).then((canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).label_waitlist.sort(
             (a: { product_code: string }, b: { product_code: string }) =>
               a.product_code.localeCompare(b.product_code),
           ),
@@ -256,16 +253,16 @@ test("Notes has a focused validating dialog; Save is quiet and Mark done can be 
   const entry = page
     .locator(".notebook-entry-card")
     .filter({ hasText: "Check tomorrow's delivery time" });
-  await expect(entry).toContainText("Demo Supervisor");
+  await expect(entry).toContainText(
+    configuredPersonExpectation("manager").name_en,
+  );
   await expect(page.locator(".undo-toast")).toHaveCount(0);
   await entry.getByRole("button", { name: "Mark done", exact: true }).click();
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).notes.find(
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).notes.find(
             (item: { text: string }) =>
               item.text === "Check tomorrow's delivery time",
           ).status,
@@ -280,11 +277,9 @@ test("Notes has a focused validating dialog; Save is quiet and Mark done can be 
   await expect(entry).toContainText("Check tomorrow's delivery time");
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          JSON.parse(
-            localStorage.getItem("supermarket-prototype-v1")!,
-          ).notes.find(
+      readCanonicalBusinessEvidence(page).then(
+        (canonicalState) =>
+          JSON.parse(JSON.stringify(canonicalState)!).notes.find(
             (item: { text: string }) =>
               item.text === "Check tomorrow's delivery time",
           ).status,
@@ -298,13 +293,14 @@ test("Offers creates from the top dialog, keeps pricing unchanged and excludes W
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#offers");
-  const prices = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(
-      (item: { code: string; selling_price: string }) => [
-        item.code,
-        item.selling_price,
-      ],
-    ),
+  const prices = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.map(
+        (item: { code: string; selling_price: string }) => [
+          item.code,
+          item.selling_price,
+        ],
+      ),
   );
   const trigger = page.getByRole("button", {
     name: "Create offer",
@@ -327,13 +323,14 @@ test("Offers creates from the top dialog, keeps pricing unchanged and excludes W
     .getByRole("button", { name: "Create offer", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
-  const after = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).products.map(
-      (item: { code: string; selling_price: string }) => [
-        item.code,
-        item.selling_price,
-      ],
-    ),
+  const after = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).products.map(
+        (item: { code: string; selling_price: string }) => [
+          item.code,
+          item.selling_price,
+        ],
+      ),
   );
   expect(after).toEqual(prices);
   await page

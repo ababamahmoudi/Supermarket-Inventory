@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
@@ -33,10 +34,8 @@ async function review(page: import("@playwright/test").Page) {
   // committed upload rather than the previous workspace during that change.
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const invoice = JSON.parse(
-          localStorage.getItem("supermarket-prototype-v1")!,
-        ).invoice;
+      readCanonicalBusinessEvidence(page).then((canonicalState) => {
+        const invoice = JSON.parse(JSON.stringify(canonicalState)!).invoice;
         return {
           fileName: invoice.file_name,
           originalHash: invoice.file_data?.split(":").at(-1),
@@ -120,11 +119,13 @@ test("Persian signed money, line numbers and deduction parentheses stay isolated
   page,
 }) => {
   await review(page);
-  await page
+  const markShort = page
     .locator(".invoice-line")
     .nth(5)
-    .getByRole("checkbox", { name: "Mark as short", exact: true })
-    .check();
+    .getByRole("checkbox", { name: "Mark as short", exact: true });
+  await expect(markShort).not.toBeChecked();
+  await markShort.click();
+  await expect(markShort).toBeChecked();
   await setLanguage(page, "fa");
   const deduction = page
     .locator(".invoice-summary-grid .ui-summary-tile")
@@ -209,8 +210,8 @@ test("manual invoice drafts work when randomUUID is unavailable", async ({
     .click();
   await page.reload();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
-  const invoice = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice,
+  const invoice = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(invoice.status).toBe("draft");
   expect(typeof invoice.id).toBe("string");
@@ -249,10 +250,9 @@ test("fictional invoice answers are available only inside Demo and retain Persia
       exact: true,
     }),
   ).toHaveText("خیر، تاریخ‌های متفاوت");
-  const answer = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice
-        .lower_price_answers,
+  const answer = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).invoice.lower_price_answers,
   );
   expect(answer.same_expiry).toBe("no");
   expect(answer.old_expiry).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -331,8 +331,8 @@ test("Supplier invoice links open the actual posted document and retained origin
       new Decimal(line.unit_cost).times(line.qty).toFixed(2),
     );
   }
-  const invoice = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice,
+  const invoice = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
   );
   expect(invoice.supplier_invoice_number).toBe("FV-20390");
   expect(invoice.status).toBe("posted");
@@ -393,10 +393,9 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(reloadedSource.text).toBe(retainedSource);
   expect(reloadedSource.sha256).toBe(source.sha256);
   expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).invoice
-          .file_data,
+    await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).invoice.file_data,
     ),
   ).toBe(invoice.file_data);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

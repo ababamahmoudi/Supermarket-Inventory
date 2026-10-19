@@ -4,7 +4,6 @@ import { supplierRecords } from "./supplier-editor";
 import { updateNoteStatus } from "./operations";
 import {
   addToOrderNote,
-  applyInvoiceToOrder,
   cancelOrder,
   compareInvoiceOrder,
   createOrder,
@@ -13,19 +12,39 @@ import {
   saveOrderDraft,
   scopedOrders,
   suggestOpenOrders,
-  validateOrderReceipt,
-  type OrderContext,
   type OrderReceiptInput,
 } from "./orders";
-import type { DemoInvoice } from "./types";
+import type { DemoInvoice, DemoState } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
+import {
+  applyReviewedOrderReceipt as applyInvoiceToOrder,
+  validateReviewedOrderReceipt as validateOrderReceipt,
+} from "./order-receipt-test-fixture";
 
-const supervisor: OrderContext = {
-  company_id: "super-arzon",
-  branch: "all",
-  role: "supervisor",
-  actor: "Order Supervisor",
-  allowed_branches: ["Branch 1", "Branch 2", "Branch 3", "warehouse"],
-};
+const managers = new WeakMap<DemoState, Map<string, AuthenticatedActor>>();
+function managerActor(state: DemoState, branch = "all") {
+  let known = managers.get(state);
+  if (!known) {
+    known = new Map();
+    managers.set(state, known);
+  }
+  let actor = known.get(branch);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      user_id: `test-orders-manager-${branch}`,
+      locations: branch === "all" ? ["Branch 1"] : [branch],
+      selection:
+        branch === "all"
+          ? { kind: "all_locations" }
+          : { kind: "location", location_id: branch },
+      name_en: "Order Manager",
+    });
+    known.set(branch, actor);
+  }
+  return actor;
+}
 function fixture(quote: string | undefined = "2.5000") {
   const state = initialState();
   const supplier = supplierRecords(state).find(
@@ -35,17 +54,17 @@ function fixture(quote: string | undefined = "2.5000") {
   state.supplier_items = [
     {
       id: "item-c2-1",
-      company_id: supervisor.company_id,
+      company_id: managerActor(state).company_id,
       supplier_id: supplier.id,
       supplier_name: supplier.name,
       product_code: product.code,
       supplier_item_code: "SKU-1",
       units_per_case: 12,
       quoted_unit_cost_before_tax: quote,
-      quoted_by: supervisor.actor,
+      quoted_by: managerActor(state).actor,
       quoted_at: "2026-10-09T10:00:00Z",
       created_at: "2026-10-09T10:00:00Z",
-      created_by: supervisor.actor,
+      created_by: managerActor(state).actor,
     },
   ];
   const input = {
@@ -60,12 +79,12 @@ function receiptFixture(
   decision: "short" | "back_ordered" | "cancelled" = "short",
 ) {
   const { state, supplier, input } = fixture();
-  const order = createOrder(state, supervisor, input);
-  placeOrder(state, supervisor, order.id);
+  const order = createOrder(state, managerActor(state), input);
+  placeOrder(state, managerActor(state), order.id);
   const invoice: DemoInvoice = {
     ...structuredClone(state.invoice),
     id: "order-invoice-1",
-    company_id: supervisor.company_id,
+    company_id: managerActor(state).company_id,
     branch: "Branch 1",
     handling_branch: "Branch 1",
     supplier: supplier.name,
@@ -74,7 +93,7 @@ function receiptFixture(
     lines: [
       {
         ...structuredClone(state.invoice.lines[0]),
-        company_id: supervisor.company_id,
+        company_id: managerActor(state).company_id,
         product_code: order.lines[0].product_code,
         supplier_item_id: "item-c2-1",
         supplier_item_code: "SKU-1",
@@ -116,7 +135,7 @@ describe("C2 order drafts and placement", () => {
     const ledger = structuredClone(state.ledger),
       stock = structuredClone(state.stock),
       movements = structuredClone(state.stock_movements);
-    const order = createOrder(state, supervisor, {
+    const order = createOrder(state, managerActor(state), {
       ...input,
       lines: [{ ...input.lines[0], cases: "0.5" }],
     });
@@ -128,14 +147,14 @@ describe("C2 order drafts and placement", () => {
       expected_line_total: "0.74",
     });
     expect(order.expected_total_before_tax).toBe("0.74");
-    placeOrder(state, supervisor, order.id);
+    placeOrder(state, managerActor(state), order.id);
     expect(state.ledger).toEqual(ledger);
     expect(state.stock).toEqual(stock);
     expect(state.stock_movements).toEqual(movements);
     const before = structuredClone(state);
     for (const cases of ["0.1", "0", "-1", "Infinity", "bad"]) {
       expect(() =>
-        createOrder(state, supervisor, {
+        createOrder(state, managerActor(state), {
           ...input,
           lines: [{ ...input.lines[0], cases }],
         }),
@@ -146,21 +165,25 @@ describe("C2 order drafts and placement", () => {
   it("does not invent a purchased cost from catalog prices, and blocks placement until Expected unit cost is explicit", () => {
     const { state, input } = fixture(undefined);
     delete state.supplier_items![0].quoted_unit_cost_before_tax;
-    const candidate = orderCandidates(state, supervisor, input.supplier).find(
-      (item) => item.id === "item-c2-1",
-    )!;
+    const candidate = orderCandidates(
+      state,
+      managerActor(state),
+      input.supplier,
+    ).find((item) => item.id === "item-c2-1")!;
     expect(candidate.expected_unit_cost).toBeNull();
     expect(candidate.expected_case_cost).toBeNull();
     expect(candidate).not.toHaveProperty("history");
     expect(candidate).not.toHaveProperty("last_bought_date");
-    const order = createOrder(state, supervisor, input);
+    const order = createOrder(state, managerActor(state), input);
     expect(order.expected_total_before_tax).toBeNull();
     const before = structuredClone(state);
-    expect(() => placeOrder(state, supervisor, order.id)).toThrow("cost");
+    expect(() => placeOrder(state, managerActor(state), order.id)).toThrow(
+      "cost",
+    );
     expect(state).toEqual(before);
     saveOrderDraft(
       state,
-      supervisor,
+      managerActor(state),
       order.id,
       {
         ...input,
@@ -168,7 +191,7 @@ describe("C2 order drafts and placement", () => {
       },
       order.version,
     );
-    placeOrder(state, supervisor, order.id);
+    placeOrder(state, managerActor(state), order.id);
     expect(order.expected_total_before_tax).toBe("14.81");
     expect(order.lines[0].expected_cost_source).toBe("entered");
     expect(state.supplier_items![0]).not.toHaveProperty(
@@ -177,21 +200,21 @@ describe("C2 order drafts and placement", () => {
   });
   it("retains placed pack, bilingual names and cost snapshots across future supplier-item edits", () => {
     const { state, input } = fixture();
-    const order = createOrder(state, supervisor, input);
-    placeOrder(state, supervisor, order.id);
+    const order = createOrder(state, managerActor(state), input);
+    placeOrder(state, managerActor(state), order.id);
     const captured = structuredClone(order);
     state.supplier_items![0].units_per_case = 24;
     state.supplier_items![0].quoted_unit_cost_before_tax = "3.0000";
     state.products[0].name_en = "Renamed later";
     expect(order).toEqual(captured);
     expect(
-      orderCandidates(state, supervisor, input.supplier).find(
+      orderCandidates(state, managerActor(state), input.supplier).find(
         (item) => item.id === "item-c2-1",
       ),
     ).toMatchObject({ units_per_case: 24, expected_unit_cost: "3.0000" });
-    expect(() => saveOrderDraft(state, supervisor, order.id, input)).toThrow(
-      "status",
-    );
+    expect(() =>
+      saveOrderDraft(state, managerActor(state), order.id, input),
+    ).toThrow("status");
   });
   it("links a free-text To order note in one click without inventing demand; only explicit selected mappings become ordered once", () => {
     const { state, input } = fixture();
@@ -206,26 +229,31 @@ describe("C2 order drafts and placement", () => {
       text: "Another reminder",
     };
     state.notes.push(unrelated);
-    const order = createOrder(state, supervisor, { ...input, lines: [] });
-    addToOrderNote(state, supervisor, order.id, note.id);
+    const order = createOrder(state, managerActor(state), {
+      ...input,
+      lines: [],
+    });
+    addToOrderNote(state, managerActor(state), order.id, note.id);
     const linked = structuredClone(state);
-    addToOrderNote(state, supervisor, order.id, note.id);
+    addToOrderNote(state, managerActor(state), order.id, note.id);
     expect(state).toEqual(linked);
     expect(order.lines).toEqual([]);
     expect(note.status).toBe("open");
-    saveOrderDraft(state, supervisor, order.id, {
+    saveOrderDraft(state, managerActor(state), order.id, {
       ...input,
       source_note_ids: [note.id],
     });
     const before = structuredClone(state);
-    expect(() => placeOrder(state, supervisor, order.id)).toThrow("notes");
+    expect(() => placeOrder(state, managerActor(state), order.id)).toThrow(
+      "notes",
+    );
     expect(state).toEqual(before);
-    saveOrderDraft(state, supervisor, order.id, {
+    saveOrderDraft(state, managerActor(state), order.id, {
       ...input,
       source_note_ids: [note.id],
       lines: [{ ...input.lines[0], cases: "0.5", source_note_ids: [note.id] }],
     });
-    placeOrder(state, supervisor, order.id);
+    placeOrder(state, managerActor(state), order.id);
     expect(note.status).toBe("ordered");
     expect(note.text).toEqual(
       linked.notes.find((item) => item.id === note.id)!.text,
@@ -233,28 +261,22 @@ describe("C2 order drafts and placement", () => {
     expect(unrelated.status).toBe("open");
     expect(order.lines[0].ordered_units).toBe(6);
     const after = structuredClone(state);
-    expect(() => placeOrder(state, supervisor, order.id)).toThrow("status");
+    expect(() => placeOrder(state, managerActor(state), order.id)).toThrow(
+      "status",
+    );
     expect(state).toEqual(after);
     expect(() =>
-      updateNoteStatus(
-        state,
-        { ...supervisor, branch: "Branch 1" },
-        note.id,
-        "open",
-      ),
+      updateNoteStatus(state, managerActor(state, "Branch 1"), note.id, "open"),
     ).toThrow("status");
   });
   it("scopes every read and transition and grants opted-in workers costs only inside their own Orders", () => {
     const { state, input } = fixture();
-    const first = createOrder(state, supervisor, input);
-    createOrder(state, supervisor, { ...input, branch: "Branch 2" });
-    const worker: OrderContext = {
-      ...supervisor,
-      branch: "Branch 1",
-      role: "floor_worker",
-      allowed_branches: ["Branch 1"],
-    };
-    expect(() => scopedOrders(state, worker)).toThrow("permission");
+    const first = createOrder(state, managerActor(state), input);
+    createOrder(state, managerActor(state), { ...input, branch: "Branch 2" });
+    const worker = authenticatedTestActor(state, "floor_worker", {
+      locations: ["Branch 1"],
+    });
+    expect(() => scopedOrders(state, worker)).toThrow(AuthorityError);
     state.config.orders = { allow_floor_worker: true };
     expect(scopedOrders(state, worker).map((item) => item.id)).toEqual([
       first.id,
@@ -263,12 +285,22 @@ describe("C2 order drafts and placement", () => {
       orderCandidates(state, worker, input.supplier)[0],
     ).not.toHaveProperty("history");
     const before = structuredClone(state);
-    for (const context of [
-      { ...worker, role: "cashier" as const },
-      { ...worker, company_id: "other" },
-      { ...worker, branch: "all" },
+    const foreign = initialState();
+    foreign.config.company.seed_key = "other";
+    for (const denied of [
+      () =>
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+      () =>
+        authenticatedTestActor(foreign, "floor_worker", {
+          locations: ["Branch 1"],
+        }),
+      () =>
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+          selection: { kind: "all_locations" },
+        }),
     ]) {
-      expect(() => scopedOrders(state, context)).toThrow();
+      expect(() => scopedOrders(state, denied())).toThrow(AuthorityError);
       expect(state).toEqual(before);
     }
     expect(() =>
@@ -277,7 +309,9 @@ describe("C2 order drafts and placement", () => {
     expect(() =>
       cancelOrder(
         state,
-        { ...supervisor, allowed_branches: ["Branch 2"] },
+        authenticatedTestActor(state, "branch_supervisor", {
+          locations: ["Branch 2"],
+        }),
         first.id,
         "Wrong scope",
       ),
@@ -286,18 +320,18 @@ describe("C2 order drafts and placement", () => {
   });
   it("cancels with a reason without deleting records or reusing references, and rejects stale or repeated edits", () => {
     const { state, input } = fixture();
-    const order = createOrder(state, supervisor, input);
+    const order = createOrder(state, managerActor(state), input);
     const before = structuredClone(state);
     expect(() =>
-      saveOrderDraft(state, supervisor, order.id, input, 99),
+      saveOrderDraft(state, managerActor(state), order.id, input, 99),
     ).toThrow("stale");
-    expect(() => cancelOrder(state, supervisor, order.id, "")).toThrow(
+    expect(() => cancelOrder(state, managerActor(state), order.id, "")).toThrow(
       "reason",
     );
     expect(state).toEqual(before);
     cancelOrder(
       state,
-      supervisor,
+      managerActor(state),
       order.id,
       "Supplier unavailable",
       order.version,
@@ -307,10 +341,12 @@ describe("C2 order drafts and placement", () => {
       status: "cancelled",
       cancellation_reason: "Supplier unavailable",
     });
-    expect(createOrder(state, supervisor, input).reference).toBe("ORD-0002");
-    expect(() => cancelOrder(state, supervisor, order.id, "Retry")).toThrow(
-      "status",
+    expect(createOrder(state, managerActor(state), input).reference).toBe(
+      "ORD-0002",
     );
+    expect(() =>
+      cancelOrder(state, managerActor(state), order.id, "Retry"),
+    ).toThrow("status");
   });
 });
 
@@ -367,7 +403,7 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
   it("credits each posted invoice once, retains pre-post comparison, and applies only evidence-matched later Short deltas", () => {
     const { state, order, invoice, receipt } = receiptFixture();
     const snapshot = structuredClone(invoice.order_comparison);
-    applyInvoiceToOrder(state, supervisor, order.id, receipt);
+    applyInvoiceToOrder(state, managerActor(state), order.id, receipt);
     expect(order).toMatchObject({
       status: "partially_received",
       linked_invoice_ids: [invoice.id],
@@ -375,7 +411,7 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
     expect(order.lines[0].received_units).toBe(8);
     expect(invoice.order_comparison).toEqual(snapshot);
     const initial = structuredClone(state);
-    applyInvoiceToOrder(state, supervisor, order.id, {
+    applyInvoiceToOrder(state, managerActor(state), order.id, {
       ...receipt,
       event_key: "another-retry-key",
     });
@@ -388,15 +424,15 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
       lines: [{ ...receipt.lines[0], accepted_units: 4 }],
       residual: [],
     };
-    applyInvoiceToOrder(state, supervisor, order.id, later);
+    applyInvoiceToOrder(state, managerActor(state), order.id, later);
     expect(order.lines[0].received_units).toBe(12);
     expect(order.status).toBe("received");
     expect(order.receipts).toHaveLength(2);
     const after = structuredClone(state);
-    applyInvoiceToOrder(state, supervisor, order.id, later);
+    applyInvoiceToOrder(state, managerActor(state), order.id, later);
     expect(state).toEqual(after);
     expect(() =>
-      applyInvoiceToOrder(state, supervisor, order.id, {
+      applyInvoiceToOrder(state, managerActor(state), order.id, {
         ...later,
         event_key: "fake-new-event",
       }),
@@ -405,7 +441,12 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
   });
   it("keeps extra accepted units as evidence while credits never exceed ordered units, including later arrivals of cancelled residuals", () => {
     const full = receiptFixture(15);
-    applyInvoiceToOrder(full.state, supervisor, full.order.id, full.receipt);
+    applyInvoiceToOrder(
+      full.state,
+      managerActor(full.state),
+      full.order.id,
+      full.receipt,
+    );
     expect(full.order.lines[0].received_units).toBe(12);
     expect(full.order.receipts[0].lines[0]).toMatchObject({
       accepted_units: 15,
@@ -415,7 +456,7 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
     const partial = receiptFixture(8, "cancelled");
     applyInvoiceToOrder(
       partial.state,
-      supervisor,
+      managerActor(partial.state),
       partial.order.id,
       partial.receipt,
     );
@@ -425,13 +466,18 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
       cancelled_units: 4,
     });
     partial.invoice.lines[0].qty_later_received = 4;
-    applyInvoiceToOrder(partial.state, supervisor, partial.order.id, {
-      ...partial.receipt,
-      kind: "short_delivery",
-      event_key: "late-after-cancel",
-      lines: [{ ...partial.receipt.lines[0], accepted_units: 4 }],
-      residual: [],
-    });
+    applyInvoiceToOrder(
+      partial.state,
+      managerActor(partial.state),
+      partial.order.id,
+      {
+        ...partial.receipt,
+        kind: "short_delivery",
+        event_key: "late-after-cancel",
+        lines: [{ ...partial.receipt.lines[0], accepted_units: 4 }],
+        residual: [],
+      },
+    );
     expect(partial.order.lines[0]).toMatchObject({
       received_units: 8,
       cancelled_units: 4,
@@ -440,23 +486,23 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
   });
   it("preflights without mutation, rejects stale/tampered receipts, and allows authorized invoice reviewer when worker Orders is disabled", () => {
     const { state, order, invoice, receipt } = receiptFixture();
-    const worker: OrderContext = {
-      ...supervisor,
-      role: "floor_worker",
-      branch: "Branch 1",
-      allowed_branches: ["Branch 1"],
-    };
+    const worker = authenticatedTestActor(state, "floor_worker", {
+      locations: ["Branch 1"],
+    });
     const before = structuredClone(state);
     validateOrderReceipt(state, worker, order.id, receipt);
     expect(state).toEqual(before);
     expect(() =>
       validateOrderReceipt(
         state,
-        { ...worker, branch: "Branch 2" },
+        authenticatedTestActor(state, "floor_worker", {
+          user_id: "test-wrong-location-worker",
+          locations: ["Branch 2"],
+        }),
         order.id,
         receipt,
       ),
-    ).toThrow("scope");
+    ).toThrow(AuthorityError);
     expect(() =>
       validateOrderReceipt(state, worker, order.id, {
         ...receipt,
@@ -479,16 +525,20 @@ describe("C2 order comparison and cumulative receipt evidence", () => {
   });
   it("suggests only open orders sharing company, supplier and effective receiving location", () => {
     const { state, order, invoice } = receiptFixture();
-    expect(suggestOpenOrders(state, invoice).map((item) => item.id)).toEqual([
-      order.id,
-    ]);
+    expect(
+      suggestOpenOrders(state, managerActor(state), invoice).map(
+        (item) => item.id,
+      ),
+    ).toEqual([order.id]);
     for (const changed of [
       { ...invoice, company_id: "foreign" },
       { ...invoice, id: "other-invoice-location", branch: "Branch 2" },
       { ...invoice, supplier: "Other supplier" },
     ])
-      expect(suggestOpenOrders(state, changed)).toEqual([]);
+      expect(() =>
+        suggestOpenOrders(state, managerActor(state), changed),
+      ).toThrow();
     order.status = "received";
-    expect(suggestOpenOrders(state, invoice)).toEqual([]);
+    expect(suggestOpenOrders(state, managerActor(state), invoice)).toEqual([]);
   });
 });

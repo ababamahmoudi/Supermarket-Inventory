@@ -24,24 +24,38 @@ import {
   movePostedInvoice,
 } from "./received";
 import { companyDate } from "./invoice";
-import {
-  ledgerSummary,
-  postPayment,
-  type OperationsContext,
-} from "./operations";
+import { ledgerSummary, postPayment } from "./operations";
 import type { DemoState } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
 
-function context(state: DemoState, branch = "Branch 1"): OperationsContext {
-  return {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: "supervisor",
-    actor: "Ali",
-  };
+const actors = new WeakMap<DemoState, Map<string, AuthenticatedActor>>();
+function context(state: DemoState, branch = "Branch 1") {
+  let all = actors.get(state);
+  if (!all) {
+    all = new Map();
+    actors.set(state, all);
+  }
+  let actor = all.get(branch);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      user_id: `test-correction-manager-${branch}`,
+      name_en: "Ali",
+      locations: branch === "all" ? ["Branch 1"] : [branch],
+      selection:
+        branch === "all"
+          ? { kind: "all_locations" }
+          : { kind: "location", location_id: branch },
+    });
+    all.set(branch, actor);
+  }
+  return actor;
 }
+
 function posted(taxable = false, delivered = 10) {
   const state = initialState();
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, context(state), "Branch 1", true);
   Object.assign(state.invoice, {
     supplier: "Fresh Valley Foods",
     supplier_invoice_number: "CORRECTION-100",
@@ -50,7 +64,7 @@ function posted(taxable = false, delivered = 10) {
     file_type: "image/png",
     file_data: "data:image/png;base64,cmV0YWluZWQ=",
   });
-  addManualLine(state, taxable ? "0009" : "0002");
+  addManualLine(state, context(state), taxable ? "0009" : "0002");
   const line = state.invoice.lines[0];
   setInvoiceLineQuantity(line, "10", "units", 1);
   line.qty_received_at_posting = delivered;
@@ -63,7 +77,7 @@ function posted(taxable = false, delivered = 10) {
     same_expiry: "unknown",
     note: "Cost evidence corrected in the fictional demo.",
   };
-  postInvoice(state, "supervisor", "Branch 1", "Ali");
+  postInvoice(state, context(state));
   return state;
 }
 function input(state: DemoState, cost = "2.0000") {
@@ -241,13 +255,15 @@ describe("immutable invoice content corrections", () => {
     expect(() =>
       correctPostedInvoice(
         state,
-        { ...context(state), role: "floor_worker" },
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+        }),
         state.invoice.id,
         proposal,
         preview.snapshot,
         "x",
       ),
-    ).toThrow(/Supervisor/);
+    ).toThrow(AuthorityError);
     expect(() =>
       correctPostedInvoice(
         state,
@@ -658,10 +674,8 @@ describe("immutable invoice content corrections", () => {
         "0002",
         2,
         "AFTER-CORRECTION-SHORT",
-        "supervisor",
-        "Branch 1",
+        context(state),
         0,
-        "Ali",
       ),
     ).toBe("2.00");
     expect(correction.after).toEqual(snapshot);
@@ -675,17 +689,15 @@ describe("immutable invoice content corrections", () => {
         "0002",
         2,
         "AFTER-CORRECTION-SHORT",
-        "supervisor",
-        "Branch 1",
+        context(state),
         0,
-        "Ali",
       ),
     ).toBe("0.00");
   });
   it("uses effective newer product receipts when deciding the current regular cost source", () => {
     const state = posted();
     const original = structuredClone(state.invoice);
-    state.invoice = createInvoice(state, "Branch 1", true);
+    state.invoice = createInvoice(state, context(state), "Branch 1", true);
     Object.assign(state.invoice, {
       supplier: original.supplier,
       supplier_invoice_number: "NEWER-100",
@@ -694,7 +706,7 @@ describe("immutable invoice content corrections", () => {
       file_type: original.file_type,
       file_data: original.file_data,
     });
-    addManualLine(state, "0002");
+    addManualLine(state, context(state), "0002");
     Object.assign(state.invoice.lines[0], {
       qty_invoiced: 10,
       qty_received_at_posting: 10,
@@ -707,7 +719,7 @@ describe("immutable invoice content corrections", () => {
     });
     recalculateInvoice(state.invoice, state.config);
     state.invoice.lines[0].review_confirmed = true;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     state.invoice.posted_at = "2099-01-01T00:00:00.000Z";
     Object.assign(
       state.invoices!.find((row) => row.id === state.invoice.id)!,

@@ -1,11 +1,15 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+} from "./shared-ui-provider-test-fixture";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "./i18n";
 import { UnitText } from "./presentation";
-import { DemoProvider } from "./store";
 import { Field, Select } from "./ui";
-
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -13,7 +17,6 @@ beforeEach(() => {
 afterEach(async () => {
   await i18n.changeLanguage("en");
 });
-
 describe("atomic invoice Select content", () => {
   it.each([
     ["en", "⁦0002⁩ · ⁦Canned Fava Beans 400 g⁩", "400 g"],
@@ -24,7 +27,7 @@ describe("atomic invoice Select content", () => {
       await i18n.changeLanguage(language);
       const user = userEvent.setup();
       const change = vi.fn();
-      render(
+      await render(
         <DemoProvider>
           <Field label="Matched product">
             <Select
@@ -75,4 +78,10 @@ describe("atomic invoice Select content", () => {
       expect(trigger.textContent).toBe(label);
     },
   );
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

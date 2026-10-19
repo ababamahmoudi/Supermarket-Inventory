@@ -1,0 +1,24 @@
+{
+  "branch": "feat/prototype-e1-location-roles",
+  "head_at_stage": "ca00c5a68eddb12aaaec9c35c6d4f4b39f01ad4d",
+  "files": [
+    {
+      "path": "prototype/tests/orders-c2.spec.ts",
+      "source": "/tmp/e1-ci-native-three-adaptations/prototype/tests/orders-c2.spec.ts",
+      "baseline_sha256": "21d80c6c25fffe1b787f9794b53098c24309946c172078585bdf1dcc68dc5de6",
+      "sha256": "2fae1c5e6821d1fe51fe6590a1c9ef73dbbe66bb41f534dee660d5ae13cb96fd"
+    },
+    {
+      "path": "prototype/tests/settings-b.spec.ts",
+      "source": "/tmp/e1-ci-native-three-adaptations/prototype/tests/settings-b.spec.ts",
+      "baseline_sha256": "8b02081753ef2a0df2e1dac265a7ee89e45a029d709fd2c2a881840c6515c7ac",
+      "sha256": "4b5bae225ed6f49fbf0f762ffea59166b65ce49fa7fe97577807ac01e2de0230"
+    },
+    {
+      "path": "prototype/tests/suppliers-a2.spec.ts",
+      "source": "/tmp/e1-ci-native-three-adaptations/prototype/tests/suppliers-a2.spec.ts",
+      "baseline_sha256": "b2f2bf39be0fcffe609762a450a701cd2d949add3d7c1477dcb1d5f1911dedd6",
+      "sha256": "559be0fe16f4bdb3bbb6d25abd3dc43fd391023b7812a5acf1486c5ca58c8d64"
+    }
+  ]
+}

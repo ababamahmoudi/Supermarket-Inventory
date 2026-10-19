@@ -1,33 +1,45 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+  waitForSharedUiActor,
+  sharedUiSessionId,
+  sharedUiCanonical,
+} from "../shared-ui-provider-test-fixture";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
-import { DemoProvider, STORAGE_KEY, useDemo } from "../store";
+import { beforeEach, describe, expect, it, afterEach } from "vitest";
+import { useDemo } from "../store";
 import BranchRequests from "./BranchRequests";
 import { Notes } from "./Notes";
 import SupplierItems from "./SupplierItems";
-
 function SessionControls() {
-  const { signIn, setBranch } = useDemo();
+  const { switchDemoUser, demoUsers, setBranch } = useDemo();
+  const switchTo = (role: "manager" | "floor_worker") => {
+    const user = demoUsers.find((person) => person.role === role);
+    if (!user) throw new Error("Configured demo person is not ready");
+    return switchDemoUser(user.username);
+  };
   return (
     <>
-      <button onClick={() => signIn("floorworker", "demo1234")}>
-        Worker session
-      </button>
-      <button onClick={() => signIn("supervisor", "demo1234")}>
-        Supervisor session
-      </button>
+      <button onClick={() => switchTo("floor_worker")}>Worker session</button>
+      <button onClick={() => switchTo("manager")}>Supervisor session</button>
       <button onClick={() => setBranch("all")}>All locations</button>
     </>
   );
 }
 function AuthorizedSupplierItems() {
-  const { role } = useDemo();
-  return role === "supervisor" ? (
+  const { can, state } = useDemo();
+  return can("supplier_items.manage", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+  }) ? (
     <SupplierItems supplier="Fresh Valley Foods" editable />
   ) : null;
 }
-function mount(content: React.ReactNode) {
-  render(
+async function mount(content: React.ReactNode) {
+  await render(
     <DemoProvider>
       <SessionControls />
       {content}
@@ -45,8 +57,10 @@ beforeEach(() => {
 });
 describe("C6 missing-field navigation across existing forms", () => {
   it("keeps empty request Send clickable and clears only the repaired issue", async () => {
-    mount(<BranchRequests />);
+    await mount(<BranchRequests />);
+    const sessionBeforeSwitch1 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch1);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
     expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
@@ -68,14 +82,13 @@ describe("C6 missing-field navigation across existing forms", () => {
       "aria-invalid",
       "true",
     );
-    expect(
-      JSON.parse(localStorage.getItem(STORAGE_KEY)!).branch_requests ?? [],
-    ).toHaveLength(0);
+    expect((await sharedUiCanonical()).branch_requests ?? []).toHaveLength(0);
   });
-
   it("collects store-use requirements without saving and keeps unrelated errors", async () => {
-    mount(<Notes />);
+    await mount(<Notes />);
+    const sessionBeforeSwitch2 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch2);
     await userEvent.click(screen.getByRole("tab", { name: /Store use/ }));
     await userEvent.click(screen.getByRole("button", { name: "Add note" }));
     await userEvent.click(screen.getByRole("button", { name: "Save note" }));
@@ -99,10 +112,11 @@ describe("C6 missing-field navigation across existing forms", () => {
       "true",
     );
   });
-
   it("collects supplier-item product, pack and cost errors and focuses actual fields", async () => {
-    mount(<AuthorizedSupplierItems />);
+    await mount(<AuthorizedSupplierItems />);
+    const sessionBeforeSwitch3 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Supervisor session"));
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch3);
     await userEvent.click(screen.getByRole("button", { name: "Add item" }));
     const dialog = screen.getByRole("dialog");
     await userEvent.clear(within(dialog).getByLabelText("Units per case"));
@@ -128,11 +142,13 @@ describe("C6 missing-field navigation across existing forms", () => {
       ).getAllByRole("link"),
     ).toHaveLength(2);
   });
-
   it("lets a Supervisor choose the actual location for a built-in note at All locations", async () => {
-    mount(<Notes />);
+    await mount(<Notes />);
+    const sessionBeforeSwitch4 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Supervisor session"));
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch4);
     fireEvent.click(screen.getByText("All locations"));
+    await waitForSharedUiActor("manager", "all");
     await userEvent.click(screen.getByRole("button", { name: "Add note" }));
     await userEvent.type(screen.getByLabelText("Note"), "Bread for tomorrow");
     expect(screen.getByRole("button", { name: "Save note" })).toBeEnabled();
@@ -143,12 +159,21 @@ describe("C6 missing-field navigation across existing forms", () => {
     expect(screen.getByLabelText("Location")).toHaveFocus();
     await choose(screen.getByLabelText("Location"), "North York");
     await userEvent.click(screen.getByRole("button", { name: "Save note" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    const state = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    await waitFor(
+      () => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+    const state = await sharedUiCanonical();
     expect(
       state.notes.find(
         (note: { text: string }) => note.text === "Bread for tomorrow",
       ),
     ).toMatchObject({ branch: "Branch 1", type: "to_order" });
   });
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

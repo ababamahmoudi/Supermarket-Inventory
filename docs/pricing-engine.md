@@ -1,5 +1,7 @@
 # Pricing engine
 
+E1 role wording uses Owner/Manager for former Supervisor company authority. Branch Supervisor may only propose an own-store regular price; the central capability/approval boundary executes it after Owner/Manager decision. The Decimal algorithm, configuration and all seed cases are unchanged.
+
 This is the most important rule set in the product. It must be implemented **once** (a pure function with no database access), driven by configuration, and covered by tests. The backend and the prototype use the same algorithm; the prototype has a TypeScript port that must pass the same test file.
 
 Test file: `seed/pricing-test-cases.json` (every case must pass, in both languages).
@@ -93,19 +95,19 @@ The current owner fixture starts with 21 cases including boundaries (.00, .22, .
 
 ## Margin check
 
-`margin = (selling_price − unit_cost) / selling_price`. If a minimum margin is configured and the margin is lower, the proposal needs Supervisor approval (reason: "Below minimum margin"). The seeded value `0.25` is a **placeholder**; the owner must confirm it. If the setting is empty, the rule is inactive.
+`margin = (selling_price − unit_cost) / selling_price`. If a minimum margin is configured and the margin is lower, the proposal needs Owner/Manager approval (reason: "Below minimum margin"). The seeded value `0.25` is a **placeholder**; the owner must confirm it. If the setting is empty, the rule is inactive.
 
 ## When a price proposal is created
 
 On posting an invoice (and on manual cost edits), for each line: compute the new selling price from the new unit cost. Then:
 
 - Price equals the current approved price → no proposal (supplier cost change only: no approval).
-- Price differs → create a `pending` price proposal (Supervisor approval required).
+- Price differs → create a `pending` price proposal (Owner/Manager approval required).
 - New product → pending product with a pending price.
 - A manual override of the price → proposal flagged "manual override" (always approval).
   See `workflows.md` for the state machine and display rules.
 
-**Supervisor direct product entry (B, item 45)** uses this exact engine for the entered last unit cost/category, but the Supervisor's save is the creation/price decision: the product is Active immediately without a separate pending approval. A different selling price records a manual override; a below-minimum-margin saved price requires explicit confirmation. This is a role-specific creation exception, not a change to the decimal algorithm or worker invoice proposal rules.
+**Owner/Manager direct product entry (B, item 45)** uses this exact engine for the entered last unit cost/category, but the Owner/Manager's save is the creation/price decision: the product is Active immediately without a separate pending approval. A different selling price records a manual override; a below-minimum-margin saved price requires explicit confirmation. This is a role-specific creation exception, not a change to the decimal algorithm or worker invoice proposal rules.
 
 ## Price scope
 
@@ -128,7 +130,7 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 
 The Decimal algorithm, configured divisors/rounding and all seed cases above are unchanged. Each selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again. C4 Weight products instead use explicit kg/lb source quantities and canonical per-lb approved pricing.
 
-For an already manual-priced product, regular new invoices retain the approved manual price and expose new rule price beside it. Reviewer must choose **Keep manual price / Use rule price**. Keep preserves manual provenance and evaluates any configured minimum-margin review using actual manual price/new regular cost; Use creates normal posting-time Supervisor approval even if rule/manual amounts equal so explicit approval can clear provenance. Before approval and after rejection, Cashier still charges the manual approved price. Source-linked proposals retain exact new costs/latest invoice basis and company/location scope.
+For an already manual-priced product, regular new invoices retain the approved manual price and expose new rule price beside it. Reviewer must choose **Keep manual price / Use rule price**. Keep preserves manual provenance and evaluates any configured minimum-margin review using actual manual price/new regular cost; Use creates normal posting-time Owner/Manager approval even if rule/manual amounts equal so explicit approval can clear provenance. Before approval and after rejection, Cashier still charges the manual approved price. Source-linked proposals retain exact new costs/latest invoice basis and company/location scope.
 
 A **Short-dated (expiry discount)** lot requires actual expiry/Date tracking and records its real discounted receipt/payable, but never updates regular cost or selling price and creates no price-change proposal. Regular pricing basis is distinct from latest actual bought cost/history. Refused extras enter neither payable/receipt nor pricing approvals. Order expected totals are Decimal before-tax estimates, never supplier liabilities.
 

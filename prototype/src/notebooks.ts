@@ -2,8 +2,11 @@ import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { branchId, configuredBranches } from "./settings";
 import { en as notesEn, fa as notesFa } from "./c-notes-i18n";
-import type { DemoState, Role, Branch } from "./types";
-import type { OperationsContext } from "./operations";
+import type { DemoState, Role, Branch, CompanyConfig } from "./types";
+import type { AuthenticatedActor, ResourceScope } from "./authority-types";
+import { actorAtLocation, freshActor } from "./authority";
+import { configuredRoleLabel } from "./role-config";
+import { can, requireCapability, requireConcreteLocation } from "./permissions";
 
 /** The approved author-edit window is independent of transient Undo duration. */
 export const NOTEBOOK_EDIT_WINDOW = 10_000;
@@ -30,6 +33,7 @@ export interface NotebookDefinition {
   created_at: string;
   updated_at: string;
   by: string;
+  by_user_id?: string;
 }
 export interface NotebookEntry {
   id: string;
@@ -38,6 +42,7 @@ export interface NotebookEntry {
   notebook_id: string;
   text: string;
   by: string;
+  by_user_id?: string;
   created_at: string;
   updated_at: string;
   product_code?: string;
@@ -49,9 +54,7 @@ export interface NotebookEntry {
   notify_supervisor: boolean;
   archived?: boolean;
 }
-export type NotebookContext = OperationsContext & {
-  allowed_branches?: Branch[];
-};
+export type NotebookContext = AuthenticatedActor;
 export type NotebookInput = Pick<
   NotebookDefinition,
   | "name_en"
@@ -73,8 +76,8 @@ export function newNotebookInput(): NotebookInput {
     name_en: "",
     name_fa: "",
     branch: "all",
-    read_roles: ["supervisor", "floor_worker"],
-    add_roles: ["supervisor", "floor_worker"],
+    read_roles: ["owner", "manager", "floor_worker"],
+    add_roles: ["owner", "manager", "floor_worker"],
     fields: {
       product: false,
       quantity: false,
@@ -95,14 +98,59 @@ export class NotebookError extends Error {
 function fail(key: string): never {
   throw new NotebookError(key);
 }
-const roles: Role[] = ["supervisor", "floor_worker", "cashier"];
-const inBranch = (branch: Branch, context: NotebookContext) =>
-  (branch === "all" || context.branch === "all" || branch === context.branch) &&
-  (!context.allowed_branches ||
-    branch === "all" ||
-    context.allowed_branches.includes(branch));
+const roles: Role[] = [
+  "owner",
+  "manager",
+  "branch_supervisor",
+  "floor_worker",
+  "cashier",
+];
+const companyRoles: Role[] = ["owner", "manager"];
+function notebookScope(
+  record: Pick<NotebookDefinition, "company_id" | "branch" | "id">,
+  mutation = false,
+): ResourceScope {
+  return {
+    company_id: record.company_id,
+    kind: record.branch === "all" ? "company_shared" : "location_record",
+    location_ids: record.branch === "all" ? [] : [record.branch],
+    entity_id: record.id,
+    mutation,
+    ...(mutation ? {} : { location_policy: "retained_read" as const }),
+  };
+}
+function inBranch(state: DemoState, branch: Branch, context: NotebookContext) {
+  try {
+    const actor = freshActor(state, context);
+    return (
+      branch === "all" ||
+      (actor.allowed_branches.includes(branch) &&
+        (actor.branch === "all" || branch === actor.branch))
+    );
+  } catch {
+    return false;
+  }
+}
 function company(state: DemoState, context: NotebookContext) {
-  if (state.config.company.seed_key !== context.company_id) fail("scope");
+  if (
+    state.config.company.seed_key !== context.company_id ||
+    !can(state, context, "notebooks.read").allowed
+  )
+    fail("scope");
+}
+function hasNotebookACL(
+  state: DemoState,
+  record: NotebookDefinition,
+  context: NotebookContext,
+  adding = false,
+) {
+  const actor = freshActor(state, context);
+  return (
+    can(state, actor, "notebooks.definition_manage", notebookScope(record))
+      .allowed ||
+    (record.read_roles.includes(actor.role) &&
+      (!adding || record.add_roles.includes(actor.role)))
+  );
 }
 function definition(
   state: DemoState,
@@ -114,69 +162,88 @@ function definition(
     (item) =>
       item.id === notebookId &&
       item.company_id === context.company_id &&
-      inBranch(item.branch, context),
+      inBranch(state, item.branch, context),
   );
   if (!record) fail("scope");
   return record;
 }
 export function visibleNotebooks(
   state: DemoState,
-  context: NotebookContext,
+  context: NotebookContext | null,
   options: { includeArchived?: boolean } = {},
 ) {
-  if (context.company_id !== state.config.company.seed_key) return [];
+  if (
+    !context ||
+    context.company_id !== state.config.company.seed_key ||
+    !can(state, context, "notebooks.read").allowed
+  )
+    return [];
   return (state.notebooks ?? []).filter(
     (item) =>
       item.company_id === context.company_id &&
-      inBranch(item.branch, context) &&
-      (context.role === "supervisor" ||
-        item.read_roles.includes(context.role)) &&
+      inBranch(state, item.branch, context) &&
+      can(state, context, "notebooks.read", notebookScope(item)).allowed &&
+      hasNotebookACL(state, item, context) &&
       (options.includeArchived || !item.archived),
   );
 }
-export function canAccessNotebooks(state: DemoState, context: NotebookContext) {
+export function canAccessNotebooks(
+  state: DemoState,
+  context: NotebookContext | null,
+) {
   return (
-    context.role !== "cashier" ||
+    can(state, context, "notes.read").allowed ||
     visibleNotebooks(state, context, { includeArchived: true }).length > 0
   );
 }
 export function canAddNotebookEntry(
+  state: DemoState,
   record: NotebookDefinition,
-  context: NotebookContext,
-  location = context.branch,
+  context: NotebookContext | null,
+  location = context?.branch ?? "",
 ) {
-  const scopedContext = { ...context, branch: location };
-  return (
-    !record.archived &&
-    record.company_id === context.company_id &&
-    location !== "all" &&
-    (context.branch === location ||
-      (context.branch === "all" && context.role === "supervisor")) &&
-    (!context.allowed_branches ||
-      context.allowed_branches.includes(location)) &&
-    inBranch(record.branch, scopedContext) &&
-    (context.role === "supervisor" ||
-      (record.read_roles.includes(context.role) &&
-        record.add_roles.includes(context.role)))
-  );
+  try {
+    if (!context) return false;
+    const actor = freshActor(state, context);
+    const concrete = requireConcreteLocation(state, actor, location);
+    if (actor.branch !== "all" && actor.branch !== concrete) return false;
+    const scopedActor = actorAtLocation(state, actor, concrete);
+    return (
+      !record.archived &&
+      record.company_id === state.config.company.seed_key &&
+      (record.branch === "all" || record.branch === concrete) &&
+      can(state, scopedActor, "notebooks.entry_add", {
+        company_id: record.company_id,
+        kind: "location_record",
+        location_ids: [concrete],
+        entity_id: record.id,
+        mutation: true,
+      }).allowed &&
+      hasNotebookACL(state, record, scopedActor, true)
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Concrete, active entry locations; All branches is a view, never an entry. */
 export function notebookEntryLocations(
   state: DemoState,
   record: NotebookDefinition,
-  context: NotebookContext,
+  context: NotebookContext | null,
 ): Branch[] {
-  if (state.config.company.seed_key !== context.company_id) return [];
+  if (!context || state.config.company.seed_key !== context.company_id)
+    return [];
   return configuredBranches(state.config).filter((location) =>
-    canAddNotebookEntry(record, context, location),
+    canAddNotebookEntry(state, record, context, location),
   );
 }
 export function readableNotebookEntries(
   state: DemoState,
-  context: NotebookContext,
+  context: NotebookContext | null,
   options: { includeArchived?: boolean } = {},
 ) {
+  if (!context) return [];
   const readable = new Set(
     visibleNotebooks(state, context, { includeArchived: true }).map(
       (item) => item.id,
@@ -186,7 +253,7 @@ export function readableNotebookEntries(
     (item) =>
       item.company_id === context.company_id &&
       readable.has(item.notebook_id) &&
-      inBranch(item.branch, context) &&
+      inBranch(state, item.branch, context) &&
       (options.includeArchived || !item.archived),
   );
 }
@@ -206,6 +273,9 @@ function recordAction(
     branch: record.branch,
     action,
     by: context.actor,
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role: context.role,
     at: now.toISOString(),
     reversible: true,
     before: structuredClone(before),
@@ -221,7 +291,11 @@ function validateDefinition(
   excludeId?: string,
 ): NotebookInput {
   company(state, context);
-  if (context.role !== "supervisor") fail("supervisor");
+  requireCapability(state, context, "notebooks.definition_manage", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
   if (
     context.allowed_branches &&
     input.branch !== "all" &&
@@ -254,7 +328,8 @@ function validateDefinition(
     fail("roles");
   if (
     input.add_roles.some(
-      (role) => role !== "supervisor" && !input.read_roles.includes(role),
+      (role) =>
+        !companyRoles.includes(role) && !input.read_roles.includes(role),
     )
   )
     fail("roles");
@@ -264,8 +339,8 @@ function validateDefinition(
     ...structuredClone(input),
     name_en,
     name_fa,
-    read_roles: [...new Set(["supervisor" as Role, ...input.read_roles])],
-    add_roles: [...new Set(["supervisor" as Role, ...input.add_roles])],
+    read_roles: [...new Set([...companyRoles, ...input.read_roles])],
+    add_roles: [...new Set([...companyRoles, ...input.add_roles])],
     fields: { ...input.fields, measurement_unit },
   };
 }
@@ -274,6 +349,7 @@ export function createNotebook(
   context: NotebookContext,
   input: NotebookInput,
 ): NotebookDefinition {
+  context = freshActor(state, context);
   const validated = validateDefinition(state, context, input);
   const at = new Date().toISOString();
   const record = {
@@ -284,6 +360,7 @@ export function createNotebook(
     created_at: at,
     updated_at: at,
     by: context.actor,
+    by_user_id: context.user_id,
   };
   (state.notebooks ??= []).push(record);
   recordAction(
@@ -303,12 +380,14 @@ export function editNotebook(
   notebookId: string,
   input: NotebookInput,
 ) {
+  context = freshActor(state, context);
   const record = definition(state, context, notebookId);
   const validated = validateDefinition(state, context, input, notebookId);
   const before = structuredClone(record);
   Object.assign(record, validated, {
     updated_at: new Date().toISOString(),
     by: context.actor,
+    by_user_id: context.user_id,
   });
   recordAction(
     state,
@@ -326,13 +405,19 @@ export function archiveNotebook(
   notebookId: string,
   archived = true,
 ) {
+  context = freshActor(state, context);
   const record = definition(state, context, notebookId);
-  if (context.role !== "supervisor") fail("supervisor");
+  requireCapability(state, context, "notebooks.definition_manage", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
   if (record.archived === archived) return;
   const before = structuredClone(record);
   record.archived = archived;
   record.updated_at = new Date().toISOString();
   record.by = context.actor;
+  record.by_user_id = context.user_id;
   recordAction(
     state,
     context,
@@ -348,8 +433,9 @@ function entryValues(
   context: NotebookContext,
   notebook: NotebookDefinition,
   input: NotebookEntryInput,
+  editingExisting = false,
 ) {
-  if (!canAddNotebookEntry(notebook, context))
+  if (!editingExisting && !canAddNotebookEntry(state, notebook, context))
     fail(
       notebook.archived
         ? "archived"
@@ -402,6 +488,7 @@ export function addNotebookEntry(
   notebookId: string,
   input: NotebookEntryInput,
 ) {
+  context = freshActor(state, context);
   const notebook = definition(state, context, notebookId);
   if (notebook.archived) fail("archived");
   const location = input.branch ?? context.branch;
@@ -413,11 +500,14 @@ export function addNotebookEntry(
     (notebook.branch !== "all" && notebook.branch !== location)
   )
     fail("scope");
-  if (context.branch === "all" && context.role !== "supervisor")
-    fail("add_permission");
-  if (!configuredBranches(state.config).includes(location))
-    fail("location_unavailable");
-  const scopedContext = { ...context, branch: location };
+  requireCapability(state, context, "notebooks.entry_add", {
+    company_id: notebook.company_id,
+    kind: "location_record",
+    location_ids: [requireConcreteLocation(state, context, location)],
+    entity_id: notebook.id,
+    mutation: true,
+  });
+  const scopedContext = actorAtLocation(state, context, location);
   const values = entryValues(state, scopedContext, notebook, input);
   const at = new Date().toISOString();
   const record: NotebookEntry = {
@@ -427,6 +517,7 @@ export function addNotebookEntry(
     branch: location,
     notebook_id: notebook.id,
     by: context.actor,
+    by_user_id: context.user_id,
     created_at: at,
     updated_at: at,
     status: "open",
@@ -460,17 +551,37 @@ function editableEntry(
   );
   if (!record) fail("scope");
   const notebook = definition(state, context, record.notebook_id);
-  const scopedContext =
-    context.role === "supervisor" && context.branch === "all"
-      ? { ...context, branch: record.branch }
-      : context;
+  const activeLocation = configuredBranches(state.config).includes(
+    record.branch,
+  );
+  const scopedContext = activeLocation
+    ? actorAtLocation(state, context, record.branch)
+    : freshActor(state, context);
+  if (!configuredBranches(state.config, true).includes(record.branch))
+    fail("scope");
+  if (notebook.archived) fail("archived");
+  if (!hasNotebookACL(state, notebook, scopedContext, true))
+    fail("add_permission");
+  const resource: ResourceScope = {
+    company_id: record.company_id,
+    kind: "location_record",
+    location_ids: [record.branch],
+    entity_id: record.id,
+    owner_user_id: record.by_user_id,
+    mutation: true,
+    location_policy: activeLocation ? "active_only" : "retained_correction",
+  };
   if (
-    !configuredBranches(state.config, true).includes(record.branch) ||
-    !canAddNotebookEntry(notebook, scopedContext)
-  )
-    fail(notebook.archived ? "archived" : "add_permission");
-  if (context.role !== "supervisor") {
-    if (record.by !== context.actor) fail("edit_permission");
+    !can(state, scopedContext, "notebooks.entry_edit_any", resource).allowed
+  ) {
+    if (!activeLocation || !canAddNotebookEntry(state, notebook, scopedContext))
+      fail("add_permission");
+    if (
+      !record.by_user_id ||
+      record.by_user_id !== scopedContext.user_id ||
+      !can(state, scopedContext, "notebooks.entry_edit_own", resource).allowed
+    )
+      fail("edit_permission");
     const elapsed = now.getTime() - Date.parse(record.created_at);
     if (
       !Number.isFinite(elapsed) ||
@@ -485,13 +596,137 @@ function editableEntry(
 /** Author edits expire with the original ten-second window; edits never reset it. */
 export function canEditNotebookEntry(
   state: DemoState,
-  context: NotebookContext,
+  context: NotebookContext | null,
   entryId: string,
   now = new Date(),
 ): boolean {
+  if (!context) return false;
   try {
     editableEntry(state, context, entryId, now);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/** History keeps its own action deadline and immutable-version checks.
+ * This guard checks the current canonical notebook/entry authority without
+ * resetting or reusing the separate editor deadline on entry.created_at.
+ */
+export function canApplyNotebookEntryHistory(
+  state: DemoState,
+  context: NotebookContext | null,
+  entryId: string,
+): boolean {
+  try {
+    if (!context) return false;
+    const actor = freshActor(state, context);
+    const entry = readableNotebookEntries(state, actor, {
+      includeArchived: true,
+    }).find((record) => record.id === entryId);
+    if (!entry) return false;
+    const notebook = definition(state, actor, entry.notebook_id);
+    if (notebook.archived || !hasNotebookACL(state, notebook, actor, true))
+      return false;
+    const active = configuredBranches(state.config).includes(entry.branch);
+    const scope: ResourceScope = {
+      company_id: entry.company_id,
+      kind: "location_record",
+      location_ids: [entry.branch],
+      entity_id: entry.id,
+      owner_user_id: entry.by_user_id,
+      mutation: true,
+      location_policy: active ? "active_only" : "retained_correction",
+    };
+    if (can(state, actor, "notebooks.entry_edit_any", scope).allowed)
+      return true;
+    return Boolean(
+      active &&
+      entry.by_user_id &&
+      entry.by_user_id === actor.user_id &&
+      can(state, actor, "notebooks.entry_edit_own", scope).allowed &&
+      canAddNotebookEntry(state, notebook, actor, entry.branch),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Resolve the committed canonical action; callers cannot choose a status mode. */
+export function canApplyNotebookHistoryActivity(
+  state: DemoState,
+  context: NotebookContext | null,
+  activityId: string,
+): boolean {
+  try {
+    if (!context) return false;
+    const actor = freshActor(state, context);
+    const activity = state.activity.find(
+      (record) =>
+        record.id === activityId &&
+        record.company_id === actor.company_id &&
+        record.entity_type === "notebook_entry",
+    );
+    if (!activity?.entity_id) return false;
+    if (
+      ["notebook_entry_added", "notebook_entry_updated"].includes(
+        activity.action,
+      )
+    ) {
+      if (!canApplyNotebookEntryHistory(state, actor, activity.entity_id))
+        return false;
+      const entry = state.notebook_entries?.find(
+        (record) =>
+          record.id === activity.entity_id &&
+          record.company_id === actor.company_id,
+      );
+      if (!entry) return false;
+      return (
+        can(state, actor, "notebooks.entry_edit_any", {
+          company_id: entry.company_id,
+          kind: "location_record",
+          location_ids: [entry.branch],
+          entity_id: entry.id,
+          mutation: true,
+          location_policy: configuredBranches(state.config).includes(
+            entry.branch,
+          )
+            ? "active_only"
+            : "retained_correction",
+        }).allowed || activity.actor_user_id === actor.user_id
+      );
+    }
+    if (
+      !["notebook_entry_done", "notebook_entry_reopened"].includes(
+        activity.action,
+      )
+    )
+      return false;
+    const entry = readableNotebookEntries(state, actor, {
+      includeArchived: true,
+    }).find((record) => record.id === activity.entity_id);
+    if (!entry) return false;
+    const notebook = definition(state, actor, entry.notebook_id);
+    if (entry.archived || notebook.archived || !notebook.status_enabled)
+      return false;
+    if (!canAddNotebookEntry(state, notebook, actor, entry.branch))
+      return false;
+    const scope: ResourceScope = {
+      company_id: entry.company_id,
+      kind: "location_record",
+      location_ids: [entry.branch],
+      entity_id: entry.id,
+      mutation: true,
+    };
+    // 'Own' status Undo means the actor's audited status action. The original
+    // entry author can be another contributor, including in a Cashier notebook.
+    return (
+      can(state, actor, "notebooks.entry_edit_any", scope).allowed ||
+      Boolean(
+        activity.actor_user_id === actor.user_id &&
+        can(state, actor, "notebooks.entry_add", scope).allowed,
+      )
+    );
   } catch {
     return false;
   }
@@ -505,6 +740,7 @@ export function editNotebookEntry(
   expectedSnapshot?: string,
   now = new Date(),
 ): NotebookEntry {
+  context = freshActor(state, context);
   const { record, notebook, scopedContext } = editableEntry(
     state,
     context,
@@ -518,7 +754,7 @@ export function editNotebookEntry(
     expectedSnapshot !== JSON.stringify(record)
   )
     fail("stale");
-  const values = entryValues(state, scopedContext, notebook, input);
+  const values = entryValues(state, scopedContext, notebook, input, true);
   const before = structuredClone(record);
   const editableFields = [
     ["product_code", notebook.fields.product],
@@ -553,13 +789,22 @@ export function updateNotebookEntryStatus(
   entryId: string,
   status: NotebookEntry["status"],
 ) {
+  context = freshActor(state, context);
   company(state, context);
   const record = readableNotebookEntries(state, context).find(
     (item) => item.id === entryId,
   );
   if (!record) fail("scope");
   const notebook = definition(state, context, record.notebook_id);
-  if (!canAddNotebookEntry(notebook, context)) fail("add_permission");
+  if (!canAddNotebookEntry(state, notebook, context, record.branch))
+    fail("add_permission");
+  requireCapability(state, context, "notebooks.entry_add", {
+    company_id: record.company_id,
+    kind: "location_record",
+    location_ids: [record.branch],
+    entity_id: record.id,
+    mutation: true,
+  });
   if (!notebook.status_enabled || !["open", "done"].includes(status))
     fail("status");
   if (record.status === status) return;
@@ -592,8 +837,8 @@ export function hydrateNotebooks(state: DemoState): DemoState {
       branch: "all",
       name_en: "Deli temperatures",
       name_fa: "دمای اغذیه",
-      read_roles: ["supervisor", "floor_worker"],
-      add_roles: ["supervisor", "floor_worker"],
+      read_roles: ["owner", "manager", "branch_supervisor", "floor_worker"],
+      add_roles: ["owner", "manager", "branch_supervisor", "floor_worker"],
       fields: {
         product: false,
         quantity: false,
@@ -607,6 +852,7 @@ export function hydrateNotebooks(state: DemoState): DemoState {
       created_at: at,
       updated_at: at,
       by: "Demo Supervisor",
+      by_user_id: "demo-person-owner",
     },
   ];
   state.notebook_entries = [
@@ -617,6 +863,7 @@ export function hydrateNotebooks(state: DemoState): DemoState {
       notebook_id: "demo-deli-temperatures",
       text: "Morning fridge check",
       by: "Demo Floor Worker",
+      by_user_id: "demo-person-ny-floor",
       created_at: at,
       updated_at: at,
       date: state.demo_fixture_anchor_date ?? at.slice(0, 10),
@@ -631,13 +878,26 @@ export function hydrateNotebooks(state: DemoState): DemoState {
 export function notebookError(
   error: unknown,
   t: (en: string, fa: string) => string,
+  config?: Pick<CompanyConfig, "roles">,
 ) {
   const key = error instanceof NotebookError ? error.key : "scope";
+  const ownerEn = config
+    ? configuredRoleLabel(config.roles, "owner", "en")
+    : "Owner";
+  const ownerFa = config
+    ? configuredRoleLabel(config.roles, "owner", "fa")
+    : "مالک";
+  const managerEn = config
+    ? configuredRoleLabel(config.roles, "manager", "en")
+    : "Manager";
+  const managerFa = config
+    ? configuredRoleLabel(config.roles, "manager", "fa")
+    : "مدیر";
   const messages: Record<string, [string, string]> = {
     scope: [notesEn.scope, notesFa.scope],
     supervisor: [
-      "Only the Supervisor can change notebook settings.",
-      "فقط سرپرست می‌تواند تنظیمات دفترچه را تغییر دهد.",
+      `Only an ${ownerEn} or ${managerEn} can change notebook settings.`,
+      `فقط ${ownerFa} یا ${managerFa} می‌تواند تنظیمات دفترچه را تغییر دهد.`,
     ],
     branch: [notesEn.chooseLocation, notesFa.chooseLocation],
     location_unavailable: [
@@ -690,12 +950,12 @@ export function notebookError(
       "این دفترچه از وضعیت یادداشت استفاده نمی‌کند.",
     ],
     edit_permission: [
-      "Only the author or Supervisor can edit this note.",
-      "فقط نویسنده یا سرپرست می‌تواند این یادداشت را ویرایش کند.",
+      `Only the author, ${ownerEn} or ${managerEn} can edit this note.`,
+      `فقط نویسنده، ${ownerFa} یا ${managerFa} می‌تواند این یادداشت را ویرایش کند.`,
     ],
     expired: [
-      "The ten-second edit window has ended. Ask the Supervisor to edit this note.",
-      "مهلت ده‌ثانیه‌ای ویرایش پایان یافته است. از سرپرست بخواهید این یادداشت را ویرایش کند.",
+      `The ten-second edit window has ended. Ask an ${ownerEn} or ${managerEn} to edit this note.`,
+      `مهلت ده‌ثانیه‌ای ویرایش پایان یافته است. از ${ownerFa} یا ${managerFa} بخواهید این یادداشت را ویرایش کند.`,
     ],
     stale: [
       "This note changed. Open it again before editing.",

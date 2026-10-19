@@ -1,11 +1,25 @@
 import Decimal from "decimal.js";
+import type { AuthenticatedActor, Capability } from "./authority-types";
+import { freshActor } from "./authority";
+import { can, requireCapability, requireConcreteLocation } from "./permissions";
+import { actorAudit } from "./domain-authority";
+import {
+  projectProductReadDTO,
+  type ProductReadDTO,
+} from "./catalog-read-model";
+import {
+  projectOfferReadDTO,
+  projectSaleReadDTO,
+  type SaleReadDTO,
+  type OfferReadDTO,
+} from "./offers-read-model";
 import {
   effectiveOffer,
   effectivePrice,
   regularPrice,
   searchProducts,
 } from "./catalog";
-import { activeSaleAt, type SaleSchedule } from "./sales";
+import { activeSaleAt } from "./sales";
 import { effectiveClearanceOffers } from "./receipt-lots";
 import { createId } from "./ids";
 import { labelLayout, labelPages } from "./labels";
@@ -16,8 +30,6 @@ import type {
   LabelTemplate,
   LabelWaitlistItem,
   Product,
-  Offer,
-  Role,
 } from "./types";
 
 export class LabelWorkflowError extends Error {
@@ -35,11 +47,7 @@ export class LabelWorkflowError extends Error {
   }
 }
 
-export interface LabelActor {
-  name: string;
-  role: Role;
-  branch: Branch;
-}
+export type LabelActor = AuthenticatedActor;
 export interface LabelFilters {
   query: string;
   arrived: boolean;
@@ -59,17 +67,27 @@ export const emptyLabelFilters: LabelFilters = {
   supplier: "",
 };
 
-export function configuredLabelBranches(state: DemoState): Branch[] {
+export function configuredLabelBranches(state: {
+  readonly config: Pick<DemoState["config"], "branches">;
+}): Branch[] {
   return configuredBranches(state.config);
 }
-function permittedBranch(state: DemoState, branch: Branch, actor: LabelActor) {
-  if (actor.role === "cashier") throw new LabelWorkflowError("permission");
-  if (
-    branch === "all" ||
-    !configuredLabelBranches(state).includes(branch) ||
-    (actor.role !== "supervisor" && actor.branch !== branch)
-  )
-    throw new LabelWorkflowError("branch");
+function permittedBranch(
+  state: DemoState,
+  branch: Branch,
+  actor: LabelActor,
+  capability: Capability = "labels.queue_write",
+) {
+  const current = freshActor(state, actor);
+  requireConcreteLocation(state, current, branch);
+  requireCapability(state, current, capability, {
+    company_id: state.config.company.seed_key,
+    kind: "location_record",
+    location_ids: [branch],
+    mutation: true,
+    location_policy: "active_only",
+  });
+  return current;
 }
 function approvedProduct(
   state: DemoState,
@@ -110,7 +128,8 @@ function record(
     company_id: state.config.company.seed_key,
     branch,
     action,
-    by: actor.name,
+    by: freshActor(state, actor).actor,
+    ...actorAudit(state, actor),
     at: new Date().toISOString(),
     reversible,
     before,
@@ -118,10 +137,13 @@ function record(
   });
 }
 
-export function branchLabelWaitlist(
-  state: DemoState,
+export function branchLabelWaitlist<W extends LabelWaitlistItem>(
+  state: {
+    readonly config: { readonly company: { readonly seed_key: string } };
+    readonly label_waitlist?: readonly W[];
+  },
   branch: Branch,
-): LabelWaitlistItem[] {
+): W[] {
   return (state.label_waitlist ?? []).filter(
     (item) =>
       item.company_id === state.config.company.seed_key &&
@@ -161,7 +183,8 @@ export function addLabelsToWaitlist(
         branch,
         product_code: code,
         copies,
-        added_by: actor.name,
+        added_by: freshActor(state, actor).actor,
+        ...actorAudit(state, actor),
         added_at: new Date().toISOString(),
       });
   }
@@ -209,7 +232,8 @@ export function addClearanceLabelToWaitlist(
       product_code: productCode,
       lot_id: lotId,
       copies: total,
-      added_by: actor.name,
+      added_by: freshActor(state, actor).actor,
+      ...actorAudit(state, actor),
       added_at: new Date().toISOString(),
     });
   record(
@@ -316,10 +340,12 @@ export function clearLabelWaitlist(
     record(state, actor, branch, "Clear waitlist", true, before, []);
 }
 
-export type LabelPrintProduct = Product & {
+export type LabelPrintProduct = ProductReadDTO & {
   label_lot_id?: string;
-  label_clearance_offer?: Offer;
-  label_sale?: SaleSchedule | null;
+  label_clearance_offer?: OfferReadDTO;
+  /** Present-null means the prepared terms contain no ordinary offer. */
+  label_offer?: OfferReadDTO | null;
+  label_sale?: SaleReadDTO | null;
   label_regular_price?: string | null;
   label_effective_price?: string | null;
 };
@@ -341,7 +367,7 @@ export function prepareLabelPrint(
   actor: LabelActor,
   entryIds?: string[],
 ): LabelPrintSnapshot {
-  permittedBranch(state, branch, actor);
+  actor = permittedBranch(state, branch, actor, "labels.print");
   if (
     template.company_id !== state.config.company.seed_key ||
     template.archived
@@ -357,20 +383,26 @@ export function prepareLabelPrint(
       : branchEntries,
   );
   const products = entries.flatMap((entry) => {
-    const product = structuredClone(
-      approvedProduct(state, entry.product_code, branch),
-    ) as LabelPrintProduct;
-    product.label_sale = structuredClone(activeSaleAt(state, product, branch));
-    product.label_regular_price = regularPrice(state, product, branch);
-    product.label_effective_price = effectivePrice(state, product, branch);
+    const canonicalProduct = approvedProduct(state, entry.product_code, branch);
+    const sale = activeSaleAt(state, canonicalProduct, branch);
+    const offer = effectiveOffer(state, canonicalProduct, branch);
+    const product: LabelPrintProduct = {
+      ...projectProductReadDTO(state, actor, canonicalProduct),
+      label_sale: sale ? projectSaleReadDTO(sale) : null,
+      label_offer: offer ? projectOfferReadDTO(offer) : null,
+      label_regular_price: regularPrice(state, canonicalProduct, branch),
+      label_effective_price: effectivePrice(state, canonicalProduct, branch),
+    };
     if (entry.lot_id) {
-      const offer = effectiveClearanceOffers(state, product, branch).find(
-        (item) => item.lot_id === entry.lot_id,
-      );
+      const offer = effectiveClearanceOffers(
+        state,
+        canonicalProduct,
+        branch,
+      ).find((item) => item.lot_id === entry.lot_id);
       if (!offer || template.style !== "promo")
         throw new LabelWorkflowError("lot");
       product.label_lot_id = entry.lot_id;
-      product.label_clearance_offer = structuredClone(offer);
+      product.label_clearance_offer = projectOfferReadDTO(offer);
     }
     return Array<LabelPrintProduct>(copiesValue(entry.copies)).fill(product);
   });
@@ -392,7 +424,7 @@ export function confirmLabelsPrinted(
   snapshot: LabelPrintSnapshot,
   actor: LabelActor,
 ) {
-  permittedBranch(state, snapshot.branch, actor);
+  actor = permittedBranch(state, snapshot.branch, actor, "labels.print");
   if (snapshot.company_id !== state.config.company.seed_key)
     throw new LabelWorkflowError("permission");
   if (
@@ -454,15 +486,24 @@ export function saveLabelTemplate(
   template: LabelTemplate,
   actor: LabelActor,
 ) {
-  if (
-    actor.role === "cashier" ||
-    template.company_id !== state.config.company.seed_key
-  )
+  actor = freshActor(state, actor);
+  if (template.company_id !== state.config.company.seed_key)
     throw new LabelWorkflowError("permission");
   validateLabelTemplate(template, state.label_settings?.fields?.logo !== false);
   const existing = state.templates.find(
     (item) =>
       item.id === template.id && item.company_id === template.company_id,
+  );
+  requireCapability(
+    state,
+    actor,
+    existing ? "labels.templates_edit" : "labels.templates_create",
+    {
+      company_id: template.company_id,
+      kind: "company_shared",
+      entity_id: template.id,
+      mutation: true,
+    },
   );
   if (existing?.archived || template.archived)
     throw new LabelWorkflowError("template");
@@ -488,7 +529,7 @@ export function saveLabelTemplate(
 }
 
 function managedTemplate(state: DemoState, id: string, actor: LabelActor) {
-  if (actor.role === "cashier") throw new LabelWorkflowError("permission");
+  freshActor(state, actor);
   const template = state.templates.find(
     (item) =>
       item.company_id === state.config.company.seed_key && item.id === id,
@@ -504,6 +545,12 @@ export function duplicateLabelTemplate(
   name: string,
 ): LabelTemplate {
   const original = managedTemplate(state, id, actor);
+  requireCapability(state, actor, "labels.templates_create", {
+    company_id: original.company_id,
+    kind: "company_shared",
+    entity_id: original.id,
+    mutation: true,
+  });
   if (original.archived || !name.trim())
     throw new LabelWorkflowError("template");
   const copy = structuredClone(original);
@@ -532,6 +579,12 @@ export function setLabelTemplateArchived(
   actor: LabelActor,
 ) {
   const template = managedTemplate(state, id, actor);
+  requireCapability(state, actor, "labels.templates_archive", {
+    company_id: template.company_id,
+    kind: "company_shared",
+    entity_id: template.id,
+    mutation: true,
+  });
   if (Boolean(template.archived) === archived) return;
   const before = structuredClone(template);
   template.archived = archived;
@@ -622,11 +675,21 @@ export function filterLabelProducts(
 export function autoAddApprovedLabelChanges(
   before: DemoState,
   next: DemoState,
-  actor: string,
+  actor: AuthenticatedActor,
 ) {
+  actor = freshActor(next, actor);
   if (!next.label_settings?.auto_add_approved) return;
   next.label_waitlist ??= [];
   for (const branch of configuredLabelBranches(next)) {
+    if (
+      !can(next, actor, "labels.queue_write", {
+        company_id: next.config.company.seed_key,
+        kind: "location_record",
+        location_ids: [branch],
+        mutation: true,
+      }).allowed
+    )
+      continue;
     for (const product of next.products.filter(
       (item) =>
         item.company_id === next.config.company.seed_key &&
@@ -648,7 +711,8 @@ export function autoAddApprovedLabelChanges(
         branch,
         product_code: product.code,
         copies: 1,
-        added_by: actor,
+        added_by: actor.actor,
+        added_by_user_id: actor.user_id,
         added_at: new Date().toISOString(),
       });
     }

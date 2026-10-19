@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import fixtures from "../../seed/pricing-test-cases.json";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 import { calculatePrice } from "./pricing";
 import { addProduct } from "./manual-product";
 import { savePriceChange } from "./sales";
@@ -13,7 +13,11 @@ import {
   saveProductEdits,
   type ProductEdits,
 } from "./product-editor";
-import { configuredBranches } from "./settings";
+import {
+  catalogTestActor,
+  foreignCatalogManager,
+} from "./catalog-authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
 import {
   approvedWeightPricePerLb,
   calculateWeighedPrice,
@@ -153,29 +157,19 @@ describe("weighed product and settings decisions", () => {
     const provenance = structuredClone(product.price_provenance.Warehouse);
     const invoices = structuredClone(state.invoices),
       ledger = structuredClone(state.ledger);
-    savePriceChange(
-      state,
-      {
-        company_id: state.config.company.seed_key,
-        role: "supervisor",
-        actor: "Supervisor",
-        branch: "Branch 1",
-        allowed_branches: configuredBranches(state.config),
-      },
-      {
-        product_code: product.code,
-        mode: "regular",
-        scope: "all",
-        price: "3.29",
-        price_unit: "each",
-        branches: ["Branch 1", "Branch 3"],
-        starts_on: new Date().toISOString().slice(0, 10),
-        last_day: null,
-        accept_below_margin: true,
-        below_cost_reason: "Reviewed retail price",
-        add_labels: false,
-      },
-    );
+    savePriceChange(state, catalogTestActor(state, "manager"), {
+      product_code: product.code,
+      mode: "regular",
+      scope: "all",
+      price: "3.29",
+      price_unit: "each",
+      branches: ["Branch 1", "Branch 3"],
+      starts_on: new Date().toISOString().slice(0, 10),
+      last_day: null,
+      accept_below_margin: true,
+      below_cost_reason: "Reviewed retail price",
+      add_labels: false,
+    });
     product = state.products.find((item) => item.code === product.code)!;
     expect(product.selling_price).toBe("3.29");
     expect(product.branch_prices).toEqual({
@@ -205,14 +199,8 @@ describe("weighed product and settings decisions", () => {
       scope: "branch",
       selling_price: "7.49",
     };
-    const context = {
-      company_id: state.config.company.seed_key,
-      role: "supervisor" as const,
-      actor: "Supervisor",
-      branch: "Warehouse",
-      allowed_branches: configuredBranches(state.config),
-    };
-    const before = structuredClone(state);
+    const context = catalogTestActor(state, "manager", "Warehouse");
+    const before = cloneWithAuthority(state);
     expect(() =>
       savePriceChange(state, context, {
         product_code: product.code,
@@ -238,7 +226,7 @@ describe("weighed product and settings decisions", () => {
         selling_price: undefined,
         description_en: "Recorded warehouse product description",
       },
-      productEditSnapshot(state, product.code),
+      productEditSnapshot(state, context, product.code),
     );
     expect(product.description_en).toBe(
       "Recorded warehouse product description",
@@ -247,25 +235,18 @@ describe("weighed product and settings decisions", () => {
   });
   it("Undo restores weighed settings and keeps the original decision history", () => {
     const state = initialState();
-    const before = structuredClone(state);
+    const context = catalogTestActor(state, "manager", "all");
+    const before = cloneWithAuthority(state);
     const productPrices = state.products.map(
       (product) => product.selling_price,
     );
-    const context = {
-      company_id: state.config.company.seed_key,
-      role: "supervisor" as const,
-      branch: "all",
-      allowed_branches: ["Branch 1", "Branch 2", "Branch 3", "Warehouse"],
-      actor: "Supervisor",
-      username: "supervisor",
-    };
     savePricingSettings(
       state,
       {
         ...state.config,
         weighed_items: { ...DEFAULT_WEIGHED_SETTINGS, main_display_unit: "kg" },
       },
-      { role: context.role, company_id: context.company_id, by: context.actor },
+      context,
     );
     const [entry] = attachReversals(before, state, context);
     expect(entry.reversible).toBe(true);
@@ -285,32 +266,22 @@ describe("weighed product and settings decisions", () => {
   });
   it("manual creation stores cost per lb and respects the weighed rule without touching Each", () => {
     const state = initialState();
-    const product = addProduct(
-      state,
-      {
-        company_id: state.config.company.seed_key,
-        role: "supervisor",
-        actor: "Supervisor",
-        branch: "Branch 1",
-        allowed_branches: ["Branch 1", "Branch 2", "Branch 3", "Warehouse"],
-      },
-      {
-        name_en: "Fresh weighed test item",
-        name_fa: "محصول آزمایشی وزنی",
-        description_en: "",
-        description_fa: "",
-        unit_size: "1 lb",
-        ai_category: state.products[0].ai_category,
-        pricing_category: "grocery",
-        barcode: "",
-        main_supplier: state.products[0].main_supplier,
-        date_tracking: false,
-        sold_by: "weight",
-        scope: "all",
-        last_cost_before_tax: "11.0000",
-        last_cost_unit: "kg",
-      },
-    );
+    const product = addProduct(state, catalogTestActor(state, "manager"), {
+      name_en: "Fresh weighed test item",
+      name_fa: "محصول آزمایشی وزنی",
+      description_en: "",
+      description_fa: "",
+      unit_size: "1 lb",
+      ai_category: state.products[0].ai_category,
+      pricing_category: "grocery",
+      barcode: "",
+      main_supplier: state.products[0].main_supplier,
+      date_tracking: false,
+      sold_by: "weight",
+      scope: "all",
+      last_cost_before_tax: "11.0000",
+      last_cost_unit: "kg",
+    });
     expect(product).toMatchObject({
       sold_by: "weight",
       last_cost_before_tax: "4.9895",
@@ -333,11 +304,7 @@ describe("weighed product and settings decisions", () => {
       main_display_unit: "kg",
       show_second_unit: false,
     };
-    const actor = {
-      role: "supervisor" as const,
-      company_id: state.config.company.seed_key,
-      by: "Supervisor",
-    };
+    const actor = catalogTestActor(state, "manager");
     savePricingSettings(state, candidate, actor);
     expect(state.products).toEqual(products);
     expect(state.activity[0]).toMatchObject({
@@ -348,13 +315,14 @@ describe("weighed product and settings decisions", () => {
     });
     const saved = structuredClone(state.config);
     expect(() =>
-      savePricingSettings(state, candidate, { ...actor, role: "floor_worker" }),
+      savePricingSettings(
+        state,
+        candidate,
+        catalogTestActor(state, "floor_worker"),
+      ),
     ).toThrow();
     expect(() =>
-      savePricingSettings(state, candidate, {
-        ...actor,
-        company_id: "another-company",
-      }),
+      savePricingSettings(state, candidate, foreignCatalogManager(state)),
     ).toThrow();
     candidate.weighed_items.conversion_factor = "0";
     expect(() => savePricingSettings(state, candidate, actor)).toThrow();

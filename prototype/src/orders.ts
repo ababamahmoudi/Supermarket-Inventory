@@ -1,4 +1,17 @@
 import Decimal from "decimal.js";
+import type { AuthenticatedActor, Capability } from "./authority-types";
+import { can } from "./permissions";
+import { freshActor, actorAtLocation } from "./authority";
+import {
+  requirePurchase,
+  purchaseLocationAllowed,
+  purchaseLocationScope,
+} from "./purchase-authority";
+import { requireInvoiceAuthority } from "./invoice-authority";
+import {
+  invoiceEvidenceActor,
+  type InternalPurchaseEvidence,
+} from "./purchase-evidence.internal";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
@@ -6,11 +19,11 @@ import {
   costPerCase,
   invoiceCaseCostBeforeTax,
   packUnits,
-  supplierItemFacts,
+  supplierItemFactsForOrder,
 } from "./supplier-items";
 import { effectiveInvoiceLocation } from "./received";
 import { weightQuantityPerLb } from "./weighed";
-import type { OperationsContext } from "./operations";
+
 import type { Branch, DemoInvoice, DemoState, NoteRecord } from "./types";
 
 export type OrderStatus =
@@ -99,6 +112,7 @@ export interface Order {
   status: OrderStatus;
   created_at: string;
   created_by: string;
+  created_by_user_id?: string;
   ordered_at?: string;
   ordered_by?: string;
   cancelled_at?: string;
@@ -112,11 +126,7 @@ export interface Order {
   lines: OrderLine[];
   receipts: OrderReceiptEvent[];
 }
-export interface OrderContext extends OperationsContext {
-  username?: string;
-  device?: string;
-  allowed_branches?: Branch[];
-}
+export type OrderContext = AuthenticatedActor;
 export interface OrderCandidate {
   id: string;
   product_code: string;
@@ -209,10 +219,19 @@ function fail(code: OrderError["code"]): never {
   throw new OrderError(code);
 }
 const now = () => new Date().toISOString();
-export function orderQuantity(line: OrderLine): number | null {
+export type OrderQuantityRead = Pick<
+  OrderLine,
+  | "ordered_units"
+  | "received_units"
+  | "cancelled_units"
+  | "ordered_cases"
+  | "outstanding_decision"
+  | "new_item_association"
+>;
+export function orderQuantity(line: OrderQuantityRead): number | null {
   return line.new_item_association?.ordered_quantity ?? line.ordered_units;
 }
-export function remainingOrderUnits(line: OrderLine): number | null {
+export function remainingOrderUnits(line: OrderQuantityRead): number | null {
   const quantity = orderQuantity(line);
   return quantity === null
     ? null
@@ -223,7 +242,7 @@ export function remainingOrderUnits(line: OrderLine): number | null {
           .minus(line.cancelled_units),
       ).toNumber();
 }
-export function remainingOrderCases(line: OrderLine): string {
+export function remainingOrderCases(line: OrderQuantityRead): string {
   const total = orderQuantity(line);
   return total === null
     ? line.outstanding_decision === "cancelled"
@@ -237,24 +256,17 @@ export function remainingOrderCases(line: OrderLine): string {
           .toString();
 }
 export function canUseOrders(state: DemoState, context: OrderContext): boolean {
-  return (
-    context.company_id === state.config.company.seed_key &&
-    (context.branch === "all"
-      ? context.role === "supervisor"
-      : locationAllowed(state, context, context.branch)) &&
-    (context.role === "supervisor" ||
-      (context.role === "floor_worker" &&
-        context.branch !== "all" &&
-        state.config.orders?.allow_floor_worker === true))
-  );
+  return can(state, context, "orders.read", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+  }).allowed;
 }
-function guard(state: DemoState, context: OrderContext): void {
-  if (!canUseOrders(state, context))
-    fail(
-      context.company_id !== state.config.company.seed_key
-        ? "scope"
-        : "permission",
-    );
+function guard(
+  state: DemoState,
+  context: OrderContext,
+  capability: Capability = "orders.read",
+): OrderContext {
+  return requirePurchase(state, context, capability);
 }
 function locationAllowed(
   state: DemoState,
@@ -262,29 +274,26 @@ function locationAllowed(
   branch: Branch,
   active = false,
 ): boolean {
-  return (
-    branch !== "all" &&
-    configuredBranches(state.config, !active).includes(branch) &&
-    (
-      context.allowed_branches ??
-      (context.role === "supervisor"
-        ? configuredBranches(state.config, true)
-        : [context.branch])
-    ).includes(branch) &&
-    (context.branch === "all" || context.branch === branch)
+  return purchaseLocationAllowed(
+    state,
+    context,
+    active ? "orders.write" : "orders.read",
+    state.config.company.seed_key,
+    branch,
+    active,
   );
 }
 export function orderLocations(
   state: DemoState,
   context: OrderContext,
 ): Branch[] {
-  guard(state, context);
+  context = guard(state, context);
   return configuredBranches(state.config).filter((branch) =>
     locationAllowed(state, context, branch, true),
   );
 }
 export function scopedOrders(state: DemoState, context: OrderContext): Order[] {
-  guard(state, context);
+  context = guard(state, context);
   return (state.orders ?? [])
     .filter(
       (order) =>
@@ -298,8 +307,8 @@ export function orderCandidates(
   context: OrderContext,
   supplier: string,
 ): OrderCandidate[] {
-  guard(state, context);
-  return supplierItemFacts(state, context.company_id, supplier, "all")
+  context = guard(state, context);
+  return supplierItemFactsForOrder(state, context, supplier, context.branch)
     .filter((item) =>
       state.products.some(
         (product) =>
@@ -393,7 +402,7 @@ export function openToOrderNotes(
   context: OrderContext,
   location: Branch,
 ): NoteRecord[] {
-  guard(state, context);
+  context = guard(state, context);
   if (!locationAllowed(state, context, location, true)) fail("scope");
   return state.notes.filter(
     (note) =>
@@ -408,8 +417,16 @@ function expectedCost(value: string): string {
     fail("cost");
   return new Decimal(value).toFixed(4);
 }
+export type OrderCandidateQuantityRead = Pick<
+  OrderCandidate,
+  | "units_per_case"
+  | "quantity_unit"
+  | "case_weight"
+  | "case_weight_unit"
+  | "weight_conversion_factor"
+>;
 export function orderCandidateQuantity(
-  item: OrderCandidate,
+  item: OrderCandidateQuantityRead,
   cases: string,
 ): number {
   if (item.quantity_unit !== "lb") {
@@ -438,7 +455,7 @@ export function orderCandidateQuantity(
   ).toNumber();
 }
 export function orderCandidateCaseCost(
-  item: OrderCandidate,
+  item: OrderCandidateQuantityRead,
   unitCost: string,
 ): string {
   return item.quantity_unit === "lb" &&
@@ -480,7 +497,11 @@ function draftValues(
       supplierMatches(record, input.supplier),
   );
   if (!supplier) fail("supplier");
-  const candidates = orderCandidates(state, context, supplier.name);
+  const candidates = orderCandidates(
+    state,
+    actorAtLocation(state, context, input.branch),
+    supplier.name,
+  );
   const selected = [...new Set(input.source_note_ids ?? [])];
   for (const id of selected)
     if (
@@ -667,7 +688,9 @@ function audit(
     action,
     by: context.actor,
     actor_username: context.username,
-    device: context.device ?? "Browser demo",
+    actor_user_id: context.user_id,
+    actor_role_snapshot: context.role,
+    device: context.device_id ?? "Browser demo",
     at: now(),
     entity_type: "order",
     entity_id: order.id,
@@ -681,7 +704,7 @@ export function createOrder(
   context: OrderContext,
   input: OrderDraftInput,
 ): Order {
-  guard(state, context);
+  context = guard(state, context, "orders.write");
   const values = draftValues(state, context, input);
   const sequence =
     (state.orders ?? [])
@@ -707,6 +730,7 @@ export function createOrder(
     status: "draft",
     created_at: at,
     created_by: context.actor,
+    created_by_user_id: context.user_id,
     linked_invoice_ids: [],
     receipts: [],
     version: 1,
@@ -717,7 +741,7 @@ export function createOrder(
   return order;
 }
 function getOrder(state: DemoState, context: OrderContext, id: string): Order {
-  guard(state, context);
+  context = guard(state, context);
   return (
     scopedOrders(state, context).find((order) => order.id === id) ??
     fail("scope")
@@ -731,6 +755,12 @@ export function saveOrderDraft(
   version?: number,
 ): Order {
   const order = getOrder(state, context, id);
+  context = requirePurchase(
+    state,
+    context,
+    "orders.write",
+    purchaseLocationScope(order.company_id, order.branch, true),
+  );
   if (order.status !== "draft") fail("status");
   if (version !== undefined && version !== order.version) fail("stale");
   const values = draftValues(state, context, input, order);
@@ -746,6 +776,12 @@ export function addToOrderNote(
   noteId: string,
 ): Order {
   const order = getOrder(state, context, orderId);
+  context = requirePurchase(
+    state,
+    context,
+    "orders.write",
+    purchaseLocationScope(order.company_id, order.branch, true),
+  );
   if (order.status !== "draft") fail("status");
   const note = openToOrderNotes(state, context, order.branch).find(
     (item) => item.id === noteId,
@@ -765,6 +801,12 @@ export function placeOrder(
   version?: number,
 ): Order {
   const order = getOrder(state, context, id);
+  context = requirePurchase(
+    state,
+    context,
+    "orders.write",
+    purchaseLocationScope(order.company_id, order.branch, true),
+  );
   if (order.status !== "draft") fail("status");
   if (version !== undefined && version !== order.version) fail("stale");
   if (!locationAllowed(state, context, order.branch, true)) fail("location");
@@ -825,7 +867,7 @@ export function placeOrder(
       branch: order.branch,
       by: context.actor,
       actor_username: context.username,
-      device: context.device ?? "Browser demo",
+      device: context.device_id ?? "Browser demo",
       at: now(),
       action: "To order note ordered",
       entity_type: "note",
@@ -845,6 +887,12 @@ export function cancelOrder(
   version?: number,
 ): Order {
   const order = getOrder(state, context, id);
+  context = requirePurchase(
+    state,
+    context,
+    "orders.write",
+    purchaseLocationScope(order.company_id, order.branch, true),
+  );
   if (!["draft", "ordered", "partially_received"].includes(order.status))
     fail("status");
   if (version !== undefined && version !== order.version) fail("stale");
@@ -1101,9 +1149,20 @@ export function compareInvoiceOrder(
 /** Invoice callers already authorize review. This narrowly suggests compatible open orders, not general browsing. */
 export function suggestOpenOrders(
   state: DemoState,
+  actor: AuthenticatedActor,
   invoice: DemoInvoice,
 ): Order[] {
-  if (invoice.company_id !== state.config.company.seed_key) return [];
+  actor = requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.cost_read",
+    invoice.id,
+  );
+  const canonical =
+    invoice.id === state.invoice.id
+      ? state.invoice
+      : state.invoices?.find((item) => item.id === invoice.id);
+  if (canonical !== invoice) fail("scope");
   const supplier = supplierRecords(state).find(
     (record) =>
       record.company_id === invoice.company_id &&
@@ -1111,6 +1170,12 @@ export function suggestOpenOrders(
   );
   return (state.orders ?? []).filter(
     (order) =>
+      can(
+        state,
+        actor,
+        "invoices.cost_read",
+        purchaseLocationScope(order.company_id, order.branch),
+      ).allowed &&
       order.company_id === invoice.company_id &&
       order.branch === effectiveInvoiceLocation(state, invoice) &&
       (order.supplier_id === supplier?.id ||
@@ -1123,10 +1188,18 @@ function receiptOrder(
   context: OrderContext,
   id: string,
   input: OrderReceiptInput,
+  evidence: InternalPurchaseEvidence,
 ): { order: Order; invoice: DemoInvoice } {
+  const current = invoiceEvidenceActor(
+    state,
+    evidence,
+    input.invoice_id,
+    input.kind === "invoice" ? "invoice_post" : "invoice_short_resolve",
+  );
+  context = freshActor(state, context);
   if (
-    context.company_id !== state.config.company.seed_key ||
-    (context.role !== "supervisor" && context.role !== "floor_worker")
+    context.user_id !== current.user_id ||
+    context.session_id !== current.session_id
   )
     fail("permission");
   const order =
@@ -1165,28 +1238,6 @@ function receiptOrder(
       ))
   )
     fail("receipt");
-  const actingBranch =
-    input.kind === "invoice"
-      ? (invoice.handling_branch ?? invoice.branch)
-      : receivingBranch;
-  if (
-    context.role !== "supervisor" &&
-    (context.branch === "all" ||
-      context.branch !== actingBranch ||
-      (context.allowed_branches !== undefined &&
-        !context.allowed_branches.includes(actingBranch)))
-  )
-    fail("scope");
-  if (
-    context.role === "supervisor" &&
-    !locationAllowed(
-      state,
-      { ...context, branch: "all" },
-      receivingBranch,
-      true,
-    )
-  )
-    fail("scope");
   return { order, invoice };
 }
 /** Validate against saved invoice evidence before any caller writes financial records. No mutation. */
@@ -1195,8 +1246,9 @@ export function validateOrderReceipt(
   context: OrderContext,
   id: string,
   input: OrderReceiptInput,
+  evidence: InternalPurchaseEvidence,
 ): void {
-  const { order, invoice } = receiptOrder(state, context, id, input);
+  const { order, invoice } = receiptOrder(state, context, id, input, evidence);
   const prior = order.receipts.find(
     (event) =>
       event.event_key === input.event_key ||
@@ -1355,9 +1407,10 @@ export function applyInvoiceToOrder(
   context: OrderContext,
   id: string,
   input: OrderReceiptInput,
+  evidence: InternalPurchaseEvidence,
 ): Order {
-  validateOrderReceipt(state, context, id, input);
-  const { order, invoice } = receiptOrder(state, context, id, input);
+  validateOrderReceipt(state, context, id, input, evidence);
+  const { order, invoice } = receiptOrder(state, context, id, input, evidence);
   if (
     order.receipts.some(
       (event) =>

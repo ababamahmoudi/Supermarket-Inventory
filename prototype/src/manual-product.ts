@@ -1,4 +1,8 @@
 import Decimal from "decimal.js";
+import { freshActor } from "./authority";
+import { can, requireCapability } from "./permissions";
+import { actorAudit } from "./domain-authority";
+import { requireInvoiceAuthority } from "./invoice-authority";
 import { createId } from "./ids";
 import { calculatePrice } from "./pricing";
 import { calculateWeighedPrice, weightCostPerLb } from "./weighed";
@@ -43,7 +47,15 @@ export class NewProductError extends Error {
     super(code);
   }
 }
-export function similarProductNames(state: DemoState, name: string): Product[] {
+export function similarProductNames<
+  P extends Pick<Product, "company_id" | "name_en">,
+>(
+  state: {
+    readonly config: { readonly company: { readonly seed_key: string } };
+    readonly products: readonly P[];
+  },
+  name: string,
+): P[] {
   const normalized = name
     .toLocaleLowerCase()
     .normalize("NFKC")
@@ -66,7 +78,14 @@ export function similarProductNames(state: DemoState, name: string): Product[] {
   });
 }
 /** The retained high-water mark is independent of archive/revert and stock. */
-export function nextProductCode(state: DemoState): string {
+export function nextProductCode(state: {
+  readonly product_code_high_water?: number;
+  readonly config: {
+    readonly company: { readonly seed_key: string };
+    readonly product_codes: { readonly min_digits: number };
+  };
+  readonly products: readonly Pick<Product, "company_id" | "code">[];
+}): string {
   const maximum = Math.max(
     state.product_code_high_water ?? 0,
     0,
@@ -93,23 +112,34 @@ export function addProduct(
   const fail = (code: NewProductError["code"]): never => {
     throw new NewProductError(code);
   };
+  context = freshActor(state, context);
   if (context.company_id !== state.config.company.seed_key) fail("company");
   if ("opening_counts" in edits) fail("inventory_disabled");
-  if (
-    context.role !== "supervisor" &&
-    !(
-      context.role === "floor_worker" &&
-      invoiceQuickAdd &&
-      context.branch !== "all"
-    )
-  )
-    fail("permission");
+  const activeCreation = can(state, context, "catalog.create_active", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  }).allowed;
+  if (invoiceQuickAdd) {
+    context = requireInvoiceAuthority(
+      state,
+      context,
+      "invoices.product_propose",
+      state.invoice.id,
+      true,
+    );
+  } else {
+    requireCapability(state, context, "catalog.create_active", {
+      company_id: state.config.company.seed_key,
+      kind: "company_shared",
+      mutation: true,
+    });
+  }
+  const proposalBranch = invoiceQuickAdd
+    ? state.invoice.branch
+    : context.branch;
   const allowed = configuredBranches(state.config);
-  if (
-    context.branch !== "all" &&
-    (!allowed.includes(context.branch) ||
-      !context.allowed_branches.includes(context.branch))
-  )
+  if (proposalBranch !== "all" && !allowed.includes(proposalBranch))
     fail("branch");
   for (const field of ["name_en", "unit_size"] as const)
     if (!edits[field].trim()) fail(field);
@@ -169,13 +199,13 @@ export function addProduct(
     fail("price");
   const overridden =
     new Decimal(price).toFixed(2) !== calculation.selling_price;
-  if (context.role !== "supervisor" && overridden) fail("permission");
+  if (!activeCreation && overridden) fail("permission");
   const below =
     category!.minimum_margin !== null &&
     new Decimal(price)
       .minus(canonicalCost)
       .lt(new Decimal(price).times(category!.minimum_margin));
-  if (context.role === "supervisor" && below && !edits.minimum_margin_confirmed)
+  if (activeCreation && below && !edits.minimum_margin_confirmed)
     fail("margin");
   const code = nextProductCode(state);
   validateProductDateDrafts(
@@ -213,28 +243,26 @@ export function addProduct(
       : lookupBranch(context.branch),
     sold_by: edits.sold_by ?? "each",
     last_cost_before_tax: new Decimal(canonicalCost).toFixed(4),
-    selling_price:
-      context.role === "supervisor" ? new Decimal(price).toFixed(2) : "",
-    pending_price:
-      context.role === "supervisor" ? undefined : calculation.selling_price,
-    pending_branch: context.branch,
+    selling_price: activeCreation ? new Decimal(price).toFixed(2) : "",
+    pending_price: activeCreation ? undefined : calculation.selling_price,
+    pending_branch: proposalBranch,
     offer: null,
     taxable:
       state.config.tax.profiles.find(
         (item) => item.key === category!.default_tax_profile,
       )?.taxable === true,
     tax_profile: category!.default_tax_profile,
-    status: context.role === "supervisor" ? "active" : "pending_approval",
+    status: activeCreation ? "active" : "pending_approval",
   };
   state.products.push(product);
   applyProductDateDrafts(state, context, product, edits.dates, now);
-  if (context.role === "supervisor")
-    setManualPriceMarker(state, product, "all", price, context.actor, now);
-  if (context.role === "floor_worker")
+  if (activeCreation)
+    setManualPriceMarker(state, context, product, "all", price, now);
+  if (!activeCreation)
     state.approvals.push({
       id: `${code}:manual-new-product`,
       company_id: context.company_id,
-      branch: context.branch,
+      branch: proposalBranch,
       type: "new_product",
       product_code: code,
       status: "pending",
@@ -242,11 +270,12 @@ export function addProduct(
       current_price: null,
       created_at: now.toISOString(),
       triggered_by: context.actor,
+      triggered_by_user_id: context.user_id,
       unit_cost: product.last_cost_before_tax,
       margin: calculation.margin,
       threshold: category!.minimum_margin,
     });
-  if (context.role === "supervisor" && overridden)
+  if (activeCreation && overridden)
     state.approvals.push({
       id: `${code}:manual-price`,
       company_id: context.company_id,
@@ -264,9 +293,9 @@ export function addProduct(
         : undefined,
       created_at: now.toISOString(),
       triggered_by: context.actor,
+      triggered_by_user_id: context.user_id,
     });
-  if (context.role === "supervisor")
-    reconcileOffers(state, code, context.company_id);
+  if (activeCreation) reconcileOffers(state, context, code, context.company_id);
   state.activity.push({
     id: createId("product-activity"),
     company_id: context.company_id,
@@ -274,6 +303,7 @@ export function addProduct(
     product_code: code,
     action: "Add product",
     by: context.actor,
+    ...actorAudit(state, context, now),
     at: now.toISOString(),
     reversible: false,
     entity_type: "product",

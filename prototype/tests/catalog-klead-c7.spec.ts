@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import type { DemoState } from "../src/types";
 import { signIn, setLanguage } from "./helpers";
@@ -15,8 +16,8 @@ import { setupCatalogScene } from "../scripts/c6-catalog-scenes.mjs";
 const helpers = { button, field, exact, today, choose };
 const widths = [390, 768, 900, 1024, 1180, 1280, 1440, 1920];
 async function state(page: Page): Promise<DemoState> {
-  return page.evaluate(() =>
-    JSON.parse(localStorage.getItem("supermarket-prototype-v1")!),
+  return readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
   );
 }
 async function visit(page: Page, route: string) {

@@ -25,7 +25,7 @@ export function SupplierReturnsPanel({
   rows: SupplierReturnRow[];
   supplier: string;
 }) {
-  const { t, lang, state, role } = useDemo();
+  const { t, lang, state, can } = useDemo();
   const [tab, setTab] = useListState("supplierReturns.tab", "open");
   const [search, setSearch] = useListState("supplierReturns.search", "");
   const [status, setStatus] = useListState("supplierReturns.status", "all");
@@ -33,7 +33,10 @@ export function SupplierReturnsPanel({
     "supplierReturns.location",
     "all",
   );
-  const supervisor = role === "supervisor";
+  const supervisor = can("returns.amount_read", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+  });
   const columns = useTableColumns("supplier-returns", [
     {
       key: "reference",

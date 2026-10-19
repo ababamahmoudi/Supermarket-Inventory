@@ -27,33 +27,49 @@ import {
   ledgerSummary,
   postPayment,
   type OperationalLedger,
-  type OperationsContext,
 } from "./operations";
 import { supplierPage } from "./suppliers";
 import { supplierBalanceSummary } from "./supplier-balances";
 import { manualRegularApprovalPreview } from "./approvals";
 import { manualPrice, setManualPriceMarker } from "./manual-prices";
 import type { DemoState } from "./types";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { AuthorityError } from "./authority";
 
-function context(state: DemoState, branch = "Branch 1"): OperationsContext {
-  return {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    branch,
-    actor: "Ali",
-  };
+const managers = new WeakMap<DemoState, Map<string, AuthenticatedActor>>();
+function context(state: DemoState, branch = "Branch 1"): AuthenticatedActor {
+  let actual = managers.get(state);
+  if (!actual) {
+    actual = new Map();
+    managers.set(state, actual);
+  }
+  const retained = actual.get(branch);
+  if (retained) return retained;
+  const actor = authenticatedTestActor(state, "manager", {
+    user_id: `test-receiving-manager-${branch}`,
+    username: `receiving-manager-${branch}`,
+    name_en: "Ali",
+    locations: branch === "all" ? ["Branch 1"] : [branch],
+    selection:
+      branch === "all"
+        ? { kind: "all_locations" }
+        : { kind: "location", location_id: branch },
+  });
+  actual.set(branch, actor);
+  return actor;
 }
 
 function reviewed(): DemoState {
   const state = initialState();
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, context(state), "Branch 1", true);
   state.invoice.supplier = "Fresh Valley Foods";
   state.invoice.supplier_confirmed = true;
   state.invoice.supplier_invoice_number = "FICTIONAL-C-100";
   state.invoice.file_name = "fictional-c.png";
   state.invoice.file_data = "data:image/png;base64,ZGVtbw==";
   state.invoice.file_type = "image/png";
-  addManualLine(state, "0002");
+  addManualLine(state, context(state), "0002");
   const line = state.invoice.lines[0];
   line.unit_cost_before_tax = "1.4000";
   line.qty_invoiced = 36;
@@ -71,7 +87,7 @@ function reviewed(): DemoState {
 
 function posted(): DemoState {
   const state = reviewed();
-  postInvoice(state, "supervisor", "Branch 1", "Ali");
+  postInvoice(state, context(state));
   return state;
 }
 
@@ -93,7 +109,7 @@ describe("Received and receiving locations", () => {
     const state = reviewed();
     const all = context(state, "all");
     expect(receivedLog(state, all, { search: "FICTIONAL-C-100" })).toEqual([]);
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const rows = receivedLog(state, all, {
       search: "FICTIONAL-C-100",
       product: "0002",
@@ -136,15 +152,37 @@ describe("Received and receiving locations", () => {
     expect(
       receivedLog(state, all).some((row) => row.invoice_id === "foreign"),
     ).toBe(false);
-    expect(receivedLog(state, { ...all, company_id: "other-company" })).toEqual(
-      [],
-    );
-    expect(receivedLog(state, { ...all, role: "cashier" })).toEqual([]);
-    expect(receivedLog(state, { ...all, role: "floor_worker" })).toEqual([]);
+    const otherCompany = initialState();
+    otherCompany.config.company.seed_key = "other-company";
+    expect(() =>
+      receivedLog(
+        state,
+        authenticatedTestActor(otherCompany, "manager", {
+          locations: ["Branch 1"],
+        }),
+      ),
+    ).toThrow(AuthorityError);
+    expect(() =>
+      receivedLog(
+        state,
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+      ),
+    ).toThrow(AuthorityError);
+    expect(() =>
+      receivedLog(
+        state,
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+          selection: { kind: "all_locations" },
+        }),
+      ),
+    ).toThrow(AuthorityError);
     expect(
       receivedLog(
         state,
-        { ...all, role: "floor_worker", branch: "Branch 2" },
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 2"],
+        }),
         { search: "FICTIONAL-C-100", location: "Branch 1" },
       ),
     ).toEqual([]);
@@ -152,32 +190,51 @@ describe("Received and receiving locations", () => {
 
   it("suggests Ship to without silently changing location and lets the owning worker retarget the draft to Warehouse", () => {
     const state = reviewed();
+    const worker = authenticatedTestActor(state, "floor_worker", {
+      user_id: "test-receiving-multi-worker",
+      locations: ["Branch 1", "Warehouse"],
+      name_en: "Receiving Worker",
+    });
+    const source = state.invoice;
+    state.invoice = createInvoice(state, worker, "Branch 1", false);
+    Object.assign(state.invoice, {
+      supplier: source.supplier,
+      supplier_confirmed: source.supplier_confirmed,
+      supplier_invoice_number: source.supplier_invoice_number,
+      file_name: source.file_name,
+      file_type: source.file_type,
+      file_data: source.file_data,
+      lines: structuredClone(source.lines),
+    });
+    recalculateInvoice(state.invoice, state.config);
     state.invoice.ship_to = "Ship to: North York";
     expect(suggestedInvoiceLocation(state, state.invoice)).toBe("Branch 1");
     state.invoice.ship_to = "Ship to: Warehouse";
     expect(suggestedInvoiceLocation(state, state.invoice)).toBe("Warehouse");
     expect(state.invoice.branch).toBe("Branch 1");
-    setInvoiceLocation(state, "floor_worker", "Branch 1", "Warehouse");
+    setInvoiceLocation(state, worker, "Warehouse");
     expect(state.invoice.handling_branch).toBe("Branch 1");
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
-      "branch",
-    );
-    expect(invoiceBlockers(state, "floor_worker", "Branch 2")).toContain(
-      "branch",
-    );
+    expect(invoiceBlockers(state, worker)).not.toContain("branch");
+    const unrelated = authenticatedTestActor(state, "floor_worker", {
+      user_id: "test-unrelated-branch-two-worker",
+      locations: ["Branch 2"],
+    });
+    expect(invoiceBlockers(state, unrelated)).toContain("permission");
+    expect(() => setInvoiceLocation(state, unrelated, "Branch 3")).toThrow();
     expect(() =>
-      setInvoiceLocation(state, "floor_worker", "Branch 2", "Branch 3"),
+      setInvoiceLocation(
+        state,
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+        "Branch 3",
+      ),
     ).toThrow();
     expect(() =>
-      setInvoiceLocation(state, "cashier", "Branch 1", "Branch 3"),
-    ).toThrow();
-    expect(() =>
-      setInvoiceLocation(state, "supervisor", "all", "outside-company"),
+      setInvoiceLocation(state, context(state, "all"), "outside-company"),
     ).toThrow();
     state.invoice.lines.forEach((line) => {
       line.review_confirmed = true;
     });
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, worker);
     expect(
       receivedLog(state, context(state, "Warehouse"), {
         search: "FICTIONAL-C-100",
@@ -186,7 +243,9 @@ describe("Received and receiving locations", () => {
     expect(
       receivedLog(
         state,
-        { ...context(state), role: "floor_worker" },
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+        }),
         { search: "FICTIONAL-C-100" },
       ),
     ).toEqual([]);
@@ -195,9 +254,9 @@ describe("Received and receiving locations", () => {
   it("records each later short delivery once and preserves initial receipt quantity/date", () => {
     const state = reviewed();
     state.invoice.lines[0].qty_received_at_posting = 24;
-    postInvoice(state, "supervisor", "Branch 1");
-    receiveShort(state, "0002", 12, "C-LATER-1", "supervisor", "Branch 1");
-    receiveShort(state, "0002", 12, "C-LATER-1", "supervisor", "Branch 1");
+    postInvoice(state, context(state));
+    receiveShort(state, "0002", 12, "C-LATER-1", context(state));
+    receiveShort(state, "0002", 12, "C-LATER-1", context(state));
     const rows = receivedLog(state, context(state, "all"), {
       search: "FICTIONAL-C-100",
     });
@@ -215,7 +274,7 @@ describe("append-only posted invoice relocation", () => {
     const state = reviewed();
     state.invoice.lines[0].date_tracking = true;
     state.invoice.lines[0].date_value = "2027-01-01";
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const date = state.expiry.find(
       (entry) => entry.invoice_id === state.invoice.id,
     )!;
@@ -339,7 +398,7 @@ describe("append-only posted invoice relocation", () => {
   it("conserves balances through multiple moves and later short receipts at the effective destination", () => {
     const state = reviewed();
     state.invoice.lines[0].qty_received_at_posting = 24;
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const companyBefore = supplierBalanceSummary(
       state,
       context(state, "all"),
@@ -385,9 +444,23 @@ describe("append-only posted invoice relocation", () => {
       preview.snapshot,
     );
     expect(() =>
-      receiveShort(state, "0002", 12, "WRONG", "floor_worker", "Branch 1"),
+      receiveShort(
+        state,
+        "0002",
+        12,
+        "WRONG",
+        authenticatedTestActor(state, "floor_worker", {
+          locations: ["Branch 1"],
+        }),
+      ),
     ).toThrow();
-    receiveShort(state, "0002", 12, "C-LATE-MOVED", "supervisor", "Warehouse");
+    receiveShort(
+      state,
+      "0002",
+      12,
+      "C-LATE-MOVED",
+      context(state, "Warehouse"),
+    );
     expect(outstanding(state, "Warehouse")).toBe("50.40");
     expect(
       receivedLog(state, context(state, "Warehouse"), {
@@ -448,7 +521,7 @@ describe("append-only posted invoice relocation", () => {
       expect(() =>
         movePostedInvoice(
           state,
-          { ...context(state), role },
+          authenticatedTestActor(state, role, { locations: ["Branch 1"] }),
           state.invoice.id,
           "Warehouse",
           "Correction",
@@ -465,10 +538,14 @@ describe("append-only posted invoice relocation", () => {
         preview.snapshot,
       ),
     ).toThrow("reason");
+    const foreignCompanyState = initialState();
+    foreignCompanyState.config.company.seed_key = "other-company";
     expect(() =>
       invoiceLocationMovePreview(
         state,
-        { ...context(state), company_id: "other-company" },
+        authenticatedTestActor(foreignCompanyState, "manager", {
+          locations: ["Branch 1"],
+        }),
         state.invoice.id,
         "Warehouse",
       ),
@@ -548,7 +625,7 @@ describe("manual-priced invoice decisions", () => {
     const product = state.products.find((item) => item.code === "0002")!;
     product.selling_price = selling;
     product.branch_prices = {};
-    setManualPriceMarker(state, product, "all", selling, "Ali");
+    setManualPriceMarker(state, context(state), product, "all", selling);
     state.invoice.lines[0].unit_cost_before_tax = cost;
     recalculateInvoice(state.invoice, state.config);
     state.invoice.lines[0].review_confirmed = true;
@@ -556,16 +633,12 @@ describe("manual-priced invoice decisions", () => {
   }
   it("requires a receiver recommendation before posting; Keep preserves price/cost/evidence while creating the Manager calculated-price decision", () => {
     const { state, product } = manualReceipt();
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "manual_price",
-    );
+    expect(invoiceBlockers(state, context(state))).toContain("manual_price");
     const before = structuredClone(state);
-    expect(() => postInvoice(state, "supervisor", "Branch 1")).toThrow(
-      "manual_price",
-    );
+    expect(() => postInvoice(state, context(state))).toThrow("manual_price");
     expect(state).toEqual(before);
     state.invoice.lines[0].manual_price_decision = "keep";
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     expect(product.selling_price).toBe("2.79");
     expect(product.last_cost_before_tax).toBe("1.4000");
     expect(manualPrice(state, product, "Branch 1")?.price).toBe("2.79");
@@ -591,7 +664,7 @@ describe("manual-priced invoice decisions", () => {
   it("Use creates a rule-price proposal even if the new rule equals the current manual price", () => {
     const { state, product } = manualReceipt("1.5500", "2.99");
     state.invoice.lines[0].manual_price_decision = "rule";
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const approval = state.approvals.find(
       (entry) => entry.source_invoice_id === state.invoice.id,
     )!;
@@ -607,7 +680,7 @@ describe("manual-priced invoice decisions", () => {
   it("Manager Keep preview evaluates the same retained below-margin price while the pending proposal defaults calculated", () => {
     const { state, product } = manualReceipt("1.4000", "1.50");
     state.invoice.lines[0].manual_price_decision = "keep";
-    postInvoice(state, "supervisor", "Branch 1");
+    postInvoice(state, context(state));
     const approval = state.approvals.find(
       (entry) => entry.source_invoice_id === state.invoice.id,
     )!;
@@ -624,7 +697,12 @@ describe("manual-priced invoice decisions", () => {
       },
     });
     // The old 6.67% proof is retained for the actual Manager Keep choice rather than the default Rule proposal.
-    const keep = manualRegularApprovalPreview(state, approval, "keep");
+    const keep = manualRegularApprovalPreview(
+      state,
+      context(state),
+      approval,
+      "keep",
+    );
     expect(keep.price).toBe("1.50");
     expect(keep.below_minimum_margin).toBe(true);
     expect(new Decimal(keep.margin!).times(100).toFixed(2)).toBe("6.67");

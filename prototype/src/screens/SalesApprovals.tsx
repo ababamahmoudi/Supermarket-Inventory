@@ -1,3 +1,6 @@
+import { useProtectedQuery } from "../use-protected-query";
+import type { SaleRequestReadDTO } from "../offers-read-model";
+import { domainScope } from "../domain-authority";
 import { useState } from "react";
 import Decimal from "decimal.js";
 import { ChangePriceDialog } from "../ChangePriceDialog";
@@ -9,7 +12,7 @@ import {
   resolveSaleRequest,
   SalesError,
   type ChangePriceInput,
-  type SaleRequest,
+  type PriceChangePreview,
 } from "../sales";
 import {
   Money,
@@ -31,29 +34,29 @@ import {
 import "./sales-c8.css";
 
 export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
-  const { state, update, branch, role, historyContext, lang, t } = useDemo();
+  const { state, command, query, can, branch, historyContext, lang, t } =
+    useDemo();
   const [acknowledgments, setAcknowledgments] = useState<
     Record<string, boolean>
   >({});
   const [costReasons, setCostReasons] = useState<Record<string, string>>({});
   const [attempted, setAttempted] = useState<Record<string, boolean>>({});
-  const [changing, setChanging] = useState<SaleRequest | null>(null);
-  const [rejecting, setRejecting] = useState<SaleRequest | null>(null);
+  const [changing, setChanging] = useState<SaleRequestReadDTO | null>(null);
+  const [rejecting, setRejecting] = useState<SaleRequestReadDTO | null>(null);
   const [reason, setReason] = useState("");
   const [rejectAttempted, setRejectAttempted] = useState(false);
   const [message, setMessage] = useState("");
-  if (role !== "supervisor" || !historyContext) return null;
+  const canDecide = Boolean(historyContext && can("approvals.decide"));
   const requests = (state.sale_requests ?? []).filter(
     (request) =>
-      request.company_id === historyContext.company_id &&
+      request.company_id === historyContext?.company_id &&
       historyContext.allowed_branches.includes(request.branch) &&
       request.status === "pending" &&
       (branch === "all" || request.branch === branch) &&
       (!request.last_day ||
         request.last_day >= saleStoreDate(state.config, request.branch)),
   );
-  if (!requests.length) return null;
-  const requestInput = (request: SaleRequest): ChangePriceInput => ({
+  const requestInput = (request: SaleRequestReadDTO): ChangePriceInput => ({
     product_code: request.product_code,
     mode: "sale",
     scope: "current",
@@ -67,21 +70,66 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
     last_day: request.last_day,
     accept_below_margin: acknowledgments[request.id] ?? false,
     below_cost_reason: costReasons[request.id] ?? "",
-    add_labels: request.add_promo_labels,
+    add_labels: request.add_promo_labels ?? false,
     why: request.why,
     existing_sale_id: request.existing_sale_id,
     expected_revision: request.expected_sale_revision,
   });
-  const approve = (request: SaleRequest) => {
+  const previewInputs = JSON.stringify(
+    requests.map((request) => ({
+      id: request.id,
+      revision: request.revision,
+      input: requestInput(request),
+    })),
+  );
+  const requestPreviews = useProtectedQuery(
+    canDecide ? "approvals.decide" : null,
+    domainScope(state),
+    (canonical, actor) => {
+      const inputs = JSON.parse(previewInputs) as {
+        id: string;
+        revision: number;
+        input: ChangePriceInput;
+      }[];
+      return Object.fromEntries(
+        inputs.flatMap(({ id, revision, input }) => {
+          const request = canonical.sale_requests?.find(
+            (item) => item.id === id && item.company_id === actor.company_id,
+          );
+          return request &&
+            request.revision === revision &&
+            request.status === "pending"
+            ? [[id, previewPriceChange(canonical, actor, input)]]
+            : [];
+        }),
+      ) as Record<string, PriceChangePreview>;
+    },
+    previewInputs,
+  );
+  const previews = requestPreviews.data ?? {};
+  if (!historyContext || !can("approvals.read") || !requests.length)
+    return null;
+  const approve = async (request: SaleRequestReadDTO) => {
     setAttempted((current) => ({ ...current, [request.id]: true }));
     const input = requestInput(request);
-    if (!previewPriceChange(state, historyContext, input).can_save) return;
     try {
-      update((draft) =>
-        resolveSaleRequest(draft, historyContext, request.id, "approve", {
-          expected_revision: request.revision,
-          input,
-        }),
+      const preview = await query(
+        "approvals.decide",
+        domainScope(state, request),
+        (canonical, actor) => previewPriceChange(canonical, actor, input),
+      );
+      if (!preview.can_save) {
+        requestPreviews.reload();
+        return;
+      }
+      await command(
+        "approvals.decide",
+        domainScope(state, request, true),
+        (draft, freshActor) =>
+          resolveSaleRequest(draft, freshActor, request.id, "approve", {
+            expected_revision: request.revision,
+            input,
+          }),
       );
       setMessage(t("Approved", "تأیید شد"));
     } catch (error) {
@@ -98,15 +146,18 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
       );
     }
   };
-  const reject = () => {
+  const reject = async () => {
     setRejectAttempted(true);
     if (!rejecting || !reason.trim()) return;
     try {
-      update((draft) =>
-        resolveSaleRequest(draft, historyContext, rejecting.id, "reject", {
-          expected_revision: rejecting.revision,
-          reason,
-        }),
+      await command(
+        "approvals.decide",
+        domainScope(state, rejecting, true),
+        (draft, freshActor) =>
+          resolveSaleRequest(draft, freshActor, rejecting.id, "reject", {
+            expected_revision: rejecting.revision,
+            reason,
+          }),
       );
       setRejecting(null);
       setReason("");
@@ -129,14 +180,10 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
             item.company_id === request.company_id &&
             item.code === request.product_code,
         );
-        const preview = previewPriceChange(
-          state,
-          historyContext,
-          requestInput(request),
-        );
-        const effect = preview.effects[0];
+        const preview = canDecide ? previews[request.id] : undefined;
+        const effect = preview?.effects[0];
         const issues = attempted[request.id]
-          ? preview.issues.map((issue) => ({
+          ? (preview?.issues ?? []).map((issue) => ({
               id: issue.code,
               fieldId:
                 issue.code === "below_margin"
@@ -201,16 +248,18 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
                 )}
               </span>
             </div>
-            <p className="muted">
-              {t("Requested by", "درخواست‌دهنده")}:{" "}
-              {demoUserLabel(request.requester, lang)}
-              {request.why && (
-                <>
-                  {" "}
-                  · {t("Why?", "چرا؟")} {request.why}
-                </>
-              )}
-            </p>
+            {request.requester && (
+              <p className="muted">
+                {t("Requested by", "درخواست‌دهنده")}:{" "}
+                {demoUserLabel(request.requester, lang)}
+                {request.why && (
+                  <>
+                    {" "}
+                    · {t("Why?", "چرا؟")} {request.why}
+                  </>
+                )}
+              </p>
+            )}
             {effect?.margin && (
               <p>
                 {t("Margin at this price", "حاشیه سود در این قیمت")}{" "}
@@ -279,32 +328,34 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
                 </Field>
               </section>
             )}
-            <div className="actions sale-request-actions">
-              <Button onClick={() => approve(request)}>
-                {t("Approve", "تأیید")}
-              </Button>
-              <Button
-                id={`sale-request-review-${request.id}`}
-                variant="neutral"
-                onClick={() => setChanging(request)}
-              >
-                {t("Change and approve", "تغییر و تأیید")}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  setRejecting(request);
-                  setReason("");
-                  setRejectAttempted(false);
-                }}
-              >
-                {t("Reject", "رد")}
-              </Button>
-            </div>
+            {canDecide && (
+              <div className="actions sale-request-actions">
+                <Button disabled={!preview} onClick={() => approve(request)}>
+                  {t("Approve", "تأیید")}
+                </Button>
+                <Button
+                  id={`sale-request-review-${request.id}`}
+                  variant="neutral"
+                  onClick={() => setChanging(request)}
+                >
+                  {t("Change and approve", "تغییر و تأیید")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setRejecting(request);
+                    setReason("");
+                    setRejectAttempted(false);
+                  }}
+                >
+                  {t("Reject", "رد")}
+                </Button>
+              </div>
+            )}
           </section>
         );
       })}
-      {changing && (
+      {changing && canDecide && (
         <ChangePriceDialog
           product_code={changing.product_code}
           branch={changing.branch}
@@ -312,7 +363,7 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
           onClose={() => setChanging(null)}
         />
       )}
-      {rejecting && (
+      {rejecting && canDecide && (
         <Dialog
           open
           title={t("Reject sale request", "رد درخواست حراج")}

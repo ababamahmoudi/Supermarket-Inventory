@@ -39,19 +39,34 @@
   ],
   "roles": [
     {
-      "key": "cashier",
-      "label": "Cashier",
-      "summary": "Product and price lookup only"
+      "key": "owner",
+      "label": "Owner",
+      "label_fa": "مالک",
+      "summary": "Company-wide approvals, money, people and settings"
+    },
+    {
+      "key": "manager",
+      "label": "Manager",
+      "label_fa": "مدیر",
+      "summary": "Company-wide approvals, money, people and settings"
+    },
+    {
+      "key": "branch_supervisor",
+      "label": "Branch Supervisor",
+      "label_fa": "سرپرست شعبه",
+      "summary": "Assigned-location invoices, receiving, pickup, labels, dates, notes, requests and orders"
     },
     {
       "key": "floor_worker",
       "label": "Floor Worker",
-      "summary": "Receiving, returns, products, labels, suppliers, offers, notes"
+      "label_fa": "کارمند فروشگاه",
+      "summary": "Assigned-location receiving, returns, labels, dates, offers, requests and notes"
     },
     {
-      "key": "supervisor",
-      "label": "Supervisor",
-      "summary": "Approvals, payables, users, settings, all branches"
+      "key": "cashier",
+      "label": "Cashier",
+      "label_fa": "صندوق‌دار",
+      "summary": "Assigned-store product and price lookup"
     }
   ],
   "pricing_categories": [
@@ -154,7 +169,7 @@
     ],
     "one_active_offer_per_product_scope": true,
     "start_end_dates_required": false,
-    "who_can_create": ["floor_worker", "supervisor"],
+    "who_can_create": ["owner", "manager", "floor_worker"],
     "ai_suggested_offers_need_floor_worker_confirmation": true
   },
   "expiry": {
@@ -237,10 +252,7 @@
   "session": {
     "sign_in": "username_and_password",
     "self_registration": false,
-    "accounts_created_by": [
-      "supervisor",
-      "platform_owner_for_first_supervisor"
-    ],
+    "accounts_created_by": ["owner", "manager"],
     "temporary_password_forces_change": true,
     "password_min_length": 8,
     "block_common_passwords": true,
@@ -257,7 +269,8 @@
       "user_management"
     ],
     "pins": false,
-    "later_options": ["invite_only_google_sign_in", "supervisor_second_step"]
+    "later_options": ["invite_only_google_sign_in", "supervisor_second_step"],
+    "simulated_authenticator_code": "123456"
   },
   "dashboard_order": [
     "approvals_waiting",
@@ -299,39 +312,41 @@
         "kind": "to_order",
         "name_en": "To order",
         "name_fa": "برای سفارش",
-        "read_roles": ["floor_worker", "supervisor"],
-        "add_roles": ["floor_worker", "supervisor"],
+        "read_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
+        "add_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
         "has_status": true
       },
       {
         "kind": "store_use",
         "name_en": "Store use",
         "name_fa": "مصرف فروشگاه",
-        "read_roles": ["floor_worker", "supervisor"],
-        "add_roles": ["floor_worker", "supervisor"],
+        "read_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
+        "add_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
         "creates_stock_movement": true
       },
       {
         "kind": "for_supervisor",
-        "name_en": "For Supervisor",
-        "name_fa": "برای سرپرست",
-        "read_roles": ["floor_worker", "supervisor"],
-        "add_roles": ["floor_worker", "supervisor"],
+        "name_en": "For Manager",
+        "name_fa": "برای مدیر",
+        "read_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
+        "add_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
         "has_status": true,
-        "notify_supervisor": true
+        "notify_supervisor": true,
+        "notify_roles": ["owner", "manager", "branch_supervisor"],
+        "name_role_key": "manager"
       }
     ],
-    "custom_created_by": ["supervisor"]
+    "custom_created_by": ["owner", "manager"]
   },
   "history": {
     "undo_window_seconds": 10,
-    "revert_role": "supervisor",
     "corrections_not_undo_for": [
       "posted_invoice",
       "stock_movement",
       "payables_entry",
       "label_print"
-    ]
+    ],
+    "revert_roles": ["owner", "manager"]
   },
   "receiving": {
     "ai_reading_enabled": true,

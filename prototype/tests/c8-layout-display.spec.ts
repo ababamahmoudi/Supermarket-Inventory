@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -11,11 +12,12 @@ import {
   uploadInvoice,
 } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 const copy = (lang: "en" | "fa", en: string, fa: string) =>
   lang === "fa" ? fa : en;
 const saved = (page: Page): Promise<DemoState> =>
-  page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), storage);
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
+  );
 
 async function retainedOriginalHash(page: Page, reference: string) {
   const bytes = await page.evaluate(async (id) => {
@@ -377,10 +379,10 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
     new URL("../public/demo-originals/fictional-hw-5012.svg", import.meta.url),
   );
   await (await openInvoiceUpload(page)).setInputFiles(original);
-  await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect(
     page.getByRole("heading", { name: "Review invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect
     .poll(async () => (await saved(page)).invoice.supplier_invoice_number)
     .toBe("HW-5012");

@@ -1,62 +1,75 @@
-import { beforeEach, expect, it } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { useState } from "react";
+import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
+import { authenticatedTestActor } from "../authority-test-fixture";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DemoProvider, useDemo } from "../store";
 import { returnFixture } from "../return-test-fixture";
-import {
-  recordPickup,
-  type OperationalReturn,
-  type OperationsContext,
-} from "../operations";
+import { recordPickup } from "../operations";
 import { ReturnActionForms } from "./ReturnActionForms";
 import { ReturnMemoDocument } from "../return-memo";
 import i18n from "../i18n";
-const worker: OperationsContext = {
-  company_id: "super-arzon",
-  branch: "Branch 1",
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
-};
+const worker = (state: ReturnType<typeof returnFixture>) =>
+  authenticatedTestActor(state, "floor_worker", {
+    locations: ["Branch 1"],
+    name_en: "Demo Floor Worker",
+  });
+const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+afterEach(() => {
+  for (const fixture of fixtures.splice(0)) fixture.dispose();
+});
+async function prepare(mode: "pickup" | "resolve") {
+  const state = returnFixture();
+  if (mode === "resolve") {
+    state.returns[0].lines.push({
+      product_code: "0001",
+      qty: 2,
+      reason: "Damaged",
+      unit_cost: "5.0000",
+    });
+    recordPickup(state, worker(state), "c4-return", {
+      quantities: { "0003": 3, "0001": 2 },
+      representative: "Demo Driver",
+      slip: "SIGNED-UI-001",
+    });
+  }
+  const fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: {
+      selection: { kind: "location", location_id: "Branch 1" },
+      name_en: "Demo Supervisor",
+    },
+  });
+  fixtures.push(fixture);
+  return fixture;
+}
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   await i18n.changeLanguage("en");
 });
 function Harness({ mode }: { mode: "pickup" | "resolve" }) {
-  const { state, update, switchDemoUser, t } = useDemo();
-  const record = state.returns.find((item) => item.id === "c4-return") as
-    OperationalReturn | undefined;
+  const { state, actor, t } = useDemo();
+  const [loaded, setLoaded] = useState(false);
+  const record = state.returns.find((item) => item.id === "c4-return");
   return (
     <>
-      <button
-        onClick={() => {
-          switchDemoUser("supervisor");
-          update((draft) => {
-            const fixture = returnFixture();
-            if (mode === "resolve") {
-              fixture.returns[0].lines.push({
-                product_code: "0001",
-                qty: 2,
-                reason: "Damaged",
-                unit_cost: "5.0000",
-              });
-              recordPickup(fixture, worker, "c4-return", {
-                quantities: { "0003": 3, "0001": 2 },
-                representative: "Demo Driver",
-                slip: "SIGNED-UI-001",
-              });
-            }
-            Object.assign(draft, fixture);
-          });
-        }}
-      >
-        Load fictional return
-      </button>
-      {record && (
+      {actor && (
+        <button onClick={() => setLoaded(true)}>Load fictional return</button>
+      )}
+      {loaded && record && actor && (
         <ReturnActionForms
           record={record}
           mode={mode}
-          context={{ ...worker, role: "supervisor", actor: "Demo Supervisor" }}
+          context={actor}
           onClose={() => {}}
           onSaved={() => {}}
         />
@@ -68,13 +81,14 @@ function Harness({ mode }: { mode: "pickup" | "resolve" }) {
 }
 it("lists missing pickup fields with working links, clears only edited errors and saves shortfalls", async () => {
   const user = userEvent.setup();
+  const fixture = await prepare("pickup");
   render(
-    <DemoProvider>
+    <DemoProvider options={fixture.options}>
       <Harness mode="pickup" />
     </DemoProvider>,
   );
   await user.click(
-    screen.getByRole("button", { name: "Load fictional return" }),
+    await screen.findByRole("button", { name: "Load fictional return" }),
   );
   await user.click(screen.getByRole("button", { name: "Record pickup" }));
   const missing = screen.getByRole("alert", { name: "What's missing" });
@@ -104,26 +118,29 @@ it("lists missing pickup fields with working links, clears only edited errors an
     "SIGNED-UI-002",
   );
   await user.click(screen.getByRole("button", { name: "Record pickup" }));
-  const record = JSON.parse(screen.getByTestId("return-json").textContent!);
-  expect(record.lines[0]).toMatchObject({
-    picked_up: 2,
-    pickup_shortfall: {
-      reason: "Rep refused: not covered by the return policy",
-      outcome: "keep_for_next_pickup",
-      quantity: 1,
-    },
+  await waitFor(() => {
+    const record = JSON.parse(screen.getByTestId("return-json").textContent!);
+    expect(record.lines[0]).toMatchObject({
+      picked_up: 2,
+      pickup_shortfall: {
+        reason: "Rep refused: not covered by the return policy",
+        outcome: "keep_for_next_pickup",
+        quantity: 1,
+      },
+    });
+    expect(record.pickup_memos[0].reference).toBe("RM-0001");
   });
-  expect(record.pickup_memos[0].reference).toBe("RM-0001");
 });
 it("records mixed per-item replacement and outstanding date without exposing editable pickup", async () => {
   const user = userEvent.setup();
+  const fixture = await prepare("resolve");
   render(
-    <DemoProvider>
+    <DemoProvider options={fixture.options}>
       <Harness mode="resolve" />
     </DemoProvider>,
   );
   await user.click(
-    screen.getByRole("button", { name: "Load fictional return" }),
+    await screen.findByRole("button", { name: "Load fictional return" }),
   );
   expect(
     screen.queryByLabelText("Actual pickup quantity"),
@@ -148,25 +165,27 @@ it("records mixed per-item replacement and outstanding date without exposing edi
   await user.click(screen.getByLabelText("Expected date"));
   await user.click(screen.getByRole("button", { name: "2026-10-23" }));
   await user.click(screen.getByRole("button", { name: "Record resolution" }));
-  const record = JSON.parse(screen.getByTestId("return-json").textContent!);
-  expect(record.lines[0]).toMatchObject({ picked_up: 3, settled: 1 });
-  expect(record.lines[1]).toMatchObject({
-    picked_up: 2,
-    outstanding_expected_date: "2026-10-23",
+  await waitFor(() => {
+    const record = JSON.parse(screen.getByTestId("return-json").textContent!);
+    expect(record.lines[0]).toMatchObject({ picked_up: 3, settled: 1 });
+    expect(record.lines[1]).toMatchObject({
+      picked_up: 2,
+      outstanding_expected_date: "2026-10-23",
+    });
+    expect(record.pickup_memos[0].lines[0].quantity).toBe(3);
+    expect(
+      record.evidence.map((event: { kind: string }) => event.kind),
+    ).toContain("replacement");
+    expect(
+      record.evidence.map((event: { kind: string }) => event.kind),
+    ).toContain("outstanding");
   });
-  expect(record.pickup_memos[0].lines[0].quantity).toBe(3);
-  expect(
-    record.evidence.map((event: { kind: string }) => event.kind),
-  ).toContain("replacement");
-  expect(
-    record.evidence.map((event: { kind: string }) => event.kind),
-  ).toContain("outstanding");
 });
 it("prints English by default in Persian UI and supports independent bilingual document choice", () => {
   const state = returnFixture();
   pickupForPrint();
   function pickupForPrint() {
-    recordPickup(state, worker, "c4-return", {
+    recordPickup(state, worker(state), "c4-return", {
       quantities: { "0003": 3 },
       representative: "Demo Driver",
       slip: "SIGNED-PRINT",

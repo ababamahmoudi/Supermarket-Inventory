@@ -1,3 +1,5 @@
+import { runCanonicalBusinessFixture } from "./business-fixture";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, signIn, visitPage } from "./helpers";
 
@@ -7,14 +9,14 @@ test("Warehouse is a configured location and retains its type through a Supervis
   await signIn(page, "Supervisor");
   const location = page
     .locator(".topbar")
-    .getByLabel("Branch", { exact: true });
+    .getByLabel("Location", { exact: true });
   await location.click();
   await expect(page.getByRole("option")).toHaveText([
     "North York",
     "Richmond Hill",
     "Newmarket",
     "Warehouse",
-    "All branches",
+    "All locations",
   ]);
   await page.getByRole("option", { name: "Warehouse", exact: true }).click();
   await expect(location).toHaveText("Warehouse");
@@ -43,10 +45,11 @@ test("Warehouse is a configured location and retains its type through a Supervis
   await expect(location).toHaveText("Receiving Warehouse");
   await page.reload();
   await expect(location).toHaveText("Receiving Warehouse");
-  const saved = await page.evaluate(() =>
-    JSON.parse(
-      localStorage.getItem("supermarket-prototype-v1")!,
-    ).config.branches.find((branch: { code: string }) => branch.code === "W1"),
+  const saved = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).config.branches.find(
+        (branch: { code: string }) => branch.code === "W1",
+      ),
   );
   expect(saved).toMatchObject({
     id: "Warehouse",
@@ -84,12 +87,38 @@ test("location type can be chosen when adding a location and Cashiers cannot acc
     .click();
   await setBranch(page, "East Warehouse");
   await expect(
-    page.locator(".topbar").getByLabel("Branch", { exact: true }),
+    page.locator(".topbar").getByLabel("Location", { exact: true }),
   ).toHaveText("East Warehouse");
   await signIn(page, "Cashier");
-  await expect(page.locator(".topbar .branch-pill.static")).toHaveText(
+  const cashierLocation = page
+    .locator(".topbar")
+    .getByRole("combobox", { name: "Location", exact: true });
+  // The registered North York computer selects an allowed default. This person
+  // has two assigned stores, so the picker must retain both without warehouses.
+  await expect(cashierLocation).toHaveText("North York");
+  await cashierLocation.click();
+  await expect(page.getByRole("option")).toHaveText([
     "North York",
+    "Richmond Hill",
+    "All my locations",
+  ]);
+  for (const forbiddenLocation of ["Warehouse", "East Warehouse"])
+    await expect(
+      page.getByRole("option", { name: forbiddenLocation, exact: true }),
+    ).toHaveCount(0);
+  await page
+    .getByRole("option", { name: "Richmond Hill", exact: true })
+    .click();
+  await expect(cashierLocation).toHaveText("Richmond Hill");
+  await chooseOption(
+    page,
+    cashierLocation,
+    "all_my_locations",
+    "All my locations",
   );
+  await expect(cashierLocation).toHaveText("All my locations");
+  await chooseOption(page, cashierLocation, "location:Branch 1", "North York");
+  await expect(cashierLocation).toHaveText("North York");
   await expect(
     page.getByRole("link", { name: "Received", exact: true }),
   ).toHaveCount(0);
@@ -108,18 +137,22 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
 }) => {
   await signIn(page, "Supervisor");
   // An explicit current-week posted receipt keeps this behavior meaningful on Mondays.
-  const receiptFixture = await page.evaluate(() => {
-    const saved = JSON.parse(localStorage.getItem("supermarket-prototype-v1")!);
-    const receipt = saved.invoices.find(
-      (invoice: { status: string; branch: string }) =>
-        invoice.status === "posted" && invoice.branch === "Branch 1",
-    );
-    if (!receipt)
-      throw new Error("The seed must retain a posted North York receipt");
-    receipt.received_at = new Date().toISOString();
-    localStorage.setItem("supermarket-prototype-v1", JSON.stringify(saved));
-    return { id: receipt.id, number: receipt.supplier_invoice_number };
-  });
+  const receiptFixture = await runCanonicalBusinessFixture(
+    page,
+    (saved) => {
+      if (!saved.invoices)
+        throw new Error("The receipt fixture requires invoices.");
+      const receipt = saved.invoices.find(
+        (invoice: { status: string; branch: string }) =>
+          invoice.status === "posted" && invoice.branch === "Branch 1",
+      );
+      if (!receipt)
+        throw new Error("The seed must retain a posted North York receipt");
+      receipt.received_at = new Date().toISOString();
+      return { id: receipt.id, number: receipt.supplier_invoice_number };
+    },
+    undefined,
+  );
   await page.reload();
   expect(receiptFixture.id).toBeTruthy();
   await expect(

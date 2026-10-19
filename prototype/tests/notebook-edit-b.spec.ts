@@ -1,3 +1,5 @@
+import { configuredPersonExpectation } from "./configured-person-expectations";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
 
@@ -8,13 +10,12 @@ async function deliTab(page: Page) {
   await page.getByRole("tab", { name: /^Deli temperatures(?: \d+)?$/ }).click();
 }
 async function storedEntry(page: Page, text: string) {
-  return page.evaluate(
-    ({ key, text }) =>
-      JSON.parse(localStorage.getItem(key)!).notebook_entries.find(
-        (entry: { text: string }) => entry.text === text,
-      ),
-    { key: storage, text },
-  );
+  return readCanonicalBusinessEvidence(page).then((canonicalState) => {
+    const canonicalEvidenceInput = { key: storage, text };
+    return JSON.parse(JSON.stringify(canonicalState)!).notebook_entries.find(
+      (entry: { text: string }) => entry.text === canonicalEvidenceInput.text,
+    );
+  });
 }
 
 test("a worker corrects their own note within ten seconds, the original author window expires, and the Supervisor can edit later", async ({
@@ -84,23 +85,22 @@ test("a worker corrects their own note within ten seconds, the original author w
     measurement: "3.6",
     measurement_unit: "°C",
   });
-  const audit = await page.evaluate(
-    (key) =>
-      JSON.parse(localStorage.getItem(key)!).activity.filter(
+  const audit = await readCanonicalBusinessEvidence(page).then(
+    (canonicalState) =>
+      JSON.parse(JSON.stringify(canonicalState)!).activity.filter(
         (entry: { action: string }) =>
           entry.action === "notebook_entry_updated",
       ),
-    storage,
   );
   expect(audit).toHaveLength(2);
   expect(audit[0]).toMatchObject({
-    by: "Demo Supervisor",
+    by: configuredPersonExpectation("manager").name_en,
     before: { text: "Afternoon check corrected" },
     after: { text: "Supervisor verified fridge check" },
     reversible: true,
   });
   expect(audit[1]).toMatchObject({
-    by: "Demo Floor Worker",
+    by: configuredPersonExpectation("ny-floor").name_en,
     before: { text: "Afternoon fridge check" },
     after: { text: "Afternoon check corrected" },
     reversible: true,
@@ -135,7 +135,9 @@ test("an already-open worker editor expires after ten seconds and Cancel keeps t
   await editor
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
-  await expect(editor.getByRole("alert")).toContainText("Ask the Supervisor");
+  await expect(editor.getByRole("alert")).toHaveText(
+    "The ten-second edit window has ended. Ask an Owner or Manager to edit this note.",
+  );
   expect(await storedEntry(page, "Unchanged saved check")).toEqual(original);
   await editor.getByRole("button", { name: "Cancel", exact: true }).click();
   expect(await storedEntry(page, "Unchanged saved check")).toEqual(original);

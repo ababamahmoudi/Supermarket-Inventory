@@ -7,7 +7,6 @@ import {
   postReturnClaim,
   correctReturnPickup,
   type OperationalReturn,
-  type OperationsContext,
 } from "./operations";
 import {
   recordItemResolutions,
@@ -15,19 +14,16 @@ import {
 } from "./return-item-resolutions";
 import { signedReturnPickupQuantities } from "./signed-return-pickups";
 import { pendingReturnCredits } from "./return-workflow";
-const worker: OperationsContext = {
-  company_id: "super-arzon",
-  branch: "Branch 1",
-  role: "floor_worker",
-  actor: "Demo Floor Worker",
-};
-const supervisor: OperationsContext = {
-  ...worker,
-  role: "supervisor",
-  actor: "Demo Supervisor",
-};
+import { authenticatedTestActor } from "./authority-test-fixture";
+const worker = (state: ReturnType<typeof returnFixture>) =>
+  authenticatedTestActor(state, "floor_worker", {
+    locations: ["Branch 1"],
+    name_en: "Demo Floor Worker",
+  });
+const supervisor = (state: ReturnType<typeof returnFixture>) =>
+  authenticatedTestActor(state, "manager", { name_en: "Demo Supervisor" });
 const pickup = (state: ReturnType<typeof returnFixture>, quantity = 3) =>
-  recordPickup(state, worker, "c4-return", {
+  recordPickup(state, worker(state), "c4-return", {
     quantities: { "0003": quantity },
     representative: "Demo Driver",
     slip: "SIGNED-PER-ITEM",
@@ -42,8 +38,8 @@ const ownRecord = (state: ReturnType<typeof returnFixture>) =>
   state.returns.find(
     (record) =>
       record.id === "c4-return" &&
-      record.company_id === worker.company_id &&
-      record.branch === worker.branch,
+      record.company_id === state.config.company.seed_key &&
+      record.branch === "Branch 1",
   )! as OperationalReturn;
 describe("C6 signed per-item resolution write guard", () => {
   it("rejects unrelated signed evidence even when a legacy aggregate claims all units were picked up", () => {
@@ -63,7 +59,7 @@ describe("C6 signed per-item resolution write guard", () => {
     ];
     const before = structuredClone(state);
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 3 },
         invoice_id: "c4-base-invoice",
@@ -71,7 +67,7 @@ describe("C6 signed per-item resolution write guard", () => {
       }),
     ).toThrow("pickup_required");
     expect(() =>
-      receiveReplacement(state, worker, record.id, {
+      receiveReplacement(state, worker(state), record.id, {
         product_code: "0002",
         qty: 1,
         covers: { "0003": 1 },
@@ -81,14 +77,14 @@ describe("C6 signed per-item resolution write guard", () => {
       }),
     ).toThrow("pickup_required");
     expect(() =>
-      submitFinancialClaim(state, supervisor, record.id, {
+      submitFinancialClaim(state, supervisor(state), record.id, {
         type: "no_compensation",
         covers: { "0003": 1 },
         reason: "No signed pickup",
       }),
     ).toThrow("pickup_required");
     expect(() =>
-      recordItemResolutions(state, worker, record.id, [
+      recordItemResolutions(state, worker(state), record.id, [
         {
           product_code: "0003",
           kind: "outstanding",
@@ -111,7 +107,7 @@ describe("C6 signed per-item resolution write guard", () => {
     });
     const before = structuredClone(state);
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 2 },
         invoice_id: "c4-base-invoice",
@@ -119,15 +115,21 @@ describe("C6 signed per-item resolution write guard", () => {
       }),
     ).toThrow("coverage");
     expect(state).toEqual(before);
-    submitFinancialClaim(state, worker, record.id, {
+    submitFinancialClaim(state, worker(state), record.id, {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       invoice_id: "c4-base-invoice",
       document: "ACTUAL-ONE",
     });
-    postReturnClaim(state, supervisor, record.id, record.claims![0].id, "8.00");
+    postReturnClaim(
+      state,
+      supervisor(state),
+      record.id,
+      record.claims![0].id,
+      "8.00",
+    );
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 1 },
         invoice_id: "c4-base-invoice",
@@ -161,26 +163,21 @@ describe("C6 signed per-item resolution write guard", () => {
     pickup(state);
     const record = ownRecord(state),
       original = structuredClone(record.pickup_memos![0]);
-    correctReturnPickup(
-      state,
-      { ...supervisor, pickup_correction_authority: "manager" },
-      record.id,
-      {
-        memo_id: original.id,
-        quantities: { "0003": 1 },
-        reason: "Signed count reviewed",
-        shortfalls: {
-          "0003": {
-            reason: "Two not picked up",
-            outcome: "keep_for_next_pickup",
-          },
+    correctReturnPickup(state, supervisor(state), record.id, {
+      memo_id: original.id,
+      quantities: { "0003": 1 },
+      reason: "Signed count reviewed",
+      shortfalls: {
+        "0003": {
+          reason: "Two not picked up",
+          outcome: "keep_for_next_pickup",
         },
       },
-    );
+    });
     expect([...signedReturnPickupQuantities(record)]).toEqual([["0003", 1]]);
     record.lines[0].picked_up = 3;
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 2 },
         invoice_id: "c4-base-invoice",
@@ -206,7 +203,7 @@ describe("C6 signed per-item resolution write guard", () => {
       unit_cost: "5.0000",
     });
     const legacy = structuredClone(record.lines[0]);
-    recordPickup(state, worker, record.id, {
+    recordPickup(state, worker(state), record.id, {
       quantities: { "0001": 1, "0003": 0 },
       representative: "Driver",
       slip: "SIGNED-NEW-ITEM",
@@ -214,7 +211,7 @@ describe("C6 signed per-item resolution write guard", () => {
         "0001": { reason: "One kept", outcome: "keep_for_next_pickup" },
       },
     });
-    recordItemResolutions(state, worker, record.id, [
+    recordItemResolutions(state, worker(state), record.id, [
       {
         product_code: "0001",
         kind: "outstanding",
@@ -229,7 +226,7 @@ describe("C6 signed per-item resolution write guard", () => {
     });
     const before = structuredClone(state);
     expect(() =>
-      recordItemResolutions(state, worker, record.id, [
+      recordItemResolutions(state, worker(state), record.id, [
         {
           product_code: "0003",
           kind: "outstanding",
@@ -249,7 +246,7 @@ describe("C6 signed per-item resolution write guard", () => {
     state.returns.unshift(foreign, otherLocation);
     const foreignBefore = structuredClone(foreign),
       otherBefore = structuredClone(otherLocation);
-    recordItemResolutions(state, worker, "c4-return", [
+    recordItemResolutions(state, worker(state), "c4-return", [
       {
         product_code: "0003",
         kind: "outstanding",
@@ -301,7 +298,7 @@ it("does not fill legacy replacement aggregates when a new unsigned write is rej
   };
   const before = structuredClone(state);
   expect(() =>
-    receiveReplacement(state, worker, record.id, {
+    receiveReplacement(state, worker(state), record.id, {
       product_code: "0002",
       qty: 1,
       covers: { "0003": 1 },
@@ -338,11 +335,11 @@ it("retained posted claims cap remaining signed coverage even when settled proje
     resolved: 2,
     available: 1,
   });
-  expect(pendingReturnCredits(state, supervisor)).toEqual([
+  expect(pendingReturnCredits(state, supervisor(state))).toEqual([
     expect.objectContaining({ amount: "10.00" }),
   ]);
   expect(() =>
-    submitFinancialClaim(state, worker, record.id, {
+    submitFinancialClaim(state, worker(state), record.id, {
       type: "credit_current_invoice",
       covers: { "0003": 2 },
       invoice_id: "c4-base-invoice",
@@ -350,7 +347,7 @@ it("retained posted claims cap remaining signed coverage even when settled proje
     }),
   ).toThrow("coverage");
   expect(() =>
-    receiveReplacement(state, worker, record.id, {
+    receiveReplacement(state, worker(state), record.id, {
       product_code: "0002",
       qty: 2,
       covers: { "0003": 2 },
@@ -360,7 +357,7 @@ it("retained posted claims cap remaining signed coverage even when settled proje
     }),
   ).toThrow("coverage");
   expect(state).toStrictEqual(before);
-  submitFinancialClaim(state, worker, record.id, {
+  submitFinancialClaim(state, worker(state), record.id, {
     type: "credit_current_invoice",
     covers: { "0003": 1 },
     invoice_id: "c4-base-invoice",
@@ -373,20 +370,20 @@ it("pairs posted claim events once, retains replacement coverage and blocks ambi
   const state = returnFixture();
   pickup(state);
   const record = ownRecord(state);
-  submitFinancialClaim(state, supervisor, record.id, {
+  submitFinancialClaim(state, supervisor(state), record.id, {
     type: "credit_current_invoice",
     covers: { "0003": 1 },
     invoice_id: "c4-base-invoice",
     document: "CREDIT-ONE",
     amount: "8.00",
   });
-  postReturnClaim(state, supervisor, record.id, record.claims![0].id);
+  postReturnClaim(state, supervisor(state), record.id, record.claims![0].id);
   record.lines[0].settled = 0;
   expect(returnItemProgress(record, record.lines[0])).toMatchObject({
     resolved: 1,
     available: 2,
   });
-  receiveReplacement(state, worker, record.id, {
+  receiveReplacement(state, worker(state), record.id, {
     product_code: "0002",
     qty: 1,
     covers: { "0003": 1 },
@@ -405,7 +402,7 @@ it("pairs posted claim events once, retains replacement coverage and blocks ambi
   record.claims!.push(conflicting);
   const before = structuredClone(state);
   expect(() =>
-    submitFinancialClaim(state, worker, record.id, {
+    submitFinancialClaim(state, worker(state), record.id, {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       invoice_id: "c4-base-invoice",
@@ -426,21 +423,21 @@ it("keeps resolved imports closed for new writes while retrying an already recor
     representative: "Driver",
     receipt: "RESOLVED-REPLACEMENT",
   };
-  receiveReplacement(state, worker, record.id, actual);
+  receiveReplacement(state, worker(state), record.id, actual);
   const before = structuredClone(state);
-  receiveReplacement(state, worker, record.id, actual);
+  receiveReplacement(state, worker(state), record.id, actual);
   expect(state).toStrictEqual(before);
   record.lines[0].settled = 0;
   const stale = structuredClone(state);
   expect(() =>
-    receiveReplacement(state, worker, record.id, {
+    receiveReplacement(state, worker(state), record.id, {
       ...actual,
       receipt: "SECOND-ON-CLOSED",
       covers: { "0003": 1 },
     }),
   ).toThrow("closed");
   expect(() =>
-    submitFinancialClaim(state, worker, record.id, {
+    submitFinancialClaim(state, worker(state), record.id, {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       invoice_id: "c4-base-invoice",
@@ -448,7 +445,7 @@ it("keeps resolved imports closed for new writes while retrying an already recor
     }),
   ).toThrow("closed");
   expect(() =>
-    recordItemResolutions(state, worker, record.id, [
+    recordItemResolutions(state, worker(state), record.id, [
       {
         product_code: "0003",
         kind: "outstanding",
@@ -480,7 +477,7 @@ it("does not read a colliding foreign return's posted settlements into the own c
   ];
   state.returns.unshift(foreign);
   const foreignBefore = structuredClone(foreign);
-  recordItemResolutions(state, worker, record.id, [
+  recordItemResolutions(state, worker(state), record.id, [
     {
       product_code: "0003",
       kind: "outstanding",
@@ -497,7 +494,7 @@ it("does not post a preserved unverified claim on an already closed return", () 
   const state = returnFixture();
   pickup(state);
   const record = ownRecord(state);
-  submitFinancialClaim(state, worker, record.id, {
+  submitFinancialClaim(state, worker(state), record.id, {
     type: "credit_current_invoice",
     covers: { "0003": 1 },
     invoice_id: "c4-base-invoice",
@@ -506,7 +503,13 @@ it("does not post a preserved unverified claim on an already closed return", () 
   record.status = "resolved";
   const before = structuredClone(state);
   expect(() =>
-    postReturnClaim(state, supervisor, record.id, record.claims![0].id, "8.00"),
+    postReturnClaim(
+      state,
+      supervisor(state),
+      record.id,
+      record.claims![0].id,
+      "8.00",
+    ),
   ).toThrow("closed");
   expect(state).toStrictEqual(before);
 });
@@ -540,7 +543,7 @@ it("keeps historical postings with missing covered quantities read-only without 
     const before = structuredClone(state);
     expect(returnItemProgress(record, record.lines[0]).available).toBe(0);
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 1 },
         invoice_id: "c4-base-invoice",
@@ -559,7 +562,7 @@ it("does not guess which original item a legacy multi-item replacement snapshot 
     reason: "Damaged",
     quantity_unit: "units",
   });
-  recordPickup(state, worker, record.id, {
+  recordPickup(state, worker(state), record.id, {
     quantities: { "0003": 3, "0002": 1 },
     representative: "Driver",
     slip: "SIGNED-MULTIPLE-ITEMS",
@@ -571,7 +574,7 @@ it("does not guess which original item a legacy multi-item replacement snapshot 
   };
   const before = structuredClone(state);
   expect(() =>
-    submitFinancialClaim(state, worker, record.id, {
+    submitFinancialClaim(state, worker(state), record.id, {
       type: "credit_current_invoice",
       covers: { "0003": 1 },
       invoice_id: "c4-base-invoice",
@@ -622,7 +625,7 @@ it.each(["snapshot", "line_projection", "mismatched_event"] as const)(
     const before = structuredClone(state);
     expect(returnItemProgress(record, record.lines[0]).available).toBe(0);
     expect(() =>
-      submitFinancialClaim(state, worker, record.id, {
+      submitFinancialClaim(state, worker(state), record.id, {
         type: "credit_current_invoice",
         covers: { "0003": 1 },
         invoice_id: "c4-base-invoice",
@@ -630,14 +633,14 @@ it.each(["snapshot", "line_projection", "mismatched_event"] as const)(
       }),
     ).toThrow("return_settlement_evidence");
     expect(() =>
-      submitFinancialClaim(state, supervisor, record.id, {
+      submitFinancialClaim(state, supervisor(state), record.id, {
         type: "no_compensation",
         covers: { "0003": 1 },
         reason: "New writeoff on mixed history",
       }),
     ).toThrow("return_settlement_evidence");
     expect(() =>
-      receiveReplacement(state, worker, record.id, {
+      receiveReplacement(state, worker(state), record.id, {
         product_code: "0002",
         qty: 1,
         covers: { "0003": 1 },
@@ -647,7 +650,7 @@ it.each(["snapshot", "line_projection", "mismatched_event"] as const)(
       }),
     ).toThrow("return_settlement_evidence");
     expect(() =>
-      recordItemResolutions(state, worker, record.id, [
+      recordItemResolutions(state, worker(state), record.id, [
         {
           product_code: "0003",
           kind: "outstanding",

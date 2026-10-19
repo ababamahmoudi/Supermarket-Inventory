@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
@@ -6,10 +7,11 @@ import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "js
 import type { DemoState } from "../src/types";
 import { setBranch, setLanguage, signIn } from "./helpers";
 
-const storage = "supermarket-prototype-v1";
 const originalId = `a2-fixture:${receiptFixtures.invoices[0].number}`;
 const saved = (page: Page): Promise<DemoState> =>
-  page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), storage);
+  readCanonicalBusinessEvidence(page).then((canonicalState) =>
+    JSON.parse(JSON.stringify(canonicalState)!),
+  );
 
 for (const language of ["en", "fa"] as const)
   test(`posted original and confirmed correction retain immutable evidence and version links in ${language}`, async ({
@@ -238,11 +240,27 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   const expectedHash = digest(fixture.buffer);
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(fixture);
+  // File injection bypasses inert/disabled controls. Wait for the real manual
+  // command and protected workspace before acting as an enabled file picker.
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousInvoiceId &&
+        current.entry_mode === "manual" &&
+        current.status === "draft"
+      );
+    })
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+  ).toBeVisible();
+  const upload = page.getByLabel("Upload a PDF or photo", { exact: true });
+  await expect(upload).toBeEnabled();
+  await upload.setInputFiles(fixture);
   const canvas = page.getByRole("img", {
     name: "Original invoice PDF",
     exact: true,

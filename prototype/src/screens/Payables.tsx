@@ -1,3 +1,8 @@
+import { payablesBoard } from "../payables-board";
+import { useProtectedQuery } from "../use-protected-query";
+import { domainScope } from "../domain-authority";
+import type { AuthenticatedActor, Capability } from "../authority-types";
+import type { DemoState } from "../types";
 import "../c3-tables.css";
 import {
   branchLabel as configuredBranchLabel,
@@ -19,11 +24,7 @@ import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { companyDate } from "../invoice";
 import { DateText, formatMoney, LtrText, Money } from "../presentation";
-import {
-  supplierBalanceCsv,
-  supplierBalanceOverview,
-  supplierBalanceSummary,
-} from "../supplier-balances";
+import { supplierBalanceCsv } from "../supplier-balances";
 import "./financial-polish.css";
 import {
   Badge,
@@ -60,14 +61,16 @@ import "./filters-a2.css";
 import "./payables-klead.css";
 
 export function Payables() {
-  const { state, update, role, branch, setBranch, user, lang, t } = useDemo();
+  const { actor, can, t } = useDemo();
+  if (!actor || !can("payables.read"))
+    return <EmptyState>{t("Payables", "پرداختنی‌ها")}</EmptyState>;
+  return <PayablesContent />;
+}
+function PayablesContent() {
+  const { state, command, query, actor, branch, setBranch, user, lang, t } =
+    useDemo();
   const branches = configuredBranches(state.config);
-  const context: OperationsContext = {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? t("Supervisor", "سرپرست"),
-  };
+  const context: OperationsContext = actor!;
   const suppliers = [
     ...new Set([
       ...state.ledger
@@ -171,18 +174,24 @@ export function Payables() {
       actions: true,
     },
   ]);
-  if (role !== "supervisor")
-    return (
-      <EmptyState>
-        {t(
-          "Payables are available to Supervisors only.",
-          "پرداختنی‌ها فقط برای سرپرستان در دسترس است.",
-        )}
-      </EmptyState>
-    );
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
   const endOfMonth = validMonth ? monthEndDate(month) : undefined;
-  const overview = supplierBalanceOverview(state, context).filter(
+  const read = useProtectedQuery(
+    "payables.read",
+    domainScope(state),
+    (canonical, actualActor) =>
+      payablesBoard(
+        canonical,
+        actualActor,
+        supplier,
+        mode === "month" ? endOfMonth : undefined,
+      ),
+    JSON.stringify([supplier, mode, endOfMonth, branch]),
+  );
+  if (!read.data)
+    return <EmptyState>{t("Payables", "پرداختنی‌ها")}</EmptyState>;
+  const financialRead = read.data;
+  const overview = financialRead.overview.filter(
     (item) =>
       item.supplier
         .toLocaleLowerCase()
@@ -202,7 +211,8 @@ export function Payables() {
     setConfirmMoney(null);
     setValidationIssues([]);
   };
-  const changeBranch = (value: string, clear = false) => {
+  const changeBranch = async (value: string, clear = false) => {
+    if (value === branch && !clear) return;
     // This explicit filter change keeps the other filters and selected report.
     // A top-bar/session switch still reads its separately scoped preferences.
     for (const [field, retained] of Object.entries({
@@ -222,8 +232,14 @@ export function Payables() {
         ),
         retained,
       );
-    setBranch(value as Branch);
-    resetEntryForms();
+    try {
+      await setBranch(value as Branch);
+      resetEntryForms();
+    } catch (caught) {
+      setError(
+        operationError(caught instanceof Error ? caught.message : "", t),
+      );
+    }
   };
   const clearFilters = () => {
     setValidationIssues([]);
@@ -239,12 +255,7 @@ export function Payables() {
     setAllocations(null);
     setDisputeId(null);
   };
-  const summary = supplierBalanceSummary(
-    state,
-    context,
-    supplier,
-    mode === "month" ? endOfMonth : undefined,
-  );
+  const summary = financialRead.summary;
   const today =
     mode === "month" && endOfMonth ? endOfMonth : companyDate(state.config);
   const openInvoices = summary.invoices.filter((invoice) =>
@@ -262,9 +273,17 @@ export function Payables() {
       opening_balance: t("Opening balance", "مانده افتتاحیه"),
       adjustment: t("Adjustment", "تعدیل"),
     })[type] ?? t("Adjustment", "تعدیل");
-  const run = (action: (draft: typeof state) => void, feedback: string) => {
+  const run = async (
+    action: (draft: DemoState, freshActor: AuthenticatedActor) => void,
+    feedback: string,
+    capability: Capability = "payables.write",
+  ) => {
     try {
-      update(action);
+      await command(
+        capability,
+        domainScope(state, { company_id: context.company_id, branch }, true),
+        action,
+      );
       setError("");
       setErrorKey("");
       setMessage(feedback);
@@ -361,7 +380,7 @@ export function Payables() {
           ),
         );
       if (
-        state.ledger.some(
+        financialRead.ledger.some(
           (row) =>
             row.company_id === context.company_id &&
             row.branch === branch &&
@@ -416,7 +435,7 @@ export function Payables() {
         );
       if (
         entryType === "opening_balance" &&
-        state.ledger.some(
+        financialRead.ledger.some(
           (row) =>
             row.company_id === context.company_id &&
             row.branch === branch &&
@@ -426,7 +445,7 @@ export function Payables() {
       )
         add("payables-entry-type", operationError("opening_exists", t));
       if (
-        state.ledger.some(
+        financialRead.ledger.some(
           (row) =>
             row.company_id === context.company_id &&
             row.branch === branch &&
@@ -452,16 +471,16 @@ export function Payables() {
   };
   const fieldError = (...keys: string[]) =>
     keys.includes(errorKey) ? error : undefined;
-  const confirmMoneyRecord = () => {
+  const confirmMoneyRecord = async () => {
     const payment = confirmMoney === "payment";
     if (!collectMissing(payment ? "payment" : "entry", payment)) {
       setConfirmMoney(null);
       return;
     }
     const saved = payment
-      ? run(
-          (draft) =>
-            postPayment(draft, context, {
+      ? await run(
+          (draft, freshActor) =>
+            postPayment(draft, freshActor, {
               supplier,
               amount,
               date,
@@ -475,9 +494,9 @@ export function Payables() {
             "پرداخت خارج از برنامه و تخصیص‌ها ثبت شد. هیچ پولی منتقل نشد.",
           ),
         )
-      : run(
-          (draft) =>
-            postLedgerAdjustment(draft, context, {
+      : await run(
+          (draft, freshActor) =>
+            postLedgerAdjustment(draft, freshActor, {
               supplier,
               type: entryType,
               amount: adjustment,
@@ -489,6 +508,9 @@ export function Payables() {
             "Recorded ledger entry. Previous records were preserved.",
             "ردیف دفتر ثبت شد. سوابق قبلی حفظ شدند.",
           ),
+          entryType === "opening_balance"
+            ? "payables.opening_balance_write"
+            : "payables.write",
         );
     setConfirmMoney(null);
     if (!saved) return;
@@ -503,16 +525,33 @@ export function Payables() {
       setEntryNote("");
     }
   };
-  const csv = () => {
-    const blob = new Blob([supplierBalanceCsv(summary, supplier)], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `payables-${branch.replaceAll(" ", "-")}-${month}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  const csv = async () => {
+    try {
+      const csvText = await query(
+        "payables.read",
+        domainScope(state),
+        (canonical, actualActor) =>
+          supplierBalanceCsv(
+            canonical,
+            actualActor,
+            supplier,
+            mode === "month" ? endOfMonth : undefined,
+          ),
+      );
+      const blob = new Blob([csvText], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `payables-${branch.replaceAll(" ", "-")}-${month}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (caught) {
+      setError(
+        operationError(caught instanceof Error ? caught.message : "", t),
+      );
+    }
   };
   return (
     <>
@@ -765,7 +804,29 @@ export function Payables() {
               <Button
                 variant="tinted"
                 disabled={mode === "month" && !validMonth}
-                onClick={() => window.print()}
+                onClick={async () => {
+                  try {
+                    await query(
+                      "payables.read",
+                      domainScope(state),
+                      (canonical, actualActor) =>
+                        payablesBoard(
+                          canonical,
+                          actualActor,
+                          supplier,
+                          mode === "month" ? endOfMonth : undefined,
+                        ),
+                    );
+                    window.print();
+                  } catch (caught) {
+                    setError(
+                      operationError(
+                        caught instanceof Error ? caught.message : "",
+                        t,
+                      ),
+                    );
+                  }
+                }}
               >
                 {t("Print summary", "چاپ خلاصه")}
               </Button>
@@ -974,11 +1035,21 @@ export function Payables() {
               </div>
               <Button
                 variant="neutral"
-                onClick={() => {
+                onClick={async () => {
                   if (!collectMissing("payment", false, true)) return;
                   try {
                     setAllocations(
-                      suggestAllocations(state, context, supplier, amount),
+                      await query(
+                        "payables.read",
+                        domainScope(state),
+                        (canonical, actualActor) =>
+                          suggestAllocations(
+                            canonical,
+                            actualActor,
+                            supplier,
+                            amount,
+                          ),
+                      ),
                     );
                     setError("");
                   } catch (caught) {
@@ -1005,10 +1076,8 @@ export function Payables() {
                       "بررسی و ویرایش تخصیص‌ها",
                     )}
                   </h3>
-                  {supplierBalanceSummary(state, context, supplier)
-                    .invoices.filter((invoice) =>
-                      new Decimal(invoice.amount).gt(0),
-                    )
+                  {financialRead.paymentSummary.invoices
+                    .filter((invoice) => new Decimal(invoice.amount).gt(0))
                     .map((invoice) => (
                       <Field
                         key={invoice.invoice_id}
@@ -1223,14 +1292,14 @@ export function Payables() {
                   {t("Close", "بستن")}
                 </Button>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!collectMissing("dispute")) return;
                     if (
-                      run(
-                        (draft) =>
+                      await run(
+                        (draft, freshActor) =>
                           markLedgerDispute(
                             draft,
-                            context,
+                            freshActor,
                             disputeId,
                             disputeNote,
                           ),

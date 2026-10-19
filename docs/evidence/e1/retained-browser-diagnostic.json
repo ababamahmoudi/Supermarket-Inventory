@@ -1,0 +1,250 @@
+{
+  "discovered": 742,
+  "passed": 12,
+  "failed": 7,
+  "interrupted": 1,
+  "explicit_annotated_skips_seen": 0,
+  "not_run": 722,
+  "actual_cli_exit": 130,
+  "retries": 0,
+  "failures": [
+    {
+      "file": "alignment-a2.spec.ts",
+      "line": 5,
+      "test": "table columns align and phone cards retain labelled contained values (en)",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "/tmp/e1-current-browser-proof-v1/candidate/prototype/tests/alignment-a2.spec.ts",
+              "column": 53,
+              "line": 44
+            },
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.invoice-line')\nExpected: \u001b[32m6\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('.invoice-line') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.invoice-line')\u001b[22m\n\u001b[2m    8 \u00d7 locator resolved to 0 elements\u001b[22m\n\u001b[2m      - unexpected value \"0\"\u001b[22m\n\n\n  42 |         await uploadInvoice(page);\n  43 |         await setLanguage(page, language);\n> 44 |         await expect(page.locator(\".invoice-line\")).toHaveCount(6);\n     |                                                     ^\n  45 |       }\n  46 |       if (englishTab) {\n  47 |         await page\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/alignment-a2.spec.ts:44:53"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "b-polish.spec.ts",
+      "line": 352,
+      "test": "Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["timedOut"],
+      "errors": [
+        [
+          {
+            "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+          },
+          {
+            "location": {
+              "file": "/tmp/e1-current-browser-proof-v1/candidate/prototype/tests/b-polish.spec.ts",
+              "column": 6,
+              "line": 373
+            },
+            "message": "Error: locator.click: Test timeout of 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('heading', { name: 'Supervisor dashboard', exact: true })\u001b[22m\n\n\n  371 |   await page\n  372 |     .getByRole(\"heading\", { name: \"Supervisor dashboard\", exact: true })\n> 373 |     .click();\n      |      ^\n  374 |   await expect(chart.getByRole(\"tooltip\")).toHaveCount(0);\n  375 |   await point.hover();\n  376 |   await expect(chart.getByRole(\"tooltip\")).toBeVisible();\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/b-polish.spec.ts:373:6"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "branch-invoice-b.spec.ts",
+      "line": 13,
+      "test": "a Floor Worker cannot read another branch's manual draft, and starting their own invoice preserves it for the Supervisor",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "eval at evaluate (:311:30), <anonymous>",
+              "column": 45,
+              "line": 1
+            },
+            "message": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'invoice')\n    at eval (eval at evaluate (:311:30), <anonymous>:1:45)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at eval (eval at evaluate (:311:30), <anonymous>:1:45)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/branch-invoice-b.spec.ts:27:31"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "branch-invoice-b.spec.ts",
+      "line": 71,
+      "test": "another branch's reading draft stays hidden and unchanged by reading timers or Demo answers",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "eval at evaluate (:311:30), <anonymous>",
+              "column": 45,
+              "line": 1
+            },
+            "message": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'invoice')\n    at eval (eval at evaluate (:311:30), <anonymous>:1:45)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at eval (eval at evaluate (:311:30), <anonymous>:1:45)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/branch-invoice-b.spec.ts:86:31"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "branch-requests-c2.spec.ts",
+      "line": 10,
+      "test": "request catalog cases and free text; fulfil at Warehouse, receive Missing, close and copy residual once",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "eval at evaluate (:311:30), <anonymous>",
+              "column": 20,
+              "line": 4
+            },
+            "message": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'stock')\n    at eval (eval at evaluate (:311:30), <anonymous>:4:20)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at eval (eval at evaluate (:311:30), <anonymous>:4:20)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/branch-requests-c2.spec.ts:18:31"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "branch-requests-c2.spec.ts",
+      "line": 185,
+      "test": "Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in en",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "eval at evaluate (:311:30), <anonymous>",
+              "column": 29,
+              "line": 3
+            },
+            "message": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'products')\n    at eval (eval at evaluate (:311:30), <anonymous>:3:29)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at eval (eval at evaluate (:311:30), <anonymous>:3:29)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/branch-requests-c2.spec.ts:192:16"
+          }
+        ]
+      ]
+    },
+    {
+      "file": "branch-requests-c2.spec.ts",
+      "line": 185,
+      "test": "Supervisor All requires explicit endpoint and bilingual A4 picking list paginates in fa",
+      "project": "desktop",
+      "status": "unexpected",
+      "actual_statuses": ["failed"],
+      "errors": [
+        [
+          {
+            "location": {
+              "file": "eval at evaluate (:311:30), <anonymous>",
+              "column": 29,
+              "line": 3
+            },
+            "message": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'products')\n    at eval (eval at evaluate (:311:30), <anonymous>:3:29)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at eval (eval at evaluate (:311:30), <anonymous>:3:29)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /tmp/e1-current-browser-proof-v1/candidate/prototype/tests/branch-requests-c2.spec.ts:192:16"
+          }
+        ]
+      ]
+    }
+  ],
+  "interrupted_tests": [
+    {
+      "file": "c2-shell-review.spec.ts",
+      "line": 5,
+      "test": "C2 sidebar keeps new and existing pages accessible without scrolling at 720px desktop height",
+      "project": "desktop",
+      "status": "skipped",
+      "actual_statuses": ["interrupted"]
+    }
+  ],
+  "source_and_assets": {
+    "source_fingerprint": "bba505d64531aad3c5a08af8ae14a813cf3265b515b38507f5f2223d295fc58e",
+    "source_files": 546,
+    "source_unchanged": true,
+    "live_root_unchanged": true,
+    "assets_unchanged": true,
+    "results": [
+      {
+        "name": "native-list",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e1-current-browser-proof-v1/native.config.mts",
+          "--list"
+        ],
+        "actual_exit": 0,
+        "started": "2026-10-13T23:23:59.734441+00:00",
+        "ended": "2026-10-13T23:24:03.468071+00:00"
+      },
+      {
+        "name": "native",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e1-current-browser-proof-v1/native.config.mts"
+        ],
+        "actual_exit": 0,
+        "started": "2026-10-13T23:24:03.468558+00:00",
+        "ended": "2026-10-13T23:25:30.028668+00:00"
+      },
+      {
+        "name": "retained-list",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e1-current-browser-proof-v1/retained.config.mts",
+          "--list"
+        ],
+        "actual_exit": 0,
+        "started": "2026-10-13T23:25:30.030206+00:00",
+        "ended": "2026-10-13T23:25:37.322624+00:00"
+      },
+      {
+        "name": "build",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/typescript/bin/tsc",
+          "--noEmit"
+        ],
+        "actual_exit": 0,
+        "started": "2026-10-13T23:25:37.323116+00:00",
+        "ended": "2026-10-13T23:26:30.005287+00:00"
+      },
+      {
+        "name": "vite-build",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/vite/bin/vite.js",
+          "build"
+        ],
+        "actual_exit": 0,
+        "started": "2026-10-13T23:26:30.007436+00:00",
+        "ended": "2026-10-13T23:26:33.528746+00:00"
+      },
+      {
+        "name": "retained",
+        "command": [
+          "/workspace/scratch/supermarket-review-node/bin/node",
+          "/workspace/Supermarket-Inventory/prototype/node_modules/@playwright/test/cli.js",
+          "test",
+          "--config",
+          "/tmp/e1-current-browser-proof-v1/retained.config.mts"
+        ],
+        "actual_exit": 130,
+        "started": "2026-10-13T23:26:33.557650+00:00",
+        "ended": "2026-10-13T23:31:01.573321+00:00"
+      }
+    ]
+  }
+}

@@ -114,19 +114,19 @@ Groups remain Daily (Lookup, Invoices, Received, Returns, Labels, Date tracking,
 
 ## Key layouts
 
-**Supervisor dashboard: preserve exact order and grid.**
+**Owner/Manager dashboard: preserve exact order and grid.**
 
 1. Four KPIs: **Approvals waiting · Open alerts · Open shorts · Expiring soon**. The two coloured variants are now **solid blue and solid ink**, replacing gradients.
 2. A 12-column row: **Approvals queue** (8 columns) / **Alerts** (4), equal-height cards. Approval rows preserve product/names/code, change type, Old → New, location and Approve/Reject; narrow actions move below and never overlap. Alerts use title, secondary line, status and end action.
 3. Equal-height **Recent invoices** (8) / **Returns** (4), retaining the View all returns header link.
-4. **Supplier balances**, top five by balance, Supervisor-only.
+4. **Supplier balances**, top five by balance, Owner/Manager-only.
 5. Equal-height **Purchases by supplier, this month** / **Purchases, last 8 weeks**, 6 columns each.
 6. Equal-height **Arrived this week** / **Price changes this week**, 6 each. Actual Received and approved/manual changes; no stock or sales estimate, no additional KPI.
 7. Notes for Supervisor and Activity in the right panel. Scope all content to company/allowed location and stack responsively.
 
 Worker home retains My drafts, Needs review, Offers to confirm and Expiring soon, then Today's suppliers and open returns and My notes. Purchase charts derive posted non-voided purchases net of shorts, linked credits and corrections, Decimal until rendering, configured-zone periods and honest empty states. Never invent sales.
 
-**Lookup:** centered column, max 880 px. White/surface search 56 px, radius 16, scan inside. AI-category chips: All, most-used categories, More. Calm result list with names/code at start, prices at end, offers as pills, selected blue tint. Product price **60 px**, offer pill beside. Read-only Dates and Last received are two quiet rows with small icon tiles: `Expires YYYY-MM-DD · Location`, close-date pill. **No tracking switch, date entry or Add in Lookup.** Current-location price/clearance/expiry only; no other store's prices/lots. Supervisor Edit opens the shared editor.
+**Lookup:** centered column, max 880 px. White/surface search 56 px, radius 16, scan inside. AI-category chips: All, most-used categories, More. Calm result list with names/code at start, prices at end, offers as pills, selected blue tint. Product price **60 px**, offer pill beside. Read-only Dates and Last received are two quiet rows with small icon tiles: `Expires YYYY-MM-DD · Location`, close-date pill. **No tracking switch, date entry or Add in Lookup.** Current-location price/clearance/expiry only; no other store's prices/lots. Owner/Manager Edit opens the shared editor.
 
 **Add/Edit product:** English name and pricing category required; Persian name, descriptions and category optional. Date tracking Yes immediately reveals a soft grey group in the same form: toggle, **Remind me [30] days before expiry**, current-location dates as white rows, inline Type/Date/Quantity/Add and optional lot. Edit/remove within this form. Save product and dates together. Dialog title/caption, round ×, small grey section headings and hairline footer with Neutral Cancel then main action.
 
@@ -176,3 +176,31 @@ These targeted owner fixes supersede conflicting C6/C7 layouts. Klead fonts, tok
 - Change price uses existing dialog/choices/fields; sale/new-regular exact copy from requirements. Scoped retail choices, dates, label checkbox, live plain summary, neutral Cancel and one primary action. Margin amber/acknowledgement, below cost red/reason. Sale large plus regular comparison; request amber beside current charge. No new font/colour scheme or copied reference data.
 
 **E3, planned:** specified phone tables become compact name/translation at start, key value at end, end chevron and one muted secondary line; Labels keeps its checkbox. New screens at 390/430 EN/FA, 44 px actions. Manifest branding is configured company logo/name. This does not claim C8 already implements the E3 conversion. All stages keep visible focus, role-private fields and actual 4.5:1 text contrast.
+
+## E1 People, setup and location authority (2026-10-12)
+
+Keep Klead tokens, Manrope/Vazirmatn, borderless cards, shared controls, actual 4.5:1 contrast and exact printing geometry unchanged. E1 replaces role authority, not the visual system. People and the location dashboard reuse the existing Card, FilterToolbar, styled Select/multi-selection/Checkbox, Field, DialogActions and linked validation. No native controls, new palette or stretched numeric fields.
+
+People list/Add/Edit follow requirements §16 and screens. Setup code is a protected successful result shown once, with a labelled copy action; never expose codes in list rows, recent users or History. Password then privileged passkey/authenticator setup uses the existing bounded sign-in card and plainly marks simulation. Configured role labels and names remain bilingual; no borrowed avatars or sample names.
+
+The location picker distinguishes All my locations from All locations, and any write requires a permitted concrete location. Keep existing account placement/Demo menu; switching users changes real scoped capability views. Branch Supervisor dashboard contains operational cards only, with no invented financial substitute KPI and no unimplemented E2 task card. Owner/Manager retain the exact existing company-dashboard grid.
+
+Role-private columns never enter Columns/details/accessibility text/print/export. Own pending approval cards are read-only for Branch Supervisor. The sale-cost delivery-hold checkbox is independent of the Owner/Manager price decision. Retain Floor Worker label template creation and calibration as Labels operations rather than Company Settings.
+
+Exact sign-in hint label: **Fresh demo password** / **گذرواژهٔ دموی تازه**. It describes the configured fresh/reset fixture default, not a migrated person's current password. Preserve custom/migrated passwords and never show their value. Exact personal-notification stale/permission error: **This notification is no longer available. Open its list again.** / **این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.** Exact return-setting explanation: **Pickup records a pending claim. Only an Owner or Manager posts confirmed credit.** / **جمع‌آوری یک ادعای در انتظار ثبت می‌کند. فقط مالک یا مدیر اعتبار تأییدشده را ثبت می‌کند.** Exact Settings denial: **Only an Owner or Manager can change Settings.** / **فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.**
+
+Keep the generic Undo capsule at about 8 seconds with hover/focus pause, separately from the existing 10-second note-author Edit window. Public read models cannot carry or expose a full authority snapshot; shared controls use current provider capability affordances and fresh private-source queries for protected values.
+
+New People/picker/dashboard/setup states retain existing English/Persian phone rules at 390 px; E3 adds the specified 430 px checks/list-row installation work separately. E1 test/screenshot statuses remain Planned until actual proof; do not represent emulated width as a physical installed phone.
+
+### E1 storage failure copy
+
+Use exactly: “Browser storage could not be read or updated. Your original data is retained. Allow browser storage, then reload.” Persian: “فضای ذخیره‌سازی مرورگر قابل خواندن یا به‌روزرسانی نیست. داده‌های اصلی شما حفظ شده‌اند. ذخیره‌سازی مرورگر را مجاز کنید، سپس صفحه را دوباره بارگذاری کنید.” Preserve unreadable original data; do not promise a seed fallback, in-memory edit or Reset fixes an uncommitted write.
+
+### E1 protected note editing messages
+
+Keep the configured built-in notebook title **For Supervisor** and the action **Notify Supervisor**. Branch Supervisor unread counts use `notes.status_manage`. Reuse the existing translated error meanings: **Only the author, Owner or Manager can edit this note.**; **The ten-second edit window has ended. Ask an Owner or Manager to edit this note.**; **This note can no longer be edited. Ask an Owner or Manager to review it.** Author-window and retained-correction rules remain independently enforced.
+
+### E1 Reset demo confirmation
+
+Use exactly: “Restore the fictional business data and the six demo people. People changes and business changes made in this browser are cleared. Your preferences and language stay the same.” Persian: “داده‌های کسب‌وکار خیالی و شش کاربر دمو بازیابی می‌شوند. تغییرات کاربران و کسب‌وکار این مرورگر پاک می‌شوند. تنظیمات شخصی و زبان شما حفظ می‌شوند.” Only explicit Reset changes the People directory; normal migration preserves it.

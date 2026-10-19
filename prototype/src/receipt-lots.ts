@@ -1,12 +1,10 @@
 import Decimal from "decimal.js";
+import type { CatalogPriceReadState, PriceProduct } from "./catalog";
+import { sellingSaleBranches } from "./sales";
 import { createId } from "./ids";
 import { companyDate } from "./invoice";
 import { effectiveInvoiceVersion } from "./invoice-version";
-import {
-  effectiveInvoiceLocation,
-  projectExpiryLocation,
-  lastReceivedByLocation,
-} from "./received";
+import { effectiveInvoiceLocation, projectExpiryLocation } from "./received";
 import { configuredBranches, branchSellsToCustomers } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import {
@@ -16,7 +14,15 @@ import {
   normalizeSearch,
 } from "./catalog";
 import { validTrackedDate } from "./date-tracking";
-import type { HistoryContext } from "./history";
+import type { AuthenticatedActor } from "./authority-types";
+import { freshActor } from "./authority";
+import { can, requireCapability, requireConcreteLocation } from "./permissions";
+import { purchaseLocationScope } from "./purchase-authority";
+import { canInvoiceAuthority } from "./invoice-authority";
+import {
+  projectPurchaseOperational,
+  type ReceiptLotReadDTO,
+} from "./purchase-projections";
 import type {
   Branch,
   DemoInvoice,
@@ -201,21 +207,26 @@ export function recordInvoiceReceiptLots(
   }
 }
 
+/** Scoped operational lot metadata; purchase money is an independent capability. */
 export function receiptLotsForProduct(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
-): ReceiptLot[] {
+): ReceiptLotReadDTO[] {
+  context = freshActor(state, context);
+  requireCapability(state, context, "lots.read", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+  });
   if (
-    context.role !== "supervisor" ||
-    context.company_id !== state.config.company.seed_key
+    !can(state, context, "received.read", {
+      company_id: state.config.company.seed_key,
+      kind: "company_shared",
+    }).allowed
   )
     return [];
-  return receiptLots(state).filter(
-    (lot) =>
-      lot.product_code === productCode &&
-      context.allowed_branches.includes(lot.branch) &&
-      (context.branch === "all" || context.branch === lot.branch),
+  return projectPurchaseOperational(state, context).receipt_lots.filter(
+    (lot) => lot.product_code === productCode,
   );
 }
 
@@ -231,7 +242,7 @@ export interface SafeDateSuggestion {
 /** Narrow receiving hint; never returns another location's quantity, cost or invoice. */
 export function reusableOtherLocationDates(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   input: {
     product_code: string;
     supplier: string;
@@ -240,12 +251,14 @@ export function reusableOtherLocationDates(
   },
   now = new Date(),
 ): SafeDateSuggestion[] {
-  if (
-    context.company_id !== state.config.company.seed_key ||
-    !["supervisor", "floor_worker"].includes(context.role) ||
-    !configuredBranches(state.config).includes(input.branch)
-  )
-    return [];
+  context = freshActor(state, context);
+  requireCapability(
+    state,
+    context,
+    "dates.reuse_safe_hint",
+    purchaseLocationScope(state.config.company.seed_key, input.branch),
+  );
+  if (!configuredBranches(state.config).includes(input.branch)) return [];
   const product = state.products.find(
     (item) =>
       item.company_id === context.company_id &&
@@ -365,42 +378,135 @@ export function firstAddedLocation(
 /** Catalog metadata only: cashiers never receive receipt quantities or money. */
 export function lookupLastReceipt(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
 ): { date: string; supplier?: string; invoice_number?: string } | undefined {
-  const location = lookupBranch(context.branch);
+  context = freshActor(state, context);
+  const location = requireConcreteLocation(state, context);
+  requireCapability(
+    state,
+    context,
+    "lookup.receipt_hint",
+    purchaseLocationScope(context.company_id, location),
+  );
   if (
-    context.company_id !== state.config.company.seed_key ||
-    !context.allowed_branches.includes(location)
+    !state.products.some(
+      (product) =>
+        product.company_id === context.company_id &&
+        product.code === productCode,
+    )
   )
     return undefined;
-  const latest = lastReceivedByLocation(
-    state,
-    {
-      company_id: context.company_id,
-      branch: location,
-      role: context.role === "cashier" ? "floor_worker" : context.role,
-      actor: context.actor,
-    },
-    productCode,
-  ).find((entry) => entry.branch === location);
+  const candidates: {
+    at: string;
+    date: string;
+    supplier?: string;
+    invoice_number?: string;
+  }[] = [];
+  const displayDate = (at: string) =>
+    at.length === 10 ? at : companyDate(state.config, new Date(at));
+  const invoices = new Map(
+    [...(state.invoices ?? []), state.invoice].map((invoice) => [
+      invoice.id,
+      invoice,
+    ]),
+  );
+  for (const original of invoices.values()) {
+    if (
+      original.company_id !== context.company_id ||
+      original.status !== "posted" ||
+      effectiveInvoiceLocation(state, original) !== location
+    )
+      continue;
+    const invoice = effectiveInvoiceVersion(state, original);
+    const lines = invoice.lines.filter(
+      (line) =>
+        line.company_id === context.company_id &&
+        line.product_code === productCode &&
+        new Decimal(line.qty_received_at_posting)
+          .minus(line.refused_units ?? 0)
+          .plus(line.qty_later_received ?? 0)
+          .gt(0),
+    );
+    if (!lines.length) continue;
+    const at = invoice.received_at ?? invoice.posted_at ?? invoice.invoice_date;
+    if (!at) continue;
+    const readable = canInvoiceAuthority(
+      state,
+      context,
+      "invoices.read",
+      original.id,
+    );
+    const metadata = readable
+      ? {
+          supplier: invoice.supplier,
+          invoice_number: invoice.supplier_invoice_number,
+        }
+      : {};
+    candidates.push({ at, date: displayDate(at), ...metadata });
+    for (const movement of state.stock_movements ?? []) {
+      if (
+        movement.company_id !== context.company_id ||
+        movement.invoice_id !== original.id ||
+        movement.branch !== location ||
+        movement.product_code !== productCode ||
+        movement.type !== "short_resolved_received" ||
+        new Decimal(movement.qty).lte(0) ||
+        !(original.short_receipt_keys ?? []).some(
+          (key) => movement.id === `${original.id}:delivery:${key}:stock`,
+        )
+      )
+        continue;
+      candidates.push({
+        at: movement.at,
+        date: displayDate(movement.at),
+        ...metadata,
+      });
+    }
+  }
+  for (const movement of state.stock_movements ?? []) {
+    if (
+      movement.company_id !== context.company_id ||
+      movement.branch !== location ||
+      movement.product_code !== productCode ||
+      movement.type !== "replacement_received" ||
+      new Decimal(movement.qty).lte(0)
+    )
+      continue;
+    candidates.push({ at: movement.at, date: displayDate(movement.at) });
+  }
+  const latest = candidates.sort((first, second) =>
+    second.at.localeCompare(first.at),
+  )[0];
   if (!latest) return undefined;
-  return context.role === "cashier"
-    ? { date: latest.date }
-    : {
-        date: latest.date,
-        supplier: latest.supplier,
-        invoice_number: latest.invoice_number,
-      };
+  return {
+    date: latest.date,
+    ...(latest.supplier ? { supplier: latest.supplier } : {}),
+    ...(latest.invoice_number ? { invoice_number: latest.invoice_number } : {}),
+  };
 }
 
 /** Explicit branch input is the cashier's current allowed location, never all stores. */
-export function effectiveClearanceOffers(
-  state: DemoState,
-  productOrCode: Product | string,
+/** Pure public selector. Only already-projected receipt evidence is read; absent lots grant no clearance. */
+export function effectiveProjectedClearanceOffers<
+  P extends PriceProduct,
+  O extends Offer,
+>(
+  state: Omit<CatalogPriceReadState<P>, "offers"> & {
+    offers: readonly O[];
+    clearance_lots?: readonly Pick<
+      ReceiptLot,
+      "id" | "company_id" | "product_code" | "branch"
+    >[];
+    receipt_lots?: readonly Pick<
+      ReceiptLot,
+      "id" | "company_id" | "product_code" | "branch"
+    >[];
+  },
+  productOrCode: P | string,
   branch: Branch,
   now = new Date(),
-): Offer[] {
+): O[] {
   const code =
     typeof productOrCode === "string" ? productOrCode : productOrCode.code;
   const product = state.products.find(
@@ -411,7 +517,7 @@ export function effectiveClearanceOffers(
   if (
     !product ||
     product.status !== "active" ||
-    !branchSellsToCustomers(state.config, location)
+    !sellingSaleBranches(state).includes(location)
   )
     return [];
   let regularAmount: Decimal;
@@ -422,7 +528,7 @@ export function effectiveClearanceOffers(
     return [];
   }
   const eligibleLots = new Set(
-    receiptLots(state)
+    (state.clearance_lots ?? state.receipt_lots ?? [])
       .filter(
         (lot) =>
           lot.company_id === product.company_id &&
@@ -453,10 +559,31 @@ export function effectiveClearanceOffers(
         offer.currency === state.config.company.currency &&
         isOfferScheduledNow(offer, state.config.company.timezone, now) &&
         validTrackedDate(offer.expiry_date ?? "") &&
-        offer.expiry_date! >= companyDate(state.config, now),
+        offer.expiry_date! >=
+          new Intl.DateTimeFormat("en-CA", {
+            timeZone: state.config.company.timezone,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(now),
     )
     .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
     .slice(0, 1);
+}
+
+/** Canonical receipt-derived fallback remains private to the guarded business domain. */
+export function effectiveClearanceOffers(
+  state: DemoState,
+  productOrCode: Product | string,
+  branch: Branch,
+  now = new Date(),
+): Offer[] {
+  return effectiveProjectedClearanceOffers(
+    { ...state, receipt_lots: receiptLots(state) },
+    productOrCode,
+    branch,
+    now,
+  );
 }
 
 export class ClearanceError extends Error {
@@ -467,34 +594,39 @@ export class ClearanceError extends Error {
 
 export function scopedClearanceOffers(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   productCode: string,
   now = new Date(),
 ): Offer[] {
-  if (
-    context.company_id !== state.config.company.seed_key ||
-    (context.role !== "supervisor" && context.branch === "all") ||
-    !context.allowed_branches.includes(lookupBranch(context.branch))
-  )
-    return [];
-  return effectiveClearanceOffers(state, productCode, context.branch, now);
+  context = freshActor(state, context);
+  const location = requireConcreteLocation(state, context);
+  requireCapability(
+    state,
+    context,
+    "offers.read",
+    purchaseLocationScope(context.company_id, location),
+  );
+  return effectiveClearanceOffers(state, productCode, location, now);
 }
 
 export function setLotClearance(
   state: DemoState,
-  context: HistoryContext,
+  context: AuthenticatedActor,
   lotId: string,
   price: string,
   now = new Date(),
 ): Offer {
-  if (context.role !== "supervisor") throw new ClearanceError("permission");
-  if (context.company_id !== state.config.company.seed_key)
-    throw new ClearanceError("scope");
-  const lot = receiptLotsForProduct(
+  context = freshActor(state, context);
+  const lot = receiptLots(state).find(
+    (item) => item.id === lotId && item.company_id === context.company_id,
+  );
+  if (!lot) throw new ClearanceError("lot");
+  requireCapability(
     state,
     context,
-    receiptLots(state).find((item) => item.id === lotId)?.product_code ?? "",
-  ).find((item) => item.id === lotId);
+    "offers.clearance_create",
+    purchaseLocationScope(lot.company_id, lot.branch, true),
+  );
   if (
     !lot ||
     !branchSellsToCustomers(state.config, lot.branch) ||
@@ -541,6 +673,7 @@ export function setLotClearance(
     ) {
       offer.status = "stopped";
       offer.stopped_at = now.toISOString();
+      offer.stopped_by_user_id = context.user_id;
     }
   const offer: Offer = {
     id: createId("lot-clearance"),
@@ -559,6 +692,8 @@ export function setLotClearance(
     mix_and_match: false,
     status: "active",
     created_at: now.toISOString(),
+    created_by_user_id: context.user_id,
+    version: 1,
     end_date: lot.expiry_date,
   };
   state.offers.push(offer);
@@ -570,6 +705,9 @@ export function setLotClearance(
     action: "Create clearance offer",
     by: context.actor,
     actor_username: context.username,
+    actor_user_id: context.user_id,
+    actor_role_snapshot: context.role,
+    device_id: context.device_id,
     at: now.toISOString(),
     scope: "branch",
     entity_type: "offer",

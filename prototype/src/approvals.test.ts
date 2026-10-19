@@ -1,3 +1,4 @@
+import { authenticatedTestActor } from "./authority-test-fixture";
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { configSeed, demoSeed } from "./config";
@@ -90,7 +91,7 @@ function approval(state: DemoState, values: Partial<Approval> = {}): Approval {
 }
 
 function prepareInvoice(state: DemoState, cost?: string): void {
-  state.invoice = createInvoice(state, "Branch 1");
+  state.invoice = createInvoice(state, worker(state), "Branch 1");
   state.invoice.file_name = "fictional-demo.png";
   state.invoice.file_type = "image/png";
   state.invoice.file_data = "data:image/png;base64,ZGVtby1vbmx5";
@@ -126,7 +127,7 @@ describe("invoice, approval, offer and catalog integration", () => {
   it("uses a posted invoice proposal without changing cashier price until approval and worker offer confirmation", () => {
     const state = initialState();
     prepareInvoice(state);
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, worker(state));
     const proposal = state.approvals.find(
       (item) => item.product_code === "0006" && item.status === "pending",
     )!;
@@ -135,7 +136,14 @@ describe("invoice, approval, offer and catalog integration", () => {
     expect(proposal.invoice_ids).toContain(state.invoice.id);
     expect(effectivePrice(state, product, "Branch 1")).toBe("1.99");
     expect(pendingPrice(state, product, "Branch 1")).toBe("2.99");
-    resolveApproval(state, proposal.id, "approve", "branch", "Branch 1");
+    resolveApproval(
+      state,
+      manager(state),
+      proposal.id,
+      "approve",
+      "branch",
+      "Branch 1",
+    );
     expect(effectivePrice(state, product, "Branch 1")).toBe("2.99");
     expect(effectivePrice(state, product, "Branch 2")).toBe("1.99");
     expect(pendingPrice(state, product, "Branch 1")).toBeNull();
@@ -146,7 +154,7 @@ describe("invoice, approval, offer and catalog integration", () => {
         item.branch === "Branch 1" &&
         item.status === "suggested",
     )!;
-    activateOffer(state, suggestion, "floor_worker");
+    activateOffer(state, worker(state), suggestion);
     expect(state.activity.at(-1)?.action).toBe("Confirm offer");
     expect(effectiveOffer(state, product, "Branch 1")?.label).toBe("2 for $5");
     expect(
@@ -164,7 +172,7 @@ describe("invoice, approval, offer and catalog integration", () => {
   it("keeps an invoice margin review out of pending-price lookup and sends an override through normal approval", () => {
     const state = initialState();
     prepareInvoice(state, "1.12");
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, worker(state));
     const product = state.products.find((item) => item.code === "0002")!;
     const first = state.approvals.find(
       (item) =>
@@ -174,10 +182,15 @@ describe("invoice, approval, offer and catalog integration", () => {
     expect(first.margin).toBeTruthy();
     expect(first.threshold).toBe("0.25");
     expect(pendingPrice(state, product, "Branch 1")).toBeNull();
-    keepApprovedPrice(state, first.id, "Keep the agreed shelf price.");
+    keepApprovedPrice(
+      state,
+      manager(state),
+      first.id,
+      "Keep the agreed shelf price.",
+    );
     expect(effectivePrice(state, product, "Branch 1")).toBe("1.49");
     prepareInvoice(state, "1.1201");
-    postInvoice(state, "floor_worker", "Branch 1");
+    postInvoice(state, worker(state));
     const next = state.approvals.find(
       (item) =>
         item.product_code === product.code &&
@@ -186,13 +199,21 @@ describe("invoice, approval, offer and catalog integration", () => {
     )!;
     const override = proposeManualOverride(
       state,
+      manager(state),
       next.id,
       "1.99",
       "Cover the received cost.",
     );
     expect(effectivePrice(state, product, "Branch 1")).toBe("1.49");
     expect(pendingPrice(state, product, "Branch 1")).toBe("1.99");
-    resolveApproval(state, override.id, "approve", "all", "all");
+    resolveApproval(
+      state,
+      manager(state),
+      override.id,
+      "approve",
+      "all",
+      "all",
+    );
     expect(effectivePrice(state, product, "Branch 2")).toBe("1.99");
     expect(effectiveOffer(state, product, "Branch 1")).toBeNull();
     expect(
@@ -215,7 +236,14 @@ describe("approval scopes and prices", () => {
       name_en: `Configured shop ${index + 1}`,
       active: index !== 2,
     }));
-    applyApprovedPrice(state, "0006", "2.99", "branch", "shop-2");
+    applyApprovedPrice(
+      state,
+      manager(state),
+      "0006",
+      "2.99",
+      "branch",
+      "shop-2",
+    );
     expect(effectivePrice(state, "0006", "shop-2")).toBe("2.99");
     expect(
       state.alerts.find((item) => item.type === "price_conflict")
@@ -235,11 +263,25 @@ describe("approval scopes and prices", () => {
       )?.status,
     ).toBe("suggested");
     expect(() =>
-      applyApprovedPrice(state, "0006", "3.99", "branch", "Branch 1"),
-    ).toThrow("Choose one branch");
+      applyApprovedPrice(
+        state,
+        manager(state),
+        "0006",
+        "3.99",
+        "branch",
+        "Branch 1",
+      ),
+    ).toThrow("location");
     expect(() =>
-      applyApprovedPrice(state, "0006", "3.99", "branch", "shop-3"),
-    ).toThrow("Choose one branch");
+      applyApprovedPrice(
+        state,
+        manager(state),
+        "0006",
+        "3.99",
+        "branch",
+        "shop-3",
+      ),
+    ).toThrow("location");
   });
 
   it("honors disabled suggestions while preserving current and manually confirmed offers", () => {
@@ -247,21 +289,28 @@ describe("approval scopes and prices", () => {
     const existing = offer(state);
     state.offers.push(existing);
     state.config.promotions.ai_suggestions_enabled = false;
-    applyApprovedPrice(state, "0006", "2.99", "branch", "Branch 1");
+    applyApprovedPrice(
+      state,
+      manager(state),
+      "0006",
+      "2.99",
+      "branch",
+      "Branch 1",
+    );
     expect(state.offers).toEqual([existing]);
     activateOffer(
       state,
+      manager(state),
       offer(state, {
         id: "manual-lavash",
         product_code: "0006",
         scope: "branch",
         branch: "Branch 1",
       }),
-      "supervisor",
     );
     expect(effectiveOffer(state, "0006", "Branch 1")?.id).toBe("manual-lavash");
     state.config.promotions.ai_suggestions_enabled = true;
-    applyApprovedPrice(state, "0002", "1.99", "all", "all");
+    applyApprovedPrice(state, manager(state), "0002", "1.99", "all", "all");
     expect(
       state.offers.some(
         (item) => item.product_code === "0002" && item.status === "suggested",
@@ -278,8 +327,22 @@ describe("approval scopes and prices", () => {
     const barberries = state.approvals.find(
       (item) => item.product_code === "0015",
     )!;
-    resolveApproval(state, lavash.id, "approve", "branch", "Branch 1");
-    resolveApproval(state, barberries.id, "approve", "all", "all");
+    resolveApproval(
+      state,
+      manager(state),
+      lavash.id,
+      "approve",
+      "branch",
+      "Branch 1",
+    );
+    resolveApproval(
+      state,
+      manager(state),
+      barberries.id,
+      "approve",
+      "all",
+      "all",
+    );
     expect(effectivePrice(state, "0006", "Branch 1")).toBe("2.99");
     expect(effectivePrice(state, "0006", "Branch 2")).toBe("1.99");
     expect(effectivePrice(state, "0015", "Branch 1")).toBe("5.49");
@@ -293,7 +356,14 @@ describe("approval scopes and prices", () => {
     const product = state.products.find((item) => item.code === "0006")!;
     product.pending_price = "2.99";
     expect(effectivePrice(state, product, "Branch 1")).toBe("1.99");
-    resolveApproval(state, "approval:lavash", "approve", "branch", "Branch 1");
+    resolveApproval(
+      state,
+      manager(state),
+      "approval:lavash",
+      "approve",
+      "branch",
+      "Branch 1",
+    );
     expect(effectivePrice(state, product, "Branch 1")).toBe("2.99");
     expect(effectivePrice(state, product, "Branch 2")).toBe("1.99");
     expect(product.selling_price).toBe("1.99");
@@ -312,7 +382,14 @@ describe("approval scopes and prices", () => {
     state.approvals.push(
       approval(state, { product_code: product.code, proposed_price: "6.99" }),
     );
-    resolveApproval(state, "approval:lavash", "approve", "all", "all");
+    resolveApproval(
+      state,
+      manager(state),
+      "approval:lavash",
+      "approve",
+      "all",
+      "all",
+    );
     expect(product.branch_prices).toEqual({});
     expect(
       ["Branch 1", "Branch 2", "Branch 3"].map((branch) =>
@@ -327,13 +404,14 @@ describe("approval scopes and prices", () => {
   it("rejects a stale preview without applying any prices", () => {
     const state = fixture();
     state.approvals.push(approval(state));
-    const snapshot = approvalSnapshot(state, "0006");
+    const snapshot = approvalSnapshot(state, manager(state), "0006");
     state.products.find((item) => item.code === "0006")!.branch_prices = {
       "Branch 2": "3.99",
     };
     expect(() =>
       resolveApproval(
         state,
+        manager(state),
         "approval:lavash",
         "approve",
         "all",
@@ -349,11 +427,12 @@ describe("approval scopes and prices", () => {
   it("refreshes a preview when its proposed price changed and logs a completed approval once", () => {
     const state = fixture();
     state.approvals.push(approval(state));
-    const snapshot = approvalSnapshot(state, "0006");
+    const snapshot = approvalSnapshot(state, manager(state), "0006");
     state.approvals[0].proposed_price = "3.99";
     expect(() =>
       resolveApproval(
         state,
+        manager(state),
         "approval:lavash",
         "approve",
         "all",
@@ -364,17 +443,25 @@ describe("approval scopes and prices", () => {
     ).toThrow("Prices changed");
     resolveApproval(
       state,
+      manager(state),
       "approval:lavash",
       "approve",
       "all",
       "all",
       undefined,
-      approvalSnapshot(state, "0006"),
+      approvalSnapshot(state, manager(state), "0006"),
     );
     expect(state.activity).toHaveLength(1);
     expect(state.activity[0].action).toBe("Approve price");
     expect(() =>
-      resolveApproval(state, "approval:lavash", "approve", "all", "all"),
+      resolveApproval(
+        state,
+        manager(state),
+        "approval:lavash",
+        "approve",
+        "all",
+        "all",
+      ),
     ).toThrow("no longer pending");
     expect(state.activity).toHaveLength(1);
   });
@@ -397,7 +484,14 @@ describe("approval scopes and prices", () => {
         proposed_price: "5.49",
       }),
     );
-    resolveApproval(state, "approval:lavash", "reject", "all", "all");
+    resolveApproval(
+      state,
+      manager(state),
+      "approval:lavash",
+      "reject",
+      "all",
+      "all",
+    );
     expect(product.status).toBe("archived");
     expect(state.products.some((item) => item.code === "0015")).toBe(true);
     expect(effectivePrice(state, product, "Branch 1")).toBeNull();
@@ -422,11 +516,18 @@ describe("approval scopes and prices", () => {
       approval(state, { id: "foreign", company_id: "other-company" }),
     );
     const before = JSON.stringify(foreign);
-    applyApprovedPrice(state, "0006", "2.99", "all", "all");
+    applyApprovedPrice(state, manager(state), "0006", "2.99", "all", "all");
     expect(JSON.stringify(foreign)).toBe(before);
     expect(state.offers[0].status).toBe("active");
     expect(() =>
-      resolveApproval(state, "foreign", "approve", "all", "all"),
+      resolveApproval(
+        state,
+        manager(state),
+        "foreign",
+        "approve",
+        "all",
+        "all",
+      ),
     ).toThrow("no longer pending");
   });
 });
@@ -449,10 +550,15 @@ describe("minimum margin review", () => {
       products: state.products,
       offers: state.offers,
     });
-    expect(() => keepApprovedPrice(state, "approval:lavash", "  ")).toThrow(
-      "Add a reason",
+    expect(() =>
+      keepApprovedPrice(state, manager(state), "approval:lavash", "  "),
+    ).toThrow("Add a reason");
+    keepApprovedPrice(
+      state,
+      manager(state),
+      "approval:lavash",
+      "Keep the agreed shelf price",
     );
-    keepApprovedPrice(state, "approval:lavash", "Keep the agreed shelf price");
     expect(state.approvals[0].status).toBe("approved");
     expect(state.approvals[0].acknowledgment_reason).toBe(
       "Keep the agreed shelf price",
@@ -473,6 +579,7 @@ describe("minimum margin review", () => {
     );
     const pending = proposeManualOverride(
       state,
+      manager(state),
       "approval:lavash",
       "3.99",
       "Cover the new cost",
@@ -482,7 +589,13 @@ describe("minimum margin review", () => {
     expect(pending.status).toBe("pending");
     expect(effectivePrice(state, "0003", "Branch 1")).toBe("2.99");
     expect(() =>
-      proposeManualOverride(state, "approval:lavash", "3.999", "reason"),
+      proposeManualOverride(
+        state,
+        manager(state),
+        "approval:lavash",
+        "3.999",
+        "reason",
+      ),
     ).toThrow();
   });
 });
@@ -502,8 +615,8 @@ describe("cross-branch conflict acknowledgment", () => {
       status: "pending",
       branch_prices: { "Branch 1": "6.49", "Branch 2": "6.99" },
     });
-    markPriceConflictIntentional(state, "seed-conflict");
-    syncPriceConflicts(state, "0004");
+    markPriceConflictIntentional(state, manager(state), "seed-conflict");
+    syncPriceConflicts(state, manager(state), "0004");
     expect(state.alerts).toHaveLength(1);
     expect(state.alerts[0].status).toBe("intentional");
     expect(state.alerts[0].branch_prices?.["Branch 3"]).toBe("6.49");
@@ -513,18 +626,25 @@ describe("cross-branch conflict acknowledgment", () => {
     const state = fixture();
     const product = state.products.find((item) => item.code === "0004")!;
     product.branch_prices = { "Branch 2": "6.99" };
-    syncPriceConflicts(state, "0004");
+    syncPriceConflicts(state, manager(state), "0004");
     expect(state.alerts).toHaveLength(1);
-    markPriceConflictIntentional(state, state.alerts[0].id);
-    syncPriceConflicts(state, "0004");
+    markPriceConflictIntentional(state, manager(state), state.alerts[0].id);
+    syncPriceConflicts(state, manager(state), "0004");
     expect(state.alerts).toHaveLength(1);
     expect(state.alerts[0].status).toBe("intentional");
-    applyApprovedPrice(state, "0004", "7.49", "branch", "Branch 2");
+    applyApprovedPrice(
+      state,
+      manager(state),
+      "0004",
+      "7.49",
+      "branch",
+      "Branch 2",
+    );
     expect(
       state.alerts.filter((item) => item.status === "pending"),
     ).toHaveLength(1);
     expect(state.alerts[0].status).toBe("resolved");
-    applyApprovedPrice(state, "0004", "6.49", "all", "all");
+    applyApprovedPrice(state, manager(state), "0004", "6.49", "all", "all");
     expect(state.alerts.every((item) => item.status === "resolved")).toBe(true);
   });
 });
@@ -532,14 +652,24 @@ describe("cross-branch conflict acknowledgment", () => {
 describe("offers and mix-and-match", () => {
   it("creates a suggestion after approval and waits for worker confirmation", () => {
     const state = fixture();
-    applyApprovedPrice(state, "0006", "2.99", "branch", "Branch 1");
+    applyApprovedPrice(
+      state,
+      manager(state),
+      "0006",
+      "2.99",
+      "branch",
+      "Branch 1",
+    );
     const suggestion = state.offers.find(
       (item) => item.product_code === "0006" && item.branch === "Branch 1",
     )!;
     expect(suggestion.status).toBe("suggested");
     expect(suggestion.label).toBe("2 for $5");
     expect(effectiveOffer(state, "0006", "Branch 1")).toBeNull();
-    activateOffer(state, { ...suggestion, mix_and_match: false });
+    activateOffer(state, manager(state), {
+      ...suggestion,
+      mix_and_match: false,
+    });
     expect(effectiveOffer(state, "0006", "Branch 1")?.label).toBe("2 for $5");
     expect(
       effectivePool(state, "Branch 1", "2_for_5", "CAD").some(
@@ -554,7 +684,14 @@ describe("offers and mix-and-match", () => {
       offer(state),
       offer(state, { id: "branch", scope: "branch", branch: "Branch 1" }),
     );
-    applyApprovedPrice(state, "0003", "5.49", "branch", "Branch 1");
+    applyApprovedPrice(
+      state,
+      manager(state),
+      "0003",
+      "5.49",
+      "branch",
+      "Branch 1",
+    );
     expect(state.offers.find((item) => item.id === "branch")!.status).toBe(
       "stopped",
     );
@@ -578,6 +715,7 @@ describe("offers and mix-and-match", () => {
     state.offers.push(offer(state));
     activateOffer(
       state,
+      manager(state),
       offer(state, {
         id: "branch:first",
         scope: "branch",
@@ -587,6 +725,7 @@ describe("offers and mix-and-match", () => {
     );
     activateOffer(
       state,
+      manager(state),
       offer(state, {
         id: "branch:second",
         scope: "branch",
@@ -615,17 +754,17 @@ describe("offers and mix-and-match", () => {
         pool: "2_for_7",
       }),
     );
-    applyApprovedPrice(state, "0003", "1.99", "all", "all");
+    applyApprovedPrice(state, manager(state), "0003", "1.99", "all", "all");
     expect(
       state.offers.slice(0, 2).every((item) => item.status === "stopped"),
     ).toBe(true);
-    reconcileOffers(state, "0003");
+    reconcileOffers(state, manager(state), "0003");
     expect(
       state.offers.filter(
         (item) => item.status === "suggested" && item.product_code === "0003",
       ),
     ).toHaveLength(1);
-    applyApprovedPrice(state, "0003", "2.99", "all", "all");
+    applyApprovedPrice(state, manager(state), "0003", "2.99", "all", "all");
     expect(state.offers[0].status).toBe("stopped");
     expect(effectiveOffer(state, "0003", "Branch 1")).toBeNull();
   });
@@ -716,3 +855,16 @@ describe("offers and mix-and-match", () => {
     ).toBe(false);
   });
 });
+
+function manager(state: DemoState) {
+  return authenticatedTestActor(state, "manager", {
+    name_en: "Demo Supervisor",
+    username: "supervisor",
+  });
+}
+function worker(state: DemoState) {
+  return authenticatedTestActor(state, "floor_worker", {
+    name_en: "Demo Floor Worker",
+    username: "floorworker",
+  });
+}

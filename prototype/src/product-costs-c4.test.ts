@@ -15,16 +15,21 @@ import { effectiveInvoiceVersion } from "./invoice-version";
 import { productCostHistory, productStoreCost } from "./product-costs";
 import { supplierItemFacts } from "./supplier-items";
 import { orderCandidates } from "./orders";
-import type { OperationsContext } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import type { DemoInvoice, DemoState } from "./types";
 
-function context(state: DemoState): OperationsContext {
-  return {
-    company_id: state.config.company.seed_key,
-    branch: "Branch 1",
-    role: "supervisor",
-    actor: "Ali",
-  };
+const actors = new WeakMap<DemoState, AuthenticatedActor>();
+function context(state: DemoState) {
+  let actor = actors.get(state);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+      name_en: "Ali",
+    });
+    actors.set(state, actor);
+  }
+  return actor;
 }
 
 function freshState() {
@@ -42,7 +47,7 @@ function postCost(
   cost: string,
   postedAt: string,
 ) {
-  state.invoice = createInvoice(state, "Branch 1", true);
+  state.invoice = createInvoice(state, context(state), "Branch 1", true);
   Object.assign(state.invoice, {
     supplier: "Fresh Valley Foods",
     supplier_invoice_number: number,
@@ -53,7 +58,7 @@ function postCost(
     file_type: "image/png",
     file_data: "data:image/png;base64,cmV0YWluZWQ=",
   });
-  addManualLine(state, "0002");
+  addManualLine(state, context(state), "0002");
   const line = state.invoice.lines[0];
   setInvoiceLineQuantity(line, "10", "units", 1);
   Object.assign(line, {
@@ -68,7 +73,7 @@ function postCost(
     same_expiry: "unknown",
     note: "Retain this receipt's cost evidence.",
   };
-  postInvoice(state, "supervisor", "Branch 1", "Ali");
+  postInvoice(state, context(state));
   state.invoice.posted_at = postedAt;
   Object.assign(
     state.invoices!.find((invoice) => invoice.id === state.invoice.id)!,
@@ -137,7 +142,7 @@ describe("Catalog cost history after posted invoice corrections", () => {
     expect(state.invoice).toEqual(original);
     const supplierItem = supplierItemFacts(
       state,
-      context(state).company_id,
+      context(state),
       original.supplier,
       "all",
     ).find((item) => item.product_code === product.code)!;
@@ -154,21 +159,26 @@ describe("Catalog cost history after posted invoice corrections", () => {
     expect(
       productCostHistory(
         state,
-        { ...context(state), role: "cashier" },
+        authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
         product,
       ),
     ).toEqual([]);
     expect(
       productCostHistory(
         state,
-        { ...context(state), branch: "Branch 2" },
+        authenticatedTestActor(state, "manager", {
+          user_id: "test-other-selection-manager",
+          locations: ["Branch 2"],
+        }),
         product,
       ),
     ).toEqual([]);
+    const foreign = initialState();
+    foreign.config.company.seed_key = "another-company";
     expect(
       productStoreCost(
         state,
-        { ...context(state), company_id: "another-company" },
+        authenticatedTestActor(foreign, "manager", { locations: ["Branch 1"] }),
         product,
       ),
     ).toBeNull();
@@ -208,7 +218,7 @@ describe("Catalog cost history after posted invoice corrections", () => {
     expect(product.price_provenance).toEqual(provenance);
     const supplierItem = supplierItemFacts(
       state,
-      context(state).company_id,
+      context(state),
       newer.supplier,
       "all",
     ).find((item) => item.product_code === product.code)!;

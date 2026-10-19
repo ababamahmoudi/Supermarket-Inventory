@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, setLanguage, signIn } from "./helpers";
 
@@ -210,10 +211,9 @@ for (const language of ["en", "fa"] as const)
     expect(geometry.headers).toContainEqual(["Units", "واحد"]);
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
-    const order = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("supermarket-prototype-v1")!).orders.at(
-        -1,
-      ),
+    const order = await readCanonicalBusinessEvidence(page).then(
+      (canonicalState) =>
+        JSON.parse(JSON.stringify(canonicalState)!).orders.at(-1),
     );
     expect(order.lines[0]).toMatchObject({
       new_item: true,

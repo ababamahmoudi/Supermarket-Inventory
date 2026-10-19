@@ -1,25 +1,22 @@
 import { regularPrice, normalizeSearch } from "./catalog";
+import type { AuthenticatedActor } from "./authority-types";
+import { freshActor } from "./authority";
+import { requireCapability } from "./permissions";
+import { actorAudit } from "./domain-authority";
 import {
   applyProductDateDrafts,
+  stopProductDateTracking,
   validateProductDateDrafts,
   validateProductTrackingDate,
   DateTrackingError,
   type ProductDateDraft,
   type StopTrackingChoice,
 } from "./date-tracking";
-import { projectExpiryLocation } from "./received";
 import { createId } from "./ids";
-import { configuredBranches } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
-import type { Branch, DemoState, Product, Role } from "./types";
+import type { DemoState, Product } from "./types";
 
-export interface ProductEditorContext {
-  company_id: string;
-  role: Role;
-  actor: string;
-  branch: Branch;
-  allowed_branches: Exclude<Branch, "all">[];
-}
+export type ProductEditorContext = AuthenticatedActor;
 export interface ProductEdits {
   name_en: string;
   name_fa: string;
@@ -69,24 +66,13 @@ function ownProduct(state: DemoState, company: string, code: string): Product {
   return product;
 }
 function checkContext(state: DemoState, context: ProductEditorContext) {
-  if (context.role !== "supervisor") fail("permission");
-  if (context.company_id !== state.config.company.seed_key) fail("company");
-  const configured = configuredBranches(state.config);
-  if (
-    !context.allowed_branches.length ||
-    context.allowed_branches.some((branch) => !configured.includes(branch))
-  )
-    fail("branch");
-  if (
-    context.branch !== "all" &&
-    !context.allowed_branches.includes(context.branch)
-  )
-    fail("branch");
-  if (
-    context.branch === "all" &&
-    configured.some((branch) => !context.allowed_branches.includes(branch))
-  )
-    fail("branch");
+  const actor = freshActor(state, context);
+  requireCapability(state, actor, "catalog.edit", {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared",
+    mutation: true,
+  });
+  return actor;
 }
 /** Capture only this product and its derived price decisions, offers and conflicts. */
 function snapshot(state: DemoState, product: Product) {
@@ -103,9 +89,11 @@ function snapshot(state: DemoState, product: Product) {
 }
 export function productEditSnapshot(
   state: DemoState,
+  actor: AuthenticatedActor,
   code: string,
   company = state.config.company.seed_key,
 ): string {
+  checkContext(state, actor);
   return JSON.stringify(snapshot(state, ownProduct(state, company, code)));
 }
 /** The frontend domain enforces permissions too; hiding Edit is insufficient. */
@@ -117,7 +105,7 @@ export function saveProductEdits(
   expectedSnapshot: string,
   now = new Date(),
 ): void {
-  checkContext(state, context);
+  context = checkContext(state, context);
   const product = ownProduct(state, context.company_id, code);
   if (
     edits.sold_by !== undefined &&
@@ -125,7 +113,10 @@ export function saveProductEdits(
     edits.sold_by !== "weight"
   )
     fail("unit_size");
-  if (productEditSnapshot(state, code, context.company_id) !== expectedSnapshot)
+  if (
+    productEditSnapshot(state, context, code, context.company_id) !==
+    expectedSnapshot
+  )
     fail("stale");
   for (const key of ["name_en", "unit_size"] as const)
     if (!edits[key].trim()) fail(key);
@@ -203,23 +194,8 @@ export function saveProductEdits(
     sold_by: edits.sold_by ?? product.sold_by ?? "each",
   });
   applyProductDateDrafts(state, context, product, edits.dates, now);
-  if (edits.date_tracking === false && edits.date_tracking_stop === "clear") {
-    for (const entry of state.expiry) {
-      if (
-        entry.company_id !== context.company_id ||
-        entry.product_code !== code ||
-        entry.status !== "active" ||
-        !context.allowed_branches.includes(
-          projectExpiryLocation(state, entry).branch,
-        )
-      )
-        continue;
-      entry.status = "removed";
-      entry.removal_action = "stop_tracking";
-      entry.removed_at = now.toISOString();
-      entry.removed_by = context.actor;
-    }
-  }
+  if (edits.date_tracking === false && edits.date_tracking_stop === "clear")
+    stopProductDateTracking(state, context, code, "clear");
   state.activity.push({
     id: createId("product-edit"),
     company_id: context.company_id,
@@ -228,6 +204,7 @@ export function saveProductEdits(
     product_code: code,
     action: "Save product",
     by: context.actor,
+    ...actorAudit(state, context, now),
     at: now.toISOString(),
     reversible: true,
     before,
@@ -243,7 +220,7 @@ export function recordProductBarcodeConflict(
   barcode: string,
   now = new Date(),
 ): void {
-  checkContext(state, context);
+  context = checkContext(state, context);
   const product = ownProduct(state, context.company_id, code);
   const normalized = barcode.trim();
   const existing = state.products.find(
@@ -275,6 +252,7 @@ export function recordProductBarcodeConflict(
     reason: "Barcode conflict",
     created_at: now.toISOString(),
     triggered_by: context.actor,
+    triggered_by_user_id: context.user_id,
     barcode: normalized,
     conflicting_product_code: existing.code,
   });
@@ -285,6 +263,7 @@ export function recordProductBarcodeConflict(
     product_code: code,
     action: "Report barcode conflict",
     by: context.actor,
+    ...actorAudit(state, context, now),
     at: now.toISOString(),
     reversible: false,
     before: { barcode: product.barcode },

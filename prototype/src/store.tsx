@@ -3,782 +3,396 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { configSeed, demoSeed } from "./config";
-import retainedConfig from "./compat/configuration.json";
+import type { DemoState, Language } from "./types";
+import type {
+  AuthenticatedActor,
+  Capability,
+  ResourceScope,
+  LocationSelection,
+} from "./authority-types";
+import type { ScopedReadView } from "./e1-read-model";
+import {
+  createE1ShellRuntime,
+  type ShellRuntimeOptions,
+} from "./e1-shell-runtime";
+import type { ShellSnapshot } from "./e1-store-controller";
+import type { E1DemoContextValue } from "./e1-demo-context";
+import {
+  emptyPreferences,
+  preferencesFor,
+  readPreferences,
+  rememberRecentPerson,
+  writePreferences,
+  readLanguage,
+  LANGUAGE_KEY,
+  PreferenceStorageError,
+  type AuthPreferences,
+  type Theme,
+} from "./auth-preferences.e1";
+import i18n, { translate, translateCount } from "./i18n";
 import { formatMoney } from "./formatters";
-import { hydrateDemoFixture, restoreDemoFixture } from "./demo-fixtures";
-import { hydrateBState, restoreBState } from "./b-state";
-import { hydrateCState, restoreCState } from "./c-state";
-import { hydrateC2State, restoreC2State } from "./c2-state";
-import { hydrateC4State, restoreC4State } from "./c4-state";
-import { hydrateC6State } from "./c6-state";
-import {
-  hydrateSalesState,
-  hydrateSalesDemo,
-  evaluateSales,
-  type SalesContext,
-  type SaleRecipient,
-} from "./sales";
-import { syncReturnCreditAlerts } from "./return-workflow";
-import { syncDateReminderAlerts } from "./date-tracking";
-import { shouldShowUndoNotification } from "./undo-notification-policy";
-import { configuredBranches, branchAllowsRole } from "./settings";
-import { autoAddApprovedLabelChanges } from "./label-workflow";
-import { attachReversals, reverseActivity, HistoryError } from "./history";
-import { createId } from "./ids";
-import {
-  archiveFileStorageSnapshot,
-  migrateInlineFiles,
-  migrateLegacyFileBackups,
-} from "./file-database";
-import {
-  decodeHistoryStorage,
-  encodeHistoryStorage,
-  HistoryStorageError,
-} from "./history-storage";
+import { attachReversals, ownUndoResource, reverseActivity } from "./history";
 import {
   addUndoToast,
   pauseUndoToast,
   expireUndoToasts,
-  remainingTime,
   type UndoToast,
 } from "./undo-queue";
-import {
-  AUTH_STORAGE_KEY,
-  SESSION_KEY,
-  authenticate,
-  auditAuth,
-  demoUsers,
-  preferencesFor,
-  readAuth,
-  readAuthSession,
-  replacePassword,
-  type AuthError,
-  type AuthSession,
-  type AuthState,
-  type DemoUser,
-  type Theme,
-} from "./auth";
+import { shouldShowUndoNotification } from "./undo-notification-policy";
+import { configSeed } from "./config";
+import { HistoryStorageError } from "./history-storage";
+import { FileStorageError } from "./file-database";
+import { AuthorityStorageError } from "./authority-repository";
+import { configuredLocations } from "./authority";
+
 export { demoUsers } from "./auth";
-import i18n, { translate, translateCount } from "./i18n";
-import type { Branch, DemoState, Language, Role } from "./types";
-
-export const STORAGE_KEY = "supermarket-prototype-v1";
-export const branches = demoSeed.branches as Exclude<Branch, "all">[];
-
-export function relativeDate(days: number): string {
-  const now = new Date();
-  now.setDate(now.getDate() + days);
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: configSeed.company.timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-}
-
-export function initialState(): DemoState {
-  const company_id = configSeed.company.seed_key;
-  const products: DemoState["products"] = demoSeed.products.map((product) => ({
-    ...product,
-    status: "active",
-    sold_by:
-      "sold_by" in product && product.sold_by === "weight" ? "weight" : "each",
-    company_id,
-    branch_prices:
-      product.code === demoSeed.cross_branch_price_conflict.product_code
-        ? {
-            "Branch 1": demoSeed.cross_branch_price_conflict.branch_1_price,
-            "Branch 2": demoSeed.cross_branch_price_conflict.branch_2_price,
-          }
-        : ({} as Record<string, string>),
-    pending_price:
-      product.code === "0006"
-        ? demoSeed.demo_invoice.lines.find(
-            (line) => line.product_code === product.code,
-          )?.calculated_selling_price
-        : null,
-    pending_branch: "Branch 1",
-  }));
-  const newLine = demoSeed.demo_invoice.lines.find(
-    (line) => line.product_code === "NEW",
-  )!;
-  products.push({
-    company_id,
-    code: "0015",
-    name_en: newLine.description,
-    name_fa: "زرشک خشک ۱۰۰ گرمی",
-    pricing_category: configSeed.pricing_categories.find(
-      (category) => category.key === "grocery",
-    )!.key,
-    unit_size: "100 g",
-    last_cost_before_tax: newLine.unit_cost_before_tax,
-    selling_price: "",
-    pending_price: newLine.calculated_selling_price,
-    pending_branch: "Branch 1",
-    branch_prices: {},
-    offer: null,
-    taxable: newLine.taxable,
-    date_tracking: true,
-    main_supplier: demoSeed.demo_invoice.supplier,
-    ai_category: "Dried fruits & spices",
-    barcode: "DEMO-NEW-0015",
-    status: "pending_approval",
-    tax_profile: newLine.tax_profile,
-  });
-  const state = hydrateC4State(
-    hydrateC2State(
-      hydrateCState(
-        hydrateBState(
-          hydrateDemoFixture(
-            structuredClone({
-              version: 1,
-              supplier_balance_snapshot_date: relativeDate(0),
-              supplier_balance_snapshot_currency: configSeed.company.currency,
-              pricing_minimum_margin_schema: 2,
-              config: configSeed,
-              products,
-              approvals: [
-                {
-                  id: "demo-lavash-price",
-                  company_id,
-                  branch: "Branch 1",
-                  type: "price_change",
-                  product_code: "0006",
-                  status: "pending",
-                  proposed_price: "2.99",
-                  current_price: "1.99",
-                },
-                {
-                  id: "demo-barberries-product",
-                  company_id,
-                  branch: "Branch 1",
-                  type: "new_product",
-                  product_code: "0015",
-                  status: "pending",
-                  proposed_price: newLine.calculated_selling_price,
-                  current_price: null,
-                },
-              ],
-              alerts: [
-                {
-                  id: "demo-tea-conflict",
-                  company_id,
-                  branch: "all",
-                  type: "price_conflict",
-                  product_code:
-                    demoSeed.cross_branch_price_conflict.product_code,
-                  status: "pending",
-                  branch_prices: {
-                    "Branch 1":
-                      demoSeed.cross_branch_price_conflict.branch_1_price,
-                    "Branch 2":
-                      demoSeed.cross_branch_price_conflict.branch_2_price,
-                  },
-                },
-              ],
-              invoice: {
-                ...demoSeed.demo_invoice,
-                id: "demo-fv-20417",
-                company_id,
-                branch: "Branch 1",
-                status: "empty",
-                lines: demoSeed.demo_invoice.lines.map((line) => ({
-                  ...line,
-                  company_id,
-                  sold_by: line.sold_by === "weight" ? "weight" : "each",
-                  quantity_unit:
-                    line.quantity_unit === "cases" ? "cases" : "units",
-                })),
-                invoice_date: relativeDate(0),
-                received_at: new Date().toISOString(),
-                receiving_employee: demoSeed.demo_users.find(
-                  (user) => user.role === "floor_worker",
-                )!.name,
-                due_date: relativeDate(14),
-                supplier_confirmed: true,
-              },
-              invoices: [],
-              offers: products
-                .filter((product) => product.offer)
-                .map((product) => {
-                  const mapping = configSeed.promotions.price_to_offer.find(
-                    (offer) => offer.price === product.selling_price,
-                  )!;
-                  return {
-                    id: `demo-offer-${product.code}`,
-                    company_id,
-                    branch: "all",
-                    product_code: product.code,
-                    label: product.offer!,
-                    price: product.selling_price,
-                    pool: mapping.mix_and_match_pool,
-                    mix_and_match: true,
-                    status: "active",
-                    scope: "all",
-                    currency: configSeed.company.currency,
-                  };
-                }),
-              templates: [],
-              returns: demoSeed.open_returns.map((record, index) => ({
-                ...record,
-                company_id,
-                branch: record.branch as Branch,
-                id: `demo-return-${index + 1}`,
-                status: record.status as "open" | "partially_resolved",
-              })),
-              expiry: demoSeed.expiring_soon_examples.map((record, index) => ({
-                ...record,
-                company_id,
-                branch: record.branch as Branch,
-                id: `demo-expiry-${index + 1}`,
-                date: relativeDate(record.expires_in_days),
-                status: "active",
-              })),
-              notes: demoSeed.notes.map((record, index) => ({
-                ...record,
-                company_id,
-                branch: "Branch 1",
-                id: `demo-note-${index + 1}`,
-                type: record.type as
-                  "to_order" | "store_use" | "note_to_supervisor",
-                status: "open",
-                created_at: new Date().toISOString(),
-              })),
-              ledger: [],
-              stock: Object.fromEntries(
-                products.flatMap((product) =>
-                  branches.map((branch) => [
-                    `${branch}:${product.code}`,
-                    demoSeed.open_returns.reduce(
-                      (count, record) =>
-                        count +
-                        (record.branch === branch &&
-                        record.replacement_received?.product_code ===
-                          product.code
-                          ? record.replacement_received.qty
-                          : 0),
-                      0,
-                    ),
-                  ]),
-                ),
-              ),
-              activity: [],
-            } satisfies DemoState),
-          ),
-        ),
-      ),
-    ),
-    true,
-  );
-  hydrateC6State(state);
-  hydrateSalesDemo(state);
-  evaluateSales(state);
-  syncReturnCreditAlerts(state);
-  syncDateReminderAlerts(state);
-  return state;
-}
-
-function readState(): { state: DemoState; invalidHistoryRaw?: string } {
-  let rawSaved = "null";
-  try {
-    rawSaved = localStorage.getItem(STORAGE_KEY) ?? "null";
-    const saved = decodeHistoryStorage(JSON.parse(rawSaved));
-    if (
-      saved &&
-      typeof saved === "object" &&
-      "version" in saved &&
-      saved.version === 1 &&
-      "config" in saved &&
-      "products" in saved &&
-      Array.isArray(saved.products)
-    ) {
-      const candidate = saved as DemoState;
-      if (
-        candidate.config?.company?.seed_key === configSeed.company.seed_key &&
-        Array.isArray(candidate.approvals) &&
-        Array.isArray(candidate.ledger) &&
-        candidate.invoice &&
-        Array.isArray(candidate.returns)
-      ) {
-        // Keep business edits from v1 while replacing the old PIN session policy.
-        candidate.config.session = {
-          ...configSeed.session,
-          ...candidate.config.session,
-          sign_in: configSeed.session.sign_in,
-          pins: configSeed.session.pins,
-        };
-        candidate.supplier_balance_snapshot_date ??= relativeDate(0);
-        candidate.supplier_balance_snapshot_currency ??=
-          configSeed.company.currency;
-        if (candidate.pricing_minimum_margin_schema !== 2) {
-          // Earlier screens could edit divisors, but not minimum margins. Only
-          // replace an unchanged retained default;
-          // preserve explicit custom values and all other saved business data.
-          for (const category of candidate.config.pricing_categories) {
-            const previous = retainedConfig.pricing_categories.find(
-              (item) => item.key === category.key,
-            );
-            const current = configSeed.pricing_categories.find(
-              (item) => item.key === category.key,
-            );
-            if (
-              previous &&
-              current &&
-              category.minimum_margin === previous.minimum_margin
-            )
-              category.minimum_margin = current.minimum_margin;
-          }
-          candidate.pricing_minimum_margin_schema = 2;
-        }
-        const migrated = restoreC4State(
-          restoreC2State(
-            restoreCState(
-              restoreBState(
-                restoreDemoFixture(candidate, localStorage),
-                localStorage,
-              ),
-              localStorage,
-            ),
-            localStorage,
-          ),
-          localStorage,
-          rawSaved,
-        );
-        if (migrated.prototype_c4_schema === 1)
-          syncReturnCreditAlerts(migrated);
-        hydrateC6State(migrated);
-        hydrateSalesState(migrated);
-        evaluateSales(migrated);
-        syncDateReminderAlerts(migrated);
-        return { state: migrated };
-      }
-    }
-  } catch (error) {
-    if (error instanceof HistoryStorageError)
-      return { state: initialState(), invalidHistoryRaw: rawSaved };
-    /* Invalid or unavailable browser storage falls back to the fictional seed. */
-  }
-  return { state: initialState() };
-}
-interface DemoContextValue {
-  state: DemoState;
-  update: (mutator: (draft: DemoState) => void) => void;
-  role: Role | null;
-  branch: Branch;
-  lang: Language;
-  t: (en: string, fa: string) => string;
-  tCount: (
-    enSingular: string,
-    enPlural: string,
-    faSingular: string,
-    faPlural: string,
-    count: number,
-  ) => string;
-  money: (value: string) => string;
-  setBranch: (branch: Branch) => void;
-  setLang: (lang: Language) => void;
-  user: DemoUser | null;
-  locked: boolean;
-  authenticatedAt: number;
-  mustChangePassword: boolean;
-  recentUsers: DemoUser[];
-  theme: Theme;
-  comfortableText: boolean;
-  setTheme: (theme: Theme) => void;
-  setComfortableText: (comfortable: boolean) => void;
-  signIn: (username: string, password: string) => AuthError | null;
-  unlock: (password: string) => AuthError | null;
-  choosePassword: (password: string) => AuthError | null;
-  switchDemoUser: (username: string) => void;
-  needsReauthentication: (page: string) => boolean;
-  reauthenticate: (password: string) => AuthError | null;
-  lock: () => void;
-  signOut: () => void;
-  reset: () => void;
-  navigate: (page: string) => void;
+export {
+  initialState,
+  relativeDate,
+  STORAGE_KEY,
+  branches,
+} from "./e1-bootstrap";
+export type ProviderOptions = Omit<
+  ShellRuntimeOptions<DemoState, ScopedReadView>,
+  | "publish"
+  | "publishPreferences"
+  | "publishError"
+  | "publishRecoveryStatus"
+  | "onCommitted"
+>;
+type Runtime = Awaited<
+  ReturnType<typeof createE1ShellRuntime<DemoState, ScopedReadView>>
+>;
+interface ProviderValue extends E1DemoContextValue {
+  storageError: boolean;
+  historyLoadError: boolean;
   resetGeneration: number;
   undoToasts: UndoToast[];
-  pauseUndo: (id: string, paused: boolean) => void;
-  dismissUndo: (id: string) => void;
-  undoActivity: (id: string) => void;
-  revertActivity: (id: string) => void;
-  historyContext: SalesContext | null;
+  pauseUndo(id: string, paused: boolean): void;
+  dismissUndo(id: string): void;
+  undoActivity(id: string): Promise<void>;
+  revertActivity(id: string): Promise<void>;
 }
-const DemoContext = createContext<DemoContextValue | null>(null);
+const DemoContext = createContext<ProviderValue | null>(null);
+const errorCode = (error: unknown) =>
+  error instanceof HistoryStorageError
+    ? "history"
+    : error && typeof error === "object" && "code" in error
+      ? String(error.code)
+      : "storage";
 
-export function DemoProvider({ children }: { children: ReactNode }) {
-  const [loaded] = useState(readState);
-  const [state, setState] = useState(loaded.state);
-  const [historyLoadError, setHistoryLoadError] = useState(
-    Boolean(loaded.invalidHistoryRaw),
+/** `options` is assembled from all guarded domain projectors at the application entry. */
+export function DemoProvider({
+  children,
+  options,
+}: {
+  children: ReactNode;
+  options: ProviderOptions;
+}) {
+  const [snapshot, setSnapshot] = useState<ShellSnapshot<ScopedReadView>>(
+    () => ({
+      view: options.signedOutView(),
+      actor: null,
+      person: null,
+      secondStepMethod: null,
+      stage: "loading",
+      generation: 0,
+      revision: 0,
+      directoryVersion: 0,
+    }),
   );
-  const invalidHistory = useRef(Boolean(loaded.invalidHistoryRaw));
-  const recoverySnapshot = useRef(loaded.invalidHistoryRaw);
-  const stateRef = useRef(state);
-  const [session, setSession] = useState(() =>
-    readAuthSession(configuredBranches(state.config, true)),
-  );
-  const sessionRef = useRef(session);
-  const [auth, setAuth] = useState(readAuth);
-  const authRef = useRef(auth);
-  const commitSession = useCallback((next: AuthSession) => {
-    sessionRef.current = next;
-    setSession(next);
-  }, []);
-  const commitAuth = useCallback((next: AuthState) => {
-    authRef.current = next;
-    setAuth(next);
+  const snapshotRef = useRef(snapshot);
+  useLayoutEffect(() => {
+    snapshotRef.current = snapshot;
+  }, [snapshot]);
+  const [preferences, setPreferences] = useState<AuthPreferences>(() => {
     try {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next));
+      return readPreferences();
     } catch {
-      /* Browser-only demo remains usable in memory. */
+      return emptyPreferences();
     }
-  }, []);
-  const user =
-    demoUsers.find((candidate) => candidate.username === session.username) ??
-    null;
-  const role = user?.role ?? null;
-  const mustChangePassword = Boolean(
-    user && auth.accounts[user.username]?.mustChangePassword,
+  });
+  const preferencesRef = useRef(preferences);
+  useLayoutEffect(() => {
+    preferencesRef.current = preferences;
+  }, [preferences]);
+  const [languageChoice, setLangState] = useState<Language>(() => {
+    try {
+      return readLanguage();
+    } catch {
+      return "en";
+    }
+  });
+  const languages = snapshot.view.config.company.ui_languages;
+  const supportedLanguage = languages.find(
+    (value): value is Language => value === "en" || value === "fa",
   );
-  const preferences = useMemo(() => {
-    const preference = preferencesFor(auth, session.username);
-    return {
-      ...preference,
-      comfortableText: preference.comfortableTextExplicit
-        ? preference.comfortableText
-        : state.config.company.text_size === "large",
-    };
-  }, [auth, session.username, state.config.company.text_size]);
-  const [storageError, setStorageError] = useState(
-    Boolean(loaded.invalidHistoryRaw),
-  );
-  const filePersistence = useRef<Promise<void>>(Promise.resolve());
-  const [resetGeneration, setResetGeneration] = useState(0);
-  const [undoToasts, setUndoToasts] = useState<UndoToast[]>([]);
-  const undoRef = useRef(undoToasts);
-  const commitToasts = useCallback((next: UndoToast[]) => {
-    undoRef.current = next;
-    setUndoToasts(next);
-  }, []);
-  const pauseUndo = useCallback(
-    (id: string, paused: boolean) => {
-      commitToasts(pauseUndoToast(undoRef.current, id, paused, Date.now()));
-    },
-    [commitToasts],
-  );
-  const saleRecipients = useCallback(
-    (): SaleRecipient[] =>
-      demoUsers
-        .filter((candidate) =>
-          Boolean(authRef.current.accounts[candidate.username]),
-        )
-        .map((candidate) => ({
-          username: candidate.username,
-          role: candidate.role,
-          allowed_branches:
-            candidate.role === "supervisor"
-              ? configuredBranches(stateRef.current.config, true)
-              : [candidate.branch],
-        })),
+  const lang =
+    languages.includes(languageChoice) || !supportedLanguage
+      ? languageChoice
+      : supportedLanguage;
+  if (lang !== languageChoice) setLangState(lang);
+  const [recentUsers, setRecentUsers] = useState<
+    E1DemoContextValue["recentUsers"]
+  >([]);
+  const [demoUsers, setDemoUsers] = useState<E1DemoContextValue["demoUsers"]>(
     [],
   );
-  const actionContext = useCallback((): SalesContext | null => {
-    const actor = demoUsers.find(
-      (candidate) => candidate.username === sessionRef.current.username,
-    );
+  const [storageError, setStorageError] = useState(false);
+  const [historyLoadError, setHistoryLoadError] = useState(false);
+  const [historyQuarantineActive, setHistoryQuarantineActive] = useState(false);
+  const [historyResetPending, setHistoryResetPending] = useState(false);
+  const [currentComputerId, setCurrentComputerId] = useState<string | null>(
+    null,
+  );
+  const [resetGeneration, setResetGeneration] = useState(0);
+  const [undoToasts, setUndoToasts] = useState<UndoToast[]>([]);
+  const runtimeRef = useRef<Runtime | null>(null);
+  const optionsRef = useRef(options);
+  const requireRuntime = useCallback(() => {
+    if (!runtimeRef.current) throw new Error("storage");
+    return runtimeRef.current;
+  }, []);
+  const savePreferences = useCallback((next: AuthPreferences) => {
+    writePreferences(next);
+    preferencesRef.current = next;
+    setPreferences(next);
+  }, []);
+  const reportStorageFailure = useCallback((error: unknown) => {
     if (
-      !actor ||
-      sessionRef.current.locked ||
-      authRef.current.accounts[actor.username]?.mustChangePassword
-    )
-      return null;
-    return {
-      company_id: stateRef.current.config.company.seed_key,
-      role: actor.role,
-      actor: actor.name,
-      username: actor.username,
-      notification_recipients: saleRecipients(),
-      branch: sessionRef.current.branch,
-      allowed_branches:
-        actor.role === "supervisor"
-          ? configuredBranches(stateRef.current.config, true)
-          : [actor.branch],
-    };
-  }, [saleRecipients]);
-  const update = useCallback(
-    (mutator: (draft: DemoState) => void) => {
-      // Validate synchronously so the screen can catch a failed business action.
-      // Publish only successful drafts; the ref also preserves same-event updates.
-      if (
-        sessionRef.current.locked ||
-        (sessionRef.current.username &&
-          authRef.current.accounts[sessionRef.current.username]
-            ?.mustChangePassword)
-      )
-        throw new Error("Sign in and choose your password before continuing.");
-      const actingUser = demoUsers.find(
-        (candidate) => candidate.username === sessionRef.current.username,
-      );
-      if (
-        actingUser &&
-        !branchAllowsRole(
-          stateRef.current.config,
-          sessionRef.current.branch,
-          actingUser.role,
-        )
-      )
-        throw new Error(
-          "This location is unavailable for your role. Ask your Supervisor to check your location assignment.",
-        );
-      const draft = structuredClone(stateRef.current);
-      evaluateSales(draft, new Date(), saleRecipients());
-      mutator(draft);
-      syncReturnCreditAlerts(draft);
-      const context = actionContext();
-      if (context) {
-        autoAddApprovedLabelChanges(stateRef.current, draft, context.actor);
-        const previousIds = new Set(
-          stateRef.current.activity.map((entry) => entry.id),
-        );
-        if (
-          !draft.activity.some((entry) => !previousIds.has(entry.id)) &&
-          draft.invoice.status === "draft" &&
-          stateRef.current.invoice.status !== "posted" &&
-          JSON.stringify(draft.invoice) !==
-            JSON.stringify(stateRef.current.invoice)
-        ) {
-          draft.activity.push({
-            id: createId("draft-edit"),
-            company_id: context.company_id,
-            branch: draft.invoice.branch,
-            action:
-              stateRef.current.invoice.status === "draft"
-                ? "Edit draft"
-                : "Save draft",
-            by: context.actor,
-            at: new Date().toISOString(),
-            reversible: true,
-            entity_type: "invoice",
-            entity_id: draft.invoice.id,
-          });
-        }
-        const entries = attachReversals(stateRef.current, draft, context);
-        let queue = undoRef.current;
-        for (const entry of entries.filter(
-          (item) =>
-            context.role !== "cashier" &&
-            item.reversible &&
-            item.reversal?.length &&
-            item.by === context.actor &&
-            shouldShowUndoNotification(item.action),
-        ))
-          queue = addUndoToast(
-            queue,
-            {
-              id: entry.id,
-              action: entry.action,
-              actor_username: context.username,
-            },
-            Date.now(),
-          );
-        if (queue !== undoRef.current) commitToasts(queue);
-      }
-      // Reminder alerts are a derived projection, not part of an operator's
-      // reversible edit. Undo recalculates them from the restored date evidence.
-      syncDateReminderAlerts(draft);
-      evaluateSales(draft, new Date(), saleRecipients());
-      stateRef.current = draft;
-      setState(draft);
-    },
-    [actionContext, commitToasts, saleRecipients],
-  );
-  useEffect(() => {
-    const refresh = () => {
-      const next = structuredClone(stateRef.current);
-      const dateChanged = syncDateReminderAlerts(next);
-      const salesChanged = evaluateSales(next, new Date(), saleRecipients());
-      if (!dateChanged && !salesChanged) return;
-      stateRef.current = next;
-      setState(next);
-    };
-    const timer = window.setInterval(refresh, 60_000);
-    window.addEventListener("focus", refresh);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", refresh);
-    };
-  }, [saleRecipients]);
-  useEffect(() => {
-    const languages = state.config.company.ui_languages?.length
-      ? state.config.company.ui_languages
-      : ["en", "fa"];
-    if (!languages.includes(session.lang))
-      commitSession({ ...sessionRef.current, lang: languages[0] as Language });
-  }, [state.config.company.ui_languages, session.lang, commitSession]);
-  useEffect(() => {
-    const running = undoToasts.filter((item) => item.running_since !== null);
-    if (!running.length) return;
-    const delay = Math.min(
-      ...running.map((item) => remainingTime(item, Date.now())),
-    );
-    const timer = window.setTimeout(
-      () => commitToasts(expireUndoToasts(undoRef.current, Date.now())),
-      Math.max(1, delay),
-    );
-    return () => window.clearTimeout(timer);
-  }, [undoToasts, commitToasts]);
-  const reverse = useCallback(
-    (id: string, mode: "undo" | "revert") => {
-      const context = actionContext();
-      if (!context) throw new HistoryError("permission");
-      if (mode === "undo") {
-        const toast = undoRef.current.find(
-          (item) => item.id === id && item.actor_username === context.username,
-        );
-        if (!toast || remainingTime(toast, Date.now()) <= 0)
-          throw new HistoryError("expired");
-      }
-      update((draft) => reverseActivity(draft, context, id, mode));
-      commitToasts(undoRef.current.filter((item) => item.id !== id));
-    },
-    [actionContext, update, commitToasts],
-  );
+      error instanceof AuthorityStorageError ||
+      error instanceof HistoryStorageError ||
+      error instanceof FileStorageError ||
+      error instanceof PreferenceStorageError ||
+      (error instanceof Error && error.message === "storage") ||
+      error instanceof DOMException
+    ) {
+      setStorageError(true);
+      if (error instanceof HistoryStorageError) setHistoryLoadError(true);
+    }
+  }, []);
   useEffect(() => {
     let active = true;
-    if (invalidHistory.current) {
-      // Never replace a malformed retained dictionary with fictional fallback
-      // data. Archive its exact raw bytes; an explicit Reset is the only release.
-      const raw = recoverySnapshot.current;
-      if (raw)
-        void archiveFileStorageSnapshot(
-          STORAGE_KEY,
-          raw,
-          state.config.company.seed_key,
-        )
-          .then(() => {
-            if (active) recoverySnapshot.current = undefined;
-          })
-          .catch(() => undefined);
-      return () => {
-        active = false;
-      };
-    }
-    // jsdom has no file database. Existing synchronous domain/component tests
-    // retain their in-memory storage seam; actual browser checks exercise IDB.
-    if (import.meta.env.MODE === "test" && typeof indexedDB === "undefined") {
-      try {
-        // The same lossless codec is covered in unit and real browser tests.
-        if (recoverySnapshot.current) throw new HistoryStorageError();
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(encodeHistoryStorage(state)),
-        );
-        queueMicrotask(() => {
-          if (active) setStorageError(false);
+    let clockTimer: number | undefined;
+    let clockPending: Promise<void> | null = null;
+    const reconcileClock = () => {
+      if (!active || !runtimeRef.current || clockPending) return;
+      clockPending = runtimeRef.current
+        .reconcileClock()
+        .catch((error: unknown) => {
+          if (active) reportStorageFailure(error);
+        })
+        .finally(() => {
+          clockPending = null;
         });
-      } catch {
-        queueMicrotask(() => {
-          if (active) setStorageError(true);
-        });
-      }
-      return () => {
-        active = false;
-      };
-    }
-    // Serialize writes and abandon stale snapshots if the user edited/reset
-    // while a legacy upload was being copied. Never republish an old draft.
-    filePersistence.current = filePersistence.current
-      .catch(() => undefined)
-      .then(async () => {
-        if (!active || stateRef.current !== state) return;
-        const company = state.config.company.seed_key;
-        const migrated = await migrateInlineFiles(state, company);
-        if (!active || stateRef.current !== state) return;
-        // Shrinking old same-key backups first frees space even when Safari's
-        // existing text storage is full. Exact backups are verified in IDB.
-        await migrateLegacyFileBackups(localStorage, company);
-        if (!active || stateRef.current !== state) return;
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const encoded = encodeHistoryStorage(migrated.state);
-        const serialized = JSON.stringify(encoded);
-        let requiresC6Backup = false;
-        let requiresC8Backup = false;
-        let requiresHistoryBackup = false;
-        if (raw) {
+    };
+    void createE1ShellRuntime({
+      ...optionsRef.current,
+      publish: (next) => {
+        if (!active) return;
+        snapshotRef.current = next;
+        setSnapshot(next);
+        if (
+          next.actor &&
+          preferencesRef.current.recent_user_ids[0] !== next.actor.user_id
+        ) {
+          const remembered = rememberRecentPerson(
+            preferencesRef.current,
+            next.actor.user_id,
+          );
           try {
-            const previous = JSON.parse(raw);
-            requiresC6Backup = previous.prototype_c6_schema !== 1;
-            requiresC8Backup = previous.prototype_c8_schema !== 1;
-            requiresHistoryBackup =
-              Object.hasOwn(encoded, "prototype_history_dictionary") &&
-              !Object.hasOwn(previous, "prototype_history_dictionary");
+            savePreferences(remembered);
           } catch {
-            requiresC6Backup = true;
-            requiresC8Backup = true;
+            setStorageError(true);
           }
         }
-        if (recoverySnapshot.current) {
-          await archiveFileStorageSnapshot(
-            STORAGE_KEY,
-            recoverySnapshot.current,
-            company,
+      },
+      publishRecoveryStatus: (status) => {
+        if (active) {
+          setHistoryLoadError(status.active);
+          setHistoryQuarantineActive(status.active);
+          setHistoryResetPending(status.retirementPending);
+        }
+      },
+      publishPreferences: (next) => {
+        if (active) {
+          preferencesRef.current = next;
+          setPreferences(next);
+        }
+      },
+      publishError: (error) => {
+        if (active) reportStorageFailure(error);
+      },
+      prepareCommit: (draft, before, actor) => {
+        optionsRef.current.prepareCommit?.(draft, before, actor);
+        attachReversals(before, draft, actor);
+      },
+      onCommitted: (before, after, actor) => {
+        if (!active) return;
+        const prior = new Set(before.activity.map((entry) => entry.id));
+        const entry = after.activity.find(
+          (value) =>
+            !prior.has(value.id) &&
+            value.reversible &&
+            shouldShowUndoNotification(value.action),
+        );
+        if (entry)
+          setUndoToasts((queue) =>
+            addUndoToast(
+              queue,
+              {
+                id: entry.id,
+                action: entry.action,
+                actor_username: actor.username,
+              },
+              Date.now(),
+            ),
           );
-          recoverySnapshot.current = undefined;
+      },
+    })
+      .then((runtime) => {
+        if (!active) {
+          runtime.dispose();
+          return;
         }
-        if (
-          raw &&
-          (migrated.migrated ||
-            requiresC6Backup ||
-            requiresC8Backup ||
-            requiresHistoryBackup)
-        )
-          await archiveFileStorageSnapshot(STORAGE_KEY, raw, company);
-        if (!active || stateRef.current !== state) return;
-        localStorage.setItem(STORAGE_KEY, serialized);
-        if (localStorage.getItem(STORAGE_KEY) !== serialized)
-          throw new Error("Browser state could not be read back.");
+        runtimeRef.current = runtime;
+        setCurrentComputerId(runtime.currentComputerId());
         setStorageError(false);
-        if (migrated.migrated) {
-          // This is representation migration, never a business edit or Undo.
-          stateRef.current = migrated.state;
-          setState(migrated.state);
-        }
+        clockTimer = window.setInterval(reconcileClock, 60_000);
+        window.addEventListener("focus", reconcileClock);
       })
-      .catch(() => {
-        if (active && stateRef.current === state) setStorageError(true);
+      .catch((error) => {
+        if (active) {
+          setStorageError(true);
+          setHistoryLoadError(errorCode(error) === "history");
+          setSnapshot((current) => ({
+            ...current,
+            stage: "signed_out",
+            actor: null,
+          }));
+        }
       });
     return () => {
       active = false;
+      if (clockTimer !== undefined) window.clearInterval(clockTimer);
+      window.removeEventListener("focus", reconcileClock);
+      runtimeRef.current?.dispose();
+      runtimeRef.current = null;
     };
-  }, [state]);
+  }, [savePreferences, reportStorageFailure]);
+  useEffect(() => {
+    let active = true;
+    const runtime = runtimeRef.current;
+    if (runtime)
+      void runtime
+        .recentPeople(preferences.recent_user_ids)
+        .then((users) => {
+          if (active) setRecentUsers(users);
+        })
+        .catch(() => {
+          if (active) setRecentUsers([]);
+        });
+    return () => {
+      active = false;
+    };
+  }, [preferences.recent_user_ids, snapshot.generation, currentComputerId]);
+  useEffect(() => {
+    let active = true;
+    const runtime = runtimeRef.current;
+    if (runtime)
+      void runtime.demoPeople().then(
+        (rows) => {
+          if (active) setDemoUsers(rows);
+        },
+        (error: unknown) => {
+          if (active) {
+            setDemoUsers([]);
+            reportStorageFailure(error);
+          }
+        },
+      );
+    return () => {
+      active = false;
+    };
+  }, [
+    snapshot.generation,
+    snapshot.directoryVersion,
+    currentComputerId,
+    reportStorageFailure,
+  ]);
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setUndoToasts((queue) => expireUndoToasts(queue, Date.now())),
+      250,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+  const activePreferences = useMemo(() => {
+    const saved = preferencesFor(preferences, snapshot.person?.id ?? null);
+    return {
+      ...saved,
+      comfortableText: saved.comfortableTextExplicit
+        ? saved.comfortableText
+        : snapshot.view.config.company.text_size === "large" ||
+          saved.comfortableText,
+    };
+  }, [
+    preferences,
+    snapshot.person?.id,
+    snapshot.view.config.company.text_size,
+  ]);
+  const t = useCallback(
+    (en: string, fa: string) => translate(en, fa, lang),
+    [lang],
+  );
+  const tCount = useCallback(
+    (
+      one: string,
+      other: string,
+      faOne: string,
+      faOther: string,
+      count: number,
+    ) => translateCount(one, other, faOne, faOther, count, lang),
+    [lang],
+  );
+  const money = useCallback(
+    (amount: string) =>
+      formatMoney(amount, { currency: snapshot.view.config.company.currency }),
+    [snapshot.view.config.company.currency],
+  );
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      localStorage.setItem(LANGUAGE_KEY, lang);
     } catch {
-      /* The session remains usable in memory. */
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Report a failed external Storage write; this effect depends only on lang.
+      setStorageError(true);
     }
-    void i18n.changeLanguage(session.lang);
-    document.documentElement.lang = session.lang;
-    document.documentElement.dir = session.lang === "fa" ? "rtl" : "ltr";
-    document.title = `${session.lang === "fa" ? state.config.company.name_fa : state.config.company.name_en} · ${translate("Demo", "دمو")}`;
-  }, [session, state.config.company]);
+  }, [lang]);
   useEffect(() => {
-    document.documentElement.dataset.theme = preferences.theme;
-    document.documentElement.dataset.textSize = preferences.comfortableText
-      ? "comfortable"
-      : "default";
-  }, [preferences.theme, preferences.comfortableText]);
+    void i18n.changeLanguage(lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
+    document.documentElement.dataset.theme = activePreferences.theme;
+    document.documentElement.dataset.textSize =
+      activePreferences.comfortableText ? "comfortable" : "default";
+    const company = snapshot.view.config.company;
+    document.title = `${lang === "fa" ? company.name_fa : company.name_en} · ${translate("Demo", "دمو", lang)}`;
+  }, [
+    lang,
+    activePreferences.theme,
+    activePreferences.comfortableText,
+    snapshot.view.config.company,
+  ]);
   useEffect(() => {
-    const style = document.documentElement.style;
-    const defaults = configSeed.company.branding;
-    const branding = state.config.company.branding ?? defaults;
+    const style = document.documentElement.style,
+      defaults = configSeed.company.branding,
+      branding = snapshot.view.config.company.branding ?? defaults;
     const tokens: [string, keyof typeof defaults][] = [
       ["--company-primary", "primary_color"],
       ["--company-primary-hover", "primary_hover_color"],
@@ -793,329 +407,361 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     return () => {
       for (const [token] of tokens) style.removeProperty(token);
     };
-  }, [state.config.company.branding]);
-  const lockSession = useCallback(() => {
-    const current = sessionRef.current;
-    if (!current.username || current.locked) return;
-    const next = structuredClone(authRef.current);
-    auditAuth(next, "Locked screen", current.username);
-    commitAuth(next);
-    commitSession({ ...current, locked: true });
-  }, [commitAuth, commitSession]);
+  }, [snapshot.view.config.company.branding]);
   useEffect(() => {
-    if (!user || session.locked || mustChangePassword) return;
-    const delay = state.config.session.idle_lock_minutes * 60_000;
+    if (snapshot.stage !== "complete") return;
+    const delay = snapshot.view.config.session.idle_lock_minutes * 60_000;
     if (delay <= 0) return;
-    let timer = window.setTimeout(lockSession, delay);
+    const lock = () => {
+      void requireRuntime().controller.lock().catch(reportStorageFailure);
+    };
+    let timer = window.setTimeout(lock, delay);
     const activity = () => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(lockSession, delay);
+      timer = window.setTimeout(lock, delay);
     };
-    for (const event of ["pointerdown", "keydown", "pointermove", "touchstart"])
-      window.addEventListener(event, activity);
+    const events = ["pointerdown", "keydown", "pointermove", "touchstart"];
+    for (const event of events) window.addEventListener(event, activity);
     return () => {
       window.clearTimeout(timer);
-      for (const event of [
-        "pointerdown",
-        "keydown",
-        "pointermove",
-        "touchstart",
-      ])
-        window.removeEventListener(event, activity);
+      for (const event of events) window.removeEventListener(event, activity);
     };
   }, [
-    user,
-    session.locked,
-    mustChangePassword,
-    state.config.session.idle_lock_minutes,
-    lockSession,
+    snapshot.stage,
+    snapshot.view.config.session.idle_lock_minutes,
+    requireRuntime,
+    reportStorageFailure,
   ]);
-  const historyContext = useMemo<SalesContext | null>(
-    () =>
-      user && role && !session.locked && !mustChangePassword
-        ? {
-            company_id: state.config.company.seed_key,
-            role,
-            actor: user.name,
-            username: user.username,
-            notification_recipients: demoUsers
-              .filter((candidate) => Boolean(auth.accounts[candidate.username]))
-              .map((candidate) => ({
-                username: candidate.username,
-                role: candidate.role,
-                allowed_branches:
-                  candidate.role === "supervisor"
-                    ? configuredBranches(state.config, true)
-                    : [candidate.branch],
-              })),
-            branch: session.branch,
-            allowed_branches:
-              role === "supervisor"
-                ? configuredBranches(state.config, true)
-                : [user.branch],
-          }
-        : null,
-    [
-      user,
-      role,
-      session.locked,
-      session.branch,
-      mustChangePassword,
-      state.config,
-      auth.accounts,
-    ],
+  const command = useCallback(
+    <T,>(
+      capability: Capability,
+      scope: ResourceScope,
+      mutate: (draft: DemoState, actor: AuthenticatedActor) => T,
+    ) =>
+      requireRuntime()
+        .controller.command(capability, scope, mutate)
+        .catch((error: unknown) => {
+          reportStorageFailure(error);
+          throw error;
+        }),
+    [requireRuntime, reportStorageFailure],
   );
-  const value = useMemo<DemoContextValue>(
+  const query = useCallback(
+    <T,>(
+      capability: Capability,
+      scope: ResourceScope,
+      project: (state: DemoState, actor: AuthenticatedActor) => T,
+    ) =>
+      requireRuntime()
+        .controller.query(capability, scope, project)
+        .catch((error: unknown) => {
+          reportStorageFailure(error);
+          throw error;
+        }),
+    [requireRuntime, reportStorageFailure],
+  );
+  const permission = useCallback(
+    (capability: Capability, scope?: ResourceScope) =>
+      runtimeRef.current?.controller.permission(capability, scope) ?? {
+        allowed: false,
+        reason: "authentication" as const,
+      },
+    [],
+  );
+  const can = useCallback(
+    (capability: Capability, scope?: ResourceScope) =>
+      permission(capability, scope).allowed,
+    [permission],
+  );
+  const setLocation = useCallback(
+    async (selection: LocationSelection) => {
+      await requireRuntime().controller.setLocation(selection);
+    },
+    [requireRuntime],
+  );
+  const setBranch = useCallback(
+    async (branch: string) => {
+      const actor = snapshotRef.current.actor;
+      if (!actor) throw new Error("authentication");
+      await setLocation(
+        branch === "all"
+          ? actor.location_scope.kind === "company"
+            ? { kind: "all_locations" }
+            : { kind: "all_my_locations" }
+          : { kind: "location", location_id: branch },
+      );
+    },
+    [setLocation],
+  );
+  const authAction = useCallback(
+    async (
+      operation: (runtime: Runtime) => Promise<void>,
+    ): Promise<string | null> => {
+      try {
+        await operation(requireRuntime());
+        await requireRuntime().retryHistoryRetirement();
+        return null;
+      } catch (error) {
+        reportStorageFailure(error);
+        return errorCode(error);
+      }
+    },
+    [requireRuntime, reportStorageFailure],
+  );
+  const people = useMemo<E1DemoContextValue["people"]>(
     () => ({
-      state,
-      update,
-      undoToasts,
-      historyContext,
-      pauseUndo,
-      dismissUndo: (id) =>
-        commitToasts(undoRef.current.filter((item) => item.id !== id)),
-      undoActivity: (id) => reverse(id, "undo"),
-      revertActivity: (id) => reverse(id, "revert"),
-      ...session,
-      role,
-      user,
-      mustChangePassword,
-      recentUsers: auth.recentUsers
-        .map((username) =>
-          demoUsers.find((candidate) => candidate.username === username)!,
-        )
-        .filter(Boolean),
-      ...preferences,
-      setTheme: (theme) => {
-        const next = structuredClone(authRef.current);
-        const preference = {
-          ...preferencesFor(next, sessionRef.current.username),
-          theme,
-        };
-        next.devicePreferences = preference;
-        if (sessionRef.current.username)
-          next.preferences[sessionRef.current.username] = preference;
-        commitAuth(next);
-      },
-      setComfortableText: (comfortableText) => {
-        const next = structuredClone(authRef.current);
-        const preference = {
-          ...preferencesFor(next, sessionRef.current.username),
-          comfortableText,
-          comfortableTextExplicit: true,
-        };
-        next.devicePreferences = preference;
-        if (sessionRef.current.username)
-          next.preferences[sessionRef.current.username] = preference;
-        commitAuth(next);
-      },
-      resetGeneration,
-      t: (en, fa) => translate(en, fa, session.lang),
-      tCount: (one, other, faOne, faOther, count) =>
-        translateCount(one, other, faOne, faOther, count, session.lang),
-      money: (amount) => {
-        try {
-          return formatMoney(amount || "0", {
-            currency: state.config.company.currency,
-          });
-        } catch {
-          return "—";
-        }
-      },
-      setBranch: (branch) => {
-        if (
-          role === "supervisor" &&
-          (branch === "all" ||
-            configuredBranches(stateRef.current.config).includes(branch))
-        )
-          commitSession({ ...sessionRef.current, branch });
-      },
-      setLang: (lang) => {
-        void i18n.changeLanguage(lang);
-        commitSession({ ...sessionRef.current, lang });
-      },
-      signIn: (username, password) => {
-        const result = authenticate(
-          authRef.current,
-          username,
-          password,
-          stateRef.current.config.session,
-        );
-        commitAuth(result.state);
-        if (!result.user) return result.error ?? "invalid";
-        if (
-          !branchAllowsRole(
-            stateRef.current.config,
-            result.user.branch === "all"
-              ? configuredBranches(stateRef.current.config)[0]
-              : result.user.branch,
-            result.user.role,
-          )
-        )
-          return "location";
-        commitToasts([]);
-        commitSession({
-          ...sessionRef.current,
-          username: result.user.username,
-          branch:
-            result.user.branch === "all"
-              ? configuredBranches(stateRef.current.config)[0]
-              : result.user.branch,
-          locked: false,
-          authenticatedAt: Date.now(),
-        });
-        return null;
-      },
-      unlock: (password) => {
-        const result = authenticate(
-          authRef.current,
-          sessionRef.current.username ?? "",
-          password,
-          stateRef.current.config.session,
-        );
-        commitAuth(result.state);
-        if (!result.user) return result.error ?? "invalid";
-        commitSession({
-          ...sessionRef.current,
-          locked: false,
-          authenticatedAt: Date.now(),
-        });
-        return null;
-      },
-      choosePassword: (password) => {
-        if (!sessionRef.current.username) return "invalid";
-        const result = replacePassword(
-          authRef.current,
-          sessionRef.current.username,
-          password,
-          stateRef.current.config.session,
-        );
-        if (result.error) return result.error;
-        commitAuth(result.state);
-        commitSession({ ...sessionRef.current, authenticatedAt: Date.now() });
-        return null;
-      },
-      switchDemoUser: (username) => {
-        const demoUser = demoUsers.find(
-          (candidate) => candidate.username === username,
-        );
-        if (!demoUser) return;
-        if (
-          !branchAllowsRole(
-            stateRef.current.config,
-            demoUser.branch === "all"
-              ? configuredBranches(stateRef.current.config)[0]
-              : demoUser.branch,
-            demoUser.role,
-          )
-        )
-          return;
-        commitToasts([]);
-        const next = structuredClone(authRef.current);
-        auditAuth(next, "Switched demo user", username);
-        next.recentUsers = [
-          username,
-          ...next.recentUsers.filter((recent) => recent !== username),
-        ].slice(0, 4);
-        commitAuth(next);
-        commitSession({
-          ...sessionRef.current,
-          username,
-          branch:
-            demoUser.branch === "all"
-              ? configuredBranches(stateRef.current.config)[0]
-              : demoUser.branch,
-          locked: false,
-          authenticatedAt: Date.now(),
-        });
-        window.location.hash =
-          demoUser.role === "supervisor"
-            ? "dashboard"
-            : demoUser.role === "cashier"
-              ? "lookup"
-              : "invoices";
-      },
-      needsReauthentication: (page) =>
-        state.config.session.reprompt_password_for.includes(page) &&
-        Date.now() - session.authenticatedAt >
-          state.config.session.reprompt_password_after_minutes * 60_000,
-      reauthenticate: (password) => {
-        const result = authenticate(
-          authRef.current,
-          sessionRef.current.username ?? "",
-          password,
-          stateRef.current.config.session,
-        );
-        commitAuth(result.state);
-        if (!result.user) {
-          if (result.error === "locked")
-            commitSession({ ...sessionRef.current, locked: true });
-          return result.error ?? "invalid";
-        }
-        commitSession({ ...sessionRef.current, authenticatedAt: Date.now() });
-        return null;
-      },
-      lock: lockSession,
-      signOut: () => {
-        commitToasts([]);
-        const current = sessionRef.current;
-        const next = structuredClone(authRef.current);
-        if (current.username) auditAuth(next, "Signed out", current.username);
-        commitAuth(next);
-        window.location.hash = "";
-        commitSession({
-          ...current,
-          username: null,
-          branch: "Branch 1",
-          locked: false,
-          authenticatedAt: 0,
-        });
-      },
-      reset: () => {
-        commitToasts([]);
-        invalidHistory.current = false;
-        setHistoryLoadError(false);
-        const seed = initialState();
-        stateRef.current = seed;
-        setState(seed);
-        setResetGeneration((previous) => previous + 1);
-      },
-      navigate: (page) => {
-        window.location.hash = page;
+      list: () => requireRuntime().people.list(),
+      add: (input) => requireRuntime().people.add(input),
+      edit: (input) => requireRuntime().people.edit(input),
+      deactivate: (input) => requireRuntime().people.deactivate(input),
+      reactivate: (input) => requireRuntime().people.reactivate(input),
+      resetSetup: (input) => requireRuntime().people.resetSetup(input),
+    }),
+    [requireRuntime],
+  );
+  const registeredComputers = useMemo<
+    E1DemoContextValue["registeredComputers"]
+  >(
+    () => ({
+      list: () => requireRuntime().registeredComputers.list(),
+      register: (input) => requireRuntime().registeredComputers.register(input),
+      edit: (input) => requireRuntime().registeredComputers.edit(input),
+      deactivate: (input) =>
+        requireRuntime().registeredComputers.deactivate(input),
+      selectCurrent: async (id) => {
+        await requireRuntime().registeredComputers.selectCurrent(id);
+        setCurrentComputerId(id);
       },
     }),
-    [
-      session,
-      state,
-      update,
-      resetGeneration,
-      role,
-      user,
-      auth,
-      preferences,
-      mustChangePassword,
-      commitAuth,
-      commitSession,
-      lockSession,
-      undoToasts,
-      historyContext,
-      commitToasts,
-      reverse,
-      pauseUndo,
-    ],
+    [requireRuntime],
   );
+  const changePreference = useCallback(
+    (patch: Partial<ReturnType<typeof preferencesFor>>) => {
+      const personId = snapshotRef.current.person?.id ?? null,
+        current = preferencesRef.current;
+      const nextValue = { ...preferencesFor(current, personId), ...patch };
+      try {
+        savePreferences({
+          ...current,
+          device_preferences: nextValue,
+          by_user_id: personId
+            ? { ...current.by_user_id, [personId]: nextValue }
+            : current.by_user_id,
+        });
+      } catch (error) {
+        reportStorageFailure(error);
+      }
+    },
+    [savePreferences, reportStorageFailure],
+  );
+  const pauseUndo = useCallback((id: string, paused: boolean) => {
+    setUndoToasts((queue) => pauseUndoToast(queue, id, paused, Date.now()));
+  }, []);
+  const dismissUndo = useCallback((id: string) => {
+    setUndoToasts((queue) => queue.filter((item) => item.id !== id));
+  }, []);
+  const value = useMemo<ProviderValue>(() => {
+    const actor = snapshot.actor,
+      person = snapshot.person;
+    return {
+      demoUsers,
+      state: snapshot.view,
+      actor,
+      historyContext: actor,
+      role: actor?.role ?? null,
+      branch: actor?.branch ?? "all",
+      user: person
+        ? {
+            name: person.name_en,
+            name_en: person.name_en,
+            name_fa: person.name_fa,
+            username: person.username,
+            role: person.role,
+          }
+        : null,
+      locked: snapshot.stage === "locked",
+      mustChangePassword: snapshot.stage === "password",
+      authenticatedAt: actor ? Date.parse(actor.authenticated_at) : 0,
+      authStage: snapshot.stage,
+      authorityGeneration: snapshot.generation,
+      businessRevision: snapshot.revision,
+      authorityDirectoryVersion: snapshot.directoryVersion,
+      secondStepMethod: snapshot.secondStepMethod,
+      locationSelection: actor?.selection ?? null,
+      locationIds: actor
+        ? configuredLocations(snapshot.view)
+            .filter(
+              (location) =>
+                location.active !== false &&
+                actor.allowed_branches.includes(location.id) &&
+                (actor.selection.kind !== "location" ||
+                  actor.selection.location_id === location.id),
+            )
+            .map((location) => location.id)
+        : [],
+      setLocation,
+      setBranch,
+      permission,
+      can,
+      command,
+      query,
+      people,
+      registeredComputers,
+      currentComputerId,
+      authorityHistory: () => requireRuntime().authorityHistory(),
+      signIn: (username, password) =>
+        authAction((runtime) =>
+          runtime.controller.signIn(
+            username,
+            password,
+            currentComputerId ?? undefined,
+          ),
+        ),
+      choosePassword: (password) =>
+        authAction((runtime) => runtime.controller.choosePassword(password)),
+      setupSecondStep: (method) =>
+        authAction((runtime) => runtime.controller.setupSecondStep(method)),
+      completeSecondStep: (response) =>
+        authAction((runtime) =>
+          runtime.controller.completeSecondStep(response),
+        ),
+      unlock: (password) =>
+        authAction((runtime) => runtime.controller.unlock(password)),
+      reauthenticate: (password) =>
+        authAction((runtime) => runtime.controller.reauthenticate(password)),
+      switchDemoUser: (username) =>
+        authAction((runtime) => runtime.controller.switchDemoUser(username)),
+      signOut: async () => {
+        await authAction(async (runtime) => {
+          await runtime.controller.signOut();
+          // Retire the prior route after genuine sign-out, independently of
+          // the later damaged-History retirement retry inside authAction.
+          window.location.hash = "";
+        });
+      },
+      lock: async () => {
+        await authAction((runtime) => runtime.controller.lock());
+      },
+      reset: async () => {
+        try {
+          const result = await requireRuntime().resetDemo();
+          if (result.clean) setStorageError(false);
+        } catch (error) {
+          reportStorageFailure(error);
+          throw error;
+        }
+        setCurrentComputerId(requireRuntime().currentComputerId());
+        setUndoToasts([]);
+        setResetGeneration((current) => current + 1);
+      },
+      needsReauthentication: (page) =>
+        Boolean(
+          actor &&
+          snapshot.view.config.session.reprompt_password_for.includes(page) &&
+          Date.now() - Date.parse(actor.authenticated_at) >=
+            snapshot.view.config.session.reprompt_password_after_minutes *
+              60_000,
+        ),
+      recentUsers,
+      preferences,
+      ...activePreferences,
+      setTheme: (theme: Theme) => changePreference({ theme }),
+      setComfortableText: (comfortableText) =>
+        changePreference({ comfortableText, comfortableTextExplicit: true }),
+      lang,
+      setLang: (language) => {
+        setLangState(language);
+        try {
+          localStorage.setItem(LANGUAGE_KEY, language);
+        } catch {
+          setStorageError(true);
+        }
+      },
+      t,
+      tCount,
+      money,
+      navigate: (route) => {
+        window.location.hash = route;
+      },
+      storageError,
+      historyLoadError,
+      resetGeneration,
+      undoToasts,
+      pauseUndo,
+      dismissUndo,
+      undoActivity: async (id) => {
+        if (!actor) throw new Error("authentication");
+        // Resolve the actual source without exposing History. Cashier's narrow
+        // custom-notebook Undo status comes only from its canonical own action
+        // and current source ACL, then reverseActivity checks again at commit.
+        const resource = await query(
+          "notebooks.read",
+          { company_id: actor.company_id, kind: "company_shared" },
+          (draft, current) => ownUndoResource(draft, current, id),
+        );
+        await command("history.undo_own", resource, (draft, current) =>
+          reverseActivity(draft, current, id, "undo"),
+        );
+        setUndoToasts((queue) => queue.filter((item) => item.id !== id));
+      },
+      revertActivity: async (id) => {
+        if (!actor) throw new Error("authentication");
+        await command(
+          "history.revert",
+          { company_id: actor.company_id, kind: "company_shared" },
+          (draft, current) => reverseActivity(draft, current, id, "revert"),
+        );
+      },
+    };
+  }, [
+    snapshot,
+    lang,
+    preferences,
+    recentUsers,
+    demoUsers,
+    activePreferences,
+    storageError,
+    historyLoadError,
+    resetGeneration,
+    undoToasts,
+    pauseUndo,
+    dismissUndo,
+    command,
+    query,
+    permission,
+    can,
+    t,
+    tCount,
+    money,
+    setLocation,
+    setBranch,
+    authAction,
+    people,
+    registeredComputers,
+    currentComputerId,
+    requireRuntime,
+    changePreference,
+    reportStorageFailure,
+  ]);
   return (
     <DemoContext.Provider value={value}>
-      {storageError && (
+      {(storageError || historyLoadError) && (
         <div className="banner danger" role="status">
-          {translate(
-            historyLoadError
-              ? "Saved history could not be read. Your original data is retained. Reset the demo to start again."
-              : "Browser storage is full or disabled. Your changes last until this page closes. Reset the demo or allow browser storage.",
-            historyLoadError
-              ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. برای شروع دوباره، دمو را بازنشانی کنید."
-              : "حافظهٔ مرورگر پر یا غیرفعال است. تغییرات تا بسته شدن صفحه باقی می‌مانند. دمو را بازنشانی کنید یا حافظهٔ مرورگر را فعال کنید.",
-            session.lang,
+          {t(
+            historyResetPending
+              ? "Demo reset is complete. Your original history is backed up, but its old browser copy could not be retired. Allow browser storage, then reload."
+              : historyQuarantineActive
+                ? "Saved history could not be read. Your original data is retained. You are using a separate fictional demo. Allow browser storage, then reload, or choose Reset demo."
+                : historyLoadError
+                  ? "Saved history could not be read. Your original data is retained. Allow browser storage, then reload."
+                  : "Browser storage could not be read or updated. Your original data is retained. Allow browser storage, then reload.",
+            historyResetPending
+              ? "بازنشانی دمو کامل شده است. از سابقهٔ اصلی شما نسخهٔ پشتیبان گرفته شده، اما نسخهٔ قدیمی آن در مرورگر پاک‌سازی نشد. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید."
+              : historyQuarantineActive
+                ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. اکنون از یک دموی ساختگی جداگانه استفاده می‌کنید. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید، یا بازنشانی دمو را انتخاب کنید."
+                : historyLoadError
+                  ? "سابقهٔ ذخیره‌شده خوانده نشد. اطلاعات اصلی شما نگه داشته شده است. دسترسی به حافظهٔ مرورگر را فعال کنید و سپس صفحه را دوباره بارگذاری کنید."
+                  : "فضای ذخیره‌سازی مرورگر قابل خواندن یا به‌روزرسانی نیست. داده‌های اصلی شما حفظ شده‌اند. ذخیره‌سازی مرورگر را مجاز کنید، سپس صفحه را دوباره بارگذاری کنید.",
           )}
         </div>
       )}
@@ -1123,14 +769,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     </DemoContext.Provider>
   );
 }
-export function useDemo(): DemoContextValue {
+export function useDemo(): ProviderValue {
   const context = useContext(DemoContext);
-  if (!context) throw new Error("useDemo must be used inside DemoProvider");
+  if (!context) throw new Error("DemoProvider is missing");
   return context;
 }
-export function useConfiguredTimeZone(): string {
-  return (
-    useContext(DemoContext)?.state.config.company.timezone ??
-    configSeed.company.timezone
-  );
+export function useConfiguredTimeZone() {
+  const context = useContext(DemoContext);
+  return context?.state.config.company.timezone ?? configSeed.company.timezone;
 }

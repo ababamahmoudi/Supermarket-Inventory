@@ -1,11 +1,19 @@
+import {
+  AuthenticatedUiProvider as DemoProvider,
+  renderAuthenticatedUI as render,
+  prepareSharedUiFixture,
+  disposeSharedUiFixture,
+  waitForSharedUiActor,
+  sharedUiSessionId,
+} from "./shared-ui-provider-test-fixture";
 import postcss from "postcss";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import i18n from "./i18n";
-import { DemoProvider, useDemo } from "./store";
+import { useDemo } from "./store";
 import {
   Button,
   ConfirmDialog,
@@ -21,7 +29,6 @@ import {
   tablePreferenceKey,
   type TableColumnDefinition,
 } from "./c3-column-preferences";
-
 const columns: TableColumnDefinition[] = [
   { key: "name", label: "Product", required: true, width: 200 },
   { key: "price", label: "Selling price", align: "end", width: 100 },
@@ -29,13 +36,11 @@ const columns: TableColumnDefinition[] = [
   { key: "actions", label: "Actions", actions: true, width: 100 },
 ];
 const scope = { company: "company-one", user: "ali", table: "products" };
-
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   await i18n.changeLanguage("en");
 });
-
 describe("scoped table presentation preferences", () => {
   it("remembers optional columns without hiding the identifying name or exposing stale columns", () => {
     expect(defaultHiddenColumns(columns)).toEqual(["supplier"]);
@@ -59,7 +64,6 @@ describe("scoped table presentation preferences", () => {
       "supplier",
     ]);
   });
-
   it("does not accept tampered identifying-column preferences or fail on blocked storage", () => {
     localStorage.setItem(
       tablePreferenceKey(scope),
@@ -91,18 +95,18 @@ describe("scoped table presentation preferences", () => {
     );
   });
 });
-
 function ProductsTable() {
   const table = useTableColumns("products", columns);
-  const { switchDemoUser } = useDemo();
+  const { switchDemoUser, demoUsers } = useDemo();
+  const switchTo = (role: "manager" | "floor_worker") => {
+    const user = demoUsers.find((person) => person.role === role);
+    if (!user) throw new Error("Configured demo person is not ready");
+    return switchDemoUser(user.username);
+  };
   return (
     <>
-      <Button onClick={() => switchDemoUser("supervisor")}>
-        Supervisor account
-      </Button>
-      <Button onClick={() => switchDemoUser("floorworker")}>
-        Worker account
-      </Button>
+      <Button onClick={() => switchTo("manager")}>Supervisor account</Button>
+      <Button onClick={() => switchTo("floor_worker")}>Worker account</Button>
       <FilterToolbar
         search={
           <input
@@ -143,18 +147,19 @@ function ProductsTable() {
     </>
   );
 }
-
 describe("styled Columns chooser", () => {
   it("keeps header, body, column group and spanning rows synchronized, persists and resets", async () => {
     const user = userEvent.setup();
-    const view = render(
+    const view = await render(
       <DemoProvider>
         <ProductsTable />
       </DemoProvider>,
     );
+    const sessionBeforeSwitch1 = sharedUiSessionId();
     await user.click(
       screen.getByRole("button", { name: "Supervisor account" }),
     );
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch1);
     await user.click(screen.getByRole("button", { name: "Columns" }));
     const dialog = screen.getByRole("dialog", { name: "Columns" });
     expect(
@@ -181,7 +186,7 @@ describe("styled Columns chooser", () => {
     await user.click(within(dialog).getByRole("button", { name: "Close" }));
     expect(screen.getByRole("button", { name: "Columns" })).toHaveFocus();
     view.unmount();
-    render(
+    await render(
       <DemoProvider>
         <ProductsTable />
       </DemoProvider>,
@@ -198,37 +203,41 @@ describe("styled Columns chooser", () => {
       screen.queryByRole("columnheader", { name: "Supplier" }),
     ).not.toBeInTheDocument();
   });
-
   it("changes users without copying another account's hidden columns", async () => {
     const user = userEvent.setup();
-    render(
+    await render(
       <DemoProvider>
         <ProductsTable />
       </DemoProvider>,
     );
+    const sessionBeforeSwitch2 = sharedUiSessionId();
     await user.click(
       screen.getByRole("button", { name: "Supervisor account" }),
     );
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch2);
     await user.click(screen.getByRole("button", { name: "Columns" }));
     await user.click(screen.getByRole("checkbox", { name: "Selling price" }));
     await user.click(screen.getByRole("button", { name: "Close" }));
+    const sessionBeforeSwitch3 = sharedUiSessionId();
     await user.click(screen.getByRole("button", { name: "Worker account" }));
+    await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch3);
     expect(
       screen.getByRole("columnheader", { name: "Selling price" }),
     ).toBeVisible();
+    const sessionBeforeSwitch4 = sharedUiSessionId();
     await user.click(
       screen.getByRole("button", { name: "Supervisor account" }),
     );
+    await waitForSharedUiActor("manager", undefined, sessionBeforeSwitch4);
     expect(
       screen.queryByRole("columnheader", { name: "Selling price" }),
     ).not.toBeInTheDocument();
   });
 });
-
 it("uses an explicit Danger confirmation and respects its blocked action", async () => {
   const user = userEvent.setup();
   const confirm = vi.fn();
-  render(
+  await render(
     <DemoProvider>
       <ConfirmDialog
         open
@@ -248,7 +257,6 @@ it("uses an explicit Danger confirmation and respects its blocked action", async
   await user.click(button);
   expect(confirm).not.toHaveBeenCalled();
 });
-
 function contrast(first: string, second: string): number {
   const luminance = (hex: string) => {
     const values = [1, 3, 5].map(
@@ -267,7 +275,6 @@ function contrast(first: string, second: string): number {
   const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
   return (values[0] + 0.05) / (values[1] + 0.05);
 }
-
 it("keeps Klead neutral and tinted actions readable in both themes", () => {
   const css = readFileSync(
     resolve(process.cwd(), "src/klead-tokens.css"),
@@ -326,4 +333,10 @@ it("keeps Klead neutral and tinted actions readable in both themes", () => {
       ),
     ).toBeGreaterThanOrEqual(4.5);
   }
+});
+beforeEach(async () => {
+  await prepareSharedUiFixture();
+});
+afterEach(() => {
+  disposeSharedUiFixture();
 });

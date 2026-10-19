@@ -23,18 +23,16 @@ import {
 } from "./invoice";
 import { saveSupplier, confirmSupplier } from "./supplier-editor";
 import { attachReversals, reverseActivity } from "./history";
-import type { OperationsContext } from "./operations";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { cloneWithAuthority } from "./authority";
 
-const context: OperationsContext = {
-  company_id: "super-arzon-demo",
-  role: "supervisor",
-  branch: "Branch 1",
-  actor: "Reviewing Supervisor",
-};
 function fixture() {
   const state = initialState();
-  const actor = { ...context, company_id: state.config.company.seed_key };
-  state.invoice = createInvoice(state, "Branch 1", true);
+  const actor = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    name_en: "Reviewing Manager",
+  });
+  state.invoice = createInvoice(state, actor, "Branch 1", true);
   state.invoice.invoice_date = "2026-10-10";
   state.invoice.received_at = "2026-10-11T00:10:00.000Z";
   return { state, actor };
@@ -96,11 +94,9 @@ describe("payment terms and editable totals", () => {
   it.each(["Net -1", "Net 9000000000000000"])(
     "blocks invalid/custom calendar terms %s without imposing a business maximum",
     (terms) => {
-      const { state } = fixture();
+      const { state, actor } = fixture();
       setInvoicePaymentTerms(state.invoice, terms);
-      expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-        "payment_terms",
-      );
+      expect(invoiceBlockers(state, actor)).toContain("payment_terms");
     },
   );
   it.each([
@@ -130,7 +126,7 @@ describe("payment terms and editable totals", () => {
     expect(state.invoice.due_date).toBe("2026-10-19");
   });
   it("auto-fills a Decimal final total and warns on an explicit difference", () => {
-    const { state } = fixture();
+    const { state, actor } = fixture();
     setInvoiceAmount(state.invoice, "subtotal", "400.00");
     expect(state.invoice.final_total).toBe("400.00");
     setInvoiceAmount(state.invoice, "tax", "52.00");
@@ -139,9 +135,7 @@ describe("payment terms and editable totals", () => {
     expect(invoiceTotalDiffers(state.invoice)).toBe(true);
     setInvoiceAmount(state.invoice, "subtotal", "500.00");
     expect(state.invoice.final_total).toBe("450.00");
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).not.toContain(
-      "money",
-    );
+    expect(invoiceBlockers(state, actor)).not.toContain("money");
   });
   it("returns to automatic mode when an entered final total equals Subtotal plus Tax", () => {
     const { state } = fixture();
@@ -155,8 +149,8 @@ describe("payment terms and editable totals", () => {
     expect(state.invoice.final_total).toBe("0.35");
   });
   it("preserves a deliberately overridden total through recalculated line edits", () => {
-    const { state } = fixture();
-    addManualLine(state, "0002");
+    const { state, actor } = fixture();
+    addManualLine(state, actor, "0002");
     setInvoiceAmount(state.invoice, "final_total", "1.00");
     state.invoice.lines[0].unit_cost_before_tax = "2.0000";
     recalculateInvoice(state.invoice, state.config);
@@ -178,24 +172,29 @@ describe("manual supplier review", () => {
     notes: "",
   };
   it("accepts optional contact fields in a new invoice proposal for either permitted role", () => {
-    for (const role of ["supervisor", "floor_worker"] as const) {
+    for (const role of ["manager", "floor_worker"] as const) {
       const { state, actor } = fixture();
-      const supplier = saveSupplier(state, { ...actor, role }, fields, {
+      const receiver =
+        role === "manager"
+          ? actor
+          : authenticatedTestActor(state, "floor_worker", {
+              locations: ["Branch 1"],
+              name_en: "Receiving Worker",
+            });
+      const supplier = saveSupplier(state, receiver, fields, {
         invoice_quick_add: true,
       });
       expect(supplier.status).toBe("proposed");
       state.invoice.supplier = supplier.name;
       markInvoiceSupplierReview(state.invoice, supplier);
       expect(state.invoice.status).toBe("review");
-      expect(invoiceBlockers(state, role, "Branch 1")).toContain(
-        "supplier_details",
-      );
+      expect(invoiceBlockers(state, receiver)).toContain("supplier_details");
       expect(() => confirmSupplier(state, actor, supplier.id)).toThrow(
         "Complete supplier details",
       );
     }
   });
-  it("requires completion and explicit Supervisor confirmation without posting or mutating money", () => {
+  it("requires completion and explicit Manager confirmation without posting or mutating money", () => {
     const { state, actor } = fixture();
     const supplier = saveSupplier(state, actor, fields, {
       invoice_quick_add: true,
@@ -210,30 +209,22 @@ describe("manual supplier review", () => {
       payment_terms: "Net 14",
     });
     const ledger = structuredClone(state.ledger);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "supplier_review",
-    );
+    expect(invoiceBlockers(state, actor)).toContain("supplier_review");
     confirmInvoiceSupplierReview(state, actor);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).not.toContain(
-      "supplier_review",
-    );
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
     expect(supplier.status).toBe("confirmed");
     expect(state.invoice.status).not.toBe("posted");
     expect(state.ledger).toEqual(ledger);
   });
-  it("preserves standalone Supervisor creation while incomplete manual use stays blocked", () => {
+  it("preserves standalone Manager creation while incomplete manual use stays blocked", () => {
     const { state, actor } = fixture();
     const supplier = saveSupplier(state, actor, fields);
     expect(supplier.status).toBe("confirmed");
     state.invoice.supplier = supplier.name;
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "supplier_details",
-    );
+    expect(invoiceBlockers(state, actor)).toContain("supplier_details");
     state.invoice.entry_mode = "upload";
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).not.toContain(
-      "supplier_details",
-    );
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_details");
   });
   it("does not bypass explicit review by reselecting the completed same supplier", () => {
     const { state, actor } = fixture();
@@ -248,21 +239,21 @@ describe("manual supplier review", () => {
       payment_terms: "Net 14",
     });
     markInvoiceSupplierReview(state.invoice, supplier, supplier.name);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).toContain(
-      "supplier_review",
-    );
+    expect(invoiceBlockers(state, actor)).toContain("supplier_review");
     confirmInvoiceSupplierReview(state, actor);
-    expect(invoiceBlockers(state, "supervisor", "Branch 1")).not.toContain(
-      "supplier_review",
-    );
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
   });
   it("does not let a Worker, Cashier or foreign company confirm manual review", () => {
-    const { state, actor } = fixture();
+    const { state } = fixture();
     const before = structuredClone(state);
+    const foreign = initialState();
+    foreign.config.company.seed_key = "another-company";
     for (const invalid of [
-      { ...actor, role: "floor_worker" as const },
-      { ...actor, role: "cashier" as const },
-      { ...actor, company_id: "another-company" },
+      authenticatedTestActor(state, "floor_worker", {
+        locations: ["Branch 1"],
+      }),
+      authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+      authenticatedTestActor(foreign, "manager", { locations: ["Branch 1"] }),
     ]) {
       expect(() => confirmInvoiceSupplierReview(state, invalid)).toThrow();
       expect(state).toEqual(before);
@@ -273,16 +264,16 @@ describe("manual supplier review", () => {
 describe("draft line removal", () => {
   it("recalculates the draft, gives a scoped Undo, and preserves all money/receipt evidence", () => {
     const { state, actor } = fixture();
-    addManualLine(state, "0002");
-    addManualLine(state, "0003");
-    const before = structuredClone(state);
+    addManualLine(state, actor, "0002");
+    addManualLine(state, actor, "0003");
+    const before = cloneWithAuthority(state);
     const ledger = structuredClone(state.ledger);
     const movements = structuredClone(state.stock_movements);
     removeInvoiceLine(state, actor, 0);
     expect(state.invoice.lines).toHaveLength(1);
     expect(state.invoice.lines[0].product_code).toBe("0003");
     expect(state.activity.at(-1)?.action).toBe("Remove line");
-    const history = { ...actor, allowed_branches: ["Branch 1"] };
+    const history = actor;
     attachReversals(before, state, history);
     reverseActivity(state, history, state.activity.at(-1)!.id, "undo");
     expect(state.invoice.lines).toEqual(before.invoice.lines);
@@ -291,10 +282,12 @@ describe("draft line removal", () => {
   });
   it("rejects posted removal and unauthorized locations atomically", () => {
     const { state, actor } = fixture();
-    addManualLine(state, "0002");
+    addManualLine(state, actor, "0002");
     for (const invalid of [
-      { ...actor, role: "cashier" as const },
-      { ...actor, role: "floor_worker" as const, branch: "Branch 2" },
+      authenticatedTestActor(state, "cashier", { locations: ["Branch 1"] }),
+      authenticatedTestActor(state, "floor_worker", {
+        locations: ["Branch 2"],
+      }),
     ]) {
       const before = structuredClone(state);
       expect(() => removeInvoiceLine(state, invalid, 0)).toThrow();

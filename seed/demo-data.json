@@ -5,33 +5,137 @@
   "branches": ["Branch 1", "Branch 2", "Branch 3"],
   "demo_users": [
     {
-      "name": "Demo Supervisor",
-      "username": "supervisor",
+      "id": "demo-person-owner",
+      "name": "Demo Owner",
+      "name_en": "Demo Owner",
+      "name_fa": "مالک آزمایشی",
+      "username": "owner",
+      "aliases": [],
+      "email": "owner@super-arzon.example",
       "password": "demo1234",
-      "role": "supervisor",
-      "branch": "all"
+      "role": "owner",
+      "location_scope": {
+        "kind": "company"
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "second_step_method": "passkey",
+        "simulated": true
+      },
+      "demo_fixture": true
     },
     {
-      "name": "Demo Floor Worker",
-      "username": "floorworker",
+      "id": "demo-person-manager",
+      "name": "Demo Manager",
+      "name_en": "Demo Manager",
+      "name_fa": "مدیر آزمایشی",
+      "username": "manager",
+      "aliases": ["supervisor"],
+      "email": "manager@super-arzon.example",
+      "password": "demo1234",
+      "role": "manager",
+      "location_scope": {
+        "kind": "company"
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "second_step_method": "passkey",
+        "simulated": true
+      },
+      "demo_fixture": true
+    },
+    {
+      "id": "demo-person-rh-supervisor",
+      "name": "Demo Richmond Hill Supervisor",
+      "name_en": "Demo Richmond Hill Supervisor",
+      "name_fa": "سرپرست آزمایشی ریچموند هیل",
+      "username": "rh-supervisor",
+      "aliases": [],
+      "email": "rh-supervisor@super-arzon.example",
+      "password": "demo1234",
+      "role": "branch_supervisor",
+      "location_scope": {
+        "kind": "assigned",
+        "location_ids": ["Branch 2", "Branch 3"]
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "second_step_method": "passkey",
+        "simulated": true
+      },
+      "demo_fixture": true
+    },
+    {
+      "id": "demo-person-ny-floor",
+      "name": "Demo North York Floor Worker",
+      "name_en": "Demo North York Floor Worker",
+      "name_fa": "کارمند آزمایشی نورث یورک",
+      "username": "ny-floor",
+      "aliases": ["floorworker"],
+      "email": "ny-floor@super-arzon.example",
       "password": "demo1234",
       "role": "floor_worker",
-      "branch": "Branch 1"
+      "location_scope": {
+        "kind": "assigned",
+        "location_ids": ["Branch 1"]
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "simulated": true
+      },
+      "demo_fixture": true
     },
     {
+      "id": "demo-person-wh-floor",
+      "name": "Demo Warehouse Floor Worker",
+      "name_en": "Demo Warehouse Floor Worker",
+      "name_fa": "کارمند آزمایشی انبار",
+      "username": "wh-floor",
+      "aliases": [],
+      "email": "wh-floor@super-arzon.example",
+      "password": "demo1234",
+      "role": "floor_worker",
+      "location_scope": {
+        "kind": "assigned",
+        "location_ids": ["Warehouse"]
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "simulated": true
+      },
+      "demo_fixture": true
+    },
+    {
+      "id": "demo-person-cashier",
       "name": "Demo Cashier",
+      "name_en": "Demo Cashier",
+      "name_fa": "صندوق‌دار آزمایشی",
       "username": "cashier",
+      "aliases": [],
+      "email": "cashier@super-arzon.example",
       "password": "demo1234",
       "role": "cashier",
-      "branch": "Branch 1"
-    },
-    {
-      "name": "Demo New Employee",
-      "username": "newemployee",
-      "temporary_password": "temp1234",
-      "must_change_password": true,
-      "role": "floor_worker",
-      "branch": "Branch 1"
+      "location_scope": {
+        "kind": "assigned",
+        "location_ids": ["Branch 1", "Branch 2"]
+      },
+      "status": "active",
+      "setup": {
+        "password_complete": true,
+        "second_step_complete": true,
+        "simulated": true
+      },
+      "demo_fixture": true
     }
   ],
   "suppliers": [
@@ -668,8 +772,8 @@
       "name_en": "Deli temperatures",
       "name_fa": "دمای یخچال دلی",
       "branch": "Branch 1",
-      "read_roles": ["floor_worker", "supervisor"],
-      "add_roles": ["floor_worker", "supervisor"],
+      "read_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
+      "add_roles": ["owner", "manager", "branch_supervisor", "floor_worker"],
       "fields": ["measurement"],
       "measurement_unit": "°C",
       "has_status": false,
@@ -763,5 +867,16 @@
       "original_file_name": "fictional-hw-5012.svg",
       "original_sha256": "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444"
     }
-  }
+  },
+  "registered_computers": [
+    {
+      "id": "demo-computer-north-york",
+      "name": "North York demo computer",
+      "name_fa": "رایانهٔ آزمایشی نورث یورک",
+      "location_id": "Branch 1",
+      "active": true,
+      "version": 1,
+      "registered_by_user_id": "demo-person-owner"
+    }
+  ]
 }

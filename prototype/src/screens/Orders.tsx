@@ -4,7 +4,7 @@ import {
   FieldError,
   type ValidationIssue,
 } from "../WhatsMissing";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useListState, useRouteParam } from "../navigation";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft, X } from "lucide-react";
@@ -32,24 +32,17 @@ import {
   ProductName,
   UnitText,
 } from "../presentation";
-import { branchLabel, configuredBranches } from "../settings";
-import { supplierRecords, supplierMatches } from "../supplier-editor";
+import { branchLabel } from "../settings";
+import { supplierMatches } from "../supplier-editor";
 import { packUnits, costPerCase } from "../supplier-items";
 import {
-  canUseOrders,
   cancelOrder,
   createOrder,
-  orderCandidates,
   orderCandidateQuantity,
   orderCandidateCaseCost,
-  orderLocations,
   placeOrder,
   remainingOrderUnits,
   saveOrderDraft,
-  scopedOrders,
-  type Order,
-  type OrderLine,
-  type OrderContext,
   type OrderDraftInput,
 } from "../orders";
 import { orderError, orderStatusCopy } from "../c-orders-i18n";
@@ -58,7 +51,19 @@ import { useOperationalPrint } from "../operational-print-hook";
 import { createId } from "../ids";
 import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import { ReceivedDateRange } from "./ReceivedDateRange";
-import type { CompanyConfig, Language } from "../types";
+import type { DemoState, Language } from "../types";
+import type { AuthenticatedActor } from "../authority-types";
+import type { OrderReadDTO, OrderLineReadDTO } from "../purchase-projections";
+import { useProtectedQuery } from "../use-protected-query";
+import {
+  ordersBoard,
+  orderFormCandidates,
+  previewOrderDraft,
+  previewPlaceOrder,
+  orderPrintSnapshot,
+  requireSameOrderActor,
+  type OrderPrintConfig,
+} from "../orders-board";
 import "./orders.css";
 
 interface FormState {
@@ -81,7 +86,9 @@ interface NewOrderItem {
 function orderCostText(value: string): string {
   return new Decimal(value).toFixed(4).replace(/(\.\d{2,}?)0+$/, "$1");
 }
-function orderQuantitySuffix(line: OrderLine): string {
+function orderQuantitySuffix(
+  line: Pick<OrderLineReadDTO, "quantity_unit" | "new_item_association">,
+): string {
   return line.quantity_unit === "lb" ||
     line.new_item_association?.quantity_unit === "lb"
     ? " lb"
@@ -92,8 +99,8 @@ function ScaledOrderPreview({
   config,
   language,
 }: {
-  order: Order;
-  config: CompanyConfig;
+  order: OrderReadDTO;
+  config: OrderPrintConfig;
   language: Language;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
@@ -152,22 +159,22 @@ function ScaledOrderPreview({
 }
 
 export default function Orders() {
-  const { state, update, branch, role, user, lang, t, tCount, navigate } =
-    useDemo();
-  const context: OrderContext = {
-    company_id: state.config.company.seed_key,
-    branch: role === "floor_worker" ? (user?.branch ?? branch) : branch,
-    role: role ?? "cashier",
-    actor: user?.name ?? "",
-    username: user?.username,
-    device: "Browser demo",
-    allowed_branches:
-      role === "supervisor"
-        ? configuredBranches(state.config, true)
-        : user
-          ? [user.branch]
-          : [],
-  };
+  const {
+    state,
+    actor,
+    command,
+    query,
+    can,
+    branch,
+    lang,
+    t,
+    tCount,
+    navigate,
+    authorityGeneration,
+    authorityDirectoryVersion,
+    businessRevision,
+    locationSelection,
+  } = useDemo();
   const [form, setForm] = useState<FormState | null>(null);
   const selectedId = useRouteParam("id");
   const [search, setSearch] = useListState("orders.search", "");
@@ -191,7 +198,13 @@ export default function Orders() {
   );
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const [printPreview, setPrintPreview] = useState<Order | null>(null);
+  const [printRequest, setPrintRequest] = useState<{
+    id: string;
+    branch: string;
+    version: number;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const writeInFlight = useRef(false);
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPack, setNewItemPack] = useState("");
@@ -241,12 +254,77 @@ export default function Orders() {
     return () => window.removeEventListener("hashchange", leaveForm);
   }, []);
   const { printDocument, printOutput, clearPrint } = useOperationalPrint();
-  const sessionScope = `${context.company_id}:${context.role}:${context.username ?? ""}:${context.branch}`;
+  const companyScope = {
+    company_id: state.config.company.seed_key,
+    kind: "company_shared" as const,
+  };
+  const boardRead = useProtectedQuery(
+    "orders.read",
+    companyScope,
+    (canonical, freshActor) => ordersBoard(canonical, freshActor),
+    "orders-board",
+  );
+  const candidateScope = {
+    company_id: state.config.company.seed_key,
+    kind: "location_record" as const,
+    location_ids: form?.branch ? [form.branch] : [],
+  };
+  const candidateRead = useProtectedQuery(
+    form?.supplier && form.branch ? "orders.read" : null,
+    candidateScope,
+    (canonical, freshActor) =>
+      orderFormCandidates(canonical, freshActor, form!.branch, form!.supplier),
+    JSON.stringify([form?.branch, form?.supplier]),
+  );
+  const printRead = useProtectedQuery(
+    printRequest ? "orders.read" : null,
+    {
+      company_id: state.config.company.seed_key,
+      kind: "location_record",
+      location_ids: printRequest ? [printRequest.branch] : [],
+      location_policy: "retained_read",
+    },
+    (canonical, freshActor) =>
+      orderPrintSnapshot(
+        canonical,
+        freshActor,
+        printRequest!.id,
+        printRequest!.version,
+      ),
+    JSON.stringify(printRequest),
+  );
+  const printPreview = printRead.data?.order ?? null;
+  const mayReadOrders = can("orders.read");
+  const sessionScope = JSON.stringify([
+    actor?.company_id,
+    actor?.user_id,
+    actor?.session_id,
+    actor?.authority_epoch,
+    actor?.person_version,
+    authorityGeneration,
+    authorityDirectoryVersion,
+    locationSelection,
+    mayReadOrders,
+    can("orders.write"),
+    can("orders.cost_read", candidateScope),
+  ]);
+  const printAccessKey = `${sessionScope}:${businessRevision}`;
+  const currentIdentity = useRef(sessionScope);
+  const currentAccess = useRef(printAccessKey);
+  const clearPrintRef = useRef(clearPrint);
+  useLayoutEffect(() => {
+    currentIdentity.current = sessionScope;
+    currentAccess.current = printAccessKey;
+    clearPrintRef.current = clearPrint;
+  }, [sessionScope, printAccessKey, clearPrint]);
+  useEffect(() => {
+    clearPrintRef.current();
+  }, [printAccessKey]);
   const [boundScope, setBoundScope] = useState(sessionScope);
   if (boundScope !== sessionScope) {
     setBoundScope(sessionScope);
     setForm(null);
-    setPrintPreview(null);
+    setPrintRequest(null);
     clearPrint();
     setCancelId(null);
     setNewItemOpen(false);
@@ -255,27 +333,38 @@ export default function Orders() {
     setMessage("");
     return null;
   }
-  if (!canUseOrders(state, context))
+  if (!actor || !mayReadOrders)
     return <EmptyState>{orderError(new Error("permission"), t)}</EmptyState>;
-  const all = scopedOrders(state, context);
+  if (boardRead.error)
+    return <EmptyState>{orderError(boardRead.error, t)}</EmptyState>;
+  if (boardRead.pending || !boardRead.data)
+    return <EmptyState>{t("Loading…", "در حال بارگیری…")}</EmptyState>;
+  const board = boardRead.data;
+  const all = board.orders;
   const selected = all.find((order) => order.id === selectedId);
-  const suppliers = supplierRecords(state).filter(
-    (supplier) =>
-      supplier.company_id === context.company_id &&
-      supplier.active &&
-      supplier.status === "confirmed",
+  const suppliers = board.suppliers;
+  const locations = board.locations;
+  const candidates = candidateRead.data?.candidates ?? [];
+  const mayReadFormCosts = Boolean(
+    form?.branch &&
+    form.branch !== "all" &&
+    can("orders.cost_read", candidateScope) &&
+    (!form.supplier || candidateRead.data?.costs_visible === true),
   );
-  const locations = orderLocations(state, context);
-  const candidates = form?.supplier
-    ? orderCandidates(state, context, form.supplier)
-    : [];
+  const mayWriteForm = Boolean(
+    form?.branch &&
+    can("orders.write", {
+      company_id: actor.company_id,
+      kind: "location_record",
+      location_ids: [form.branch],
+      mutation: true,
+    }),
+  );
   const notes =
     form?.branch && locations.includes(form.branch)
-      ? state.notes.filter(
+      ? board.notes.filter(
           (note) =>
-            note.company_id === context.company_id &&
             note.branch === form.branch &&
-            note.type === "to_order" &&
             (note.status === "open" || form.selectedNotes.includes(note.id)),
         )
       : [];
@@ -291,23 +380,49 @@ export default function Orders() {
         .includes(search.trim().toLocaleLowerCase()),
   );
   const money = (
-    value: string | null,
+    value: string | null | undefined,
     currency = state.config.company.currency,
   ) =>
-    value === null ? (
+    value === null ||
+    value === undefined ||
+    (form !== null && !mayReadFormCosts) ? (
       <span className="muted">—</span>
     ) : (
       <Money value={value} currency={currency} />
     );
-  const run = (mutator: (draft: typeof state) => void, success: string) => {
+  const run = async (
+    mutator: (draft: DemoState, freshActor: AuthenticatedActor) => void,
+    success: string,
+    location: string,
+    before?: () => Promise<boolean>,
+  ) => {
+    if (writeInFlight.current || !location || location === "all") return false;
+    writeInFlight.current = true;
+    const initiatingActor = actor;
+    setSaving(true);
     try {
-      update(mutator);
+      if (before && !(await before())) return false;
+      await command(
+        "orders.write",
+        {
+          company_id: initiatingActor.company_id,
+          kind: "location_record",
+          location_ids: [location],
+          mutation: true,
+        },
+        (draft, freshActor) => {
+          requireSameOrderActor(draft, freshActor, initiatingActor);
+          mutator(draft, freshActor);
+        },
+      );
+      if (currentIdentity.current !== sessionScope) return false;
       setError("");
       setErrorKey("");
       setErrorItemId(null);
       setMessage(success);
       return true;
     } catch (caught) {
+      if (currentIdentity.current !== sessionScope) return false;
       setError(orderError(caught, t));
       const key = caught instanceof Error ? caught.message : "";
       setErrorKey(key);
@@ -361,6 +476,9 @@ export default function Orders() {
       setErrorItemId(invalidItem?.id ?? invalidNewItem?.id ?? null);
       setMessage("");
       return false;
+    } finally {
+      writeInFlight.current = false;
+      setSaving(false);
     }
   };
   const validationError = (fieldId: string) =>
@@ -369,7 +487,7 @@ export default function Orders() {
     setValidationIssues((current) =>
       current.filter((issue) => issue.fieldId !== fieldId),
     );
-  const validateForm = (place: boolean) => {
+  const validateForm = async (place: boolean) => {
     if (!form) return false;
     const issues: ValidationIssue[] = [];
     const add = (fieldId: string, code: string, name?: string) => {
@@ -433,11 +551,25 @@ export default function Orders() {
     if (!issues.length) {
       // Domain validation on a throwaway copy protects stale notes, identities and permission rules.
       try {
-        const preview = structuredClone(state);
-        const order = form.id
-          ? saveOrderDraft(preview, context, form.id, input(), form.version)
-          : createOrder(preview, context, input());
-        if (place) placeOrder(preview, context, order.id, order.version);
+        const initiatingActor = actor;
+        const proposed = input();
+        await query(
+          "orders.write",
+          {
+            company_id: initiatingActor.company_id,
+            kind: "location_record",
+            location_ids: [proposed.branch],
+            mutation: true,
+          },
+          (canonical, freshActor) => {
+            requireSameOrderActor(canonical, freshActor, initiatingActor);
+            previewOrderDraft(canonical, freshActor, proposed, {
+              id: form.id,
+              expected_version: form.version,
+              place,
+            });
+          },
+        );
       } catch (caught) {
         const code = caught instanceof Error ? caught.message : "item";
         const target =
@@ -451,6 +583,7 @@ export default function Orders() {
         add(target, code);
       }
     }
+    if (currentIdentity.current !== sessionScope) return false;
     setValidationIssues(issues);
     return !issues.length;
   };
@@ -519,12 +652,7 @@ export default function Orders() {
   const newForm = () => {
     setValidationIssues([]);
     setForm({
-      branch:
-        branch === "all"
-          ? ""
-          : locations.includes(context.branch)
-            ? context.branch
-            : "",
+      branch: branch === "all" ? "" : locations.includes(branch) ? branch : "",
       supplier: "",
       cases: {},
       costs: {},
@@ -535,7 +663,7 @@ export default function Orders() {
     setError("");
     setMessage("");
   };
-  const editForm = (order: Order) => {
+  const editForm = (order: OrderReadDTO) => {
     setForm({
       id: order.id,
       version: order.version,
@@ -639,21 +767,35 @@ export default function Orders() {
       })),
     ],
   });
-  const save = (place: boolean) => {
-    if (!validateForm(place)) return;
+  const save = async (place: boolean) => {
+    if (saving || candidateRead.pending || candidateRead.error || !form) return;
+    const currentForm = form;
+    const proposed = input();
+    if (currentForm.id && currentForm.version === undefined) {
+      setError(orderError(new Error("stale"), t));
+      return;
+    }
     let savedId = "";
     if (
-      run(
-        (draft) => {
-          const order = form!.id
-            ? saveOrderDraft(draft, context, form!.id, input(), form!.version)
-            : createOrder(draft, context, input());
-          if (place) placeOrder(draft, context, order.id, order.version);
+      await run(
+        (draft, freshActor) => {
+          const order = currentForm.id
+            ? saveOrderDraft(
+                draft,
+                freshActor,
+                currentForm.id,
+                proposed,
+                currentForm.version,
+              )
+            : createOrder(draft, freshActor, proposed);
+          if (place) placeOrder(draft, freshActor, order.id, order.version);
           savedId = order.id;
         },
         place
           ? t("Order placed.", "سفارش ثبت شد.")
           : t("Draft saved.", "پیش‌نویس ذخیره شد."),
+        proposed.branch,
+        () => validateForm(place),
       )
     ) {
       setForm(null);
@@ -676,6 +818,7 @@ export default function Orders() {
       const changed =
         entered &&
         (item.expected_unit_cost === null ||
+          item.expected_unit_cost === undefined ||
           !new Decimal(entered).eq(item.expected_unit_cost));
       const caseCost = changed
         ? orderCandidateCaseCost(item, entered!)
@@ -685,7 +828,7 @@ export default function Orders() {
         units,
         caseCost,
         total:
-          caseCost === null
+          caseCost === null || caseCost === undefined
             ? null
             : new Decimal(caseCost)
                 .times(cases)
@@ -714,7 +857,7 @@ export default function Orders() {
         units,
         caseCost,
         total:
-          caseCost === null
+          caseCost === null || caseCost === undefined
             ? null
             : new Decimal(caseCost)
                 .times(cases)
@@ -724,9 +867,10 @@ export default function Orders() {
       return { id: item.id, units: null, caseCost: null, total: null };
     }
   });
-  const total =
-    rowAmounts.some((row) => row.selected && row.total === null) ||
-    temporaryAmounts.some((row) => row.total === null)
+  const total = !mayReadFormCosts
+    ? undefined
+    : rowAmounts.some((row) => row.selected && row.total === null) ||
+        temporaryAmounts.some((row) => row.total === null)
       ? null
       : [...rowAmounts, ...temporaryAmounts]
           .reduce((sum, row) => sum.plus(row.total ?? 0), new Decimal(0))
@@ -750,7 +894,7 @@ export default function Orders() {
         description={
           branchLabel(
             state.config,
-            form?.branch || selected?.branch || context.branch,
+            form?.branch || selected?.branch || branch,
             lang,
           ) +
           (form?.supplier || selected?.supplier
@@ -764,7 +908,7 @@ export default function Orders() {
               {t("Back to Orders", "بازگشت به سفارش‌ها")}
             </Button>
           ) : (
-            <Button onClick={newForm}>
+            <Button onClick={newForm} disabled={!can("orders.write") || saving}>
               <Plus size={16} />
               {t("New order", "سفارش جدید")}
             </Button>
@@ -801,6 +945,11 @@ export default function Orders() {
               }}
             >
               <WhatsMissing issues={validationIssues} />
+              {candidateRead.error && (
+                <p className="banner danger" role="alert">
+                  {orderError(candidateRead.error, t)}
+                </p>
+              )}
               <div className="order-heading-fields">
                 <Field
                   label={t("Location", "مکان")}
@@ -817,6 +966,7 @@ export default function Orders() {
                       setForm({
                         ...form,
                         branch: value,
+                        costs: {},
                         selectedNotes: [],
                         noteItems: {},
                       });
@@ -1003,10 +1153,14 @@ export default function Orders() {
                                 >
                                   <NumberField
                                     id={`order-cost-${item.id}`}
+                                    disabled={!mayReadFormCosts}
                                     aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${name}`}
                                     value={
-                                      form.costs[item.id] ??
-                                      (item.expected_unit_cost === null
+                                      (mayReadFormCosts
+                                        ? form.costs[item.id]
+                                        : "") ??
+                                      (item.expected_unit_cost === null ||
+                                      item.expected_unit_cost === undefined
                                         ? ""
                                         : orderCostText(
                                             item.expected_unit_cost,
@@ -1032,6 +1186,7 @@ export default function Orders() {
                                   />
                                 </Field>
                                 {item.expected_unit_cost !== null &&
+                                  item.expected_unit_cost !== undefined &&
                                   item.expected_cost_source && (
                                     <span className="order-item-caption">
                                       {item.expected_cost_source ===
@@ -1211,8 +1366,13 @@ export default function Orders() {
                                 >
                                   <NumberField
                                     id={`order-cost-${item.id}`}
+                                    disabled={!mayReadFormCosts}
                                     aria-label={`${t("Expected unit cost", "هزینهٔ مورد انتظار واحد")} — ${item.name_en}`}
-                                    value={form.costs[item.id] ?? ""}
+                                    value={
+                                      mayReadFormCosts
+                                        ? (form.costs[item.id] ?? "")
+                                        : ""
+                                    }
                                     min="0"
                                     step="0.0001"
                                     onChange={(value) => {
@@ -1276,10 +1436,27 @@ export default function Orders() {
                 <Button variant="neutral" onClick={back}>
                   {t("Cancel", "انصراف")}
                 </Button>
-                <Button type="submit" variant="neutral">
+                <Button
+                  type="submit"
+                  variant="neutral"
+                  disabled={
+                    saving ||
+                    candidateRead.pending ||
+                    candidateRead.error !== null ||
+                    !mayWriteForm
+                  }
+                >
                   {t("Save as draft", "ذخیره پیش‌نویس")}
                 </Button>
-                <Button onClick={() => save(true)}>
+                <Button
+                  disabled={
+                    saving ||
+                    candidateRead.pending ||
+                    candidateRead.error !== null ||
+                    !mayWriteForm
+                  }
+                  onClick={() => save(true)}
+                >
                   {t("Place order", "ثبت سفارش")}
                 </Button>
               </DialogActions>
@@ -1419,86 +1596,115 @@ export default function Orders() {
                 {t(...orderStatusCopy[selected.status])}
               </Badge>
               <div className="actions">
-                {selected.status === "draft" && (
-                  <>
-                    <Button
-                      variant="neutral"
-                      onClick={() => editForm(selected)}
-                    >
-                      {t("Edit draft", "ویرایش پیش‌نویس")}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        try {
-                          placeOrder(
-                            structuredClone(state),
-                            context,
-                            selected.id,
-                            selected.version,
-                          );
-                        } catch (caught) {
-                          const code =
-                            caught instanceof Error ? caught.message : "item";
-                          const missingLine = selected.lines.find(
-                            (line) =>
-                              !line.new_item &&
-                              line.expected_unit_cost === null,
-                          );
-                          editForm(selected);
-                          const fieldId =
-                            code === "cost" && missingLine
-                              ? `order-cost-${missingLine.supplier_item_id}`
-                              : code === "supplier"
-                                ? "order-supplier"
-                                : code === "location"
-                                  ? "order-location"
-                                  : "order-items";
-                          setValidationIssues([
-                            {
-                              id: `${fieldId}-error`,
-                              fieldId,
-                              message: orderError(caught, t),
-                            },
-                          ]);
-                          return;
-                        }
-                        run(
-                          (draft) => {
-                            placeOrder(
-                              draft,
-                              context,
-                              selected.id,
-                              selected.version,
+                {selected.status === "draft" &&
+                  board.writable_order_ids.includes(selected.id) && (
+                    <>
+                      <Button
+                        variant="neutral"
+                        disabled={saving}
+                        onClick={() => editForm(selected)}
+                      >
+                        {t("Edit draft", "ویرایش پیش‌نویس")}
+                      </Button>
+                      <Button
+                        disabled={saving}
+                        onClick={async () => {
+                          const initiatingActor = actor;
+                          try {
+                            await query(
+                              "orders.write",
+                              {
+                                company_id: initiatingActor.company_id,
+                                kind: "location_record",
+                                location_ids: [selected.branch],
+                                mutation: true,
+                              },
+                              (canonical, freshActor) => {
+                                requireSameOrderActor(
+                                  canonical,
+                                  freshActor,
+                                  initiatingActor,
+                                );
+                                previewPlaceOrder(
+                                  canonical,
+                                  freshActor,
+                                  selected.id,
+                                  selected.version,
+                                );
+                              },
                             );
-                          },
-                          t("Order placed.", "سفارش ثبت شد."),
-                        );
-                      }}
-                    >
-                      {t("Place order", "ثبت سفارش")}
-                    </Button>
-                  </>
-                )}
+                          } catch (caught) {
+                            const code =
+                              caught instanceof Error ? caught.message : "item";
+                            const missingLine = selected.lines.find(
+                              (line) =>
+                                !line.new_item &&
+                                line.expected_unit_cost === null,
+                            );
+                            editForm(selected);
+                            const fieldId =
+                              code === "cost" && missingLine
+                                ? `order-cost-${missingLine.supplier_item_id}`
+                                : code === "supplier"
+                                  ? "order-supplier"
+                                  : code === "location"
+                                    ? "order-location"
+                                    : "order-items";
+                            setValidationIssues([
+                              {
+                                id: `${fieldId}-error`,
+                                fieldId,
+                                message: orderError(caught, t),
+                              },
+                            ]);
+                            return;
+                          }
+                          await run(
+                            (draft, freshActor) => {
+                              placeOrder(
+                                draft,
+                                freshActor,
+                                selected.id,
+                                selected.version,
+                              );
+                            },
+                            t("Order placed.", "سفارش ثبت شد."),
+                            selected.branch,
+                          );
+                        }}
+                      >
+                        {t("Place order", "ثبت سفارش")}
+                      </Button>
+                    </>
+                  )}
                 <Button
                   variant="tinted"
-                  onClick={() => setPrintPreview(structuredClone(selected))}
+                  disabled={saving}
+                  onClick={() =>
+                    setPrintRequest({
+                      id: selected.id,
+                      branch: selected.branch,
+                      version: selected.version,
+                    })
+                  }
                 >
                   <Printer size={16} />
                   {t("Print order", "چاپ سفارش")}
                 </Button>
                 {["draft", "ordered", "partially_received"].includes(
                   selected.status,
-                ) && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setCancelId(selected.id);
-                      setReason("");
-                    }}
-                  >
-                    {t("Cancel order", "لغو سفارش")}
-                  </Button>
-                )}
+                ) &&
+                  board.writable_order_ids.includes(selected.id) && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setCancelId(selected.id);
+                        setReason("");
+                      }}
+                    >
+                      {t("Cancel order", "لغو سفارش")}
+                    </Button>
+                  )}
               </div>
             </div>
             <dl className="order-detail-meta">
@@ -1665,11 +1871,7 @@ export default function Orders() {
                       navigate(`invoices?id=${encodeURIComponent(id)}`)
                     }
                   >
-                    <LtrText>
-                      {[...(state.invoices ?? []), state.invoice].find(
-                        (invoice) => invoice.id === id,
-                      )?.supplier_invoice_number ?? id}
-                    </LtrText>
+                    <LtrText>{board.invoice_numbers[id] ?? id}</LtrText>
                   </Button>
                 ))}
               </div>
@@ -1680,7 +1882,7 @@ export default function Orders() {
               {selected.source_note_ids.map((id) => (
                 <p key={id}>
                   <bdi dir="auto">
-                    {state.notes.find(
+                    {board.notes.find(
                       (note) =>
                         note.id === id &&
                         note.company_id === selected.company_id &&
@@ -1751,7 +1953,7 @@ export default function Orders() {
                 ]}
               />
             </Field>
-            {role === "supervisor" && branch === "all" && (
+            {branch === "all" && (
               <Field label={t("Location", "مکان")}>
                 <Select
                   value={locationFilter}
@@ -1961,7 +2163,8 @@ export default function Orders() {
             >
               <NumberField
                 id="order-new-cost"
-                value={newItemCost}
+                value={mayReadFormCosts ? newItemCost : ""}
+                disabled={!mayReadFormCosts}
                 min="0"
                 step="0.0001"
                 onChange={(value) => {
@@ -2022,7 +2225,8 @@ export default function Orders() {
           </Button>
           <Button
             variant="destructive"
-            onClick={() => {
+            disabled={saving}
+            onClick={async () => {
               if (!reason.trim()) {
                 setValidationIssues([
                   {
@@ -2033,18 +2237,24 @@ export default function Orders() {
                 ]);
                 return;
               }
+              const cancelled = all.find((order) => order.id === cancelId);
+              if (!cancelled) {
+                setError(orderError(new Error("scope"), t));
+                return;
+              }
               if (
-                run(
-                  (draft) => {
+                await run(
+                  (draft, freshActor) => {
                     cancelOrder(
                       draft,
-                      context,
-                      cancelId!,
+                      freshActor,
+                      cancelled.id,
                       reason,
-                      all.find((order) => order.id === cancelId)?.version,
+                      cancelled.version,
                     );
                   },
                   t("Order cancelled.", "سفارش لغو شد."),
+                  cancelled.branch,
                 )
               )
                 setCancelId(null);
@@ -2055,35 +2265,76 @@ export default function Orders() {
         </DialogActions>
       </Dialog>
       <Dialog
-        open={printPreview !== null}
+        open={printRequest !== null}
         onOpenChange={(open) => {
-          if (!open) setPrintPreview(null);
+          if (!open) setPrintRequest(null);
         }}
         title={t("Print order", "چاپ سفارش")}
         className="order-print-dialog"
       >
+        {printRead.error && (
+          <p className="banner danger" role="alert">
+            {orderError(printRead.error, t)}
+          </p>
+        )}
+        {printRead.pending && (
+          <p className="helper">{t("Loading…", "در حال بارگیری…")}</p>
+        )}
         {printPreview && (
           <>
             <ScaledOrderPreview
               order={printPreview}
-              config={state.config}
+              config={printRead.data!.config}
               language={lang}
             />
             <DialogActions>
-              <Button variant="neutral" onClick={() => setPrintPreview(null)}>
+              <Button variant="neutral" onClick={() => setPrintRequest(null)}>
                 {t("Close", "بستن")}
               </Button>
               <Button
                 variant="tinted"
-                onClick={() =>
-                  printDocument(
-                    <OrderPrintDocument
-                      order={structuredClone(printPreview)}
-                      config={structuredClone(state.config)}
-                      language={lang}
-                    />,
-                  )
-                }
+                disabled={printRead.pending || saving}
+                onClick={async () => {
+                  if (!printRequest) return;
+                  const initiatingActor = actor;
+                  const requestKey = printAccessKey;
+                  try {
+                    const printable = await query(
+                      "orders.read",
+                      {
+                        company_id: initiatingActor.company_id,
+                        kind: "location_record",
+                        location_ids: [printRequest.branch],
+                        location_policy: "retained_read",
+                      },
+                      (canonical, freshActor) => {
+                        requireSameOrderActor(
+                          canonical,
+                          freshActor,
+                          initiatingActor,
+                        );
+                        return orderPrintSnapshot(
+                          canonical,
+                          freshActor,
+                          printRequest.id,
+                          printRequest.version,
+                        );
+                      },
+                    );
+                    if (currentAccess.current !== requestKey)
+                      throw new Error("stale");
+                    printDocument(
+                      <OrderPrintDocument
+                        order={printable.order}
+                        config={printable.config}
+                        language={lang}
+                      />,
+                    );
+                  } catch (caught) {
+                    clearPrint();
+                    setError(orderError(caught, t));
+                  }
+                }}
               >
                 <Printer size={16} />
                 {t("Print", "چاپ")}

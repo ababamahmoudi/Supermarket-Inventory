@@ -1,3 +1,4 @@
+import { useSettingsConfiguration } from "../settings-configuration";
 import { useState } from "react";
 import Decimal from "decimal.js";
 import { MoreHorizontal } from "lucide-react";
@@ -95,9 +96,10 @@ function categoryLabel(
 }
 
 export default function PricingSettings() {
-  const { state, update, t, money, user, role } = useDemo();
+  const { command, t, money } = useDemo();
+  const configuration = useSettingsConfiguration();
   const [draft, setDraft] = useState<CompanyConfig>(() =>
-    structuredClone(state.config),
+    structuredClone(configuration),
   );
   const [editing, setEditing] = useState<PricingCategory | null>(null);
   const [newCategory, setNewCategory] = useState(false);
@@ -110,7 +112,7 @@ export default function PricingSettings() {
     Partial<Record<RuleArea, string>>
   >({});
   const [categoryKey, setCategoryKey] = useState(
-    state.config.pricing_categories[0]?.key ?? "",
+    configuration.pricing_categories[0]?.key ?? "",
   );
   const [cost, setCost] = useState("1.00");
   const [soldBy, setSoldBy] = useState("each");
@@ -186,8 +188,8 @@ export default function PricingSettings() {
       // An unfinished rule field must not make a valid divisor look invalid.
       validatePricingConfig({
         ...candidate,
-        rounding_bands: state.config.rounding_bands,
-        special_corrections: state.config.special_corrections,
+        rounding_bands: configuration.rounding_bands,
+        special_corrections: configuration.special_corrections,
       });
       setDraft(candidate);
       setInvalidDivisors((previous) => {
@@ -220,22 +222,24 @@ export default function PricingSettings() {
       weighedSettings(draft),
     ]) !==
     JSON.stringify([
-      state.config.pricing_categories,
-      state.config.rounding_bands,
-      state.config.special_corrections,
-      weighedSettings(state.config),
+      configuration.pricing_categories,
+      configuration.rounding_bands,
+      configuration.special_corrections,
+      weighedSettings(configuration),
     ]);
-  function save() {
+  async function save() {
     setSubmitted(true);
     if (Object.keys(divisorErrors).length) return;
     try {
       validatePricingConfig(draft);
-      update((next) =>
-        savePricingSettings(next, draft, {
-          role: role ?? "cashier",
-          company_id: state.config.company.seed_key,
-          by: user?.name ?? "",
-        }),
+      await command(
+        "settings.manage",
+        {
+          company_id: configuration.company.seed_key,
+          kind: "company_shared",
+          mutation: true,
+        },
+        (next, freshActor) => savePricingSettings(next, draft, freshActor),
       );
       setSaveError(undefined);
       setRuleErrors({});
@@ -856,7 +860,7 @@ export default function PricingSettings() {
           <Button
             variant="neutral"
             onClick={() => {
-              setDraft(structuredClone(state.config));
+              setDraft(structuredClone(configuration));
               setInvalidDivisors({});
               setDivisorErrors({});
               setSaveError(undefined);

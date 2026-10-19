@@ -1,0 +1,113 @@
+.people-e1 {
+  display: grid;
+  gap: 24px;
+}
+/* Keep usernames and the current-computer note on their own secondary line. */
+.people-e1 td[data-column-key="name"] > small.muted,
+.people-e1 + .card td[data-column-key="name"] > small.muted {
+  display: block;
+  margin-block-start: 4px;
+}
+.person-editor-dialog,
+.registered-computer-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: 720px;
+}
+.person-editor-dialog form,
+.registered-computer-dialog form {
+  display: grid;
+  gap: 24px;
+}
+.person-editor-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.person-editor-fields .field,
+.registered-computer-dialog .field {
+  min-inline-size: 0;
+  inline-size: min(100%, 320px);
+}
+.people-location-options {
+  border: 0;
+  padding: 16px;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-control);
+}
+.people-location-options legend {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  padding: 0;
+  margin-block-end: 8px;
+}
+.one-time-setup-code {
+  display: block;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  padding: 16px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-control);
+  font-size: var(--font-size-body);
+  white-space: nowrap;
+}
+@media (max-width: 759px) {
+  .person-editor-fields {
+    grid-template-columns: 1fr;
+  }
+}
+.location-dashboard,
+.location-dashboard-list {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.location-dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.location-dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.location-dashboard-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-inline-size: 0;
+}
+.location-dashboard-row > div {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-inline-size: 0;
+}
+.location-dashboard-row strong {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  overflow-wrap: normal;
+}
+.location-dashboard-row > .ui-badge {
+  align-self: center;
+}
+@media (max-width: 1023px) {
+  .location-dashboard-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 759px) {
+  .location-dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+  .location-dashboard-row {
+    flex-wrap: wrap;
+  }
+  .location-dashboard-row > div {
+    flex-basis: 60%;
+  }
+}

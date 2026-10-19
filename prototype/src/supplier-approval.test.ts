@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { initialState } from "./store";
 import { createInvoice, invoiceBlockers } from "./invoice";
 import type { DemoState } from "./types";
-import type { OperationsContext } from "./operations";
+import type { AuthenticatedActor } from "./authority-types";
+import { authenticatedTestActor } from "./authority-test-fixture";
 import {
   confirmSupplier,
   resolveSupplierApproval,
@@ -13,7 +14,8 @@ import {
 } from "./supplier-editor";
 
 let state: DemoState;
-let supervisor: OperationsContext;
+let manager: AuthenticatedActor;
+let worker: AuthenticatedActor;
 const edits: SupplierEdits = {
   name: "Orchard Confirmation Supply",
   phone: "416-555-0173",
@@ -26,21 +28,20 @@ const edits: SupplierEdits = {
 };
 beforeEach(() => {
   state = initialState();
-  supervisor = {
-    company_id: state.config.company.seed_key,
-    role: "supervisor",
-    branch: "Branch 1",
-    actor: "Signed-in Supervisor",
-  };
+  manager = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+    name_en: "Signed-in Manager",
+  });
+  worker = authenticatedTestActor(state, "floor_worker", {
+    locations: ["Branch 1"],
+    name_en: "Receiving Worker",
+  });
 });
 function proposal() {
-  const supplier = saveSupplier(
-    state,
-    { ...supervisor, role: "floor_worker", actor: "Receiving Worker" },
-    edits,
-    { invoice_quick_add: true },
-  );
-  state.invoice = createInvoice(state, "Branch 1", true);
+  const supplier = saveSupplier(state, worker, edits, {
+    invoice_quick_add: true,
+  });
+  state.invoice = createInvoice(state, manager, "Branch 1", true);
   state.invoice.supplier = supplier.name;
   state.invoice.supplier_confirmed = false;
   const approval = state.approvals.find(
@@ -50,34 +51,34 @@ function proposal() {
 }
 
 describe("supplier confirmation approvals", () => {
-  it("confirms the worker proposal, releases only the supplier gate and audits the actual Supervisor", () => {
+  it("confirms the worker proposal, releases only the supplier gate and audits the actual Manager", () => {
     const { supplier, approval } = proposal();
     const products = structuredClone(state.products);
     const now = new Date("2026-10-08T13:00:00Z");
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "supplier_pending",
-    );
+    expect(invoiceBlockers(state, worker)).toContain("supplier_pending");
+    manager = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 2"],
+      name_en: "Signed-in Manager",
+    });
     resolveSupplierApproval(
       state,
-      supervisor,
+      manager,
       approval.id,
       "approve",
-      supplierApprovalSnapshot(state, approval.id),
+      supplierApprovalSnapshot(state, manager, approval.id),
       now,
     );
     expect(supplier.status).toBe("confirmed");
     expect(approval.status).toBe("approved");
     expect(state.invoice.supplier_confirmed).toBe(true);
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).not.toContain(
-      "supplier_pending",
-    );
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "file",
-    );
+    expect(invoiceBlockers(state, worker)).not.toContain("supplier_pending");
+    expect(invoiceBlockers(state, worker)).toContain("file");
     expect(state.products).toEqual(products);
     expect(state.activity.at(-1)).toMatchObject({
       action: "Confirm supplier",
-      by: supervisor.actor,
+      by: manager.actor,
+      actor_user_id: manager.user_id,
+      actor_role_snapshot: "manager",
       at: now.toISOString(),
       entity_id: supplier.id,
       reversible: false,
@@ -87,7 +88,7 @@ describe("supplier confirmation approvals", () => {
   it("rejects without deleting records or confirming the supplier, keeping drafts blocked", () => {
     const { supplier, approval } = proposal();
     const originalId = state.invoice.id;
-    resolveSupplierApproval(state, supervisor, approval.id, "reject");
+    resolveSupplierApproval(state, manager, approval.id, "reject");
     expect(approval.status).toBe("rejected");
     expect(supplier).toMatchObject({ status: "proposed", active: false });
     expect(state.suppliers).toContain(supplier);
@@ -95,30 +96,41 @@ describe("supplier confirmation approvals", () => {
     expect(state.invoice.supplier_confirmed).toBe(false);
     expect(supplierChoices(state)).not.toContain(supplier);
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, "floor_worker", "Branch 1")).toContain(
-      "supplier_pending",
-    );
-    expect(() => confirmSupplier(state, supervisor, supplier.id)).toThrow(
+    expect(invoiceBlockers(state, worker)).toContain("supplier_pending");
+    expect(() => confirmSupplier(state, manager, supplier.id)).toThrow(
       "inactive",
     );
     expect(state.activity.at(-1)).toMatchObject({
       action: "Reject supplier",
-      by: supervisor.actor,
+      by: manager.actor,
       entity_id: supplier.id,
       reversible: false,
     });
   });
 
   it.each(["approve", "reject"] as const)(
-    "blocks %s from a worker, cashier, other company or another branch without changes",
+    "blocks %s from a worker, cashier, other company or Branch Supervisor without changes",
     (decision) => {
       const { approval } = proposal();
       const before = structuredClone(state);
+      const foreign = initialState();
+      foreign.config.company.seed_key = "other-company";
+      const otherCompanyManager = authenticatedTestActor(foreign, "manager", {
+        locations: ["Branch 1"],
+      });
+      const cashier = authenticatedTestActor(state, "cashier", {
+        locations: ["Branch 1"],
+      });
+      const otherBranchSupervisor = authenticatedTestActor(
+        state,
+        "branch_supervisor",
+        { locations: ["Branch 2"] },
+      );
       for (const context of [
-        { ...supervisor, role: "floor_worker" as const },
-        { ...supervisor, role: "cashier" as const },
-        { ...supervisor, company_id: "other-company" },
-        { ...supervisor, branch: "Branch 2" },
+        worker,
+        cashier,
+        otherCompanyManager,
+        otherBranchSupervisor,
       ]) {
         expect(() =>
           resolveSupplierApproval(state, context, approval.id, decision),
@@ -132,13 +144,13 @@ describe("supplier confirmation approvals", () => {
     "requires a fresh supplier snapshot before %s",
     (decision) => {
       const { supplier, approval } = proposal();
-      const snapshot = supplierApprovalSnapshot(state, approval.id);
+      const snapshot = supplierApprovalSnapshot(state, manager, approval.id);
       supplier.phone = "416-555-0180";
       const edited = structuredClone(state);
       expect(() =>
         resolveSupplierApproval(
           state,
-          supervisor,
+          manager,
           approval.id,
           decision,
           snapshot,
@@ -150,10 +162,10 @@ describe("supplier confirmation approvals", () => {
 
   it("does not repeat an approval or create a second audit entry", () => {
     const { approval } = proposal();
-    resolveSupplierApproval(state, supervisor, approval.id, "approve");
+    resolveSupplierApproval(state, manager, approval.id, "approve");
     const before = structuredClone(state);
     expect(() =>
-      resolveSupplierApproval(state, supervisor, approval.id, "approve"),
+      resolveSupplierApproval(state, manager, approval.id, "approve"),
     ).toThrow("no longer pending");
     expect(state).toEqual(before);
   });

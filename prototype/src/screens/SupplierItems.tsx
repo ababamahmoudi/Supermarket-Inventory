@@ -9,7 +9,7 @@ import {
   type SupplierItemRow,
 } from "../supplier-items";
 import { WhatsMissing } from "../WhatsMissing";
-import type { OperationsContext } from "../operations";
+import { useProtectedQuery } from "../use-protected-query";
 import { branchLabel } from "../settings";
 import {
   DateText,
@@ -39,15 +39,20 @@ export default function SupplierItems({
   supplier: string;
   editable: boolean;
 }) {
-  const { state, role, branch, user, lang, t, update, navigate } = useDemo();
-  const context: OperationsContext = {
+  const { state, can, lang, t, command, navigate } = useDemo();
+  const scope = {
     company_id: state.config.company.seed_key,
-    role: role ?? "cashier",
-    branch,
-    actor: user?.name ?? "",
+    kind: "company_shared" as const,
   };
-  const supervisor = role === "supervisor";
-  const rows = supplierItems(state, context, supplier);
+  const supervisor = can("supplier_items.cost_read", scope);
+  const canEdit = editable && can("supplier_items.manage", scope);
+  const rowsRead = useProtectedQuery(
+    "supplier_items.read",
+    scope,
+    (canonical, actor) => supplierItems(canonical, actor, supplier),
+    supplier,
+  );
+  const rows = rowsRead.data ?? [];
   const [query, setQuery] = useListState(
     `supplier-items.${supplier}.search`,
     "",
@@ -105,7 +110,7 @@ export default function SupplierItems({
         <span className="muted supplier-item-count">
           <LtrText>{visible.length}</LtrText> {t("items", "کالا")}
         </span>
-        {supervisor && editable && (
+        {canEdit && (
           <Button onClick={() => setEditor("new")}>
             {t("Add item", "افزودن کالا")}
           </Button>
@@ -237,7 +242,7 @@ export default function SupplierItems({
                 {supervisor && (
                   <td>
                     <div className="actions supplier-item-actions">
-                      {editable && (
+                      {canEdit && (
                         <Button
                           variant="neutral"
                           size="sm"
@@ -399,23 +404,23 @@ export default function SupplierItems({
           </div>
         </Dialog>
       )}
-      {supervisor && editor && (
+      {canEdit && editor && (
         <SupplierItemEditor
           key={editor === "new" ? "new" : editor.id}
           supplier={supplier}
           item={editor === "new" ? undefined : editor}
           onClose={() => setEditor(null)}
-          onSave={(values) =>
-            update((draft) =>
+          onSave={async (values) => {
+            await command("supplier_items.manage", scope, (draft, actor) =>
               saveSupplierItem(
                 draft,
-                context,
+                actor,
                 supplier,
                 values,
                 editor === "new" ? undefined : editor.id,
               ),
-            )
-          }
+            );
+          }}
         />
       )}
     </>
@@ -431,7 +436,7 @@ function SupplierItemEditor({
   supplier: string;
   item?: SupplierItemRow;
   onClose: () => void;
-  onSave: (edits: Parameters<typeof saveSupplierItem>[3]) => void;
+  onSave: (edits: Parameters<typeof saveSupplierItem>[3]) => Promise<void>;
 }) {
   const { state, lang, t } = useDemo();
   const [product, setProduct] = useState(item?.product_code ?? "");
@@ -441,6 +446,7 @@ function SupplierItemEditor({
     item?.financial?.quoted_unit_cost_before_tax ?? "",
   );
   const [error, setError] = useState<SupplierItemError["code"] | null>(null);
+  const [pending, setPending] = useState(false);
   const [missing, setMissing] = useState<
     Partial<Record<"product" | "pack" | "cost" | "code", string>>
   >({});
@@ -494,7 +500,7 @@ function SupplierItemEditor({
       <form
         className="stack manual-entry-form"
         noValidate
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           setError(null);
           const next: typeof missing = {};
@@ -517,8 +523,10 @@ function SupplierItemEditor({
             next.cost = errors.cost;
           setMissing(next);
           if (Object.keys(next).length) return;
+          if (pending) return;
+          setPending(true);
           try {
-            onSave({
+            await onSave({
               product_code: product,
               supplier_item_code: code,
               units_per_case: /^\d+$/.test(pack) ? Number(pack) : NaN,
@@ -535,6 +543,8 @@ function SupplierItemEditor({
                   : (key as "product" | "pack" | "cost");
               setMissing({ [field]: errors[key] });
             } else setError(key);
+          } finally {
+            setPending(false);
           }
         }}
       >
@@ -645,7 +655,7 @@ function SupplierItemEditor({
           <Button variant="neutral" onClick={onClose}>
             {t("Cancel", "لغو")}
           </Button>
-          <Button type="submit">
+          <Button disabled={pending} type="submit">
             {item ? t("Save item", "ذخیره کالا") : t("Add item", "افزودن کالا")}
           </Button>
         </DialogActions>

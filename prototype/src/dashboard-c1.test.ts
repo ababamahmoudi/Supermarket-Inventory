@@ -2,23 +2,73 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
 import { companyDate } from "./invoice";
-import { dashboardArrivals, dashboardPurchases } from "./dashboard-data";
+import {
+  dashboardArrivals,
+  dashboardPurchases,
+  dashboardSummary,
+} from "./dashboard-data";
+import { stopOffer } from "./approvals";
 import { invoiceLocationMovePreview, movePostedInvoice } from "./received";
-import type { OperationsContext } from "./operations";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { actorAtLocation, cloneWithAuthority } from "./authority";
+import type { AuthenticatedActor } from "./authority-types";
 
-function context(
-  state: ReturnType<typeof initialState>,
-  branch = "all",
-): OperationsContext {
-  return {
-    company_id: state.config.company.seed_key,
-    branch,
-    role: "supervisor",
-    actor: "Demo Supervisor",
-  };
+const actors = new WeakMap<
+  ReturnType<typeof initialState>,
+  AuthenticatedActor
+>();
+function context(state: ReturnType<typeof initialState>, branch = "all") {
+  let actor = actors.get(state);
+  if (!actor) {
+    actor = authenticatedTestActor(state, "manager", {
+      selection: { kind: "all_locations" },
+    });
+    actors.set(state, actor);
+  }
+  return branch === "all" ? actor : actorAtLocation(state, actor, branch);
 }
 
 describe("C1 dashboard uses receiving evidence rather than inventory estimates", () => {
+  it("filters real offer activity by the selected location while retaining company-wide actions", () => {
+    const state = initialState();
+    const manager = context(state);
+    const globalOffer = state.offers.find(
+      (offer) => offer.status === "active" && offer.scope === "all",
+    );
+    expect(globalOffer).toBeDefined();
+    if (!globalOffer) throw new Error("Active configured offer is missing");
+    const localOffer = {
+      ...structuredClone(globalOffer),
+      id: "dashboard-location-offer",
+      branch: "Branch 2",
+      scope: "branch" as const,
+    };
+    state.offers.push(localOffer);
+    stopOffer(state, manager, localOffer.id);
+    stopOffer(state, manager, globalOffer.id);
+    const localActivity = state.activity.find(
+      (entry) => entry.action === "Stop offer" && entry.branch === "Branch 2",
+    );
+    const globalActivity = state.activity.find(
+      (entry) => entry.action === "Stop offer" && entry.branch === "all",
+    );
+    expect(localActivity).toBeDefined();
+    expect(globalActivity).toBeDefined();
+    const northYork = dashboardSummary(state, context(state, "Branch 1"));
+    const richmondHill = dashboardSummary(state, context(state, "Branch 2"));
+    const all = dashboardSummary(state, manager);
+    expect(northYork.activity.map((entry) => entry.id)).not.toContain(
+      localActivity!.id,
+    );
+    expect(northYork.activity.map((entry) => entry.id)).toContain(
+      globalActivity!.id,
+    );
+    expect(richmondHill.activity.map((entry) => entry.id)).toContain(
+      localActivity!.id,
+    );
+    expect(all.activity.map((entry) => entry.id)).toContain(localActivity!.id);
+  });
+
   it("keeps arrivals unchanged when obsolete estimated stock changes", () => {
     const state = initialState();
     const invoice = structuredClone(state.invoices![0]);
@@ -35,14 +85,11 @@ describe("C1 dashboard uses receiving evidence rather than inventory estimates",
     expect(dashboardArrivals(state, context(state))).toEqual(before);
     expect(dashboardArrivals(state, context(state, "Warehouse"))).toEqual([]);
     expect(() =>
-      dashboardArrivals(state, { ...context(state), role: "cashier" }),
+      dashboardArrivals(state, authenticatedTestActor(state, "cashier")),
     ).toThrow();
-    expect(() =>
-      dashboardArrivals(state, {
-        ...context(state),
-        company_id: "other-company",
-      }),
-    ).toThrow();
+    const foreign = cloneWithAuthority(state);
+    foreign.config.company.seed_key = "other-company";
+    expect(() => dashboardArrivals(foreign, context(state))).toThrow();
   });
 
   it("moves recorded purchases with the invoice without turning unpaid liability into purchases", () => {

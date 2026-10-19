@@ -9,7 +9,7 @@ import {
   promoContentGeometry,
 } from "./labels";
 import type { LabelTemplate } from "./types";
-import { initialState } from "./store";
+import { initialState } from "./e1-bootstrap";
 const template: LabelTemplate = {
   id: "test",
   company_id: "demo",

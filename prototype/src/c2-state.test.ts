@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { AUTH_STORAGE_KEY, SESSION_KEY } from "./auth";
+import { LEGACY_AUTH_STORAGE_KEY as AUTH_STORAGE_KEY } from "./authority-initialization";
+import { legacySessionKey as SESSION_KEY } from "./shell-provider-test-fixture";
 import { C2_BACKUP_KEY, hydrateC2State, restoreC2State } from "./c2-state";
 import { initialState } from "./store";
 import type { SupplierItemDefinition } from "./supplier-items";

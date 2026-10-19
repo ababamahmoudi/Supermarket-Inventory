@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useSettingsConfiguration } from "../settings-configuration";
+import { configSeed } from "../config";
 import { useDemo } from "../store";
-import { returnSettings, updateReturnSettings } from "../return-workflow";
+import { updateReturnSettings } from "../return-workflow";
 import { DateText, demoUserLabel } from "../presentation";
 import { Button, Card, Checkbox, Field, NumberField, Select } from "../ui";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
@@ -8,8 +10,9 @@ import { saveSupplierDocumentSettings } from "../supplier-document-settings";
 import { saveDateReminderSettings } from "../date-reminder-settings";
 
 export function ReturnsSettings() {
-  const { state, update, role, user, t, lang } = useDemo();
-  const saved = returnSettings(state);
+  const { state, command, can, t, lang } = useDemo();
+  const configuration = useSettingsConfiguration();
+  const saved = configuration.returns ?? configSeed.returns;
   const [deduct, setDeduct] = useState<boolean | null>(null);
   const [days, setDays] = useState<string | null>(null);
   const [defaultDays, setDefaultDays] = useState<string | null>(null);
@@ -23,20 +26,20 @@ export function ReturnsSettings() {
   const [orderLanguage, setOrderLanguage] = useState<"en" | "bilingual" | null>(
     null,
   );
-  if (role !== "supervisor") return null;
+  if (!can("settings.manage")) return null;
   const enabled = deduct ?? saved.deduct_expected_credit_at_pickup;
   const reminder = days ?? String(saved.waiting_credit_days);
   const dateReminder =
-    defaultDays ?? String(state.config.expiry.expiring_soon_days);
+    defaultDays ?? String(configuration.expiry.expiring_soon_days);
   const changed =
     enabled !== saved.deduct_expected_credit_at_pickup ||
     reminder !== String(saved.waiting_credit_days) ||
-    dateReminder !== String(state.config.expiry.expiring_soon_days) ||
-    (memoLanguage ?? state.config.supplier_documents?.return_memo ?? "en") !==
-      (state.config.supplier_documents?.return_memo ?? "en") ||
+    dateReminder !== String(configuration.expiry.expiring_soon_days) ||
+    (memoLanguage ?? configuration.supplier_documents?.return_memo ?? "en") !==
+      (configuration.supplier_documents?.return_memo ?? "en") ||
     (orderLanguage ??
-      state.config.supplier_documents?.supplier_order ??
-      "en") !== (state.config.supplier_documents?.supplier_order ?? "en");
+      configuration.supplier_documents?.supplier_order ??
+      "en") !== (configuration.supplier_documents?.supplier_order ?? "en");
   return (
     <Card title={t("Returns", "مرجوعی‌ها")} className="form-card">
       <WhatsMissing issues={issues} />
@@ -75,8 +78,8 @@ export function ReturnsSettings() {
       </Field>
       <p className="muted">
         {t(
-          "Pickup records a pending claim. Only a Supervisor posts confirmed credit.",
-          "جمع‌آوری یک ادعای در انتظار ثبت می‌کند. فقط سرپرست اعتبار تأییدشده را ثبت می‌کند.",
+          "Pickup records a pending claim. Only an Owner or Manager posts confirmed credit.",
+          "جمع‌آوری یک ادعای در انتظار ثبت می‌کند. فقط مالک یا مدیر اعتبار تأییدشده را ثبت می‌کند.",
         )}
       </p>
       <div className="form-grid">
@@ -107,7 +110,7 @@ export function ReturnsSettings() {
           <Select
             value={
               memoLanguage ??
-              state.config.supplier_documents?.return_memo ??
+              configuration.supplier_documents?.return_memo ??
               "en"
             }
             onChange={(value) => {
@@ -132,7 +135,7 @@ export function ReturnsSettings() {
           <Select
             value={
               orderLanguage ??
-              state.config.supplier_documents?.supplier_order ??
+              configuration.supplier_documents?.supplier_order ??
               "en"
             }
             onChange={(value) => {
@@ -150,7 +153,7 @@ export function ReturnsSettings() {
         </Field>
       </div>
       <Button
-        onClick={() => {
+        onClick={async () => {
           const threshold = Number(reminder);
           const dateThreshold = Number(dateReminder);
           const missing: ValidationIssue[] = [];
@@ -188,54 +191,62 @@ export function ReturnsSettings() {
             setMessage(t("Changes saved.", "تغییرات ذخیره شد."));
             return;
           }
-          update((draft) => {
-            if (
-              enabled !== saved.deduct_expected_credit_at_pickup ||
-              threshold !== saved.waiting_credit_days
-            )
-              updateReturnSettings(
-                draft,
-                {
-                  company_id: state.config.company.seed_key,
-                  role,
-                  branch: "all",
-                  actor: user?.name ?? "",
-                },
-                {
-                  deduct_expected_credit_at_pickup: enabled,
-                  waiting_credit_days: threshold,
-                },
-              );
-            saveSupplierDocumentSettings(
-              draft,
+          try {
+            await command(
+              "settings.manage",
               {
-                company_id: state.config.company.seed_key,
-                role,
-                branch: "all",
-                actor: user?.name ?? "",
+                company_id: configuration.company.seed_key,
+                kind: "company_shared",
+                mutation: true,
               },
-              {
-                return_memo:
-                  memoLanguage ??
-                  state.config.supplier_documents?.return_memo ??
-                  "en",
-                supplier_order:
-                  orderLanguage ??
-                  state.config.supplier_documents?.supplier_order ??
-                  "en",
+              (draft, freshActor) => {
+                if (
+                  enabled !==
+                    (draft.config.returns ?? configSeed.returns)
+                      .deduct_expected_credit_at_pickup ||
+                  threshold !==
+                    (draft.config.returns ?? configSeed.returns)
+                      .waiting_credit_days
+                )
+                  updateReturnSettings(draft, freshActor, {
+                    deduct_expected_credit_at_pickup:
+                      deduct ??
+                      (draft.config.returns ?? configSeed.returns)
+                        .deduct_expected_credit_at_pickup,
+                    waiting_credit_days:
+                      days === null
+                        ? (draft.config.returns ?? configSeed.returns)
+                            .waiting_credit_days
+                        : threshold,
+                  });
+                saveSupplierDocumentSettings(draft, freshActor, {
+                  return_memo:
+                    memoLanguage ??
+                    draft.config.supplier_documents?.return_memo ??
+                    "en",
+                  supplier_order:
+                    orderLanguage ??
+                    draft.config.supplier_documents?.supplier_order ??
+                    "en",
+                });
+                saveDateReminderSettings(
+                  draft,
+                  freshActor,
+                  defaultDays === null
+                    ? draft.config.expiry.expiring_soon_days
+                    : dateThreshold,
+                );
               },
             );
-            saveDateReminderSettings(
-              draft,
-              {
-                company_id: state.config.company.seed_key,
-                role,
-                branch: "all",
-                actor: user?.name ?? "",
-              },
-              dateThreshold,
+          } catch {
+            setError(
+              t(
+                "Only an Owner or Manager can change Settings.",
+                "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
+              ),
             );
-          });
+            return;
+          }
           setDeduct(null);
           setDays(null);
           setDefaultDays(null);
