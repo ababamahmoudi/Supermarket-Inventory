@@ -23,7 +23,8 @@
 .request-form.card {
   max-inline-size: 928px;
 }
-.request-location-fields .ui-select {
+:root .request-form .request-location-fields .field > .ui-select {
+  width: 100%;
   inline-size: 100%;
   max-inline-size: 100%;
 }

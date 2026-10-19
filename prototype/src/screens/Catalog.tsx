@@ -174,17 +174,19 @@ function ProductProvenance({ product }: { product: Product }) {
         "قیمت عادی محاسبه‌شده از فاکتور",
       )}{" "}
       <LtrText>{source.invoice_number}</LtrText> ·{" "}
-      {sourceCost && financial.data?.category && (
-        <>
-          <Money value={sourceCost.unit_cost_before_tax} decimals={2} />{" "}
-          <LtrText>÷ {financial.data.category.cost_divisor} →</LtrText>{" "}
-        </>
-      )}
-      <SellingPrice
-        value={source.calculated_price}
-        product={product}
-        config={state.config}
-      />
+      <LtrText>
+        {sourceCost && financial.data?.category && (
+          <>
+            <Money value={sourceCost.unit_cost_before_tax} decimals={2} />{" "}
+            <LtrText>÷ {financial.data.category.cost_divisor} →</LtrText>{" "}
+          </>
+        )}
+        <SellingPrice
+          value={source.calculated_price}
+          product={product}
+          config={state.config}
+        />
+      </LtrText>
       {source.changed_price && (
         <>
           {" "}
@@ -1921,10 +1923,25 @@ function ProductDetail({ product }: { product: Product }) {
         className={`product-page-top-cards${!mayReadCost || location === "all" ? " without-private-cost" : ""}`}
       >
         <Card className="product-page-price-card">
-          <h2>
-            {t("Price at", "قیمت در")}{" "}
-            {configuredBranchLabel(state.config, location, lang)}
-          </h2>
+          <div className="c9-price-card-heading">
+            <h2>
+              {t("Price at", "قیمت در")}{" "}
+              {configuredBranchLabel(state.config, location, lang)}
+            </h2>
+            <span className="helper">
+              {t("Before tax", "پیش از مالیات")}
+              {profile?.taxable && (
+                <>
+                  {" "}
+                  ·{" "}
+                  {t(
+                    state.config.tax.label_text_en,
+                    state.config.tax.label_text_fa,
+                  )}
+                </>
+              )}
+            </span>
+          </div>
           {location === "all" ? (
             <Field label={t("Location", "مکان")}>
               <Select

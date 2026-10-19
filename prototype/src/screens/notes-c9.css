@@ -130,3 +130,7 @@
   opacity: 1;
   color: var(--approved);
 }
+
+.notebook-entry-card > .muted > .ltr-fragment {
+  white-space: nowrap;
+}

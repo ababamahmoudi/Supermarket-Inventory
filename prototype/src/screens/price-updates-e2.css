@@ -5,6 +5,7 @@
 }
 .price-updates-list {
   display: grid;
+  container-type: inline-size;
 }
 .price-updates-row {
   display: grid;
@@ -25,6 +26,79 @@
 .price-update-dashboard-row small {
   display: block;
   margin-block-start: 4px;
+}
+.price-updates-table-header,
+.price-updates-row .price-updates-wide-cell {
+  display: none;
+}
+.price-updates-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@container (min-width: 880px) {
+  .price-updates-table-header,
+  .price-updates-row {
+    display: grid;
+    grid-template-columns:
+      28px minmax(140px, 1.3fr) minmax(90px, 0.8fr) minmax(128px, 1fr)
+      minmax(140px, 1.4fr) minmax(98px, 0.8fr) auto;
+    gap: 12px;
+  }
+  .price-updates-table-header {
+    align-items: center;
+    padding-block: 12px;
+    border-block-end: 1px solid var(--row-divider);
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-caption);
+  }
+  .price-updates-row > * {
+    min-inline-size: 0;
+  }
+  .price-updates-row .price-updates-wide-cell {
+    display: block;
+  }
+  .price-updates-row .price-updates-compact-meta {
+    display: none;
+  }
+  .price-updates-product > .product-name {
+    font-weight: var(--font-weight-headline);
+  }
+  .price-updates-price-heading,
+  .price-updates-row > .price-update-change {
+    justify-self: end;
+  }
+  .price-updates-row .price-updates-steps {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: var(--font-size-caption);
+  }
+  .price-updates-steps > span {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: var(--radius-round);
+    background: var(--pending);
+    flex-shrink: 0;
+  }
+  .price-updates-steps.is-pending {
+    color: var(--pending);
+  }
+  .price-updates-steps.is-started {
+    color: var(--accent);
+  }
+  .price-updates-steps.is-started > span {
+    background: var(--accent);
+  }
+  .price-updates-steps.is-complete {
+    color: var(--approved);
+  }
+  .price-updates-steps.is-complete > span {
+    background: var(--approved);
+  }
 }
 .price-update-change {
   direction: ltr;
@@ -157,7 +231,7 @@
   .price-updates-row .price-update-change {
     grid-column: 2;
   }
-  .price-updates-row .price-update-open {
+  .price-updates-row .price-updates-row-actions {
     grid-column: 3;
     grid-row: 1 / span 2;
   }

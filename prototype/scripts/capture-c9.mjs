@@ -834,6 +834,13 @@ try {
         );
         if (await dismissUndo.isVisible()) await dismissUndo.click();
         await ready(page, setup.selector);
+        // End setup like a reader: dismiss transient menus, leave the editor,
+        // then return to the top before native full-page capture. This also
+        // avoids capturing a focused skip link or a scrolled sticky top bar.
+        await page.keyboard.press("Escape");
+        await page.locator("main h1").click();
+        await page.keyboard.press("Control+Home");
+        await settled(page);
         // Native screenshot only. No CSS, DOM, storage or business-state patching.
         const path = `${scene}-${variant}.png`;
         await page.screenshot({

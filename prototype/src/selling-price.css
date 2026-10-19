@@ -85,7 +85,7 @@
 }
 .c9-sale-details {
   background: var(--field-fill);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-search);
   padding: 16px;
   margin-block: 16px;
 }
@@ -120,13 +120,25 @@
 .c9-hero-price .selling-price-current {
   font-weight: var(--font-weight-product-price);
 }
+:root .product-page .c9-price-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 16px;
+}
+:root .product-page .c9-price-card-heading h2 {
+  margin: 0;
+}
 :root .product-page-price-card .c9-product-price {
   gap: 16px;
 }
 :root .c9-product-price :is(.c9-regular-line, .c9-sale-details) {
   margin-block: 0;
 }
-del.sale-regular-price .selling-price-current {
+del.sale-regular-price .selling-price-current,
+.price-update-change > del .selling-price-current {
   text-decoration-line: line-through;
   font-weight: var(--font-weight-body);
 }
@@ -141,6 +153,19 @@ del.sale-regular-price .selling-price-current {
 }
 .c9-regular-line del {
   white-space: nowrap;
+}
+@media screen {
+  :root .lookup-page .lookup-price-block > .c9-regular-line {
+    flex-basis: 100%;
+  }
+  :root .lookup-page .lookup-result-row .lookup-result-price {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  :root .lookup-page .lookup-result-price > .lookup-result-pills {
+    order: 0;
+  }
 }
 .c9-labels-products-table table {
   table-layout: fixed;
@@ -173,6 +198,20 @@ del.sale-regular-price .selling-price-current {
   }
 }
 @media (max-width: 759px) {
+  :root
+    .c9-labels-products-table.is-responsive.is-mobile.is-phone-list
+    .phone-list-row
+    > td {
+    inline-size: auto;
+  }
+  :root
+    .c9-labels-products-table.is-phone-list
+    .phone-list-name
+    .product-name
+    :is(strong, small) {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
   :root
     .current-offers-table.is-phone-list
     .phone-list-secondary

@@ -109,10 +109,16 @@ const errorText: Record<BranchRequestError["code"], [string, string]> = {
     "مورد کسری یا نرسیده‌ای برای کپی باقی نمانده است.",
   ],
 };
-function RequestItemName({ item }: { item: BranchRequestItem }) {
+function RequestItemName({
+  item,
+  language,
+}: {
+  item: BranchRequestItem;
+  language: Language;
+}) {
   return item.kind === "catalog" ? (
     <span>
-      <ProductName product={item} />
+      <ProductName product={item} language={language} />
       <span className="helper">
         <LtrText>{item.product_code}</LtrText> ·{" "}
         <UnitSize value={item.unit_size ?? ""} />
@@ -743,7 +749,7 @@ export default function BranchRequests() {
                     <div className="request-line-heading">
                       {product ? (
                         <span>
-                          <ProductName product={product} />
+                          <ProductName product={product} language={lang} />
                           <span className="helper">
                             <LtrText>{product.code}</LtrText> ·{" "}
                             <UnitSize value={product.unit_size} />
@@ -876,7 +882,7 @@ export default function BranchRequests() {
                   .map((product) => (
                     <div key={product.code}>
                       <span>
-                        <ProductName product={product} />
+                        <ProductName product={product} language={lang} />
                         <span className="helper">
                           <LtrText>{product.code}</LtrText> ·{" "}
                           <UnitSize value={product.unit_size} />
@@ -1107,7 +1113,7 @@ export default function BranchRequests() {
                       </p>
                     )}
                     <div className="request-checklist-heading">
-                      <RequestItemName item={item} />
+                      <RequestItemName item={item} language={lang} />
                       <strong>
                         <LtrText>{item.quantity}</LtrText> {quantityLabel(item)}
                       </strong>

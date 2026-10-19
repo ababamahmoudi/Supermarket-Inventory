@@ -49,7 +49,7 @@ export function SaleRequestCards({
   const [rejecting, setRejecting] = useState<SaleRequestReadDTO | null>(null);
   const [reason, setReason] = useState("");
   const [rejectAttempted, setRejectAttempted] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<[string, string] | null>(null);
   const canDecide = Boolean(historyContext && can("approvals.decide"));
   const requests = (state.sale_requests ?? []).filter(
     (request) =>
@@ -135,18 +135,18 @@ export function SaleRequestCards({
             input,
           }),
       );
-      setMessage(t("Approved", "تأیید شد"));
+      setMessage(["Approved", "تأیید شد"]);
     } catch (error) {
       setMessage(
         error instanceof SalesError && error.code === "revision"
-          ? t(
+          ? [
               "This request changed. Review it again.",
               "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
-            )
-          : t(
+            ]
+          : [
               "Open the request again to review its price, stores and dates.",
               "برای بررسی قیمت، فروشگاه‌ها و تاریخ‌ها درخواست را دوباره باز کنید.",
-            ),
+            ],
       );
     }
   };
@@ -165,19 +165,17 @@ export function SaleRequestCards({
       );
       setRejecting(null);
       setReason("");
-      setMessage(t("Rejected", "رد شد"));
+      setMessage(["Rejected", "رد شد"]);
     } catch {
-      setMessage(
-        t(
-          "This request changed. Review it again.",
-          "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
-        ),
-      );
+      setMessage([
+        "This request changed. Review it again.",
+        "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
+      ]);
     }
   };
   const content = (
     <>
-      {message && <p role="status">{message}</p>}
+      {message && <p role="status">{t(...message)}</p>}
       {requests.map((request) => {
         const product = state.products.find(
           (item) =>
@@ -270,16 +268,19 @@ export function SaleRequestCards({
               </strong>
               <span>{branchLabel(state.config, request.branch, lang)}</span>
               <span>
-                <DateText value={terms?.starts_on ?? request.starts_on} />
-                {(terms ? terms.last_day : request.last_day) ? (
-                  <>
-                    {" "}
-                    –{" "}
-                    <DateText
-                      value={(terms ? terms.last_day : request.last_day)!}
-                    />
-                  </>
-                ) : (
+                <LtrText>
+                  <DateText value={terms?.starts_on ?? request.starts_on} />
+                  {(terms ? terms.last_day : request.last_day) && (
+                    <>
+                      {" "}
+                      –{" "}
+                      <DateText
+                        value={(terms ? terms.last_day : request.last_day)!}
+                      />
+                    </>
+                  )}
+                </LtrText>
+                {!(terms ? terms.last_day : request.last_day) && (
                   <> · {t("No end date", "بدون تاریخ پایان")}</>
                 )}
               </span>
